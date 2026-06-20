@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Bear head: minimalist line-art -->
+  <circle cx="17" cy="18" r="6"/>
+  <circle cx="47" cy="18" r="6"/>
+  <path d="M16 24 C14 28 13 33 14 38 C16 48 23 53 32 53 C41 53 48 48 50 38 C51 33 50 28 48 24"/>
+  <path d="M16 24 C20 20 26 18 32 18 C38 18 44 20 48 24"/>
+  <path d="M25 34 h3 M36 34 h3"/>
+  <path d="M30 42 q2 2 4 0"/>
+  <path d="M32 42 v4"/>
+</svg>

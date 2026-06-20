@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Bull head: minimalist line-art -->
+  <path d="M14 18 C8 14 5 20 8 26 C10 30 15 31 18 30"/>
+  <path d="M50 18 C56 14 59 20 56 26 C54 30 49 31 46 30"/>
+  <path d="M18 28 C18 22 23 17 32 17 C41 17 46 22 46 28"/>
+  <path d="M18 28 C18 40 24 50 32 50 C40 50 46 40 46 28"/>
+  <path d="M26 33 l3 3 M38 33 l-3 3"/>
+  <path d="M28 43 q4 3 8 0"/>
+</svg>

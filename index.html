@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en" data-regime="bull">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TradePro — Indiabulls Securities · Bull/Bear Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/styles.css?v=15" />
+</head>
+<body>
+<div class="ambient" aria-hidden="true">
+  <span class="aurora a1"></span>
+  <span class="aurora a2"></span>
+  <span class="aurora a3"></span>
+  <span class="grid-motion"></span>
+</div>
+<div class="regime-sweep" id="regimeSweep"></div>
+<div class="floor-sweep" id="floorSweep"></div>
+<div id="srAnnounce" class="sr-only" aria-live="polite" role="status"></div>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs>
+  <linearGradient id="sgu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00ab4e" stop-opacity=".30"/><stop offset="1" stop-color="#00ab4e" stop-opacity="0"/></linearGradient>
+  <linearGradient id="sgd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e5383b" stop-opacity=".28"/><stop offset="1" stop-color="#e5383b" stop-opacity="0"/></linearGradient>
+</defs></svg>
+
+<!-- ====================== TOP BAR ====================== -->
+<header class="topbar">
+  <div class="tb-brand">
+    <img class="brand-logo" src="assets/logo.svg" alt="Indiabulls Securities" />
+    <span class="brand-pro">TradePro</span>
+  </div>
+
+  <div class="exch-switch" id="exchSwitch" role="tablist" aria-label="Exchange">
+    <button class="exch-btn active" data-exch="NSE" role="tab" aria-selected="true">NSE</button>
+    <button class="exch-btn" data-exch="BSE" role="tab" aria-selected="false">BSE</button>
+    <button class="exch-btn" data-exch="MCX" role="tab" aria-selected="false">MCX</button>
+  </div>
+  <div class="mkt-status" id="mktStatus"></div>
+
+  <div class="tb-spacer"></div>
+
+  <div class="search">
+    <svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input type="text" placeholder="Search NSE · BSE · MCX…" aria-label="Search scrips on NSE, BSE and MCX" />
+    <kbd>/</kbd>
+    <div class="search-results" id="searchResults"></div>
+  </div>
+
+  <div class="topbar-right">
+    <div class="regime-control">
+      <div class="seg" role="tablist" aria-label="Market regime">
+        <button class="seg-btn" data-regime-btn="bull" role="tab"><span class="seg-dot dot-bull"></span>Bull</button>
+        <button class="seg-btn" data-regime-btn="neutral" role="tab"><span class="seg-dot dot-neutral"></span>Neutral</button>
+        <button class="seg-btn" data-regime-btn="bear" role="tab"><span class="seg-dot dot-bear"></span>Bear</button>
+      </div>
+      <button class="auto-pill" id="autoPill" title="AUTO — the detection engine drives the regime">
+        <span class="auto-dot"></span>AUTO <b class="auto-conf" id="autoConf">100%</b>
+      </button>
+    </div>
+    <button class="surface-toggle" id="surfaceToggle" title="Day / Night — Trading Floor mode" aria-label="Toggle day or night mode" aria-pressed="false"></button>
+    <button class="engine-btn icon-only" id="engineBtn" title="Regime Engine" aria-label="Open regime detection engine"><svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2.2" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="7" cy="17" r="2.2" fill="currentColor" stroke="none"/></svg></button>
+    <button class="widget-btn" id="widgetBtn" title="Add or manage widgets" aria-label="Open widget library"><svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Widgets</span></button>
+    <div class="funds-chip"><span id="fundsLabel">Margin available</span><b id="fundsVal">₹4,82,000</b></div>
+    <div class="profile">SB</div>
+  </div>
+</header>
+
+<!-- ====================== INDEX TICKER TAPE ====================== -->
+<div class="ticker-bar">
+  <div class="tb-ticker" id="topIndex"></div>
+</div>
+
+<!-- ====================== REGIME INSIGHT BAR ====================== -->
+<div class="regime-bar" id="regimeBar"></div>
+
+<!-- ====================== TERMINAL 3-PANE ====================== -->
+<main class="terminal">
+
+  <!-- LEFT: Marketwatch -->
+  <aside class="pane pane-left">
+    <div class="pane-head">
+      <div class="wl-tabs">
+        <button class="wl-tab active">My Watchlist</button>
+        <button class="wl-tab">F&amp;O</button>
+        <button class="wl-tab">Indices</button>
+      </div>
+      <button class="icon-btn" title="Add scrip" aria-label="Add scrip to watchlist"><svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+    </div>
+    <div class="wl-search"><svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input placeholder="Add scrip…" aria-label="Add a scrip to your watchlist" /></div>
+    <div class="wl-meta" id="wlMeta"></div>
+    <div class="wl-rows" id="wlRows"></div>
+    <div class="pane-resize pr-right" data-resize="left" title="Drag to resize · double-click to reset"></div>
+  </aside>
+
+  <!-- CENTER: Chart + bottom tabbed panel -->
+  <section class="pane pane-center">
+    <div class="invest-hub" id="investHub" aria-label="Invest and trade tools"></div>
+    <div class="desk-bar" id="deskBar" role="tablist" aria-label="Workspace layout presets"></div>
+    <div class="desk-view" id="deskView" aria-label="Derivatives desk"></div>
+    <div class="algo-view" id="algoView" aria-label="Algo trading"></div>
+    <div class="ai-view" id="aiView" aria-label="AI copilot"></div>
+    <div class="chart-card" id="chartCard"></div>
+    <div class="chart-resize" id="chartResize" title="Drag to resize chart · double-click to reset"></div>
+    <div class="panel">
+      <div class="panel-tabs" id="panelTabs"></div>
+      <div class="panel-body" id="panelBody"></div>
+    </div>
+  </section>
+
+  <!-- RIGHT: Order pad + contextual regime module -->
+  <aside class="pane pane-right">
+    <div class="pane-resize pr-left" data-resize="right" title="Drag to resize · double-click to reset"></div>
+    <div id="orderPad"></div>
+    <div id="contextModule"></div>
+    <div id="widgetStack" aria-label="Your widgets"></div>
+  </aside>
+
+</main>
+
+<!-- ====================== REGIME ENGINE PANEL ====================== -->
+<aside class="engine collapsed" id="engine">
+  <div class="engine-head">
+    <div><b>Regime Detection Engine</b><span>Simulate the market · watch AUTO switch the terminal</span></div>
+    <button class="icon-btn" id="engineClose" aria-label="Close engine panel"><svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="engine-body">
+    <div class="presets">
+      <button class="preset" data-preset="rally"><span class="seg-dot dot-bull"></span>Rally</button>
+      <button class="preset" data-preset="choppy"><span class="seg-dot dot-neutral"></span>Choppy</button>
+      <button class="preset" data-preset="crash"><span class="seg-dot dot-bear"></span>Crash</button>
+      <button class="preset preset-spike" data-preset="spike"><span class="seg-dot dot-amber"></span>VIX Spike</button>
+    </div>
+
+    <div class="sliders">
+      <label class="sld"><span class="sld-top"><span>Nifty trend <i>(vs 20/50/200 DMA)</i></span><b id="vTrend">+82</b></span>
+        <input type="range" id="sTrend" min="-100" max="100" value="82" />
+        <span class="sld-ends"><i>Below all MAs</i><i>Stacked above</i></span></label>
+      <label class="sld"><span class="sld-top"><span>India VIX</span><b id="vVix">12.4</b></span>
+        <input type="range" id="sVix" min="8" max="35" step="0.1" value="12.4" />
+        <span class="sld-ends"><i>Calm</i><i>Fear</i></span></label>
+      <label class="sld"><span class="sld-top"><span>Advance / Decline</span><b id="vAd">2.30</b></span>
+        <input type="range" id="sAd" min="0.2" max="3" step="0.05" value="2.3" />
+        <span class="sld-ends"><i>0.2</i><i>3.0</i></span></label>
+      <label class="sld"><span class="sld-top"><span>Index RSI</span><b id="vRsi">64</b></span>
+        <input type="range" id="sRsi" min="20" max="80" value="64" />
+        <span class="sld-ends"><i>Oversold</i><i>Overbought</i></span></label>
+      <label class="sld"><span class="sld-top"><span>Your 5-day P&amp;L</span><b id="vPnl">+3.0%</b></span>
+        <input type="range" id="sPnl" min="-10" max="10" step="0.5" value="3" />
+        <span class="sld-ends"><i>Drawdown</i><i>Rising</i></span></label>
+      <label class="sld sld-toggle"><span>MACD signal cross</span>
+        <button id="macdToggle" class="mini-toggle" data-on="true">Bullish ↑</button></label>
+    </div>
+
+    <button class="sim-run" id="simRun">▶ Run live simulation</button>
+
+    <div class="readout">
+      <div class="gauge">
+        <div class="gauge-track">
+          <span class="gz gz-bear">BEAR</span><span class="gz gz-neutral">NEUTRAL</span><span class="gz gz-bull">BULL</span>
+          <div class="gauge-needle" id="gaugeNeedle"></div>
+        </div>
+        <div class="gauge-scale"><i>−100</i><i>−25</i><i>+25</i><i>+100</i></div>
+      </div>
+      <div class="er-grid">
+        <div class="er"><span>Composite S</span><b id="erScore">+66</b></div>
+        <div class="er"><span>Regime</span><b id="erRegime">BULL</b></div>
+        <div class="er"><span>Confidence</span><b id="erConf">100%</b></div>
+      </div>
+      <div class="signals" id="signals"></div>
+    </div>
+  </div>
+</aside>
+<div class="engine-scrim" id="engineScrim"></div>
+
+<!-- ====================== WIDGET LIBRARY (slide-in) ====================== -->
+<aside class="wg-gallery collapsed" id="widgetGallery" role="dialog" aria-label="Widget library">
+  <div class="wg-gallery-head">
+    <div><b id="wgTitle">Widget Library</b><span id="wgSubtitle"></span></div>
+    <button class="icon-btn" id="wgClose" aria-label="Close widget library"><svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="wg-gallery-body" id="wgGalleryBody"></div>
+</aside>
+<div class="engine-scrim" id="widgetGalleryScrim"></div>
+
+<!-- ====================== ORDER CONFIRMATION MODAL ====================== -->
+<div class="modal-scrim" id="modalScrim"></div>
+<div class="modal" id="orderModal" role="dialog" aria-modal="true" aria-label="Confirm order">
+  <div class="modal-head"><b id="modalTitle">Confirm order</b>
+    <button class="icon-btn" id="modalClose" aria-label="Close order dialog"><svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="modal-body" id="modalBody"></div>
+  <div class="modal-foot">
+    <button class="tbtn ghost" id="modalCancel">Cancel</button>
+    <button class="tbtn primary" id="modalConfirm">Confirm</button>
+  </div>
+</div>
+
+<!-- ====================== FLOATING MODE SWITCH ====================== -->
+<div class="mode-fab" id="modeFab" data-persona="trader" role="tablist" aria-label="Workspace mode">
+  <span class="mf-pill" aria-hidden="true"></span>
+  <button class="mf-btn on" data-persona="trader" role="tab" aria-selected="true">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M21 7h-5M21 7v5"/></svg>Trading</button>
+  <button class="mf-btn" data-persona="investor" role="tab" aria-selected="false">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-8"/><path d="M12 13C12 9 8.5 7 5 7c0 4 3 6 7 6z"/><path d="M12 11c0-3.2 2.8-5 6-5 0 3.2-2.6 5-6 5z"/></svg>Investing</button>
+  <button class="mf-btn" data-persona="algo" role="tab" aria-selected="false">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 3v2M15 3v2M9 19v2M15 19v2M3 9h2M3 15h2M19 9h2M19 15h2"/></svg>Algo</button>
+  <button class="mf-btn" data-persona="ai" role="tab" aria-selected="false">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/></svg>AI</button>
+</div>
+
+<!-- ====================== FIRST-RUN PERSONA GATE ====================== -->
+<div class="persona-gate" id="personaGate" role="dialog" aria-modal="true" aria-label="Choose how you use TradePro">
+  <div class="pg-card">
+    <img class="pg-logo" src="assets/logo.svg" alt="Indiabulls Securities" />
+    <h2 class="pg-title">How will you use TradePro today?</h2>
+    <p class="pg-sub">We'll tailor the entire terminal — order pad, panels, chart and signals — to your style. Switch anytime from the floating control.</p>
+    <div class="pg-opts">
+      <button class="pg-opt" data-persona="trader">
+        <span class="pg-ic"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M21 7h-5M21 7v5"/></svg></span>
+        <b>I'm Trading</b>
+        <span class="pg-desc">Active markets · intraday &amp; F&amp;O · momentum, stops, hedges, R:R brackets and live tape.</span>
+      </button>
+      <button class="pg-opt" data-persona="investor">
+        <span class="pg-ic"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-8"/><path d="M12 13C12 9 8.5 7 5 7c0 4 3 6 7 6z"/><path d="M12 11c0-3.2 2.8-5 6-5 0 3.2-2.6 5-6 5z"/></svg></span>
+        <b>I'm Investing</b>
+        <span class="pg-desc">Long-term wealth · SIP &amp; delivery · accumulate, allocate, rebalance and compound.</span>
+      </button>
+      <button class="pg-opt" data-persona="algo">
+        <span class="pg-ic"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 3v2M15 3v2M9 19v2M15 19v2M3 9h2M3 15h2M19 9h2M19 15h2"/></svg></span>
+        <b>I'm Automating</b>
+        <span class="pg-desc">Rule-based algos · backtest, deploy &amp; monitor strategies that trade for you, hands-free.</span>
+      </button>
+      <button class="pg-opt" data-persona="ai">
+        <span class="pg-ic"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/></svg></span>
+        <b>Ask AI</b>
+        <span class="pg-desc">Your market copilot · ask for ideas, screeners, hedges &amp; plain-English insight on demand.</span>
+      </button>
+    </div>
+    <button class="pg-skip" id="pgSkip">Decide later — start in Trading</button>
+  </div>
+</div>
+
+<!-- ====================== CARD FOCUS SCRIM ====================== -->
+<div class="card-scrim" id="cardScrim" title="Click to restore"></div>
+
+<!-- ====================== CINEMATIC REVEAL STAGE ====================== -->
+<div class="reveal-stage" id="revealStage" aria-hidden="true"></div>
+
+<!-- ====================== TOASTS ====================== -->
+<div class="toast-wrap" id="toastWrap" role="status" aria-live="polite"></div>
+
+<script src="assets/chart.js?v=15"></script>
+<script src="assets/app.js?v=15"></script>
+</body>
+</html>
