@@ -158,11 +158,14 @@ const SEED_ORDERS=[
 ];
 const REGIME_SYM={bull:'RELIANCE',neutral:'HDFCBANK',bear:'ADANIENT'};
 const SL_W={bull:0.025,neutral:0.018,bear:0.010};
-const EXCHANGES={
-  NSE:[['NIFTY 50',23450],['BANK NIFTY',50200],['FIN NIFTY',23010]],
-  BSE:[['SENSEX',77100],['BANKEX',58200],['BSE MIDCAP',44300]],
-  MCX:[['GOLD',71800],['SILVER',89500],['CRUDE OIL',6420]],
-};
+// Curated cross-market headline tape — one ticker spanning equities, indices & commodities
+const HEADLINE_INDEX=[['NIFTY 50',23450],['SENSEX',77100],['BANK NIFTY',50200],['FIN NIFTY',23010],['GOLD',71800],['SILVER',89500],['CRUDE OIL',6420]];
+// Everything a user can pin to the rolling ticker: headline indices/commodities + every stock in the universe.
+const TICKER_UNIVERSE=[
+  ...HEADLINE_INDEX.map(([name,base])=>({name,base,grp:'Indices & commodities'})),
+  ...SYMS.map(s=>({name:s.sym,base:s.ltp,grp:'Stocks'})),
+];
+const TICKER_DEFAULT={items:HEADLINE_INDEX.map(([n])=>n), speed:60, rolling:true};   // speed = px/sec scroll rate
 
 /* ---------- state ---------- */
 const state={mode:'auto',displayed:'bull',engine:'bull',prevVix:12.4,forceHard:false,suggesting:false,
@@ -171,7 +174,7 @@ const state={mode:'auto',displayed:'bull',engine:'bull',prevVix:12.4,forceHard:f
   orders:SEED_ORDERS.slice(),                          // live orderbook
   wlOrder:null, dragSym:null,                          // watchlist custom order
   paneW:null, chartH:null,                             // resizing
-  surface:'day', exch:'NSE', tapeT:null,               // floor mode + live tape
+  surface:'day', tapeT:null,                           // floor mode + live tape
   tradeFromChart:null,                                 // bracket dragged on the chart
   persona:null,                                        // 'trader' | 'investor' (null = first run)
   investAmt:null, investType:'cnc', investSection:null,// investor order pad + tool hub
@@ -183,6 +186,7 @@ const state={mode:'auto',displayed:'bull',engine:'bull',prevVix:12.4,forceHard:f
   widgets:null, dragWidget:null,                       // per-persona widget stack
   revealing:false,                                     // cinematic transition in flight
   cards:{},                                            // per-card min/max state
+  ticker:{items:TICKER_DEFAULT.items.slice(),speed:TICKER_DEFAULT.speed,rolling:TICKER_DEFAULT.rolling}, // rolling index tape (user-configurable)
   lastFocus:null};
 
 /* ---------- persona axis (orthogonal to regime) ---------- */
@@ -224,9 +228,9 @@ const PLAY={
 /* ---------- persistence (localStorage) ---------- */
 const LS_KEY='tradepro.terminal.v1';
 function saveState(){try{localStorage.setItem(LS_KEY,JSON.stringify({
-  mode:state.mode,regime:state.displayed,surface:state.surface,exch:state.exch,
+  mode:state.mode,regime:state.displayed,surface:state.surface,
   wlOrder:state.wlOrder,selected:state.selected,paneW:state.paneW,chartH:state.chartH,
-  persona:state.persona,investSection:state.investSection,layout:state.layout,customLayouts:state.customLayouts,activeCustom:state.activeCustom,aiCfg:state.aiCfg,widgets:state.widgets,cards:state.cards,chart:(window.TPChart?TPChart.serialize():null)}));}catch(e){}}
+  persona:state.persona,investSection:state.investSection,layout:state.layout,customLayouts:state.customLayouts,activeCustom:state.activeCustom,aiCfg:state.aiCfg,widgets:state.widgets,cards:state.cards,ticker:state.ticker,chart:(window.TPChart?TPChart.serialize():null)}));}catch(e){}}
 function saveChart(){saveState();}   // persist callback for the chart engine
 function loadState(){
   let s; try{s=JSON.parse(localStorage.getItem(LS_KEY));}catch(e){return null;}
@@ -237,7 +241,6 @@ function loadState(){
     mode:oneOf(s.mode,['auto','manual'],'auto'),
     regime:oneOf(s.regime,['bull','neutral','bear'],'bull'),
     surface:oneOf(s.surface,['day','night'],'day'),
-    exch:oneOf(s.exch,['NSE','BSE','MCX'],'NSE'),
     persona:oneOf(s.persona,['trader','investor','algo','ai'],null),
     investSection:oneOf(s.investSection,INVEST_TOOLS.map(t=>t.key),null),
     layout:oneOf(s.layout,['originals','charts','watchlist','options','futures','build'],'originals'),
@@ -259,6 +262,12 @@ function loadState(){
         if(Array.isArray(s.widgets[p])){const a=[...new Set(s.widgets[p].filter(k=>valid.includes(k)))]; def[p]=a;}});
       return def;})(),
     cards:(()=>{const o={};if(s.cards&&typeof s.cards==='object')['watchlist','chart','panel','order','context'].forEach(k=>{o[k]=oneOf(s.cards[k],['normal','min','max'],'normal');});return o;})(),
+    ticker:(()=>{const d={items:TICKER_DEFAULT.items.slice(),speed:TICKER_DEFAULT.speed,rolling:true};
+      if(s.ticker&&typeof s.ticker==='object'){
+        if(Array.isArray(s.ticker.items)){const valid=TICKER_UNIVERSE.map(u=>u.name);const a=[...new Set(s.ticker.items.filter(n=>valid.includes(n)))]; if(a.length)d.items=a;}
+        if(typeof s.ticker.speed==='number'&&s.ticker.speed>=20&&s.ticker.speed<=180)d.speed=Math.round(s.ticker.speed);
+        if(typeof s.ticker.rolling==='boolean')d.rolling=s.ticker.rolling;
+      } return d;})(),
     selected:(typeof s.selected==='string'&&bySym(s.selected))?s.selected:null,
     chartH:numIn(s.chartH,120,500), wlOrder:null, paneW:null,
     chart:(s.chart&&typeof s.chart==='object')?s.chart:null,   // validated inside TPChart.restore
@@ -281,17 +290,100 @@ function announce(msg){const el=$('srAnnounce');if(el)el.textContent=msg;}
    RENDER — TOP INDEX + REGIME BAR
    ============================================================ */
 function liveS(){return composite(scoreSignals(readSignals()));}
+function tickerItems(){ const uni=new Map(TICKER_UNIVERSE.map(u=>[u.name,u])); return (state.ticker.items||[]).map(n=>uni.get(n)).filter(Boolean); }
 function renderTopIndex(){
-  const S=liveS(), base=(S/100)*1.5;
-  const idx=EXCHANGES[state.exch]||EXCHANGES.NSE;
-  $('topIndex').innerHTML=idx.map(([n,b],i)=>{
-    const c=+(base+(i-1)*0.18).toFixed(2), v=b*(1+c/100), dec=b>=20000?0:1;
-    return `<div class="tix"><span class="tix-name">${n}</span><div class="tix-row">
+  const track=$('topIndex'); if(!track) return;
+  const items=tickerItems(), S=liveS(), drift=(S/100)*1.5;
+  const seq=items.map(({name,base:b},i)=>{
+    const c=+(drift+(i-1)*0.18).toFixed(2), v=b*(1+c/100), dec=b>=20000?0:1;
+    return `<div class="tix"><span class="tix-name">${esc(name)}</span><div class="tix-row">
       <span class="tix-val num">${v.toLocaleString('en-IN',{maximumFractionDigits:dec})}</span>
       <span class="tix-chg ${cls(c)} num">${pct(c)}</span></div></div>`;
-  }).join('');
+  }).join('') || `<div class="tix tix-empty">No instruments — add some from ticker settings ▸</div>`;
+  const roll=!!state.ticker.rolling && items.length>1;
+  track.classList.toggle('rolling',roll);
+  const vp=track.parentElement; if(vp) vp.classList.toggle('static',!roll);
+  // two identical sequences let the track loop seamlessly at translateX(-50%)
+  track.innerHTML=`<div class="tb-seq tb-seq-a">${seq}</div>`+(roll?`<div class="tb-seq tb-seq-b" aria-hidden="true">${seq}</div>`:'');
+  applyTickerSpeed();
 }
-function setExch(x){state.exch=x;document.querySelectorAll('[data-exch]').forEach(b=>{const on=b.dataset.exch===x;b.classList.toggle('active',on);b.setAttribute('aria-selected',on);});renderTopIndex();announce(x+' exchange selected');saveState();}
+function applyTickerSpeed(){
+  const track=$('topIndex'); if(!track) return;
+  if(!track.classList.contains('rolling')){track.style.removeProperty('--tk-dur');return;}
+  const seqA=track.querySelector('.tb-seq-a'); if(!seqA) return;
+  requestAnimationFrame(()=>{const w=seqA.scrollWidth, pps=clamp(state.ticker.speed||60,20,180);
+    track.style.setProperty('--tk-dur',Math.max(6,w/pps).toFixed(1)+'s');});
+}
+/* ---- ticker settings popover (speed · rolling · instruments) ---- */
+function openTickerSettings(open){
+  const p=$('tickerSettings'), g=$('tickerGear'); if(!p) return;
+  if(open===undefined) open=p.hidden;
+  if(!open){ p.hidden=true; document.removeEventListener('click',tickerOutside,true); document.removeEventListener('keydown',tickerEsc); if(g)g.setAttribute('aria-expanded','false'); return; }
+  renderTickerSettings(); p.hidden=false;
+  if(g){const r=g.getBoundingClientRect(); p.style.top=(r.bottom+8)+'px'; p.style.right=Math.max(12,window.innerWidth-r.right)+'px'; g.setAttribute('aria-expanded','true');}
+  setTimeout(()=>{document.addEventListener('click',tickerOutside,true);document.addEventListener('keydown',tickerEsc);},0);
+}
+function tickerOutside(e){ if(!e.target.closest('#tickerSettings,#tickerGear')) openTickerSettings(false); }
+function tickerEsc(e){ if(e.key==='Escape'){openTickerSettings(false); const g=$('tickerGear'); if(g)g.focus();} }
+let tkQuery='', tkActive=-1, tkRefocus=false; // ticker instrument search: query text, keyboard cursor, refocus-after-add flag
+function renderTickerSettings(){
+  const p=$('tickerSettings'); if(!p) return; const t=state.ticker, has=new Set(t.items);
+  const chips=t.items.map(n=>`<span class="tk-chip"><span>${esc(n)}</span><button class="tk-chip-x" data-tkremove="${esc(n)}" aria-label="Remove ${esc(n)} from ticker">${icon('close',11)}</button></span>`).join('')||`<span class="tk-none">No instruments yet — search below to add one.</span>`;
+  p.innerHTML=`
+    <div class="tk-head"><b>Ticker settings</b><button class="icon-btn" id="tkClose" aria-label="Close ticker settings">${icon('close',14)}</button></div>
+    <div class="tk-row tk-toggle-row"><label id="tkRollLab">Rolling tape</label>
+      <button class="mini-toggle" id="tkRoll" role="switch" aria-checked="${t.rolling}" aria-labelledby="tkRollLab" data-on="${t.rolling}">${t.rolling?'On':'Off'}</button></div>
+    <div class="tk-row tk-speed-row${t.rolling?'':' tk-disabled'}"><label for="tkSpeed">Speed</label>
+      <input type="range" id="tkSpeed" min="20" max="180" step="5" value="${t.speed}" ${t.rolling?'':'disabled'} aria-label="Ticker scroll speed">
+      <span class="tk-ends"><i>Slow</i><i>Fast</i></span></div>
+    <div class="tk-sec">Instruments <i>${t.items.length}</i></div>
+    <div class="tk-chips">${chips}</div>
+    <div class="tk-add">
+      <div class="tk-search-wrap">${icon('search',13)}<input type="text" id="tkSearch" class="tk-search" value="${esc(tkQuery)}" placeholder="Search any instrument to add…" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="false" aria-controls="tkResults" aria-autocomplete="list"><button class="tk-search-clear" id="tkClear" aria-label="Clear search" ${tkQuery?'':'hidden'}>${icon('close',12)}</button></div>
+      <div class="tk-results" id="tkResults" role="listbox" aria-label="Matching instruments" hidden></div>
+    </div>
+    <div class="tk-foot"><span class="tk-foot-hint">${TICKER_UNIVERSE.length} instruments available</span><button class="btn-ghost sm" id="tkReset">Reset to default</button></div>`;
+  $('tkClose').onclick=()=>openTickerSettings(false);
+  $('tkRoll').onclick=()=>{t.rolling=!t.rolling;renderTopIndex();renderTickerSettings();saveState();};
+  const sp=$('tkSpeed'); if(sp) sp.oninput=()=>{t.speed=+sp.value;applyTickerSpeed();saveState();};
+  p.querySelectorAll('[data-tkremove]').forEach(b=>b.onclick=()=>{t.items=t.items.filter(n=>n!==b.dataset.tkremove);renderTopIndex();renderTickerSettings();saveState();});
+  $('tkReset').onclick=()=>{tkQuery='';state.ticker={items:TICKER_DEFAULT.items.slice(),speed:TICKER_DEFAULT.speed,rolling:true};renderTopIndex();renderTickerSettings();saveState();};
+  // --- searchable instrument picker (type to filter · ↑↓ to navigate · Enter to add) ---
+  const search=$('tkSearch'), results=$('tkResults'), clear=$('tkClear');
+  const hlite=(name,q)=>{ if(!q)return esc(name); const i=name.toLowerCase().indexOf(q); return i<0?esc(name):esc(name.slice(0,i))+'<mark>'+esc(name.slice(i,i+q.length))+'</mark>'+esc(name.slice(i+q.length)); };
+  const addInstr=name=>{ if(!name||has.has(name))return; t.items.push(name); tkRefocus=true; renderTopIndex(); renderTickerSettings(); saveState(); announce(name+' added to ticker'); };
+  const itemEls=()=>[...results.querySelectorAll('.tk-res')];
+  const setActive=i=>{ const els=itemEls(); if(!els.length){tkActive=-1;return;} tkActive=(i+els.length)%els.length; els.forEach((el,j)=>el.classList.toggle('on',j===tkActive)); els[tkActive].scrollIntoView({block:'nearest'}); };
+  const closeResults=()=>{ results.hidden=true; tkActive=-1; if(search)search.setAttribute('aria-expanded','false'); };
+  const renderResults=()=>{
+    const q=tkQuery.trim().toLowerCase(), avail=TICKER_UNIVERSE.filter(u=>!has.has(u.name));
+    if(!avail.length){ results.innerHTML=`<div class="tk-res-empty">Every instrument is already on your ticker.</div>`; results.hidden=false; return; }
+    let m=q?avail.filter(u=>u.name.toLowerCase().includes(q)):avail;
+    if(q)m.sort((a,b)=>(a.name.toLowerCase().startsWith(q)?0:1)-(b.name.toLowerCase().startsWith(q)?0:1)||a.name.localeCompare(b.name));
+    const total=m.length; m=m.slice(0,40);
+    if(!m.length){ results.innerHTML=`<div class="tk-res-empty">No instrument matches “${esc(tkQuery)}”.</div>`; results.hidden=false; search.setAttribute('aria-expanded','true'); return; }
+    const groups={}; m.forEach(x=>{(groups[x.grp]=groups[x.grp]||[]).push(x);});
+    results.innerHTML=Object.keys(groups).map(g=>`<div class="tk-res-grp">${esc(g)}</div>`+groups[g].map(x=>{const dec=x.base>=20000?0:1;
+      return `<button type="button" class="tk-res" role="option" data-tkadd="${esc(x.name)}"><span class="tk-res-nm">${hlite(x.name,q)}</span><span class="tk-res-px num">${x.base.toLocaleString('en-IN',{maximumFractionDigits:dec})}</span><span class="tk-res-add">${icon('plus',12)}</span></button>`;}).join('')).join('')
+      + (total>m.length?`<div class="tk-res-more">+${total-m.length} more — keep typing to narrow</div>`:'');
+    results.hidden=false; search.setAttribute('aria-expanded','true');
+    results.querySelectorAll('[data-tkadd]').forEach(b=>{b.onmousedown=e=>e.preventDefault();b.onclick=()=>addInstr(b.dataset.tkadd);});
+    setActive(0);
+  };
+  if(search){
+    search.oninput=()=>{ tkQuery=search.value; if(clear)clear.hidden=!tkQuery; renderResults(); };
+    search.onfocus=()=>renderResults();
+    search.onkeydown=e=>{
+      if(e.key==='ArrowDown'){ e.preventDefault(); if(results.hidden){renderResults();}else setActive(tkActive+1); }
+      else if(e.key==='ArrowUp'){ e.preventDefault(); setActive(tkActive-1); }
+      else if(e.key==='Enter'){ e.preventDefault(); const els=itemEls(), el=els[tkActive]||els[0]; if(el)addInstr(el.dataset.tkadd); }
+      else if(e.key==='Escape'&&!results.hidden){ e.preventDefault(); e.stopPropagation(); closeResults(); }
+    };
+  }
+  if(clear)clear.onclick=()=>{ tkQuery=''; if(search){search.value='';search.focus();} clear.hidden=true; renderResults(); };
+  if(tkRefocus){ tkRefocus=false; if(search){search.focus(); const L=search.value.length; try{search.setSelectionRange(L,L);}catch(_){}} renderResults(); }
+}
+function wireTicker(){ const g=$('tickerGear'); if(g) g.onclick=e=>{e.stopPropagation();openTickerSettings();}; }
 function renderRegimeBar(r){
   const raw=readSignals(), sc=scoreSignals(raw), S=composite(sc), conf=confidence(S,sc);
   const cfg={
@@ -839,6 +931,7 @@ function applyPersona(p,opts){
   const changed=state.persona!==p;
   state.persona=p;
   document.documentElement.dataset.persona=p;
+  applyPaneWidths(); // re-apply (3-pane) or clear (algo/ai single-pane) the grid width on every persona switch
   syncFab();
   const gate=$('personaGate'); if(gate) gate.classList.remove('show');
   // reset order-pad context so verbs/defaults match the new persona
@@ -1025,16 +1118,14 @@ function renderInvestHub(){
   const hub=$('investHub'); if(!hub) return;
   if(!isInvestor()){ hub.innerHTML=''; return; }   // never paint in trader mode
   if(!state.investSection){
-    const tiles=INVEST_TOOLS.map(t=>`
-        <button class="ih-tile" data-tool="${t.key}" aria-label="${t.label}">
-          <span class="ih-ic">${icon(t.icon,20)}</span>
-          <span class="ih-tbody"><b>${t.label}${t.tag?`<i class="ih-tag">${t.tag}</i>`:''}</b><span class="ih-desc">${t.desc}</span></span>
-          <span class="ih-go" aria-hidden="true"></span>
-        </button>`).join('');
+    // tools live in the persistent bottom bar now — overview shows the portfolio dashboard + a pointer to the bar
+    const chips=INVEST_TOOLS.slice(0,4).map(t=>`<button class="ihw-chip" data-tool="${t.key}">${icon(t.icon,14)}${t.label}${t.tag?`<i>${t.tag}</i>`:''}</button>`).join('');
     hub.innerHTML=`<div class="ih-scroll">
       ${renderPortfolioHero()}
-      <div class="ih-sub"><b>Invest &amp; Trade</b><span>Pick a tool to begin</span></div>
-      <div class="ih-grid">${tiles}</div>
+      <div class="ih-welcome">
+        <div class="ihw-head"><b>Invest &amp; Trade</b><span>Pick a tool from the <b>Invest &amp; Trade</b> bar at the bottom — or jump in here:</span></div>
+        <div class="ihw-chips">${chips}</div>
+      </div>
     </div>`;
     hub.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>enterTool(b.dataset.tool));
     hub.querySelectorAll('[data-pftab]').forEach(b=>b.onclick=()=>{state.portfolioTab=b.dataset.pftab;renderInvestHub();});
@@ -1054,10 +1145,10 @@ function renderInvestHub(){
   updateCardBtns();
 }
 /* tool navigation: enter steals focus to the section title + announces; refresh re-renders without stealing focus */
-function enterTool(k){ state.investSection=k; state.toolState={}; renderInvestHub(); saveState();
+function enterTool(k){ state.investSection=k; state.toolState={}; renderInvestHub(); renderWsBar(); saveState();
   const t=INVEST_TOOLS.find(x=>x.key===k)||{}; announce((t.label||'Tool')+' opened');
   const ttl=$('ihSecTtl'); if(ttl) setTimeout(()=>{try{ttl.focus();}catch(e){}},40); }
-function exitTool(){ state.investSection=null; state.toolState={}; renderInvestHub(); saveState(); announce('Back to all tools'); }
+function exitTool(){ state.investSection=null; state.toolState={}; renderInvestHub(); renderWsBar(); saveState(); announce('Back to all tools'); }
 function refreshTool(){ renderInvestHub(); }
 /* per-tool ui state helpers (sub-tab / filter / form draft) */
 function ts(k,def){ return (state.toolState[k]!==undefined)?state.toolState[k]:def; }
@@ -1605,6 +1696,16 @@ const STRAT_PRESETS=[
 /* ---- layout system: 5 preset workspaces + unlimited user-built named layouts ---- */
 const PRESET_LAYOUTS=[['originals','Originals','grip'],['charts','Charts','trendUp'],['watchlist','Watchlist','star'],['options','Option Analyser','scale'],['futures','Future Analyser','bolt']];
 const PRESET_DESC={originals:'Chart + tabs (default)',charts:'Maximised chart',watchlist:'Wide watchlist + chart',options:'Option chain · OI · strategy',futures:'Futures buildup desk'};
+// "Quick layouts" — fixed-pane terminals (instant, opinionated). `panes` drives the hover wireframe; `suggest` ties to today's regime.
+const QUICK_LAYOUTS=[
+  {key:'originals',name:'Originals',      tag:'Balanced terminal',  accent:'#10b981', icon:'layout',  desc:'Watchlist, chart & orders side by side', panes:['rail','chart','panel'], suggest:'neutral'},
+  {key:'charts',   name:'Charts',         tag:'Chart-first',        accent:'#3b82f6', icon:'trendUp', desc:'Maximised chart for focused analysis',   panes:['chart']},
+  {key:'watchlist',name:'Watchlist',      tag:'Scan & track',       accent:'#0ea5e9', icon:'star',    desc:'Wide watchlist beside your chart',       panes:['wrail','chart']},
+  {key:'options',  name:'Option Analyser',tag:'Derivatives desk',   accent:'#8b5cf6', icon:'scale',   desc:'Chain, OI & strategy builder',           panes:['deskchain'], suggest:'bear'},
+  {key:'futures',  name:'Future Analyser',tag:'Futures desk',       accent:'#f59e0b', icon:'bolt',    desc:'Futures buildup & basis tracker',        panes:['deskfut']},
+];
+// pane type → relative width + skeleton, for the quick-layout pane schematic
+const PWIRE={rail:{f:0.8,s:'quotes'},wrail:{f:1.5,s:'quotes'},chart:{f:2.2,s:'candles'},panel:{f:1.1,s:'list'},deskchain:{f:2,s:'chain'},deskfut:{f:2,s:'candles'}};
 let _lid=0;
 const newLayoutId=()=>'L'+Date.now().toString(36)+(_lid++);
 function customLayouts(){ if(!Array.isArray(state.customLayouts))state.customLayouts=[]; return state.customLayouts; }
@@ -1623,19 +1724,55 @@ function tabsOf(cl){ if(!cl) return [];
 function activeTab(){ const cl=activeCustom(); if(!cl) return null; const ts=tabsOf(cl); return ts.find(t=>t.id===cl.activeTab)||ts[0]; }
 function activeCanvas(){ const t=activeTab(); return t?t.cards:[]; }
 function layoutCardCount(L){ return tabsOf(L).reduce((s,t)=>s+t.cards.length,0); }
-function currentLayoutName(){ if(state.layout==='build'){const cl=activeCustom();return cl?cl.name:'New layout';} const p=PRESET_LAYOUTS.find(x=>x[0]===state.layout); return p?p[1]:'Originals'; }
+function currentLayoutName(){ if(state.layout==='build'){const cl=activeCustom();return cl?cl.name:'New workspace';} const p=PRESET_LAYOUTS.find(x=>x[0]===state.layout); return p?p[1]:'Originals'; }
 const isDesk=()=>state.persona==='trader'&&(state.layout==='options'||state.layout==='futures');
 const isCenterTakeover=()=>state.persona==='trader'&&['options','futures','build'].indexOf(state.layout)>=0;
 
 function renderDeskBar(){
-  const bar=$('deskBar'); if(!bar) return;
-  if(state.persona!=='trader'){ bar.innerHTML=''; closeLayoutMenu(); return; }
-  bar.innerHTML=`<span class="db-label">Layout</span>
-    <button class="layout-btn" id="layoutBtn" aria-haspopup="menu" aria-expanded="false">${icon('layout',14)}<span class="lb-name">${esc(currentLayoutName())}</span><svg class="ico lb-chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
-    <div class="layout-menu" id="layoutMenu" role="menu" aria-label="Choose or build a layout" hidden></div>
-    <button class="btn-ghost sm lb-newq" id="layoutNewQ">${icon('plus',12)} New layout</button>`;
-  $('layoutBtn').onclick=toggleLayoutMenu;
-  $('layoutNewQ').onclick=layoutGallery;
+  // workspaces now live in the persistent bottom bar — clear the legacy top slot
+  const top=$('wsSwitch'); if(top){ top.innerHTML=''; closeLayoutMenu(); }
+  renderWsBar();
+}
+const PRESET_ICON={originals:'grip',charts:'trendUp',watchlist:'star',options:'scale',futures:'bolt'};
+// persistent bottom bar — persona-aware: trader → workspaces, investor → Invest & Trade tools.
+function renderWsBar(){
+  const bar=$('wsBar'); if(!bar) return;
+  if(state.persona==='trader'){ bar.hidden=false; document.body.classList.add('has-wsbar'); renderWsBarTrader(bar); }
+  else if(state.persona==='investor'){ bar.hidden=false; document.body.classList.add('has-wsbar'); renderWsBarInvestor(bar); }
+  else { bar.hidden=true; document.body.classList.remove('has-wsbar'); }
+}
+// investor bottom bar: Overview + every Invest & Trade tool as a tab (state.investSection drives active)
+function renderWsBarInvestor(bar){
+  const cur=state.investSection;
+  const home=`<button class="wsb-tab${!cur?' on':''}" data-invtool="" aria-current="${!cur}" title="Portfolio overview">${icon('pie',13)}<span>Overview</span></button>`;
+  const tools=INVEST_TOOLS.map(t=>{const on=cur===t.key;
+    return `<button class="wsb-tab${on?' on':''}" data-invtool="${t.key}" aria-current="${on}" title="${esc(t.label)}">${icon(t.icon,13)}<span>${esc(t.label)}</span>${t.tag?`<i class="wsb-tag">${esc(t.tag)}</i>`:''}</button>`;}).join('');
+  bar.innerHTML=`<span class="wsb-lead">${icon('sprout',13)} Invest &amp; Trade</span>
+    <div class="wsb-scroll" role="tablist" aria-label="Invest and trade tools">${home}<span class="wsb-div" aria-hidden="true"></span>${tools}</div>
+    <button class="wsb-new" data-invaddfund title="Add funds">${icon('wallet',14)}<span>Add Funds</span></button>`;
+  bar.querySelectorAll('[data-invtool]').forEach(b=>b.onclick=()=>{const k=b.dataset.invtool; k?enterTool(k):exitTool();});
+  const af=bar.querySelector('[data-invaddfund]'); if(af)af.onclick=()=>fundsAction('add');
+  const active=bar.querySelector('.wsb-tab.on'); if(active)active.scrollIntoView({inline:'nearest',block:'nearest'});
+}
+// trader bottom bar: preset terminals + your custom workspaces as tabs, with a New action.
+// Per-workspace TABS (Main / Tab 2 …) stay nested at the top of the canvas — so the hierarchy reads clearly.
+function renderWsBarTrader(bar){
+  const cl=customLayouts();
+  const presets=PRESET_LAYOUTS.map(([k,l])=>{const on=state.layout===k;
+    return `<button class="wsb-tab${on?' on':''}" data-wsbpreset="${k}" aria-current="${on}" title="${esc(PRESET_DESC[k]||l)}">${icon(PRESET_ICON[k]||'layout',13)}<span>${esc(l)}</span></button>`;}).join('');
+  const customs=cl.map(L=>{const on=state.layout==='build'&&state.activeCustom===L.id, n=layoutCardCount(L);
+    return `<span class="wsb-wrap${on?' on':''}"><button class="wsb-tab${on?' on':''}" data-wsbcustom="${L.id}" aria-current="${on}" title="${esc(L.name)} · ${n} widget${n===1?'':'s'}">${icon('layout',13)}<span>${esc(L.name)}</span></button>${on?`<button class="wsb-mini" data-wsbrename="${L.id}" aria-label="Rename ${esc(L.name)}" title="Rename workspace">${icon('sliders',11)}</button><button class="wsb-mini danger" data-wsbdelete="${L.id}" aria-label="Delete ${esc(L.name)}" title="Delete workspace">${icon('close',11)}</button>`:''}</span>`;}).join('');
+  bar.innerHTML=`<span class="wsb-lead">${icon('grip',13)} Workspaces</span>
+    <div class="wsb-scroll" role="tablist" aria-label="Switch workspace">
+      ${presets}${cl.length?'<span class="wsb-div" aria-hidden="true"></span>':''}${customs}
+    </div>
+    <button class="wsb-new" data-wsbnew title="Create a new workspace">${icon('plus',14)}<span>New</span></button>`;
+  bar.querySelectorAll('[data-wsbpreset]').forEach(b=>b.onclick=()=>pickQuickLayout(b.dataset.wsbpreset));
+  bar.querySelectorAll('[data-wsbcustom]').forEach(b=>b.onclick=()=>selectCustom(b.dataset.wsbcustom));
+  bar.querySelectorAll('[data-wsbrename]').forEach(b=>b.onclick=e=>{e.stopPropagation();renameLayout(b.dataset.wsbrename);});
+  bar.querySelectorAll('[data-wsbdelete]').forEach(b=>b.onclick=e=>{e.stopPropagation();deleteLayout(b.dataset.wsbdelete);});
+  const nb=bar.querySelector('[data-wsbnew]'); if(nb)nb.onclick=layoutGallery;
+  const active=bar.querySelector('.wsb-tab.on'); if(active)active.scrollIntoView({inline:'nearest',block:'nearest'});
 }
 function toggleLayoutMenu(){ const m=$('layoutMenu'); if(!m)return; m.hidden?openLayoutMenu():closeLayoutMenu(); }
 function openLayoutMenu(){
@@ -1643,12 +1780,12 @@ function openLayoutMenu(){
   const item=(active,label,sub,attrs,extra)=>`<button class="lm-item${active?' on':''}" role="menuitem" ${attrs}><span class="lm-check">${active?icon('check',13):''}</span><span class="lm-tb"><b>${esc(label)}</b>${sub?`<span>${esc(sub)}</span>`:''}</span>${extra||''}</button>`;
   let html=`<div class="lm-sec">Preset workspaces</div>`;
   html+=PRESET_LAYOUTS.map(([k,l])=>item(state.layout===k,l,PRESET_DESC[k],`data-lmpreset="${k}"`)).join('');
-  html+=`<div class="lm-sec">My layouts</div>`;
+  html+=`<div class="lm-sec">My workspaces</div>`;
   const cl=customLayouts();
   html+= cl.length? cl.map(L=>item(state.layout==='build'&&state.activeCustom===L.id,L.name,layoutCardCount(L)+' widget'+(layoutCardCount(L)===1?'':'s'),`data-lmcustom="${L.id}"`,
       `<span class="lm-acts"><span class="lm-mini" role="button" tabindex="0" data-lmrename="${L.id}" aria-label="Rename ${esc(L.name)}">${icon('sliders',12)}</span><span class="lm-mini danger" role="button" tabindex="0" data-lmdelete="${L.id}" aria-label="Delete ${esc(L.name)}">${icon('close',12)}</span></span>`)).join('')
-    : `<div class="lm-empty">No saved layouts yet — build your own.</div>`;
-  html+=`<button class="lm-new" role="menuitem" data-lmnew>${icon('plus',14)} New layout…</button>`;
+    : `<div class="lm-empty">No saved workspaces yet — build your own.</div>`;
+  html+=`<button class="lm-new" role="menuitem" data-lmnew>${icon('plus',14)} New workspace…</button>`;
   m.innerHTML=html; m.hidden=false; if(btn)btn.setAttribute('aria-expanded','true');
   m.querySelectorAll('[data-lmpreset]').forEach(b=>b.onclick=()=>{selectPreset(b.dataset.lmpreset);});
   m.querySelectorAll('[data-lmcustom]').forEach(b=>b.onclick=e=>{ if(e.target.closest('[data-lmrename],[data-lmdelete]'))return; selectCustom(b.dataset.lmcustom);});
@@ -1668,7 +1805,7 @@ function setLayout(l,customId){
   if(l==='build'){ if(customId!==undefined) state.activeCustom=customId; }
   else if(l==='options') state.desk.view='chain'; else if(l==='futures') state.desk.view='futures';
   renderDeskBar(); renderDeskView(); saveState();
-  announce(currentLayoutName()+' layout');
+  announce(currentLayoutName()+' workspace');
   if(window.TPChart&&TPChart.resize){TPChart.resize();setTimeout(()=>TPChart.resize(),90);}
 }
 function selectPreset(k){ closeLayoutMenu(); setLayout(k); }
@@ -1680,40 +1817,142 @@ function createLayout(tplKey){
   const id=newLayoutId(), tid=newTabId();
   a.push({id,name,activeTab:tid,tabs:[{id:tid,name:'Main',cards:tpl?tpl.cards.map(c=>({key:c.key,span:c.span})):[],sync:{A:0,B:1}}]});
   setLayout('build',id);
-  quickToast('Layout created — '+name, tpl?tpl.cards.length+' widgets added · customise freely':'Empty canvas — add the widgets you want.');
+  quickToast('Workspace created — '+name, tpl?tpl.cards.length+' widgets added · customise freely':'Empty canvas — add the widgets you want.');
 }
 function renameLayout(id){
   const L=customLayouts().find(x=>x.id===id); if(!L)return;
-  flowModal({title:'Rename layout', confirm:'Save',
-    body:`<div class="flow-field"><label for="lrName">Layout name</label><input class="flow-input" id="lrName" type="text" value="${esc(L.name)}" maxlength="40" autocomplete="off"></div>`,
+  flowModal({title:'Rename workspace', confirm:'Save',
+    body:`<div class="flow-field"><label for="lrName">Workspace name</label><input class="flow-input" id="lrName" type="text" value="${esc(L.name)}" maxlength="40" autocomplete="off"></div>`,
     focus:'#lrName',
-    onConfirm(body){const v=body.querySelector('#lrName').value.trim(); if(!v){flowError(body,'#lrName','Enter a name.');return false;} L.name=v.slice(0,40); saveState(); renderDeskBar(); renderDeskView(); announce('Layout renamed to '+L.name);}
+    onConfirm(body){const v=body.querySelector('#lrName').value.trim(); if(!v){flowError(body,'#lrName','Enter a name.');return false;} L.name=v.slice(0,40); saveState(); renderDeskBar(); renderDeskView(); announce('Workspace renamed to '+L.name);}
   });
 }
 function deleteLayout(id){
   const L=customLayouts().find(x=>x.id===id); if(!L)return;
-  flowModal({title:'Delete layout?', confirm:'Delete', danger:true,
+  flowModal({title:'Delete workspace?', confirm:'Delete', danger:true,
     body:`<p class="flow-confirm">Delete <b>${esc(L.name)}</b> and its ${layoutCardCount(L)} widget${layoutCardCount(L)===1?'':'s'}? This can’t be undone.</p>`,
     onConfirm(){ state.customLayouts=customLayouts().filter(x=>x.id!==id);
       if(state.activeCustom===id){ const nx=state.customLayouts[0]; if(nx){state.activeCustom=nx.id;setLayout('build',nx.id);} else {state.activeCustom=null;setLayout('originals');} }
       else { renderDeskBar(); saveState(); }
-      quickToast('Layout deleted — '+L.name,'Removed from your layouts.'); }
+      quickToast('Workspace deleted — '+L.name,'Removed from your workspaces.'); }
   });
+}
+// Shared Dext-style setup tiles — used by the modal gallery, the empty-canvas state, and the empty-workspace landing.
+// `attr` is the data-attribute the caller wires (e.g. 'lgtpl' to create, 'cvtpl' to seed the current tab).
+// Each widget maps to a tiny skeleton so the hover preview reads as a real layout, not abstract boxes.
+const SKEL_TYPE={cv_watch:'quotes',movers:'quotes',heatmap:'heat',cv_chain:'chain',oi:'bars',depth:'depth',cv_fut:'candles',pnl:'pnl',margin:'pnl',cv_pcr:'meter'};
+function skelByType(type){
+  switch(type){
+    case 'heat':    return `<span class="sk sk-heat"><i class="g"></i><i class="r"></i><i class="g"></i><i class="r"></i><i class="n"></i><i class="g"></i></span>`;
+    case 'chain':   return `<span class="sk sk-chain"><i class="hd"></i><i><b class="g"></b><b class="r"></b></i><i class="atm"><b class="g"></b><b class="r"></b></i><i><b class="g"></b><b class="r"></b></i></span>`;
+    case 'bars':    return `<span class="sk sk-bars"><i class="g"></i><i class="r"></i><i class="g"></i><i class="r"></i><i class="g"></i></span>`;
+    case 'candles': return `<span class="sk sk-cndl"><i class="g"></i><i class="r"></i><i class="g"></i><i class="g"></i><i class="r"></i><i class="g"></i></span>`;
+    case 'depth':   return `<span class="sk sk-depth"><i class="g"></i><i class="g"></i><i class="r"></i><i class="r"></i></span>`;
+    case 'meter':   return `<span class="sk sk-meter"><i></i></span>`;
+    case 'pnl':     return `<span class="sk sk-pnl"><b class="fig"></b><span class="spk"><i></i><i></i><i></i><i></i></span></span>`;
+    case 'list':    return `<span class="sk sk-list"><i class="tabs"><b></b><b class="on"></b><b></b></i><i class="ln"></i><i class="ln"></i><i class="ln"></i></span>`; // orders / scanner tabs
+    default:        return `<span class="sk sk-q"><i><b></b><b class="up"></b></i><i><b></b><b class="dn"></b></i><i><b></b><b class="up"></b></i></span>`; // quotes
+  }
+}
+function miniSkel(key){ return skelByType(SKEL_TYPE[key]||'quotes'); }
+function miniLayout(cards){ return `<span class="lg-wire">${cards.map(c=>{const sp=c.span===3?3:c.span===2?2:1;return `<span class="lg-wcell wsp-${sp}">${miniSkel(c.key)}</span>`;}).join('')}</span>`; }
+function setupTiles(attr){
+  const suggested={bull:'scalper',neutral:'originals',bear:'optdesk'}[state.displayed]||'originals';
+  return CANVAS_TEMPLATES.map(t=>`<button class="lg-tile${t.key===suggested?' is-suggested':''}" data-${attr}="${t.key}" style="--lg-accent:${t.accent}">
+      ${t.key===suggested?`<span class="lg-flag">${icon('check',11)} Suggested</span>`:''}
+      <span class="lg-stage"><span class="lg-stage-ic">${icon(t.icon,30)}</span><span class="lg-stage-wire">${miniLayout(t.cards)}</span></span>
+      <span class="lg-meta"><b>${esc(t.name)}</b><i class="lg-tag">${esc(t.tag)}</i><span class="lg-desc">${esc(t.desc)}</span></span>
+      <span class="lg-cta"><span class="lg-n">${icon('layout',10)} ${t.cards.length} widgets</span><em class="lg-go">Use this →</em></span>
+    </button>`).join('');
+}
+// distinct, full-width "do it yourself" path — surfaced upfront, separate from the ready-made tiles
+function scratchBar(attr){
+  return `<button class="lg-scratch-bar" data-${attr}="scratch">
+      <span class="lsb-ic">${icon('plus',20)}</span>
+      <span class="lsb-tx"><b>Start from a blank canvas</b><span>Prefer to build it yourself? Open an empty canvas and drop in exactly the widgets you want.</span></span>
+      <em class="lsb-go">Start blank →</em>
+    </button>`;
+}
+// pane schematic for quick layouts — horizontal panes, each with a header dash + type skeleton
+function quickWire(panes){
+  return `<span class="lg-pwire">${panes.map(p=>{const d=PWIRE[p]||PWIRE.chart;
+    return `<span class="lg-pane" style="flex:${d.f}"><span class="lg-pane-hd"></span><span class="lg-pane-bd">${skelByType(d.s)}</span></span>`;}).join('')}</span>`;
+}
+function quickTiles(attr){
+  const suggested={bull:'bull',neutral:'neutral',bear:'bear'}[state.displayed]||'neutral';
+  return QUICK_LAYOUTS.map(t=>{const isSug=t.suggest===suggested;
+    return `<button class="lg-tile${isSug?' is-suggested':''}" data-${attr}="${t.key}" style="--lg-accent:${t.accent}">
+      ${isSug?`<span class="lg-flag">${icon('check',11)} Suggested</span>`:''}
+      <span class="lg-stage"><span class="lg-stage-ic">${icon(t.icon,30)}</span><span class="lg-stage-wire">${quickWire(t.panes)}</span></span>
+      <span class="lg-meta"><b>${esc(t.name)}</b><i class="lg-tag">${esc(t.tag)}</i><span class="lg-desc">${esc(t.desc)}</span></span>
+      <span class="lg-cta"><span class="lg-n">${icon('grip',10)} Fixed panes</span><em class="lg-go">Open →</em></span>
+    </button>`;}).join('');
+}
+// saved canvas workspaces shown as resumable tiles (grid wireframe from the active tab)
+function savedTiles(attr){
+  const cl=customLayouts(); if(!cl.length) return '';
+  return cl.map(L=>{const tab=tabsOf(L).find(t=>t.id===L.activeTab)||tabsOf(L)[0], cards=(tab&&tab.cards)||[];
+    return `<button class="lg-tile lg-saved" data-${attr}="${L.id}" style="--lg-accent:#64748b">
+      <span class="lg-stage"><span class="lg-stage-ic">${icon('layout',30)}</span><span class="lg-stage-wire">${cards.length?miniLayout(cards):`<span class="lg-wire lg-wire-empty">${icon('plus',16)}</span>`}</span></span>
+      <span class="lg-meta"><b>${esc(L.name)}</b><i class="lg-tag">Saved workspace</i><span class="lg-desc">Pick up where you left off${tabsOf(L).length>1?` · ${tabsOf(L).length} tabs`:''}</span></span>
+      <span class="lg-cta"><span class="lg-n">${icon('layout',10)} ${cards.length} widget${cards.length===1?'':'s'}</span><em class="lg-go">Open →</em></span>
+    </button>`;}).join('');
+}
+// pick a fixed-pane terminal: bring any closed core panes back, then switch layout
+function pickQuickLayout(k){
+  if(state.cards){ Object.keys(CARD_EL).forEach(key=>{if(state.cards[key]==='hidden')state.cards[key]='normal';}); }
+  setLayout(k); applyCardStates(); applyPaneWidths(); saveState();
 }
 function layoutGallery(){
   closeLayoutMenu();
-  const tiles=[{key:'scratch',name:'Start from scratch',desc:'An empty canvas — add exactly the widgets you want.',n:0}]
-    .concat(CANVAS_TEMPLATES.map(t=>({key:t.key,name:t.name,desc:t.desc,n:t.cards.length})));
-  flowModal({title:'Start building your layout', hideConfirm:true,
-    body:`<p class="cv-pick-note">Pick a starting point — you can add, remove, resize and rearrange widgets afterwards.</p>
-      <div class="lg-grid">${tiles.map(t=>`<button class="lg-tile" data-lgtpl="${t.key}">
-        <span class="lg-ic">${icon(t.key==='scratch'?'plus':'layout',18)}</span>
-        <b>${t.name}</b><span>${t.desc}</span>${t.n?`<i>${icon('layout',10)} ${t.n} widgets</i>`:`<i>Blank</i>`}</button>`).join('')}</div>`,
-    wire(body){ body.querySelectorAll('[data-lgtpl]').forEach(b=>b.onclick=()=>{closeModal();createLayout(b.dataset.lgtpl);}); }
+  const regimeWord={bull:'bullish',neutral:'range-bound',bear:'bearish'}[state.displayed]||'live';
+  flowModal({title:'Build your workspace', hideConfirm:true,
+    body:`<p class="cv-pick-note">Tuned to today's <b>${regimeWord}</b> market — <span class="lg-hint">${icon('check',10)} marks our pick</span>. Hover any setup to preview its layout.</p>
+      ${scratchBar('lgtpl')}
+      ${lgSection('Quick layouts','Ready-to-trade terminals — fixed panes, one click.',quickTiles('lgquick'))}
+      ${lgSection('Build your own','Pick a template to customise, or reopen a saved workspace.',savedTiles('lgsaved')+setupTiles('lgtpl'))}`,
+    wire(body){
+      body.querySelectorAll('[data-lgquick]').forEach(b=>b.onclick=()=>{closeModal();pickQuickLayout(b.dataset.lgquick);});
+      body.querySelectorAll('[data-lgsaved]').forEach(b=>b.onclick=()=>{closeModal();selectCustom(b.dataset.lgsaved);});
+      body.querySelectorAll('[data-lgtpl]').forEach(b=>b.onclick=()=>{closeModal();createLayout(b.dataset.lgtpl);});
+    }
   });
+}
+/* full-canvas "pick a setup" landing shown when the workspace is emptied (all core panes closed) */
+let wsRestoreDismissed=false; // session opt-out: hide the restore prompt until the next pane is closed
+function restorePanels(){ if(!state.cards)state.cards={}; Object.keys(CARD_EL).forEach(k=>{if(state.cards[k]==='hidden')state.cards[k]='normal';}); applyCardStates(); applyPaneWidths(); saveState(); announce('Panels restored'); }
+function dismissRestore(){ wsRestoreDismissed=true; updateWorkspaceEmpty(); announce('Restore dismissed — closed panels stay closed'); }
+function lgSection(title,sub,inner){ return `<section class="lg-section"><div class="lg-sec-head"><b>${title}</b><span>${sub}</span></div><div class="lg-grid lg-inline">${inner}</div></section>`; }
+function renderWsEmpty(el){
+  const hidden=Object.keys(CARD_EL).filter(k=>state.cards&&state.cards[k]==='hidden').length;
+  const showRestore=hidden && !wsRestoreDismissed;
+  el.innerHTML=`<div class="ws-empty-inner">
+    <div class="ws-empty-head"><b>Build your workspace</b><span>Pick a ready-made terminal, design your own, or bring back a panel you closed — hover any setup to preview its layout.</span>
+      ${showRestore?`<span class="ws-restore-row">
+        <button class="btn-primary sm ws-restore" data-wsrestore>${icon('layout',13)} Restore ${hidden} closed panel${hidden>1?'s':''}</button>
+        <button class="btn-ghost sm ws-dismiss" data-wsdismiss aria-label="Dismiss — keep panels closed">${icon('close',12)} Dismiss</button>
+      </span>`:''}
+    </div>
+    ${scratchBar('wstpl')}
+    ${lgSection('Quick layouts','Ready-to-trade terminals — fixed panes, one click.',quickTiles('wsquick'))}
+    ${lgSection('Build your own','Pick a template to customise, or reopen a saved workspace.',savedTiles('wssaved')+setupTiles('wstpl'))}
+  </div>`;
+  el.querySelectorAll('[data-wsquick]').forEach(b=>b.onclick=()=>pickQuickLayout(b.dataset.wsquick));
+  el.querySelectorAll('[data-wssaved]').forEach(b=>b.onclick=()=>selectCustom(b.dataset.wssaved));
+  el.querySelectorAll('[data-wstpl]').forEach(b=>b.onclick=()=>createLayout(b.dataset.wstpl));
+  const rs=el.querySelector('[data-wsrestore]'); if(rs)rs.onclick=restorePanels;
+  const ds=el.querySelector('[data-wsdismiss]'); if(ds)ds.onclick=dismissRestore;
+}
+function updateWorkspaceEmpty(){
+  const el=$('wsEmpty'); if(!el) return;
+  const c=state.cards||{};
+  const empty = state.persona==='trader' && !isCenterTakeover() && c.chart==='hidden' && c.panel==='hidden';
+  if(empty){ renderWsEmpty(el); el.hidden=false; } else el.hidden=true;
+  const term=document.querySelector('.terminal'); if(term) term.classList.toggle('ws-landing',empty);
 }
 function renderDeskView(){
   const v=$('deskView'); if(!v) return;
+  updateWorkspaceEmpty();
   if(!isCenterTakeover()){ v.innerHTML=''; return; }
   if(state.layout==='build'){ renderCanvasInto(v); return; }
   const tabs=[['chain','Option Chain'],['oi','OI Analysis'],['strategy','Strategy'],['futures','Futures']], view=state.desk.view||'chain';
@@ -1898,18 +2137,19 @@ const CANVAS_EXTRA=[
       return `<div class="wg-row"><span class="t-sym wg-grow">${s.sym}</span><span class="num ${cls(s.chg)}">${pct(s.chg)}</span><span class="bu-chip ${bu[1]}">${bu[0]}</span></div>`;}).join('');}},
 ];
 const canvasW=key=>canvasCatalog().find(w=>w.key===key);
+// Card spans are designed so every row sums to 3 columns — no holes in the real canvas or the hover preview.
 const CANVAS_TEMPLATES=[
-  {key:'originals', name:'Originals',      desc:'Watchlist, movers, option chain & P&L', cards:[{key:'cv_watch',span:1},{key:'movers',span:1},{key:'cv_chain',span:2},{key:'pnl',span:1},{key:'margin',span:1}]},
-  {key:'watchdriven',name:'Watchlist Driven',desc:'Watchlist-led with movers & heatmap',  cards:[{key:'cv_watch',span:1},{key:'movers',span:1},{key:'heatmap',span:2}]},
-  {key:'optdesk',  name:'Option Analyser', desc:'Chain, PCR / max-pain & open interest',  cards:[{key:'cv_chain',span:2},{key:'cv_pcr',span:1},{key:'oi',span:1}]},
-  {key:'futdesk',  name:'Future Analyser', desc:'Futures buildup, watchlist & margin',    cards:[{key:'cv_fut',span:2},{key:'cv_watch',span:1},{key:'margin',span:1}]},
-  {key:'scalper',  name:'Scalper',         desc:'Movers, depth & live P&L for fast intraday',cards:[{key:'movers',span:1},{key:'depth',span:1},{key:'pnl',span:1},{key:'heatmap',span:2}]},
+  {key:'originals', name:'Originals',      tag:'The all-rounder',     accent:'#10b981', icon:'layout', desc:'Watchlist, movers, option chain & P&L', cards:[{key:'cv_watch',span:1},{key:'movers',span:1},{key:'pnl',span:1},{key:'cv_chain',span:2},{key:'margin',span:1}]},
+  {key:'watchdriven',name:'Watchlist Driven',tag:'Spot movers first',  accent:'#3b82f6', icon:'star',   desc:'Watchlist-led with movers & heatmap',  cards:[{key:'cv_watch',span:2},{key:'movers',span:1},{key:'heatmap',span:3}]},
+  {key:'optdesk',  name:'Option Analyser', tag:'Derivatives & hedging',accent:'#8b5cf6', icon:'scale',  desc:'Chain, PCR / max-pain & open interest',  cards:[{key:'cv_chain',span:2},{key:'cv_pcr',span:1},{key:'oi',span:3}]},
+  {key:'futdesk',  name:'Future Analyser', tag:'Futures & basis',      accent:'#f59e0b', icon:'bolt',   desc:'Futures buildup, watchlist & margin',    cards:[{key:'cv_fut',span:3},{key:'cv_watch',span:2},{key:'margin',span:1}]},
+  {key:'scalper',  name:'Scalper',         tag:'Fast intraday',        accent:'#ef4444', icon:'trendUp',desc:'Movers, depth & live P&L for fast intraday',cards:[{key:'movers',span:1},{key:'depth',span:1},{key:'pnl',span:1},{key:'heatmap',span:3}]},
 ];
 /* tab bar across the top of the canvas — switch / add / rename / delete named workspaces */
 function cvTabBar(cl){ const ts=tabsOf(cl);
   const tabs=ts.map(t=>{ const on=t.id===cl.activeTab;
     return `<div class="cv-tabwrap${on?' on':''}"><button class="cv-tab" data-cvtab="${t.id}" role="tab" aria-selected="${on}">${esc(t.name)}</button>${on?`<button class="cv-tabbtn" data-cvtabedit="${t.id}" aria-label="Rename tab ${esc(t.name)}" title="Rename tab">${icon('sliders',10)}</button>${ts.length>1?`<button class="cv-tabbtn" data-cvtabdel="${t.id}" aria-label="Delete tab ${esc(t.name)}" title="Delete tab">${icon('close',10)}</button>`:''}`:''}</div>`;}).join('');
-  return `<div class="cv-tabs" role="tablist" aria-label="Layout workspaces">${tabs}<button class="cv-tab-add" data-cvtabadd aria-label="New tab" title="New tab">${icon('plus',12)}</button></div>`;
+  return `<div class="cv-tabs" role="tablist" aria-label="Workspace tabs">${tabs}<button class="cv-tab-add" data-cvtabadd aria-label="New tab" title="New tab">${icon('plus',12)}</button></div>`;
 }
 function cvSwitchTab(id){ const cl=activeCustom(); if(!cl)return; const t=tabsOf(cl).find(x=>x.id===id); if(!t)return; cl.activeTab=id; saveState(); renderDeskView(); announce('Tab '+t.name); }
 function cvAddTab(){ const cl=activeCustom(); if(!cl)return; const ts=tabsOf(cl); if(ts.length>=8){quickToast('Tab limit reached','Up to 8 tabs per layout.');return;}
@@ -1922,33 +2162,35 @@ function cvRenameTab(id){ const cl=activeCustom(); if(!cl)return; const t=tabsOf
 function cvDeleteTab(id){ const cl=activeCustom(); if(!cl)return; const ts=tabsOf(cl); if(ts.length<=1)return; const t=ts.find(x=>x.id===id); if(!t)return;
   flowModal({title:'Delete tab?', confirm:'Delete', danger:true,
     body:`<p class="flow-confirm">Delete tab <b>${esc(t.name)}</b> and its ${t.cards.length} widget${t.cards.length===1?'':'s'}? This can’t be undone.</p>`,
-    onConfirm(){ cl.tabs=ts.filter(x=>x.id!==id); if(cl.activeTab===id)cl.activeTab=cl.tabs[0].id; saveState(); renderDeskView(); quickToast('Tab deleted — '+t.name,'Removed from this layout.'); }});
+    onConfirm(){ cl.tabs=ts.filter(x=>x.id!==id); if(cl.activeTab===id)cl.activeTab=cl.tabs[0].id; saveState(); renderDeskView(); quickToast('Tab deleted — '+t.name,'Removed from this workspace.'); }});
 }
 function renderCanvasInto(v){
   const cl=activeCustom();
-  if(!cl){ // build layout selected but no custom layouts exist → prompt to create
-    v.innerHTML=`<div class="desk-wrap"><div class="desk-scroll"><div class="cv-empty">
-      <span class="se-ic">${icon('layout',26)}</span><b>No layout yet</b>
-      <p>Create your first custom layout — start from a template or a blank canvas.</p>
-      <button class="btn-primary" data-cvnew>${icon('plus',13)} New layout</button></div></div></div>`;
-    const nb=v.querySelector('[data-cvnew]'); if(nb)nb.onclick=layoutGallery; return;
+  if(!cl){ // build layout selected but no custom layouts exist → full-canvas setup picker
+    v.innerHTML=`<div class="desk-wrap"><div class="desk-scroll"><div class="ws-empty-inner">
+      <div class="ws-empty-head"><b>Build your workspace</b><span>Start from a blank canvas, or pick a template — you can rearrange everything later.</span></div>
+      ${scratchBar('lgtpl')}
+      ${lgSection('Build your own','Pick a template to customise.',setupTiles('lgtpl'))}</div></div></div>`;
+    v.querySelectorAll('[data-lgtpl]').forEach(b=>b.onclick=()=>createLayout(b.dataset.lgtpl)); return;
   }
   const tab=activeTab(), cards=tab?tab.cards:[];
   const head=`<div class="desk-head cv-topbar">
     <div class="cv-title"><b>${icon('layout',15)} ${esc(cl.name)}</b><span>${cards.length?cards.length+' widget'+(cards.length===1?'':'s')+' · '+esc(tab.name):'Empty tab'}</span></div>
-    <div class="cv-tools"><button class="btn-ghost sm" data-cvrename aria-label="Rename layout">${icon('sliders',12)}</button>${cards.length?`<button class="btn-ghost sm" data-cvclear>${icon('close',12)} Clear</button>`:''}<button class="btn-primary sm" data-cvadd>${icon('plus',13)} Add widget</button></div>
+    <div class="cv-tools"><button class="btn-ghost sm" data-cvrename aria-label="Rename workspace">${icon('sliders',12)}</button>${cards.length?`<button class="btn-ghost sm" data-cvclear>${icon('close',12)} Clear</button>`:''}<button class="btn-primary sm" data-cvadd>${icon('plus',13)} Add widget</button></div>
   </div>`;
   let body;
   if(!cards.length){
-    body=`<div class="desk-scroll"><div class="cv-empty">
-      <span class="se-ic">${icon('layout',26)}</span>
-      <b>Build out “${esc(tab.name)}”</b>
-      <p>Add widget cards, drag to arrange, drag a card’s right edge to resize, and link Option-Chain / PCR cards into sync groups. Or seed this tab from a template:</p>
-      <div class="cv-tpls">${CANVAS_TEMPLATES.map(t=>`<button class="cv-tpl" data-cvtpl="${t.key}"><b>${t.name}</b><span>${t.desc}</span><i>${icon('layout',11)} ${t.cards.length} widgets</i></button>`).join('')}</div>
-      <button class="btn-ghost" data-cvadd>${icon('plus',13)} Add a widget manually</button>
+    body=`<div class="desk-scroll"><div class="ws-empty-inner">
+      <div class="ws-empty-head"><b>Build out “${esc(tab.name)}”</b><span>Add widgets one by one, or seed this tab from a template — everything stays editable.</span></div>
+      <button class="lg-scratch-bar" data-cvadd>
+        <span class="lsb-ic">${icon('plus',20)}</span>
+        <span class="lsb-tx"><b>Add widgets manually</b><span>Open the widget picker and choose exactly what you want, one by one.</span></span>
+        <em class="lsb-go">Open picker →</em>
+      </button>
+      ${lgSection('Start from a template','Seed this tab instantly — then rearrange, resize & save.',setupTiles('cvtpl'))}
     </div></div>`;
   }else{
-    body=`<div class="desk-scroll"><div class="cv-grid">${cards.map((c,i)=>canvasCard(c,i,tab)).join('')}<button class="cv-addtile" data-cvadd aria-label="Add widget">${icon('plus',16)}<span>Add widget</span></button></div></div>`;
+    body=`<div class="desk-scroll"><div class="cv-grid">${cards.map((c,i)=>canvasCard(c,i,tab)).join('')}</div></div>`;
   }
   v.innerHTML=`<div class="desk-wrap">${head}${cvTabBar(cl)}${body}</div>`;
   wireCanvas(v);
@@ -2012,7 +2254,7 @@ function canvasPicker(){
       <span class="cv-pick-ic">${icon(w.icon,16)}</span><span class="cv-pick-tb"><b>${w.name}</b><span>${w.span===2?'Wide card':'Standard card'}</span></span>
       <span class="cv-pick-add">${icon(have.has(w.key)?'check':'plus',14)}</span></button>`).join('');};
   flowModal({title:'Add widgets', hideConfirm:true,
-    body:`<p class="cv-pick-note">Tap to add or remove. Build your layout with as many cards as you like.</p><div class="cv-pick" id="cvPick">${drawItems()}</div>`,
+    body:`<p class="cv-pick-note">Tap to add or remove. Build your workspace with as many cards as you like.</p><div class="cv-pick" id="cvPick">${drawItems()}</div>`,
     wire(body){
       const bind=()=>body.querySelectorAll('[data-cvpick]').forEach(b=>b.onclick=()=>{
         const tab=activeTab(); if(!tab)return;
@@ -2408,15 +2650,20 @@ function doTick(){
   const upd=(el,dec)=>{const base=parseFloat(el.textContent.replace(/,/g,''))||0; if(!base)return;
     const mv=(Math.random()-0.5)*base*0.0007*(0.4+vol*3.2)*night;
     flashNum(el,(base+mv).toLocaleString('en-IN',{maximumFractionDigits:dec}),mv);};
-  document.querySelectorAll('#topIndex .tix-val').forEach(el=>upd(el,(parseFloat(el.textContent.replace(/,/g,''))||0)>=20000?0:1));
+  document.querySelectorAll('#topIndex .tb-seq-a .tix-val').forEach(el=>upd(el,(parseFloat(el.textContent.replace(/,/g,''))||0)>=20000?0:1));
+  const _sa=document.querySelector('#topIndex .tb-seq-a'),_sb=document.querySelector('#topIndex .tb-seq-b'); if(_sa&&_sb)_sb.innerHTML=_sa.innerHTML; // keep the looped copy in sync
   document.querySelectorAll('#wlRows .wl-row .wl-ltp').forEach(el=>{if(Math.random()<0.6+vol*0.4)upd(el, (parseFloat(el.textContent.replace(/,/g,''))||0)>1000?1:2);});
   const op=$('ordLtp'); if(op) upd(op,1);
 }
 function tapeLoop(){ doTick(); const vix=+$('sVix').value, night=state.surface==='night'?0.7:1; const delay=clamp((1500-(vix-8)*42)*night,300,1500); state.tapeT=setTimeout(tapeLoop,delay); }
 
 function applyPaneWidths(){
-  const t=document.querySelector('.terminal');
-  t.style.gridTemplateColumns=state.paneW?`${state.paneW.left}px 1fr ${state.paneW.right}px`:'';
+  const t=document.querySelector('.terminal'); if(!t)return;
+  const threePane=state.persona==='trader'||state.persona==='investor';
+  if(!threePane){ t.style.gridTemplateColumns=''; return; } // algo/ai are single-pane: drop any stale inline width so the persona stylesheet (1fr) wins
+  const wlHidden=threePane && state.cards && state.cards.watchlist==='hidden';
+  if(wlHidden){ const bear=document.documentElement.dataset.regime==='bear'; const right=state.paneW?state.paneW.right:(bear?300:332); t.style.gridTemplateColumns=`1fr ${right}px`; }
+  else t.style.gridTemplateColumns=state.paneW?`${state.paneW.left}px 1fr ${state.paneW.right}px`:'';
 }
 function applyChartHeight(){
   const card=$('chartCard'); if(card) card.style.height=state.chartH?state.chartH+'px':'';
@@ -2481,10 +2728,8 @@ function renderWidgetStack(){
       <div class="wg-head"><span class="wg-ic">${icon(w.icon,13)}</span><b>${w.name}</b>
         <span class="wg-grip" title="Drag to reorder" aria-hidden="true">${icon('grip',13)}</span>
         <button class="wg-x" data-wremove="${k}" title="Remove" aria-label="Remove ${w.name}">${icon('close',12)}</button></div>
-      <div class="wg-body">${w.render()}</div></div>`;}).join('')
-    +`<button class="wg-add" id="wgAdd">${icon('plus',14)}<span>Add widget</span></button>`;
+      <div class="wg-body">${w.render()}</div></div>`;}).join('');
   wrap.querySelectorAll('[data-wremove]').forEach(b=>b.onclick=e=>{e.stopPropagation();removeWidget(b.dataset.wremove);});
-  const add=$('wgAdd'); if(add) add.onclick=()=>openWidgetGallery(true);
   initWidgetDnD();
 }
 function addWidget(k){const a=activeWidgets(); if(widgetCatalog().some(w=>w.key===k)&&!a.includes(k)){a.push(k);renderWidgetStack();renderWidgetGallery();saveState();}}
@@ -2495,13 +2740,21 @@ function renderWidgetGallery(){
   const body=$('wgGalleryBody'); if(!body) return;
   const inv=isInvestor(), keys=activeWidgets();
   const sub=$('wgSubtitle'); if(sub) sub.textContent=inv?'Wealth, planning & discovery widgets':'Real-time market & execution widgets';
+  const panes=[['watchlist','star'],['chart','trendUp'],['panel','layout'],['order','scale'],['context','target']];
+  const paneHtml=`<div class="wgl-sec">Layout panels</div>`+panes.map(([k,ic])=>{const on=paneVisible(k),nm=CARD_LABEL[k]||k;
+    return `<button class="wgl-item ${on?'on':''}" data-ptoggle="${k}" aria-pressed="${on}">
+      <span class="wgl-ic">${icon(ic,17)}</span>
+      <span class="wgl-tb"><b>${nm}</b><span>${on?'Showing':'Hidden — tap to restore'}</span></span>
+      <span class="wgl-add">${icon(on?'check':'plus',15)}</span></button>`;}).join('');
   body.innerHTML=`<div class="wgl-note">Tailored for <b>${inv?'Investing':'Trading'}</b> · your picks are saved per mode</div>`
+    +paneHtml+`<div class="wgl-sec">Widgets</div>`
     +widgetCatalog().map(w=>{const on=keys.includes(w.key);
       return `<button class="wgl-item ${on?'on':''}" data-wtoggle="${w.key}" aria-pressed="${on}">
         <span class="wgl-ic">${icon(w.icon,17)}</span>
         <span class="wgl-tb"><b>${w.name}</b><span>${w.desc}</span></span>
         <span class="wgl-add">${icon(on?'check':'plus',15)}</span></button>`;}).join('');
   body.querySelectorAll('[data-wtoggle]').forEach(b=>b.onclick=()=>toggleWidget(b.dataset.wtoggle));
+  body.querySelectorAll('[data-ptoggle]').forEach(b=>b.onclick=()=>togglePane(b.dataset.ptoggle));
 }
 function initWidgetDnD(){
   const wrap=$('widgetStack'); if(!wrap) return;
@@ -2514,10 +2767,12 @@ function initWidgetDnD(){
   });
 }
 const CARD_EL={watchlist:'.pane-left',chart:'.chart-card',panel:'.panel',order:'#orderPad',context:'#contextModule'};
-function cardCtl(key){
+const CARD_LABEL={watchlist:'Watchlist',chart:'Chart',panel:'Orders & scanner',order:'Order pad',context:'Insights'};
+function cardCtl(key){ const nm=CARD_LABEL[key]||key;
   return `<div class="card-ctl" data-cardgrp="${key}">
-    <button class="cc-btn cc-min" data-cardbtn="min" data-cardkey="${key}" title="Minimize / restore" aria-label="Minimize card">${icon('minus',13)}</button>
-    <button class="cc-btn cc-max" data-cardbtn="max" data-cardkey="${key}" title="Maximize / restore" aria-label="Maximize card">${icon('expand',13)}</button>
+    <button class="cc-btn cc-min" data-cardbtn="min" data-cardkey="${key}" title="Minimize / restore" aria-label="Minimize ${nm}">${icon('minus',13)}</button>
+    <button class="cc-btn cc-max" data-cardbtn="max" data-cardkey="${key}" title="Maximize / restore" aria-label="Maximize ${nm}">${icon('expand',13)}</button>
+    <button class="cc-btn cc-close" data-cardbtn="close" data-cardkey="${key}" title="Close ${nm} — restore from + Widgets" aria-label="Close ${nm}">${icon('close',13)}</button>
   </div>`;
 }
 function mountStableCardCtls(){
@@ -2545,22 +2800,30 @@ function applyCardStates(){
     const m=(state.cards&&state.cards[k])||'normal';
     el.classList.toggle('card-min', m==='min');
     el.classList.toggle('card-max', m==='max');
+    el.classList.toggle('card-hidden', m==='hidden');
     if(m==='max')anyMax=true;
   });
   const term=document.querySelector('.terminal'); if(term) term.classList.toggle('has-max',anyMax);
   const scrim=$('cardScrim'); if(scrim) scrim.classList.toggle('show',anyMax);
   document.body.classList.toggle('card-maxed',anyMax);
-  updateCardBtns();
+  updateCardBtns(); updateWorkspaceEmpty();
   if(window.TPChart&&TPChart.resize){TPChart.resize();setTimeout(()=>TPChart.resize(),70);}
 }
 function toggleCard(key,which){
   if(!state.cards)state.cards={};
-  const cur=state.cards[key]||'normal';
-  if(which==='min'){ state.cards[key]= cur==='min'?'normal':'min'; }
+  const cur=state.cards[key]||'normal', nm=CARD_LABEL[key]||key;
+  if(which==='close'){ state.cards[key]='hidden'; wsRestoreDismissed=false; }
+  else if(which==='min'){ state.cards[key]= cur==='min'?'normal':'min'; }
   else { if(cur==='max'){state.cards[key]='normal';}
     else { Object.keys(CARD_EL).forEach(k=>{if(state.cards[k]==='max')state.cards[k]='normal';}); state.cards[key]='max'; } }
-  applyCardStates(); announce(`${key} ${state.cards[key]==='normal'?'restored':state.cards[key]+'imized'}`); saveState();
+  applyCardStates(); applyPaneWidths();
+  const st=state.cards[key];
+  if(st==='hidden') quickToast(nm+' hidden','Restore it from + Widgets → Layout panels.');
+  else announce(`${nm} ${st==='normal'?'restored':st==='min'?'minimized':'maximized'}`);
+  saveState();
 }
+function paneVisible(key){ return ((state.cards&&state.cards[key])||'normal')!=='hidden'; }
+function togglePane(key){ if(!state.cards)state.cards={}; state.cards[key]= paneVisible(key)?'hidden':'normal'; applyCardStates(); applyPaneWidths(); renderWidgetGallery(); saveState(); }
 function restoreMaxCard(){ let changed=false; Object.keys(CARD_EL).forEach(k=>{if(state.cards[k]==='max'){state.cards[k]='normal';changed=true;}}); if(changed){applyCardStates();saveState();} }
 
 /* ============================================================
@@ -2668,7 +2931,6 @@ function init(){
   // orderbook cancel (delegated)
   $('panelBody').addEventListener('click',e=>{const c=e.target.closest('[data-cancel]');if(c)cancelOrder(+c.dataset.cancel);});
 
-  document.querySelectorAll('[data-exch]').forEach(b=>b.addEventListener('click',()=>setExch(b.dataset.exch)));
   $('surfaceToggle').addEventListener('click',toggleSurface);
 
   // persona: floating CTA + first-run gate
@@ -2687,17 +2949,18 @@ function init(){
   const cscrim=$('cardScrim'); if(cscrim) cscrim.addEventListener('click',restoreMaxCard);
   document.addEventListener('keydown',e=>{if(e.key==='Escape')restoreMaxCard();});
 
-  initWatchlistDnD(); initResize(); initSearch(); initKeyboardNav();
+  initWatchlistDnD(); initResize(); initSearch(); initKeyboardNav(); wireTicker();
 
   // ---- mount the interactive chart engine ----
   if(window.TPChart) TPChart.mount({onTrade:tradeFromChart, persist:saveChart});
 
   // ---- restore persisted session ----
   const saved=loadState();
-  if(saved){ state.exch=saved.exch||'NSE'; state.wlOrder=saved.wlOrder||null; state.selected=saved.selected||null;
+  if(saved){ state.wlOrder=saved.wlOrder||null; state.selected=saved.selected||null;
     state.paneW=saved.paneW||null; state.chartH=saved.chartH||null;
     if(saved.chart && window.TPChart) TPChart.restore(saved.chart); }
   if(saved&&saved.cards) state.cards=saved.cards;
+  if(saved&&saved.ticker) state.ticker=saved.ticker;
   state.persona=(saved&&saved.persona)||'trader';
   state.investSection=(saved&&saved.investSection)||null;
   state.layout=(saved&&['originals','charts','watchlist','options','futures','build'].indexOf(saved.layout)>=0)?saved.layout:'originals';
@@ -2723,7 +2986,6 @@ function init(){
   document.documentElement.dataset.layout=state.layout;
   syncFab();
   applyChartHeight();
-  document.querySelectorAll('[data-exch]').forEach(b=>{const on=b.dataset.exch===state.exch;b.classList.toggle('active',on);b.setAttribute('aria-selected',on);});
   setSurface(saved&&saved.surface?saved.surface:'day', true); // silent: no power-on sweep on reload
   updateClock(); setInterval(updateClock,1000);
 
@@ -2740,7 +3002,7 @@ function init(){
 
 /* ---------- keyboard nav for segmented controls ---------- */
 function initKeyboardNav(){
-  [document.querySelector('.seg'), $('exchSwitch')].forEach(grp=>{ if(!grp)return;
+  [document.querySelector('.seg')].forEach(grp=>{ if(!grp)return;
     grp.addEventListener('keydown',e=>{
       if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;
       const btns=[...grp.querySelectorAll('button')];

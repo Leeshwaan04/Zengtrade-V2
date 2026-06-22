@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="assets/styles.css?v=15" />
+<link rel="stylesheet" href="assets/styles.css?v=30" />
 </head>
 <body>
 <div class="ambient" aria-hidden="true">
@@ -31,18 +31,15 @@
     <span class="brand-pro">TradePro</span>
   </div>
 
-  <div class="exch-switch" id="exchSwitch" role="tablist" aria-label="Exchange">
-    <button class="exch-btn active" data-exch="NSE" role="tab" aria-selected="true">NSE</button>
-    <button class="exch-btn" data-exch="BSE" role="tab" aria-selected="false">BSE</button>
-    <button class="exch-btn" data-exch="MCX" role="tab" aria-selected="false">MCX</button>
-  </div>
+  <!-- Workspace selector (JS-rendered in Trading mode) — replaces the old NSE/BSE/MCX exchange switch -->
+  <div class="ws-switch" id="wsSwitch" aria-label="Workspace"></div>
   <div class="mkt-status" id="mktStatus"></div>
 
   <div class="tb-spacer"></div>
 
   <div class="search">
     <svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-    <input type="text" placeholder="Search NSE · BSE · MCX…" aria-label="Search scrips on NSE, BSE and MCX" />
+    <input type="text" placeholder="Search a stock, e.g. INFY" aria-label="Search for a stock by name or symbol" />
     <kbd>/</kbd>
     <div class="search-results" id="searchResults"></div>
   </div>
@@ -68,8 +65,10 @@
 
 <!-- ====================== INDEX TICKER TAPE ====================== -->
 <div class="ticker-bar">
-  <div class="tb-ticker" id="topIndex"></div>
+  <div class="tb-viewport"><div class="tb-ticker" id="topIndex"></div></div>
+  <button class="tb-gear" id="tickerGear" title="Ticker settings" aria-label="Ticker settings" aria-haspopup="dialog" aria-expanded="false"><svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2.2" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="7" cy="17" r="2.2" fill="currentColor" stroke="none"/></svg></button>
 </div>
+<div class="tk-settings" id="tickerSettings" role="dialog" aria-label="Ticker settings" hidden></div>
 
 <!-- ====================== REGIME INSIGHT BAR ====================== -->
 <div class="regime-bar" id="regimeBar"></div>
@@ -96,7 +95,6 @@
   <!-- CENTER: Chart + bottom tabbed panel -->
   <section class="pane pane-center">
     <div class="invest-hub" id="investHub" aria-label="Invest and trade tools"></div>
-    <div class="desk-bar" id="deskBar" role="tablist" aria-label="Workspace layout presets"></div>
     <div class="desk-view" id="deskView" aria-label="Derivatives desk"></div>
     <div class="algo-view" id="algoView" aria-label="Algo trading"></div>
     <div class="ai-view" id="aiView" aria-label="AI copilot"></div>
@@ -106,6 +104,8 @@
       <div class="panel-tabs" id="panelTabs"></div>
       <div class="panel-body" id="panelBody"></div>
     </div>
+    <!-- full-canvas setup picker shown when the workspace center is emptied (all core panes closed) -->
+    <div class="ws-empty" id="wsEmpty" hidden></div>
   </section>
 
   <!-- RIGHT: Order pad + contextual regime module -->
@@ -117,6 +117,9 @@
   </aside>
 
 </main>
+
+<!-- ====================== WORKSPACE TABS BAR (bottom) ====================== -->
+<nav class="ws-bar" id="wsBar" aria-label="Your workspaces" hidden></nav>
 
 <!-- ====================== REGIME ENGINE PANEL ====================== -->
 <aside class="engine collapsed" id="engine">
@@ -251,6 +254,6 @@
 <div class="toast-wrap" id="toastWrap" role="status" aria-live="polite"></div>
 
 <script src="assets/chart.js?v=15"></script>
-<script src="assets/app.js?v=15"></script>
+<script src="assets/app.js?v=30"></script>
 </body>
 </html>
