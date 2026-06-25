@@ -61,6 +61,7 @@ const S={
   trade:null,                 // {sym,side,entry,sl,target}
   replay:{on:false,idx:0,timer:null},
   drag:null, palette:{}, onTrade:null, persist:null, raf:0,
+  feed:null, barReq:0, loading:false, noData:false,   // real-candle feed (Kite historical)
 };
 
 /* ============================================================
@@ -169,7 +170,15 @@ function draw(){
   ctx.clearRect(0,0,S.W,S.H);
   let bars=visBars();
   if(S.type==='heikin')bars=heikin(bars);
-  if(!bars.length)return;
+  if(!bars.length){
+    // Honest empty state — never synthetic candles
+    ctx.fillStyle=withA(cssv('--slate')||'#8a93a6',0.9);
+    ctx.font='13px '+(cssv('--ui')||'system-ui');
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(S.loading?'Loading live chart…':(S.noData?'No live chart data — connect Kite (run login.py)':'No data'),S.W/2,S.H/2);
+    ctx.textAlign='left';
+    return;
+  }
   const rng=priceRange(L,bars), main=L.main;
   const v=S.view, cw=L.plotW/v.count;
   const lo=Math.max(0,Math.floor(v.start)-1), hi=Math.min(bars.length-1,Math.ceil(v.start+v.count)+1);
@@ -539,7 +548,26 @@ function resize(){
   S.ctx.setTransform(S.dpr,0,0,S.dpr,0,0);schedule();
 }
 function schedule(){if(S.raf)return;S.raf=requestAnimationFrame(()=>{S.raf=0;draw();updateTradeChipDom();});}
-function rebuildBars(){S.bars=genBars(S.sym,S.tf,S.regime,S.basePrice);}
+function rebuildBars(){
+  // Real candles when a feed is wired (live Kite historical); NO synthetic fallback.
+  // While a request is in flight the prior bars stay; null/empty -> honest no-data state.
+  if(S.feed){
+    const sym=S.sym, tf=S.tf, reqId=++S.barReq;
+    S.loading=true;
+    Promise.resolve(S.feed(sym,tf)).then(bars=>{
+      if(reqId!==S.barReq) return;                 // superseded by a newer symbol/TF
+      S.loading=false;
+      if(Array.isArray(bars)&&bars.length){ S.bars=bars; S.noData=false; }
+      else { S.bars=[]; S.noData=true; }
+      const last=S.bars[S.bars.length-1];
+      const el=document.querySelector('#chLast');
+      if(el) el.innerHTML = last ? `${fmtN(last.c,last.c>2000?0:1)} <span class="${S.change>=0?'up':'down'}">${S.change>=0?'+':''}${(S.change||0).toFixed(2)}%</span>` : '<span class="muted">—</span>';
+      fit(true); schedule();
+    }).catch(()=>{ if(reqId===S.barReq){S.loading=false;S.bars=[];S.noData=true;fit(true);schedule();} });
+    return;
+  }
+  S.bars=genBars(S.sym,S.tf,S.regime,S.basePrice);   // legacy fallback (no feed wired)
+}
 
 let persistT=0;
 function persistSoon(){clearTimeout(persistT);persistT=setTimeout(persist,400);}
@@ -550,7 +578,7 @@ function persist(){if(S.persist)S.persist(serialize());}
    ============================================================ */
 function mount(opts){
   if(S.mounted)return;opts=opts||{};
-  S.onTrade=opts.onTrade||null;S.persist=opts.persist||null;
+  S.onTrade=opts.onTrade||null;S.persist=opts.persist||null;S.feed=opts.feed||null;
   buildDOM();refreshPalette();
   rebuildBars();fit(true);syncToolbar();syncIndChecks();
   if(window.ResizeObserver){new ResizeObserver(resize).observe(S.cv.parentElement);}
@@ -585,5 +613,16 @@ function restore(o){
     if(clean.length)S.drawings[sym]=clean.map(d=>({type:d.type,pts:d.pts.map(p=>({i:p.i,price:p.price}))}));});}
 }
 function setTimeframe(tf){if(S.mounted&&TF[tf])setTF(tf);}
-window.TPChart={mount,render,resize,serialize,restore,setTimeframe};
+/* Real-time tick: nudge the last live candle's close (and extend its high/low) when a
+   fresh WebSocket price arrives for the symbol on screen. Cheap — just redraws. */
+function tick(sym,ltp){
+  if(!S.mounted||ltp==null||sym!==S.sym||!S.bars.length||S.noData)return;
+  const b=S.bars[S.bars.length-1];
+  b.c=ltp; if(ltp>b.h)b.h=ltp; if(ltp<b.l)b.l=ltp;
+  const el=document.querySelector('#chLast');
+  if(el){const d=el.querySelector('span');const chg=d?d.outerHTML:'';
+    el.innerHTML=`${fmtN(ltp,ltp>2000?0:1)} ${chg}`;}
+  schedule();
+}
+window.TPChart={mount,render,resize,serialize,restore,setTimeframe,tick};
 })();

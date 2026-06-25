@@ -293,12 +293,20 @@ function liveS(){return composite(scoreSignals(readSignals()));}
 function tickerItems(){ const uni=new Map(TICKER_UNIVERSE.map(u=>[u.name,u])); return (state.ticker.items||[]).map(n=>uni.get(n)).filter(Boolean); }
 function renderTopIndex(){
   const track=$('topIndex'); if(!track) return;
-  const items=tickerItems(), S=liveS(), drift=(S/100)*1.5;
-  const seq=items.map(({name,base:b},i)=>{
-    const c=+(drift+(i-1)*0.18).toFixed(2), v=b*(1+c/100), dec=b>=20000?0:1;
+  // NO FAKE PRICES: when Kite isn't connected, show an honest banner instead of synthetic ticks.
+  if(!BOT.live){
+    track.classList.remove('rolling'); const vp0=track.parentElement; if(vp0) vp0.classList.add('static');
+    track.innerHTML=`<div class="tb-seq"><div class="tix tix-offline">${icon('shield',12)}<span>Live market data off — run <b>python3 login.py</b> to connect Kite</span></div></div>`;
+    return;
+  }
+  const items=tickerItems();
+  const seq=items.map(({name})=>{
+    const rq=realQuote(name);
+    if(!rq) return `<div class="tix"><span class="tix-name">${esc(name)}</span><div class="tix-row"><span class="tix-val num muted">—</span></div></div>`;
+    const dec=rq.ltp>=20000?0:(rq.ltp>=1000?1:2);
     return `<div class="tix"><span class="tix-name">${esc(name)}</span><div class="tix-row">
-      <span class="tix-val num">${v.toLocaleString('en-IN',{maximumFractionDigits:dec})}</span>
-      <span class="tix-chg ${cls(c)} num">${pct(c)}</span></div></div>`;
+      <span class="tix-val num">${rq.ltp.toLocaleString('en-IN',{maximumFractionDigits:dec})}</span>
+      <span class="tix-chg ${cls(rq.chg||0)} num">${pct(rq.chg||0)}</span></div></div>`;
   }).join('') || `<div class="tix tix-empty">No instruments — add some from ticker settings ▸</div>`;
   const roll=!!state.ticker.rolling && items.length>1;
   track.classList.toggle('rolling',roll);
@@ -385,7 +393,7 @@ function renderTickerSettings(){
 }
 function wireTicker(){ const g=$('tickerGear'); if(g) g.onclick=e=>{e.stopPropagation();openTickerSettings();}; }
 function renderRegimeBar(r){
-  const raw=readSignals(), sc=scoreSignals(raw), S=composite(sc), conf=confidence(S,sc);
+  const bar=$('regimeBar'); if(!bar) return;
   const cfg={
     bull:{kick:'Risk-on · Momentum',title:'Markets trending up',
       read:`Opportunity-capture mode. The terminal leads with <b>breakout scans &amp; long entries</b>; risk tools stay one tap away. Your watchlist is sorted by momentum and the order pad defaults to BUY.`},
@@ -396,15 +404,20 @@ function renderRegimeBar(r){
   }[r];
   const read=(PLAY[state.persona||'trader']||PLAY.trader)[r]||cfg.read;
   const pTag=isInvestor()?'Investing':'Trading';
-  $('regimeBar').innerHTML=`
-    <div class="rb-badge"><div class="rb-emo rb-emo-${r}"><img class="rb-mascot" src="assets/mascot-${r}.png" alt="" draggable="false" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex'"><span class="rb-emo-ic" style="display:none">${icon(r,21)}</span></div>
-      <div><div class="rb-title"><small>${cfg.kick} · ${pTag}</small>${cfg.title}</div></div></div>
-    <div class="rb-read">${read}</div>
-    <div class="rb-stats">
-      <div class="rb-stat"><span>India VIX</span><b class="${raw.vix>18?'down':'up'} num">${raw.vix.toFixed(1)}</b></div>
-      <div class="rb-stat"><span>Breadth A/D</span><b class="${raw.ad>=1?'up':'down'} num">${raw.ad.toFixed(2)}</b></div>
-      <div class="rb-stat"><span>Engine S</span><b class="num" style="color:var(--accent-d)">${S>=0?'+':''}${S}</b></div>
-    </div>`;
+  if(state.regimeCollapsed===undefined) state.regimeCollapsed=true;   // compact by default — engine stats live in the header now
+  const collapsed=state.regimeCollapsed;
+  bar.classList.toggle('collapsed',collapsed);
+  if(collapsed){
+    bar.innerHTML=`<button class="rb-toggle" id="rbToggle" aria-expanded="false" title="Show the market read">
+      <span class="rb-mini-ic rb-emo-${r}">${icon(r,13)}</span><b>${cfg.title}</b><span class="rb-mini-kick">${cfg.kick} · ${pTag}</span><span class="rb-chev">▾</span></button>`;
+  } else {
+    bar.innerHTML=`
+      <div class="rb-badge"><div class="rb-emo rb-emo-${r}"><img class="rb-mascot" src="assets/mascot-${r}.png" alt="" draggable="false" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex'"><span class="rb-emo-ic" style="display:none">${icon(r,21)}</span></div>
+        <div><div class="rb-title"><small>${cfg.kick} · ${pTag}</small>${cfg.title}</div></div></div>
+      <div class="rb-read">${read}</div>
+      <button class="rb-toggle mini" id="rbToggle" aria-expanded="true" title="Collapse">${icon('x',13)}</button>`;
+  }
+  const t=$('rbToggle'); if(t)t.onclick=()=>{state.regimeCollapsed=!state.regimeCollapsed; renderRegimeBar(state.displayed); if(typeof saveState==='function')saveState();};
 }
 
 /* ============================================================
@@ -431,21 +444,24 @@ function renderWatchlist(r){
     : inv ? `<span>Quality &amp; your holdings</span><span>LTP · Chg%</span>`
     : `<span>${bear?'Weakest first':'Top movers first'}</span><span>${bear?'β shown':'LTP · Chg%'}</span>`;
   $('wlRows').innerHTML=list.map(s=>{
+    const lv = s.live!==false && BOT.live;   // real Kite quote present for THIS symbol
     let badge='';
-    if(inv){ badge = s.hold?`<span class="badge b-hold">holding</span>`:(s.chg<-1.5?`<span class="badge b-up">on sale</span>`:''); }
-    else if(bear){ badge = s.chg<0?`<span class="badge b-down">near support</span>`:(s.hold?`<span class="badge b-hold">holding</span>`:''); }
-    else { badge = s.chg>1.5?`<span class="badge b-up">near breakout</span>`:''; }
+    if(inv){ badge = s.hold?`<span class="badge b-hold">holding</span>`:(lv&&s.chg<-1.5?`<span class="badge b-up">on sale</span>`:''); }
+    else if(bear){ badge = lv&&s.chg<0?`<span class="badge b-down">near support</span>`:(s.hold?`<span class="badge b-hold">holding</span>`:''); }
+    else { badge = lv&&s.chg>1.5?`<span class="badge b-up">near breakout</span>`:''; }
     const sub = bear
       ? `<span>${s.sector}</span><span class="beta">β ${s.beta}</span>${badge}`
       : `<span>${s.sector}</span>${badge}`;
+    const ltpCell = lv
+      ? `<div class="wl-ltp num">${s.ltp.toLocaleString('en-IN')}</div><div class="wl-chg ${cls(s.chg)} num">${pct(s.chg)}</div>`
+      : `<div class="wl-ltp num muted" title="No live quote — connect Kite">—</div><div class="wl-chg num muted">·</div>`;
     return `<div class="wl-row${s.sym===effSel?' sel':''}" draggable="true" data-sym="${s.sym}">
       <span class="wl-grip">${icon('grip',12)}</span>
       <div class="wl-l">
         <div class="wl-sym">${s.sym} ${s.hold?`<span class="hold-star">${icon('star',11)}</span>`:''}</div>
         <div class="wl-sub">${sub}</div></div>
-      <div class="wl-r"><div class="wl-ltp num">${s.ltp.toLocaleString('en-IN')}</div>
-        <div class="wl-chg ${cls(s.chg)} num">${pct(s.chg)}</div></div>
-      <div class="wl-spark">${spark(s.sym.length*97+ (bear?3:11), s.chg>=0)}</div>
+      <div class="wl-r">${ltpCell}</div>
+      <div class="wl-spark">${lv?spark(s.sym.length*97+ (bear?3:11), s.chg>=0):''}</div>
     </div>`;
   }).join('');
   const rst=$('wlReset'); if(rst) rst.onclick=()=>{state.wlOrder=null;renderWatchlist(state.displayed);saveState();};
@@ -454,6 +470,7 @@ function selectSym(sym){
   if(!bySym(sym))return;
   state.selected=sym; state.orderSide=null; state.orderQty=null; state.tradeFromChart=null;
   renderWatchlist(state.displayed); renderChart(state.displayed); renderOrder(state.displayed);
+  if(BOT.live && document.querySelector('.wg-card[data-wkey="depth"]')) loadDepth(sym);  // refresh depth ladder for new symbol
   announce(sym+' selected'); saveState();
 }
 /* trade-from-chart: the engine drags an entry/SL/target bracket → order pad */
@@ -482,6 +499,26 @@ function renderChart(r){
   const s=chartSymbol(r);
   TPChart.render({symbol:s.sym, name:s.name||s.sym, regime:r, basePrice:s.ltp, change:s.chg});
 }
+/* Real OHLCV feed for the chart — pulls Kite historical via /api/candles. Returns null
+   when offline or the symbol has no real series, so the chart shows an honest empty
+   state instead of synthetic candles. The chart calls this on every symbol/timeframe change. */
+async function chartFeed(sym, tfKey){
+  if(!BOT.live) return null;
+  try{
+    const d=await fetch(`${BOT_API}/api/candles?symbol=${encodeURIComponent(sym)}&tf=${encodeURIComponent(tfKey)}`).then(r=>r.json());
+    if(d && Array.isArray(d.candles) && d.candles.length) return d.candles;
+  }catch(e){}
+  return null;
+}
+
+/* Real holdings from the Kite account (/api/holdings) or null when offline — panels
+   that show positions/P&L use this so they never display the mock catalog. */
+function liveHoldings(){
+  return (BOT.live && BOT.holdings && Array.isArray(BOT.holdings.holdings)) ? BOT.holdings.holdings : null;
+}
+function emptyConnect(what){
+  return `<div class="empty-state">${icon('alert',16)} <span>Connect Kite for live ${what} — run <code>python3 login.py</code>.</span></div>`;
+}
 
 /* ============================================================
    RENDER — BOTTOM PANEL (tabs reorder per regime)
@@ -500,26 +537,30 @@ const PANELS={
     return tbl(['Scrip','Setup','','LTP','Chg%'],rows.map(x=>scanRow(x)).join(""))+note('go','Surfacing momentum, fresh 52-wk highs &amp; volume thrust to ride the trend.');
   },
   positions(r){
+    const hs=liveHoldings();
+    if(!hs) return emptyConnect('positions & P&L');
+    if(!hs.length) return '<div class="empty-state">No holdings in your Zerodha account yet — fund it and buy to see positions here.</div>';
+    const day=BOT.holdings.dayPnl||0, total=BOT.holdings.totalPnl||0;
+    const exposure=hs.reduce((a,h)=>a+(h.ltp||0)*(h.qty||0),0);
     if(r==='bear'){
-      const losers=[...HOLDINGS].sort((a,b)=>a.pnl-b.pnl).slice(0,5);
+      const losers=[...hs].sort((a,b)=>(a.dayChangePct||0)-(b.dayChangePct||0)).slice(0,5);
       const cards=`<div class="riskcards">
-        <div class="rcard"><span>Drawdown</span><b class="down">−4.2%</b></div>
-        <div class="rcard"><span>Exposure</span><b>${inrL(EXPOSURE)}</b></div>
-        <div class="rcard"><span>Portfolio β</span><b style="color:var(--amber)">1.18</b></div>
-        <div class="rcard"><span>Unhedged</span><b class="down">6 / 6</b></div></div>`;
-      const body=losers.map(h=>`<tr><td><span class="t-sym">${h.sym} <span class="beta">β ${h.beta}</span></span></td>
-        <td class="num">${h.hold.qty}</td><td class="num">${h.ltp.toLocaleString('en-IN')}</td>
+        <div class="rcard"><span>Day P&L</span><b class="${cls(day)}">${sgn(day)}</b></div>
+        <div class="rcard"><span>Exposure</span><b>${inrL(exposure)}</b></div>
+        <div class="rcard"><span>Total P&L</span><b class="${cls(total)}">${sgn(total)}</b></div>
+        <div class="rcard"><span>Holdings</span><b>${hs.length}</b></div></div>`;
+      const body=losers.map(h=>`<tr><td><span class="t-sym">${esc(h.sym)}</span></td>
+        <td class="num">${h.qty}</td><td class="num">${(h.ltp||0).toLocaleString('en-IN')}</td>
         <td class="num ${cls(h.pnl)}">${h.pnl>=0?'+':''}${inr(h.pnl)}</td>
-        <td><span class="badge ${h.pnl<0?'b-down':'b-warn'}">${h.pnl<0?'unhedged':'at risk'}</span></td></tr>`).join('');
-      return cards+tbl(['Scrip','Qty','LTP','P&L','Risk'],body)+note('warn','2 high-beta names (ADANIENT, BAJFINANCE) drive ~60% of portfolio risk — trim or hedge.');
+        <td><span class="badge ${(h.dayChangePct||0)<0?'b-down':'b-warn'}">${pct(h.dayChangePct||0)}</span></td></tr>`).join('');
+      return cards+tbl(['Scrip','Qty','LTP','P&L','Day'],body)+note('warn','Weakest holdings by today’s move shown first — review risk on the red names.');
     }
-    const winners=[...HOLDINGS].sort((a,b)=>b.pnl-a.pnl);
-    const body=winners.map(h=>`<tr><td><span class="t-sym">${h.sym}</span></td>
-      <td class="num">${h.hold.qty}</td><td class="num">${h.hold.avg.toLocaleString('en-IN')}</td>
-      <td class="num">${h.ltp.toLocaleString('en-IN')}</td><td class="num ${cls(h.pnl)}">${h.pnl>=0?'+':''}${inr(h.pnl)}</td></tr>`).join('');
+    const winners=[...hs].sort((a,b)=>(b.pnl||0)-(a.pnl||0));
+    const body=winners.map(h=>`<tr><td><span class="t-sym">${esc(h.sym)}</span></td>
+      <td class="num">${h.qty}</td><td class="num">${(h.avg||0).toLocaleString('en-IN',{maximumFractionDigits:2})}</td>
+      <td class="num">${(h.ltp||0).toLocaleString('en-IN')}</td><td class="num ${cls(h.pnl)}">${h.pnl>=0?'+':''}${inr(h.pnl)}</td></tr>`).join('');
     return tbl(['Scrip','Qty','Avg','LTP','P&L'],body)+note(r==='neutral'?'info':'go',
-      r==='neutral'?'Holding steady — no strong edge either way. Total unrealised <b>+'+inr(TOT_PNL)+'</b>.'
-      :'Let winners run — trail targets or pyramid into strength. Total unrealised <b>+'+inr(TOT_PNL)+'</b>.');
+      `Total unrealised <b>${sgn(total)}</b> · day <b>${sgn(day)}</b> across ${hs.length} holdings.`);
   },
   orders(){
     if(!state.orders.length) return '<div class="empty-state">No orders yet. Place one from the order pad on the right.</div>';
@@ -533,10 +574,14 @@ const PANELS={
     return tbl(['Scrip','Type','Qty','Price','Status'],body);
   },
   holdings(){
-    const body=HOLDINGS.map(h=>{const day=(Math.random()*2-0.6);return `<tr><td><span class="t-sym">${h.sym}</span></td>
-      <td class="num">${h.hold.qty}</td><td class="num">${h.hold.avg.toLocaleString('en-IN')}</td>
-      <td class="num">${inr(h.val)}</td><td class="num ${cls(h.pnl)}">${h.pnl>=0?'+':''}${inr(h.pnl)}</td></tr>`;}).join('');
-    return tbl(['Scrip','Qty','Avg','Cur. Value','P&L'],body);
+    const hs=liveHoldings();
+    if(!hs) return emptyConnect('holdings');
+    if(!hs.length) return '<div class="empty-state">No holdings in your Zerodha account yet.</div>';
+    const body=hs.map(h=>{const val=(h.ltp||0)*(h.qty||0);return `<tr><td><span class="t-sym">${esc(h.sym)}</span></td>
+      <td class="num">${h.qty}</td><td class="num">${(h.avg||0).toLocaleString('en-IN',{maximumFractionDigits:2})}</td>
+      <td class="num">${inr(val)}</td><td class="num ${cls(h.pnl)}">${h.pnl>=0?'+':''}${inr(h.pnl)}</td></tr>`;}).join('');
+    return tbl(['Scrip','Qty','Avg','Cur. Value','P&L'],body)
+      +note('info',`${hs.length} holdings · total unrealised <b>${sgn(BOT.holdings.totalPnl||0)}</b> · day <b>${sgn(BOT.holdings.dayPnl||0)}</b>.`);
   },
   sips(r){
     const tot=SIPS.reduce((a,s)=>a+s.amt,0);
@@ -593,7 +638,8 @@ const PANEL_LAYOUT_INV={
 function renderPanel(r){
   const L=(isInvestor()?PANEL_LAYOUT_INV:PANEL_LAYOUT)[r];
   if(!state.panelTab || !L.order.find(t=>t[0]===state.panelTab)) state.panelTab=L.def;
-  const cnt=id=>id==='orders'?state.orders.length:(id==='positions'||id==='holdings')?HOLDINGS.length:id==='sips'?SIPS.length:id==='goals'?GOALS.length:id==='events'?MARKET_EVENTS.length:null;
+  const hcnt=(liveHoldings()||[]).length;
+  const cnt=id=>id==='orders'?state.orders.length:(id==='positions'||id==='holdings')?(BOT.live?hcnt:null):id==='sips'?SIPS.length:id==='goals'?GOALS.length:id==='events'?MARKET_EVENTS.length:null;
   $('panelTabs').innerHTML=L.order.map(([id,label,count])=>{const c=cnt(id)!=null?cnt(id):count;
     return `<button class="p-tab ${id===state.panelTab?'active':''}" data-ptab="${id}">${label}<span class="pt-count">${c}</span></button>`;}).join('');
   $('panelBody').innerHTML=PANELS[state.panelTab](r);
@@ -742,9 +788,14 @@ function renderContext(r){
         +ctxRow('up','target','SBIN cup &amp; handle','Entry on close > 845','842');
   }
   const bias=r==='bull'?1.5:r==='bear'?-3.0:0;
-  const heat=SECTORS.map(sec=>{let c=sec.base+bias+(sec.def&&r==='bear'?2.2:0);const g=c>=0;const a=clamp(Math.abs(c)/4,.1,.45);
-    return `<div class="hc ${sec.def&&r==='bear'?'def':''}" style="background:${g?`rgba(0,171,78,${a})`:`rgba(229,56,59,${a})`}">
-      <div class="hc-s">${sec.s}${sec.def&&r==='bear'?' ·D':''}</div><div class="hc-c ${g?'up':'down'}">${pct(c)}</div></div>`;}).join('');
+  // real sector performance from the live watchlist when connected; simulated otherwise
+  const heatSrc=BOT.live
+    ? (()=>{const m={};SYMS.forEach(s=>{(m[s.sector]=m[s.sector]||[]).push(s.chg);});
+        return Object.entries(m).map(([s,a])=>({s,c:a.reduce((x,y)=>x+y,0)/a.length})).sort((x,y)=>y.c-x.c);})()
+    : SECTORS.map(sec=>({s:sec.s,c:sec.base+bias+(sec.def&&r==='bear'?2.2:0),def:sec.def&&r==='bear'}));
+  const heat=heatSrc.map(sec=>{const c=sec.c;const g=c>=0;const a=clamp(Math.abs(c)/4,.1,.45);
+    return `<div class="hc ${sec.def?'def':''}" style="background:${g?`rgba(0,171,78,${a})`:`rgba(229,56,59,${a})`}">
+      <div class="hc-s">${sec.s}${sec.def?' ·D':''}</div><div class="hc-c ${g?'up':'down'}">${pct(c)}</div></div>`;}).join('');
   $('contextModule').innerHTML=`<div class="ctx-card">
     <div class="ctx-head"><b><span class="ctx-rico">${icon(r,16)}</span> ${head}</b><span class="ctx-pill">${pill}</span>${cardCtl('context')}</div>
     ${rows}
@@ -762,7 +813,7 @@ function applyRegime(regime){
   document.documentElement.dataset.regime=regime;
   document.querySelectorAll('[data-regime-btn]').forEach(b=>{const on=b.dataset.regimeBtn===regime;b.classList.toggle('active',on);b.setAttribute('aria-selected',on);});
   $('fundsLabel').textContent=(PERSONA[state.persona||'trader']||PERSONA.trader).fundsLabel(regime);
-  $('fundsVal').textContent=inr(CASH);
+  $('fundsVal').textContent=fundsText();
   state.panelTab=null; // reset to regime default
   renderTopIndex(); renderRegimeBar(regime); renderWatchlist(regime);
   renderChart(regime); renderPanel(regime); renderOrder(regime); renderContext(regime); renderInvestHub(); renderWidgetStack(); renderDeskBar(); renderDeskView(); renderAlgo(); renderAI();
@@ -910,7 +961,29 @@ function cinematicPersona(p){
   }
 }
 function updateClock(){const el=$('mktStatus');if(!el)return;const d=new Date();const p=n=>String(n).padStart(2,'0');
-  el.innerHTML=`<span class="mkt-dot" title="Live market data"></span><span class="mkt-live">LIVE</span><span class="mkt-time num">${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}</span>`;}
+  const t=`${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+  const mk=BOT.live&&BOT.market&&BOT.market.market;
+  if(mk){
+    el.innerHTML=`<span class="mkt-dot ${mk.open?'open':'closed'}" title="NSE equity session"></span>`
+      +`<span class="mkt-live">${mk.open?'MARKET OPEN':esc(mk.status.toUpperCase())}</span>`
+      +`<span class="mkt-sess" title="NSE equity trading hours">${mk.openTime}–${mk.closeTime} IST</span>`
+      +`<span class="mkt-time num">${t}</span>`;
+  } else {
+    el.innerHTML=`<span class="mkt-dot off" title="Kite not connected"></span><span class="mkt-live">OFFLINE</span><span class="mkt-time num">${t}</span>`;
+  }
+  renderHdrEngine();}
+function renderHdrEngine(){
+  const el=$('hdrEngine'); if(!el) return;
+  const live=BOT.live&&BOT.market&&BOT.market.engine;
+  if(!live){ el.innerHTML=`<span class="he-stat off">${icon('shield',11)} engine offline</span>`; return; }
+  const vix=(BOT.market.vix&&BOT.market.vix.ltp)||0, ad=(BOT.market.breadth&&BOT.market.breadth.ad)||0, score=BOT.market.engine.score, reg=BOT.market.engine.regime;
+  el.innerHTML=
+    `<div class="he-stat"><span class="he-l">India VIX<span class="he-live" title="Live from Kite">● LIVE</span></span><b class="num ${vix>18?'down':'up'}">${vix.toFixed(1)}</b></div>`
+   +`<span class="he-div"></span>`
+   +`<div class="he-stat"><span class="he-l">Breadth A/D</span><b class="num ${ad>=1?'up':'down'}">${ad.toFixed(2)}</b></div>`
+   +`<span class="he-div"></span>`
+   +`<div class="he-stat"><span class="he-l">Engine · ${esc(reg)}</span><b class="num" style="color:var(--accent-d)">${score>=0?'+':''}${score}</b></div>`;
+}
 
 /* ============================================================
    PERSONA — Investor vs Trader (orthogonal to regime)
@@ -1650,25 +1723,41 @@ const EXPIRIES=[{d:'26 Jun',days:4,tag:'Weekly'},{d:'03 Jul',days:11,tag:'Weekly
 const dseed=x=>{const s=Math.sin(x*12.9898)*43758.5453;return s-Math.floor(s);}; // deterministic 0..1
 const oiFmt=n=>{n=Math.round(Math.abs(n));return n>=100000?(n/100000).toFixed(1)+'L':n>=1000?(n/1000).toFixed(0)+'K':String(n);};
 
-function buildChain(uIdx,eIdx){
-  const u=UNDERLYINGS[uIdx]||UNDERLYINGS[0], e=EXPIRIES[eIdx]||EXPIRIES[0];
-  const atm=Math.round(u.spot/u.step)*u.step, baseIV=0.12+eIdx*0.006, T=e.days/365, atmTV=0.4*u.spot*baseIV*Math.sqrt(T); // ~0.4·S·σ·√T ≈ realistic ATM premium
-  const peakOI=u.sym==='NIFTY'?6500000:u.sym==='BANKNIFTY'?4200000:1800000, rows=[];
-  for(let i=-6;i<=6;i++){
-    const K=atm+i*u.step, d=Math.abs(K-u.spot);
-    const tv=atmTV*Math.exp(-Math.pow(d/(u.step*6),2)); // gentle decay → vertical spreads stay no-arbitrage
-    const callLtp=Math.max(0.05,Math.max(0,u.spot-K)+tv), putLtp=Math.max(0.05,Math.max(0,K-u.spot)+tv);
-    const iv=(baseIV+Math.abs((K-u.spot)/u.spot)*0.9)*100, round=(K%(u.step*2)===0)?1.2:0.92;
-    const callOI=Math.round(peakOI*Math.exp(-Math.pow((K-(atm+u.step))/(u.step*3.2),2))*round);
-    const putOI =Math.round(peakOI*Math.exp(-Math.pow((K-(atm-u.step))/(u.step*3.2),2))*round);
-    const callChg=Math.round(callOI*(dseed(K+1)*0.5-0.18)), putChg=Math.round(putOI*(dseed(K+7)*0.5-0.18));
-    rows.push({K,iv,callLtp,putLtp,callOI,putOI,callChg,putChg,atm:K===atm});
-  }
-  return {u,e,atm,rows};
+/* ===== Option chain — 100% REAL from Kite (/api/chain). No synthetic chain: when the
+   token is down the desk shows an honest "connect Kite" state, mirroring the live chart. ===== */
+function chainKey(uIdx,eIdx){ return (UNDERLYINGS[uIdx]||UNDERLYINGS[0]).sym+'|'+(eIdx||0); }
+function ensureChain(uIdx,eIdx){
+  if(!BOT.live) return;
+  const key=chainKey(uIdx,eIdx), rec=BOT.chains[key];
+  if(rec && (rec.loading || Date.now()-rec.t < 15000)) return;   // fresh or already in-flight
+  BOT.chains[key]={p:rec&&rec.p,err:null,loading:true,t:rec?rec.t:0};
+  const u=(UNDERLYINGS[uIdx]||UNDERLYINGS[0]).sym;
+  fetch(`${BOT_API}/api/chain?underlying=${encodeURIComponent(u)}&expiry=${eIdx||0}`).then(r=>r.json()).then(p=>{
+    BOT.chains[key]={p:(p&&p.real)?p:null, err:(p&&!p.real)?p.error:null, loading:false, t:Date.now()};
+    if(p&&p.real&&Array.isArray(p.expiries)&&p.expiries.length) BOT.chainExp[u]=p.expiries;
+    if(typeof isCenterTakeover==='function' && isCenterTakeover()) renderDeskView();
+    if(typeof renderWidgetStack==='function') renderWidgetStack();
+  }).catch(()=>{ BOT.chains[key]={p:null,err:'fetch failed',loading:false,t:Date.now()}; });
 }
-function maxPain(c){let best=c.atm,bv=Infinity;c.rows.forEach(R=>{const S=R.K;let pain=0;c.rows.forEach(o=>{pain+=o.callOI*Math.max(0,S-o.K)+o.putOI*Math.max(0,o.K-S);});if(pain<bv){bv=pain;best=S;}});return best;}
-function pcr(c){const cs=c.rows.reduce((a,r)=>a+r.callOI,0),ps=c.rows.reduce((a,r)=>a+r.putOI,0);return cs?ps/cs:0;}
-function srLevels(c){let sup=c.rows[0],res=c.rows[0];c.rows.forEach(r=>{if(r.putOI>sup.putOI)sup=r;if(r.callOI>res.callOI)res=r;});return {support:sup.K,resist:res.K};}
+function chainRec(uIdx,eIdx){ return BOT.live ? BOT.chains[chainKey(uIdx,eIdx)] : null; }
+function chainLoading(uIdx,eIdx){ const r=chainRec(uIdx,eIdx); return !!(r&&r.loading&&!r.p); }
+/* Adapt the real /api/chain payload into the row shape the desk/widgets consume.
+   Returns null when there's no live chain yet → callers render an honest empty state. */
+function buildChain(uIdx,eIdx){
+  const rec=chainRec(uIdx,eIdx); if(!(rec&&rec.p)) return null;
+  const base=UNDERLYINGS[uIdx]||UNDERLYINGS[0], p=rec.p, el=p.expiryLabel||{d:'—',days:p.days,tag:''};
+  const u={sym:p.underlying,label:base.label,spot:p.spot,step:p.step,lot:p.lot};
+  const rows=p.rows.map(R=>({K:R.K,iv:R.iv,callLtp:R.callLtp,putLtp:R.putLtp,callOI:R.callOI,putOI:R.putOI,
+    callVol:R.callVol,putVol:R.putVol,callChg:null,putChg:null,atm:!!R.atm})); // OI-day-change not in the live quote → honest "—"
+  return {u,e:{d:el.d,days:el.days,tag:el.tag},atm:p.atm,rows,live:true,asOf:p.asOf};
+}
+function expiriesFor(uIdx){ const s=(UNDERLYINGS[uIdx]||UNDERLYINGS[0]).sym, r=BOT.live&&BOT.chainExp[s]; return (r&&r.length)?r:EXPIRIES; }
+function cvChainOff(){ return `<div class="cvch-off">${icon('shield',13)}<span>${BOT.live?'Loading live chain…':'Connect Kite for live option data'}</span></div>`; }
+const num1=(x,d)=>x==null?'—':(+x).toFixed(d==null?1:d);            // null-safe LTP/IV
+const oiTxt=x=>x==null?'—':oiFmt(x);                                 // null-safe OI
+function maxPain(c){let best=c.atm,bv=Infinity;c.rows.forEach(R=>{const S=R.K;let pain=0;c.rows.forEach(o=>{pain+=(o.callOI||0)*Math.max(0,S-o.K)+(o.putOI||0)*Math.max(0,o.K-S);});if(pain<bv){bv=pain;best=S;}});return best;}
+function pcr(c){const cs=c.rows.reduce((a,r)=>a+(r.callOI||0),0),ps=c.rows.reduce((a,r)=>a+(r.putOI||0),0);return cs?ps/cs:0;}
+function srLevels(c){let sup=c.rows[0],res=c.rows[0];c.rows.forEach(r=>{if((r.putOI||0)>(sup.putOI||0))sup=r;if((r.callOI||0)>(res.callOI||0))res=r;});return {support:sup.K,resist:res.K};}
 
 function legPayoff(l,P){const intr=l.type==='CE'?Math.max(0,P-l.K):Math.max(0,l.K-P);return (l.side==='B'?1:-1)*(intr-l.ltp)*l.lot*l.qty;}
 function stratPayoff(legs,P){return legs.reduce((a,l)=>a+legPayoff(l,P),0);}
@@ -1682,7 +1771,13 @@ function stratStats(legs,u){
   const maxLUnlimited=(rS<-tiny&&xs[N].y<=minP+tiny)||(lS<-tiny&&xs[0].y<=minP+tiny);
   return {xs,maxP,minP,bes,netPrem,maxPUnlimited,maxLUnlimited};
 }
-function mkLeg(c,type,side,off){const ai=c.rows.findIndex(r=>r.atm),r=c.rows[Math.max(0,Math.min(c.rows.length-1,ai+off))];return {type,side,K:r.K,ltp:Math.round((type==='CE'?r.callLtp:r.putLtp)*100)/100,lot:c.u.lot,qty:1};}
+function mkLeg(c,type,side,off){
+  const ai=c.rows.findIndex(r=>r.atm), px=r=>type==='CE'?r.callLtp:r.putLtp;
+  let idx=Math.max(0,Math.min(c.rows.length-1,ai+off));
+  if(px(c.rows[idx])==null){ // nearest strike with a real live quote (skip illiquid far wings)
+    for(let d=1;d<c.rows.length;d++){const a=idx-d,b=idx+d;
+      if(a>=0&&px(c.rows[a])!=null){idx=a;break;} if(b<c.rows.length&&px(c.rows[b])!=null){idx=b;break;}}}
+  const r=c.rows[idx]; return {type,side,K:r.K,ltp:Math.round((px(r)||0)*100)/100,lot:c.u.lot,qty:1};}
 const STRAT_PRESETS=[
   {key:'longcall', name:'Long Call',        build:c=>[mkLeg(c,'CE','B',0)]},
   {key:'longput',  name:'Long Put',         build:c=>[mkLeg(c,'PE','B',0)]},
@@ -1960,65 +2055,87 @@ function renderDeskView(){
     `<button class="desk-tab${k===view?' on':''}" role="tab" aria-selected="${k===view}" data-deskview="${k}">${l}${k==='strategy'&&state.desk.legs.length?` <i class="desk-tn">${state.desk.legs.length}</i>`:''}</button>`).join('')}</div></div>`;
   let body;
   if(view==='futures') body=deskFutures();
-  else{ const c=buildChain(state.desk.under,state.desk.exp); body=deskControls(c)+(view==='chain'?deskChain(c):view==='oi'?deskOI(c):deskStrategy(c)); }
+  else{
+    ensureChain(state.desk.under,state.desk.exp);
+    const c=buildChain(state.desk.under,state.desk.exp);
+    body=deskControls(c)+(!c?chainEmptyBody():(view==='chain'?deskChain(c):view==='oi'?deskOI(c):deskStrategy(c)));
+  }
   v.innerHTML=`<div class="desk-wrap">${head}${body}</div>`;
   v.querySelectorAll('[data-deskview]').forEach(b=>b.onclick=()=>{state.desk.view=b.dataset.deskview;renderDeskView();});
   wireDeskControls(v);
   if(view==='chain') wireChain(v);
   if(view==='strategy') wireStrategy(v);
 }
+// `c` may be null (no live chain yet) → selectors stay visible, stats show a live/connect chip.
 function deskControls(c){
-  const mp=maxPain(c),p=pcr(c),sr=srLevels(c);
-  return `<div class="desk-ctrls">
-    <div class="dc-sel"><label class="dc-lab" for="dcUnder">Underlying</label>
+  const exps=expiriesFor(state.desk.under), ei=Math.min(state.desk.exp,exps.length-1);
+  const sel=`<div class="dc-sel"><label class="dc-lab" for="dcUnder">Underlying</label>
       <select id="dcUnder" class="dc-input">${UNDERLYINGS.map((u,i)=>`<option value="${i}" ${i===state.desk.under?'selected':''}>${u.label}</option>`).join('')}</select></div>
     <div class="dc-sel"><label class="dc-lab" for="dcExp">Expiry</label>
-      <select id="dcExp" class="dc-input">${EXPIRIES.map((e,i)=>`<option value="${i}" ${i===state.desk.exp?'selected':''}>${e.d} · ${e.tag}</option>`).join('')}</select></div>
-    <div class="dc-stats">
-      <div class="dc-stat"><span>Spot</span><b class="num">${c.u.spot.toLocaleString('en-IN')}</b></div>
+      <select id="dcExp" class="dc-input">${exps.map((e,i)=>`<option value="${i}" ${i===ei?'selected':''}>${e.d} · ${e.tag}</option>`).join('')}</select></div>`;
+  let stats;
+  if(c){ const mp=maxPain(c),p=pcr(c),sr=srLevels(c);
+    stats=`<div class="dc-stats">
+      <div class="dc-stat"><span>Spot</span><b class="num">${Math.round(c.u.spot).toLocaleString('en-IN')}</b></div>
       <div class="dc-stat"><span>PCR</span><b class="num ${p>=1?'up':'down'}">${p.toFixed(2)}</b></div>
       <div class="dc-stat"><span>Max Pain</span><b class="num">${mp.toLocaleString('en-IN')}</b></div>
       <div class="dc-stat"><span>Support</span><b class="num up">${sr.support.toLocaleString('en-IN')}</b></div>
-      <div class="dc-stat"><span>Resistance</span><b class="num down">${sr.resist.toLocaleString('en-IN')}</b></div>
-    </div></div>`;
+      <div class="dc-stat"><span>Resistance</span><b class="num down">${sr.resist.toLocaleString('en-IN')}</b></div></div>
+      <span class="dc-live" title="Live option chain from Kite${c.asOf?' · '+new Date(c.asOf).toLocaleTimeString('en-IN'):''}"><span class="live-dot live"></span>Live</span>`;
+  } else {
+    stats=`<div class="dc-stats"></div><span class="dc-live off">${icon('shield',12)}${BOT.live?'Loading…':'Kite offline'}</span>`;
+  }
+  return `<div class="desk-ctrls">${sel}${stats}</div>`;
+}
+// Honest empty state for the chain views when no live chain is loaded (mirrors the chart).
+function chainEmptyBody(){
+  const u=(UNDERLYINGS[state.desk.under]||UNDERLYINGS[0]).label;
+  return `<div class="desk-scroll">${BOT.live
+    ? secEmpty('scale','Loading live chain…',`Fetching ${u} strikes, open interest, LTP and IV from Kite.`)
+    : secEmpty('shield','Live option chain unavailable',`Connect your Kite session (run <b>python3 login.py</b> in the bot folder) to load the real ${u} option chain — strikes, live OI, LTP and computed IV. No synthetic data is shown.`)}</div>`;
 }
 function wireDeskControls(v){
-  const u=v.querySelector('#dcUnder'); if(u)u.onchange=()=>{state.desk.under=+u.value;state.desk.legs=[];renderDeskView();};
+  const u=v.querySelector('#dcUnder'); if(u)u.onchange=()=>{state.desk.under=+u.value;state.desk.exp=0;state.desk.legs=[];renderDeskView();};
   const e=v.querySelector('#dcExp'); if(e)e.onchange=()=>{state.desk.exp=+e.value;renderDeskView();};
 }
 function deskChain(c){
+  const cellLtp=(t,K,v,itm)=>v==null?`<td class="ch-ltp"><span class="ch-na">—</span></td>`
+    :`<td class="ch-ltp ${itm?'itm':''}"><button class="ch-add" data-leg="${t}:${K}" aria-label="Add buy ${K} ${t==='CE'?'Call':'Put'} at ${num1(v)}">${num1(v)}</button></td>`;
   const rows=c.rows.map(R=>{const callItm=R.K<c.u.spot,putItm=R.K>c.u.spot;
     return `<tr class="${R.atm?'ch-atm':''}">
-      <td class="num ch-oi">${oiFmt(R.callOI)}</td>
-      <td class="num ${R.callChg>=0?'up':'down'}">${R.callChg>=0?'+':'−'}${oiFmt(R.callChg)}</td>
-      <td class="ch-ltp ${callItm?'itm':''}"><button class="ch-add" data-leg="CE:${R.K}" aria-label="Add buy ${R.K} Call at ${R.callLtp.toFixed(1)}">${R.callLtp.toFixed(1)}</button></td>
-      <td class="ch-k num ${R.atm?'atm':''}">${R.K}<i class="ch-iv">${R.iv.toFixed(1)}</i></td>
-      <td class="ch-ltp ${putItm?'itm':''}"><button class="ch-add" data-leg="PE:${R.K}" aria-label="Add buy ${R.K} Put at ${R.putLtp.toFixed(1)}">${R.putLtp.toFixed(1)}</button></td>
-      <td class="num ${R.putChg>=0?'up':'down'}">${R.putChg>=0?'+':'−'}${oiFmt(R.putChg)}</td>
-      <td class="num ch-oi">${oiFmt(R.putOI)}</td></tr>`;}).join('');
+      <td class="num ch-oi">${oiTxt(R.callOI)}</td>
+      <td class="num ch-na">—</td>
+      ${cellLtp('CE',R.K,R.callLtp,callItm)}
+      <td class="ch-k num ${R.atm?'atm':''}">${R.K}<i class="ch-iv">${R.iv==null?'—':num1(R.iv)}</i></td>
+      ${cellLtp('PE',R.K,R.putLtp,putItm)}
+      <td class="num ch-na">—</td>
+      <td class="num ch-oi">${oiTxt(R.putOI)}</td></tr>`;}).join('');
   return `<div class="desk-scroll"><table class="ch-tbl">
     <thead><tr><th colspan="3" class="ch-grp call">CALLS</th><th class="ch-grp k">Strike · IV</th><th colspan="3" class="ch-grp put">PUTS</th></tr>
     <tr class="ch-sub"><th>OI</th><th>OI Chg</th><th>LTP</th><th></th><th>LTP</th><th>OI Chg</th><th>OI</th></tr></thead>
     <tbody>${rows}</tbody></table>
-    <p class="desk-hint">${icon('bolt',12)}<span>Tap any premium to add it to your strategy. Green = ITM. ATM strike ${c.atm.toLocaleString('en-IN')} highlighted.</span></p></div>`;
+    <p class="desk-hint">${icon('bolt',12)}<span>Live OI &amp; premiums from Kite${c.e&&c.e.d?' · '+c.e.d+' expiry':''}. Tap any premium to add it to your strategy. Green = ITM. ATM strike ${c.atm.toLocaleString('en-IN')} highlighted. (Intraday OI-change isn’t in the live quote — shown as —.)</span></p></div>`;
 }
 function wireChain(v){ v.querySelectorAll('[data-leg]').forEach(b=>b.onclick=()=>{const p=b.dataset.leg.split(':');addLeg(p[0],+p[1],'B');}); }
 function addLeg(type,K,side){
-  const c=buildChain(state.desk.under,state.desk.exp),R=c.rows.find(r=>r.K===K); if(!R) return;
-  const ltp=Math.round((type==='CE'?R.callLtp:R.putLtp)*100)/100;
+  const c=buildChain(state.desk.under,state.desk.exp); if(!c) return;
+  const R=c.rows.find(r=>r.K===K); if(!R) return;
+  const raw=type==='CE'?R.callLtp:R.putLtp;
+  if(raw==null){ quickToast('No live quote','That strike isn’t trading right now — pick a nearer strike.'); return; }
+  const ltp=Math.round(raw*100)/100;
   state.desk.legs.push({type,side:side||'B',K,ltp,lot:c.u.lot,qty:1});
   const nm=(side==='S'?'Sell':'Buy')+' '+K+' '+(type==='CE'?'Call':'Put');
   quickToast('Leg added — '+nm, '₹'+ltp.toFixed(1)+' × '+c.u.lot+' (1 lot) · open the Strategy tab');
   renderDeskView(); announce(nm+' added to strategy, '+state.desk.legs.length+' legs');
 }
 function deskOI(c){
-  const maxOI=Math.max(...c.rows.map(r=>Math.max(r.callOI,r.putOI)))||1, mp=maxPain(c), sr=srLevels(c);
-  const rows=c.rows.map(R=>{const cw=R.callOI/maxOI*100,pw=R.putOI/maxOI*100;
+  const maxOI=Math.max(...c.rows.map(r=>Math.max(r.callOI||0,r.putOI||0)))||1, mp=maxPain(c), sr=srLevels(c);
+  const rows=c.rows.map(R=>{const cw=(R.callOI||0)/maxOI*100,pw=(R.putOI||0)/maxOI*100;
     const tag=R.K===sr.support?'<i class="oi-tag sup">Support</i>':R.K===sr.resist?'<i class="oi-tag res">Resist</i>':R.K===mp?'<i class="oi-tag mp">Max Pain</i>':'';
     return `<div class="oi-row ${R.atm?'atm':''}">
-      <div class="oi-call"><span class="oi-v num">${oiFmt(R.callOI)}</span><span class="oi-bar call" style="width:${cw}%"></span></div>
+      <div class="oi-call"><span class="oi-v num">${oiTxt(R.callOI)}</span><span class="oi-bar call" style="width:${cw}%"></span></div>
       <div class="oi-k num">${R.K}${tag}</div>
-      <div class="oi-put"><span class="oi-bar put" style="width:${pw}%"></span><span class="oi-v num">${oiFmt(R.putOI)}</span></div></div>`;}).join('');
+      <div class="oi-put"><span class="oi-bar put" style="width:${pw}%"></span><span class="oi-v num">${oiTxt(R.putOI)}</span></div></div>`;}).join('');
   return `<div class="desk-scroll"><div class="oi-legend"><span><i class="oi-dot call"></i>Call OI · resistance</span><span><i class="oi-dot put"></i>Put OI · support</span></div>
     <div class="oi-chart">${rows}</div>
     <p class="desk-hint">${icon('bolt',12)}<span>Highest put OI marks support, highest call OI marks resistance. Max-pain strike pulls price toward it at expiry.</span></p></div>`;
@@ -2068,7 +2185,7 @@ function payoffSVG(st,u){
     <line class="pf-spot" x1="${spotX}" y1="${padT}" x2="${spotX}" y2="${H-padB}"/>${polys}${be}</svg>`;
 }
 function wireStrategy(v){
-  v.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const c=buildChain(state.desk.under,state.desk.exp),p=STRAT_PRESETS.find(x=>x.key===b.dataset.preset);if(p){state.desk.legs=p.build(c);renderDeskView();announce(p.name+' loaded — '+state.desk.legs.length+' legs');}});
+  v.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const c=buildChain(state.desk.under,state.desk.exp); if(!c)return; const p=STRAT_PRESETS.find(x=>x.key===b.dataset.preset);if(p){state.desk.legs=p.build(c);renderDeskView();announce(p.name+' loaded — '+state.desk.legs.length+' legs');}});
   const cl=v.querySelector('[data-clearlegs]'); if(cl)cl.onclick=()=>{state.desk.legs=[];renderDeskView();announce('Strategy cleared');};
   v.querySelectorAll('[data-legside]').forEach(b=>b.onclick=()=>{const l=state.desk.legs[+b.dataset.legside];l.side=l.side==='B'?'S':'B';renderDeskView();});
   v.querySelectorAll('[data-legqty]').forEach(b=>b.onclick=()=>{const p=b.dataset.legqty.split(':'),l=state.desk.legs[+p[0]];l.qty=Math.max(1,Math.min(10,l.qty+(+p[1])));renderDeskView();});
@@ -2077,7 +2194,8 @@ function wireStrategy(v){
 }
 function execStrategy(){
   const legs=state.desk.legs; if(!legs.length) return;
-  const c=buildChain(state.desk.under,state.desk.exp), st=stratStats(legs,c.u);
+  const c=buildChain(state.desk.under,state.desk.exp); if(!c) return;
+  const st=stratStats(legs,c.u);
   const rows=legs.map(l=>`<div class="wg-row"><span class="leg-side sm ${l.side==='B'?'buy':'sell'}">${l.side==='B'?'BUY':'SELL'}</span><span class="wg-grow">${c.u.sym} ${l.K} ${l.type}</span><b class="num">${l.qty}×${l.lot}</b></div>`).join('');
   const margin=Math.round(Math.abs(st.netPrem)*1.4+c.u.spot*c.u.lot*0.12);
   flowModal({title:'Place strategy — '+c.u.sym, confirm:'Place '+legs.length+'-leg order',
@@ -2123,10 +2241,14 @@ const CANVAS_EXTRA=[
   {key:'cv_watch',name:'Watchlist',icon:'star',span:1,render(){
     return SYMS.slice(0,7).map(s=>`<div class="wg-row"><span class="t-sym">${s.sym}</span><span class="num">${s.ltp.toLocaleString('en-IN')}</span><span class="num ${cls(s.chg)}">${pct(s.chg)}</span></div>`).join('');}},
   {key:'cv_chain',name:'Option Chain',icon:'scale',span:2,sym:true,render(uIdx){
-    const c=buildChain(uIdx||0,0),ai=c.rows.findIndex(r=>r.atm),rows=c.rows.slice(Math.max(0,ai-3),ai+4);
-    return `<div class="cvch"><div class="cvch-row cvch-h"><span>Call LTP</span><b>Strike</b><span>Put LTP</span></div>${rows.map(R=>`<div class="cvch-row ${R.atm?'atm':''}"><span class="num up">${R.callLtp.toFixed(0)}</span><b class="num">${R.K}</b><span class="num down">${R.putLtp.toFixed(0)}</span></div>`).join('')}</div>`;}},
+    ensureChain(uIdx||0,0); const c=buildChain(uIdx||0,0);
+    if(!c) return cvChainOff();
+    const ai=c.rows.findIndex(r=>r.atm),rows=c.rows.slice(Math.max(0,ai-3),ai+4);
+    return `<div class="cvch"><div class="cvch-row cvch-h"><span>Call LTP</span><b>Strike</b><span>Put LTP</span></div>${rows.map(R=>`<div class="cvch-row ${R.atm?'atm':''}"><span class="num up">${num1(R.callLtp,0)}</span><b class="num">${R.K}</b><span class="num down">${num1(R.putLtp,0)}</span></div>`).join('')}</div>`;}},
   {key:'cv_pcr',name:'PCR & Max Pain',icon:'target',span:1,sym:true,render(uIdx){
-    const c=buildChain(uIdx||0,0),p=pcr(c),mp=maxPain(c),sr=srLevels(c);
+    ensureChain(uIdx||0,0); const c=buildChain(uIdx||0,0);
+    if(!c) return cvChainOff();
+    const p=pcr(c),mp=maxPain(c),sr=srLevels(c);
     return `<div class="wg-row"><span>PCR</span><b class="num ${p>=1?'up':'down'}">${p.toFixed(2)}</b></div>
       <div class="wg-row"><span>Max Pain</span><b class="num">${mp.toLocaleString('en-IN')}</b></div>
       <div class="wg-row"><span>Support</span><b class="num up">${sr.support.toLocaleString('en-IN')}</b></div>
@@ -2275,21 +2397,214 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
    ALGO MODE — strategy studio (Marketplace · Backtest · Monitor)
    Full-width center takeover; reuses ALGOS + algoDeploy.
    ============================================================ */
+/* ===== LIVE BOT INTEGRATION — kite-mean-reversion-bot API (:8756) ===== */
+const BOT_API='http://localhost:8756';
+let BOT={loaded:false,connected:false,status:null,paperMode:true,error:false,chains:{},chainExp:{}};
+async function loadBotData(){
+  try{
+    const [s,st,tr]=await Promise.all([
+      fetch(BOT_API+'/api/strategies').then(r=>r.json()),
+      fetch(BOT_API+'/api/status').then(r=>r.json()).catch(()=>({connected:false})),
+      fetch(BOT_API+'/api/trades').then(r=>r.json()).catch(()=>({trades:[]}))
+    ]);
+    BOT.trades=tr.trades||[];
+    BOT.connected=!!st.connected; BOT.status=st; BOT.paperMode=s.paperMode!==false; BOT.updated=s.updated; BOT.error=false;
+    BOT.segments=s.segments||[{id:'cash',label:'Equity Cash',note:''}];
+    if(s.strategies&&s.strategies.length){
+      ALGOS=s.strategies.map(x=>({
+        id:x.id,name:x.name,cat:x.cat,segment:x.segment,win:x.win,minCap:x.minCap,risk:x.risk,
+        product:x.product,vstatus:x.status,bestRegime:x.bestRegime,regimeFit:x.regimeFit,requires:x.requires,
+        desc:x.desc,sharpe:x.oos_sharpe,totalRet:x.totalRet,trades:x.trades,dd:x.dd||3,
+        verdict:x.verdict,paperPnl:x.paperPnl,realisedPnl:x.realisedPnl,openPnl:x.openPnl,openPositions:x.openPositions,live:x.live,real:true,
+        nudge:x.nudge,fwdTrades:x.fwdTrades,readyExceptCapital:x.readyExceptCapital,blockers:x.blockers,nudgeMsg:x.nudgeMsg,positions:x.positions,
+        status:x.live?'live':'idle', cap:x.live?x.minCap:0, cagr:x.totalRet
+      }));
+      BOT.nudgeMin=s.nudgeMinTrades||10;
+    }
+  }catch(e){ BOT.error=true; }
+  BOT.loaded=true;
+}
+/* ---- 100% real market data from Kite (/api/market). No fake fallback: when the bot
+   is offline or the Kite token has expired, displays show honest blanks, never mock. ---- */
+async function loadMarket(){
+  try{
+    const m=await fetch(BOT_API+'/api/market').then(r=>r.json());
+    BOT.live=!!(m && m.real && !m.error && m.engine);
+    BOT.market=BOT.live?m:null;
+    if(BOT.live){
+      const [q,h]=await Promise.all([
+        fetch(BOT_API+'/api/quotes?symbols='+encodeURIComponent(SYMS.map(s=>s.sym).join(','))).then(r=>r.json()).catch(()=>({quotes:{}})),
+        fetch(BOT_API+'/api/holdings').then(r=>r.json()).catch(()=>null)
+      ]);
+      BOT.quotes=(q&&q.quotes)||{};
+      // overlay REAL ltp/chg onto each watchlist symbol — no synthetic prices.
+      // s.live marks whether THIS symbol has a real quote; a null quote (e.g. a
+      // delisted/demerged symbol) stays BLANK, never the stale catalog price.
+      SYMS.forEach(s=>{const r=BOT.quotes[s.sym]; if(r&&r.ltp!=null){s.ltp=r.ltp; if(r.chg!=null)s.chg=r.chg; s.live=true;} else {s.live=false;}});
+      BOT.holdings=(h&&!h.error)?h:null;
+    } else { BOT.quotes=null; BOT.holdings=null; SYMS.forEach(s=>{s.live=false;}); }
+  }catch(e){ BOT.live=false; BOT.market=null; BOT.quotes=null; BOT.holdings=null; SYMS.forEach(s=>{s.live=false;}); }
+  if(BOT.live) connectStream(); else disconnectStream();   // sub-second push when live; keeps symset in sync
+  applyFunds(); updateClock();
+  if(typeof renderTopIndex==='function') renderTopIndex();
+  if(typeof renderRegimeBar==='function') renderRegimeBar(state.displayed);
+  if(typeof renderWatchlist==='function') renderWatchlist(state.displayed);
+  if(typeof renderWidgetStack==='function') renderWidgetStack();
+  if(typeof renderDeskView==='function') renderDeskView();   // refresh canvas cards (movers/pnl/heatmap) with live SYMS
+  if(typeof renderChart==='function') renderChart(state.displayed);  // pull real candles once live
+  if(typeof renderPanel==='function') renderPanel(state.displayed);  // holdings/positions panels -> real
+  if(typeof isAlgo==='function' && isAlgo() && typeof renderAlgo==='function') renderAlgo();
+}
+/* ---- REAL-TIME ticks via Kite WebSocket (/api/ticks, KiteTicker-fed). Updates only
+   the watchlist price cells + chart last candle IN PLACE (no full re-render → drag,
+   sort and selection survive). Self-gates on live + visible tab. ---- */
+/* ===== Sub-second PUSH via Server-Sent Events (bot→browser stream) =====
+   The bot holds one Kite WebSocket and pushes each tick to the browser over /api/stream
+   (EventSource) the instant it lands — no 2s polling lag. The 2s poll below stays as an
+   automatic fallback: it only fires when the stream isn't actively delivering (first paint,
+   stream dropped, or EventSource unsupported), so prices are never stale and never doubled. */
+const STREAM={es:null, syms:'', on:false, last:0};
+function streamSyms(){ return SYMS.map(s=>s.sym).join(','); }
+function connectStream(){
+  if(!BOT.live || typeof EventSource==='undefined') return;
+  const syms=streamSyms();
+  if(STREAM.es && STREAM.syms===syms) return;             // already streaming this exact set
+  disconnectStream();
+  STREAM.syms=syms;
+  try{
+    const es=new EventSource(`${BOT_API}/api/stream?symbols=${encodeURIComponent(syms)}`);
+    es.onopen=()=>{ STREAM.on=true; STREAM.last=Date.now(); };
+    es.onmessage=ev=>{ try{ const d=JSON.parse(ev.data);
+      if(d&&d.ticks){ applyTicks(d.ticks); STREAM.on=true; STREAM.last=Date.now(); if(d.stream)BOT.tickStream=d.stream; } }catch(e){} };
+    es.onerror=()=>{ STREAM.on=false; };                  // EventSource auto-reconnects; the poll covers the gap
+    STREAM.es=es;
+  }catch(e){ STREAM.on=false; }
+}
+function disconnectStream(){ if(STREAM.es){ try{STREAM.es.close();}catch(e){} } STREAM.es=null; STREAM.on=false; STREAM.syms=''; }
+// Apply a PARTIAL tick update (only the symbols that ticked) — used by the push stream.
+function applyTicks(ticks){
+  if(!ticks) return; const dir={};
+  for(const sym in ticks){ const t=ticks[sym], s=bySym(sym);
+    if(s&&t&&t.ltp!=null){ dir[sym]=Math.sign(t.ltp-(s.ltp||t.ltp)); s.ltp=t.ltp; if(t.chg!=null)s.chg=t.chg; s.live=true; } }
+  applyTickDom(ticks,dir);
+}
+
+let TICK_BUSY=false;
+async function loadTicks(){
+  if(TICK_BUSY || !BOT.live || document.visibilityState!=='visible') return;
+  if(STREAM.on && Date.now()-STREAM.last < 6000) return;   // push stream is live → skip the poll
+  TICK_BUSY=true;
+  try{
+    const d=await fetch(`${BOT_API}/api/ticks?symbols=${encodeURIComponent(SYMS.map(s=>s.sym).join(','))}`).then(r=>r.json());
+    if(d&&d.ticks){
+      const dir={};
+      SYMS.forEach(s=>{const t=d.ticks[s.sym];
+        if(t&&t.ltp!=null){ dir[s.sym]=Math.sign(t.ltp-(s.ltp||t.ltp)); s.ltp=t.ltp; if(t.chg!=null)s.chg=t.chg; s.live=true; }
+        else { s.live=false; }});
+      applyTickDom(d.ticks,dir);
+      BOT.tickStream=d.stream;
+    }
+  }catch(e){}
+  TICK_BUSY=false;
+}
+function applyTickDom(ticks,dir){
+  document.querySelectorAll('#wlRows .wl-row').forEach(row=>{
+    const sym=row.dataset.sym, t=ticks[sym]; if(!t||t.ltp==null) return;
+    const ltpEl=row.querySelector('.wl-ltp'), chgEl=row.querySelector('.wl-chg');
+    if(ltpEl){ ltpEl.textContent=t.ltp.toLocaleString('en-IN'); ltpEl.classList.remove('muted');
+      const dr=dir[sym]; if(dr){ltpEl.classList.remove('tick-up','tick-dn');void ltpEl.offsetWidth;ltpEl.classList.add(dr>0?'tick-up':'tick-dn');} }
+    if(chgEl){ chgEl.textContent=pct(t.chg); chgEl.className='wl-chg num '+cls(t.chg); }
+  });
+  const sel=state.selected, t=sel&&ticks[sel];
+  if(t&&t.ltp!=null&&window.TPChart&&TPChart.tick) TPChart.tick(sel,t.ltp);
+}
+/* ---- REAL 5-level market depth (/api/depth, full Kite quote().depth). Targeted body
+   update so it never rebuilds the whole widget stack. Empty levels show "—" (honest —
+   the order book is thin/empty after 15:30; all 5 levels fill during market hours). ---- */
+let DEPTH_BUSY=false;
+async function loadDepth(sym){
+  if(!BOT.live || !sym || DEPTH_BUSY) return;
+  DEPTH_BUSY=true;
+  try{
+    const d=await fetch(`${BOT_API}/api/depth?symbol=${encodeURIComponent(sym)}`).then(r=>r.json());
+    BOT.depth=(d&&!d.error)?d:{symbol:sym,bids:[],asks:[],error:(d&&d.error)||'no data'};
+  }catch(e){ BOT.depth={symbol:sym,bids:[],asks:[],error:'fetch failed'}; }
+  DEPTH_BUSY=false;
+  const body=document.querySelector('.wg-card[data-wkey="depth"] .wg-body');
+  if(body && BOT.depth.symbol===(state.selected||'RELIANCE')){
+    body.innerHTML = BOT.depth.error
+      ? `<div class="wg-empty">No depth for ${esc(BOT.depth.symbol)} — ${esc(BOT.depth.error)}.</div>`
+      : depthLadderHtml(BOT.depth);
+  }
+}
+function depthLadderHtml(d){
+  let rows='';
+  for(let i=0;i<5;i++){const b=d.bids[i]||{}, a=d.asks[i]||{};
+    rows+=`<div class="wg-depth"><span class="num up">${b.price?b.price.toFixed(1):'—'}</span>`
+      +`<span class="wg-q">${b.qty?b.qty.toLocaleString('en-IN'):''}</span>`
+      +`<span class="wg-q">${a.qty?a.qty.toLocaleString('en-IN'):''}</span>`
+      +`<span class="num down">${a.price?a.price.toFixed(1):'—'}</span></div>`;}
+  const tb=d.totalBuyQty||0, ts=d.totalSellQty||0;
+  const foot=`<div class="wg-sub">${esc(d.symbol)} · bid ${tb.toLocaleString('en-IN')} · ask ${ts.toLocaleString('en-IN')}${(tb+ts)===0?' · book opens 09:15':''}</div>`;
+  return `<div class="wg-depth wg-dhead"><span>Bid</span><span>Qty</span><span>Qty</span><span>Ask</span></div>${rows}${foot}`;
+}
+// FAST, lean poll for the live Monitor — every strategy's real-time P&L from /api/monitor (cached ~1ms).
+async function loadMonitor(){
+  try{
+    const m=await fetch(BOT_API+'/api/monitor').then(r=>r.json());
+    if(m&&m.running){
+      BOT.monitor=m;
+      const byId={}; m.running.forEach(r=>byId[r.id]=r);
+      ALGOS.forEach(a=>{const r=byId[a.id]; if(r){
+        a.paperPnl=r.paperPnl; a.openPnl=r.openPnl; a.realisedPnl=r.realisedPnl;
+        a.openPositions=r.openPositions; a.fwdTrades=r.fwdTrades; a.positions=r.positions; a.live=true;
+      }});
+    }
+  }catch(e){}
+}
+function fundsText(){
+  if(BOT.live && BOT.market && typeof BOT.market.funds==='number') return inr(BOT.market.funds);
+  return '—';
+}
+function applyFunds(){ const e=$('fundsVal'); if(e) e.textContent=fundsText(); }
+// Map a ticker/headline name to its REAL quote from /api/market (indices+commodities) or /api/quotes (stocks).
+const MKT_INDEX={'NIFTY 50':['indices','NIFTY 50'],'SENSEX':['indices','SENSEX'],'BANK NIFTY':['indices','NIFTY BANK'],
+  'FIN NIFTY':['indices','NIFTY FIN SERVICE'],'GOLD':['commodities','GOLD'],'SILVER':['commodities','SILVER'],'CRUDE OIL':['commodities','CRUDEOIL']};
+function realQuote(name){
+  if(!BOT.live||!BOT.market) return null;
+  const m=MKT_INDEX[name];
+  if(m){ const o=(BOT.market[m[0]]||{})[m[1]]; return (o&&o.ltp!=null)?{ltp:o.ltp,chg:o.chgPct}:null; }
+  const q=(BOT.quotes||{})[name]; return (q&&q.ltp!=null)?{ltp:q.ltp,chg:q.chg}:null;
+}
+function botBanner(){
+  if(!BOT.loaded) return `<div class="bot-banner">${icon('cpu',13)}<span>Connecting to your trading bot…</span></div>`;
+  if(BOT.error) return `<div class="bot-banner off">${icon('shield',13)}<span>Bot API offline — run <b>python3 bot_api.py</b> in the bot folder, then reopen Algo.</span></div>`;
+  const u=BOT.status&&BOT.status.user?esc(BOT.status.user):'—';
+  return `<div class="bot-banner on"><span class="live-dot live"></span><span>${BOT.connected?'Kite connected · '+u:'Kite disconnected'} · <b>${BOT.paperMode?'PAPER mode — no real orders':'LIVE'}</b>${BOT.status&&BOT.status.subscription?' · '+esc(BOT.status.subscription):''}</span></div>`;
+}
 function renderAlgo(){
   const v=$('algoView'); if(!v) return;
   if(!isAlgo()){ v.innerHTML=''; return; }
   state.algo=state.algo||{view:'market',bt:{algo:0,period:'1Y'}};
+  if(!state.algo.exec) state.algo.exec='paper';
+  if(!BOT.loaded){ loadBotData().then(()=>{ if(isAlgo())renderAlgo(); }); }
   const view=state.algo.view, live=ALGOS.filter(a=>a.status!=='idle');
-  const tabs=[['market','Marketplace'],['backtest','Backtest'],['monitor','Monitor']];
+  const tabs=[['market','Marketplace'],['backtest','Backtest'],['forward','Forward Test'],['monitor','Monitor']];
   const head=`<div class="av-head">
-    <div class="av-title"><span class="av-ic">${icon('cpu',17)}</span><div><b>Algo Studio</b><span>Backtest, deploy &amp; monitor rule-based strategies</span></div></div>
+    <div class="av-title"><span class="av-ic">${icon('cpu',17)}</span><div><b>Algo Studio</b><span>Backtest, forward-test &amp; monitor rule-based strategies</span></div></div>
     <div class="av-tabs" role="tablist" aria-label="Algo views">${tabs.map(([k,l])=>`<button class="av-tab${k===view?' on':''}" role="tab" aria-selected="${k===view}" data-algoview="${k}">${l}${k==='monitor'&&live.length?` <i class="av-tn">${live.length}</i>`:''}</button>`).join('')}</div></div>`;
-  const body=view==='market'?algoMarket():view==='backtest'?algoBacktest():algoMonitor();
-  v.innerHTML=`<div class="av-wrap">${head}<div class="av-scroll">${body}</div></div>`;
+  const body=view==='market'?algoMarket():view==='backtest'?algoBacktest():view==='forward'?algoForward():algoMonitor();
+  v.innerHTML=`<div class="av-wrap">${head}<div class="av-scroll">${algoStatusBar()}${body}</div></div>`;
   v.querySelectorAll('[data-algoview]').forEach(b=>b.onclick=()=>{state.algo.view=b.dataset.algoview;renderAlgo();});
+  v.querySelectorAll('[data-algoseg]').forEach(b=>b.onclick=()=>{state.algo.seg=b.dataset.algoseg;renderAlgo();});
   v.querySelectorAll('[data-algogoto]').forEach(b=>b.onclick=()=>{state.algo.view=b.dataset.algogoto;renderAlgo();});
   v.querySelectorAll('[data-algobt]').forEach(b=>b.onclick=()=>{state.algo.bt.algo=+b.dataset.algobt;state.algo.view='backtest';renderAlgo();});
   v.querySelectorAll('[data-algodep]').forEach(b=>b.onclick=()=>algoDeploy(ALGOS[+b.dataset.algodep]));
+  v.querySelectorAll('[data-algogl]').forEach(b=>b.onclick=()=>goLiveChecklist(ALGOS[+b.dataset.algogl]));
+  v.querySelectorAll('[data-execmode]').forEach(b=>b.onclick=()=>{state.algo.exec=b.dataset.execmode;renderAlgo();});
+  v.querySelectorAll('[data-execjump]').forEach(b=>b.onclick=()=>{state.algo.view='monitor';state.algo.exec=b.dataset.execjump;renderAlgo();});
+  const pc=v.querySelector('#algoPlanCap'); if(pc)pc.onchange=()=>{state.algo.capital=Math.max(0,Math.round(+pc.value||0));renderAlgo();};
+  const or=v.querySelector('#algoOnlyRun'); if(or)or.onchange=()=>{state.algo.onlyRun=or.checked;renderAlgo();};
   v.querySelectorAll('[data-algobuild]').forEach(b=>b.onclick=algoBuilder);
   v.querySelectorAll('[data-btperiod]').forEach(b=>b.onclick=()=>{state.algo.bt.period=b.dataset.btperiod;renderAlgo();});
   const bs=v.querySelector('#btAlgo'); if(bs)bs.onchange=()=>{state.algo.bt.algo=+bs.value;renderAlgo();};
@@ -2297,17 +2612,212 @@ function renderAlgo(){
   v.querySelectorAll('[data-algoresume2]').forEach(b=>b.onclick=()=>{ALGOS[+b.dataset.algoresume2].status='live';renderAlgo();quickToast('Strategy resumed','Live and scanning for entries.');});
   v.querySelectorAll('[data-algostop2]').forEach(b=>b.onclick=()=>{const a=ALGOS[+b.dataset.algostop2];a.status='idle';a.cap=0;renderAlgo();quickToast('Strategy stopped','Capital released to your funds.');});
 }
+/* ===== Info icons + plain-English definitions for every metric/strategy ===== */
+function infoI(tip){return tip?`<span class="info-i" title="${esc(tip)}" role="img" aria-label="${esc(tip)}" tabindex="0">i</span>`:'';}
+const ALGO_DEFS={
+  'OOS Sharpe':'Out-of-sample Sharpe — risk-adjusted return on data the strategy was NOT tuned on. Above ~1 is good, ~0 means no edge, below 0 loses money.',
+  'Return':'Average return per trade in the backtest, after realistic costs.',
+  'Win':'Win rate — share of trades that closed in profit. High win rate alone does NOT mean profitable: a few large losses can outweigh many small wins.',
+  'Trades':'Number of closed trades in the backtest. More trades = more reliable; under ~30 is thin, treat as a hint not proof.',
+  'Paper P&L':'Live profit/loss from forward paper-trading (simulated, no real money) since the bot started running.',
+  'Status':'Validation status. Validated = passed the regime backtest with a real, positive edge. Candidate = a recognised strategy that has NOT been backtested yet.',
+  'Best regime':'The market condition where this strategy showed its strongest edge in testing.',
+  'Min cap':'Minimum capital suggested to trade this strategy given lot sizes / margin.',
+  'Needs':'What this strategy requires to trade — product or segment (e.g. stock futures, index options, MCX).',
+  'Strategies':'How many strategies are available in this segment.',
+  'Validated':'How many strategies in this segment passed the regime backtest with a real edge (the rest are unproven candidates).',
+  'Live regime':'The market regime TradePro is detecting right now — it decides which strategy is the active engine.',
+  'Mode':'Paper = simulated, zero real orders. Live = real money. Always paper-trade first.'};
+const REGIME_DEFS={
+  Bull:'Bull — index above its 200-day average and trending up. Momentum / trend strategies are favoured.',
+  Bear:'Bear — index below its 200-day average, trending down. Most long-equity edges disappear; best to stand aside.',
+  Choppy:'Choppy / rangebound — no clear trend. Mean-reversion works; trend strategies get whipsawed.',
+  'High-Vol':'High volatility — India VIX elevated. Sharp moves and snap-backs; dip-buying (RSI-2) historically works, trend-following struggles.'};
+const STRAT_DEFS={
+  momentum:'Momentum / breakout (trend-following): buys strength as price breaks its recent high and rides the trend. Wins in trends, bleeds in chop.',
+  orb:'Opening Range Breakout: trades the break of the first 15-minute range — a classic intraday breakout play, squared off by close.',
+  meanrev:'Mean reversion: fades extremes, betting price snaps back to its average. Works in rangebound markets, dangerous in trends.',
+  rsi2:'Connors RSI(2): buys deep short-term oversold dips inside a long uptrend — a counter-trend swing edge that shines when volatility spikes.',
+  macross:'Golden Cross: slow positional trend-following on the 50/200-day moving-average crossover.',
+  supertrend:'Supertrend: an ATR-band trend follower that flips long/short as price crosses the band.',
+  pairs:'Pairs / statistical arbitrage: trades the spread between two correlated stocks — long one, short the other. Market-neutral, so it profits regardless of market direction.',
+  strangle:'Options premium selling: sells out-of-the-money calls & puts to collect time-decay (theta). High win rate but real tail risk — wings cap it.',
+  fut_trend:'Index futures trend-following with a regime filter and ATR-based position sizing.',
+  mcx_trend:'Commodity trend-following on MCX futures (gold / silver / crude) — commodities trend more strongly than equities.',
+  goldsilver:'Gold–Silver ratio: mean-reverts the price ratio between the two metals via MCX futures.'};
+function lbl(t){return ALGO_DEFS[t]?t+infoI(ALGO_DEFS[t]):t;}
+function simRegime(){
+  let vix=12; try{vix=+document.getElementById('sVix').value||12;}catch(e){}
+  if(vix>=20) return 'High-Vol';   // a volatility spike dominates the trend regime
+  return {bull:'Bull',bear:'Bear',neutral:'Choppy'}[document.documentElement.dataset.regime||state.displayed]||'Bull';
+}
+function liveRegime(){
+  if(BOT.live && BOT.market && BOT.market.engine) return BOT.market.engine.regime;   // real, from Kite
+  return simRegime();
+}
+function regimeReadout(){
+  if(BOT.live && BOT.market && BOT.market.engine){
+    const m=BOT.market;
+    return {score:m.engine.score, vix:(m.vix&&m.vix.ltp)||0, ad:(m.breadth&&m.breadth.ad)||0,
+            asOf:m.asOf, real:true};
+  }
+  try{ const raw=readSignals(), sc=scoreSignals(raw); return {score:composite(sc), vix:raw.vix, ad:raw.ad, real:false}; }
+  catch(e){ return null; }
+}
+function algoStatusBar(){
+  const lr=liveRegime();
+  const active=ALGOS.find(a=>a.vstatus==='validated'&&(a.bestRegime===lr||a.bestRegime==='Market-neutral'));
+  const conn=BOT.connected;
+  const rdot={Bull:'dot-bull',Bear:'dot-bear',Choppy:'dot-neutral','High-Vol':'dot-amber'}[lr]||'dot-neutral';
+  const eng=active?esc(active.name)+(active.live?' · paper':' · ready'):((lr==='Bear'||lr==='High-Vol')?'Stand aside':'—');
+  const er=regimeReadout();
+  const scoreTag=er?`<span class="asb-score ${er.score>=0?'up':'down'}">${er.score>=0?'+':''}${er.score}</span><span class="asb-caret">▾</span>`:'';
+  const pop=er?`<div class="asb-pop" role="tooltip">
+      <div class="asb-prow"><span>India VIX</span><b class="num ${er.vix>18?'down':'up'}">${er.vix.toFixed(1)} ${er.vix>=20?'Fear':er.vix>=15?'Caution':'Calm'}</b></div>
+      <div class="asb-prow"><span>Breadth A/D</span><b class="num ${er.ad>=1?'up':'down'}">${er.ad.toFixed(2)} ${er.ad>=1.5?'Strong':er.ad>=1?'Firm':'Weak'}</b></div>
+      <div class="asb-prow"><span>Engine Score</span><b class="num ${er.score>=0?'up':'down'}">${er.score>=0?'+':''}${er.score} ${esc(lr)}</b></div>
+      <div class="asb-popf">${er.real?('● Live from Kite · '+new Date(er.asOf).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})):'⚠ Simulated — connect Kite for live data'}</div></div>`:'';
+  const cells=[
+    `<div class="asb-cell"><span class="asb-l">Broker${infoI('Your Kite Connect link — green means market data and orders are authorised.')}</span><span class="asb-v"><span class="live-dot ${conn?'live':''}"></span>${conn?'Connected':'Offline'}</span></div>`,
+    (conn&&BOT.status&&BOT.status.user)?`<div class="asb-cell"><span class="asb-l">Account</span><span class="asb-v">${esc(String(BOT.status.user).split(' ')[0])}</span></div>`:'',
+    `<div class="asb-cell asb-click" data-execjump="${BOT.paperMode?'paper':'live'}" role="button" tabindex="0" title="See which strategies run in paper vs live"><span class="asb-l">Mode${infoI(ALGO_DEFS['Mode'])}</span><span class="asb-v"><span class="mode-badge ${BOT.paperMode?'paper':'live'}">${BOT.paperMode?'PAPER':'LIVE'}</span><span class="asb-caret">▸</span></span></div>`,
+    `<div class="asb-cell asb-pop-host"${er?' tabindex="0"':''}><span class="asb-l">Live regime${infoI((REGIME_DEFS[lr]||'')+' Hover for the live India VIX, breadth & engine score behind this call.')}</span><span class="asb-v"><span class="seg-dot ${rdot}"></span>${lr}${scoreTag}</span>${pop}</div>`,
+    `<div class="asb-cell asb-grow"><span class="asb-l">Active engine${infoI('The strategy auto-selected for the current regime. Stand aside = no validated edge here, so capital is preserved.')}</span><span class="asb-v">${eng}</span></div>`
+  ].filter(Boolean).join('<span class="asb-div"></span>');
+  return `<div class="algo-statusbar${conn?'':' off'}">${cells}</div>`;
+}
+function algoForward(){
+  const liveS=ALGOS.filter(a=>a.live);
+  if(!liveS.length) return secEmpty('cpu','No forward test running','Start the paper harness — run python3 paper_trade_all.py — to forward-test strategies on live data at zero risk.');
+  const total=liveS.reduce((s,a)=>s+(a.paperPnl||0),0);
+  const since=BOT.updated?new Date(BOT.updated).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'—';
+  const stat=secStats([{l:lbl('Strategies'),v:String(liveS.length)},{l:'Paper P&L'+infoI(ALGO_DEFS['Paper P&L']),v:sgn(total),tone:total>=0?'up':'down'},{l:'Updated'+infoI('When the forward paper-trading state last refreshed.'),v:since},{l:lbl('Mode'),v:'Paper'}]);
+  const rows=liveS.map(a=>`<div class="mon-row live"><div class="mon-l"><span class="live-dot live"></span><div><b>${esc(a.name)}${infoI(STRAT_DEFS[a.id]||'')}</b><span class="mon-cat">${esc(a.cat)} · ${(a.openPositions||0)} open</span></div></div><div class="mon-pnl"><b class="num ${cls(a.paperPnl||0)}">${sgn(a.paperPnl||0)}</b><span>paper</span></div></div>`).join('');
+  const feed=(BOT.trades&&BOT.trades.length)?`<div class="ft-feed"><div class="ft-feedh">Recent forward trades${infoI('Live entries & exits from the forward paper-trading harness — genuine out-of-sample evidence, no real money.')}</div>${BOT.trades.slice(0,14).map(t=>`<div class="ft-trade">${esc(t)}</div>`).join('')}</div>`:`<p class="sec-hint">${icon('cpu',12)}<span>No forward trades yet — they stream in here as the paper harness runs during market hours.</span></p>`;
+  return stat+`<div class="mon-list">${rows}</div>`+feed+`<p class="sec-hint">${icon('shield',12)}<span>Forward test = real out-of-sample evidence on live data at zero risk — the honest gate before any live capital.</span></p>`;
+}
+function algoCard(a,i,lr,cap){
+  cap=cap==null?algoPlanCapital():cap;
+  const rk=a.risk==='Aggressive'?'b-warn':a.risk==='Conservative'?'b-up':'b-neu';
+  const validated=a.vstatus==='validated', neutral=a.bestRegime==='Market-neutral';
+  const isActive=validated&&(a.bestRegime===lr||neutral);
+  const afford=cap>=a.minCap;
+  const affChip=cap>0?(afford?`<span class="aff-chip ok" title="Your ${inr(cap)} clears the ${inr(a.minCap)} minimum.">✓ Fits your capital</span>`:`<span class="aff-chip no" title="Needs ${inr(a.minCap)} — add ${inr(a.minCap-cap)}.">${icon('lock',10)} +${inr(a.minCap-cap)} needed</span>`):'';
+  const paperChip=a.live?`<span class="paper-chip">${icon('bolt',10)} Paper · ${(a.openPositions||0)} open</span>`:'';
+  const sbadge=validated?'<span class="vbadge ok">Validated</span>':'<span class="vbadge cand">Candidate</span>';
+  const tag=a.bestRegime?(neutral?'<span class="rg-tag">Market-neutral</span>':`<span class="rg-tag">Best in ${a.bestRegime}</span>`):'';
+  let stats;
+  if(validated){
+    const m=a.sharpe!=null?{l:'OOS Sharpe',v:a.sharpe.toFixed(2),up:a.sharpe>0}:{l:'Return',v:(a.totalRet>=0?'+':'')+a.totalRet+'%',up:a.totalRet>=0};
+    stats=`<div class="algo-stats"><div><span>${lbl(m.l)}</span><b class="num ${m.up?'up':'down'}">${m.v}</b></div><div><span>${lbl('Win')}</span><b class="num">${a.win}%</b></div><div><span>${lbl('Trades')}</span><b class="num">${a.trades}</b></div><div><span>Paper P&amp;L${infoI(ALGO_DEFS['Paper P&L'])}</span><b class="num ${a.paperPnl>0?'up':a.paperPnl<0?'down':''}">${a.paperPnl>=0?'+':'−'}${inr(Math.abs(a.paperPnl||0))}</b></div></div>`;
+  } else {
+    stats=`<div class="algo-stats"><div><span>${lbl('Status')}</span><b class="num">Candidate</b></div><div><span>${lbl('Best regime')}</span><b class="num">${a.bestRegime||'—'}</b></div><div><span>${lbl('Min cap')}</span><b class="num">${inr(a.minCap)}</b></div><div><span>${lbl('Needs')}</span><b class="num sm">${esc(a.requires||a.product||'—')}</b></div></div>`;
+  }
+  let rgrid='';
+  if(a.regimeFit){
+    rgrid='<div class="rg-head">Per-regime edge'+infoI('Average trade return in each market regime, measured in the backtest. Green = a positive edge, amber = weak/thin, red = loses. The outlined cell is the current live regime.')+'</div><div class="rg-grid">'+['Bull','Bear','Choppy','High-Vol'].map(r=>{const f=a.regimeFit[r];if(!f)return '';const tone=f[2]==='good'?'rg-good':f[2]==='weak'?'rg-weak':'rg-bad';const on=r===lr?' rg-live':'';return `<span class="rg-cell ${tone}${on}" title="${r}: ${f[0]>0?'+':''}${f[0]}% avg over ${f[1]} trades. ${REGIME_DEFS[r]||''}">${r==='High-Vol'?'HV':r}<b>${f[0]>0?'+':''}${f[0]}</b></span>`;}).join('')+'</div>';
+  }
+  const verdict=a.verdict?`<div class="algo-verdict">${icon('shield',11)}<span>${esc(a.verdict)}</span></div>`:'';
+  let act;
+  if(!validated) act='<span class="cand-pill">Backtest first</span>';
+  else if(a.live) act=`<button class="btn-go sm" data-algogl="${i}">${icon('shield',12)} Go-Live check</button>`;
+  else act=`<button class="btn-primary sm" data-algodep="${i}">Deploy (paper)</button>`;
+  return `<div class="algo-card${isActive?' is-active':''}${a.live?' is-live':''}">
+    ${isActive?`<span class="active-flag">● ACTIVE · regime ${lr}</span>`:''}
+    <div class="algo-h"><div><b>${esc(a.name)}${infoI(STRAT_DEFS[a.id]||a.desc)}</b><span class="algo-cat">${esc(a.cat)}</span></div><span class="badge ${rk}">${a.risk}</span></div>
+    <div class="vbadge-row">${sbadge}${tag}${affChip}${paperChip}</div>
+    <p class="algo-desc">${esc(a.desc)}</p>
+    ${stats}${rgrid}${verdict}
+    <div class="algo-act"><button class="btn-ghost sm" data-algobt="${i}">${icon('trendUp',12)} Backtest</button>${act}</div></div>`;
+}
+function algoPlanCapital(){
+  if(state.algo&&state.algo.capital!=null) return state.algo.capital;
+  return (BOT.status&&typeof BOT.status.funds==='number')?BOT.status.funds:0;
+}
+function algoRunnable(a,lr,cap){ return cap>=a.minCap && a.vstatus==='validated' && (a.bestRegime===lr||a.bestRegime==='Market-neutral'); }
+function algoNudge(){
+  const prov=ALGOS.filter(a=>a.readyExceptCapital);   // proven + safe; only funding & arming remain
+  if(!prov.length) return '';
+  const min=BOT.nudgeMin||10;
+  const cards=prov.map(a=>{
+    const i=ALGOS.indexOf(a);
+    if(a.nudge) return `<div class="nudge-card go"><span class="nudge-ic">${icon('bolt',16)}</span>
+      <div class="nudge-b"><b>${esc(a.name)} — ready to consider live</b><span>${esc(a.nudgeMsg||'')}</span></div>
+      <button class="btn-go sm" data-algogl="${i}">${icon('shield',12)} Review go-live checklist</button></div>`;
+    const n=a.fwdTrades||0, pct=Math.min(100,Math.round(n/min*100));
+    return `<div class="nudge-card build"><span class="nudge-ic">${icon('shield',16)}</span>
+      <div class="nudge-b"><b>${esc(a.name)} — proven &amp; safe · building forward evidence</b>
+        <span>${n}/${min} closed paper trades · paper P&amp;L <b class="${a.paperPnl>=0?'up':'down'}">${a.paperPnl>=0?'+':'−'}${inr(Math.abs(a.paperPnl||0))}</b>. A go-live nudge appears once it has ≥${min} <b>profitable</b> forward trades — proof, not hope.</span>
+        <div class="nudge-bar"><i style="width:${pct}%"></i></div></div>
+      <button class="btn-ghost sm" data-algogl="${i}">View gates</button></div>`;
+  }).join('');
+  return `<div class="nudge-wrap">${cards}</div>`;
+}
 function algoMarket(){
-  const live=ALGOS.filter(a=>a.status!=='idle'), cap=live.reduce((s,a)=>s+(a.cap||0),0);
-  const stat=secStats([{l:'Strategies',v:String(ALGOS.length)},{l:'Deployed',v:String(live.length)},{l:'Capital live',v:inr(cap)},{l:'Available',v:inr(CASH)}]);
-  const cards=ALGOS.map((a,i)=>{const rk=a.risk==='Aggressive'?'b-warn':a.risk==='Conservative'?'b-up':'b-neu';
-    return `<div class="algo-card${a.status!=='idle'?' is-live':''}">
-      <div class="algo-h"><div><b>${esc(a.name)}</b><span class="algo-cat">${esc(a.cat)}</span></div><span class="badge ${rk}">${a.risk}</span></div>
-      <p class="algo-desc">${esc(a.desc)}</p>
-      <div class="algo-stats"><div><span>CAGR</span><b class="num up">${a.cagr}%</b></div><div><span>Win</span><b class="num">${a.win}%</b></div><div><span>Max DD</span><b class="num down">−${a.dd}%</b></div><div><span>Min cap</span><b class="num">${inr(a.minCap)}</b></div></div>
-      <div class="algo-act"><button class="btn-ghost sm" data-algobt="${i}">${icon('trendUp',12)} Backtest</button>${a.status==='idle'?`<button class="btn-primary sm" data-algodep="${i}">Deploy</button>`:`<span class="live-pill">${icon('bolt',12)} Live · ${inr(a.cap)}</span>`}</div></div>`;}).join('');
-  const build=`<button class="algo-build" data-algobuild>${icon('plus',20)}<b>Build a strategy</b><span>Define your own entry &amp; exit rules</span></button>`;
-  return stat+`<div class="algo-grid">${cards}${build}</div>`;
+  const segs=BOT.segments||[{id:'cash',label:'All',note:''}];
+  const seg=state.algo.seg||segs[0].id;
+  const lr=liveRegime();
+  const cap=algoPlanCapital();
+  const onlyRun=!!(state.algo&&state.algo.onlyRun);
+  const inSeg=ALGOS.filter(a=>!a.segment||a.segment===seg);
+  const shown=onlyRun?inSeg.filter(a=>algoRunnable(a,lr,cap)):inSeg;
+  const segTabs=`<div class="seg-tabs" role="tablist">${segs.map(sg=>`<button class="seg-tab${sg.id===seg?' on':''}" data-algoseg="${sg.id}" role="tab" aria-selected="${sg.id===seg}"><b>${esc(sg.label)}</b><i>${esc(sg.note||'')}</i></button>`).join('')}</div>`;
+  const affordN=inSeg.filter(a=>cap>=a.minCap).length, matchN=inSeg.filter(a=>algoRunnable(a,lr,cap)).length;
+  const capStrip=`<div class="cap-strip">
+    <div class="cap-field"><label for="algoPlanCap">Plan with capital${infoI('Set the money you intend to deploy. Each card then shows whether you can actually run that strategy at this size — driven by real lot-size & margin minimums, not guesswork.')}</label>
+      <div class="cap-input-wrap"><span>₹</span><input id="algoPlanCap" class="cap-input num" type="number" inputmode="numeric" value="${cap}" min="0" step="5000" placeholder="e.g. 100000"></div></div>
+    <div class="cap-sum">${cap>0?`<b class="up">${affordN}</b> of ${inSeg.length} affordable · <b>${matchN}</b> also match the live <b>${lr}</b> regime`:'Enter the capital you plan to deploy to see what you can run.'}</div>
+    <label class="cap-toggle"><input type="checkbox" id="algoOnlyRun" ${onlyRun?'checked':''}><span>Only what I can run now</span></label>
+  </div>`;
+  const valid=inSeg.filter(a=>a.vstatus==='validated').length;
+  const stat=secStats([{l:lbl('Strategies'),v:String(inSeg.length)},{l:lbl('Validated'),v:String(valid)},{l:lbl('Live regime'),v:lr},{l:lbl('Mode'),v:BOT.paperMode?'Paper':'Live'}]);
+  const cards=shown.length?shown.map(a=>algoCard(a,ALGOS.indexOf(a),lr,cap)).join(''):secEmpty('shield','Nothing runnable at this size',`No validated strategy in this segment both fits ${inr(cap)} and matches the live ${lr} regime. Add capital, switch off the filter, or wait for the regime to favour a validated edge.`);
+  const build=onlyRun?'':`<button class="algo-build" data-algobuild>${icon('plus',20)}<b>Build a strategy</b><span>Define your own entry &amp; exit rules</span></button>`;
+  return algoNudge()+segTabs+capStrip+stat+`<div class="algo-grid">${cards}${build}</div>`;
+}
+/* ===== Go-Live readiness: the hard checklist that gates Paper→Live ===== */
+function goLiveChecklist(a){
+  flowModal({title:'Go-Live readiness — '+a.name, hideConfirm:true,
+    body:`<div class="gl-load">${icon('cpu',16)}<span>Running the go-live audit across strategy, account, risk &amp; security…</span></div>`,
+    wire(body){
+      fetch(BOT_API+'/api/readiness?strategy='+encodeURIComponent(a.id))
+        .then(r=>r.json()).then(d=>{ body.innerHTML=readinessHTML(d,a); wireReadiness(body,d,a); })
+        .catch(()=>{ body.innerHTML=`<p class="flow-note">${icon('shield',13)}<span>Bot API offline — run <b>python3 bot_api.py</b> in the bot folder, then retry.</span></p>`; });
+    }});
+}
+function readinessHTML(d,a){
+  if(!d||d.error) return `<p class="flow-note">${icon('shield',13)}<span>Could not audit this strategy.</span></p>`;
+  const order=[]; d.gates.forEach(g=>{ if(!order.includes(g.cat))order.push(g.cat); });
+  const groups=order.map(cat=>{
+    const rows=d.gates.filter(g=>g.cat===cat).map(g=>{
+      const ico=g.status==='pass'?'check':g.status==='fail'?'x':'alert';
+      return `<div class="gl-row ${g.status}"><span class="gl-mk">${icon(ico,13)}</span><div class="gl-tx"><b>${esc(g.label)}${g.critical?'':' <i class="gl-opt">optional</i>'}</b><span>${esc(g.detail)}</span></div></div>`;
+    }).join('');
+    return `<div class="gl-grp"><div class="gl-gh">${esc(cat)}</div>${rows}</div>`;
+  }).join('');
+  const pct=d.total?Math.round(d.passed/d.total*100):0;
+  const head=`<div class="gl-head ${d.ready?'ok':'block'}">
+    <div class="gl-score"><b>${d.passed}/${d.total}</b><span>critical gates green</span></div>
+    <div class="gl-barwrap"><div class="gl-bar"><i style="width:${pct}%"></i></div>
+      <span class="gl-verdict">${d.ready?icon('check',14)+' Cleared for live':icon('lock',13)+' '+(d.total-d.passed)+' gate(s) still open'}</span></div></div>`;
+  const open=d.gates.filter(g=>g.critical&&!g.ok);
+  const foot=d.ready
+    ? `<button class="tbtn primary gl-go" id="glGo">${icon('bolt',13)} Arm &amp; switch ${esc(a.name)} to LIVE</button>
+       <p class="gl-fnote">${icon('shield',12)}<span>Even here, a real order is impossible unless <b>ALLOW_LIVE</b> is set in the bot’s own environment — a UI click can never place money on its own.</span></p>`
+    : `<div class="gl-blocked">${icon('lock',14)}<div><b>Live is locked.</b><span>Clears automatically once every critical gate is green${open.length?': '+open.map(g=>esc(g.label)).join(' · '):''}.</span></div></div>`;
+  return head+`<div class="gl-list">${groups}</div>`+foot;
+}
+function wireReadiness(body,d,a){
+  const go=body.querySelector('#glGo'); if(!go) return;
+  go.onclick=()=>{ go.disabled=true; go.textContent='Arming…';
+    fetch(BOT_API+'/api/mode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'live'})})
+      .then(r=>r.json()).then(res=>{
+        if(res.locked){ go.disabled=false; go.innerHTML=icon('bolt',13)+' Arm &amp; switch '+esc(a.name)+' to LIVE';
+          quickToast('Live still locked','ALLOW_LIVE is not set in the bot environment, so the switch was refused. Set it on the machine running the bot, then retry.'); }
+        else { BOT.paperMode=false; closeModal(); if(typeof renderAlgo==='function')renderAlgo();
+          quickToast('LIVE armed — '+a.name,'Real orders are now enabled. Start small and watch the first fills.'); }
+      }).catch(()=>{ go.disabled=false; go.textContent='Retry'; quickToast('Could not reach the bot','Switch was not applied.'); });
+  };
 }
 function backtest(a,days){
   // Simulate a real trade-by-trade equity path from the strategy's own stats (win/CAGR/DD),
@@ -2358,7 +2868,12 @@ function eqCurveSVG(bt){
 }
 function algoBacktest(){
   const ai=Math.min(state.algo.bt.algo,ALGOS.length-1), period=state.algo.bt.period, a=ALGOS[ai];
-  const periods=[['1M',21],['3M',63],['1Y',252],['3Y',756]], days=(periods.find(p=>p[0]===period)||periods[2])[1], bt=backtest(a,days);
+  const periods=[['1M',21],['3M',63],['1Y',252],['3Y',756]], days=(periods.find(p=>p[0]===period)||periods[2])[1];
+  if(a.real&&a.vstatus!=='validated'){
+    const sel=`<div class="bt-controls"><div class="dc-sel"><label class="dc-lab" for="btAlgo">Strategy</label><select id="btAlgo" class="dc-input">${ALGOS.map((x,i)=>`<option value="${i}" ${i===ai?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div></div>`;
+    return sel+secEmpty('cpu','Candidate — not yet backtested',esc(a.name)+' is a realistic strategy for this segment but has not passed the regime-segmented backtest. '+(a.requires?('Needs '+esc(a.requires)+' data. '):'')+'It will show real numbers once validated.');
+  }
+  const bt=backtest(a,days);
   const ctrl=`<div class="bt-controls">
     <div class="dc-sel"><label class="dc-lab" for="btAlgo">Strategy</label><select id="btAlgo" class="dc-input">${ALGOS.map((x,i)=>`<option value="${i}" ${i===ai?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>
     <div class="bt-periods" role="tablist" aria-label="Backtest period">${periods.map(([k])=>`<button class="bt-period${k===period?' on':''}" data-btperiod="${k}" role="tab" aria-selected="${k===period}">${k}</button>`).join('')}</div></div>`;
@@ -2367,15 +2882,43 @@ function algoBacktest(){
   return ctrl+`<div class="bt-card"><div class="bt-cardh"><b>${esc(a.name)}</b><span>${period} backtest · ${days} sessions · hypothetical</span></div>${eqCurveSVG(bt)}</div>`+metrics+`<div class="bt-logwrap"><div class="bt-logttl">Recent trades</div>${log}</div><div class="bt-cta"><button class="btn-primary" data-algodep="${ai}">${icon('bolt',13)} Deploy this strategy</button></div>`;
 }
 function algoMonitor(){
-  const live=ALGOS.filter(a=>a.status!=='idle');
-  if(!live.length) return secEmpty('cpu','No strategies deployed','Deploy a strategy from the Marketplace — it’ll run here with live P&L and one-tap controls.',`<button class="btn-primary" data-algogoto="market">${icon('plus',13)} Browse strategies</button>`);
-  const cap=live.reduce((s,a)=>s+(a.cap||0),0), dayPnl=live.filter(a=>a.status==='live').reduce((s,a)=>s+(a.cap||0)*a.cagr/100/252*(dseed(a.name.length)*4-1),0);
-  const stat=secStats([{l:'Deployed',v:String(live.length)},{l:'Capital',v:inr(cap)},{l:"Today's P&L",v:sgn(dayPnl),tone:dayPnl>=0?'up':'down'}]);
-  const rows=live.map(a=>{const i=ALGOS.indexOf(a),pnl=(a.cap||0)*a.cagr/100/252*(dseed(a.name.length+2)*4-1);
-    return `<div class="mon-row ${a.status}"><div class="mon-l"><span class="live-dot ${a.status}"></span><div><b>${esc(a.name)}</b><span class="mon-cat">${esc(a.cat)} · ${inr(a.cap)}</span></div></div>
-      <div class="mon-pnl"><b class="num ${cls(pnl)}">${sgn(pnl)}</b><span>${a.status==='live'?'today':'paused'}</span></div>
-      <div class="mon-ctrls">${a.status==='live'?`<button class="btn-ghost sm" data-algopause2="${i}">Pause</button>`:`<button class="btn-ghost sm" data-algoresume2="${i}">Resume</button>`}<button class="btn-ghost sm danger" data-algostop2="${i}">Stop</button></div></div>`;}).join('');
-  return stat+`<div class="mon-list">${rows}</div><p class="sec-hint">${icon('shield',12)}<span>Kill-switch: <b>Stop</b> releases capital immediately. Strategies auto-halt if their max-drawdown limit is breached.</span></p>`;
+  const exec=state.algo.exec||'paper';
+  const paperRun=ALGOS.filter(a=>a.live);          // running in the forward PAPER harness
+  const liveRun=ALGOS.filter(a=>a.execLive);       // actually placing REAL orders (none until the live runner trades it)
+  const ready=ALGOS.filter(a=>a.readyExceptCapital);
+  const toggle=`<div class="exec-toggle" role="tablist" aria-label="Execution mode">
+    <button class="exec-tab${exec==='paper'?' on':''}" data-execmode="paper" role="tab" aria-selected="${exec==='paper'}"><span class="exec-dot paper"></span>Paper<i>${paperRun.length}</i></button>
+    <button class="exec-tab${exec==='live'?' on':''}" data-execmode="live" role="tab" aria-selected="${exec==='live'}"><span class="exec-dot ${liveRun.length?'live':'off'}"></span>Live<i>${liveRun.length}</i></button>
+  </div>`;
+  if(exec==='live'){
+    const readyNote=ready.length
+      ? `<div class="exec-ready">${icon('shield',13)}<div><b>Ready for live once funded &amp; armed:</b> ${ready.map(a=>esc(a.name)).join(' · ')}<span>Open each strategy’s Go-Live check, then fund the account + set ALLOW_LIVE.</span></div></div>`
+      : '';
+    if(!liveRun.length)
+      return toggle+secEmpty('shield','No strategies are live','Nothing is placing real orders. Live execution stays locked until a strategy clears the Go-Live checklist — fund the account + arm ALLOW_LIVE on the bot. Everything runs in paper until then.')+readyNote;
+    const lrows=liveRun.map(a=>{const i=ALGOS.indexOf(a);
+      return `<div class="mon-row live"><div class="mon-l"><span class="live-dot live"></span><div><b>${esc(a.name)}</b><span class="mon-cat">${esc(a.cat)} · ${(a.openPositions||0)} open</span></div></div>
+        <div class="mon-pnl"><b class="num ${cls(a.livePnl||0)}">${sgn(a.livePnl||0)}</b><span>LIVE · real ₹</span></div>
+        <div class="mon-ctrls"><button class="btn-ghost sm" data-algogl="${i}">Gates</button></div></div>`;}).join('');
+    return toggle+`<div class="mon-list">${lrows}</div>`+readyNote;
+  }
+  // ---- PAPER view ----
+  if(!paperRun.length) return toggle+secEmpty('cpu','No paper strategies running','Start the forward harness — <b>python3 paper_trade_all.py</b> — to run strategies in paper.');
+  const total=paperRun.reduce((s,a)=>s+(a.paperPnl||0),0);
+  const stat=secStats([{l:'Running · paper',v:String(paperRun.length)},{l:'Paper P&L'+infoI(ALGO_DEFS['Paper P&L']),v:sgn(total),tone:total>=0?'up':'down'},{l:'Mode',v:'Paper · no real orders'}]);
+  const rows=paperRun.map(a=>{const i=ALGOS.indexOf(a);
+    const sub=(a.openPositions||0)?`${sgn(a.openPnl||0)} unrealised`:((a.openPositions||a.fwdTrades)?'realised':'no trades yet');
+    const pos=(a.positions||[]).map(p=>p.entry!=null
+      ? `<div class="mon-posrow"><span class="mp-sym">${esc(p.sym)}</span><span class="mp-q">${p.qty} qty</span><span class="mp-x num">entry ${p.entry.toLocaleString('en-IN')}</span><span class="mp-x num">LTP ${p.ltp!=null?p.ltp.toLocaleString('en-IN'):'—'}</span><b class="mp-pnl num ${cls(p.unreal)}">${sgn(p.unreal)}${p.chgPct!=null?` · ${p.chgPct>=0?'+':''}${p.chgPct}%`:''}</b></div>`
+      : `<div class="mon-posrow"><span class="mp-sym">${esc(p.sym)}</span><span class="mp-q">spread ${p.spread>0?'long':'short'}</span><span class="mp-x">marks on close</span></div>`).join('');
+    const posBlock=pos?`<div class="mon-pos">${pos}</div>`:'';
+    return `<div class="mon-card"><div class="mon-row live"><div class="mon-l"><span class="live-dot live"></span><div><b>${esc(a.name)}${a.vstatus==='validated'?'<span class="vbadge ok" style="margin-left:6px">Validated</span>':''}</b><span class="mon-cat">${esc(a.cat)} · ${(a.openPositions||0)} open · ${a.fwdTrades||0} closed</span></div></div>
+      <div class="mon-pnl"><b class="num ${cls(a.paperPnl||0)}">${sgn(a.paperPnl||0)}</b><span title="Open positions are marked to live market price; closed-trade P&L drives the go-live nudge.">${sub}</span></div>
+      <div class="mon-ctrls"><button class="btn-ghost sm" data-algogl="${i}">${icon('shield',12)} Go-Live check</button></div></div>${posBlock}</div>`;}).join('');
+  const note=paperRun.some(a=>!a.openPositions&&!a.fwdTrades)
+    ? `Strategies at ₹0 simply haven’t triggered an entry signal yet — they only trade when their setup appears. P&L moves as positions open and close.`
+    : `Open positions are marked to live market price; the go-live nudge needs ≥${BOT.nudgeMin||10} <b>closed</b> profitable trades.`;
+  return toggle+stat+`<div class="mon-list">${rows}</div><p class="sec-hint">${icon('shield',12)}<span>${note} All run in <b>PAPER</b> — zero real-money risk.</span></p>`;
 }
 function algoBuilder(){
   flowModal({title:'Build a strategy', confirm:'Create strategy',
@@ -2452,10 +2995,12 @@ function aiRespond(q){
   if(/sector|heatmap|rotation/.test(s)) return aiCardSectors();
   return aiCardFallback();
 }
-function aiCardMovers(){const g=[...SYMS].sort((a,b)=>b.chg-a.chg);
+function aiCardMovers(){
+  if(!BOT.live) return `I can only show <b>real</b> movers when Kite is connected — run <code>python3 login.py</code>. I won't invent prices.${aiChips([['go-research','See research calls']])}`;
+  const g=[...SYMS].filter(s=>s.live!==false).sort((a,b)=>b.chg-a.chg);
   const row=s=>`<div class="ais-row"><span class="t-sym">${s.sym}</span><span class="num">${s.ltp.toLocaleString('en-IN')}</span><span class="num ${cls(s.chg)}">${pct(s.chg)}</span></div>`;
   return `Here are today’s biggest movers:<div class="ai-data"><div class="ai-col"><div class="ai-coln up">Top gainers</div>${g.slice(0,3).map(row).join('')}</div><div class="ai-col"><div class="ai-coln down">Top losers</div>${g.slice(-3).reverse().map(row).join('')}</div></div>${aiChips([['open-chain','Open option chain'],['go-research','See research calls']])}`;}
-function aiCardIdeas(){const ideas=[...SYMS].filter(s=>s.chg>0).sort((a,b)=>b.chg-a.chg).slice(0,3);
+function aiCardIdeas(){const ideas=[...SYMS].filter(s=>s.live!==false&&s.chg>0).sort((a,b)=>b.chg-a.chg).slice(0,3);
   return `Screening momentum + breadth, these stand out right now:<div class="ai-data2">${ideas.map(s=>`<div class="ais-row"><span class="t-sym">${s.sym}</span><span class="ais-tag">${s.chg>2?'Strong momentum':'Building'}</span><span class="num ${cls(s.chg)}">${pct(s.chg)}</span></div>`).join('')}</div><span class="ai-conf">Confidence: medium · ideas, not advice.</span>${aiChips([['go-research','Deep-dive research'],['go-analyser','Check overlap']])}`;}
 function aiCardHedge(){const h=HOLDINGS.reduce((a,x)=>a+x.val,0);
   return `To protect your <b>${inrL(h)}</b> equity book against a drop, a simple hedge is a <b>NIFTY put</b> or a bear put spread — defined cost, defined protection. I can set it up in the strategy builder.${aiChips([['open-strategy','Build the hedge'],['go-analyser','Assess my risk']])}`;}
@@ -2506,7 +3051,7 @@ function aiSystemPrompt(){
   const r=state.displayed, top=[...HOLDINGS].sort((a,b)=>b.val-a.val).slice(0,4).map(h=>h.sym+' '+pct(h.chg)).join(', ');
   let pcrTxt=''; try{const c=buildChain(0,0);pcrTxt=' NIFTY spot '+c.u.spot+', PCR '+pcr(c).toFixed(2)+', max-pain '+maxPain(c)+'.';}catch(e){}
   return [
-    'You are the in-app AI copilot for TradePro, an Indiabulls Securities trading & investing terminal (a demo).',
+    'You are the in-app AI copilot for TradePro, a trading & investing terminal (a demo).',
     'Be concise and direct — a few sentences, no preamble. Use plain text; **bold** for key numbers is fine. Do not use markdown headers, tables, or code blocks.',
     'Current market regime: '+r+'. User holdings (today): '+top+'.'+pcrTxt,
     'When your answer points the user toward a specific part of the app, call the `navigate` tool to offer a one-tap shortcut there — the user must tap it, so calling navigate never moves them on its own. Always write a helpful text answer as well; never reply with only a tool call.',
@@ -2646,6 +3191,10 @@ function cascadeSurface(next){
 /* ---------- live tape: VIX-driven ticks with uptick/downtick flash ---------- */
 function flashNum(el,txt,dir){ el.textContent=txt; el.classList.remove('tk-up','tk-down'); void el.offsetWidth; el.classList.add(dir>=0?'tk-up':'tk-down'); }
 function doTick(){
+  // LIVE: real Kite WebSocket ticks (loadTicks) drive every price — never fabricate
+  // movement on top of them. This synthetic tape only animates the offline demo.
+  // (BOT is a module-scoped `let`, NOT on window — reference it directly.)
+  if(typeof BOT!=='undefined' && BOT.live) return;
   const vix=+$('sVix').value, vol=clamp((vix-8)/27,0,1), night=state.surface==='night'?1.4:1;
   const upd=(el,dec)=>{const base=parseFloat(el.textContent.replace(/,/g,''))||0; if(!base)return;
     const mv=(Math.random()-0.5)*base*0.0007*(0.4+vol*3.2)*night;
@@ -2680,23 +3229,38 @@ const sgn=n=>(n>=0?'+':'−')+'₹'+Math.abs(Math.round(n)).toLocaleString('en-I
 const WIDGET_CATALOG={
   trader:[
     {key:'movers',name:'Top Movers',icon:'trendUp',desc:'Biggest gainers & losers right now',render(){
-      const g=[...SYMS].sort((a,b)=>b.chg-a.chg), row=s=>`<div class="wg-row"><span class="t-sym">${s.sym}</span><span class="num">${s.ltp.toLocaleString('en-IN')}</span><span class="num ${cls(s.chg)}">${pct(s.chg)}</span></div>`;
+      if(!BOT.live) return `<div class="wg-empty">${icon('shield',13)} Connect Kite for live movers.</div>`;
+      const live=SYMS.filter(s=>s.live!==false);   // exclude symbols with no real quote — never a stale price
+      if(!live.length) return `<div class="wg-empty">No live quotes yet.</div>`;
+      const g=[...live].sort((a,b)=>b.chg-a.chg), row=s=>`<div class="wg-row"><span class="t-sym">${s.sym}</span><span class="num">${s.ltp.toLocaleString('en-IN')}</span><span class="num ${cls(s.chg)}">${pct(s.chg)}</span></div>`;
       return `<div class="wg-split"><div><div class="wg-cap up">Gainers</div>${g.slice(0,3).map(row).join('')}</div><div><div class="wg-cap down">Losers</div>${g.slice(-3).reverse().map(row).join('')}</div></div>`;}},
     {key:'heatmap',name:'Sector Heatmap',icon:'grip',desc:'Sector performance at a glance',render(){
-      return `<div class="wg-heat">${SECTORS.map(s=>`<div class="wg-tile ${s.base>=0?'up':'down'}" style="--i:${Math.min(1,Math.abs(s.base)/3).toFixed(2)}"><b>${s.s}</b><span class="num">${pct(s.base)}</span></div>`).join('')}</div>`;}},
-    {key:'pnl',name:'Day P&L',icon:'bolt',desc:'Today’s P&L across your holdings',render(){
-      const day=HOLDINGS.reduce((a,h)=>a+h.val*h.chg/100,0), best=[...HOLDINGS].sort((a,b)=>b.chg-a.chg)[0], worst=[...HOLDINGS].sort((a,b)=>a.chg-b.chg)[0];
-      return `<div class="wg-big ${cls(day)}">${sgn(day)}</div><div class="wg-row"><span>Best</span><span class="t-sym">${best.sym}</span><span class="num up">${pct(best.chg)}</span></div><div class="wg-row"><span>Worst</span><span class="t-sym">${worst.sym}</span><span class="num down">${pct(worst.chg)}</span></div>`;}},
+      if(!BOT.live) return `<div class="wg-heat"><div class="wg-empty">${icon('shield',13)} Connect Kite for live sector performance.</div></div>`;
+      const m={}; SYMS.filter(s=>s.live!==false).forEach(s=>{(m[s.sector]=m[s.sector]||[]).push(s.chg);});
+      const secs=Object.entries(m).map(([s,a])=>({s,chg:a.reduce((x,y)=>x+y,0)/a.length})).sort((a,b)=>b.chg-a.chg);
+      if(!secs.length) return `<div class="wg-heat"><div class="wg-empty">No live quotes yet.</div></div>`;
+      return `<div class="wg-heat">${secs.map(x=>`<div class="wg-tile ${x.chg>=0?'up':'down'}" style="--i:${Math.min(1,Math.abs(x.chg)/3).toFixed(2)}"><b>${esc(x.s)}</b><span class="num">${pct(x.chg)}</span></div>`).join('')}</div>`;}},
+    {key:'pnl',name:'Day P&L',icon:'bolt',desc:'Today’s real P&L across your Kite holdings',render(){
+      if(!BOT.live||!BOT.holdings) return `<div class="wg-big muted">—</div><div class="wg-empty">Connect Kite for live Day P&amp;L.</div>`;
+      const hs=BOT.holdings.holdings||[];
+      if(!hs.length) return `<div class="wg-big">₹0</div><div class="wg-empty">No holdings yet — your real Day P&amp;L shows here once you hold positions.</div>`;
+      const day=BOT.holdings.dayPnl||0, byPct=[...hs].map(h=>({sym:h.sym,chg:h.dayChangePct||0}));
+      const best=[...byPct].sort((a,b)=>b.chg-a.chg)[0], worst=[...byPct].sort((a,b)=>a.chg-b.chg)[0];
+      return `<div class="wg-big ${cls(day)}">${sgn(day)}</div><div class="wg-row"><span>Best</span><span class="t-sym">${esc(best.sym)}</span><span class="num ${cls(best.chg)}">${pct(best.chg)}</span></div><div class="wg-row"><span>Worst</span><span class="t-sym">${esc(worst.sym)}</span><span class="num ${cls(worst.chg)}">${pct(worst.chg)}</span></div><div class="wg-foot">${hs.length} holdings · total ${sgn(BOT.holdings.totalPnl||0)}</div>`;}},
     {key:'depth',name:'Market Depth',icon:'sliders',desc:'5-level bid / ask ladder',render(){
-      const s=bySym(state.selected||'RELIANCE')||SYMS[3], p=s.ltp; let rows='';
-      for(let i=1;i<=5;i++){const bid=p*(1-i*0.0007), ask=p*(1+i*0.0007); rows+=`<div class="wg-depth"><span class="num up">${bid.toFixed(1)}</span><span class="wg-q">${Math.round(150+Math.random()*900)}</span><span class="wg-q">${Math.round(150+Math.random()*900)}</span><span class="num down">${ask.toFixed(1)}</span></div>`;}
-      return `<div class="wg-depth wg-dhead"><span>Bid</span><span>Qty</span><span>Qty</span><span>Ask</span></div>${rows}`;}},
+      if(!BOT.live) return `<div class="wg-empty">${icon('shield',13)} Connect Kite for live market depth.</div>`;
+      const sel=state.selected||'RELIANCE', d=BOT.depth;
+      if(!d||d.symbol!==sel){ loadDepth(sel); return `<div class="wg-empty">Loading live depth for ${esc(sel)}…</div>`; }
+      if(d.error) return `<div class="wg-empty">No depth for ${esc(sel)} — ${esc(d.error)}.</div>`;
+      return depthLadderHtml(d);}},
     {key:'oi',name:'Option Chain OI',icon:'scale',desc:'Call / Put open interest near spot',render(){
-      return `<div class="wg-oi">${STRIKES.map(k=>{const d=Math.abs(k-SPOT), call=Math.max(8,Math.round(70-d/12+Math.random()*14)), put=Math.max(8,Math.round(70-d/12+Math.random()*14));
-        return `<div class="wg-oirow ${k===SPOT?'atm':''}"><span class="wg-obar call" style="width:${call}%"></span><b class="num">${k}</b><span class="wg-obar put" style="width:${put}%"></span></div>`;}).join('')}</div>`;}},
+      return `<div class="wg-empty">${icon('shield',13)} Open the Option Analyser for live chain OI — no synthetic OI shown here.</div>`;}},
     {key:'margin',name:'Margin & Funds',icon:'wallet',desc:'Available margin & exposure',render(){
-      const util=Math.round(EXPOSURE/(EXPOSURE+CASH)*100);
-      return `<div class="wg-row"><span>Available</span><b class="num">${inrL(CASH)}</b></div><div class="wg-row"><span>Exposure</span><b class="num">${inrL(EXPOSURE)}</b></div><div class="wg-bar-track"><span style="width:${util}%"></span></div><div class="wg-sub">${util}% utilised · ₹6.01K instant margin available</div>`;}},
+      if(!BOT.live||!BOT.market) return `<div class="wg-empty">${icon('shield',13)} Connect Kite for live margin & funds.</div>`;
+      const avail=BOT.market.funds||0;
+      const exposure=((BOT.holdings&&BOT.holdings.holdings)||[]).reduce((a,h)=>a+(h.ltp||0)*(h.qty||0),0);
+      const denom=exposure+avail, util=denom>0?Math.round(exposure/denom*100):0;
+      return `<div class="wg-row"><span>Available funds</span><b class="num">${inrL(avail)}</b></div><div class="wg-row"><span>Holdings value</span><b class="num">${inrL(exposure)}</b></div><div class="wg-bar-track"><span style="width:${util}%"></span></div><div class="wg-sub">${util}% deployed · live from your Kite account</div>`;}},
   ],
   investor:[
     {key:'goals',name:'Goal Tracker',icon:'flag',desc:'Progress toward your life goals',render(){
@@ -2951,8 +3515,8 @@ function init(){
 
   initWatchlistDnD(); initResize(); initSearch(); initKeyboardNav(); wireTicker();
 
-  // ---- mount the interactive chart engine ----
-  if(window.TPChart) TPChart.mount({onTrade:tradeFromChart, persist:saveChart});
+  // ---- mount the interactive chart engine (real Kite candles via /api/candles) ----
+  if(window.TPChart) TPChart.mount({onTrade:tradeFromChart, persist:saveChart, feed:chartFeed});
 
   // ---- restore persisted session ----
   const saved=loadState();
@@ -2994,6 +3558,15 @@ function init(){
   applyRegime(startMode==='manual'&&saved&&saved.regime?saved.regime:'bull');
   recompute({silent:true});
   tapeLoop();
+  loadMarket(); setInterval(loadMarket, 30000);   // 100% real Kite market data (funds, regime, VIX, breadth)
+  setInterval(()=>{ loadTicks();                  // real-time prices via Kite WebSocket (watchlist + chart)
+    if(BOT.live && document.querySelector('.wg-card[data-wkey="depth"]')) loadDepth(state.selected||'RELIANCE');
+  }, 2000);
+  // fast real-time P&L poll (2s) — lean /api/monitor, only on P&L views so text inputs elsewhere aren't disrupted
+  setInterval(()=>{ const v=state.algo&&state.algo.view;
+    if(typeof isAlgo==='function'&&isAlgo()&&(v==='monitor'||v==='forward')){
+      loadMonitor().then(()=>{ if(isAlgo()&&(state.algo.view==='monitor'||state.algo.view==='forward')) renderAlgo(); });
+    }}, 2000);
   mountStableCardCtls(); applyCardStates();
 
   // first-run: ask the user how they'll use TradePro (tailors the whole terminal)

@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TradePro — Indiabulls Securities · Bull/Bear Terminal</title>
+<title>TradePro · Bull/Bear Terminal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="assets/styles.css?v=30" />
+<link rel="stylesheet" href="assets/styles.css?v=51" />
 </head>
 <body>
 <div class="ambient" aria-hidden="true">
@@ -27,13 +27,15 @@
 <!-- ====================== TOP BAR ====================== -->
 <header class="topbar">
   <div class="tb-brand">
-    <img class="brand-logo" src="assets/logo.svg" alt="Indiabulls Securities" />
+    <img class="brand-logo" src="assets/logo.svg" alt="TradePro" />
     <span class="brand-pro">TradePro</span>
   </div>
 
   <!-- Workspace selector (JS-rendered in Trading mode) — replaces the old NSE/BSE/MCX exchange switch -->
   <div class="ws-switch" id="wsSwitch" aria-label="Workspace"></div>
   <div class="mkt-status" id="mktStatus"></div>
+
+  <div class="hdr-engine" id="hdrEngine" aria-label="Live regime engine"></div>
 
   <div class="tb-spacer"></div>
 
@@ -215,7 +217,7 @@
 <!-- ====================== FIRST-RUN PERSONA GATE ====================== -->
 <div class="persona-gate" id="personaGate" role="dialog" aria-modal="true" aria-label="Choose how you use TradePro">
   <div class="pg-card">
-    <img class="pg-logo" src="assets/logo.svg" alt="Indiabulls Securities" />
+    <img class="pg-logo" src="assets/logo.svg" alt="TradePro" />
     <h2 class="pg-title">How will you use TradePro today?</h2>
     <p class="pg-sub">We'll tailor the entire terminal — order pad, panels, chart and signals — to your style. Switch anytime from the floating control.</p>
     <div class="pg-opts">
@@ -253,7 +255,7 @@
 <!-- ====================== TOASTS ====================== -->
 <div class="toast-wrap" id="toastWrap" role="status" aria-live="polite"></div>
 
-<script src="assets/chart.js?v=15"></script>
-<script src="assets/app.js?v=30"></script>
+<script src="assets/chart.js?v=17"></script>
+<script src="assets/app.js?v=56"></script>
 </body>
 </html>
