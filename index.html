@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="assets/styles.css?v=51" />
+<link rel="stylesheet" href="assets/styles.css?v=64" />
 </head>
 <body>
 <div class="ambient" aria-hidden="true">
@@ -33,9 +33,6 @@
 
   <!-- Workspace selector (JS-rendered in Trading mode) — replaces the old NSE/BSE/MCX exchange switch -->
   <div class="ws-switch" id="wsSwitch" aria-label="Workspace"></div>
-  <div class="mkt-status" id="mktStatus"></div>
-
-  <div class="hdr-engine" id="hdrEngine" aria-label="Live regime engine"></div>
 
   <div class="tb-spacer"></div>
 
@@ -60,6 +57,7 @@
     <button class="surface-toggle" id="surfaceToggle" title="Day / Night — Trading Floor mode" aria-label="Toggle day or night mode" aria-pressed="false"></button>
     <button class="engine-btn icon-only" id="engineBtn" title="Regime Engine" aria-label="Open regime detection engine"><svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2.2" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="7" cy="17" r="2.2" fill="currentColor" stroke="none"/></svg></button>
     <button class="widget-btn" id="widgetBtn" title="Add or manage widgets" aria-label="Open widget library"><svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Widgets</span></button>
+    <button class="plan-chip" id="planChip" title="Your plan — view pricing" aria-label="Your plan — view pricing"></button>
     <div class="funds-chip"><span id="fundsLabel">Margin available</span><b id="fundsVal">₹4,82,000</b></div>
     <div class="profile">SB</div>
   </div>
@@ -68,6 +66,12 @@
 <!-- ====================== INDEX TICKER TAPE ====================== -->
 <div class="ticker-bar">
   <div class="tb-viewport"><div class="tb-ticker" id="topIndex"></div></div>
+  <!-- Live market pulse — relocated here from the top bar so every metric has room to breathe -->
+  <div class="tb-market">
+    <div class="mkt-status" id="mktStatus"></div>
+    <span class="tb-mdiv"></span>
+    <div class="hdr-engine" id="hdrEngine" aria-label="Live regime engine"></div>
+  </div>
   <button class="tb-gear" id="tickerGear" title="Ticker settings" aria-label="Ticker settings" aria-haspopup="dialog" aria-expanded="false"><svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2.2" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="7" cy="17" r="2.2" fill="currentColor" stroke="none"/></svg></button>
 </div>
 <div class="tk-settings" id="tickerSettings" role="dialog" aria-label="Ticker settings" hidden></div>
@@ -86,7 +90,6 @@
         <button class="wl-tab">F&amp;O</button>
         <button class="wl-tab">Indices</button>
       </div>
-      <button class="icon-btn" title="Add scrip" aria-label="Add scrip to watchlist"><svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
     </div>
     <div class="wl-search"><svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input placeholder="Add scrip…" aria-label="Add a scrip to your watchlist" /></div>
     <div class="wl-meta" id="wlMeta"></div>
@@ -215,34 +218,40 @@
 </div>
 
 <!-- ====================== FIRST-RUN PERSONA GATE ====================== -->
-<div class="persona-gate" id="personaGate" role="dialog" aria-modal="true" aria-label="Choose how you use TradePro">
+<div class="persona-gate" id="personaGate" data-step="1" role="dialog" aria-modal="true" aria-label="Set up TradePro">
   <div class="pg-card">
     <img class="pg-logo" src="assets/logo.svg" alt="TradePro" />
-    <h2 class="pg-title">How will you use TradePro today?</h2>
-    <p class="pg-sub">We'll tailor the entire terminal — order pad, panels, chart and signals — to your style. Switch anytime from the floating control.</p>
-    <div class="pg-opts">
-      <button class="pg-opt" data-persona="trader">
-        <span class="pg-ic"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M21 7h-5M21 7v5"/></svg></span>
-        <b>I'm Trading</b>
-        <span class="pg-desc">Active markets · intraday &amp; F&amp;O · momentum, stops, hedges, R:R brackets and live tape.</span>
-      </button>
-      <button class="pg-opt" data-persona="investor">
-        <span class="pg-ic"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-8"/><path d="M12 13C12 9 8.5 7 5 7c0 4 3 6 7 6z"/><path d="M12 11c0-3.2 2.8-5 6-5 0 3.2-2.6 5-6 5z"/></svg></span>
-        <b>I'm Investing</b>
-        <span class="pg-desc">Long-term wealth · SIP &amp; delivery · accumulate, allocate, rebalance and compound.</span>
-      </button>
-      <button class="pg-opt" data-persona="algo">
-        <span class="pg-ic"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 3v2M15 3v2M9 19v2M15 19v2M3 9h2M3 15h2M19 9h2M19 15h2"/></svg></span>
-        <b>I'm Automating</b>
-        <span class="pg-desc">Rule-based algos · backtest, deploy &amp; monitor strategies that trade for you, hands-free.</span>
-      </button>
-      <button class="pg-opt" data-persona="ai">
-        <span class="pg-ic"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/></svg></span>
-        <b>Ask AI</b>
-        <span class="pg-desc">Your market copilot · ask for ideas, screeners, hedges &amp; plain-English insight on demand.</span>
-      </button>
+    <div class="pg-steps" aria-hidden="true"><span class="pg-dot on"></span><span class="pg-dot"></span></div>
+
+    <div class="pg-step pg-step1">
+      <h2 class="pg-title">How will you use TradePro today?</h2>
+      <p class="pg-sub">We'll tailor the entire terminal — order pad, panels, chart and signals — to your style. Switch anytime from the floating control.</p>
+      <div class="pg-opts">
+        <button class="pg-opt" data-persona="trader">
+          <span class="pg-ic"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M21 7h-5M21 7v5"/></svg></span>
+          <b>I'm Trading</b>
+          <span class="pg-desc">Active markets · intraday &amp; F&amp;O · momentum, stops, hedges, R:R brackets and live tape.</span>
+        </button>
+        <button class="pg-opt" data-persona="investor">
+          <span class="pg-ic"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-8"/><path d="M12 13C12 9 8.5 7 5 7c0 4 3 6 7 6z"/><path d="M12 11c0-3.2 2.8-5 6-5 0 3.2-2.6 5-6 5z"/></svg></span>
+          <b>I'm Investing</b>
+          <span class="pg-desc">Long-term wealth · SIP &amp; delivery · accumulate, allocate, rebalance and compound.</span>
+        </button>
+        <button class="pg-opt" data-persona="algo">
+          <span class="pg-ic"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 3v2M15 3v2M9 19v2M15 19v2M3 9h2M3 15h2M19 9h2M19 15h2"/></svg></span>
+          <b>I'm Automating</b>
+          <span class="pg-desc">Rule-based algos · backtest, deploy &amp; monitor strategies that trade for you, hands-free.</span>
+        </button>
+        <button class="pg-opt" data-persona="ai">
+          <span class="pg-ic"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/></svg></span>
+          <b>Ask AI</b>
+          <span class="pg-desc">Your market copilot · ask for ideas, screeners, hedges &amp; plain-English insight on demand.</span>
+        </button>
+      </div>
+      <button class="pg-skip" id="pgSkip">Decide later — start in Trading</button>
     </div>
-    <button class="pg-skip" id="pgSkip">Decide later — start in Trading</button>
+
+    <div class="pg-step pg-step2" id="pgStep2"><!-- connect-Kite step, rendered by renderOnboardConnect() --></div>
   </div>
 </div>
 
@@ -256,6 +265,6 @@
 <div class="toast-wrap" id="toastWrap" role="status" aria-live="polite"></div>
 
 <script src="assets/chart.js?v=17"></script>
-<script src="assets/app.js?v=56"></script>
+<script src="assets/app.js?v=72"></script>
 </body>
 </html>

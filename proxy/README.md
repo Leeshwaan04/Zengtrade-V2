@@ -29,10 +29,10 @@ from Claude. Clear the endpoint any time to return to the built-in scripted demo
 
 ## How it works
 
-- The app sends the chat history + a system prompt (app + portfolio context) to the proxy.
-- The proxy adds your key + `anthropic-version` headers and forwards to `api.anthropic.com/v1/messages` with `stream: true`.
+- The app sends the chat history + a system prompt + a set of **tools** to the proxy.
+- The proxy adds your key + `anthropic-version` headers and forwards to `api.anthropic.com/v1/messages` with `stream: true`. It relays the body verbatim, so the tools pass straight through.
 - The SSE response is piped straight back; the app renders `text_delta` chunks token-by-token.
-- Claude may end a reply with `[[action:KEY]]`, which the app turns into a one-tap deep link into the relevant mode (option chain, strategy builder, research, etc.).
+- **Real agent tools.** Claude can call `get_portfolio`, `get_market`, `get_quote`, `search_instruments`, `run_backtest` and `get_option_chain` — the app executes each against your **local bot API** (live Kite data), feeds the result back as a `tool_result`, and Claude continues. So every number it cites is fetched live, never invented; when Kite is disconnected the tools return `connected:false` and Claude says so. A `navigate` tool offers one-tap shortcuts into the app (you still tap to confirm).
 
 ## Security notes
 

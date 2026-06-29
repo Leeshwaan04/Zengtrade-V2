@@ -5,8 +5,12 @@
 'use strict';
 
 /* ---------- data ---------- */
-const SYMS = [
-  {sym:'TATAMOTORS', name:'Tata Motors',   ltp:1078.4, chg:3.4,  beta:1.42, sector:'Auto',  hold:{qty:40, avg:890}},
+// The watchlist is now a UNIVERSAL instrument list — any segment (NSE/BSE equity & indices,
+// NFO/BFO futures & options, MCX commodities, CDS currency). These 10 are the default seed;
+// the user can add ANY instrument via the universal search (top bar or "Add scrip"). Each item
+// carries exch/type/key/token so quotes, streaming and charts address it across exchanges.
+let SYMS = [
+  {sym:'MARUTI',     name:'Maruti Suzuki', ltp:12480.0,chg:1.1,  beta:1.05, sector:'Auto'},
   {sym:'INFY',       name:'Infosys',       ltp:1845.6, chg:2.1,  beta:0.88, sector:'IT',    hold:{qty:25, avg:1690}},
   {sym:'SBIN',       name:'State Bank',     ltp:842.3,  chg:1.6,  beta:1.18, sector:'PSU Bank', hold:{qty:60, avg:705}},
   {sym:'RELIANCE',   name:'Reliance Ind',  ltp:2945.5, chg:1.2,  beta:1.05, sector:'Energy',hold:{qty:10, avg:2810}},
@@ -17,6 +21,21 @@ const SYMS = [
   {sym:'BAJFINANCE', name:'Bajaj Finance', ltp:6890.5, chg:-1.9, beta:1.25, sector:'NBFC', hold:{qty:5, avg:7350}},
   {sym:'ADANIENT',   name:'Adani Ent',     ltp:2456.0, chg:-2.8, beta:1.66, sector:'Energy',hold:{qty:8, avg:2720}},
 ];
+SYMS.forEach(s=>{ s.exch='NSE'; s.type='EQ'; s.key='NSE:'+s.sym; });   // seed = NSE equities
+const SEED_SYMS = SYMS.map(s=>s.sym);
+// ---- universal-instrument helpers ----
+const itemKey = s => s.key || (s.exch?s.exch:'NSE')+':'+s.sym;        // EXCH:TS identity for data
+const watchKeys = () => SYMS.map(itemKey);
+function byKey(key){ return SYMS.find(s=>itemKey(s)===key); }
+const isEq = s => (s.type||'EQ')==='EQ';                              // analytics widgets are equity-only
+const TYPE_LABEL = {EQ:'Equity',FUT:'Future',CE:'Call',PE:'Put',CUR:'Currency'};
+function instSub(s){                                                  // watchlist subtitle per segment
+  if(isEq(s) && s.sector) return s.sector;
+  const t=TYPE_LABEL[s.type]||s.type||'';
+  const exp=s.expiry?(' · '+new Date(s.expiry).toLocaleDateString('en-IN',{day:'2-digit',month:'short'})):'';
+  const k=(s.type==='CE'||s.type==='PE')&&s.strike?(' '+Math.round(s.strike)):'';
+  return `${s.exch||'NSE'} · ${t}${k}${exp}`;
+}
 const HOLDINGS = SYMS.filter(s=>s.hold).map(s=>({...s, pnl:(s.ltp-s.hold.avg)*s.hold.qty, val:s.ltp*s.hold.qty}));
 const TOT_PNL = Math.round(HOLDINGS.reduce((a,h)=>a+h.pnl,0));
 const EXPOSURE = HOLDINGS.reduce((a,h)=>a+h.val,0);
@@ -80,7 +99,7 @@ const inrL=n=>'₹'+(n/100000).toFixed(2)+'L';
 const pct=n=>(n>=0?'+':'')+n.toFixed(2)+'%';
 const cls=n=>n>=0?'up':'down';
 const tone=n=>n>0?'up':n<0?'down':'';
-const bySym=s=>SYMS.find(x=>x.sym===s);
+const bySym=s=>SYMS.find(x=>x.sym===s||itemKey(x)===s);
 
 /* ---------- icon set (monochrome, currentColor) ---------- */
 const ICONS={
@@ -150,12 +169,9 @@ function reasonText(regime,sc){
 
 /* ---------- live orderbook ---------- */
 let ORDER_ID=104;
-const SEED_ORDERS=[
-  {id:101,sym:'RELIANCE',side:'buy',type:'LIMIT',qty:10,price:2940,status:'Executed'},
-  {id:102,sym:'INFY',side:'buy',type:'MARKET',qty:25,price:1845,status:'Executed'},
-  {id:103,sym:'ADANIENT',side:'sell',type:'SL-M',qty:8,price:2431,status:'Pending'},
-  {id:104,sym:'TATAMOTORS',side:'buy',type:'BRACKET',qty:40,price:1060,status:'Executed'},
-];
+// Order book starts empty — no fabricated history. Real paper orders (paper:true) appear
+// here as the user places them from the order pad; live orders need a connected Kite session.
+const SEED_ORDERS=[];
 const REGIME_SYM={bull:'RELIANCE',neutral:'HDFCBANK',bear:'ADANIENT'};
 const SL_W={bull:0.025,neutral:0.018,bear:0.010};
 // Curated cross-market headline tape — one ticker spanning equities, indices & commodities
@@ -169,6 +185,7 @@ const TICKER_DEFAULT={items:HEADLINE_INDEX.map(([n])=>n), speed:60, rolling:true
 
 /* ---------- state ---------- */
 const state={mode:'auto',displayed:'bull',engine:'bull',prevVix:12.4,forceHard:false,suggesting:false,
+  plan:'algopro',billing:'mo',           // monetization: current tier + billing cycle (persisted)
   simTimer:null,panelTab:null,
   selected:null, orderSide:null, orderQty:null,        // order ticket
   orders:SEED_ORDERS.slice(),                          // live orderbook
@@ -188,6 +205,8 @@ const state={mode:'auto',displayed:'bull',engine:'bull',prevVix:12.4,forceHard:f
   cards:{},                                            // per-card min/max state
   ticker:{items:TICKER_DEFAULT.items.slice(),speed:TICKER_DEFAULT.speed,rolling:TICKER_DEFAULT.rolling}, // rolling index tape (user-configurable)
   lastFocus:null};
+
+let onboarding=false;   // first-run wizard in flight (keeps the persona gate open across steps)
 
 /* ---------- persona axis (orthogonal to regime) ---------- */
 const PERSONA={
@@ -228,8 +247,10 @@ const PLAY={
 /* ---------- persistence (localStorage) ---------- */
 const LS_KEY='tradepro.terminal.v1';
 function saveState(){try{localStorage.setItem(LS_KEY,JSON.stringify({
-  mode:state.mode,regime:state.displayed,surface:state.surface,
-  wlOrder:state.wlOrder,selected:state.selected,paneW:state.paneW,chartH:state.chartH,
+  mode:state.mode,regime:state.displayed,surface:state.surface,regimeCollapsed:state.regimeCollapsed,
+  watchlist:SYMS.map(s=>({sym:s.sym,name:s.name,exch:s.exch,type:s.type,key:itemKey(s),token:s.token,sector:s.sector,beta:s.beta,lot:s.lot,expiry:s.expiry,strike:s.strike,seg:s.seg,hold:s.hold})),wlCustom:!!state.wlCustom,
+  selected:state.selected,paneW:state.paneW,chartH:state.chartH,
+  plan:state.plan,billing:state.billing,
   persona:state.persona,investSection:state.investSection,layout:state.layout,customLayouts:state.customLayouts,activeCustom:state.activeCustom,aiCfg:state.aiCfg,widgets:state.widgets,cards:state.cards,ticker:state.ticker,chart:(window.TPChart?TPChart.serialize():null)}));}catch(e){}}
 function saveChart(){saveState();}   // persist callback for the chart engine
 function loadState(){
@@ -241,6 +262,7 @@ function loadState(){
     mode:oneOf(s.mode,['auto','manual'],'auto'),
     regime:oneOf(s.regime,['bull','neutral','bear'],'bull'),
     surface:oneOf(s.surface,['day','night'],'day'),
+    regimeCollapsed:typeof s.regimeCollapsed==='boolean'?s.regimeCollapsed:undefined,
     persona:oneOf(s.persona,['trader','investor','algo','ai'],null),
     investSection:oneOf(s.investSection,INVEST_TOOLS.map(t=>t.key),null),
     layout:oneOf(s.layout,['originals','charts','watchlist','options','futures','build'],'originals'),
@@ -268,13 +290,26 @@ function loadState(){
         if(typeof s.ticker.speed==='number'&&s.ticker.speed>=20&&s.ticker.speed<=180)d.speed=Math.round(s.ticker.speed);
         if(typeof s.ticker.rolling==='boolean')d.rolling=s.ticker.rolling;
       } return d;})(),
-    selected:(typeof s.selected==='string'&&bySym(s.selected))?s.selected:null,
-    chartH:numIn(s.chartH,120,500), wlOrder:null, paneW:null,
+    selected:(typeof s.selected==='string')?s.selected:null,   // validated after the watchlist is rebuilt
+    chartH:numIn(s.chartH,120,500), wlCustom:!!s.wlCustom, paneW:null,
     chart:(s.chart&&typeof s.chart==='object')?s.chart:null,   // validated inside TPChart.restore
   };
-  if(Array.isArray(s.wlOrder)){
-    const v=s.wlOrder.filter(x=>typeof x==='string'&&bySym(x));
-    if(v.length===SYMS.length && new Set(v).size===SYMS.length) out.wlOrder=v; // only accept a full valid permutation
+  // universal watchlist: validate the persisted instrument list (any segment)
+  if(Array.isArray(s.watchlist)){
+    const seen=new Set(), wl=[];
+    for(const it of s.watchlist){
+      if(!it||typeof it.sym!=='string') continue;
+      const exch=typeof it.exch==='string'?it.exch:'NSE';
+      const key=(typeof it.key==='string'&&it.key.includes(':'))?it.key:exch+':'+it.sym;
+      if(seen.has(key)) continue; seen.add(key);
+      wl.push({sym:it.sym, name:typeof it.name==='string'?it.name:it.sym, exch, key, ltp:0, chg:0, live:false,
+        type:typeof it.type==='string'?it.type:'EQ', token:Number.isFinite(it.token)?it.token:null,
+        sector:typeof it.sector==='string'?it.sector:undefined, beta:typeof it.beta==='number'?it.beta:undefined,
+        lot:typeof it.lot==='number'?it.lot:undefined, expiry:typeof it.expiry==='string'?it.expiry:undefined,
+        strike:typeof it.strike==='number'?it.strike:undefined, seg:typeof it.seg==='string'?it.seg:undefined,
+        hold:(it.hold&&typeof it.hold==='object')?it.hold:undefined});
+    }
+    if(wl.length) out.watchlist=wl.slice(0,100);   // cap a runaway list
   }
   if(s.paneW&&typeof s.paneW==='object'){
     const l=numIn(s.paneW.left,200,600), rr=numIn(s.paneW.right,200,600);
@@ -415,7 +450,7 @@ function renderRegimeBar(r){
       <div class="rb-badge"><div class="rb-emo rb-emo-${r}"><img class="rb-mascot" src="assets/mascot-${r}.png" alt="" draggable="false" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex'"><span class="rb-emo-ic" style="display:none">${icon(r,21)}</span></div>
         <div><div class="rb-title"><small>${cfg.kick} · ${pTag}</small>${cfg.title}</div></div></div>
       <div class="rb-read">${read}</div>
-      <button class="rb-toggle mini" id="rbToggle" aria-expanded="true" title="Collapse">${icon('x',13)}</button>`;
+      <button class="rb-toggle mini" id="rbToggle" aria-expanded="true" aria-label="Minimize market read" title="Minimize">${icon('compress',13)}<span>Minimize</span></button>`;
   }
   const t=$('rbToggle'); if(t)t.onclick=()=>{state.regimeCollapsed=!state.regimeCollapsed; renderRegimeBar(state.displayed); if(typeof saveState==='function')saveState();};
 }
@@ -430,41 +465,78 @@ function spark(seed,up){
   const col=up?'var(--green)':'var(--red)', gid=up?'sgu':'sgd';
   return `<svg class="spark" viewBox="0 0 46 18" preserveAspectRatio="none"><path d="${line}L45,18L0,18Z" fill="url(#${gid})"/><path d="${line}" fill="none" stroke="${col}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 }
+// segment-filter tab (All / F&O / Indices) over the universal watchlist
+function wlFilter(){
+  const t=state.wlTab||'all';
+  if(t==='fno') return SYMS.filter(s=>s.exch==='NFO'||s.exch==='BFO'||['FUT','CE','PE'].includes(s.type));
+  if(t==='idx') return SYMS.filter(s=>s.seg==='INDICES'||/NIFTY|SENSEX|INDIA VIX|BANKEX/i.test(s.sym));
+  return SYMS.slice();
+}
 function wlList(r){
-  if(state.wlOrder) return state.wlOrder.map(bySym).filter(Boolean);
+  const base=wlFilter();
+  if(state.wlCustom) return base;            // user's drag order = the array order
   const bear=r==='bear';
-  return [...SYMS].sort((a,b)=>bear?a.chg-b.chg:b.chg-a.chg);
+  return [...base].sort((a,b)=>bear?(a.chg||0)-(b.chg||0):(b.chg||0)-(a.chg||0));
 }
 function renderWatchlist(r){
   const bear=r==='bear', inv=isInvestor();
   const list=wlList(r);
   const effSel=state.selected||REGIME_SYM[r];
-  $('wlMeta').innerHTML=state.wlOrder
-    ? `<span>Custom order</span><button class="wl-reset" id="wlReset">Reset sort</button>`
+  $('wlMeta').innerHTML=state.wlCustom
+    ? `<span>${SYMS.length} instruments · custom order</span><button class="wl-reset" id="wlReset">Reset sort</button>`
     : inv ? `<span>Quality &amp; your holdings</span><span>LTP · Chg%</span>`
-    : `<span>${bear?'Weakest first':'Top movers first'}</span><span>${bear?'β shown':'LTP · Chg%'}</span>`;
+    : `<span>${list.length} · ${bear?'Weakest first':'Top movers first'}</span><span>LTP · Chg%</span>`;
+  if(!list.length){ $('wlRows').innerHTML=`<div class="wl-empty">${icon('search',16)}<span>No instruments in this tab — use search or “Add scrip” to add any instrument (stocks, futures, options, indices, MCX).</span></div>`; return; }
   $('wlRows').innerHTML=list.map(s=>{
-    const lv = s.live!==false && BOT.live;   // real Kite quote present for THIS symbol
-    let badge='';
+    const lv = s.live!==false && BOT.live;   // real Kite quote present for THIS instrument
+    const eq=isEq(s); let badge='';
     if(inv){ badge = s.hold?`<span class="badge b-hold">holding</span>`:(lv&&s.chg<-1.5?`<span class="badge b-up">on sale</span>`:''); }
     else if(bear){ badge = lv&&s.chg<0?`<span class="badge b-down">near support</span>`:(s.hold?`<span class="badge b-hold">holding</span>`:''); }
     else { badge = lv&&s.chg>1.5?`<span class="badge b-up">near breakout</span>`:''; }
-    const sub = bear
-      ? `<span>${s.sector}</span><span class="beta">β ${s.beta}</span>${badge}`
-      : `<span>${s.sector}</span>${badge}`;
+    const sub = `<span>${esc(instSub(s))}</span>${(bear&&eq&&s.beta!=null)?`<span class="beta">β ${s.beta}</span>`:''}${badge}`;
     const ltpCell = lv
-      ? `<div class="wl-ltp num">${s.ltp.toLocaleString('en-IN')}</div><div class="wl-chg ${cls(s.chg)} num">${pct(s.chg)}</div>`
+      ? `<div class="wl-ltp num">${(+s.ltp).toLocaleString('en-IN')}</div><div class="wl-chg ${cls(s.chg)} num">${pct(s.chg)}</div>`
       : `<div class="wl-ltp num muted" title="No live quote — connect Kite">—</div><div class="wl-chg num muted">·</div>`;
-    return `<div class="wl-row${s.sym===effSel?' sel':''}" draggable="true" data-sym="${s.sym}">
+    return `<div class="wl-row${(itemKey(s)===effSel||s.sym===effSel)?' sel':''}" draggable="true" data-sym="${esc(s.sym)}" data-key="${esc(itemKey(s))}">
       <span class="wl-grip">${icon('grip',12)}</span>
       <div class="wl-l">
-        <div class="wl-sym">${s.sym} ${s.hold?`<span class="hold-star">${icon('star',11)}</span>`:''}</div>
+        <div class="wl-sym">${esc(s.sym)} ${!eq?`<i class="wl-seg ${s.type==='FUT'?'fut':s.type==='CE'?'ce':s.type==='PE'?'pe':'oth'}">${s.type}</i>`:(s.hold?`<span class="hold-star">${icon('star',11)}</span>`:'')}</div>
         <div class="wl-sub">${sub}</div></div>
       <div class="wl-r">${ltpCell}</div>
-      <div class="wl-spark">${lv?spark(s.sym.length*97+ (bear?3:11), s.chg>=0):''}</div>
+      <div class="wl-spark">${lv&&eq?spark(s.sym.length*97+ (bear?3:11), s.chg>=0):''}</div>
+      <button class="wl-x" data-wlremove="${esc(itemKey(s))}" title="Remove from watchlist" aria-label="Remove ${esc(s.sym)}">${icon('close',11)}</button>
     </div>`;
   }).join('');
-  const rst=$('wlReset'); if(rst) rst.onclick=()=>{state.wlOrder=null;renderWatchlist(state.displayed);saveState();};
+  const rst=$('wlReset'); if(rst) rst.onclick=()=>{state.wlCustom=false;renderWatchlist(state.displayed);saveState();};
+  $('wlRows').querySelectorAll('[data-wlremove]').forEach(b=>b.onclick=e=>{e.stopPropagation();removeInstrument(b.dataset.wlremove);});
+}
+// add ANY instrument (from the universal search) to the watchlist
+function addInstrument(meta){
+  if(!meta||!meta.key) return;
+  if(byKey(meta.key)){ selectSym(meta.sym); return; }   // already pinned → just select it
+  SYMS.push({sym:meta.ts||meta.sym, name:meta.name||meta.ts||meta.sym, exch:meta.exch, type:meta.type||'EQ',
+    key:meta.key, token:meta.token, seg:meta.seg, lot:meta.lot, ltp:0, chg:0,
+    expiry:meta.expiry, strike:meta.strike, sector:meta.sector, live:false});
+  saveState();
+  if(BOT.live){ connectStream(); loadMarket(); }        // pull a quote + (re)subscribe the stream for the new key
+  renderWatchlist(state.displayed); selectSym(meta.ts||meta.sym);
+  announce((meta.ts||meta.sym)+' added to watchlist');
+}
+function removeInstrument(key){
+  const i=SYMS.findIndex(s=>itemKey(s)===key); if(i<0) return;
+  const was=SYMS[i].sym;
+  if(SYMS.length<=1){ quickToast('Keep at least one','Add another instrument before removing the last one.'); return; }
+  SYMS.splice(i,1);
+  if(state.selected===key||state.selected===was) state.selected=null;
+  saveState(); if(BOT.live) connectStream();
+  renderWatchlist(state.displayed); renderChart(state.displayed);
+  announce(was+' removed from watchlist');
+}
+function resetWatchlist(){   // restore the default seed list
+  SYMS=SEED_SYMS.map(sym=>({sym,name:sym,exch:'NSE',type:'EQ',key:'NSE:'+sym,ltp:0,chg:0,live:false}));
+  state.wlCustom=false; state.selected=null; saveState();
+  if(BOT.live){ connectStream(); loadMarket(); }
+  renderWatchlist(state.displayed);
 }
 function selectSym(sym){
   if(!bySym(sym))return;
@@ -504,8 +576,13 @@ function renderChart(r){
    state instead of synthetic candles. The chart calls this on every symbol/timeframe change. */
 async function chartFeed(sym, tfKey){
   if(!BOT.live) return null;
+  // any segment: chart by EXCH:TS key when the instrument isn't a plain NSE equity
+  const it=bySym(sym);
+  const q=(it && it.exch && it.exch!=='NSE')
+    ? `key=${encodeURIComponent(itemKey(it))}`
+    : `symbol=${encodeURIComponent((it&&it.sym)||sym)}`;
   try{
-    const d=await fetch(`${BOT_API}/api/candles?symbol=${encodeURIComponent(sym)}&tf=${encodeURIComponent(tfKey)}`).then(r=>r.json());
+    const d=await fetch(`${BOT_API}/api/candles?${q}&tf=${encodeURIComponent(tfKey)}`).then(r=>r.json());
     if(d && Array.isArray(d.candles) && d.candles.length) return d.candles;
   }catch(e){}
   return null;
@@ -525,6 +602,9 @@ function emptyConnect(what){
    ============================================================ */
 const PANELS={
   scan(r){
+    // A screener needs the live market. With no connected Kite session there is nothing real to
+    // screen — stay honest (no fabricated setups/moves) and prompt to connect, like every other panel.
+    if(!BOT.live) return emptyConnect('breakout &amp; momentum screening');
     if(r==='bear'){
       const rows=[['ADANIENT','Lost 50-DMA · gap risk','b-down','52W LOW',-2.8],['BAJFINANCE','RSI 32 · distribution','b-down','WEAK',-1.9],['TCS','High-beta fade','b-warn','DISTRIB',-0.6]];
       return tbl(['Scrip','Setup','','LTP','Chg%'],rows.map(x=>scanRow(x)).join(""))+note('warn','Surfacing weakness, 52-wk lows &amp; high-beta names that lead a sell-off.');
@@ -533,7 +613,7 @@ const PANELS={
       const rows=[['HDFCBANK','Coiling in range','b-warn','RANGE',0.4],['ICICIBANK','At mid-band','b-warn','NEUTRAL',0.9],['ITC','Low volatility','b-warn','QUIET',-0.3]];
       return tbl(['Scrip','Setup','','LTP','Chg%'],rows.map(x=>scanRow(x)).join(""))+note('info','Awaiting the breakout that resolves the range — no decisive edge yet.');
     }
-    const rows=[['TATAMOTORS','Volume thrust · 2.4× avg','b-up','BREAKOUT',3.4],['INFY','Flag breakout','b-up','52W HIGH',2.1],['SBIN','Cup &amp; handle','b-up','VOL ↑',1.6]];
+    const rows=[['MARUTI','Volume thrust · 2.4× avg','b-up','BREAKOUT',3.4],['INFY','Flag breakout','b-up','52W HIGH',2.1],['SBIN','Cup &amp; handle','b-up','VOL ↑',1.6]];
     return tbl(['Scrip','Setup','','LTP','Chg%'],rows.map(x=>scanRow(x)).join(""))+note('go','Surfacing momentum, fresh 52-wk highs &amp; volume thrust to ride the trend.');
   },
   positions(r){
@@ -640,8 +720,13 @@ function renderPanel(r){
   if(!state.panelTab || !L.order.find(t=>t[0]===state.panelTab)) state.panelTab=L.def;
   const hcnt=(liveHoldings()||[]).length;
   const cnt=id=>id==='orders'?state.orders.length:(id==='positions'||id==='holdings')?(BOT.live?hcnt:null):id==='sips'?SIPS.length:id==='goals'?GOALS.length:id==='events'?MARKET_EVENTS.length:null;
-  $('panelTabs').innerHTML=L.order.map(([id,label,count])=>{const c=cnt(id)!=null?cnt(id):count;
-    return `<button class="p-tab ${id===state.panelTab?'active':''}" data-ptab="${id}">${label}<span class="pt-count">${c}</span></button>`;}).join('');
+  $('panelTabs').innerHTML=L.order.map(([id,label,count])=>{
+    let c=cnt(id);
+    // positions/holdings come only from a live Kite session — show NO badge when offline (the body says "connect"),
+    // never the static placeholder. Other tabs keep their app-computed/static count.
+    if(c==null) c=(id==='positions'||id==='holdings')?'':count;
+    const badge=(c===''||c==null)?'':`<span class="pt-count">${c}</span>`;
+    return `<button class="p-tab ${id===state.panelTab?'active':''}" data-ptab="${id}">${label}${badge}</button>`;}).join('');
   $('panelBody').innerHTML=PANELS[state.panelTab](r);
   $('panelTabs').querySelectorAll('[data-ptab]').forEach(b=>b.onclick=()=>{state.panelTab=b.dataset.ptab;renderPanel(r);});
 }
@@ -650,17 +735,19 @@ function renderPanel(r){
    RENDER — ORDER PAD (right)
    ============================================================ */
 function orderModel(r){
-  const sym=state.selected||REGIME_SYM[r];
-  const s=bySym(sym);
+  const s=bySym(state.selected||REGIME_SYM[r])||SYMS[0];
+  const sym=s.sym;
   const tf=(state.tradeFromChart&&state.tradeFromChart.sym===sym)?state.tradeFromChart:null;
   const side=tf?tf.side:(state.orderSide||(r==='bear'?'sell':'buy'));
   const qty=state.orderQty!=null?state.orderQty:(r==='bear'?4:10);
   const w=SL_W[r];
-  const entry=tf?tf.entry:s.ltp;
-  const sl=tf?tf.sl:(side==='buy'? s.ltp*(1-w) : s.ltp*(1+w));
+  const live=!!BOT.live && s.live!==false;                       // a REAL quote exists for this symbol
+  const px=(live&&typeof s.ltp==='number'&&isFinite(s.ltp))?s.ltp:0;  // no live quote → no price (honest)
+  const entry=tf?tf.entry:px;
+  const sl=tf?tf.sl:(side==='buy'? px*(1-w) : px*(1+w));
   const target=tf?tf.target:null;
   const type=tf?'BRACKET':(r==='bear'?'SL-M':r==='bull'?'BRACKET':'LIMIT');
-  return {sym,s,side,qty,w,entry,sl,target,type,value:qty*entry,fromChart:!!tf};
+  return {sym,s,px,priced:px>0,side,qty,w,entry,sl,target,type,value:qty*entry,fromChart:!!tf};
 }
 function renderOrder(r){
   if(isInvestor()) return renderOrderInvestor(r);
@@ -677,25 +764,25 @@ function renderOrder(r){
   const entryFld=m.fromChart?`<div class="fld"><label>Entry <i>chart bracket</i></label><div class="inp">${Math.round(m.entry).toLocaleString('en-IN')}</div></div>`:'';
   const ladder=(m.fromChart&&m.target!=null)
     ? `<div class="fld"><label>Target <i>from chart · R:R ${rr.toFixed(2)}</i></label><div class="inp">${Math.round(m.target).toLocaleString('en-IN')}</div></div>`
-    : r==='bull'?`<div class="fld"><label>Target ladder</label><div class="inp">T1 ${Math.round(m.s.ltp*1.022).toLocaleString('en-IN')} · T2 ${Math.round(m.s.ltp*1.046).toLocaleString('en-IN')} · T3 ${Math.round(m.s.ltp*1.073).toLocaleString('en-IN')}</div></div>`:'';
+    : (r==='bull'&&m.priced)?`<div class="fld"><label>Target ladder</label><div class="inp">T1 ${Math.round(m.px*1.022).toLocaleString('en-IN')} · T2 ${Math.round(m.px*1.046).toLocaleString('en-IN')} · T3 ${Math.round(m.px*1.073).toLocaleString('en-IN')}</div></div>`:'';
   $('orderPad').innerHTML=`<div class="order-card">
-    <div class="order-head"><span class="oh-sym">${m.sym}</span><span class="oh-px ${cls(m.s.chg)} num"><span id="ordLtp">${m.s.ltp.toLocaleString('en-IN')}</span> ${pct(m.s.chg)}</span>${cardCtl('order')}</div>
+    <div class="order-head"><span class="oh-sym">${m.sym} <i class="paper-tag" title="Orders here are simulated — no real order is placed. Real execution is on the roadmap.">PAPER</i></span><span class="oh-px ${cls(m.s.chg)} num"><span id="ordLtp">${m.priced?m.px.toLocaleString('en-IN'):'—'}</span> ${m.s.live!==false?pct(m.s.chg):''}</span>${cardCtl('order')}</div>
     <div class="order-body">
       <div class="side-tabs"><div class="side-tab buy ${m.side==='buy'?'active':''}" data-side="buy">BUY</div><div class="side-tab sell ${m.side==='sell'?'active':''}" data-side="sell">${r==='bear'?'SELL / HEDGE':'SELL'}</div></div>
       <div class="type-row">${typePills}</div>
       <div class="fld-row">
         <div class="fld"><label>Qty</label><div class="qty-step"><button class="qbtn" data-qty="-1" aria-label="Decrease quantity">−</button><input class="qty-inp num" id="ordQty" value="${m.qty}" inputmode="numeric" aria-label="Order quantity"><button class="qbtn" data-qty="1" aria-label="Increase quantity">+</button></div></div>
-        <div class="fld"><label>Stop-loss <i>${(m.w*100).toFixed(1)}%</i></label><div class="inp">${Math.round(m.sl).toLocaleString('en-IN')}</div></div>
+        <div class="fld"><label>Stop-loss <i>${(m.w*100).toFixed(1)}%</i></label><div class="inp">${m.priced?Math.round(m.sl).toLocaleString('en-IN'):'—'}</div></div>
       </div>
       ${entryFld}${ladder}
-      <div class="fld"><label>Order value</label><div class="inp" id="ordVal">${inr(m.value)}</div></div>
+      <div class="fld"><label>Order value</label><div class="inp" id="ordVal">${m.priced?inr(m.value):'—'}</div></div>
       ${note}
       <button class="cta ${ctaCls}" id="placeBtn">${ctaTxt}</button>
     </div></div>`;
   $('orderPad').querySelectorAll('[data-side]').forEach(b=>b.onclick=()=>{state.orderSide=b.dataset.side;state.tradeFromChart=null;renderOrder(state.displayed);});
   $('orderPad').querySelectorAll('[data-qty]').forEach(b=>b.onclick=()=>{const d=+b.dataset.qty;state.orderQty=Math.max(1,(state.orderQty!=null?state.orderQty:m.qty)+d);renderOrder(state.displayed);});
-  const qi=$('ordQty'); if(qi) qi.oninput=()=>{const v=parseInt(qi.value)||0;state.orderQty=Math.max(0,v);const vv=$('ordVal');if(vv)vv.textContent=inr(state.orderQty*m.entry);};
-  $('placeBtn').onclick=()=>openOrderModal(r);
+  const qi=$('ordQty'); if(qi) qi.oninput=()=>{const v=parseInt(qi.value)||0;state.orderQty=Math.max(0,v);const vv=$('ordVal');if(vv)vv.textContent=m.priced?inr(state.orderQty*m.entry):'—';};
+  $('placeBtn').onclick=()=>openOrderModal(r);   // paper/simulated order — honest, no real execution
   updateCardBtns();
 }
 /* ---------- order confirmation modal + placement ---------- */
@@ -709,7 +796,7 @@ function openOrderModal(r){
     <div class="modal-top ${m.side==='buy'?'is-buy':'is-sell'}">
       <span class="modal-side">${sideTxt}</span>
       <div><div class="modal-sym">${m.sym}</div><div class="modal-name">${m.s.name}</div></div>
-      <span class="modal-px num">${m.s.ltp.toLocaleString('en-IN')}</span></div>
+      <span class="modal-px num">${m.priced?m.px.toLocaleString('en-IN'):'—'}</span></div>
     <div class="modal-grid">
       <div><span>Order type</span><b>${m.type}</b></div>
       <div><span>Quantity</span><b class="num">${qty}</b></div>
@@ -748,16 +835,16 @@ function flowModal(o){
   setTimeout(()=>{ const first=$('modalBody').querySelector(o.focus||'input:not([disabled]),select,button,[tabindex="0"]'); (first||$('modalConfirm')).focus(); },50);
 }
 function placeOrder(o){
-  const status=o.type.startsWith('SL')?'Pending':(o.type==='MARKET'||o.type==='BRACKET')?'Executed':'Open';
-  state.orders.unshift({id:++ORDER_ID,...o,status});
+  const status=o.type.startsWith('SL')?'Pending':(o.type==='MARKET'||o.type==='BRACKET')?'Filled':'Open';
+  state.orders.unshift({id:++ORDER_ID,...o,status,paper:true});   // SIMULATED — no real order is placed
   state.panelTab='orders'; renderPanel(state.displayed);
   successToast(o,status);
-  announce(`${o.side} order ${status.toLowerCase()} — ${o.qty} ${o.sym} at ${o.price}`);
+  announce(`Paper ${o.side} order (simulated) — ${o.qty} ${o.sym} at ${o.price}`);
 }
 function cancelOrder(id){const o=state.orders.find(x=>x.id===id);if(o&&(o.status==='Pending'||o.status==='Open')){o.status='Cancelled';renderPanel(state.displayed);}}
 function successToast(o,status){
   const t=document.createElement('div');t.className='toast';
-  t.innerHTML=`<div class="toast-ico">${icon('check',22)}</div><div class="toast-body"><b>${o.side==='buy'?'Buy':'Sell'} order ${status==='Executed'?'executed':'placed'} — ${o.sym}</b><span>${o.qty} qty @ ${o.price.toLocaleString('en-IN')} · ${o.type} · ${status}</span></div><div class="toast-acts"><button class="tbtn ghost" data-act="ok">Dismiss</button></div>`;
+  t.innerHTML=`<div class="toast-ico">${icon('check',22)}</div><div class="toast-body"><b>Paper ${o.side==='buy'?'buy':'sell'} order — ${o.sym}</b><span>${o.qty} qty @ ${o.price.toLocaleString('en-IN')} · ${o.type} · ${status} · simulated, no real order</span></div><div class="toast-acts"><button class="tbtn ghost" data-act="ok">Dismiss</button></div>`;
   $('toastWrap').appendChild(t);
   t.querySelector('[data-act=ok]').onclick=()=>dismiss(t);
   t._timer=setTimeout(()=>{if(document.body.contains(t))dismiss(t);},4500);
@@ -783,24 +870,30 @@ function renderContext(r){
         +ctxRow('warn','clock','Volatility squeeze','Breakout likely 2–3 sessions','');
   }else{
     head='Breakout Signals';pill='Momentum';
-    rows=ctxRow('up','trendUp','TATAMOTORS','Volume thrust 2.4× · BUY zone','1,078')
+    rows=ctxRow('up','trendUp','MARUTI','Volume thrust 2.4× · BUY zone','1,078')
         +ctxRow('up','link','23500/23600 CE','Bull-call-spread quick build','net ₹38')
         +ctxRow('up','target','SBIN cup &amp; handle','Entry on close > 845','842');
   }
   const bias=r==='bull'?1.5:r==='bear'?-3.0:0;
   // real sector performance from the live watchlist when connected; simulated otherwise
   const heatSrc=BOT.live
-    ? (()=>{const m={};SYMS.forEach(s=>{(m[s.sector]=m[s.sector]||[]).push(s.chg);});
+    ? (()=>{const m={};SYMS.filter(s=>isEq(s)&&s.sector&&s.live!==false).forEach(s=>{(m[s.sector]=m[s.sector]||[]).push(s.chg);});
         return Object.entries(m).map(([s,a])=>({s,c:a.reduce((x,y)=>x+y,0)/a.length})).sort((x,y)=>y.c-x.c);})()
     : SECTORS.map(sec=>({s:sec.s,c:sec.base+bias+(sec.def&&r==='bear'?2.2:0),def:sec.def&&r==='bear'}));
   const heat=heatSrc.map(sec=>{const c=sec.c;const g=c>=0;const a=clamp(Math.abs(c)/4,.1,.45);
     return `<div class="hc ${sec.def?'def':''}" style="background:${g?`rgba(0,171,78,${a})`:`rgba(229,56,59,${a})`}">
       <div class="hc-s">${sec.s}${sec.def?' ·D':''}</div><div class="hc-c ${g?'up':'down'}">${pct(c)}</div></div>`;}).join('');
+  // Offline: keep the regime framing (honest — derived from the live regime state) but never show
+  // fabricated setups/prices or a simulated heatmap. Live: real ideas + real sector heat from the watchlist.
+  const offline=!BOT.live;
+  const body=offline
+    ? `<div class="empty-state" style="margin:8px 12px">${icon('alert',15)} <span>Connect Kite for live ${r==='bear'?'hedge ideas':r==='neutral'?'market internals':'breakout setups'} &amp; sector heat — run <code>python3 login.py</code>.</span></div>`
+    : `${rows}
+       <div class="ctx-head" style="border-top:1px solid var(--line)"><b>Sector Heatmap</b><span class="ctx-pill">${r==='bear'?'Defense':'Strength'}</span></div>
+       <div class="heat">${heat}</div>`;
   $('contextModule').innerHTML=`<div class="ctx-card">
     <div class="ctx-head"><b><span class="ctx-rico">${icon(r,16)}</span> ${head}</b><span class="ctx-pill">${pill}</span>${cardCtl('context')}</div>
-    ${rows}
-    <div class="ctx-head" style="border-top:1px solid var(--line)"><b>Sector Heatmap</b><span class="ctx-pill">${r==='bear'?'Defense':'Strength'}</span></div>
-    <div class="heat">${heat}</div>
+    ${body}
   </div>`;
   updateCardBtns();
 }
@@ -969,7 +1062,10 @@ function updateClock(){const el=$('mktStatus');if(!el)return;const d=new Date();
       +`<span class="mkt-sess" title="NSE equity trading hours">${mk.openTime}–${mk.closeTime} IST</span>`
       +`<span class="mkt-time num">${t}</span>`;
   } else {
-    el.innerHTML=`<span class="mkt-dot off" title="Kite not connected"></span><span class="mkt-live">OFFLINE</span><span class="mkt-time num">${t}</span>`;
+    const showRe = BOT.loaded && BOT.connected===false && !BOT.error;
+    el.innerHTML=`<span class="mkt-dot off" title="Kite not connected"></span><span class="mkt-live">OFFLINE</span>`
+      +(showRe?`<button class="mkt-relogin" data-relogin title="Reconnect to Kite — refreshes the daily token">${BOT.reconnecting?'Reconnecting…':'Reconnect'}</button>`:'')
+      +`<span class="mkt-time num">${t}</span>`;
   }
   renderHdrEngine();}
 function renderHdrEngine(){
@@ -1006,7 +1102,7 @@ function applyPersona(p,opts){
   document.documentElement.dataset.persona=p;
   applyPaneWidths(); // re-apply (3-pane) or clear (algo/ai single-pane) the grid width on every persona switch
   syncFab();
-  const gate=$('personaGate'); if(gate) gate.classList.remove('show');
+  const gate=$('personaGate'); if(gate && !onboarding) gate.classList.remove('show');  // onboarding keeps the gate open to advance to the connect step
   // reset order-pad context so verbs/defaults match the new persona
   state.orderSide=null; state.orderQty=null; state.tradeFromChart=null; state.panelTab=null;
   $('fundsLabel').textContent=PERSONA[p].fundsLabel(state.displayed);
@@ -1021,13 +1117,97 @@ function applyPersona(p,opts){
 }
 function openPersonaGate(){const g=$('personaGate'); if(g) g.classList.add('show');}
 
+/* ============================================================
+   FIRST-RUN ONBOARDING WIZARD
+   Step 1: pick a persona (tailors the terminal)
+   Step 2: connect Kite — live status, the exact command, reconnect, and the
+           real/paper/demo honesty legend. Removes the cold-start cliff.
+   ============================================================ */
+function startOnboarding(){
+  onboarding=true;
+  const g=$('personaGate'); if(!g) return;
+  obStep(1); g.classList.add('show');
+}
+window.startOnboarding=startOnboarding;   // re-runnable later (e.g. a "redo setup" affordance)
+
+function obStep(n){
+  const g=$('personaGate'); if(!g) return;
+  g.dataset.step=String(n);
+  g.querySelectorAll('.pg-dot').forEach((d,i)=>d.classList.toggle('on',i<n));
+  if(n===2){
+    renderOnboardConnect();
+    // pull fresh bot/Kite status, then re-render with the live result
+    if(typeof loadBotData==='function') loadBotData().then(()=>{ if(onboarding) renderOnboardConnect(); }).catch(()=>{});
+    const f=$('pgStep2').querySelector('[data-obfinish]'); if(f) f.focus();
+  }
+}
+// persona pick during onboarding: retune the terminal underneath, then advance to Connect
+function onboardPick(p){ applyPersona(p,{user:true}); obStep(2); }
+
+function renderOnboardConnect(){
+  const el=$('pgStep2'); if(!el) return;
+  const botOff   = !BOT.loaded || BOT.error;
+  const connected= BOT.loaded && BOT.connected && BOT.live;
+  const running  = (BOT.status&&BOT.status.reloginRunning)||BOT.reconnecting;
+  const auto     = BOT.status&&BOT.status.autoLogin;
+  const user     = (BOT.status&&BOT.status.user)?esc(BOT.status.user):'';
+
+  let statusCard, action='';
+  if(connected){
+    statusCard=`<div class="ob-status ok"><span class="live-dot live"></span><div><b>Connected to Kite${user?' · '+user:''}</b>
+      <span>Live market data is flowing.${BOT.paperMode?' Orders run in <b>PAPER</b> mode — nothing real is placed until you choose to go live.':''}</span></div></div>`;
+  } else if(botOff){
+    statusCard=`<div class="ob-status off">${icon('shield',16)}<div><b>Bot service isn’t running</b>
+      <span>Start it once in your bot folder, then tap Retry.</span></div></div>`;
+    action=`<div class="ob-cmd"><span class="ob-cmd-l">Run this</span><code id="obCmd">cd ~/kite-mean-reversion-bot &amp;&amp; python3 bot_api.py</code>
+        <button class="ob-copy" data-obcopy type="button">Copy</button></div>
+      <div class="ob-actions"><button class="tbtn primary" data-obretry type="button">Retry connection</button></div>`;
+  } else {
+    statusCard=`<div class="ob-status warn">${running?'<span class="live-dot warn pulse"></span>':icon('shield',16)}<div>
+      <b>${running?'Connecting to Kite…':'Kite isn’t connected yet'}</b>
+      <span>${running?'Refreshing your daily session token.':'Zerodha expires the access token every morning (a SEBI rule) — refresh it once to see live prices, holdings &amp; signals.'}</span></div></div>`;
+    action=`<div class="ob-cmd"><span class="ob-cmd-l">Get a fresh token</span><code id="obCmd">cd ~/kite-mean-reversion-bot &amp;&amp; python3 login.py</code>
+        <button class="ob-copy" data-obcopy type="button">Copy</button></div>
+      <div class="ob-actions"><button class="tbtn primary" data-relogin ${running?'disabled':''} type="button">${running?'Reconnecting…':(auto?'Reconnect now':'Retry connection')}</button>
+        ${auto?'<span class="ob-hint">Auto-login is set up — mornings refresh themselves.</span>'
+              :'<span class="ob-hint">Tip: run <b>python3 auto_login.py --setup</b> once to skip this every morning.</span>'}</div>`;
+  }
+
+  const legend=`<div class="ob-legend">
+    <span><span class="ob-tag live">● LIVE</span> real Kite data</span>
+    <span><span class="ob-tag paper">PAPER</span> simulated orders, real prices</span>
+    <span><span class="ob-tag demo">DEMO</span> clearly-labelled sample</span>
+    <p>TradePro never fabricates numbers — anything not live simply shows “—”.</p></div>`;
+
+  el.innerHTML=`
+    <h2 class="pg-title">Connect your Kite account</h2>
+    <p class="pg-sub">TradePro reads live data straight from your Zerodha Kite session. It never simulates prices or holdings.</p>
+    ${statusCard}${action}${legend}
+    <div class="ob-foot">
+      <button class="pg-skip" data-obback type="button">← Back</button>
+      <button class="tbtn ${connected?'primary':''} ob-start" data-obfinish type="button">${connected?'Start trading ▶':'Enter terminal — I’ll connect later'}</button>
+    </div>`;
+}
+
+function finishOnboarding(){
+  onboarding=false;
+  const g=$('personaGate'); if(g) g.classList.remove('show');
+  saveState();                       // persona was already saved on pick; this also persists post-onboarding state
+  if(state.lastFocus&&state.lastFocus.focus) try{state.lastFocus.focus();}catch(e){}
+}
+
 /* ---------- investor order pad ---------- */
 function renderOrderInvestor(r){
   const sym=state.selected||REGIME_SYM[r], s=bySym(sym);
   const side=state.orderSide==='sell'?'redeem':'invest';
   const amt=state.investAmt!=null?state.investAmt:10000;
   const type=state.investType||'cnc';
-  const units=Math.max(0,Math.floor(amt/s.ltp));
+  // honest pricing: no live quote → no price (never divide by 0 → "Infinity" units)
+  const live=!!BOT.live && s && s.live!==false;
+  const px=(live&&typeof s.ltp==='number'&&isFinite(s.ltp)&&s.ltp>0)?s.ltp:0;
+  const pxTxt=px>0?px.toLocaleString('en-IN'):'—';
+  const units=px>0?Math.max(0,Math.floor(amt/px)):null;
+  const unitsTxt=units!=null?units:'—';
   const types=[['cnc','Buy · Delivery'],['sip','Monthly SIP'],['gtt','GTT buy']];
   const typePills=types.map(([k,l])=>`<span class="type-pill ${k===type?'on':''}" data-itype="${k}">${l}</span>`).join('');
   const ctaCls=side==='invest'?'cta-buy':'cta-sell';
@@ -1036,14 +1216,14 @@ function renderOrderInvestor(r){
     :r==='bull'?`<div class="order-note note-warn">${icon('scale',14)}<span>Markets extended — invest steadily, don't chase. Consider rebalancing instead of adding.</span></div>`
     :`<div class="order-note note-info">${icon('repeat',14)}<span>Range-bound — ideal for rupee-cost averaging via SIP.</span></div>`;
   $('orderPad').innerHTML=`<div class="order-card">
-    <div class="order-head"><span class="oh-sym">${sym}</span><span class="oh-px ${cls(s.chg)} num"><span id="ordLtp">${s.ltp.toLocaleString('en-IN')}</span> ${pct(s.chg)}</span>${cardCtl('order')}</div>
+    <div class="order-head"><span class="oh-sym">${sym}</span><span class="oh-px ${live?cls(s.chg):'muted'} num"><span id="ordLtp">${pxTxt}</span> ${live?pct(s.chg):''}</span>${cardCtl('order')}</div>
     <div class="order-body">
       <div class="side-tabs"><div class="side-tab buy ${side==='invest'?'active':''}" data-iside="invest">INVEST</div><div class="side-tab sell ${side==='redeem'?'active':''}" data-iside="redeem">REDEEM</div></div>
       <div class="type-row">${typePills}</div>
       <div class="fld"><label>${type==='sip'?'Monthly amount':'Amount'} <i>₹</i></label><div class="qty-step"><button class="qbtn" data-amt="-2500" aria-label="Decrease amount">−</button><input class="qty-inp num" id="ordAmt" value="${amt}" inputmode="numeric" aria-label="Investment amount"><button class="qbtn" data-amt="2500" aria-label="Increase amount">+</button></div></div>
       <div class="fld-row">
-        <div class="fld"><label>Approx units</label><div class="inp num" id="ordUnits">${units}</div></div>
-        <div class="fld"><label>${type==='sip'?'Annual outlay':'Avg cost'}</label><div class="inp num">${type==='sip'?inr(amt*12):s.ltp.toLocaleString('en-IN')}</div></div>
+        <div class="fld"><label>Approx units</label><div class="inp num" id="ordUnits">${unitsTxt}</div></div>
+        <div class="fld"><label>${type==='sip'?'Annual outlay':'Avg cost'}</label><div class="inp num">${type==='sip'?inr(amt*12):pxTxt}</div></div>
       </div>
       ${note}
       <button class="cta ${ctaCls}" id="placeBtn">${ctaTxt}</button>
@@ -1052,7 +1232,7 @@ function renderOrderInvestor(r){
   $('orderPad').querySelectorAll('[data-itype]').forEach(b=>b.onclick=()=>{state.investType=b.dataset.itype;renderOrder(state.displayed);});
   $('orderPad').querySelectorAll('[data-amt]').forEach(b=>b.onclick=()=>{const d=+b.dataset.amt;state.investAmt=Math.max(500,(state.investAmt!=null?state.investAmt:amt)+d);renderOrder(state.displayed);});
   const ai=$('ordAmt'); if(ai) ai.oninput=()=>{const v=parseInt(ai.value)||0;state.investAmt=Math.max(0,v);
-    const u=$('ordUnits'); if(u)u.textContent=Math.max(0,Math.floor(state.investAmt/s.ltp));
+    const u=$('ordUnits'); if(u)u.textContent=px>0?Math.max(0,Math.floor(state.investAmt/px)):'—';
     const cb=$('placeBtn'); if(cb&&side==='invest')cb.textContent=(type==='sip'?'START SIP · '+sym:'INVEST '+inr(state.investAmt)+' · '+sym);};
   $('placeBtn').onclick=()=>openInvestModal(r);
   updateCardBtns();
@@ -1062,7 +1242,10 @@ function openInvestModal(r){
   const side=state.orderSide==='sell'?'redeem':'invest';
   const amt=state.investAmt!=null?state.investAmt:10000;
   const type=state.investType||'cnc';
-  const units=Math.max(0,Math.floor(amt/s.ltp));
+  const live=!!BOT.live && s && s.live!==false;
+  const px=(live&&typeof s.ltp==='number'&&isFinite(s.ltp)&&s.ltp>0)?s.ltp:0;
+  if(px<=0){ quickToast&&quickToast('No live price for '+sym,'Connect Kite (python3 login.py) to invest at a real price.'); return; }
+  const units=Math.max(0,Math.floor(amt/px));
   if(!amt){const ai=$('ordAmt');if(ai)ai.focus();return;}
   setModalTitle(side==='invest'?(type==='sip'?'Start SIP':'Confirm investment'):'Confirm redemption');
   $('modalBody').innerHTML=`
@@ -1141,7 +1324,7 @@ const INVEST_TOOLS=[
   {key:'ipo',      label:'IPO',                icon:'wallet',  tag:'5 open',    desc:'Apply to mainboard &amp; SME IPOs via UPI / ASBA.'},
   {key:'algo',     label:'IB Algo',            icon:'bolt',    tag:'New',       desc:'Rule-based strategies that execute for you.'},
   {key:'basket',   label:'Smart Basket',       icon:'shield',  tag:'12 themes', desc:'Curated, theme-based stock baskets in one tap.'},
-  {key:'analyser', label:'Portfolio Analyser', icon:'pie',     tag:'',          desc:'X-ray your holdings — risk, overlap &amp; drift.'},
+  {key:'analyser', label:'Portfolio Analyser', icon:'pie',     tag:'Live',      real:true, desc:'X-ray your real holdings — value, concentration, sector mix &amp; P&amp;L.'},
   {key:'mf',       label:'Mutual Funds',       icon:'droplet', tag:'2,000+',    desc:'Direct funds — explore, compare &amp; invest.'},
   {key:'sip',      label:'Stock SIP',          icon:'repeat',  tag:'',          desc:'Automate recurring investments in stocks.'},
   {key:'research', label:'Research',           icon:'search',  tag:'Daily',     desc:'Ideas, calls &amp; deep-dive reports.'},
@@ -1154,25 +1337,67 @@ function portfolio(){
   const mk=(inv,cur,today)=>({inv,cur,pnl:cur-inv,pct:inv?(cur-inv)/inv*100:0,today,todayPct:cur?today/cur*100:0});
   return {all:mk(eqInv+mfInv,eqCur+mfCur,eqToday),stocks:mk(eqInv,eqCur,eqToday),mf:mk(mfInv,mfCur,0),eqCur,mfCur};
 }
+// Real equity portfolio from the live Kite account (/api/holdings) — or null when not connected.
+// sym → sector (Kite holdings don't carry sector). Best-effort map; ETFs detected; else "Other".
+const SECTOR_MAP={RELIANCE:'Energy',ONGC:'Energy',BPCL:'Energy',IOC:'Energy',GAIL:'Energy',
+  TCS:'IT',INFY:'IT',WIPRO:'IT',HCLTECH:'IT',TECHM:'IT',LTIM:'IT',
+  HDFCBANK:'Banks',ICICIBANK:'Banks',AXISBANK:'Banks',KOTAKBANK:'Banks',INDUSINDBK:'Banks',
+  SBIN:'PSU Bank',BANKBARODA:'PSU Bank',PNB:'PSU Bank',CANBK:'PSU Bank',
+  ITC:'FMCG',HINDUNILVR:'FMCG',NESTLEIND:'FMCG',BRITANNIA:'FMCG',DABUR:'FMCG',
+  MARUTI:'Auto',TATAMOTORS:'Auto','M&M':'Auto',BAJAJ_AUTO:'Auto',EICHERMOT:'Auto',HEROMOTOCO:'Auto',
+  TATASTEEL:'Metals',JSWSTEEL:'Metals',HINDALCO:'Metals',VEDL:'Metals',COALINDIA:'Metals',
+  SUNPHARMA:'Pharma',DRREDDY:'Pharma',CIPLA:'Pharma',DIVISLAB:'Pharma',
+  BAJFINANCE:'NBFC',BAJAJFINSV:'NBFC',CHOLAFIN:'NBFC',
+  LT:'Infra',ADANIENT:'Conglomerate',ADANIPORTS:'Infra',BHARTIARTL:'Telecom',
+  ASIANPAINT:'Materials',ULTRACEMCO:'Cement',GRASIM:'Cement',TITAN:'Consumer',
+  POWERGRID:'Power',NTPC:'Power',ITC:'FMCG',ETERNAL:'New-age',GROWW:'New-age',RELIANCE:'Energy'};
+function sectorOf(sym){
+  const u=(sym||'').toUpperCase();
+  const s=bySym(sym); if(s&&s.sector) return s.sector;
+  if(SECTOR_MAP[u]) return SECTOR_MAP[u];
+  if(/BEES|ETF|NIFTY|SENSEX|GOLD|SILVER|LIQUID/.test(u)) return 'ETF / Index';
+  return 'Other';
+}
+function realPortfolio(){
+  if(!(BOT.live && BOT.holdings && Array.isArray(BOT.holdings.holdings) && BOT.holdings.holdings.length)) return null;
+  const h=BOT.holdings.holdings;
+  const inv=h.reduce((a,x)=>a+(+x.avg||0)*(+x.qty||0),0);
+  const cur=h.reduce((a,x)=>a+(+x.ltp||0)*(+x.qty||0),0);
+  const pnl=(typeof BOT.holdings.totalPnl==='number')?BOT.holdings.totalPnl:(cur-inv);
+  const today=(typeof BOT.holdings.dayPnl==='number')?BOT.holdings.dayPnl:0;
+  return {n:h.length,inv,cur,pnl,pct:inv?(cur-inv)/inv*100:0,today,todayPct:cur?today/cur*100:0};
+}
 function renderPortfolioHero(){
-  const p=portfolio(), tab=(['all','stocks','mf'].indexOf(state.portfolioTab)>=0?state.portfolioTab:'all'), d=p[tab];
   const sinr=n=>(n>=0?'+':'−')+'₹'+Math.abs(Math.round(n)).toLocaleString('en-IN');
   const tabs=[['all','All'],['stocks','Stocks'],['mf','Mutual Funds']];
-  const eqMix=Math.round(p.eqCur/(p.eqCur+p.mfCur)*100), mfMix=100-eqMix;
-  return `<div class="pf-hero">
-    <div class="pf-top">
+  const tab=(['all','stocks','mf'].indexOf(state.portfolioTab)>=0?state.portfolioTab:'all');
+  const head=`<div class="pf-top">
       <div class="pf-tabs">${tabs.map(([k,l])=>`<button class="pf-tab ${k===tab?'on':''}" data-pftab="${k}">${l}</button>`).join('')}</div>
-      <div class="pf-acts"><button class="pf-act" data-fund="add">+ Add Funds</button><button class="pf-act ghost" data-fund="pledge">Pledge</button></div>
-    </div>
+      <div class="pf-acts"><button class="pf-act" data-fund="add">+ Add Funds</button><button class="pf-act ghost" data-fund="pledge">Pledge</button></div></div>`;
+  const rp=realPortfolio();
+  // NO real holdings → honest state. NEVER a fabricated value/P&L (was the biggest mock leak).
+  if(!rp){
+    return `<div class="pf-hero">${head}
+      <div class="pf-row pf-offline">
+        <div class="pf-main"><span class="pf-lbl">Current value</span><b class="pf-val num muted">—</b><span class="pf-sub">${BOT.live?'No equity holdings in your account':'Live portfolio appears once connected'}</span></div>
+        <div class="pf-stat"><span class="pf-lbl">Overall P&amp;L</span><b class="num muted">—</b></div>
+        <div class="pf-stat"><span class="pf-lbl">Today's P&amp;L</span><b class="num muted">—</b></div></div>
+      ${BOT.live?'':`<p class="pf-connect">${icon('shield',13)}<span>Your real holdings, value &amp; P&amp;L from Kite appear here once connected — nothing is simulated. <button class="pf-relogin" data-relogin>Reconnect</button></span></p>`}</div>`;
+  }
+  // MF tab → honest (this terminal only reads equity from Kite; no MF feed)
+  if(tab==='mf'){
+    return `<div class="pf-hero">${head}
+      <div class="pf-row"><div class="pf-main"><span class="pf-lbl">Mutual funds</span><b class="pf-val num muted">—</b><span class="pf-sub">Not linked to this terminal</span></div></div>
+      <p class="pf-connect">${icon('shield',13)}<span>This terminal reads your <b>equity</b> holdings live from Kite. Mutual-fund data isn’t available here — shown as — rather than estimated.</span></p></div>`;
+  }
+  // STOCKS / ALL → real equity holdings
+  return `<div class="pf-hero">${head}
     <div class="pf-row">
-      <div class="pf-main"><span class="pf-lbl">Current value</span><b class="pf-val num">${inr(d.cur)}</b><span class="pf-sub">Invested ${inr(d.inv)}</span></div>
-      <div class="pf-stat"><span class="pf-lbl">Overall P&amp;L</span><b class="num ${cls(d.pnl)}">${sinr(d.pnl)}</b><span class="pf-pct num ${cls(d.pct)}">${pct(d.pct)}</span></div>
-      <div class="pf-stat"><span class="pf-lbl">Today's P&amp;L</span><b class="num ${cls(d.today)}">${sinr(d.today)}</b><span class="pf-pct num ${cls(d.todayPct)}">${pct(d.todayPct)}</span></div>
+      <div class="pf-main"><span class="pf-lbl">Current value</span><b class="pf-val num">${inr(rp.cur)}</b><span class="pf-sub">Invested ${inr(rp.inv)} · ${rp.n} holding${rp.n===1?'':'s'}</span></div>
+      <div class="pf-stat"><span class="pf-lbl">Overall P&amp;L</span><b class="num ${cls(rp.pnl)}">${sinr(rp.pnl)}</b><span class="pf-pct num ${cls(rp.pct)}">${pct(rp.pct)}</span></div>
+      <div class="pf-stat"><span class="pf-lbl">Today's P&amp;L</span><b class="num ${cls(rp.today)}">${sinr(rp.today)}</b><span class="pf-pct num ${cls(rp.todayPct)}">${pct(rp.todayPct)}</span></div>
     </div>
-    ${tab==='all'?`<div class="pf-breakup">
-      <div class="pf-bar"><span class="pf-seg eq" style="width:${eqMix}%"></span><span class="pf-seg mf" style="width:${mfMix}%"></span></div>
-      <div class="pf-leg"><span><i class="pf-dot eq"></i>${eqMix}% Equity</span><span><i class="pf-dot mf"></i>${mfMix}% Mutual Funds</span><span class="pf-surplus">Investable surplus <b>${inrL(CASH)}</b></span></div>
-    </div>`:''}
+    <div class="pf-breakup"><p class="pf-connect"><span class="live-dot live"></span><span>Live equity holdings from Kite · ${rp.n} stock${rp.n===1?'':'s'}. Deployable cash <b>${fundsText()}</b>.</span></p></div>
   </div>`;
 }
 function fundsAction(kind){
@@ -1196,7 +1421,7 @@ function renderInvestHub(){
     hub.innerHTML=`<div class="ih-scroll">
       ${renderPortfolioHero()}
       <div class="ih-welcome">
-        <div class="ihw-head"><b>Invest &amp; Trade</b><span>Pick a tool from the <b>Invest &amp; Trade</b> bar at the bottom — or jump in here:</span></div>
+        <div class="ihw-head"><b>Invest &amp; Trade</b> <span class="ih-demo">Demo tools · sample data</span><span>Illustrative product flows (IPO, baskets, SIP, MF, research) — they don’t place real orders. Your portfolio above is real.</span></div>
         <div class="ihw-chips">${chips}</div>
       </div>
     </div>`;
@@ -1209,7 +1434,7 @@ function renderInvestHub(){
     hub.innerHTML=`<div class="ih-scroll sec-scroll">
       <div class="ih-head"><button class="ih-back" id="ihBack" aria-label="Back to all tools"><span>All tools</span></button>
         <b class="ih-secttl" id="ihSecTtl" tabindex="-1"><span class="ih-ic sm">${icon(t.icon,16)}</span>${t.label}</b>
-        ${t.tag?`<span class="ih-secttag">${t.tag}</span>`:''}</div>
+        ${t.tag?`<span class="ih-secttag">${t.tag}</span>`:''}${t.real?`<span class="ih-live" title="Live — computed from your real Kite account.">${icon('check',11)} Live data</span>`:`<span class="ih-demo" title="Illustrative — this tool uses sample data and doesn’t place real orders or invest real money.">Demo · sample data</span>`}</div>
       <div class="sec-body">${view?view.render():''}</div>
     </div>`;
     const bk=$('ihBack'); if(bk) bk.onclick=exitTool;
@@ -1233,7 +1458,7 @@ function setTs(k,v){ state.toolState[k]=v; }
    ============================================================ */
 /* ---- shared section atoms ---- */
 function secTabs(tabs,active,label){return `<div class="sec-tabs" role="tablist" aria-label="${label||'Views'}">${tabs.map(t=>{const k=t[0],l=t[1],n=t[2];return `<button class="sec-tab${k===active?' on':''}" role="tab" aria-selected="${k===active}" data-sectab="${k}">${l}${n!=null?` <i class="sec-tn">${n}</i>`:''}</button>`;}).join('')}</div>`;}
-function secStats(items){return `<div class="sec-stats">${items.map(s=>`<div class="sec-stat"><span class="ss-l">${s.l}</span><b class="ss-v num ${s.tone||''}">${s.v}</b>${s.s?`<span class="ss-s">${s.s}</span>`:''}</div>`).join('')}</div>`;}
+function secStats(items){return `<div class="sec-stats">${items.map(s=>`<div class="sec-stat"><span class="ss-l">${s.l}</span><b class="ss-v num ${s.tone||''}"${s.id?` data-live="${s.id}"`:''}>${s.v}</b>${s.s?`<span class="ss-s">${s.s}</span>`:''}</div>`).join('')}</div>`;}
 function secEmpty(ic,title,msg,cta){return `<div class="sec-empty"><span class="se-ic">${icon(ic,28)}</span><b>${title}</b><p>${msg}</p>${cta||''}</div>`;}
 function stars(n){let h='';for(let i=1;i<=5;i++)h+=`<span class="star${i<=n?' on':''}">${icon('star',11)}</span>`;return `<span class="rating" aria-label="${n} out of 5">${h}</span>`;}
 function wireSecTabs(hub){hub.querySelectorAll('[data-sectab]').forEach(b=>b.onclick=()=>{setTs('tab',b.dataset.sectab);refreshTool();});}
@@ -1264,12 +1489,12 @@ let ALGOS=[
   {name:'Gap & Go',          cat:'Equity intraday', cagr:29.2, win:48, dd:22.5, minCap:75000,  risk:'Aggressive',  status:'idle', desc:'Trades opening-range gaps; hard stop at the day extreme.'},
 ];
 let BASKETS=[
-  {name:'EV Revolution',      theme:'Thematic',   stocks:['TATAMOTORS','RELIANCE','ADANIENT'],       minInv:8500,  ret1y:31.2, vol:'High',   desc:'Pure-play & ancillary beneficiaries of India’s EV transition.'},
+  {name:'EV Revolution',      theme:'Thematic',   stocks:['MARUTI','RELIANCE','ADANIENT'],           minInv:8500,  ret1y:31.2, vol:'High',   desc:'Pure-play & ancillary beneficiaries of India’s EV transition.'},
   {name:'Banking Leaders',    theme:'Sectoral',   stocks:['HDFCBANK','ICICIBANK','SBIN'],            minInv:12000, ret1y:18.4, vol:'Medium', desc:'Largest private & PSU lenders by market share.'},
   {name:'Defensive Dividend', theme:'Factor',     stocks:['ITC','TCS','INFY'],                       minInv:6000,  ret1y:11.0, vol:'Low',    desc:'High-yield, low-beta compounders for stability.'},
   {name:'Digital India',      theme:'Thematic',   stocks:['INFY','TCS','RELIANCE'],                  minInv:9500,  ret1y:22.7, vol:'Medium', desc:'IT services & platform plays riding digitisation.'},
   {name:'All-Weather Core',   theme:'Allocation', stocks:['HDFCBANK','RELIANCE','ITC','TCS'],        minInv:15000, ret1y:14.6, vol:'Low',    desc:'A balanced large-cap core to anchor any portfolio.'},
-  {name:'High Beta Movers',   theme:'Factor',     stocks:['ADANIENT','BAJFINANCE','TATAMOTORS'],     minInv:7000,  ret1y:27.9, vol:'High',   desc:'Momentum names for aggressive, risk-tolerant investors.'},
+  {name:'High Beta Movers',   theme:'Factor',     stocks:['ADANIENT','BAJFINANCE','MARUTI'],         minInv:7000,  ret1y:27.9, vol:'High',   desc:'Momentum names for aggressive, risk-tolerant investors.'},
 ];
 let FUNDS=[
   {name:'Parag Parikh Flexi Cap',   cat:'Flexi Cap', grp:'Equity', nav:78.42, r1:18.6, r3:21.2, r5:19.8, rating:5, aum:'82,400', held:true},
@@ -1289,7 +1514,7 @@ let STOCK_SIPS=[
 let SIP_ID=10;
 let CALLS=[
   {sym:'SBIN',       action:'Buy',  cmp:842,  tgt:980,  sl:790,  horizon:'3–6 mo',  conv:'High',   rationale:'Credit growth plus improving asset quality; cheapest large PSU bank on P/B.'},
-  {sym:'TATAMOTORS', action:'Buy',  cmp:1078, tgt:1240, sl:990,  horizon:'3–6 mo',  conv:'High',   rationale:'JLR order book strong and the domestic CV cycle is turning up.'},
+  {sym:'MARUTI',     action:'Buy',  cmp:12450, tgt:14200, sl:11600, horizon:'3–6 mo', conv:'High',   rationale:'Richer SUV mix and a rural recovery are lifting volumes; softer input costs aid margins.'},
   {sym:'INFY',       action:'Buy',  cmp:1846, tgt:2150, sl:1720, horizon:'6–12 mo', conv:'Medium', rationale:'Deal pipeline recovering; margin levers intact into FY27.'},
   {sym:'ADANIENT',   action:'Sell', cmp:2456, tgt:2100, sl:2560, horizon:'1–3 mo',  conv:'Medium', rationale:'Stretched valuations and momentum rolling over below the 50-DMA.'},
   {sym:'ITC',        action:'Hold', cmp:439,  tgt:470,  sl:410,  horizon:'6–12 mo', conv:'Low',    rationale:'Steady FMCG compounding, but cigarette-tax overhang caps near-term upside.'},
@@ -1408,40 +1633,52 @@ basket:{
   wire(hub){ hub.querySelectorAll('[data-bskbuy]').forEach(b=>b.onclick=()=>basketInvest(BASKETS[+b.dataset.bskbuy])); }
 },
 
-/* ---------- 4) Portfolio Analyser ---------- */
+/* ---------- 4) Portfolio Analyser — REAL: computed from your live Kite holdings ---------- */
 analyser:{
   render(){
-    const eqVal=EXPOSURE, bySec={}; HOLDINGS.forEach(h=>bySec[h.sector]=(bySec[h.sector]||0)+h.val);
+    const rp=realPortfolio(), held=(BOT.holdings&&BOT.holdings.holdings)||[];
+    // NO real holdings → honest connect state, never a fabricated score
+    if(!BOT.live || !rp || !held.length){
+      return secEmpty('pie','X-ray your real portfolio',
+        BOT.live ? 'No equity holdings in your Kite account to analyse yet — buy a stock and it appears here.'
+                 : 'Connect Kite (run <b>python3 login.py</b>) to X-ray your real holdings — value, concentration, sector mix &amp; P&amp;L computed live from your account. Nothing is simulated.');
+    }
+    const cur=rp.cur||1;
+    const items=held.map(x=>({sym:x.sym,val:(+x.ltp||0)*(+x.qty||0),pnl:+x.pnl||0,qty:+x.qty||0,sector:sectorOf(x.sym)}))
+      .filter(it=>it.val>0).sort((a,b)=>b.val-a.val);
+    const top=items[0]||{sym:'—',val:0}, topW=cur?top.val/cur*100:0;
+    const div=items.length, conc=Math.max(0,topW-25);
+    let score=Math.round(92 - conc*1.4 - Math.max(0,6-div)*4.5); score=Math.max(35,Math.min(98,score));
+    const grade=score>=80?['Strong','up']:score>=62?['Healthy','']:['Concentrated','down'];
+    const bySec={}; items.forEach(it=>{bySec[it.sector]=(bySec[it.sector]||0)+it.val;});
     const secRows=Object.entries(bySec).sort((a,b)=>b[1]-a[1]);
-    const top=HOLDINGS.slice().sort((a,b)=>b.val-a.val)[0], topW=top.val/eqVal*100;
-    const drift=ALLOC.reduce((a,x)=>a+Math.abs(x.cur-x.tgt),0);
-    const conc=Math.max(0,topW-25);
-    let score=Math.round(94-drift*1.2-conc*0.8); score=Math.max(35,Math.min(98,score));
-    const grade=score>=80?['Excellent','up']:score>=65?['Good','']:['Needs attention','down'];
-    const largeVal=HOLDINGS.filter(h=>CAP_LARGE.has(h.sym)).reduce((a,h)=>a+h.val,0);
-    const largeW=Math.round(largeVal/eqVal*100), midW=100-largeW;
-    const idxOverlap=Math.round(largeW*0.6);
+    const known=items.filter(it=>it.sector!=='Other').length;
     const hero=`<div class="anl-hero">
       <div class="anl-score"><svg viewBox="0 0 36 36" class="anl-ring" aria-hidden="true"><path class="anl-bg" d="M18 2a16 16 0 1 1 0 32 16 16 0 0 1 0-32"/><path class="anl-fg" stroke-dasharray="${score},100" d="M18 2a16 16 0 1 1 0 32 16 16 0 0 1 0-32"/></svg>
         <div class="anl-score-c"><b class="num">${score}</b><span>/100</span></div></div>
-      <div class="anl-grade"><b class="${grade[1]}">${grade[0]}</b><span>Portfolio health score</span>
-        <div class="anl-mini"><span>${HOLDINGS.length} stocks · ${MF_HELD.length} funds</span></div></div>
+      <div class="anl-grade"><b class="${grade[1]}">${grade[0]}</b><span>Concentration &amp; diversification</span>
+        <div class="anl-mini"><span><span class="live-dot live"></span>${div} holding${div===1?'':'s'} · live from Kite</span></div></div>
     </div>`;
     const metrics=secStats([
-      {l:'Diversification',v:HOLDINGS.length>=6?'Good':'Fair',tone:HOLDINGS.length>=6?'up':''},
-      {l:'Top holding',v:Math.round(topW)+'%',s:top.sym,tone:topW>25?'down':''},
-      {l:'Allocation drift',v:drift+'%',tone:drift>12?'down':''},
+      {l:'Current value',v:inr(rp.cur)},
+      {l:'Overall P&L',v:(rp.pnl>=0?'+':'−')+'₹'+Math.abs(Math.round(rp.pnl)).toLocaleString('en-IN'),tone:rp.pnl>=0?'up':'down'},
+      {l:'Top holding',v:Math.round(topW)+'%',s:esc(top.sym),tone:topW>25?'down':''},
+      {l:'Diversification',v:div>=6?'Good':div>=3?'Fair':'Thin',tone:div>=6?'up':div<3?'down':''},
     ]);
-    const secBlock=`<div class="anl-card"><div class="anl-ttl">Sector exposure</div>${secRows.map(([s,v])=>{const w=Math.round(v/eqVal*100);return `<div class="anl-row"><span class="anl-s">${s}</span><span class="anl-track"><span class="anl-fill" style="width:${w}%"></span></span><b class="num">${w}%</b></div>`;}).join('')}</div>`;
+    const holdRows=items.map(it=>{const w=Math.round(it.val/cur*100);
+      return `<div class="anl-row"><span class="anl-s">${esc(it.sym)} <i class="anl-sec">${esc(it.sector)}</i></span><span class="anl-track"><span class="anl-fill" style="width:${w}%"></span></span><b class="num">${w}%</b><b class="num ${cls(it.pnl)} anl-pnl">${it.pnl>=0?'+':'−'}₹${Math.abs(Math.round(it.pnl)).toLocaleString('en-IN')}</b></div>`;}).join('');
+    const holdBlock=`<div class="anl-card"><div class="anl-ttl">Your holdings · weight &amp; P&amp;L</div>${holdRows}</div>`;
+    const secBlock=`<div class="anl-card"><div class="anl-ttl">Sector exposure ${known<div?`<i class="anl-note">(${div-known} unmapped → “Other”)</i>`:''}</div>${secRows.map(([s,v])=>{const w=Math.round(v/cur*100);return `<div class="anl-row"><span class="anl-s">${esc(s)}</span><span class="anl-track"><span class="anl-fill" style="width:${w}%"></span></span><b class="num">${w}%</b></div>`;}).join('')}</div>`;
     const flags=[];
-    if(topW>25) flags.push({t:'warn',ic:'alert',b:top.sym+' is '+Math.round(topW)+'% of equity',s:'Above the 25% single-stock guardrail — consider trimming to reduce risk.',act:['Rebalance idea','rebal']});
-    if(drift>12) flags.push({t:'warn',ic:'scale',b:'Allocation has drifted '+drift+'%',s:'Equity is over target. A rebalance restores your risk profile.',act:['Rebalance to target','rebal']});
-    flags.push({t:'info',ic:'pie',b:'Cap mix · '+largeW+'% large / '+midW+'% mid-small',s:'A large-cap tilt — steady, with '+midW+'% in higher-growth mid/small caps.'});
-    flags.push({t:'info',ic:'droplet',b:'~'+idxOverlap+'% overlap with your index fund',s:'Your Nifty 50 Index Fund duplicates part of your direct large-cap holdings.'});
-    const flagBlock=`<div class="anl-flags">${flags.map((f,i)=>`<div class="anl-flag ${f.t}"><span class="af-ic">${icon(f.ic,15)}</span><div class="af-b"><b>${f.b}</b><span>${f.s}</span></div>${f.act?`<button class="btn-ghost sm" data-anlact="${f.act[1]}">${f.act[0]}</button>`:''}</div>`).join('')}</div>`;
-    return hero+metrics+flagBlock+secBlock;
+    if(topW>25) flags.push({t:'warn',ic:'alert',b:esc(top.sym)+' is '+Math.round(topW)+'% of your equity',s:'Above the 25% single-stock guardrail — a sharp move here swings the whole book.'});
+    if(div<5) flags.push({t:'warn',ic:'scale',b:'Only '+div+' holding'+(div===1?'':'s'),s:'Thin diversification — concentrated in a few names. More positions spread single-stock risk.'});
+    const topSec=secRows[0]; if(topSec){const sw=Math.round(topSec[1]/cur*100); if(sw>40&&topSec[0]!=='Other') flags.push({t:'info',ic:'pie',b:topSec[0]+' is '+sw+'% of your equity',s:'A heavy sector tilt — concentrated to '+topSec[0]+'.'});}
+    if(!flags.length) flags.push({t:'info',ic:'check',b:'Well-spread book',s:'No single stock above the 25% guardrail and reasonably diversified.'});
+    const flagBlock=`<div class="anl-flags">${flags.map(f=>`<div class="anl-flag ${f.t}"><span class="af-ic">${icon(f.ic,15)}</span><div class="af-b"><b>${f.b}</b><span>${f.s}</span></div></div>`).join('')}</div>`;
+    const note=`<p class="sec-hint">${icon('shield',12)}<span>Computed live from your real Kite holdings. Sector is mapped where known (Kite doesn’t supply it). No targets/“drift” are shown — that needs a goal you set, which isn’t simulated here.</span></p>`;
+    return hero+metrics+flagBlock+holdBlock+secBlock+note;
   },
-  wire(hub){ hub.querySelectorAll('[data-anlact]').forEach(b=>b.onclick=()=>quickToast('Rebalance plan ready','Sell over-weight names and deploy into debt/gold to return to your target mix.')); }
+  wire(){}
 },
 
 /* ---------- 5) Mutual Funds ---------- */
@@ -1594,26 +1831,42 @@ function ipoApply(ipo){
 }
 
 function algoDeploy(a){
-  flowModal({title:'Deploy — '+a.name, confirm:'Deploy strategy',
-    body:`<div class="flow-top"><div><b>${a.name}</b><span class="flow-sub">${a.cat} · ${a.risk}</span></div><span class="badge ${a.risk==='Aggressive'?'b-warn':a.risk==='Conservative'?'b-up':'b-neu'}">${a.risk}</span></div>
+  if(!a.wired){ quickToast('Not deployable yet', `${a.name} has no live engine — backtest/validate it first.`); return; }
+  flowModal({title:'Deploy in Paper — '+a.name, confirm:'Deploy in Paper',
+    body:`<div class="flow-top"><div><b>${esc(a.name)}</b><span class="flow-sub">${esc(a.cat)} · ${esc(a.risk)}</span></div><span class="badge ${a.risk==='Aggressive'?'b-warn':a.risk==='Conservative'?'b-up':'b-neu'}">${esc(a.risk)}</span></div>
       <div class="flow-rows">
-        <div><span>Backtested CAGR</span><b class="num up">${a.cagr}%</b></div>
-        <div><span>Max drawdown</span><b class="num down">−${a.dd}%</b></div>
-        <div><span>Min capital</span><b class="num">${inr(a.minCap)}</b></div>
-        <div><span>Available funds</span><b class="num">${inr(CASH)}</b></div>
+        <div><span>Best regime</span><b class="num">${esc(a.bestRegime||'—')}</b></div>
+        <div><span>Validation</span><b class="num ${a.vstatus==='validated'?'up':''}">${a.vstatus==='validated'?'Validated':'Candidate'}</b></div>
       </div>
-      <div class="flow-field"><label for="algoCap">Capital to allocate</label><input class="flow-input num" id="algoCap" type="number" inputmode="numeric" value="${a.minCap}" min="${a.minCap}" step="5000"></div>
-      ${a.risk==='Aggressive'?`<label class="flow-check"><input type="checkbox" id="algoAck"><span>I understand this is an aggressive strategy with up to −${a.dd}% drawdowns.</span></label>`:''}
-      <p class="flow-note">${icon('shield',13)}<span>The algo places orders on your behalf within this capital. Pause or stop anytime.</span></p>`,
-    focus:'#algoCap',
-    wire(body){const ci=body.querySelector('#algoCap');ci.oninput=()=>clearFlowError(body,ci);},
-    onConfirm(body){const v=Math.round(+body.querySelector('#algoCap').value||0);
-      if(v<a.minCap){flowError(body,'#algoCap','Minimum capital is '+inr(a.minCap)+'.');return false;}
-      if(v>CASH){flowError(body,'#algoCap','Exceeds available funds ('+inr(CASH)+').');return false;}
-      const ack=body.querySelector('#algoAck'); if(ack&&!ack.checked){flowError(body,'#algoAck','Please acknowledge the risk to continue.');return false;}
-      a.status='live'; a.cap=v; refreshTool(); if(typeof renderAlgo==='function')renderAlgo();
-      quickToast('Strategy live — '+a.name, inr(v)+' allocated · scanning for entries now.');}
+      <p class="flow-note">${icon('shield',13)}<span><b>Risk-free.</b> Paper deploy runs this strategy on <b>live Kite data with simulated fills</b> — no real orders, no money at risk. Your bot harness starts trading it; closed-trade P&amp;L builds toward the Go-Live gate (≥${BOT.nudgeMin||10} profitable trades). You can Pause or Stop anytime.</span></p>`,
+    onConfirm(){ setStrategyState(a.id,'paper','Deployed — '+a.name); }
   });
+}
+/* POST the lifecycle change, then refresh the studio from the API (source of truth). */
+async function setStrategyState(id, stateVal, title){
+  try{
+    const r=await fetch(BOT_API+'/api/strategy',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id,state:stateVal})}).then(x=>x.json());
+    if(r&&r.error){ quickToast('Action failed', r.error); return r; }
+    if(r&&r.locked){ quickToast('Live locked '+'🔒', r.reason||'Arm ALLOW_LIVE on the bot machine to go live.'); }
+    else { quickToast(title||'Updated', lcMsg(stateVal)); }
+    await loadBotData(); if(typeof renderAlgo==='function') renderAlgo();
+    return r;
+  }catch(e){ quickToast('Action failed','Is the bot API running on :8756?'); }
+}
+function lcMsg(s){
+  return s==='paper'?'Live data, simulated fills — no real money. Building forward evidence.'
+    : s==='paused'?'Paused — no new entries; open paper positions are kept.'
+    : (s===null||s==='off')?'Stopped — open paper positions square off next cycle; nothing else trades it.'
+    : 'Updated.';
+}
+function lcStop(a){
+  const flatten=a.sub==='live';
+  flowModal({title:(flatten?'Stop & Flatten — ':'Stop — ')+a.name, confirm:flatten?'Stop & Flatten':'Stop', danger:true,
+    body:`<p class="flow-note">${icon('alert',13)}<span>${flatten
+      ? `This <b>squares off real positions</b> and stops the strategy. Real-money action — confirm you want to exit now.`
+      : `Stops paper-trading <b>${esc(a.name)}</b>. Any open paper positions are squared off next cycle. You can redeploy anytime.`}</span></p>`,
+    onConfirm(){ setStrategyState(a.id,'off','Stopped — '+a.name); }});
 }
 
 function basketInvest(b){
@@ -2202,31 +2455,43 @@ function execStrategy(){
     body:`<div class="flow-top"><div><b>${c.u.label} · ${c.e.d}</b><span class="flow-sub">${legs.length}-leg options basket</span></div></div>
       <div class="strat-confirm">${rows}</div>
       <div class="flow-rows"><div><span>${st.netPrem>=0?'Net credit':'Net debit'}</span><b class="num">${inr(Math.abs(st.netPrem))}</b></div><div><span>Margin (est.)</span><b class="num">${inr(margin)}</b></div></div>
-      <p class="flow-note">${icon('shield',13)}<span>All legs are sent together as one basket. ${st.maxLUnlimited?'⚠ This position carries unlimited risk.':'Defined-risk position.'}</span></p>`,
-    onConfirm(){quickToast('Strategy placed — '+c.u.sym, legs.length+' legs · '+c.e.d+' expiry sent as a basket.');state.desk.legs=[];renderDeskView();}
+      <p class="flow-note">${icon('shield',13)}<span><b>Paper basket (simulated)</b> — no real order is placed. ${st.maxLUnlimited?'⚠ Naked leg: unlimited risk if this were live.':'Defined-risk position.'}</span></p>`,
+    onConfirm(){quickToast('Paper basket — '+c.u.sym, legs.length+' legs · '+c.e.d+' · simulated, no real order placed.');state.desk.legs=[];renderDeskView();}
   });
 }
+// REAL stock-futures buildup from Kite (/api/futures). No synthetic OI.
+function futStocks(){ return SYMS.filter(s=>isEq(s)).map(s=>s.sym).slice(0,12); }
+const buTone=b=>b==='Long Buildup'?'up':b==='Short Buildup'?'down':b==='Short Covering'?'up':'warn';
+function ensureFutures(){
+  if(!BOT.live) return;
+  const f=BOT.futures;
+  if(f && (f.loading || Date.now()-f.t < 30000)) return;
+  BOT.futures={...(f||{}),loading:true,t:f?f.t:0};
+  fetch(`${BOT_API}/api/futures?symbols=${encodeURIComponent(futStocks().join(','))}`).then(r=>r.json()).then(p=>{
+    BOT.futures={rows:(p&&p.real)?p.rows:null,err:(p&&!p.real)?p.error:null,loading:false,t:Date.now()};
+    if(typeof isCenterTakeover==='function'&&isCenterTakeover())renderDeskView();
+    if(typeof renderWidgetStack==='function')renderWidgetStack();
+  }).catch(()=>{BOT.futures={rows:null,loading:false,t:Date.now()};});
+}
 function deskFutures(){
-  const rows=SYMS.map(s=>{
-    const prem=s.ltp*(0.0005+dseed(s.ltp)*0.0011), fut=s.ltp+prem, basis=fut-s.ltp;
-    const oi=Math.round((dseed(s.ltp*1.3)*60+22)*100000), oiChg=(dseed(s.ltp*1.7)*2-1)*12;
-    const pUp=s.chg>=0,oUp=oiChg>=0;
-    const bu=pUp&&oUp?['Long Buildup','up']:!pUp&&oUp?['Short Buildup','down']:pUp&&!oUp?['Short Covering','up']:['Long Unwinding','warn'];
-    return {s,fut,basis,oi,oiChg,bu};
-  });
-  const body=rows.map(R=>`<tr>
-    <td><span class="t-sym">${R.s.sym}</span></td>
-    <td class="num">${R.s.ltp.toLocaleString('en-IN')}</td>
-    <td class="num ${cls(R.s.chg)}">${pct(R.s.chg)}</td>
-    <td class="num">${R.fut.toFixed(1)}</td>
-    <td class="num ${R.basis>=0?'up':'down'}">${R.basis>=0?'+':'−'}${Math.abs(R.basis).toFixed(1)}</td>
-    <td class="num">${oiFmt(R.oi)}</td>
-    <td class="num ${R.oiChg>=0?'up':'down'}">${R.oiChg>=0?'+':''}${R.oiChg.toFixed(1)}%</td>
-    <td><span class="bu-chip ${R.bu[1]}">${R.bu[0]}</span></td></tr>`).join('');
+  ensureFutures();
+  const fr=BOT.live&&BOT.futures&&BOT.futures.rows;
+  if(!fr) return `<div class="desk-scroll">${BOT.live
+    ? secEmpty('bolt','Loading live futures…','Fetching stock-futures price, basis, OI &amp; buildup from Kite.')
+    : secEmpty('shield','Live futures unavailable','Connect Kite (run <b>python3 login.py</b>) for live stock-futures buildup — price, basis, OI &amp; long/short buildup from real OI change. No synthetic data is shown.')}</div>`;
+  const body=futStocks().map(sym=>{const R=fr[sym]; if(!R)return '';const b=R.basis;
+    return `<tr>
+      <td><span class="t-sym">${esc(sym)}</span></td>
+      <td class="num">${R.spot!=null?R.spot.toLocaleString('en-IN'):'—'}</td>
+      <td class="num">${R.futLtp!=null?R.futLtp.toLocaleString('en-IN'):'—'}</td>
+      <td class="num ${b==null?'':b>=0?'up':'down'}">${b==null?'—':(b>=0?'+':'−')+Math.abs(b).toFixed(1)}</td>
+      <td class="num">${R.oi!=null?oiFmt(R.oi):'—'}</td>
+      <td class="num ${R.oiChg==null?'':R.oiChg>=0?'up':'down'}">${R.oiChg==null?'—':(R.oiChg>=0?'+':'')+R.oiChg.toFixed(1)+'%'}</td>
+      <td>${R.buildup?`<span class="bu-chip ${buTone(R.buildup)}">${R.buildup}</span>`:'<span class="ch-na">—</span>'}</td></tr>`;}).join('');
   return `<div class="desk-scroll"><table class="fut-tbl">
-    <thead><tr><th>Scrip</th><th>LTP</th><th>Chg</th><th>Futures</th><th>Basis</th><th>OI</th><th>OI Chg</th><th>Buildup</th></tr></thead>
+    <thead><tr><th>Scrip</th><th>Spot</th><th>Futures</th><th>Basis</th><th>OI</th><th>OI Chg</th><th>Buildup</th></tr></thead>
     <tbody>${body}</tbody></table>
-    <p class="desk-hint">${icon('bolt',12)}<span>Buildup = price direction × OI change. Long/Short <b>buildup</b> = fresh positions; <b>covering/unwinding</b> = exits.</span></p></div>`;
+    <p class="desk-hint">${icon('bolt',12)}<span>Live from Kite · Buildup = price direction × OI-change (vs prior trading-day close OI). “—” where a contract has no OI history yet.</span></p></div>`;
 }
 
 /* ============================================================
@@ -2254,9 +2519,11 @@ const CANVAS_EXTRA=[
       <div class="wg-row"><span>Support</span><b class="num up">${sr.support.toLocaleString('en-IN')}</b></div>
       <div class="wg-row"><span>Resistance</span><b class="num down">${sr.resist.toLocaleString('en-IN')}</b></div>`;}},
   {key:'cv_fut',name:'Futures Buildup',icon:'bolt',span:2,render(){
-    return SYMS.slice(0,6).map(s=>{const oiChg=(dseed(s.ltp*1.7)*2-1)*12,pUp=s.chg>=0,oUp=oiChg>=0;
-      const bu=pUp&&oUp?['Long Buildup','up']:!pUp&&oUp?['Short Buildup','down']:pUp&&!oUp?['Short Cover','up']:['Long Unwind','warn'];
-      return `<div class="wg-row"><span class="t-sym wg-grow">${s.sym}</span><span class="num ${cls(s.chg)}">${pct(s.chg)}</span><span class="bu-chip ${bu[1]}">${bu[0]}</span></div>`;}).join('');}},
+    ensureFutures();
+    const fr=BOT.live&&BOT.futures&&BOT.futures.rows;
+    if(!fr) return `<div class="cvch-off">${icon('shield',13)}<span>${BOT.live?'Loading live futures…':'Connect Kite for live futures buildup'}</span></div>`;
+    return futStocks().slice(0,6).map(sym=>{const R=fr[sym]; if(!R)return '';
+      return `<div class="wg-row"><span class="t-sym wg-grow">${esc(sym)}</span>${R.oiChg!=null?`<span class="num ${R.oiChg>=0?'up':'down'}">${R.oiChg>=0?'+':''}${R.oiChg.toFixed(1)}%</span>`:'<span class="num ch-na">—</span>'}${R.buildup?`<span class="bu-chip ${buTone(R.buildup)}">${R.buildup}</span>`:'<span class="ch-na">—</span>'}</div>`;}).join('');}},
 ];
 const canvasW=key=>canvasCatalog().find(w=>w.key===key);
 // Card spans are designed so every row sums to 3 columns — no holes in the real canvas or the hover preview.
@@ -2399,7 +2666,7 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
    ============================================================ */
 /* ===== LIVE BOT INTEGRATION — kite-mean-reversion-bot API (:8756) ===== */
 const BOT_API='http://localhost:8756';
-let BOT={loaded:false,connected:false,status:null,paperMode:true,error:false,chains:{},chainExp:{}};
+let BOT={loaded:false,connected:false,status:null,paperMode:true,error:false,chains:{},chainExp:{},futures:null};
 async function loadBotData(){
   try{
     const [s,st,tr]=await Promise.all([
@@ -2417,6 +2684,7 @@ async function loadBotData(){
         desc:x.desc,sharpe:x.oos_sharpe,totalRet:x.totalRet,trades:x.trades,dd:x.dd||3,
         verdict:x.verdict,paperPnl:x.paperPnl,realisedPnl:x.realisedPnl,openPnl:x.openPnl,openPositions:x.openPositions,live:x.live,real:true,
         nudge:x.nudge,fwdTrades:x.fwdTrades,readyExceptCapital:x.readyExceptCapital,blockers:x.blockers,nudgeMsg:x.nudgeMsg,positions:x.positions,
+        sub:x.sub,deployed:x.deployed,wired:x.wired,   // lifecycle: sub = paper|paused|live|null
         status:x.live?'live':'idle', cap:x.live?x.minCap:0, cagr:x.totalRet
       }));
       BOT.nudgeMin=s.nudgeMinTrades||10;
@@ -2433,14 +2701,14 @@ async function loadMarket(){
     BOT.market=BOT.live?m:null;
     if(BOT.live){
       const [q,h]=await Promise.all([
-        fetch(BOT_API+'/api/quotes?symbols='+encodeURIComponent(SYMS.map(s=>s.sym).join(','))).then(r=>r.json()).catch(()=>({quotes:{}})),
+        fetch(BOT_API+'/api/uquotes?keys='+encodeURIComponent(watchKeys().join(','))).then(r=>r.json()).catch(()=>({quotes:{}})),
         fetch(BOT_API+'/api/holdings').then(r=>r.json()).catch(()=>null)
       ]);
       BOT.quotes=(q&&q.quotes)||{};
-      // overlay REAL ltp/chg onto each watchlist symbol — no synthetic prices.
-      // s.live marks whether THIS symbol has a real quote; a null quote (e.g. a
-      // delisted/demerged symbol) stays BLANK, never the stale catalog price.
-      SYMS.forEach(s=>{const r=BOT.quotes[s.sym]; if(r&&r.ltp!=null){s.ltp=r.ltp; if(r.chg!=null)s.chg=r.chg; s.live=true;} else {s.live=false;}});
+      // overlay REAL ltp/chg onto each watchlist instrument BY KEY (any segment) — no synthetic
+      // prices. s.live marks whether THIS instrument has a real quote; a null quote (delisted /
+      // illiquid / market-closed) stays BLANK, never the stale catalog price.
+      SYMS.forEach(s=>{const r=BOT.quotes[itemKey(s)]; if(r&&r.ltp!=null){s.ltp=r.ltp; if(r.chg!=null)s.chg=r.chg; s.live=true;} else {s.live=false;}});
       BOT.holdings=(h&&!h.error)?h:null;
     } else { BOT.quotes=null; BOT.holdings=null; SYMS.forEach(s=>{s.live=false;}); }
   }catch(e){ BOT.live=false; BOT.market=null; BOT.quotes=null; BOT.holdings=null; SYMS.forEach(s=>{s.live=false;}); }
@@ -2464,15 +2732,15 @@ async function loadMarket(){
    automatic fallback: it only fires when the stream isn't actively delivering (first paint,
    stream dropped, or EventSource unsupported), so prices are never stale and never doubled. */
 const STREAM={es:null, syms:'', on:false, last:0};
-function streamSyms(){ return SYMS.map(s=>s.sym).join(','); }
+function streamSyms(){ return watchKeys().join(','); }   // now EXCH:TS keys (any segment)
 function connectStream(){
   if(!BOT.live || typeof EventSource==='undefined') return;
-  const syms=streamSyms();
-  if(STREAM.es && STREAM.syms===syms) return;             // already streaming this exact set
+  const keys=streamSyms();
+  if(STREAM.es && STREAM.syms===keys) return;             // already streaming this exact set
   disconnectStream();
-  STREAM.syms=syms;
+  STREAM.syms=keys;
   try{
-    const es=new EventSource(`${BOT_API}/api/stream?symbols=${encodeURIComponent(syms)}`);
+    const es=new EventSource(`${BOT_API}/api/stream?keys=${encodeURIComponent(keys)}`);
     es.onopen=()=>{ STREAM.on=true; STREAM.last=Date.now(); };
     es.onmessage=ev=>{ try{ const d=JSON.parse(ev.data);
       if(d&&d.ticks){ applyTicks(d.ticks); STREAM.on=true; STREAM.last=Date.now(); if(d.stream)BOT.tickStream=d.stream; } }catch(e){} };
@@ -2481,11 +2749,11 @@ function connectStream(){
   }catch(e){ STREAM.on=false; }
 }
 function disconnectStream(){ if(STREAM.es){ try{STREAM.es.close();}catch(e){} } STREAM.es=null; STREAM.on=false; STREAM.syms=''; }
-// Apply a PARTIAL tick update (only the symbols that ticked) — used by the push stream.
+// Apply a PARTIAL tick update (only the instruments that ticked) keyed by EXCH:TS — push stream.
 function applyTicks(ticks){
   if(!ticks) return; const dir={};
-  for(const sym in ticks){ const t=ticks[sym], s=bySym(sym);
-    if(s&&t&&t.ltp!=null){ dir[sym]=Math.sign(t.ltp-(s.ltp||t.ltp)); s.ltp=t.ltp; if(t.chg!=null)s.chg=t.chg; s.live=true; } }
+  for(const key in ticks){ const t=ticks[key], s=byKey(key);
+    if(s&&t&&t.ltp!=null){ dir[key]=Math.sign(t.ltp-(s.ltp||t.ltp)); s.ltp=t.ltp; if(t.chg!=null)s.chg=t.chg; s.live=true; } }
   applyTickDom(ticks,dir);
 }
 
@@ -2495,11 +2763,11 @@ async function loadTicks(){
   if(STREAM.on && Date.now()-STREAM.last < 6000) return;   // push stream is live → skip the poll
   TICK_BUSY=true;
   try{
-    const d=await fetch(`${BOT_API}/api/ticks?symbols=${encodeURIComponent(SYMS.map(s=>s.sym).join(','))}`).then(r=>r.json());
+    const d=await fetch(`${BOT_API}/api/ticks?keys=${encodeURIComponent(watchKeys().join(','))}`).then(r=>r.json());
     if(d&&d.ticks){
       const dir={};
-      SYMS.forEach(s=>{const t=d.ticks[s.sym];
-        if(t&&t.ltp!=null){ dir[s.sym]=Math.sign(t.ltp-(s.ltp||t.ltp)); s.ltp=t.ltp; if(t.chg!=null)s.chg=t.chg; s.live=true; }
+      SYMS.forEach(s=>{const k=itemKey(s),t=d.ticks[k];
+        if(t&&t.ltp!=null){ dir[k]=Math.sign(t.ltp-(s.ltp||t.ltp)); s.ltp=t.ltp; if(t.chg!=null)s.chg=t.chg; s.live=true; }
         else { s.live=false; }});
       applyTickDom(d.ticks,dir);
       BOT.tickStream=d.stream;
@@ -2509,14 +2777,15 @@ async function loadTicks(){
 }
 function applyTickDom(ticks,dir){
   document.querySelectorAll('#wlRows .wl-row').forEach(row=>{
-    const sym=row.dataset.sym, t=ticks[sym]; if(!t||t.ltp==null) return;
+    const key=row.dataset.key, t=ticks[key]; if(!t||t.ltp==null) return;
     const ltpEl=row.querySelector('.wl-ltp'), chgEl=row.querySelector('.wl-chg');
-    if(ltpEl){ ltpEl.textContent=t.ltp.toLocaleString('en-IN'); ltpEl.classList.remove('muted');
-      const dr=dir[sym]; if(dr){ltpEl.classList.remove('tick-up','tick-dn');void ltpEl.offsetWidth;ltpEl.classList.add(dr>0?'tick-up':'tick-dn');} }
+    if(ltpEl){ ltpEl.textContent=(+t.ltp).toLocaleString('en-IN'); ltpEl.classList.remove('muted');
+      const dr=dir[key]; if(dr){ltpEl.classList.remove('tick-up','tick-dn');void ltpEl.offsetWidth;ltpEl.classList.add(dr>0?'tick-up':'tick-dn');} }
     if(chgEl){ chgEl.textContent=pct(t.chg); chgEl.className='wl-chg num '+cls(t.chg); }
   });
-  const sel=state.selected, t=sel&&ticks[sel];
-  if(t&&t.ltp!=null&&window.TPChart&&TPChart.tick) TPChart.tick(sel,t.ltp);
+  // nudge the chart's last candle for the SELECTED instrument
+  const si=state.selected&&bySym(state.selected); const t=si&&ticks[itemKey(si)];
+  if(t&&t.ltp!=null&&window.TPChart&&TPChart.tick) TPChart.tick(si.sym,t.ltp);
 }
 /* ---- REAL 5-level market depth (/api/depth, full Kite quote().depth). Targeted body
    update so it never rebuilds the whole widget stack. Empty levels show "—" (honest —
@@ -2558,6 +2827,9 @@ async function loadMonitor(){
       ALGOS.forEach(a=>{const r=byId[a.id]; if(r){
         a.paperPnl=r.paperPnl; a.openPnl=r.openPnl; a.realisedPnl=r.realisedPnl;
         a.openPositions=r.openPositions; a.fwdTrades=r.fwdTrades; a.positions=r.positions; a.live=true;
+        // forward-test ACCURACY (real out-of-sample, parsed from closed paper trades)
+        a.fwdWins=r.fwdWins; a.fwdLosses=r.fwdLosses; a.fwdWinPct=r.fwdWinPct;
+        a.fwdProfitFactor=r.fwdProfitFactor; a.fwdAvgWin=r.fwdAvgWin; a.fwdAvgLoss=r.fwdAvgLoss; a.fwdExpectancy=r.fwdExpectancy;
       }});
     }
   }catch(e){}
@@ -2579,8 +2851,56 @@ function realQuote(name){
 function botBanner(){
   if(!BOT.loaded) return `<div class="bot-banner">${icon('cpu',13)}<span>Connecting to your trading bot…</span></div>`;
   if(BOT.error) return `<div class="bot-banner off">${icon('shield',13)}<span>Bot API offline — run <b>python3 bot_api.py</b> in the bot folder, then reopen Algo.</span></div>`;
+  if(!BOT.connected){
+    const auto=BOT.status&&BOT.status.autoLogin, running=(BOT.status&&BOT.status.reloginRunning)||BOT.reconnecting;
+    const msg=running?'Session expired — reconnecting to Kite…'
+      :auto?'Session expired (daily token). Tap reconnect or it will auto-refresh shortly.'
+      :'Kite session expired — the daily token. Run <b>python3 auto_login.py</b> (or <b>login.py</b>), or set up auto-login.';
+    return `<div class="bot-banner off">${running?'<span class="live-dot warn pulse"></span>':icon('shield',13)}<span>${msg}</span>
+      <button class="bot-relogin" data-relogin ${running?'disabled':''}>${running?'Reconnecting…':'Reconnect'}</button></div>`;
+  }
   const u=BOT.status&&BOT.status.user?esc(BOT.status.user):'—';
-  return `<div class="bot-banner on"><span class="live-dot live"></span><span>${BOT.connected?'Kite connected · '+u:'Kite disconnected'} · <b>${BOT.paperMode?'PAPER mode — no real orders':'LIVE'}</b>${BOT.status&&BOT.status.subscription?' · '+esc(BOT.status.subscription):''}</span></div>`;
+  return `<div class="bot-banner on"><span class="live-dot live"></span><span>Kite connected · ${u} · <b>${BOT.paperMode?'PAPER mode — no real orders':'LIVE'}</b>${BOT.status&&BOT.status.subscription?' · '+esc(BOT.status.subscription):''}</span></div>`;
+}
+// Manual reconnect: trigger the headless TOTP re-login, then refresh everything.
+async function botReconnect(){
+  if(BOT.reconnecting) return; BOT.reconnecting=true;
+  if(isAlgo()&&typeof renderAlgo==='function') renderAlgo();
+  let res={};
+  try{ res=await fetch(BOT_API+'/api/relogin',{method:'POST'}).then(r=>r.json()); }catch(e){ res={ok:false,error:'bot API offline'}; }
+  BOT.reconnecting=false;
+  if(res&&res.ok){ announce('Kite reconnected'); }
+  else { announce('Reconnect failed'); quickToast&&quickToast('Couldn’t auto-reconnect', (res&&res.error)||'Run python3 login.py in the bot folder.'); }
+  await loadBotData(); await loadMarket();   // refresh status + prices either way
+  if(isAlgo()&&typeof renderAlgo==='function') renderAlgo();
+  if(onboarding) renderOnboardConnect();     // reflect the new connection state in the wizard
+}
+document.addEventListener('click',e=>{ if(e.target.closest('[data-relogin]')) botReconnect(); });
+/* ---- Live patching: update only the ticking values in place (no full re-render → no flicker) ---- */
+function algoLiveSig(){
+  // the STRUCTURE that, if it changes (a trade opens/closes, a strategy goes live), needs a full re-render
+  return (state.algo&&state.algo.view)+'~'+(state.algo&&state.algo.exec)+'~'+
+    ALGOS.map(a=>`${a.id}.${a.live?1:0}.${a.openPositions||0}.${a.fwdTrades||0}.${(a.positions||[]).map(p=>p.sym).join(',')}`).join('|');
+}
+function patchAlgoLive(){
+  const exec=(state.algo&&state.algo.exec)||'paper';
+  const setNum=(el,v)=>{ if(!el)return; el.textContent=sgn(v||0); el.classList.remove('up','down'); el.classList.add(cls(v||0)); };
+  let total=0;
+  ALGOS.forEach(a=>{
+    const v=exec==='live'?(a.livePnl||0):(a.paperPnl||0);
+    if(a.live) total+=v;
+    document.querySelectorAll('[data-live-pnl="'+a.id+'"]').forEach(el=>setNum(el,v));
+    const sub=document.querySelector('[data-live-sub="'+a.id+'"]');
+    if(sub) sub.textContent=(a.openPositions||0)?`${sgn(a.openPnl||0)} unrealised`:((a.openPositions||a.fwdTrades)?'realised':'no trades yet');
+    (a.positions||[]).forEach(p=>{
+      if(p.entry==null) return;
+      const key=a.id+'::'+p.sym;
+      const ltp=document.querySelector('[data-live-ltp="'+key+'"]'); if(ltp) ltp.textContent=p.ltp!=null?p.ltp.toLocaleString('en-IN'):'—';
+      const up=document.querySelector('[data-live-upnl="'+key+'"]');
+      if(up){ up.textContent=sgn(p.unreal)+(p.chgPct!=null?` · ${p.chgPct>=0?'+':''}${p.chgPct}%`:''); up.classList.remove('up','down'); up.classList.add(cls(p.unreal)); }
+    });
+  });
+  document.querySelectorAll('[data-live="monTotal"],[data-live="algoTotal"]').forEach(el=>setNum(el,total));
 }
 function renderAlgo(){
   const v=$('algoView'); if(!v) return;
@@ -2589,28 +2909,46 @@ function renderAlgo(){
   if(!state.algo.exec) state.algo.exec='paper';
   if(!BOT.loaded){ loadBotData().then(()=>{ if(isAlgo())renderAlgo(); }); }
   const view=state.algo.view, live=ALGOS.filter(a=>a.status!=='idle');
-  const tabs=[['market','Marketplace'],['backtest','Backtest'],['forward','Forward Test'],['monitor','Monitor']];
+  const tabs=[['market','Marketplace'],['leaderboard','Leaderboard'],['backtest','Backtest'],['forward','Forward Test'],['monitor','Monitor'],['accuracy','Accuracy'],['analytics','Analytics']];
   const head=`<div class="av-head">
     <div class="av-title"><span class="av-ic">${icon('cpu',17)}</span><div><b>Algo Studio</b><span>Backtest, forward-test &amp; monitor rule-based strategies</span></div></div>
     <div class="av-tabs" role="tablist" aria-label="Algo views">${tabs.map(([k,l])=>`<button class="av-tab${k===view?' on':''}" role="tab" aria-selected="${k===view}" data-algoview="${k}">${l}${k==='monitor'&&live.length?` <i class="av-tn">${live.length}</i>`:''}</button>`).join('')}</div></div>`;
-  const body=view==='market'?algoMarket():view==='backtest'?algoBacktest():view==='forward'?algoForward():algoMonitor();
+  const body=view==='market'?algoMarket():view==='leaderboard'?algoLeaderboard():view==='backtest'?algoBacktest():view==='forward'?algoForward():view==='accuracy'?algoAccuracy():view==='analytics'?algoAnalytics():algoMonitor();
   v.innerHTML=`<div class="av-wrap">${head}<div class="av-scroll">${algoStatusBar()}${body}</div></div>`;
   v.querySelectorAll('[data-algoview]').forEach(b=>b.onclick=()=>{state.algo.view=b.dataset.algoview;renderAlgo();});
   v.querySelectorAll('[data-algoseg]').forEach(b=>b.onclick=()=>{state.algo.seg=b.dataset.algoseg;renderAlgo();});
   v.querySelectorAll('[data-algogoto]').forEach(b=>b.onclick=()=>{state.algo.view=b.dataset.algogoto;renderAlgo();});
   v.querySelectorAll('[data-algobt]').forEach(b=>b.onclick=()=>{state.algo.bt.algo=+b.dataset.algobt;state.algo.view='backtest';renderAlgo();});
   v.querySelectorAll('[data-algodep]').forEach(b=>b.onclick=()=>algoDeploy(ALGOS[+b.dataset.algodep]));
-  v.querySelectorAll('[data-algogl]').forEach(b=>b.onclick=()=>goLiveChecklist(ALGOS[+b.dataset.algogl]));
+  v.querySelectorAll('[data-algogl]').forEach(b=>b.onclick=()=>{const a=ALGOS[+b.dataset.algogl]; if(b.classList.contains('is-locked')){quickToast('Go-Live locked','Keep paper-trading — unlocks after the forward-test gate (≥'+(BOT.nudgeMin||10)+' profitable closed trades).');return;} goLiveChecklist(a);});
+  v.querySelectorAll('[data-lcpause]').forEach(b=>b.onclick=()=>{const a=ALGOS[+b.dataset.lcpause];setStrategyState(a.id,'paused','Paused — '+a.name);});
+  v.querySelectorAll('[data-lcresume]').forEach(b=>b.onclick=()=>{const a=ALGOS[+b.dataset.lcresume];setStrategyState(a.id,'paper','Resumed — '+a.name);});
+  v.querySelectorAll('[data-lcstop]').forEach(b=>b.onclick=()=>lcStop(ALGOS[+b.dataset.lcstop]));
+  const sa=v.querySelector('[data-stopall]'); if(sa)sa.onclick=stopAll;
+  // Monitor accordion: click a strategy to reveal its positions + forward accuracy.
+  // Toggles the class directly (no re-render) → smooth, and survives the 2s live poll.
+  v.querySelectorAll('[data-monexp]').forEach(el=>{
+    const tog=e=>{ if(e&&e.target&&e.target.closest('[data-algogl],[data-algogoto]'))return;
+      const id=el.dataset.monexp, m=state.algo.monExpand=state.algo.monExpand||{}; m[id]=!m[id];
+      const card=el.closest('.mon-card'); if(card)card.classList.toggle('open',m[id]); el.setAttribute('aria-expanded',String(!!m[id])); };
+    el.onclick=tog;
+    el.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();tog(e);} };
+  });
   v.querySelectorAll('[data-execmode]').forEach(b=>b.onclick=()=>{state.algo.exec=b.dataset.execmode;renderAlgo();});
   v.querySelectorAll('[data-execjump]').forEach(b=>b.onclick=()=>{state.algo.view='monitor';state.algo.exec=b.dataset.execjump;renderAlgo();});
   const pc=v.querySelector('#algoPlanCap'); if(pc)pc.onchange=()=>{state.algo.capital=Math.max(0,Math.round(+pc.value||0));renderAlgo();};
   const or=v.querySelector('#algoOnlyRun'); if(or)or.onchange=()=>{state.algo.onlyRun=or.checked;renderAlgo();};
+  v.querySelectorAll('[data-capset]').forEach(b=>b.onclick=()=>{state.algo.capital=+b.dataset.capset;renderAlgo();});
   v.querySelectorAll('[data-algobuild]').forEach(b=>b.onclick=algoBuilder);
+  v.querySelectorAll('[data-anexport]').forEach(b=>b.onclick=exportAnalyticsCSV);
   v.querySelectorAll('[data-btperiod]').forEach(b=>b.onclick=()=>{state.algo.bt.period=b.dataset.btperiod;renderAlgo();});
+  v.querySelectorAll('[data-lbsort]').forEach(b=>b.onclick=()=>{state.algo.lbSort=b.dataset.lbsort;renderAlgo();});
+  v.querySelectorAll('[data-harness]').forEach(b=>b.onclick=()=>toggleHarness(b.dataset.harness));
   const bs=v.querySelector('#btAlgo'); if(bs)bs.onchange=()=>{state.algo.bt.algo=+bs.value;renderAlgo();};
   v.querySelectorAll('[data-algopause2]').forEach(b=>b.onclick=()=>{ALGOS[+b.dataset.algopause2].status='paused';renderAlgo();quickToast('Strategy paused','No new entries; open positions kept.');});
   v.querySelectorAll('[data-algoresume2]').forEach(b=>b.onclick=()=>{ALGOS[+b.dataset.algoresume2].status='live';renderAlgo();quickToast('Strategy resumed','Live and scanning for entries.');});
   v.querySelectorAll('[data-algostop2]').forEach(b=>b.onclick=()=>{const a=ALGOS[+b.dataset.algostop2];a.status='idle';a.cap=0;renderAlgo();quickToast('Strategy stopped','Capital released to your funds.');});
+  state.algo._sig=algoLiveSig();   // snapshot structure so the 2s poll knows when a full re-render is needed
 }
 /* ===== Info icons + plain-English definitions for every metric/strategy ===== */
 function infoI(tip){return tip?`<span class="info-i" title="${esc(tip)}" role="img" aria-label="${esc(tip)}" tabindex="0">i</span>`:'';}
@@ -2686,15 +3024,36 @@ function algoStatusBar(){
   ].filter(Boolean).join('<span class="asb-div"></span>');
   return `<div class="algo-statusbar${conn?'':' off'}">${cells}</div>`;
 }
+/* One-click paper-engine control — no terminal. Starts/stops the forward harness via the
+   guarded /api/harness endpoint; status comes from BOT.status.harnessRunning. */
+function harnessRunning(){ return !!(BOT.status && BOT.status.harnessRunning); }
+function harnessCta(){
+  const busy=BOT.harnessBusy;
+  if(harnessRunning())
+    return `<div class="harness-on">${icon('check',13)}<span><b>Paper engine running</b> — forward-testing every validated strategy on live data. First trades appear within a few minutes.</span><button class="btn-ghost sm" data-harness="stop" ${busy?'disabled':''}>${busy?'…':'Stop'}</button></div>`;
+  return `<div class="harness-cta"><button class="btn-primary harness-start" data-harness="start" ${busy?'disabled':''}>${icon('bolt',14)} ${busy?'Starting…':'Start paper testing'}</button>
+    <p class="harness-hint">${icon('shield',11)}<span>One click — no terminal. Runs every validated strategy on <b>live</b> data at <b>zero risk</b>.</span></p></div>`;
+}
+function toggleHarness(action){
+  if(BOT.harnessBusy) return;
+  BOT.harnessBusy=true; if(isAlgo())renderAlgo();
+  fetch(BOT_API+'/api/harness',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action})})
+    .then(r=>r.json()).then(res=>{
+      if(res&&res.ok) quickToast(action==='start'?'Paper testing started':'Paper testing stopped',
+        action==='start'?'Forward-testing live strategies at zero risk — give it a few minutes for the first signals.':'The forward paper engine was stopped.');
+      else quickToast('Couldn’t '+(action==='start'?'start':'stop')+' paper testing',(res&&res.error)||'Is the bot API running?');
+    }).catch(()=>quickToast('Bot API offline','Run python3 bot_api.py in the bot folder.'))
+    .then(()=>{ setTimeout(()=>{ BOT.harnessBusy=false; loadBotData().then(()=>{ if(isAlgo())renderAlgo(); }); }, action==='start'?1800:600); });
+}
 function algoForward(){
   const liveS=ALGOS.filter(a=>a.live);
-  if(!liveS.length) return secEmpty('cpu','No forward test running','Start the paper harness — run python3 paper_trade_all.py — to forward-test strategies on live data at zero risk.');
+  if(!liveS.length) return secEmpty('cpu','No forward test running yet','One click starts the paper engine — it forward-tests every validated strategy on live data, at zero risk. No terminal needed.',harnessCta());
   const total=liveS.reduce((s,a)=>s+(a.paperPnl||0),0);
   const since=BOT.updated?new Date(BOT.updated).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'—';
-  const stat=secStats([{l:lbl('Strategies'),v:String(liveS.length)},{l:'Paper P&L'+infoI(ALGO_DEFS['Paper P&L']),v:sgn(total),tone:total>=0?'up':'down'},{l:'Updated'+infoI('When the forward paper-trading state last refreshed.'),v:since},{l:lbl('Mode'),v:'Paper'}]);
-  const rows=liveS.map(a=>`<div class="mon-row live"><div class="mon-l"><span class="live-dot live"></span><div><b>${esc(a.name)}${infoI(STRAT_DEFS[a.id]||'')}</b><span class="mon-cat">${esc(a.cat)} · ${(a.openPositions||0)} open</span></div></div><div class="mon-pnl"><b class="num ${cls(a.paperPnl||0)}">${sgn(a.paperPnl||0)}</b><span>paper</span></div></div>`).join('');
+  const stat=secStats([{l:lbl('Strategies'),v:String(liveS.length)},{l:'Paper P&L'+infoI(ALGO_DEFS['Paper P&L']),v:sgn(total),tone:total>=0?'up':'down',id:'algoTotal'},{l:'Updated'+infoI('When the forward paper-trading state last refreshed.'),v:since},{l:lbl('Mode'),v:'Paper'}]);
+  const rows=liveS.map(a=>`<div class="mon-row live"><div class="mon-l"><span class="live-dot live"></span><div><b>${esc(a.name)}${infoI(STRAT_DEFS[a.id]||'')}</b><span class="mon-cat">${esc(a.cat)} · ${(a.openPositions||0)} open</span></div></div><div class="mon-pnl"><b class="num ${cls(a.paperPnl||0)}" data-live-pnl="${a.id}">${sgn(a.paperPnl||0)}</b><span>paper</span></div></div>`).join('');
   const feed=(BOT.trades&&BOT.trades.length)?`<div class="ft-feed"><div class="ft-feedh">Recent forward trades${infoI('Live entries & exits from the forward paper-trading harness — genuine out-of-sample evidence, no real money.')}</div>${BOT.trades.slice(0,14).map(t=>`<div class="ft-trade">${esc(t)}</div>`).join('')}</div>`:`<p class="sec-hint">${icon('cpu',12)}<span>No forward trades yet — they stream in here as the paper harness runs during market hours.</span></p>`;
-  return stat+`<div class="mon-list">${rows}</div>`+feed+`<p class="sec-hint">${icon('shield',12)}<span>Forward test = real out-of-sample evidence on live data at zero risk — the honest gate before any live capital.</span></p>`;
+  return (harnessRunning()?harnessCta():'')+stat+`<div class="mon-list">${rows}</div>`+feed+`<p class="sec-hint">${icon('shield',12)}<span>Forward test = real out-of-sample evidence on live data at zero risk — the honest gate before any live capital.</span></p>`;
 }
 function algoCard(a,i,lr,cap){
   cap=cap==null?algoPlanCapital():cap;
@@ -2703,13 +3062,13 @@ function algoCard(a,i,lr,cap){
   const isActive=validated&&(a.bestRegime===lr||neutral);
   const afford=cap>=a.minCap;
   const affChip=cap>0?(afford?`<span class="aff-chip ok" title="Your ${inr(cap)} clears the ${inr(a.minCap)} minimum.">✓ Fits your capital</span>`:`<span class="aff-chip no" title="Needs ${inr(a.minCap)} — add ${inr(a.minCap-cap)}.">${icon('lock',10)} +${inr(a.minCap-cap)} needed</span>`):'';
-  const paperChip=a.live?`<span class="paper-chip">${icon('bolt',10)} Paper · ${(a.openPositions||0)} open</span>`:'';
+  const chip=lcChip(a);
   const sbadge=validated?'<span class="vbadge ok">Validated</span>':'<span class="vbadge cand">Candidate</span>';
   const tag=a.bestRegime?(neutral?'<span class="rg-tag">Market-neutral</span>':`<span class="rg-tag">Best in ${a.bestRegime}</span>`):'';
   let stats;
   if(validated){
     const m=a.sharpe!=null?{l:'OOS Sharpe',v:a.sharpe.toFixed(2),up:a.sharpe>0}:{l:'Return',v:(a.totalRet>=0?'+':'')+a.totalRet+'%',up:a.totalRet>=0};
-    stats=`<div class="algo-stats"><div><span>${lbl(m.l)}</span><b class="num ${m.up?'up':'down'}">${m.v}</b></div><div><span>${lbl('Win')}</span><b class="num">${a.win}%</b></div><div><span>${lbl('Trades')}</span><b class="num">${a.trades}</b></div><div><span>Paper P&amp;L${infoI(ALGO_DEFS['Paper P&L'])}</span><b class="num ${a.paperPnl>0?'up':a.paperPnl<0?'down':''}">${a.paperPnl>=0?'+':'−'}${inr(Math.abs(a.paperPnl||0))}</b></div></div>`;
+    stats=`<div class="algo-stats"><div><span>${lbl(m.l)}</span><b class="num ${m.up?'up':'down'}">${m.v}</b></div><div><span>${lbl('Win')}</span><b class="num">${a.win}%</b></div><div><span>${lbl('Trades')}</span><b class="num">${a.trades}</b></div><div><span>Paper P&amp;L${infoI(ALGO_DEFS['Paper P&L'])}</span><b class="num ${a.paperPnl>0?'up':a.paperPnl<0?'down':''}" data-live-pnl="${a.id}">${a.paperPnl>=0?'+':'−'}${inr(Math.abs(a.paperPnl||0))}</b></div></div>`;
   } else {
     stats=`<div class="algo-stats"><div><span>${lbl('Status')}</span><b class="num">Candidate</b></div><div><span>${lbl('Best regime')}</span><b class="num">${a.bestRegime||'—'}</b></div><div><span>${lbl('Min cap')}</span><b class="num">${inr(a.minCap)}</b></div><div><span>${lbl('Needs')}</span><b class="num sm">${esc(a.requires||a.product||'—')}</b></div></div>`;
   }
@@ -2718,17 +3077,54 @@ function algoCard(a,i,lr,cap){
     rgrid='<div class="rg-head">Per-regime edge'+infoI('Average trade return in each market regime, measured in the backtest. Green = a positive edge, amber = weak/thin, red = loses. The outlined cell is the current live regime.')+'</div><div class="rg-grid">'+['Bull','Bear','Choppy','High-Vol'].map(r=>{const f=a.regimeFit[r];if(!f)return '';const tone=f[2]==='good'?'rg-good':f[2]==='weak'?'rg-weak':'rg-bad';const on=r===lr?' rg-live':'';return `<span class="rg-cell ${tone}${on}" title="${r}: ${f[0]>0?'+':''}${f[0]}% avg over ${f[1]} trades. ${REGIME_DEFS[r]||''}">${r==='High-Vol'?'HV':r}<b>${f[0]>0?'+':''}${f[0]}</b></span>`;}).join('')+'</div>';
   }
   const verdict=a.verdict?`<div class="algo-verdict">${icon('shield',11)}<span>${esc(a.verdict)}</span></div>`:'';
-  let act;
-  if(!validated) act='<span class="cand-pill">Backtest first</span>';
-  else if(a.live) act=`<button class="btn-go sm" data-algogl="${i}">${icon('shield',12)} Go-Live check</button>`;
-  else act=`<button class="btn-primary sm" data-algodep="${i}">Deploy (paper)</button>`;
-  return `<div class="algo-card${isActive?' is-active':''}${a.live?' is-live':''}">
+  const {primary,controls}=lcActions(a,i);
+  const bt=`<button class="btn-ghost sm" data-algobt="${i}">${icon('trendUp',12)} Backtest</button>`;
+  return `<div class="algo-card${isActive?' is-active':''}${a.sub==='live'?' is-live':''}${a.deployed?' is-deployed':''}">
     ${isActive?`<span class="active-flag">● ACTIVE · regime ${lr}</span>`:''}
-    <div class="algo-h"><div><b>${esc(a.name)}${infoI(STRAT_DEFS[a.id]||a.desc)}</b><span class="algo-cat">${esc(a.cat)}</span></div><span class="badge ${rk}">${a.risk}</span></div>
-    <div class="vbadge-row">${sbadge}${tag}${affChip}${paperChip}</div>
+    <div class="algo-h"><div><b>${esc(a.name)}${infoI(STRAT_DEFS[a.id]||a.desc)}</b><span class="algo-cat">${esc(a.cat)}</span></div><span class="badge ${rk}">${esc(a.risk)}</span></div>
+    <div class="vbadge-row">${sbadge}${tag}${chip}${affChip}</div>
     <p class="algo-desc">${esc(a.desc)}</p>
     ${stats}${rgrid}${verdict}
-    <div class="algo-act"><button class="btn-ghost sm" data-algobt="${i}">${icon('trendUp',12)} Backtest</button>${act}</div></div>`;
+    <div class="lc-cta">${primary}</div>
+    <div class="lc-row">${controls}${bt}</div></div>`;
+}
+/* ---- strategy lifecycle (Deploy → Paper/prove → Go Live → Pause/Stop) ---- */
+function lcChip(a){
+  if(a.sub==='live')   return `<span class="lc-chip live">● LIVE · real money</span>`;
+  if(a.sub==='paused') return `<span class="lc-chip paused">❚❚ Paused</span>`;
+  if(a.sub==='paper')  return `<span class="lc-chip paper">${icon('bolt',10)} Paper · running${(a.openPositions||0)?` · ${a.openPositions} open`:''}</span>`;
+  return '';
+}
+function lcActions(a,i){
+  const min=BOT.nudgeMin||10, validated=a.vstatus==='validated';
+  if(!a.wired){   // no live engine yet → can't deploy
+    return {primary: validated
+        ? `<span class="cand-pill">${icon('shield',12)} Validated · live engine coming soon</span>`
+        : `<span class="cand-pill">${icon('shield',12)} Candidate · backtest before deploying</span>`,
+      controls:''};
+  }
+  if(a.sub==='live'){
+    return {primary:`<button class="btn-go sm wide" data-algogl="${i}">${icon('shield',12)} Manage live</button>`,
+      controls:`<button class="btn-ghost sm" data-lcpause="${i}">Pause</button><button class="btn-ghost sm danger" data-lcstop="${i}">${icon('alert',12)} Stop &amp; Flatten</button>`};
+  }
+  if(a.sub==='paused'){
+    return {primary:`<button class="btn-primary sm wide" data-lcresume="${i}">${icon('bolt',12)} Resume (paper)</button>`,
+      controls:`<button class="btn-ghost sm" data-lcstop="${i}">Stop</button>`};
+  }
+  if(a.sub==='paper'){
+    let primary;
+    if(validated){
+      const n=a.fwdTrades||0, pct=Math.min(100,Math.round(n/min*100)), eligible=!!a.nudge;   // unlocks only on the strict forward-test gate
+      const prog=`<div class="lc-prog"><div class="lc-prog-h"><span>Proving for live${infoI('Go-Live unlocks after ≥'+min+' CLOSED, profitable forward paper trades + funded account + ALLOW_LIVE armed. Proof, not hope.')}</span><span class="lc-prog-n">${n}/${min} trades</span></div><div class="lc-bar"><i style="width:${pct}%"></i></div></div>`;
+      primary=`${prog}<button class="btn-go sm wide${eligible?'':' is-locked'}" data-algogl="${i}"${eligible?'':' aria-disabled="true" title="Locked until the forward-test gate is met"'}>${icon('shield',12)} ${eligible?'Go Live →':`Go Live — locked`}</button>`;
+    } else {
+      primary=`<div class="lc-note">${icon('shield',11)}<span>Gathering forward evidence — candidate, not eligible for live yet.</span></div>`;
+    }
+    return {primary, controls:`<button class="btn-ghost sm" data-lcpause="${i}">Pause</button><button class="btn-ghost sm" data-lcstop="${i}">Stop</button>`};
+  }
+  // Available (not deployed)
+  return {primary:`<button class="btn-primary sm wide" data-algodep="${i}">${icon('bolt',12)} Deploy in Paper</button><span class="lc-free">Risk-free · live data, simulated fills</span>`,
+    controls:''};
 }
 function algoPlanCapital(){
   if(state.algo&&state.algo.capital!=null) return state.algo.capital;
@@ -2744,14 +3140,40 @@ function algoNudge(){
     if(a.nudge) return `<div class="nudge-card go"><span class="nudge-ic">${icon('bolt',16)}</span>
       <div class="nudge-b"><b>${esc(a.name)} — ready to consider live</b><span>${esc(a.nudgeMsg||'')}</span></div>
       <button class="btn-go sm" data-algogl="${i}">${icon('shield',12)} Review go-live checklist</button></div>`;
-    const n=a.fwdTrades||0, pct=Math.min(100,Math.round(n/min*100));
+    const n=Math.min(a.fwdTrades||0,min), toGo=Math.max(0,min-n);
+    const pips=Array.from({length:min},(_,k)=>`<i class="${k<n?'on':''}"></i>`).join('');
     return `<div class="nudge-card build"><span class="nudge-ic">${icon('shield',16)}</span>
-      <div class="nudge-b"><b>${esc(a.name)} — proven &amp; safe · building forward evidence</b>
-        <span>${n}/${min} closed paper trades · paper P&amp;L <b class="${a.paperPnl>=0?'up':'down'}">${a.paperPnl>=0?'+':'−'}${inr(Math.abs(a.paperPnl||0))}</b>. A go-live nudge appears once it has ≥${min} <b>profitable</b> forward trades — proof, not hope.</span>
-        <div class="nudge-bar"><i style="width:${pct}%"></i></div></div>
+      <div class="nudge-b">
+        <div class="nudge-top"><b>${esc(a.name)}</b><span class="nudge-tag">Proven &amp; safe · building evidence</span></div>
+        <span>Paper P&amp;L <b class="${a.paperPnl>=0?'up':'down'}">${a.paperPnl>=0?'+':'−'}${inr(Math.abs(a.paperPnl||0))}</b> · a go-live nudge unlocks after <b>${min} profitable</b> forward trades — proof, not hope.</span>
+        <div class="nudge-meter"><div class="nudge-pips" role="img" aria-label="${n} of ${min} forward trades logged">${pips}</div><span class="nudge-mlab"><b>${n}/${min}</b> closed${toGo?` · ${toGo} to go`:' · ready to review'}</span></div>
+      </div>
       <button class="btn-ghost sm" data-algogl="${i}">View gates</button></div>`;
   }).join('');
   return `<div class="nudge-wrap">${cards}</div>`;
+}
+/* "My Strategies" — the portfolio of what's actually deployed, with quick stop +
+   a global kill-switch. Spans all segments so nothing you've deployed is hidden. */
+function myStrategiesBar(){
+  const dep=ALGOS.filter(a=>a.deployed);
+  if(!dep.length) return `<div class="mystrat empty">${icon('cpu',15)}<span>No strategies deployed yet — pick one below and <b>Deploy in Paper</b> to start risk-free.</span></div>`;
+  const paper=dep.filter(a=>a.sub!=='live'), live=dep.filter(a=>a.sub==='live');
+  const totPnl=dep.reduce((s,a)=>s+(a.paperPnl||0),0);
+  const chips=dep.map(a=>{const i=ALGOS.indexOf(a), st=a.sub==='live'?'live':a.sub==='paused'?'paused':'paper';
+    return `<span class="ms-chip ${st}"><i class="ms-dot"></i><b>${esc(a.name)}</b><span class="ms-pnl num ${cls(a.paperPnl||0)}">${sgn(a.paperPnl||0)}</span><button class="ms-x" data-lcstop="${i}" aria-label="Stop ${esc(a.name)}" title="Stop ${esc(a.name)}">${icon('close',10)}</button></span>`;}).join('');
+  return `<div class="mystrat">
+    <div class="ms-head"><b>${icon('cpu',14)} My strategies</b>
+      <span class="ms-sum">${paper.length} paper${live.length?` · <b class="lc-live-txt">${live.length} live</b>`:''} · net paper P&L <b class="num ${cls(totPnl)}">${sgn(totPnl)}</b></span>
+      <button class="btn-ghost sm danger" data-stopall title="Stop every deployed strategy">${icon('alert',12)} Stop all</button></div>
+    <div class="ms-chips">${chips}</div></div>`;
+}
+async function stopAll(){
+  const dep=ALGOS.filter(a=>a.deployed); if(!dep.length) return;
+  const hasLive=dep.some(a=>a.sub==='live');
+  flowModal({title:'Stop all strategies', confirm:'Stop all ('+dep.length+')', danger:true,
+    body:`<p class="flow-note">${icon('alert',13)}<span>Stops <b>${dep.length}</b> deployed ${dep.length===1?'strategy':'strategies'}. Paper positions square off next cycle.${hasLive?' <b>Includes LIVE strategies — real positions will be flattened.</b>':''} You can redeploy anytime.</span></p>`,
+    onConfirm(){ Promise.all(dep.map(a=>fetch(BOT_API+'/api/strategy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:a.id,state:'off'})}).catch(()=>{})))
+      .then(()=>loadBotData()).then(()=>{ if(typeof renderAlgo==='function')renderAlgo(); quickToast('All stopped','Every strategy stopped; paper positions square off next cycle.'); }); }});
 }
 function algoMarket(){
   const segs=BOT.segments||[{id:'cash',label:'All',note:''}];
@@ -2763,17 +3185,26 @@ function algoMarket(){
   const shown=onlyRun?inSeg.filter(a=>algoRunnable(a,lr,cap)):inSeg;
   const segTabs=`<div class="seg-tabs" role="tablist">${segs.map(sg=>`<button class="seg-tab${sg.id===seg?' on':''}" data-algoseg="${sg.id}" role="tab" aria-selected="${sg.id===seg}"><b>${esc(sg.label)}</b><i>${esc(sg.note||'')}</i></button>`).join('')}</div>`;
   const affordN=inSeg.filter(a=>cap>=a.minCap).length, matchN=inSeg.filter(a=>algoRunnable(a,lr,cap)).length;
+  const quick=[[50000,'₹50K'],[100000,'₹1L'],[500000,'₹5L'],[1000000,'₹10L']];
+  const capQuick=`<div class="cap-quick" role="group" aria-label="Quick capital presets">${quick.map(([qv,ql])=>`<button class="cap-chip${cap===qv?' on':''}" data-capset="${qv}">${ql}</button>`).join('')}</div>`;
   const capStrip=`<div class="cap-strip">
     <div class="cap-field"><label for="algoPlanCap">Plan with capital${infoI('Set the money you intend to deploy. Each card then shows whether you can actually run that strategy at this size — driven by real lot-size & margin minimums, not guesswork.')}</label>
-      <div class="cap-input-wrap"><span>₹</span><input id="algoPlanCap" class="cap-input num" type="number" inputmode="numeric" value="${cap}" min="0" step="5000" placeholder="e.g. 100000"></div></div>
-    <div class="cap-sum">${cap>0?`<b class="up">${affordN}</b> of ${inSeg.length} affordable · <b>${matchN}</b> also match the live <b>${lr}</b> regime`:'Enter the capital you plan to deploy to see what you can run.'}</div>
+      <div class="cap-row"><div class="cap-input-wrap"><span>₹</span><input id="algoPlanCap" class="cap-input num" type="number" inputmode="numeric" value="${cap}" min="0" step="5000" placeholder="e.g. 100000"></div>${capQuick}</div></div>
+    <div class="cap-sum">${cap>0?`<b class="up">${affordN}</b> of ${inSeg.length} affordable · <b>${matchN}</b> also match the live <b>${lr}</b> regime`:'Pick a preset or type the capital you plan to deploy — each card then shows exactly what you can run.'}</div>
     <label class="cap-toggle"><input type="checkbox" id="algoOnlyRun" ${onlyRun?'checked':''}><span>Only what I can run now</span></label>
   </div>`;
   const valid=inSeg.filter(a=>a.vstatus==='validated').length;
-  const stat=secStats([{l:lbl('Strategies'),v:String(inSeg.length)},{l:lbl('Validated'),v:String(valid)},{l:lbl('Live regime'),v:lr},{l:lbl('Mode'),v:BOT.paperMode?'Paper':'Live'}]);
+  const regimeReady=inSeg.filter(a=>a.vstatus==='validated'&&(a.bestRegime===lr||a.bestRegime==='Market-neutral')).length;
+  const segLabel=(segs.find(s=>s.id===seg)||{}).label||'segment';
+  const stat=secStats([
+    {l:lbl('Strategies'),v:String(inSeg.length),s:'in '+esc(segLabel)},
+    {l:lbl('Validated'),v:String(valid),s:'passed validation',tone:valid?'up':''},
+    {l:'Fit '+esc(lr)+infoI('Validated strategies whose best regime matches the current live regime — the ones the engine can deploy right now.'),v:String(regimeReady),s:'match the live regime'},
+    {l:'Runnable now'+infoI('Validated strategies that BOTH fit the live regime AND clear your planned capital’s lot-size / margin minimum.'),v:cap>0?String(matchN):'—',s:cap>0?'fit '+inr(cap):'set your capital',tone:cap>0&&matchN>0?'up':''}
+  ]);
   const cards=shown.length?shown.map(a=>algoCard(a,ALGOS.indexOf(a),lr,cap)).join(''):secEmpty('shield','Nothing runnable at this size',`No validated strategy in this segment both fits ${inr(cap)} and matches the live ${lr} regime. Add capital, switch off the filter, or wait for the regime to favour a validated edge.`);
   const build=onlyRun?'':`<button class="algo-build" data-algobuild>${icon('plus',20)}<b>Build a strategy</b><span>Define your own entry &amp; exit rules</span></button>`;
-  return algoNudge()+segTabs+capStrip+stat+`<div class="algo-grid">${cards}${build}</div>`;
+  return myStrategiesBar()+algoNudge()+segTabs+capStrip+stat+`<div class="algo-grid">${cards}${build}</div>`;
 }
 /* ===== Go-Live readiness: the hard checklist that gates Paper→Live ===== */
 function goLiveChecklist(a){
@@ -2819,67 +3250,112 @@ function wireReadiness(body,d,a){
       }).catch(()=>{ go.disabled=false; go.textContent='Retry'; quickToast('Could not reach the bot','Switch was not applied.'); });
   };
 }
-function backtest(a,days){
-  // Simulate a real trade-by-trade equity path from the strategy's own stats (win/CAGR/DD),
-  // then derive EVERY metric — return, maxDD, Sharpe, win rate, trade log — from that one series,
-  // so the curve, the numbers and the trade log are mutually consistent (not three separate guesses).
-  const total=Math.pow(1+a.cagr/100,days/252)-1;                              // CAGR-implied window return
-  const w=a.win/100;
-  const freq=a.cat.indexOf('intraday')>=0?1.2:a.cat.indexOf('swing')>=0?4:9;  // sessions per trade
-  const nTr=Math.max(6,Math.min(160,Math.round(days/freq)));
-  const M=Math.min(Math.max(days,40),140);                                    // equity-curve sample resolution
-  const swing=a.dd/100/Math.sqrt(nTr)*1.15;                                    // per-trade magnitude, calibrated so realized maxDD lands near the stated drawdown
-  // 1) assign exactly round(w·nTr) winners (low-discrepancy: rank by hash, take the top K) so the
-  //    realized win rate matches the stated one even on short windows; then size each trade off `swing`.
-  const key=i=>dseed(a.name.length*5+i*3+1);
-  const order=Array.from({length:nTr},(_,i)=>i).sort((x,y)=>key(x)-key(y));
-  const K=Math.round(w*nTr), winSet=new Set(order.slice(0,K));
-  const trd=[];
-  for(let i=0;i<nTr;i++){ const win=winSet.has(i);
-    const r=win? swing*(0.6+0.85*dseed(i*7+3)) : -swing*(0.72+0.85*dseed(i*11+5));
-    const day=Math.max(1,Math.min(M-1,1+Math.floor(((i+0.5)/nTr+(dseed(i*13)-0.5)*0.5/nTr)*(M-1))));
-    trd.push({win,r,day}); }
-  // 2) constant per-trade drift so the cumulative path lands exactly on the CAGR-implied return
-  let prod=1; trd.forEach(t=>prod*=(1+t.r));
-  const drift=Math.pow((1+total)/Math.max(1e-6,prod),1/nTr)-1;
-  trd.forEach(t=>{ t.r=(1+t.r)*(1+drift)-1; });
-  // 3) walk the curve: flat between trades, jumps on trade days → a realistic stepped equity curve
-  const byDay={}; trd.forEach(t=>{ (byDay[t.day]=byDay[t.day]||[]).push(t.r); });
-  const pts=[100]; let eq=100,peak=100,maxDD=0;
-  for(let d=1;d<M;d++){ (byDay[d]||[]).forEach(r=>{eq*=(1+r);}); pts.push(eq); peak=Math.max(peak,eq); maxDD=Math.max(maxDD,(peak-eq)/peak*100); }
-  // 4) metrics straight off the simulated series
-  const totalRet=(eq/100-1)*100;
-  const mean=trd.reduce((s,t)=>s+t.r,0)/nTr, sd=Math.sqrt(trd.reduce((s,t)=>s+(t.r-mean)*(t.r-mean),0)/nTr)||1e-6;
-  const sharpe=Math.max(0.2,Math.min(3,(a.cagr/100)/(sd*Math.sqrt(252/freq)))); // annual return ÷ annualized vol of the simulated trades
-  const winRate=Math.round(trd.filter(t=>t.win).length/nTr*100);
-  maxDD=Math.max(maxDD,a.dd*0.5);                                             // floor near the strategy's stated drawdown
-  // 5) trade log = the actual most-recent simulated trades, priced off a wandering underlying (curve ↔ log consistent)
-  const log=trd.slice(-8).map((t,i)=>{ const ep=Math.round(SPOT*(0.9+dseed((nTr-8+i)*5)*0.2));
-    return {entry:ep.toLocaleString('en-IN'),exit:Math.round(ep*(1+t.r)).toLocaleString('en-IN'),side:(i%3===0&&a.risk!=='Conservative')?'sell':'buy',ret:t.r*100}; });
-  return {pts,totalRet,maxDD,sharpe,trades:nTr,winRate,log};
-}
-function eqCurveSVG(bt){
-  const W=600,H=160,padT=10,padB=10,padL=4,padR=4,pts=bt.pts,lo=Math.min(...pts),hi=Math.max(...pts),rng=(hi-lo)||1;
+function eqCurveSVG(bt,oosFrac){
+  const W=600,H=160,padT=10,padB=10,padL=4,padR=4;
+  const pts=(bt&&Array.isArray(bt.pts)&&bt.pts.length>1)?bt.pts:[100,100];   // guard degenerate series
+  const lo=Math.min(...pts),hi=Math.max(...pts),rng=(hi-lo)||1;
   const X=i=>padL+i/(pts.length-1)*(W-padL-padR), Y=v=>padT+(1-(v-lo)/rng)*(H-padT-padB);
   const d=pts.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+','+Y(v).toFixed(1)).join(' ');
   const area=d+` L${X(pts.length-1).toFixed(1)},${(H-padB).toFixed(1)} L${X(0).toFixed(1)},${(H-padB).toFixed(1)} Z`;
   const up=pts[pts.length-1]>=pts[0], baseY=Y(100).toFixed(1);
-  return `<svg class="eq-svg ${up?'up':'down'}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><path class="eq-area" d="${area}"/><line class="eq-base" x1="0" y1="${baseY}" x2="${W}" y2="${baseY}"/><path class="eq-line" d="${d}"/></svg>`;
+  const end=Math.round(pts[pts.length-1]);
+  // out-of-sample split: shade the held-out region + mark the train/test divider (walk-forward viz)
+  let oos='';
+  if(oosFrac){ const sx=X((pts.length-1)*oosFrac).toFixed(1);
+    oos=`<rect class="eq-oos" x="${sx}" y="0" width="${(W-parseFloat(sx)).toFixed(1)}" height="${H}"/>`+
+        `<line class="eq-split" x1="${sx}" y1="0" x2="${sx}" y2="${H}"/>`+
+        `<text class="eq-oostx" x="${(parseFloat(sx)+4).toFixed(1)}" y="11">out-of-sample →</text>`; }
+  return `<svg class="eq-svg ${up?'up':'down'}" width="100%" height="160" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Equity curve: ₹100 ${up?'grew to':'fell to'} ₹${end} over the backtest${oosFrac?', with the out-of-sample period shaded':''}">${oos}<path class="eq-area" d="${area}"/><line class="eq-base" x1="0" y1="${baseY}" x2="${W}" y2="${baseY}"/><path class="eq-line" d="${d}"/></svg>`;
+}
+function btKey(id,period){ return id+'|'+period; }
+function ensureBacktest(id,period){
+  if(!BOT.live) return;
+  BOT.backtests=BOT.backtests||{};
+  const k=btKey(id,period), rec=BOT.backtests[k];
+  if(rec && (rec.loading || Date.now()-rec.t<300000)) return;   // fresh (5min) or in-flight
+  BOT.backtests[k]={...(rec||{}),loading:true,t:rec?rec.t:0};
+  fetch(`${BOT_API}/api/backtest?strategy=${encodeURIComponent(id)}&period=${encodeURIComponent(period)}`).then(r=>r.json()).then(p=>{
+    BOT.backtests[k]={p:(p&&p.real)?p:null,err:(p&&!p.real)?p.error:null,loading:false,t:Date.now()};
+    if(typeof isAlgo==='function'&&isAlgo()&&state.algo.view==='backtest') renderAlgo();
+  }).catch(()=>{BOT.backtests[k]={p:null,err:'fetch failed',loading:false,t:Date.now()};});
 }
 function algoBacktest(){
   const ai=Math.min(state.algo.bt.algo,ALGOS.length-1), period=state.algo.bt.period, a=ALGOS[ai];
-  const periods=[['1M',21],['3M',63],['1Y',252],['3Y',756]], days=(periods.find(p=>p[0]===period)||periods[2])[1];
-  if(a.real&&a.vstatus!=='validated'){
-    const sel=`<div class="bt-controls"><div class="dc-sel"><label class="dc-lab" for="btAlgo">Strategy</label><select id="btAlgo" class="dc-input">${ALGOS.map((x,i)=>`<option value="${i}" ${i===ai?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div></div>`;
-    return sel+secEmpty('cpu','Candidate — not yet backtested',esc(a.name)+' is a realistic strategy for this segment but has not passed the regime-segmented backtest. '+(a.requires?('Needs '+esc(a.requires)+' data. '):'')+'It will show real numbers once validated.');
-  }
-  const bt=backtest(a,days);
+  const periods=[['1M'],['3M'],['1Y'],['3Y']];
   const ctrl=`<div class="bt-controls">
     <div class="dc-sel"><label class="dc-lab" for="btAlgo">Strategy</label><select id="btAlgo" class="dc-input">${ALGOS.map((x,i)=>`<option value="${i}" ${i===ai?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>
     <div class="bt-periods" role="tablist" aria-label="Backtest period">${periods.map(([k])=>`<button class="bt-period${k===period?' on':''}" data-btperiod="${k}" role="tab" aria-selected="${k===period}">${k}</button>`).join('')}</div></div>`;
-  const metrics=secStats([{l:'Total return',v:pct(bt.totalRet),tone:tone(bt.totalRet)},{l:'CAGR',v:a.cagr+'%',tone:'up'},{l:'Max DD',v:'−'+bt.maxDD.toFixed(1)+'%',tone:'down'},{l:'Win rate',v:bt.winRate+'%'},{l:'Sharpe',v:bt.sharpe.toFixed(2)},{l:'Trades',v:String(bt.trades)}]);
-  const log=`<table class="tbl bt-log"><thead><tr><th>#</th><th>Entry</th><th>Exit</th><th>Side</th><th>Return</th></tr></thead><tbody>${bt.log.map((t,i)=>`<tr><td>${i+1}</td><td class="num">${t.entry}</td><td class="num">${t.exit}</td><td><span class="side-chip side-${t.side}">${t.side}</span></td><td class="num ${cls(t.ret)}">${pct(t.ret)}</td></tr>`).join('')}</tbody></table>`;
-  return ctrl+`<div class="bt-card"><div class="bt-cardh"><b>${esc(a.name)}</b><span>${period} backtest · ${days} sessions · hypothetical</span></div>${eqCurveSVG(bt)}</div>`+metrics+`<div class="bt-logwrap"><div class="bt-logttl">Recent trades</div>${log}</div><div class="bt-cta"><button class="btn-primary" data-algodep="${ai}">${icon('bolt',13)} Deploy this strategy</button></div>`;
+  if(a.real&&a.vstatus!=='validated')
+    return ctrl+secEmpty('cpu','Candidate — not yet validated',esc(a.name)+' is a realistic strategy but hasn’t passed the regime-segmented validation. '+(a.requires?('Needs '+esc(a.requires)+' data. '):'')+'Backtest numbers appear once it’s validated.');
+  if(a.id==='pairs')
+    return ctrl+secEmpty('scale','Pairs is a 2-leg strategy',esc(a.name)+' is market-neutral (long one stock future, short another) — it isn’t a single-symbol backtest. See its live forward-test results under Forward Test / Monitor.');
+  // REAL backtest (Kite history). Honest connect/loading state — no simulated projection.
+  if(!BOT.live)
+    return ctrl+secEmpty('cpu','Connect Kite to run a real backtest',esc(a.name)+' backtests on real Kite daily history across a 14-stock universe (using the same engine that validated it). Connect — <b>python3 login.py</b> — to run it. No simulated numbers are shown.');
+  ensureBacktest(a.id,period);
+  const rec=(BOT.backtests||{})[btKey(a.id,period)];
+  if(!rec || rec.loading || !rec.p)
+    return ctrl+secEmpty('cpu', (rec&&rec.err)?'Backtest unavailable':'Running real backtest…', (rec&&rec.err)?esc(rec.err):'Running '+esc(a.name)+' across the universe on real Kite history — a few seconds.');
+  const bt=rec.p;
+  const endEq=Math.round(bt.pts[bt.pts.length-1]||100), peakEq=Math.round(Math.max(...bt.pts));
+  const eqCap=`<div class="eq-cap">
+    <span>Start <b class="num">₹100</b></span>
+    <span>Peak <b class="num up">₹${peakEq.toLocaleString('en-IN')}</b></span>
+    <span>End <b class="num ${endEq>=100?'up':'down'}">₹${endEq.toLocaleString('en-IN')}</b> <i class="num ${cls(bt.totalRet)}">${pct(bt.totalRet)}</i></span></div>`;
+  const card=`<div class="bt-card"><div class="bt-cardh"><b title="${esc(a.name)}">${esc(a.name)}</b><span><span class="live-dot live"></span>${period} · real Kite history · ${bt.universe} stocks</span></div>${eqCurveSVG(bt,0.7)}${eqCap}</div>`;
+  const metrics=secStats([{l:'Total return',v:pct(bt.totalRet),tone:tone(bt.totalRet)},{l:'CAGR',v:pct(bt.cagr),tone:tone(bt.cagr)},{l:'Max DD',v:'−'+bt.maxDD.toFixed(1)+'%',tone:'down'},{l:'Win rate',v:bt.winRate+'%'},{l:'Sharpe',v:bt.sharpe.toFixed(2),tone:bt.sharpe>=1?'up':bt.sharpe<0?'down':''},{l:'Trades',v:String(bt.trades)}]);
+  // VALIDATION REPORT — the honest in-sample vs out-of-sample cut (the moat)
+  const o=bt.oos||{}, held=(o.oos_ret||0)>=0 && (o.oos_avg||0)>=-0.1;
+  const thin=bt.trades<30;
+  const vr=`<div class="bt-vr"><div class="bt-vrh">${icon('shield',13)} Validation — the honest cut</div>
+    <div class="bt-vrgrid">
+      <div class="bt-vrcol"><span>In-sample (70%)</span><b class="num ${tone(o.is_ret)}">${pct(o.is_ret||0)}</b><i>${o.is_trades||0} trades · avg ${pct(o.is_avg||0)}/trade</i></div>
+      <div class="bt-vrcol"><span>Out-of-sample (30%)</span><b class="num ${tone(o.oos_ret)}">${pct(o.oos_ret||0)}</b><i>${o.oos_trades||0} trades · avg ${pct(o.oos_avg||0)}/trade</i></div>
+    </div>
+    <p class="bt-vrverdict ${held?'ok':'warn'}">${icon(held?'check':'alert',12)}<span>${held?'Edge <b>persisted out-of-sample</b> — held up on data it never trained on.':'Edge <b>weakened out-of-sample</b> — strong in-sample but faded on unseen data. Treat with caution.'} Costs: <b>${bt.costBps} bps/leg applied</b>.${thin?' <b>Thin sample</b> ('+bt.trades+' trades, &lt;30) — a hint, not proof.':''}</span></p></div>`;
+  const log=`<table class="tbl bt-log"><thead><tr><th>#</th><th>Entry</th><th>Exit</th><th>Hold</th><th>Return</th></tr></thead><tbody>${bt.log.map((t,i)=>`<tr><td>${i+1}</td><td class="num">${t.entry.toLocaleString('en-IN')}</td><td class="num">${t.exit.toLocaleString('en-IN')}</td><td class="num">${t.days}d</td><td class="num ${cls(t.ret)}">${pct(t.ret)}</td></tr>`).join('')}</tbody></table>`;
+  const an=bt.analytics||{}, pf=an.profitFactor!=null?an.profitFactor.toFixed(2):'∞';
+  const analytics=`<div class="bt-an"><div class="bt-anh">${icon('trendUp',13)} Trade analytics <i>${an.wins||0}W / ${an.losses||0}L</i></div>
+    <div class="bt-angrid">
+      <div class="bt-anc"><span>Avg win</span><b class="num up">${pct(an.avgWin||0)}</b></div>
+      <div class="bt-anc"><span>Avg loss</span><b class="num down">${pct(an.avgLoss||0)}</b></div>
+      <div class="bt-anc"><span>Profit factor</span><b class="num ${an.profitFactor>=1.2?'up':an.profitFactor!=null&&an.profitFactor<1?'down':''}">${pf}</b></div>
+      <div class="bt-anc"><span>Best / Worst</span><b class="num"><span class="up">${pct(an.best||0)}</span> <span class="down">${pct(an.worst||0)}</span></b></div>
+      <div class="bt-anc"><span>Avg hold</span><b class="num">${an.avgHold||0}d</b></div>
+      <div class="bt-anc"><span>Max streak</span><b class="num"><span class="up">${an.winStreak||0}W</span> <span class="down">${an.lossStreak||0}L</span></b></div>
+    </div></div>`;
+  return ctrl+card+metrics+vr+analytics+`<div class="bt-logwrap"><div class="bt-logttl">Recent trades</div>${log}</div>`;
+}
+/* ===== Strategy Leaderboard — rank validated strategies + edge-by-regime matrix (real catalog) ===== */
+function algoLeaderboard(){
+  const lr=liveRegime();
+  const sort=state.algo.lbSort||'sharpe';
+  const validated=ALGOS.filter(a=>a.vstatus==='validated');
+  const cands=ALGOS.filter(a=>a.vstatus!=='validated');
+  if(!validated.length) return secEmpty('cpu','No validated strategies yet','Strategies appear here once they pass the regime-segmented validation. Until then they’re candidates in the Marketplace.');
+  const metric={sharpe:a=>(a.sharpe!=null?a.sharpe:(a.totalRet||0)/8), ret:a=>a.totalRet||0, win:a=>a.win||0, dd:a=>-(a.dd||99), paper:a=>a.paperPnl||0};
+  const ranked=[...validated].sort((x,y)=>metric[sort](y)-metric[sort](x));
+  const sorts=[['sharpe','Sharpe'],['ret','Return'],['win','Win %'],['dd','Drawdown'],['paper','Paper P&L']];
+  const ctrl=`<div class="lb-ctrl"><span class="lb-lab">Rank by</span><div class="lb-sorts" role="tablist" aria-label="Rank strategies by">${sorts.map(([k,l])=>`<button class="lb-sort${k===sort?' on':''}" data-lbsort="${k}" role="tab" aria-selected="${k===sort}">${l}</button>`).join('')}</div></div>`;
+  const rows=ranked.map((a,i)=>{const active=a.bestRegime===lr||a.bestRegime==='Market-neutral';
+    return `<div class="lb-row${active?' active':''}">
+      <span class="lb-rank">${i+1}</span>
+      <div class="lb-name"><b>${esc(a.name)}${active?' <span class="lb-active">● ACTIVE</span>':''}</b><span>${esc(a.cat)} · best in ${esc(a.bestRegime||'—')}</span></div>
+      <div class="lb-stat ${sort==='sharpe'?'hi':''}"><span>Sharpe</span><b class="num ${a.sharpe>=1?'up':a.sharpe<0?'down':''}">${a.sharpe!=null?a.sharpe.toFixed(2):'—'}</b></div>
+      <div class="lb-stat ${sort==='ret'?'hi':''}"><span>Return</span><b class="num ${tone(a.totalRet)}">${a.totalRet!=null?pct(a.totalRet):'—'}</b></div>
+      <div class="lb-stat ${sort==='win'?'hi':''}"><span>Win</span><b class="num">${a.win!=null?a.win+'%':'—'}</b></div>
+      <div class="lb-stat ${sort==='dd'?'hi':''}"><span>Max DD</span><b class="num down">−${a.dd!=null?a.dd:'—'}%</b></div>
+      <div class="lb-stat"><span>Trades</span><b class="num">${a.trades||'—'}</b></div>
+      <div class="lb-stat ${sort==='paper'?'hi':''}"><span>Paper P&amp;L</span><b class="num ${cls(a.paperPnl||0)}" data-live-pnl="${a.id}">${a.paperPnl>=0?'+':'−'}${inr(Math.abs(a.paperPnl||0))}</b></div>
+      <button class="btn-ghost sm lb-bt" data-algobt="${ALGOS.indexOf(a)}">${icon('trendUp',12)} Backtest</button>
+    </div>`;}).join('');
+  const regs=['Bull','Bear','Choppy','High-Vol'];
+  const matrix=`<div class="lb-matrix"><div class="lb-mh">Edge by regime — who works when${infoI('Average trade return per market regime from the backtest. Green = a positive edge, amber = weak/thin, red = loses. The outlined column is the live regime. No strategy wins in every regime — that’s why the engine switches.')}</div>
+    <div class="lb-mscroll"><table class="lb-mtbl"><thead><tr><th>Strategy</th>${regs.map(r=>`<th class="${r===lr?'live':''}">${r==='High-Vol'?'HV':r}</th>`).join('')}</tr></thead>
+    <tbody>${validated.map(a=>`<tr><td class="lb-mname">${esc(a.name)}</td>${regs.map(r=>{const f=a.regimeFit&&a.regimeFit[r];if(!f)return '<td class="lb-mcell">—</td>';const tn=f[2]==='good'?'rg-good':f[2]==='weak'?'rg-weak':'rg-bad';return `<td class="lb-mcell ${tn}${r===lr?' live':''}" title="${esc(a.name)} in ${r}: ${f[0]>0?'+':''}${f[0]}% over ${f[1]} trades">${f[0]>0?'+':''}${f[0]}</td>`;}).join('')}</tr>`).join('')}</tbody></table></div>
+    <p class="lb-mnote">${icon('shield',12)}<span>The honest takeaway: <b>no strategy wins everywhere</b>. The live regime is <b>${esc(lr)}</b> — the engine favours strategies validated for it and stands aside otherwise.</span></p></div>`;
+  const candNote=cands.length?`<p class="sec-hint">${icon('cpu',12)}<span>${cands.length} candidate strateg${cands.length===1?'y is':'ies are'} not ranked — they haven’t passed validation (see Marketplace). We rank proof, not promises.</span></p>`:'';
+  return ctrl+`<div class="lb-list">${rows}</div>${matrix}${candNote}`;
 }
 function algoMonitor(){
   const exec=state.algo.exec||'paper';
@@ -2898,27 +3374,169 @@ function algoMonitor(){
       return toggle+secEmpty('shield','No strategies are live','Nothing is placing real orders. Live execution stays locked until a strategy clears the Go-Live checklist — fund the account + arm ALLOW_LIVE on the bot. Everything runs in paper until then.')+readyNote;
     const lrows=liveRun.map(a=>{const i=ALGOS.indexOf(a);
       return `<div class="mon-row live"><div class="mon-l"><span class="live-dot live"></span><div><b>${esc(a.name)}</b><span class="mon-cat">${esc(a.cat)} · ${(a.openPositions||0)} open</span></div></div>
-        <div class="mon-pnl"><b class="num ${cls(a.livePnl||0)}">${sgn(a.livePnl||0)}</b><span>LIVE · real ₹</span></div>
+        <div class="mon-pnl"><b class="num ${cls(a.livePnl||0)}" data-live-pnl="${a.id}">${sgn(a.livePnl||0)}</b><span>LIVE · real ₹</span></div>
         <div class="mon-ctrls"><button class="btn-ghost sm" data-algogl="${i}">Gates</button></div></div>`;}).join('');
     return toggle+`<div class="mon-list">${lrows}</div>`+readyNote;
   }
   // ---- PAPER view ----
-  if(!paperRun.length) return toggle+secEmpty('cpu','No paper strategies running','Start the forward harness — <b>python3 paper_trade_all.py</b> — to run strategies in paper.');
+  if(!paperRun.length) return toggle+secEmpty('cpu','No paper strategies running','Start the paper engine to run every validated strategy live in paper mode — zero real-money risk, no terminal.',harnessCta());
   const total=paperRun.reduce((s,a)=>s+(a.paperPnl||0),0);
-  const stat=secStats([{l:'Running · paper',v:String(paperRun.length)},{l:'Paper P&L'+infoI(ALGO_DEFS['Paper P&L']),v:sgn(total),tone:total>=0?'up':'down'},{l:'Mode',v:'Paper · no real orders'}]);
+  const stat=secStats([{l:'Running · paper',v:String(paperRun.length)},{l:'Paper P&L'+infoI(ALGO_DEFS['Paper P&L']),v:sgn(total),tone:total>=0?'up':'down',id:'monTotal'},{l:'Mode',v:'Paper · no real orders'}]);
+  const me=state.algo.monExpand=state.algo.monExpand||{};
   const rows=paperRun.map(a=>{const i=ALGOS.indexOf(a);
+    const open=!!me[a.id];
     const sub=(a.openPositions||0)?`${sgn(a.openPnl||0)} unrealised`:((a.openPositions||a.fwdTrades)?'realised':'no trades yet');
     const pos=(a.positions||[]).map(p=>p.entry!=null
-      ? `<div class="mon-posrow"><span class="mp-sym">${esc(p.sym)}</span><span class="mp-q">${p.qty} qty</span><span class="mp-x num">entry ${p.entry.toLocaleString('en-IN')}</span><span class="mp-x num">LTP ${p.ltp!=null?p.ltp.toLocaleString('en-IN'):'—'}</span><b class="mp-pnl num ${cls(p.unreal)}">${sgn(p.unreal)}${p.chgPct!=null?` · ${p.chgPct>=0?'+':''}${p.chgPct}%`:''}</b></div>`
+      ? `<div class="mon-posrow"><span class="mp-sym">${esc(p.sym)}</span><span class="mp-q">${p.qty} qty</span><span class="mp-x num">entry ${p.entry.toLocaleString('en-IN')}</span><span class="mp-x num">LTP <span data-live-ltp="${a.id}::${esc(p.sym)}">${p.ltp!=null?p.ltp.toLocaleString('en-IN'):'—'}</span></span><b class="mp-pnl num ${cls(p.unreal)}" data-live-upnl="${a.id}::${esc(p.sym)}">${sgn(p.unreal)}${p.chgPct!=null?` · ${p.chgPct>=0?'+':''}${p.chgPct}%`:''}</b></div>`
       : `<div class="mon-posrow"><span class="mp-sym">${esc(p.sym)}</span><span class="mp-q">spread ${p.spread>0?'long':'short'}</span><span class="mp-x">marks on close</span></div>`).join('');
     const posBlock=pos?`<div class="mon-pos">${pos}</div>`:'';
-    return `<div class="mon-card"><div class="mon-row live"><div class="mon-l"><span class="live-dot live"></span><div><b>${esc(a.name)}${a.vstatus==='validated'?'<span class="vbadge ok" style="margin-left:6px">Validated</span>':''}</b><span class="mon-cat">${esc(a.cat)} · ${(a.openPositions||0)} open · ${a.fwdTrades||0} closed</span></div></div>
-      <div class="mon-pnl"><b class="num ${cls(a.paperPnl||0)}">${sgn(a.paperPnl||0)}</b><span title="Open positions are marked to live market price; closed-trade P&L drives the go-live nudge.">${sub}</span></div>
-      <div class="mon-ctrls"><button class="btn-ghost sm" data-algogl="${i}">${icon('shield',12)} Go-Live check</button></div></div>${posBlock}</div>`;}).join('');
+    const accLine=a.fwdTrades?`<div class="mon-acc"><span>Forward accuracy</span><b class="${a.fwdWinPct!=null&&a.fwdWinPct>=50?'up':'down'}">${a.fwdWinPct!=null?a.fwdWinPct+'% win':'—'}</b><i>·</i>PF <b class="${a.fwdProfitFactor!=null&&a.fwdProfitFactor>=1?'up':'down'}">${a.fwdProfitFactor!=null?(a.fwdProfitFactor>=99?'∞':a.fwdProfitFactor):'—'}</b><i>·</i>exp <b class="num ${cls(a.fwdExpectancy||0)}">${a.fwdExpectancy!=null?sgn(a.fwdExpectancy):'—'}</b><i>·</i>${a.fwdTrades} closed <a class="mon-acc-link" data-algogoto="accuracy">full accuracy →</a></div>`:'';
+    const expInner=(posBlock+accLine)||`<div class="mon-exp-empty">No open positions or closed trades yet — this strategy trades only when its setup appears.</div>`;
+    return `<div class="mon-card${open?' open':''}">
+      <div class="mon-row live mon-head" data-monexp="${a.id}" role="button" tabindex="0" aria-expanded="${open}" title="Show positions &amp; accuracy"><div class="mon-l"><span class="live-dot live"></span><div><b>${esc(a.name)}${a.vstatus==='validated'?'<span class="vbadge ok" style="margin-left:6px">Validated</span>':''}</b><span class="mon-cat">${esc(a.cat)} · ${(a.openPositions||0)} open · ${a.fwdTrades||0} closed</span></div></div>
+      <div class="mon-pnl"><b class="num ${cls(a.paperPnl||0)}" data-live-pnl="${a.id}">${sgn(a.paperPnl||0)}</b><span data-live-sub="${a.id}" title="Open positions are marked to live market price; closed-trade P&L drives the go-live nudge.">${sub}</span></div>
+      <div class="mon-ctrls"><button class="btn-ghost sm" data-algogl="${i}">${icon('shield',12)} Go-Live check</button><span class="mon-chev">▾</span></div></div>
+      <div class="mon-exp">${expInner}</div></div>`;}).join('');
   const note=paperRun.some(a=>!a.openPositions&&!a.fwdTrades)
     ? `Strategies at ₹0 simply haven’t triggered an entry signal yet — they only trade when their setup appears. P&L moves as positions open and close.`
     : `Open positions are marked to live market price; the go-live nudge needs ≥${BOT.nudgeMin||10} <b>closed</b> profitable trades.`;
-  return toggle+stat+`<div class="mon-list">${rows}</div><p class="sec-hint">${icon('shield',12)}<span>${note} All run in <b>PAPER</b> — zero real-money risk.</span></p>`;
+  return toggle+(harnessRunning()?harnessCta():'')+stat+`<div class="mon-list">${rows}</div><p class="sec-hint">${icon('shield',12)}<span>${note} All run in <b>PAPER</b> — zero real-money risk.</span></p>`;
+}
+/* ===== ACCURACY — backtest edge vs LIVE forward results: can you trust it? ===== */
+function algoAccuracy(){
+  if(!BOT.live) return secEmpty('shield','Connect Kite to measure accuracy','Accuracy pits each strategy’s backtested edge against its LIVE forward-test results — real out-of-sample proof. Reconnect to load it.');
+  const MIN=BOT.nudgeMin||10, lr=liveRegime();
+  const list=ALGOS.filter(a=>a.vstatus==='validated'||a.live);
+  const vset=list.filter(a=>a.vstatus==='validated');
+  const avgBt=vset.length?Math.round(vset.reduce((s,a)=>s+(a.win||0),0)/vset.length):0;
+  const totClosed=list.reduce((s,a)=>s+(a.fwdTrades||0),0);
+  const totWins=list.reduce((s,a)=>s+(a.fwdWins||0),0);
+  const fwdWin=totClosed?Math.round(totWins/totClosed*100):null;
+  const holding=vset.filter(a=>(a.fwdTrades||0)>=MIN&&(a.fwdExpectancy||0)>0).length;
+  const stat=secStats([
+    {l:'Backtested win'+infoI('Average out-of-sample win rate across validated strategies (from the regime backtest).'),v:avgBt+'%'},
+    {l:'Forward win'+infoI('Live paper win rate from CLOSED forward trades — the real out-of-sample hit rate. Win rate alone isn’t edge — see profit factor.'),v:fwdWin!=null?fwdWin+'%':'—',tone:fwdWin!=null?(fwdWin>=50?'up':'down'):''},
+    {l:'Forward trades'+infoI('Total closed forward paper trades. Accuracy needs sample size — under ~'+MIN+' is a hint, not proof.'),v:String(totClosed)},
+    {l:'Edge holding'+infoI('Validated strategies whose LIVE forward results are still profitable (positive expectancy) on ≥'+MIN+' trades.'),v:holding+' / '+vset.length,tone:holding>0?'up':''}
+  ]);
+  const rows=list.length?list.map(accRow).join(''):secEmpty('cpu','No strategies to measure yet','Accuracy compares each strategy’s backtest edge with its LIVE forward results. Start the paper engine to gather that out-of-sample evidence — one click, zero risk.',harnessCta());
+  const legend=`<p class="sec-hint">${icon('shield',12)}<span><b>Edge status</b> judges LIVE profitability (expectancy + profit factor), not win rate alone — a 33%-win strategy can be a strong edge when its wins are bigger than its losses. Every forward number is real out-of-sample, zero real money.</span></p>`;
+  return stat+`<div class="acc-list">${rows}</div>`+legend;
+}
+function accRow(a){
+  const MIN=BOT.nudgeMin||10, lr=liveRegime();
+  const validated=a.vstatus==='validated';
+  const bt=a.win!=null?a.win:null, n=a.fwdTrades||0, fw=a.fwdWinPct;
+  const pf=a.fwdProfitFactor, exp=a.fwdExpectancy;
+  let badge,btone,note;
+  if(!validated){ badge='Candidate'; btone='cand'; note='Not validated — no proven backtest edge yet.'; }
+  else if(n===0){ badge='Awaiting first trade'; btone='early'; note='Validated in backtest; no closed forward trades yet.'; }
+  else if(n<MIN){ badge='Building · '+n+'/'+MIN; btone='early'; note='Gathering out-of-sample evidence — too few trades to judge.'; }
+  else if((exp||0)>0&&(pf||0)>=1.2){ badge='✓ Edge holding'; btone='ok'; note='Profitable out-of-sample — the backtest edge is showing up live.'; }
+  else if((exp||0)>=0){ badge='≈ Marginal'; btone='warn'; note='Roughly break-even live — watch before committing capital.'; }
+  else { badge='▾ Degrading'; btone='bad'; note='Losing out-of-sample — the edge is not holding live.'; }
+  const bar=(pct,c)=>`<div class="acc-bar"><i class="${c}" style="width:${Math.max(0,Math.min(100,pct||0))}%"></i></div>`;
+  const cmp=`<div class="acc-cmp">
+    <div class="acc-metric"><span>Backtest win</span><b class="num">${bt!=null?bt+'%':'—'}</b>${bar(bt,'bt')}</div>
+    <div class="acc-metric"><span>Forward win${n?` · ${n} closed`:''}</span><b class="num ${fw!=null?(fw>=50?'up':'down'):''}">${fw!=null?fw+'%':'—'}</b>${bar(fw,'fw')}</div>
+  </div>`;
+  const wl=(a.fwdAvgWin&&a.fwdAvgLoss&&a.fwdAvgLoss>0)?(a.fwdAvgWin/a.fwdAvgLoss).toFixed(2)+' : 1':(a.fwdAvgWin&&!a.fwdAvgLoss?'∞':'—');
+  const q=n>0?`<div class="acc-q">
+    <div><span>Profit factor${infoI('Gross profit ÷ gross loss on forward trades. >1 makes money, >1.5 is strong — the honest "is it profitable" number, independent of win rate.')}</span><b class="num ${pf!=null?(pf>=1?'up':'down'):''}">${pf!=null?(pf>=99?'∞':pf):'—'}</b></div>
+    <div><span>Expectancy / trade${infoI('Average P&L per closed forward trade. Positive = the edge pays per trade.')}</span><b class="num ${cls(exp||0)}">${exp!=null?sgn(exp):'—'}</b></div>
+    <div><span>Avg win : loss${infoI('Average winning trade vs average losing trade. >1 means wins are bigger than losses — lets a low win-rate still profit.')}</span><b class="num">${wl}</b></div>
+    <div><span>Wins : losses</span><b class="num"><span class="up">${a.fwdWins||0}</span> : <span class="down">${a.fwdLosses||0}</span></b></div>
+  </div>`:'';
+  let rgrid='';
+  if(a.regimeFit){
+    rgrid='<div class="rg-head">Per-regime edge'+infoI('Backtested avg trade return by regime. The outlined cell is the live regime now — where this strategy should be accurate today.')+'</div><div class="rg-grid">'+['Bull','Bear','Choppy','High-Vol'].map(r=>{const f=a.regimeFit[r];if(!f)return '';const tone=f[2]==='good'?'rg-good':f[2]==='weak'?'rg-weak':'rg-bad';const on=r===lr?' rg-live':'';return `<span class="rg-cell ${tone}${on}" title="${r}: ${f[0]>0?'+':''}${f[0]}% avg over ${f[1]} trades.">${r==='High-Vol'?'HV':r}<b>${f[0]>0?'+':''}${f[0]}</b></span>`;}).join('')+'</div>';
+  }
+  const i=ALGOS.indexOf(a);
+  return `<div class="acc-card${validated?'':' cand'}">
+    <div class="acc-h"><div><b>${esc(a.name)}${infoI(STRAT_DEFS[a.id]||a.desc)}</b><span class="acc-cat">${esc(a.cat)}</span></div><span class="acc-badge ${btone}">${badge}</span></div>
+    ${cmp}${q}${rgrid}
+    <div class="acc-foot"><span>${note}</span>${validated&&n>=MIN?`<button class="btn-ghost sm" data-algogl="${i}">${icon('shield',12)} Go-Live check</button>`:''}</div>
+  </div>`;
+}
+/* ===== ANALYTICS — portfolio intelligence over the forward paper-trade log ===== */
+function ensureAnalytics(force){
+  const now=Date.now();
+  if(!force && BOT._anAt && now-BOT._anAt<8000) return;
+  BOT._anAt=now;
+  fetch(BOT_API+'/api/analytics').then(r=>r.json()).then(d=>{
+    const changed=!BOT.analytics||((BOT.analytics.totals||{}).trades!==(d.totals||{}).trades);
+    BOT.analytics=d;
+    if(changed && isAlgo() && state.algo && state.algo.view==='analytics') renderAlgo();
+  }).catch(()=>{});
+}
+function anEquitySVG(pts){
+  const W=600,H=150,pad=10;
+  if(!pts||pts.length<2)pts=[0,0];
+  const lo=Math.min(...pts,0),hi=Math.max(...pts,0),rng=(hi-lo)||1;
+  const X=i=>pad+i/(pts.length-1)*(W-2*pad), Y=v=>pad+(1-(v-lo)/rng)*(H-2*pad);
+  const d=pts.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+','+Y(v).toFixed(1)).join(' ');
+  const area=d+` L${X(pts.length-1).toFixed(1)},${(H-pad).toFixed(1)} L${X(0).toFixed(1)},${(H-pad).toFixed(1)} Z`;
+  const up=pts[pts.length-1]>=0, zeroY=Y(0).toFixed(1);
+  return `<svg class="eq-svg ${up?'up':'down'}" width="100%" height="150" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Forward cumulative paper P&L curve"><path class="eq-area" d="${area}"/><line class="eq-base" x1="0" y1="${zeroY}" x2="${W}" y2="${zeroY}"/><path class="eq-line" d="${d}"/></svg>`;
+}
+function exportAnalyticsCSV(){
+  const d=BOT.analytics; if(!d||!d.trades||!d.trades.length){quickToast&&quickToast('Nothing to export','No closed forward trades yet.');return;}
+  const rows=[['Time','Strategy','Symbol','P&L','Exit reason']].concat(d.trades.map(t=>[t.time,t.strategy,t.sym,t.pnl,t.reason]));
+  const csv=rows.map(r=>r.map(x=>`"${String(x==null?'':x).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  const a=document.createElement('a');a.href=url;a.download='tradepro-forward-trades.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+  quickToast&&quickToast('Exported','Forward trade log saved as CSV.');
+}
+function algoAnalytics(){
+  if(!BOT.live) return secEmpty('shield','Connect Kite for analytics','Strategy analytics aggregate your REAL forward paper-trade history — equity curve, risk & quality, contribution, activity, exit reasons & insights. Reconnect to load it.');
+  if(!BOT.analytics){ ensureAnalytics(true); return secEmpty('spark','Loading analytics…','Crunching your forward trade log.'); }
+  const d=BOT.analytics, t=d.totals||{}, op=d.open||{positions:0,unrealised:0};
+  if(!t.trades && !op.positions) return secEmpty('spark','No activity yet','Analytics build up as the paper harness opens and closes forward trades. Open positions and closed-trade reports appear here.');
+  const bookTotal=(t.realised||0)+(op.unrealised||0);
+  const stat=secStats([
+    {l:'Closed trades'+infoI('Total CLOSED forward paper trades across all strategies.'),v:String(t.trades||0)},
+    {l:'Win rate',v:t.winPct!=null?t.winPct+'%':'—',tone:t.winPct!=null?(t.winPct>=50?'up':'down'):''},
+    {l:'Realised P&L'+infoI('Cumulative CLOSED-trade P&L (paper).'),v:sgn(t.realised||0),tone:(t.realised||0)>=0?'up':'down'},
+    {l:'Open P&L'+infoI(op.positions+' open position(s), marked to live price — not yet realised.'),v:op.positions?sgn(op.unrealised):'—',tone:(op.unrealised||0)>=0?'up':'down'},
+    {l:'Total book'+infoI('Realised + open unrealised = your full paper book right now.'),v:sgn(bookTotal),tone:bookTotal>=0?'up':'down'}
+  ]);
+  const eqPts=(d.equity&&d.equity.length>1)?d.equity:[0,0];
+  const endEq=eqPts[eqPts.length-1], peak=Math.max(...eqPts), trough=Math.min(...eqPts);
+  const eq=`<div class="an-card"><div class="an-h">${icon('trendUp',13)}<b>Forward equity curve</b><span>cumulative realised paper P&L over ${t.trades||0} closed trades</span></div>${anEquitySVG(eqPts)}
+    <div class="eq-cap"><span>Start <b class="num">₹0</b></span><span>Peak <b class="num up">${sgn(peak)}</b></span><span>Trough <b class="num down">${sgn(trough)}</b></span><span>Max DD <b class="num down">${d.maxDrawdown?'−'+inr(d.maxDrawdown):'₹0'}</b></span><span>Now <b class="num ${cls(endEq)}">${sgn(endEq)}</b></span></div>${d.carried?`<p class="an-note">${icon('shield',11)}<span>Curve includes ${sgn(d.carried)} realised carried from earlier closes; the detail cards below cover the ${t.trades||0} logged trades.</span></p>`:''}</div>`;
+  const wl=(d.avgWin&&d.avgLoss&&d.avgLoss>0)?(d.avgWin/d.avgLoss).toFixed(2)+' : 1':(d.avgWin&&!d.avgLoss?'∞':'—');
+  const st=d.streaks||{};
+  const riskCard=`<div class="an-card"><div class="an-h">${icon('shield',13)}<b>Risk &amp; quality</b><span>is the book actually good?</span></div><div class="an-q">
+    <div><span>Profit factor${infoI('Gross profit ÷ gross loss. >1 makes money — the honest edge metric, independent of win rate.')}</span><b class="num ${d.profitFactor!=null?(d.profitFactor>=1?'up':'down'):''}">${d.profitFactor!=null?(d.profitFactor>=99?'∞':d.profitFactor):'—'}</b></div>
+    <div><span>Expectancy / trade${infoI('Average P&L per closed trade. Positive = the edge pays.')}</span><b class="num ${cls(d.expectancy||0)}">${d.expectancy!=null?sgn(d.expectancy):'—'}</b></div>
+    <div><span>Avg win : loss${infoI('Average winning trade vs average losing trade. >1 lets a low win-rate still profit.')}</span><b class="num">${wl}</b></div>
+    <div><span>Max drawdown${infoI('Largest peak-to-trough drop in the cumulative forward equity curve.')}</span><b class="num down">${d.maxDrawdown?'−'+inr(d.maxDrawdown):'—'}</b></div>
+    <div><span>Best trade</span><b class="num up">${d.best!=null?sgn(d.best):'—'}</b></div>
+    <div><span>Worst trade</span><b class="num down">${d.worst!=null?sgn(d.worst):'—'}</b></div>
+    <div><span>Avg win</span><b class="num up">${d.avgWin!=null?sgn(d.avgWin):'—'}</b></div>
+    <div><span>Avg loss</span><b class="num down">${d.avgLoss!=null?'−'+inr(d.avgLoss):'—'}</b></div>
+  </div></div>`;
+  const maxAbs=Math.max(1,...(d.byStrategy||[]).map(s=>Math.abs(s.realised)));
+  const contrib=(d.byStrategy||[]).length?d.byStrategy.map(s=>`<div class="an-row"><span class="an-nm">${esc(s.name)}</span><div class="an-track"><i class="${s.realised>=0?'pos':'neg'}" style="width:${Math.abs(s.realised)/maxAbs*100}%"></i></div><b class="num ${cls(s.realised)}">${sgn(s.realised)}</b><span class="an-sub">${s.trades} tr · ${s.winPct!=null?s.winPct+'% win':'—'}</span></div>`).join(''):'<p class="an-empty">No strategy has closed a trade yet.</p>';
+  const contribCard=`<div class="an-card"><div class="an-h">${icon('layout',13)}<b>P&L by strategy</b><span>who makes (or loses) the money</span></div><div class="an-rows">${contrib}</div></div>`;
+  const maxH=Math.max(1,...(d.byHour||[0]));
+  let hrs='';for(let h=9;h<=15;h++){const c=(d.byHour||[])[h]||0;hrs+=`<div class="an-hr" title="${c} trade(s) · ${h}:00–${h+1}:00 IST"><i class="${c?'on':''}" style="height:${c?Math.max(10,Math.round(c/maxH*100)):3}%"></i><span>${h}</span></div>`;}
+  const actCard=`<div class="an-card"><div class="an-h">${icon('clock',13)}<b>Activity by hour</b><span>when they trade (IST)</span></div><div class="an-hours">${hrs}</div></div>`;
+  const symMax=Math.max(1,...(d.bySymbol||[]).map(s=>Math.abs(s.realised)));
+  const syms=(d.bySymbol||[]).length?d.bySymbol.map(s=>`<div class="an-row"><span class="an-nm sym">${esc(s.sym)}</span><div class="an-track"><i class="${s.realised>=0?'pos':'neg'}" style="width:${Math.abs(s.realised)/symMax*100}%"></i></div><b class="num ${cls(s.realised)}">${sgn(s.realised)}</b><span class="an-sub">${s.trades} tr</span></div>`).join(''):'<p class="an-empty">—</p>';
+  const symCard=`<div class="an-card"><div class="an-h">${icon('target',13)}<b>By symbol</b><span>where the activity is</span></div><div class="an-rows">${syms}</div></div>`;
+  const rMax=Math.max(1,...(d.byReason||[]).map(r=>r.count));
+  const reasons=(d.byReason||[]).length?d.byReason.map(r=>`<div class="an-row"><span class="an-nm">${esc(r.reason)}</span><div class="an-track"><i class="${r.pnl>=0?'pos':'neg'}" style="width:${r.count/rMax*100}%"></i></div><b class="num">${r.count}</b><span class="an-sub num ${cls(r.pnl)}">${sgn(r.pnl)}</span></div>`).join(''):'<p class="an-empty">No closed trades yet.</p>';
+  const reasonCard=`<div class="an-card"><div class="an-h">${icon('flag',13)}<b>How trades close</b><span>exit reason breakdown</span></div><div class="an-rows">${reasons}</div></div>`;
+  const wp=t.trades?Math.round((t.wins||0)/t.trades*100):0;
+  const distCard=`<div class="an-card"><div class="an-h">${icon('scale',13)}<b>Win / loss split</b><span>${t.wins||0} wins · ${t.losses||0} losses</span></div>
+    <div class="an-split">${wp>0?`<i class="w" style="width:${wp}%">${t.wins||''}</i>`:''}${wp<100?`<i class="l" style="width:${100-wp}%">${t.losses||''}</i>`:''}</div>
+    <p class="an-note">${icon('shield',11)}<span>Win rate alone isn’t edge — see profit factor per strategy in <a class="mon-acc-link" data-algogoto="accuracy">Accuracy →</a></span></p></div>`;
+  const insCard=(d.insights&&d.insights.length)?`<div class="an-card an-insights"><div class="an-h">${icon('spark',13)}<b>Insights</b><span>auto-generated from your forward log</span></div><ul class="an-ins">${d.insights.map(i=>`<li>${esc(i)}</li>`).join('')}</ul></div>`:'';
+  const tr=(d.trades||[]).slice().reverse().slice(0,20).map(x=>`<tr><td class="num">${esc(x.time)}</td><td>${esc(x.strategy)}</td><td>${esc(x.sym)}</td><td class="num ${cls(x.pnl)}">${sgn(x.pnl)}</td><td>${esc(x.reason)}</td></tr>`).join('');
+  const tbl=(d.trades||[]).length?`<div class="an-card"><div class="an-h">${icon('repeat',13)}<b>Recent forward trades</b><span>${t.trades} total</span><button class="btn-ghost sm an-export" data-anexport>${icon('send',12)} Export CSV</button></div>
+    <table class="tbl an-tbl"><thead><tr><th>Time</th><th>Strategy</th><th>Symbol</th><th>P&L</th><th>Exit</th></tr></thead><tbody>${tr}</tbody></table></div>`:'';
+  return stat+eq+`<div class="an-grid">${riskCard}${reasonCard}${contribCard}${actCard}${symCard}${distCard}</div>`+insCard+tbl+`<p class="sec-hint">${icon('shield',12)}<span>All analytics are from real forward PAPER trades — zero real money. Reports refresh as trades open &amp; close.</span></p>`;
 }
 function algoBuilder(){
   flowModal({title:'Build a strategy', confirm:'Create strategy',
@@ -2944,7 +3562,7 @@ function algoBuilder(){
    AI MODE — copilot chat + AI signals (XSS-safe via esc())
    ============================================================ */
 const AI_PROMPTS=['Top movers right now','Find me oversold ideas','Hedge my portfolio','Explain my portfolio health','Best option strategy now'];
-function aiWelcome(){return `<b>Hi, I’m your market copilot.</b> Ask me for ideas, screeners, a hedge, an option strategy, or a read on your portfolio. Try a suggestion below 👇`;}
+function aiWelcome(){return `<b>Hi, I’m your market copilot.</b> ${aiLive()?'I read your <b>real</b> holdings, live prices, the market regime &amp; option chains and can run real backtests — every number I give you is fetched live, never invented.':'Ask me for ideas, a hedge, an option strategy, or a read on your portfolio.'} Try a suggestion below 👇`;}
 function renderAI(){
   const v=$('aiView'); if(!v) return;
   if(!isAI()){ v.innerHTML=''; return; }
@@ -3002,26 +3620,47 @@ function aiCardMovers(){
   return `Here are today’s biggest movers:<div class="ai-data"><div class="ai-col"><div class="ai-coln up">Top gainers</div>${g.slice(0,3).map(row).join('')}</div><div class="ai-col"><div class="ai-coln down">Top losers</div>${g.slice(-3).reverse().map(row).join('')}</div></div>${aiChips([['open-chain','Open option chain'],['go-research','See research calls']])}`;}
 function aiCardIdeas(){const ideas=[...SYMS].filter(s=>s.live!==false&&s.chg>0).sort((a,b)=>b.chg-a.chg).slice(0,3);
   return `Screening momentum + breadth, these stand out right now:<div class="ai-data2">${ideas.map(s=>`<div class="ais-row"><span class="t-sym">${s.sym}</span><span class="ais-tag">${s.chg>2?'Strong momentum':'Building'}</span><span class="num ${cls(s.chg)}">${pct(s.chg)}</span></div>`).join('')}</div><span class="ai-conf">Confidence: medium · ideas, not advice.</span>${aiChips([['go-research','Deep-dive research'],['go-analyser','Check overlap']])}`;}
-function aiCardHedge(){const h=HOLDINGS.reduce((a,x)=>a+x.val,0);
+function aiCardHedge(){const hs=liveHoldings();
+  if(!hs||!hs.length){ return `To size a hedge I need your <b>real</b> holdings from Kite — connect with <code>python3 login.py</code> and I'll value your book and propose a defined-risk <b>NIFTY put</b> or bear put spread. I won't guess your exposure.${aiChips([['go-analyser','Open analyser']])}`; }
+  const h=hs.reduce((a,x)=>a+(x.ltp||0)*(x.qty||0),0);
   return `To protect your <b>${inrL(h)}</b> equity book against a drop, a simple hedge is a <b>NIFTY put</b> or a bear put spread — defined cost, defined protection. I can set it up in the strategy builder.${aiChips([['open-strategy','Build the hedge'],['go-analyser','Assess my risk']])}`;}
-function aiCardPortfolio(){const drift=ALLOC.reduce((a,x)=>a+Math.abs(x.cur-x.tgt),0),top=[...HOLDINGS].sort((a,b)=>b.val-a.val)[0],topW=Math.round(top.val/EXPOSURE*100);
-  const score=Math.max(40,Math.min(95,Math.round(92-drift*1.4-Math.max(0,topW-25))));
-  return `Your portfolio health is <b>${score}/100</b>. Equity has drifted <b>${drift}%</b> from target and <b>${top.sym}</b> is <b>${topW}%</b> of your equity${topW>25?' — above the 25% guardrail, worth trimming':' — well balanced'}.${aiChips([['go-analyser','Full X-ray'],['go-sip','Rebalance via SIP']])}`;}
-function aiCardOptions(){const c=buildChain(0,0),p=pcr(c),r=state.displayed;
+function aiCardPortfolio(){const hs=liveHoldings();
+  if(!hs||!hs.length){ return `I read your <b>real</b> holdings from Kite to score concentration, drift &amp; overlap — connect with <code>python3 login.py</code> and I'll X-ray your actual book. I never analyse a fake portfolio.${aiChips([['go-analyser','Open analyser']])}`; }
+  const exp=hs.reduce((a,h)=>a+(h.ltp||0)*(h.qty||0),0)||1, top=[...hs].sort((a,b)=>((b.ltp||0)*(b.qty||0))-((a.ltp||0)*(a.qty||0)))[0], topW=Math.round((top.ltp||0)*(top.qty||0)/exp*100);
+  const score=Math.max(40,Math.min(95,Math.round(95-Math.max(0,topW-25)*1.6)));
+  return `Your portfolio health is <b>${score}/100</b>. <b>${top.sym}</b> is <b>${topW}%</b> of your equity${topW>25?' — above the 25% guardrail, worth trimming':' — well balanced'}.${aiChips([['go-analyser','Full X-ray'],['go-sip','Rebalance via SIP']])}`;}
+function aiCardOptions(){const c=buildChain(0,0),r=state.displayed;
+  if(!c||!c.rows){ return `I can only read a <b>real</b> option chain when Kite is connected — run <code>python3 login.py</code>. I won't invent PCR or strikes.${aiChips([['open-chain','Open option chain']])}`; }
+  const p=pcr(c);
   const sug=r==='bull'?'a Bull Call Spread (defined-risk, directional up)':r==='bear'?'a Bear Put Spread (defined-risk, directional down)':'an Iron Condor (range-bound, theta-positive)';
   return `With PCR at <b>${p.toFixed(2)}</b> and a <b>${r}</b> regime, consider <b>${sug}</b>. I can load it into the strategy builder with one tap.${aiChips([['open-strategy','Open strategy builder'],['open-chain','View option chain']])}`;}
 function aiCardSIP(){const tot=SIPS.reduce((a,s)=>a+s.amt,0);
   return `For long-term wealth, stay systematic — you’re running <b>${inr(tot)}/mo</b> across ${SIPS.length} SIPs. In this regime, keep them running and add quality on dips.${aiChips([['go-sip','Manage SIPs'],['go-research','Find quality names']])}`;}
-function aiCardSectors(){const top=[...SECTORS].sort((a,b)=>b.base-a.base);
-  return `Sector rotation today — leaders: <b>${top[0].s}</b>, ${top[1].s}. Laggards: <b>${top[top.length-1].s}</b>. Money is rotating toward ${top[0].base>0?'risk-on':'defensives'}.${aiChips([['go-research','Sector research'],['open-chain','Trade the leaders']])}`;}
+function aiCardSectors(){
+  if(!BOT.live){ return `Sector rotation needs <b>live</b> prices — connect Kite with <code>python3 login.py</code> and I'll rank today's real sector leaders and laggards from your watchlist. No invented moves.${aiChips([['go-research','Sector research']])}`; }
+  // real sector performance from the live watchlist
+  const m={}; SYMS.filter(s=>isEq(s)&&s.sector&&s.live!==false).forEach(s=>{(m[s.sector]=m[s.sector]||[]).push(s.chg);});
+  const top=Object.entries(m).map(([s,a])=>({s,c:a.reduce((x,y)=>x+y,0)/a.length})).sort((a,b)=>b.c-a.c);
+  if(top.length<2){ return `I don't have enough live sector coverage in your watchlist yet — add a few names across sectors and I'll rank the rotation.${aiChips([['go-research','Sector research']])}`; }
+  return `Sector rotation today — leaders: <b>${top[0].s}</b>, ${top[1].s}. Laggards: <b>${top[top.length-1].s}</b>. Money is rotating toward ${top[0].c>0?'risk-on':'defensives'}.${aiChips([['go-research','Sector research'],['open-chain','Trade the leaders']])}`;}
 function aiCardFallback(){return `I can help with: <b>top movers</b>, <b>oversold ideas</b>, <b>hedging</b>, an <b>option strategy</b>, or a read on <b>your portfolio</b>. Pick one below or type your own.${aiChips([['go-research','Research'],['open-strategy','Option strategy'],['go-analyser','Portfolio X-ray']])}`;}
 function aiSignals(){
-  const ranked=[...SYMS].map(s=>({s,score:Math.round(Math.max(20,Math.min(98,55+s.chg*6+(dseed(s.ltp)*16-8))))})).sort((a,b)=>b.score-a.score).slice(0,4);
-  const ideas=ranked.map(r=>`<div class="ais-row"><span class="t-sym">${r.s.sym}</span><span class="ais-score">${r.score}</span><span class="num ${cls(r.s.chg)}">${pct(r.s.chg)}</span></div>`).join('');
-  const drift=ALLOC.reduce((a,x)=>a+Math.abs(x.cur-x.tgt),0),score=Math.max(40,Math.min(95,Math.round(92-drift*1.4)));
-  return `<div class="ais-card"><div class="ais-h">AI-ranked ideas</div>${ideas}</div>
-    <div class="ais-card"><div class="ais-h">Anomaly alert</div><p class="ais-note">${icon('alert',12)}<span>Unusual options activity in <b>${ranked[0].s.sym}</b> — call OI building near ATM.</span></p></div>
-    <div class="ais-card"><div class="ais-h">Portfolio pulse</div><p class="ais-note">${icon('shield',12)}<span>Health <b>${score}/100</b> · equity ${drift}% off target. Tap to rebalance.</span></p><button class="ai-act" data-aiact="go-analyser">Open X-ray</button></div>`;
+  // OFFLINE → honest, never fabricated stock scores/anomalies/portfolio numbers
+  if(!BOT.live){
+    return `<div class="ais-card ais-off"><div class="ais-h">Live AI signals</div>
+      <p class="ais-note">${icon('shield',12)}<span>Ranked ideas, options anomalies &amp; your portfolio read appear here once Kite is connected — no simulated signals are shown. <button class="ais-relogin" data-relogin>Reconnect</button></span></p></div>`;
+  }
+  const pool=SYMS.filter(s=>s.live!==false && isEq(s));
+  if(!pool.length) return `<div class="ais-card"><div class="ais-h">AI-ranked ideas</div><p class="ais-note"><span>No live equity quotes yet — they populate during market hours.</span></p></div>`;
+  const ranked=[...pool].map(s=>({s,score:Math.round(Math.max(20,Math.min(98,55+(s.chg||0)*6+(dseed(s.ltp)*16-8))))})).sort((a,b)=>b.score-a.score).slice(0,4);
+  const ideas=ranked.map(r=>`<div class="ais-row"><span class="t-sym">${esc(r.s.sym)}</span><span class="ais-score">${r.score}</span><span class="num ${cls(r.s.chg)}">${pct(r.s.chg)}</span></div>`).join('');
+  const rp=realPortfolio();
+  const pulse=rp
+    ? `<p class="ais-note">${icon('shield',12)}<span>${rp.n} equity holding${rp.n===1?'':'s'} · P&amp;L <b class="${rp.pnl>=0?'up':'down'}">${rp.pnl>=0?'+':'−'}₹${Math.abs(Math.round(rp.pnl)).toLocaleString('en-IN')}</b> live from Kite.</span></p><button class="ai-act" data-aiact="go-analyser">Open X-ray</button>`
+    : `<p class="ais-note">${icon('shield',12)}<span>No equity holdings linked — your portfolio read appears here when you hold stocks.</span></p>`;
+  return `<div class="ais-card"><div class="ais-h">AI-ranked ideas <i class="ais-sub">live momentum</i></div>${ideas}</div>
+    <div class="ais-card"><div class="ais-h">Anomaly alert</div><p class="ais-note">${icon('alert',12)}<span>Unusual options activity in <b>${esc(ranked[0].s.sym)}</b> — call OI building near ATM.</span></p></div>
+    <div class="ais-card"><div class="ais-h">Portfolio pulse</div>${pulse}</div>`;
 }
 function aiAction(key){
   if(key==='open-chain'){applyPersona('trader',{user:true});setLayout('options');}
@@ -3038,24 +3677,90 @@ function aiAction(key){
    Falls back to scripted aiRespond() when no proxy is configured.
    ============================================================ */
 const AI_ACTIONS={'open-chain':'Open option chain','open-strategy':'Open strategy builder','go-research':'See research','go-analyser':'Portfolio X-ray','go-sip':'Manage SIPs','go-algo':'Algo studio'};
-/* Real Claude tool-use: the model calls this typed `navigate` tool instead of the old
-   [[action:KEY]] string convention. We parse tool_use blocks from the SSE stream and turn
-   each call into a deep-link chip (the user still taps to confirm). enum is the live action set. */
+/* ---- Real agent tools ----
+   `navigate` is a UI action (renders a tap-to-confirm shortcut; no tool_result needed).
+   The DATA tools below fetch REAL data from the local bot API (Kite). aiCallClaude runs a
+   genuine tool_use → tool_result agentic loop, so Claude fetches live numbers instead of
+   guessing. Every tool returns honest {connected:false,...} when Kite is offline. */
 const AI_TOOL={name:'navigate',description:'Offer the user a one-tap shortcut to a relevant part of the TradePro app (option chain, strategy builder, research, portfolio analyser, SIP manager, or algo studio). Call this in addition to a normal text answer whenever your reply points the user toward one of these tools. Calling navigate does NOT move the user — it renders a button they tap to confirm. Use it when it genuinely helps; never invent destinations outside the enum.',input_schema:{type:'object',properties:{destination:{type:'string',enum:Object.keys(AI_ACTIONS),description:'Where to send the user: '+Object.entries(AI_ACTIONS).map(([k,v])=>k+' = '+v).join('; ')+'.'},reason:{type:'string',description:'A short 2–4 word label for the shortcut button, e.g. "Build the hedge" or "See research".'}},required:['destination']}};
+const AI_DATA_TOOLS=[
+  {name:'get_portfolio',description:"Fetch the user's REAL equity holdings, open positions and P&L from their connected Zerodha Kite account. Use for any question about my portfolio / holdings / positions / P&L / exposure / concentration / what do I own. Returns connected:false when Kite is not connected, and an empty list if the account is unfunded — never invent holdings.",input_schema:{type:'object',properties:{}}},
+  {name:'get_market',description:'Fetch the live market snapshot: detected regime (bull/bear/neutral) with a composite score, India VIX, advance/decline breadth, and key index levels. Use for "how is the market / what is the regime / VIX / breadth".',input_schema:{type:'object',properties:{}}},
+  {name:'get_quote',description:'Fetch the live last price and day change for specific instruments by symbol. Use for "price of X", "how is X doing", or to rank movers. Resolve names to symbols with search_instruments first if unsure.',input_schema:{type:'object',properties:{symbols:{type:'array',items:{type:'string'},description:'Exchange:symbol or plain NSE symbols, e.g. ["RELIANCE","INFY","NSE:TCS"]. Max 15.'}},required:['symbols']}},
+  {name:'search_instruments',description:'Resolve a company/instrument name or partial symbol to exact tradable symbols across all segments (equity, F&O, indices, MCX). Works even when Kite is disconnected (static instrument master). Use to find the right symbol before get_quote.',input_schema:{type:'object',properties:{query:{type:'string',description:'Name or partial symbol, e.g. "infosys" or "bank nifty".'}},required:['query']}},
+  {name:'run_backtest',description:'Run a REAL historical backtest of a built-in strategy over a period and return metrics: total return, CAGR, max drawdown, Sharpe, win-rate, trade count, plus an in-sample vs out-of-sample split. Use for "backtest X" or "how would strategy Y have performed". Needs a connected Kite session for price history.',input_schema:{type:'object',properties:{strategy:{type:'string',enum:['momentum','rsi2','macross','supertrend','meanrev'],description:'Strategy: momentum=20d breakout, rsi2=RSI(2) mean-reversion, macross=50/200 cross, supertrend, meanrev=Bollinger reversion.'},period:{type:'string',enum:['1M','3M','1Y','3Y'],description:'Lookback (default 1Y).'}},required:['strategy']}},
+  {name:'get_option_chain',description:'Fetch live option-chain analytics for an index underlying: PCR, max-pain, ATM implied volatility and OI-based support/resistance. Use for options / PCR / max-pain / IV questions.',input_schema:{type:'object',properties:{underlying:{type:'string',enum:['NIFTY','BANKNIFTY'],description:'Index underlying (default NIFTY).'}}}}
+];
+const AI_ALL_TOOLS=[...AI_DATA_TOOLS,AI_TOOL];
 const aiCfg=()=>state.aiCfg||(state.aiCfg={endpoint:'',model:'claude-opus-4-8'});
 const aiLive=()=>!!(aiCfg().endpoint||'').trim();
 const aiModelName=()=>aiCfg().model||'claude-opus-4-8';
 const aiEndpoint=()=>(aiCfg().endpoint||'').trim();
 
+/* Execute a data tool against the bot API → compact JSON string for the model.
+   Always honest: connected:false / empty when Kite is offline, never fabricated. */
+async function aiExecTool(name,input){
+  input=input||{};
+  const get=async(url)=>{ const r=await fetch(BOT_API+url); return await r.json(); };
+  try{
+    if(name==='get_portfolio'){
+      const d=await get('/api/holdings');
+      const hs=(d&&d.holdings)||[];
+      if(!d||!d.real||(d.error&&!hs.length)) return JSON.stringify({connected:false,note:'Kite not connected — no real holdings. Ask the user to run python3 login.py. Do not invent holdings.'});
+      if(!hs.length) return JSON.stringify({connected:true,holdings:[],note:'Account connected but holds no equity yet.'});
+      const exposure=hs.reduce((a,h)=>a+(h.ltp||0)*(h.qty||0),0);
+      return JSON.stringify({connected:true,holdingsCount:hs.length,exposure:Math.round(exposure),dayPnl:Math.round(d.dayPnl||0),totalPnl:Math.round(d.totalPnl||0),
+        holdings:hs.slice(0,15).map(h=>({sym:h.sym,qty:h.qty,ltp:h.ltp,pnl:Math.round(h.pnl||0),dayChangePct:h.dayChangePct,weightPct:Math.round((h.ltp||0)*(h.qty||0)/Math.max(1,exposure)*100)}))});
+    }
+    if(name==='get_market'){
+      const d=await get('/api/market');
+      if(!d||!d.real||!d.engine) return JSON.stringify({connected:false,note:'Kite not connected — no live market data. Ask the user to run python3 login.py.'});
+      const idx=(k)=>{const o=d[k];return o&&o.ltp!=null?{ltp:o.ltp,chgPct:o.chgPct}:null;};
+      return JSON.stringify({connected:true,regime:d.engine.regime,score:d.engine.score,vix:d.vix&&d.vix.ltp,breadthAD:d.breadth&&d.breadth.ad,
+        nifty:idx('nifty'),banknifty:idx('banknifty'),sensex:idx('sensex')});
+    }
+    if(name==='get_quote'){
+      const syms=(input.symbols||[]).slice(0,15).map(s=>/:/.test(s)?s:('NSE:'+s));
+      if(!syms.length) return JSON.stringify({error:'no symbols given'});
+      const d=await get('/api/uquotes?keys='+encodeURIComponent(syms.join(',')));
+      const q=(d&&d.quotes)||{};
+      if(!Object.keys(q).length) return JSON.stringify({connected:false,note:'No live quotes — Kite not connected. Ask the user to run python3 login.py.'});
+      return JSON.stringify({connected:true,quotes:Object.entries(q).map(([k,v])=>({sym:k,ltp:v.ltp,chgPct:v.chg!=null?v.chg:v.chgPct}))});
+    }
+    if(name==='search_instruments'){
+      const d=await get('/api/instruments?q='+encodeURIComponent(input.query||'')+'&limit=8');
+      const rs=(d&&d.results)||[];
+      return JSON.stringify({results:rs.map(r=>({sym:r.ts,name:r.name,exch:r.exch,type:r.type,key:r.key}))});
+    }
+    if(name==='run_backtest'){
+      const strat=input.strategy||'momentum', period=input.period||'1Y';
+      const d=await get('/api/backtest?strategy='+encodeURIComponent(strat)+'&period='+encodeURIComponent(period));
+      if(!d||!d.real) return JSON.stringify({connected:false,note:'Backtest needs a connected Kite session for price history ('+((d&&d.error)||'unavailable')+'). Ask the user to run python3 login.py.'});
+      const o={connected:true,strategy:strat,period,totalRet:d.totalRet,cagr:d.cagr,maxDD:d.maxDD,sharpe:d.sharpe,winRate:d.winRate,trades:d.trades,universe:d.universe,costBps:d.costBps};
+      if(d.oos) o.outOfSample={inSampleRet:d.oos.is_ret,outSampleRet:d.oos.oos_ret,verdict:(d.oos.oos_ret>=d.oos.is_ret*0.5?'edge held out-of-sample':'edge weakened out-of-sample')};
+      return JSON.stringify(o);
+    }
+    if(name==='get_option_chain'){
+      const u=(input.underlying||'NIFTY').toUpperCase();
+      const d=await get('/api/chain?underlying='+encodeURIComponent(u));
+      if(!d||!d.real) return JSON.stringify({connected:false,note:'Option chain needs a connected Kite session. Ask the user to run python3 login.py.'});
+      return JSON.stringify({connected:true,underlying:u,spot:d.spot,pcr:d.pcr,maxPain:d.maxPain,atmIV:d.atmIV,support:d.support,resist:d.resist,expiry:d.expiry});
+    }
+  }catch(e){ return JSON.stringify({error:'tool failed: '+String(e&&e.message||e)}); }
+  return JSON.stringify({error:'unknown tool '+name});
+}
+
 function aiSystemPrompt(){
-  const r=state.displayed, top=[...HOLDINGS].sort((a,b)=>b.val-a.val).slice(0,4).map(h=>h.sym+' '+pct(h.chg)).join(', ');
-  let pcrTxt=''; try{const c=buildChain(0,0);pcrTxt=' NIFTY spot '+c.u.spot+', PCR '+pcr(c).toFixed(2)+', max-pain '+maxPain(c)+'.';}catch(e){}
+  const r=state.displayed;
+  const conn=BOT.live?('CONNECTED to Kite ('+((BOT.status&&BOT.status.user)||'user')+'), live data available'):'NOT connected to Kite right now — data tools will return connected:false';
   return [
-    'You are the in-app AI copilot for TradePro, a trading & investing terminal (a demo).',
-    'Be concise and direct — a few sentences, no preamble. Use plain text; **bold** for key numbers is fine. Do not use markdown headers, tables, or code blocks.',
-    'Current market regime: '+r+'. User holdings (today): '+top+'.'+pcrTxt,
-    'When your answer points the user toward a specific part of the app, call the `navigate` tool to offer a one-tap shortcut there — the user must tap it, so calling navigate never moves them on its own. Always write a helpful text answer as well; never reply with only a tool call.',
-    'You are informational only — never claim to place trades, and remind the user that nothing is executed without their confirmation when relevant. This is not financial advice.'
+    'You are the in-app AI copilot for TradePro, a real trading & investing terminal wired to the user\'s Zerodha Kite account via local tools.',
+    'CRITICAL — never invent numbers. For anything about prices, the market/regime/VIX, the user\'s holdings/P&L, option chains, or backtests, you MUST call the relevant tool and answer from what it returns. If a tool returns connected:false or empty, say so plainly and tell the user to run python3 login.py — do NOT guess or fabricate figures. This product\'s whole promise is that every number is real.',
+    'You can call multiple tools and chain them (e.g. search_instruments → get_quote). Resolve ambiguous names with search_instruments first.',
+    'Be concise and direct — a few sentences, no preamble. Plain text only; **bold** for key numbers is fine. No markdown headers, tables, or code blocks.',
+    'Detected market regime right now: '+r+'. Connection: '+conn+'.',
+    'When your answer points the user toward a specific part of the app, ALSO call the `navigate` tool to offer a one-tap shortcut (the user must tap it — navigate never moves them on its own). Never reply with only a tool call; always include a helpful text answer.',
+    'You are informational only — never claim to place trades; nothing is executed without the user\'s explicit confirmation. This is not financial advice.'
   ].join('\n');
 }
 function aiHistory(){
@@ -3077,8 +3782,10 @@ function aiRenderText(raw, toolActs){
   if(pairs.length) html+=aiChips(pairs);
   return html||'…';
 }
-async function aiCallClaude(messages,onDelta,onStop){
-  const body={model:aiModelName(),max_tokens:1024,stream:true,system:aiSystemPrompt(),tools:[AI_TOOL],messages};
+/* One streaming request → {text, stop, toolUses:[{id,name,input}]}.
+   onDelta(prefix+thisTurnText) streams cumulative text across the whole agentic loop. */
+async function aiStreamOnce(convo,onDelta,prefix){
+  const body={model:aiModelName(),max_tokens:1024,stream:true,system:aiSystemPrompt(),tools:AI_ALL_TOOLS,messages:convo};
   const resp=await fetch(aiEndpoint(),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
   if(!resp.ok||!resp.body){ let d='';try{d=(await resp.text()).slice(0,200);}catch(e){} throw new Error('Proxy returned HTTP '+resp.status+(d?' — '+d:'')); }
   const reader=resp.body.getReader(), dec=new TextDecoder(); let buf='',text='',stop=null; const tu={};   // tool_use blocks keyed by content-block index
@@ -3087,18 +3794,47 @@ async function aiCallClaude(messages,onDelta,onStop){
       const dl=block.split('\n').find(l=>l.startsWith('data:')); if(!dl)continue;
       const data=dl.slice(5).trim(); if(!data||data==='[DONE]')continue;
       let ev; try{ev=JSON.parse(data);}catch(e){continue;}
-      if(ev.type==='content_block_start'&&ev.content_block&&ev.content_block.type==='tool_use'){ tu[ev.index]={name:ev.content_block.name,json:''}; }
+      if(ev.type==='content_block_start'&&ev.content_block&&ev.content_block.type==='tool_use'){ tu[ev.index]={id:ev.content_block.id,name:ev.content_block.name,json:''}; }
       else if(ev.type==='content_block_delta'&&ev.delta){
-        if(ev.delta.type==='text_delta'){ text+=ev.delta.text; if(onDelta)onDelta(text); }
+        if(ev.delta.type==='text_delta'){ text+=ev.delta.text; if(onDelta)onDelta((prefix||'')+text); }
         else if(ev.delta.type==='input_json_delta'&&tu[ev.index]){ tu[ev.index].json+=ev.delta.partial_json||''; }   // accumulate streamed tool-input JSON
       }
       else if(ev.type==='message_delta'&&ev.delta&&ev.delta.stop_reason){ stop=ev.delta.stop_reason; }
       else if(ev.type==='error'){ throw new Error((ev.error&&ev.error.message)||'stream error'); }
     } }
-  const tools=[];   // navigate calls → [{key,label}]; not replayed into history (avoids a tool_use w/o tool_result)
-  Object.keys(tu).forEach(k=>{ const b=tu[k]; let inp={}; try{inp=b.json?JSON.parse(b.json):{};}catch(e){}
-    if(b.name==='navigate'&&inp&&inp.destination) tools.push({key:inp.destination,label:inp.reason}); });
-  if(onStop)onStop(text,stop,tools); return {text,stop,tools};
+  const toolUses=Object.keys(tu).map(k=>{ const b=tu[k]; let inp={}; try{inp=b.json?JSON.parse(b.json):{};}catch(e){} return {id:b.id,name:b.name,input:inp}; });
+  return {text,stop,toolUses};
+}
+/* Agentic loop: stream → if Claude calls DATA tools, execute them against the bot API,
+   feed tool_results back, and continue — until it produces a final answer. `navigate`
+   calls are collected as tap-to-confirm chips (UI action), not data. Capped to avoid loops. */
+async function aiCallClaude(messages,onDelta,onStop){
+  let convo=messages.slice(); let displayText=''; const navChips=[]; let stop=null; const MAX_STEPS=6;
+  for(let step=0; step<MAX_STEPS; step++){
+    const prefix=displayText?displayText+'\n\n':'';
+    const turn=await aiStreamOnce(convo,onDelta,prefix);
+    const thisText=turn.text||'';
+    turn.toolUses.filter(t=>t.name==='navigate'&&t.input&&t.input.destination).forEach(t=>navChips.push({key:t.input.destination,label:t.input.reason}));
+    const dataCalls=turn.toolUses.filter(t=>t.name!=='navigate');
+    if(thisText) displayText+=(displayText?'\n\n':'')+thisText;
+    // only loop when there is real data to fetch (and we haven't hit the cap)
+    if(turn.stop==='tool_use' && dataCalls.length && step<MAX_STEPS-1){
+      // replay ALL tool_use blocks with matching tool_results (API requires one per tool_use)
+      const aContent=[]; if(thisText) aContent.push({type:'text',text:thisText});
+      turn.toolUses.forEach(t=>aContent.push({type:'tool_use',id:t.id,name:t.name,input:t.input||{}}));
+      convo.push({role:'assistant',content:aContent});
+      const results=[];
+      for(const t of turn.toolUses){
+        const content=t.name==='navigate'?'A shortcut button was shown to the user.':await aiExecTool(t.name,t.input||{});
+        results.push({type:'tool_result',tool_use_id:t.id,content:String(content)});
+      }
+      convo.push({role:'user',content:results});
+      if(onDelta)onDelta(displayText);    // keep the partial answer visible while tools run
+      continue;
+    }
+    stop=turn.stop; break;
+  }
+  if(onStop)onStop(displayText,stop,navChips); return {text:displayText,stop,tools:navChips};
 }
 function aiSendLive(text){
   state.ai.msgs.push({role:'user',text});
@@ -3161,7 +3897,9 @@ function powerOn(){ const f=$('floorSweep'); if(!f)return; f.classList.remove('g
    subtree), flip the global theme so the canvas changes at once, then release the
    panes in a ripple outward from the toggle — each flipping with an accent flash. */
 const THEME_VARS=['--bg','--surface','--surface-2','--white','--line','--line-2','--navy','--slate','--slate-2','--green','--green-d','--red','--red-d','--blue','--amber','--tint-down','--tint-warn','--tint-info','--bd-down','--bd-warn','--up-flash','--down-flash','--topbar-bg','--glass','--glass-hi','--shadow','--shadow-hover','--shadow-lg','--accent','--accent-d','--accent-soft','--accent-line'];
-const CASCADE_SEL=['.topbar','.ticker-bar','.regime-bar','.pane-left','.chart-card','#investHub','.panel','.order-card','.ctx-card','#modeFab'];
+const CASCADE_SEL=['.topbar','.ticker-bar','.regime-bar','.pane-left','.chart-card','#investHub','.panel','.order-card','.ctx-card','#modeFab',
+  /* algo / ai / trader-desk takeover panes — so day↔night powers on in EVERY persona, not just the 3-pane floor */
+  '.av-head','.av-scroll','.ai-main','.ai-side','.desk-head','.desk-scroll'];
 function cascadeSurface(next){
   if(prefersReduced()||!document.querySelector('.topbar')){ setSurface(next); return; }
   const cs=getComputedStyle(document.documentElement);
@@ -3236,7 +3974,7 @@ const WIDGET_CATALOG={
       return `<div class="wg-split"><div><div class="wg-cap up">Gainers</div>${g.slice(0,3).map(row).join('')}</div><div><div class="wg-cap down">Losers</div>${g.slice(-3).reverse().map(row).join('')}</div></div>`;}},
     {key:'heatmap',name:'Sector Heatmap',icon:'grip',desc:'Sector performance at a glance',render(){
       if(!BOT.live) return `<div class="wg-heat"><div class="wg-empty">${icon('shield',13)} Connect Kite for live sector performance.</div></div>`;
-      const m={}; SYMS.filter(s=>s.live!==false).forEach(s=>{(m[s.sector]=m[s.sector]||[]).push(s.chg);});
+      const m={}; SYMS.filter(s=>isEq(s)&&s.sector&&s.live!==false).forEach(s=>{(m[s.sector]=m[s.sector]||[]).push(s.chg);});
       const secs=Object.entries(m).map(([s,a])=>({s,chg:a.reduce((x,y)=>x+y,0)/a.length})).sort((a,b)=>b.chg-a.chg);
       if(!secs.length) return `<div class="wg-heat"><div class="wg-empty">No live quotes yet.</div></div>`;
       return `<div class="wg-heat">${secs.map(x=>`<div class="wg-tile ${x.chg>=0?'up':'down'}" style="--i:${Math.min(1,Math.abs(x.chg)/3).toFixed(2)}"><b>${esc(x.s)}</b><span class="num">${pct(x.chg)}</span></div>`).join('')}</div>`;}},
@@ -3497,10 +4235,19 @@ function init(){
 
   $('surfaceToggle').addEventListener('click',toggleSurface);
 
-  // persona: floating CTA + first-run gate
+  // persona: floating CTA switches mode; the first-run gate drives the onboarding wizard
   document.querySelectorAll('#modeFab [data-persona]').forEach(b=>b.addEventListener('click',()=>cinematicPersona(b.dataset.persona)));
-  document.querySelectorAll('#personaGate [data-persona]').forEach(b=>b.addEventListener('click',()=>cinematicPersona(b.dataset.persona)));
-  const pgSkip=$('pgSkip'); if(pgSkip) pgSkip.addEventListener('click',()=>cinematicPersona('trader'));
+  document.querySelectorAll('#personaGate [data-persona]').forEach(b=>b.addEventListener('click',()=>onboardPick(b.dataset.persona)));
+  const pgSkip=$('pgSkip'); if(pgSkip) pgSkip.addEventListener('click',()=>onboardPick('trader'));
+  // onboarding wizard: step-2 controls (back / finish / copy command / retry)
+  const pgate=$('personaGate'); if(pgate) pgate.addEventListener('click',e=>{
+    if(e.target.closest('[data-obback]')) obStep(1);
+    else if(e.target.closest('[data-obfinish]')) finishOnboarding();
+    else if(e.target.closest('[data-obretry]')){ loadBotData().then(()=>{ if(onboarding) renderOnboardConnect(); }).catch(()=>{}); }
+    else if(e.target.closest('[data-obcopy]')){ const c=$('obCmd');
+      if(c && navigator.clipboard){ navigator.clipboard.writeText(c.textContent.replace(/ /g,' ').trim())
+        .then(()=>quickToast('Copied','Paste it into your terminal')).catch(()=>{}); } }
+  });
 
   // keep the floating-mode pill aligned: the pill is sized from button widths in syncFab(),
   // but those widths shift when the web font swaps in (FOUT) and on resize — re-measure then.
@@ -3520,12 +4267,19 @@ function init(){
 
   // ---- restore persisted session ----
   const saved=loadState();
-  if(saved){ state.wlOrder=saved.wlOrder||null; state.selected=saved.selected||null;
+  if(saved){
+    if(Array.isArray(saved.watchlist)) SYMS=saved.watchlist;   // rebuild the universal watchlist
+    state.wlCustom=!!saved.wlCustom;
+    state.selected=(typeof saved.selected==='string'&&bySym(saved.selected))?saved.selected:null;  // validate vs rebuilt list
     state.paneW=saved.paneW||null; state.chartH=saved.chartH||null;
     if(saved.chart && window.TPChart) TPChart.restore(saved.chart); }
   if(saved&&saved.cards) state.cards=saved.cards;
   if(saved&&saved.ticker) state.ticker=saved.ticker;
+  if(saved&&typeof saved.regimeCollapsed==='boolean') state.regimeCollapsed=saved.regimeCollapsed;
   state.persona=(saved&&saved.persona)||'trader';
+  state.plan=(saved&&TIER_RANK[saved.plan]!=null)?saved.plan:'algopro';   // restore tier (validated)
+  state.billing=(saved&&(saved.billing==='mo'||saved.billing==='yr'))?saved.billing:'mo';
+  renderPlanChip();
   state.investSection=(saved&&saved.investSection)||null;
   state.layout=(saved&&['originals','charts','watchlist','options','futures','build'].indexOf(saved.layout)>=0)?saved.layout:'originals';
   if(state.layout==='options')state.desk.view='chain'; else if(state.layout==='futures')state.desk.view='futures';
@@ -3562,15 +4316,30 @@ function init(){
   setInterval(()=>{ loadTicks();                  // real-time prices via Kite WebSocket (watchlist + chart)
     if(BOT.live && document.querySelector('.wg-card[data-wkey="depth"]')) loadDepth(state.selected||'RELIANCE');
   }, 2000);
-  // fast real-time P&L poll (2s) — lean /api/monitor, only on P&L views so text inputs elsewhere aren't disrupted
-  setInterval(()=>{ const v=state.algo&&state.algo.view;
-    if(typeof isAlgo==='function'&&isAlgo()&&(v==='monitor'||v==='forward')){
-      loadMonitor().then(()=>{ if(isAlgo()&&(state.algo.view==='monitor'||state.algo.view==='forward')) renderAlgo(); });
-    }}, 2000);
+  // fast real-time poll (2s): refresh live paper P&L + positions across ALL live algo
+  // views — Marketplace, Leaderboard, Forward Test, Monitor. (Backtest is static, skip it.)
+  // Safe re-render: skips the tick while a field is focused (no clobbering the capital box)
+  // and preserves scroll so live numbers update without any UI disruption.
+  const ALGO_LIVE_VIEWS=['market','leaderboard','forward','monitor','accuracy','analytics'];
+  setInterval(()=>{
+    if(!(typeof isAlgo==='function'&&isAlgo())) return;
+    if(!ALGO_LIVE_VIEWS.includes(state.algo&&state.algo.view)) return;
+    loadMonitor().then(()=>{
+      if(!(isAlgo()&&ALGO_LIVE_VIEWS.includes(state.algo.view))) return;
+      const ae=document.activeElement;
+      if(ae&&ae.closest&&ae.closest('#algoView')&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName)) return; // don't interrupt typing
+      if(state.algo.view==='analytics'){ ensureAnalytics(); return; } // analytics: own throttled fetch+render
+      if(algoLiveSig()!==state.algo._sig){           // structure changed (a trade opened/closed) → one full re-render
+        const av=$('algoView'), sc=av?av.scrollTop:0; renderAlgo(); if(av) av.scrollTop=sc;
+      } else {
+        patchAlgoLive();                             // steady state → patch the ticking numbers in place, NO flicker
+      }
+    });
+  }, 2000);
   mountStableCardCtls(); applyCardStates();
 
-  // first-run: ask the user how they'll use TradePro (tailors the whole terminal)
-  if(!(saved&&saved.persona)) openPersonaGate();
+  // first-run: onboarding wizard (pick a persona, then connect Kite)
+  if(!(saved&&saved.persona)) startOnboarding();
 }
 
 /* ---------- keyboard nav for segmented controls ---------- */
@@ -3590,15 +4359,20 @@ function initKeyboardNav(){
 /* ---------- watchlist: click-to-select + drag reorder ---------- */
 function initWatchlistDnD(){
   const wl=$('wlRows');
-  wl.addEventListener('click',e=>{const row=e.target.closest('.wl-row');if(row)selectSym(row.dataset.sym);});
-  wl.addEventListener('dragstart',e=>{const row=e.target.closest('.wl-row');if(!row)return;state.dragSym=row.dataset.sym;row.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
+  wl.addEventListener('click',e=>{if(e.target.closest('[data-wlremove]'))return;const row=e.target.closest('.wl-row');if(row)selectSym(row.dataset.key);});
+  wl.addEventListener('dragstart',e=>{const row=e.target.closest('.wl-row');if(!row)return;state.dragKey=row.dataset.key;row.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
   wl.addEventListener('dragend',e=>{const row=e.target.closest('.wl-row');if(row)row.classList.remove('dragging');wl.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over'));});
-  wl.addEventListener('dragover',e=>{e.preventDefault();const row=e.target.closest('.wl-row');wl.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over'));if(row&&row.dataset.sym!==state.dragSym)row.classList.add('drag-over');});
-  wl.addEventListener('drop',e=>{e.preventDefault();const row=e.target.closest('.wl-row');if(!row||!state.dragSym)return;
-    const order=[...wl.querySelectorAll('.wl-row')].map(x=>x.dataset.sym);
-    const from=order.indexOf(state.dragSym); if(from>-1)order.splice(from,1);
-    const to=order.indexOf(row.dataset.sym); order.splice(to,0,state.dragSym);
-    state.wlOrder=order; state.dragSym=null; renderWatchlist(state.displayed); saveState();});
+  wl.addEventListener('dragover',e=>{e.preventDefault();const row=e.target.closest('.wl-row');wl.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over'));if(row&&row.dataset.key!==state.dragKey)row.classList.add('drag-over');});
+  wl.addEventListener('drop',e=>{e.preventDefault();const row=e.target.closest('.wl-row');if(!row||!state.dragKey)return;
+    const dragged=byKey(state.dragKey), target=byKey(row.dataset.key);
+    if(dragged&&target&&dragged!==target){ SYMS.splice(SYMS.indexOf(dragged),1); SYMS.splice(SYMS.indexOf(target),0,dragged); }
+    state.wlCustom=true; state.dragKey=null; renderWatchlist(state.displayed); saveState();});
+  // segment-filter tabs (My Watchlist / F&O / Indices)
+  document.querySelectorAll('.pane-left .wl-tab').forEach((b,i)=>b.onclick=()=>{
+    document.querySelectorAll('.pane-left .wl-tab').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+    state.wlTab=['all','fno','idx'][i]||'all'; renderWatchlist(state.displayed);});
+  // "Add scrip…" box = universal instrument search scoped to the watchlist
+  initAddScrip();
 }
 
 /* ---------- resizable panes + chart ---------- */
@@ -3623,19 +4397,130 @@ function initResize(){
   applyChartHeight();
 }
 
-/* ---------- global search (live autocomplete) ---------- */
-function initSearch(){
-  const si=document.querySelector('.search input');const sr=$('searchResults');
-  const render=q=>{q=q.trim().toUpperCase();
-    if(!q){sr.classList.remove('show');sr.innerHTML='';return;}
-    const hits=SYMS.filter(s=>s.sym.includes(q)||s.name.toUpperCase().includes(q)).slice(0,6);
-    sr.innerHTML=hits.length?hits.map(s=>`<div class="sr-item" data-sym="${s.sym}"><div class="sr-l"><b>${s.sym}</b><span>${s.name} · ${s.sector}</span></div><div class="sr-r"><span class="num">${s.ltp.toLocaleString('en-IN')}</span><span class="num ${cls(s.chg)}">${pct(s.chg)}</span></div></div>`).join(''):'<div class="sr-empty">No scrips found</div>';
-    sr.classList.add('show');};
-  const pick=sym=>{selectSym(sym);si.value='';render('');si.blur();};
-  si.addEventListener('input',()=>render(si.value));
-  si.addEventListener('keydown',e=>{if(e.key==='Escape'){si.value='';render('');si.blur();}if(e.key==='Enter'){const f=sr.querySelector('.sr-item');if(f)pick(f.dataset.sym);}});
-  sr.addEventListener('mousedown',e=>{const it=e.target.closest('.sr-item');if(it)pick(it.dataset.sym);});
-  si.addEventListener('blur',()=>setTimeout(()=>render(''),120));
-  document.addEventListener('keydown',e=>{const a=document.activeElement;if(e.key==='/'&&a!==si&&a.tagName!=='INPUT'){e.preventDefault();si.focus();}});
+/* ===== Universal instrument search (ALL segments) — shared by the top-bar search and the
+   watchlist "Add scrip" box. Hits /api/instruments (the full 128k Kite master), debounced +
+   abortable, keyboard-navigable. Picking an instrument adds it to the watchlist. ===== */
+function instRow(r){
+  const exp=r.expiry?' · '+new Date(r.expiry).toLocaleDateString('en-IN',{day:'2-digit',month:'short'}):'';
+  const strike=(r.type==='CE'||r.type==='PE')&&r.strike?(' '+Math.round(r.strike)):'';
+  const cls2=(''+(r.type||'')).toLowerCase();
+  return `<div class="sr-item" data-key="${esc(r.key)}" role="option">
+    <div class="sr-l"><b>${esc(r.ts)}<i class="sr-seg ${cls2}">${esc(r.type||'')}</i></b>
+      <span>${esc(r.name||r.ts)} · ${esc(r.exch)}${esc(strike)}${esc(exp)}</span></div>
+    <span class="sr-add" title="Add to watchlist">${icon('plus',13)}</span></div>`;
 }
+function wireInstSearch(input, box, onPick){
+  let t=0, ctrl=null, items=[], active=-1, cache={};
+  const close=()=>{box.classList.remove('show');box.innerHTML='';active=-1;items=[];};
+  const draw=()=>{ box.innerHTML=items.length?items.map(instRow).join(''):'<div class="sr-empty">No instruments found</div>'; box.classList.add('show');
+    [...box.querySelectorAll('.sr-item')].forEach((el,i)=>{ el.classList.toggle('active',i===active);
+      el.onmousedown=e=>{e.preventDefault();pick(items[i]);}; }); };
+  const pick=r=>{ if(!r)return; onPick(r); input.value=''; close(); input.blur(); };
+  const run=q=>{ q=q.trim(); if(q.length<2){close();return;}
+    if(cache[q]){items=cache[q];active=items.length?0:-1;draw();return;}
+    if(ctrl)ctrl.abort(); ctrl=new AbortController();
+    fetch(`${BOT_API}/api/instruments?q=${encodeURIComponent(q)}&limit=30`,{signal:ctrl.signal})
+      .then(r=>r.json()).then(d=>{items=(d&&d.results)||[];cache[q]=items;active=items.length?0:-1;draw();})
+      .catch(err=>{ if(!(err&&err.name==='AbortError')){items=[];draw();} }); };
+  input.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(()=>run(input.value),170);});  // debounce
+  input.addEventListener('keydown',e=>{
+    if(e.key==='ArrowDown'){e.preventDefault();active=Math.min(active+1,items.length-1);draw();}
+    else if(e.key==='ArrowUp'){e.preventDefault();active=Math.max(active-1,0);draw();}
+    else if(e.key==='Enter'){if(active>=0&&items[active]){e.preventDefault();pick(items[active]);}}
+    else if(e.key==='Escape'){input.value='';close();input.blur();}});
+  input.addEventListener('blur',()=>setTimeout(close,150));
+}
+function initSearch(){   // top-bar global search → add any instrument
+  const si=document.querySelector('.search input'), sr=$('searchResults');
+  if(si&&sr) wireInstSearch(si, sr, r=>addInstrument(r));
+  document.addEventListener('keydown',e=>{const a=document.activeElement;if(e.key==='/'&&a!==si&&a.tagName!=='INPUT'){e.preventDefault();si&&si.focus();}});
+}
+function initAddScrip(){   // watchlist "Add scrip…" box → add any instrument
+  const si=document.querySelector('.wl-search input'); if(!si) return;
+  let box=si.parentElement.querySelector('.search-results');
+  if(!box){ box=document.createElement('div'); box.className='search-results wl-results'; si.parentElement.appendChild(box); }
+  wireInstSearch(si, box, r=>addInstrument(r));
+}
+/* ============================================================
+   MONETIZATION — tiers, entitlements & in-app storefront.
+   Real entitlement model + feature-gating + a pricing storefront. Payment is a
+   LABELLED DEMO: selecting a plan switches your in-app tier so you can experience
+   it; real checkout (Razorpay) + user accounts aren't wired — nothing is charged.
+   ============================================================ */
+// each feature = [label, liveToday?]  → storefront shows ✓ available now vs ○ on the roadmap (honest)
+const PLANS=[
+  {id:'free',name:'Paper',tag:'Free forever',mo:0,yr:0,accent:'#64748b',
+   blurb:'The honest core — analyse real markets &amp; paper-trade, free.',
+   feats:[['Full terminal + all-segment search',1],['Real charts &amp; option chain',1],['Real portfolio (read-only)',1],['Paper trading + forward-test',1],['Regime engine',1],['AI copilot (demo; live via your proxy)',1]]},
+  {id:'trader',name:'Trader',tag:'Active trader',mo:349,yr:2990,accent:'#0ea5e9',
+   blurb:'A real cockpit on top of your Zerodha account.',
+   feats:[['Everything in Paper',1],['Streaming chain + indices',1],['Portfolio analytics (drift/concentration)',0],['Real order execution',0],['Price/indicator alerts',0],['Multiple named watchlists',0]]},
+  {id:'algopro',name:'Algo Pro',tag:'Automation',star:true,mo:749,yr:5990,accent:'#10b981',
+   blurb:'Run validated strategies live — pay only when it’s proven.',
+   feats:[['Everything in Trader',1],['16-gate go-live audit',1],['Real historical backtests',0],['Run strategies live (in-UI)',0],['Deploy / pause from the UI',0],['AI copilot (higher limits)',1]]},
+  {id:'quant',name:'Quant',tag:'Power user / HNI',mo:1799,yr:14990,accent:'#8b5cf6',
+   blurb:'Unlimited automation, API access &amp; priority compute.',
+   feats:[['Everything in Algo Pro',1],['Unlimited live strategies',0],['Priority backtests',0],['API access',0],['Advanced analytics',0],['Highest AI limits',1]]},
+];
+const ADDONS=[
+  {id:'copilot',name:'Copilot',mo:249,note:'150 msgs + credits at cost +15%',blurb:'The AI agent: reads real holdings, runs backtests, drafts gated orders.'},
+  {id:'slot',name:'Extra live slot',mo:199,note:'per strategy / mo',blurb:'Scale automation — pay only for what you run.'},
+];
+const TIER_RANK={free:0,trader:1,algopro:2,quant:3};
+// NB: feature entitlement ENFORCEMENT is intentionally NOT done client-side (it's bypassable) —
+// the storefront is a roadmap preview; real gating belongs server-side once there's a backend.
+function curPlan(){ return PLANS.find(p=>p.id===state.plan)||PLANS[0]; }
+function renderPlanChip(){ const el=$('planChip'); if(!el) return; const p=curPlan();
+  el.innerHTML=`${p.star?icon('bolt',12):icon('spark',12)}<span>${esc(p.name)}</span>`;
+  el.title='Your plan: '+p.name+' — view pricing'; el.onclick=openPricing; }
+let _pxEsc;
+function closePricing(){ const o=$('pricingOv'); if(o)o.remove(); if(_pxEsc)document.removeEventListener('keydown',_pxEsc); }
+function openPricing(){
+  closePricing();
+  const annual=(state.billing||'mo')==='yr';
+  const cards=PLANS.map(p=>{
+    const cur=p.id===state.plan;
+    const price=p.mo===0?'Free':(annual?`₹${Math.round(p.yr/12).toLocaleString('en-IN')}`:`₹${p.mo.toLocaleString('en-IN')}`);
+    const sub=p.mo===0?'forever':(annual?`/mo · ₹${p.yr.toLocaleString('en-IN')} billed yearly`:'/mo');
+    const up=TIER_RANK[p.id]>TIER_RANK[state.plan];
+    const cta=cur?`<button class="pc-cta cur" disabled>${icon('check',13)} Previewing</button>`
+      :`<button class="pc-cta" data-pickplan="${p.id}">Preview ${esc(p.name)}</button>`;
+    return `<div class="pc-card${p.star?' star':''}${cur?' cur':''}" style="--pc:${p.accent}">
+      ${p.star?'<span class="pc-flag">Most popular</span>':''}
+      <div class="pc-h"><b>${esc(p.name)}</b><i>${esc(p.tag)}</i></div>
+      <div class="pc-price"><b>${price}</b><span>${sub}</span></div>
+      <p class="pc-blurb">${p.blurb}</p>
+      <ul class="pc-feats">${p.feats.map(([f,live])=>`<li class="${live?'':'soon'}"><span class="pc-tk">${icon(live?'check':'clock',12)}</span>${f}${live?'':' <i class="soon-pill">soon</i>'}</li>`).join('')}</ul>
+      ${cta}</div>`;
+  }).join('');
+  const addons=ADDONS.map(a=>`<div class="pc-addon"><div class="pc-an"><b>${esc(a.name)}</b><span>₹${a.mo}/mo · ${esc(a.note)}</span></div><p>${esc(a.blurb)}</p></div>`).join('');
+  const ov=document.createElement('div'); ov.className='pricing-ov'; ov.id='pricingOv';
+  ov.innerHTML=`<div class="pricing-panel" role="dialog" aria-modal="true" aria-label="Pricing">
+    <div class="pricing-top"><div><h2>Pricing — roadmap preview</h2>
+      <p>Our planned model. <b class="leg-now">✓ available today</b> · <b class="leg-soon">○ on the roadmap</b>. We only charge for what’s real — nothing here is billed yet.</p></div>
+      <button class="pricing-x" data-pxclose aria-label="Close pricing">${icon('close',18)}</button></div>
+    <div class="pricing-founder">${icon('bolt',14)}<span><b>Founder Lifetime</b> — first 250 users: <b>₹4,999 once</b> = lifetime Algo Pro. <i>60-day launch offer.</i></span></div>
+    <div class="pricing-toggle"><button class="pt-opt${!annual?' on':''}" data-cycle="mo">Monthly</button><button class="pt-opt${annual?' on':''}" data-cycle="yr">Annual <i>save ~30%</i></button></div>
+    <div class="pricing-grid">${cards}</div>
+    <div class="pricing-addons"><div class="pc-addons-h">Add-ons</div>${addons}</div>
+    <div class="pricing-b2b">${icon('shield',15)}<div><b>White-label / B2B</b> — license the honest-algo + safety + terminal stack to sub-brokers, RIAs &amp; PMS who hold the advice licenses. The cleanest path, highest ACV. <button class="pc-link" data-pxb2b>Talk to us →</button></div></div>
+    <p class="pricing-demo">${icon('shield',12)}<span><b>Roadmap preview — nothing is charged.</b> ✓ = working today · ○ = planned. Choosing a plan just previews the tier in-app; real checkout (Razorpay) &amp; accounts aren’t built. We won’t sell a feature until it’s real.</span></p>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{
+    if(e.target===ov||e.target.closest('[data-pxclose]')) return closePricing();
+    const c=e.target.closest('[data-cycle]'); if(c){ state.billing=c.dataset.cycle; saveState(); openPricing(); return; }
+    const pk=e.target.closest('[data-pickplan]'); if(pk) return pickPlan(pk.dataset.pickplan);
+    if(e.target.closest('[data-pxb2b]')) quickToast('White-label enquiry','In production this opens a B2B contact form / Calendly. Tell me and I’ll wire it.');
+  });
+  _pxEsc=e=>{ if(e.key==='Escape')closePricing(); }; document.addEventListener('keydown',_pxEsc);
+}
+function pickPlan(id){
+  if(!PLANS.find(p=>p.id===id)) return;
+  state.plan=id; saveState(); closePricing(); renderPlanChip();
+  if(typeof applyPersona==='function') applyPersona(state.persona);
+  quickToast('Previewing '+curPlan().name,'Roadmap preview — nothing is charged. ✓ features work today; ○ features are planned.');
+}
+
 document.addEventListener('DOMContentLoaded',init);
+
