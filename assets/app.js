@@ -357,6 +357,43 @@ function applyTickerSpeed(){
   requestAnimationFrame(()=>{const w=seqA.scrollWidth, pps=clamp(state.ticker.speed||60,20,180);
     track.style.setProperty('--tk-dur',Math.max(6,w/pps).toFixed(1)+'s');});
 }
+/* ---- REALTIME ROLLING TAPE ------------------------------------------------------------
+   The index tape used to refresh ONLY via loadMarket() — every 30s, and /api/market is itself
+   30s-cached server-side — so it sat frozen between cycles while the watchlist ticked every
+   second. Here we stream the index LTPs from the WebSocket-fed /api/ticks cache (the SAME
+   sub-second feed the watchlist uses) on the existing 2s poll and patch the tape values
+   IN PLACE — no innerHTML swap, so the scroll never resets/jumps. Commodities (MCX) have no
+   cheap realtime source (need the resolved futures symbol) and stay on the 30s loadMarket cycle. */
+const TAPE_LIVE={'NSE:NIFTY 50':['indices','NIFTY 50'],'NSE:NIFTY BANK':['indices','NIFTY BANK'],
+  'NSE:NIFTY FIN SERVICE':['indices','NIFTY FIN SERVICE'],'BSE:SENSEX':['indices','SENSEX'],
+  'NSE:INDIA VIX':['vix',null]};
+async function loadTape(){
+  if(!BOT.live||!BOT.market) return;
+  try{
+    const keys=Object.keys(TAPE_LIVE);
+    const d=await fetch(`${BOT_API}/api/ticks?keys=${encodeURIComponent(keys.join(','))}`).then(r=>r.json());
+    const t=d&&d.ticks; if(!t) return;
+    for(const k in TAPE_LIVE){
+      const v=t[k]; if(!v||v.ltp==null) continue;
+      const sec=TAPE_LIVE[k][0], name=TAPE_LIVE[k][1];
+      if(sec==='vix'){ BOT.market.vix={ltp:v.ltp,chgPct:v.chg}; }
+      else { const m=(BOT.market[sec]=BOT.market[sec]||{}); const prev=m[name]||{}; m[name]={ltp:v.ltp,prevClose:prev.prevClose,chgPct:v.chg}; }
+    }
+    patchTape();
+  }catch(e){}
+}
+function patchTape(){
+  const track=$('topIndex'); if(!track) return;
+  track.querySelectorAll('.tix').forEach(tx=>{
+    const nm=tx.querySelector('.tix-name'); if(!nm) return;
+    const rq=realQuote(nm.textContent.trim()); if(!rq||rq.ltp==null) return;
+    const dec=rq.ltp>=20000?0:(rq.ltp>=1000?1:2);
+    const val=tx.querySelector('.tix-val');
+    if(val){ val.classList.remove('muted'); val.textContent=rq.ltp.toLocaleString('en-IN',{maximumFractionDigits:dec}); }
+    const chg=tx.querySelector('.tix-chg');
+    if(chg){ chg.textContent=pct(rq.chg||0); chg.className='tix-chg '+cls(rq.chg||0)+' num'; }
+  });
+}
 /* ---- ticker settings popover (speed · rolling · instruments) ---- */
 function openTickerSettings(open){
   const p=$('tickerSettings'), g=$('tickerGear'); if(!p) return;
@@ -2669,12 +2706,13 @@ const BOT_API='http://localhost:8756';
 let BOT={loaded:false,connected:false,status:null,paperMode:true,error:false,chains:{},chainExp:{},futures:null};
 async function loadBotData(){
   try{
-    const [s,st,tr]=await Promise.all([
+    const [s,st,tr,sp]=await Promise.all([
       fetch(BOT_API+'/api/strategies').then(r=>r.json()),
       fetch(BOT_API+'/api/status').then(r=>r.json()).catch(()=>({connected:false})),
-      fetch(BOT_API+'/api/trades').then(r=>r.json()).catch(()=>({trades:[]}))
+      fetch(BOT_API+'/api/trades').then(r=>r.json()).catch(()=>({trades:[]})),
+      fetch(BOT_API+'/api/stopped').then(r=>r.json()).catch(()=>({stopped:[]}))
     ]);
-    BOT.trades=tr.trades||[];
+    BOT.trades=tr.trades||[]; BOT.stopped=sp.stopped||[]; BOT.stoppedTotal=sp.totalFlattenPnl||0;
     BOT.connected=!!st.connected; BOT.status=st; BOT.paperMode=s.paperMode!==false; BOT.updated=s.updated; BOT.error=false;
     BOT.segments=s.segments||[{id:'cash',label:'Equity Cash',note:''}];
     if(s.strategies&&s.strategies.length){
@@ -2682,6 +2720,7 @@ async function loadBotData(){
         id:x.id,name:x.name,cat:x.cat,segment:x.segment,win:x.win,minCap:x.minCap,risk:x.risk,
         product:x.product,vstatus:x.status,bestRegime:x.bestRegime,regimeFit:x.regimeFit,requires:x.requires,
         desc:x.desc,sharpe:x.oos_sharpe,totalRet:x.totalRet,trades:x.trades,dd:x.dd||3,
+        style:x.style,minDeploy:x.minDeploy,riskPerTrade:x.riskPerTrade,maxDD:x.maxDD,   // capital + risk + style model
         verdict:x.verdict,paperPnl:x.paperPnl,realisedPnl:x.realisedPnl,openPnl:x.openPnl,openPositions:x.openPositions,live:x.live,real:true,
         nudge:x.nudge,fwdTrades:x.fwdTrades,readyExceptCapital:x.readyExceptCapital,blockers:x.blockers,nudgeMsg:x.nudgeMsg,positions:x.positions,
         sub:x.sub,deployed:x.deployed,wired:x.wired,   // lifecycle: sub = paper|paused|live|null
@@ -2712,6 +2751,13 @@ async function loadMarket(){
       BOT.holdings=(h&&!h.error)?h:null;
     } else { BOT.quotes=null; BOT.holdings=null; SYMS.forEach(s=>{s.live=false;}); }
   }catch(e){ BOT.live=false; BOT.market=null; BOT.quotes=null; BOT.holdings=null; SYMS.forEach(s=>{s.live=false;}); }
+  // Adaptive risk: when the LIVE regime actually flips, re-apply every "Adapt"-enabled
+  // strategy's stand-aside / re-engage rule (paper only; never silent on real money).
+  if(BOT.live && BOT.market && BOT.market.engine){
+    const reg=BOT.market.engine.regime;
+    if(BOT._adaptRegime && BOT._adaptRegime!==reg && typeof enforceAdapt==='function') enforceAdapt();
+    BOT._adaptRegime=reg;
+  }
   if(BOT.live) connectStream(); else disconnectStream();   // sub-second push when live; keeps symset in sync
   applyFunds(); updateClock();
   if(typeof renderTopIndex==='function') renderTopIndex();
@@ -2826,7 +2872,10 @@ async function loadMonitor(){
       const byId={}; m.running.forEach(r=>byId[r.id]=r);
       ALGOS.forEach(a=>{const r=byId[a.id]; if(r){
         a.paperPnl=r.paperPnl; a.openPnl=r.openPnl; a.realisedPnl=r.realisedPnl;
-        a.openPositions=r.openPositions; a.fwdTrades=r.fwdTrades; a.positions=r.positions; a.live=true;
+        // DON'T clobber a.live here — that conflated "subscribed" with "monitored" and raced
+        // loadBotData every 2s (the old P&L flip-flop). All algo tabs filter on a.deployed (stable,
+        // from /api/strategies); /api/monitor now returns only subscribed strategies, so they agree.
+        a.openPositions=r.openPositions; a.fwdTrades=r.fwdTrades; a.positions=r.positions;
         // forward-test ACCURACY (real out-of-sample, parsed from closed paper trades)
         a.fwdWins=r.fwdWins; a.fwdLosses=r.fwdLosses; a.fwdWinPct=r.fwdWinPct;
         a.fwdProfitFactor=r.fwdProfitFactor; a.fwdAvgWin=r.fwdAvgWin; a.fwdAvgLoss=r.fwdAvgLoss; a.fwdExpectancy=r.fwdExpectancy;
@@ -2885,10 +2934,11 @@ function algoLiveSig(){
 function patchAlgoLive(){
   const exec=(state.algo&&state.algo.exec)||'paper';
   const setNum=(el,v)=>{ if(!el)return; el.textContent=sgn(v||0); el.classList.remove('up','down'); el.classList.add(cls(v||0)); };
-  let total=0;
+  let total=0, depTotal=0;        // total = actively-running (Monitor); depTotal = all deployed incl. paused/aside (Forward Test)
   ALGOS.forEach(a=>{
     const v=exec==='live'?(a.livePnl||0):(a.paperPnl||0);
     if(a.live) total+=v;
+    if(a.deployed) depTotal+=v;
     document.querySelectorAll('[data-live-pnl="'+a.id+'"]').forEach(el=>setNum(el,v));
     const sub=document.querySelector('[data-live-sub="'+a.id+'"]');
     if(sub) sub.textContent=(a.openPositions||0)?`${sgn(a.openPnl||0)} unrealised`:((a.openPositions||a.fwdTrades)?'realised':'no trades yet');
@@ -2900,26 +2950,390 @@ function patchAlgoLive(){
       if(up){ up.textContent=sgn(p.unreal)+(p.chgPct!=null?` · ${p.chgPct>=0?'+':''}${p.chgPct}%`:''); up.classList.remove('up','down'); up.classList.add(cls(p.unreal)); }
     });
   });
-  document.querySelectorAll('[data-live="monTotal"],[data-live="algoTotal"]').forEach(el=>setNum(el,total));
+  document.querySelectorAll('[data-live="monTotal"]').forEach(el=>setNum(el,total));
+  document.querySelectorAll('[data-live="algoTotal"]').forEach(el=>setNum(el,depTotal));
+  let anReal=0, anOpen=0;
+  ALGOS.forEach(a=>{ if(a.live){ anReal+=(a.realisedPnl||0); anOpen+=(a.openPnl||0); } });
+  document.querySelectorAll('[data-live="anRealised"]').forEach(el=>setNum(el,anReal));
+  document.querySelectorAll('[data-live="anOpen"]').forEach(el=>setNum(el,anOpen));
+  document.querySelectorAll('[data-live="anBook"]').forEach(el=>setNum(el,total));
 }
+/* ============================================================
+   STRATEGY LIBRARY — every strategy family, as honest, browseable,
+   educational entries. Risk-first: each leads with how it FAILS and
+   the survival guard, not just the upside. Entries are "Candidate"
+   (recognised, not yet engine-backtested) until a backend-validated
+   strategy of the same id graduates them. The whole survival ethos:
+   pick what fits TODAY's regime, stand aside when nothing does.
+   ============================================================ */
+const STRAT_FAMILIES=[
+  ['trend',      'Trend / Momentum',     'trendUp', 'Ride a move that has already started; lose small when it reverses.'],
+  ['meanrev',    'Mean Reversion',       'repeat',  'Fade a stretched price back to its average. Wins often, must cap the rare big loss.'],
+  ['breakout',   'Breakout / Volatility','bolt',    'Enter as price escapes a range on expanding volume.'],
+  ['time',       'Time / Calendar',      'clock',   'The clock is the signal — time-of-day, expiry, day-of-week, auto square-off.'],
+  ['statarb',    'Stat-Arb / Pairs',     'swap',    'Trade the spread between two related instruments, not the market direction.'],
+  ['event',      'Event-Driven',         'flag',    'Position around a scheduled catalyst — results, rebalances, news.'],
+  ['sentiment',  'Sentiment / OI / Flow','spark',   'Read positioning — open interest, PCR, max-pain, FII/DII flows.'],
+  ['factor',     'Factor / Rotation',    'pie',     'Rotate a basket by a persistent edge — momentum, low-vol, quality, sector.'],
+  ['ml',         'ML / Regime',          'cpu',     'A model picks the signal or switches the active strategy by regime.'],
+  ['opt_dir',    'Options · Directional','target',  'Express a view with limited, known risk using long options or debit spreads.'],
+  ['opt_income', 'Options · Income',     'wallet',  'Sell premium for steady credit — capped upside, must defend the tails.'],
+  ['opt_vol',    'Options · Volatility', 'scale',   'Trade volatility itself — straddles, calendars, delta-neutral theta.'],
+  ['arb',        'Cash-Futures / Arb',   'scissors','Lock a near-riskless spread between cash & futures or across expiries.'],
+];
+const SEG_LABEL={equity:'Equity',index:'Index F&O',fno:'Stock F&O',options:'Options',any:'Any market'};
+// risk → existing badge class (Conservative=b-up, Moderate=b-neu, Aggressive=b-warn)
+const STRAT_LIBRARY=[
+  // ---- Trend / Momentum ----
+  {id:'lib_macross',name:'Moving-Average Crossover',fam:'trend',risk:'Moderate',seg:'index',best:'Bull',
+   what:'Goes long when a fast MA crosses above a slow MA; flat/short when it crosses below.',
+   rule:'BUY when price/fast-MA crosses above the slow MA (e.g. 50 over 200); exit on the opposite cross.',
+   works:'Sustained, trending markets — it catches the meat of a directional move.',
+   fails:'Choppy, sideways markets — it gets whipsawed, buying high and selling low repeatedly.',
+   guard:'Add a regime filter (only take longs in Bull) and a hard stop; stand aside in Choppy.',
+   params:[['Fast MA','50'],['Slow MA','200'],['Stop','ATR×2']]},
+  {id:'lib_ema921',name:'EMA 9/21 Momentum',fam:'trend',risk:'Aggressive',seg:'index',best:'Bull',
+   what:'Faster intraday version of the crossover for momentum bursts.',
+   rule:'Long when EMA9 > EMA21 and price holds above both; exit when EMA9 crosses back below EMA21.',
+   works:'Strong intraday trends and momentum days with a clear direction.',
+   fails:'Range-bound, low-volume sessions — frequent small losses pile up.',
+   guard:'Cap trades/day, trade only the trending session window, square off by close.',
+   params:[['Fast EMA','9'],['Slow EMA','21'],['Max trades/day','3']]},
+  {id:'lib_supertrend',name:'Supertrend Follow',fam:'trend',risk:'Moderate',seg:'fno',best:'Bull',
+   what:'Trails an ATR-based band; flips long/short as price closes through it.',
+   rule:'Long when price closes above the Supertrend line; reverse/flat when it closes below.',
+   works:'Clean trends with steady volatility — the band trails the move well.',
+   fails:'Sharp volatility spikes flip it repeatedly (false reversals).',
+   guard:'Use a longer ATR period in High-Vol; size down when VIX is elevated.',
+   params:[['ATR period','10'],['Multiplier','3']]},
+  {id:'lib_adx',name:'ADX Trend Filter',fam:'trend',risk:'Conservative',seg:'equity',best:'Bull',
+   what:'Only trades when trend strength (ADX) confirms a real trend exists.',
+   rule:'Take trend entries only when ADX > 25 and rising; otherwise stay flat.',
+   works:'As a filter on top of any trend system — it cuts the worst chop trades.',
+   fails:'Lags at trend births and ends; can keep you out of early moves.',
+   guard:'Pair with a momentum trigger so you are not late; never trade ADX < 20.',
+   params:[['ADX threshold','25'],['Lookback','14']]},
+  {id:'lib_rsmom',name:'Relative-Strength Rotation',fam:'trend',risk:'Moderate',seg:'equity',best:'Bull',
+   what:'Holds the strongest stocks in a universe, drops the laggards.',
+   rule:'Rank a universe by 3–6 month return; hold the top decile, rebalance monthly.',
+   works:'Trending broad markets where leadership persists.',
+   fails:'Sharp reversals/crashes — last month’s winners fall hardest.',
+   guard:'Add a market-trend filter (go to cash below the 200-DMA of the index).',
+   params:[['Lookback','6mo'],['Top N','10'],['Rebalance','Monthly']]},
+  // ---- Mean Reversion ----
+  {id:'lib_rsi2',name:'RSI(2) Pullback',fam:'meanrev',risk:'Moderate',seg:'equity',best:'Bull',
+   what:'Buys short, sharp dips inside an established uptrend.',
+   rule:'In an uptrend (price > 200-DMA), buy when RSI(2) < 10; exit when RSI(2) > 70 or on a time stop.',
+   works:'Uptrending markets that pull back and resume — high win rate.',
+   fails:'Catches a falling knife if the uptrend has actually broken.',
+   guard:'Never fade without the trend filter; hard time-stop so a loser can’t compound.',
+   params:[['RSI period','2'],['Entry','<10'],['Exit','>70']]},
+  {id:'lib_bollrev',name:'Bollinger Band Reversion',fam:'meanrev',risk:'Moderate',seg:'equity',best:'Choppy',
+   what:'Fades touches of the outer band back toward the mean.',
+   rule:'Buy a close below the lower band, exit at the middle band; mirror for shorts.',
+   works:'Range-bound, mean-reverting names with stable volatility.',
+   fails:'Trending breakouts — “cheap” keeps getting cheaper.',
+   guard:'Skip when bands are expanding fast (volatility regime change); stop beyond the band.',
+   params:[['Period','20'],['StdDev','2']]},
+  {id:'lib_vwaprev',name:'VWAP Reversion',fam:'meanrev',risk:'Aggressive',seg:'index',best:'Choppy',
+   what:'Intraday fade of price stretched far from VWAP back to it.',
+   rule:'Fade when price is >N stdev from VWAP with no fresh news; target VWAP.',
+   works:'Liquid intraday instruments on balanced, two-sided days.',
+   fails:'Trend days — price rides far from VWAP and never returns.',
+   guard:'Detect trend-day early (opening drive) and disable; tight per-trade stop.',
+   params:[['Band','2σ'],['Target','VWAP']]},
+  {id:'lib_gapfill',name:'Gap-Fill Fade',fam:'meanrev',risk:'Aggressive',seg:'equity',best:'Choppy',
+   what:'Fades an overnight gap betting it fills toward the prior close.',
+   rule:'On a moderate gap with no catalyst, fade toward the prior close; stop beyond the gap extreme.',
+   works:'Emotion-driven gaps with no real news behind them.',
+   fails:'News/results gaps that run — fading those is how accounts blow up.',
+   guard:'Never fade an earnings/news gap; cap gap size; hard stop at the day extreme.',
+   params:[['Max gap','2%'],['Stop','Day extreme']]},
+  // ---- Breakout / Volatility ----
+  {id:'lib_orb',name:'Opening Range Breakout',fam:'breakout',risk:'Aggressive',seg:'index',best:'High-Vol',
+   what:'Trades a break of the first 15–30 min range of the day.',
+   rule:'Mark the first 15-min high/low; go with a breakout on volume; stop at the opposite end.',
+   works:'High-volatility opens and trending days.',
+   fails:'Quiet, rangebound days produce repeated false breaks.',
+   guard:'Require a volume/ATR expansion to confirm; one re-entry max; square off intraday.',
+   params:[['Range','First 15m'],['Confirm','Volume>avg']]},
+  {id:'lib_donchian',name:'20-Day High Breakout',fam:'breakout',risk:'Moderate',seg:'equity',best:'Bull',
+   what:'The classic Turtle breakout — buy new highs, ride the trend.',
+   rule:'Buy a close above the 20-day high; trail with the 10-day low; exit on the trail.',
+   works:'Strong, persistent trends and momentum regimes.',
+   fails:'Whipsaws at range edges in sideways markets.',
+   guard:'ATR position sizing so each trade risks a fixed small % of capital.',
+   params:[['Entry','20-day high'],['Exit trail','10-day low']]},
+  {id:'lib_nr7',name:'NR7 / Inside-Bar Breakout',fam:'breakout',risk:'Moderate',seg:'equity',best:'High-Vol',
+   what:'Trades expansion out of the narrowest-range bar (a coiled spring).',
+   rule:'After an NR7 / inside bar, enter on a break of its range in the trend direction.',
+   works:'Post-consolidation volatility expansion.',
+   fails:'Failed breaks reverse straight through the other side.',
+   guard:'Trade only in the higher-timeframe trend direction; stop at the bar’s other extreme.',
+   params:[['Pattern','NR7'],['Filter','HTF trend']]},
+  {id:'lib_vcp',name:'Volatility Contraction',fam:'breakout',risk:'Moderate',seg:'equity',best:'Bull',
+   what:'Buys breakouts from tightening bases (contracting volatility).',
+   rule:'Identify successively tighter pullbacks on declining volume; buy the pivot breakout.',
+   works:'Leading stocks in bull markets forming clean bases.',
+   fails:'Late-stage bases and bear markets — most breakouts fail.',
+   guard:'Tight stop under the pivot; only in confirmed uptrends.',
+   params:[['Base','Tightening'],['Stop','Under pivot']]},
+  // ---- Time / Calendar ----
+  {id:'lib_920',name:'9:20 ORB (time entry)',fam:'time',risk:'Aggressive',seg:'options',best:'High-Vol',
+   what:'A fixed-time entry just after the open captures the day’s initial drive.',
+   rule:'At 9:20, enter in the direction of the opening 5-min candle; SL at its low/high.',
+   works:'Days with a strong directional open.',
+   fails:'Flat opens reverse and stop you out fast.',
+   guard:'Predefined SL/target, one shot per day, hard square-off time.',
+   params:[['Entry','09:20'],['Square-off','15:15']]},
+  {id:'lib_eodsq',name:'Intraday Auto Square-off',fam:'time',risk:'Conservative',seg:'any',best:'Any',
+   what:'A discipline overlay — flatten everything before the close, no overnight risk.',
+   rule:'Force-exit all intraday positions at a set time (e.g. 15:15) regardless of P&L.',
+   works:'Every intraday strategy — removes gap risk and emotional holding.',
+   fails:'Can exit a winner early; that is the price of zero overnight risk.',
+   guard:'This IS the guard — pair with any intraday system.',
+   params:[['Square-off','15:15']]},
+  {id:'lib_btst',name:'BTST Momentum',fam:'time',risk:'Aggressive',seg:'equity',best:'Bull',
+   what:'Buy strong-closing stocks today, sell tomorrow on follow-through.',
+   rule:'Buy names closing at day highs on volume; exit next morning on strength or a stop.',
+   works:'Strong-trend markets with overnight continuation.',
+   fails:'Overnight gap-downs on negative global cues — full overnight risk.',
+   guard:'Small size; avoid event nights; predefined gap-down exit.',
+   params:[['Hold','1 night'],['Exit','Next open']]},
+  {id:'lib_expiry',name:'Expiry-Day Theta',fam:'time',risk:'Aggressive',seg:'options',best:'Choppy',
+   what:'Sells options on expiry day to harvest the fastest time decay.',
+   rule:'Sell ATM/OTM options near the open on expiry; manage with a stop-loss on premium.',
+   works:'Pinned, low-movement expiry sessions.',
+   fails:'A trending expiry day — short options can lose multiples of the credit fast.',
+   guard:'Hard premium SL, defined-risk spreads not naked, size for the worst case.',
+   params:[['Day','Expiry'],['Stop','2× credit']]},
+  {id:'lib_dow',name:'Day-of-Week / Seasonality',fam:'time',risk:'Conservative',seg:'index',best:'Any',
+   what:'Exploits recurring calendar tendencies (e.g. monthly expiry, turn-of-month).',
+   rule:'Take positions only on statistically favourable calendar days from backtests.',
+   works:'When a seasonal edge is statistically robust out-of-sample.',
+   fails:'Overfitting — many “seasonal” edges are noise that vanish live.',
+   guard:'Demand a large sample + OOS proof before trusting; tiny size.',
+   params:[['Edge','Calendar'],['Proof','OOS required']]},
+  // ---- Stat-Arb / Pairs ----
+  {id:'lib_pairs',name:'Pairs Trading',fam:'statarb',risk:'Moderate',seg:'equity',best:'Choppy',
+   what:'Long one stock, short a correlated one when their spread stretches.',
+   rule:'When the spread z-score > 2, short the rich / long the cheap; exit at mean reversion.',
+   works:'Stable, cointegrated pairs in range-bound markets — market-neutral.',
+   fails:'When the relationship breaks (a fundamental change in one name).',
+   guard:'Re-test cointegration regularly; stop if the spread keeps diverging.',
+   params:[['Entry','z>2'],['Exit','z→0']]},
+  {id:'lib_ratio',name:'Ratio / Spread Trade',fam:'statarb',risk:'Moderate',seg:'fno',best:'Choppy',
+   what:'Trades the ratio between two related futures (e.g. sector pair).',
+   rule:'Mean-revert the historical ratio band between two related contracts.',
+   works:'Structurally linked instruments with a stable ratio.',
+   fails:'Regime shifts that permanently re-rate one leg.',
+   guard:'Hard spread stop; cap leverage — spreads still blow out.',
+   params:[['Band','Historical'],['Hedge','β-weighted']]},
+  {id:'lib_idxarb',name:'Index Arbitrage',fam:'statarb',risk:'Conservative',seg:'index',best:'Any',
+   what:'Captures mispricing between an index and its futures/constituents.',
+   rule:'When futures deviate from fair value beyond costs, trade the convergence.',
+   works:'High-liquidity, low-cost execution environments.',
+   fails:'Costs/slippage eat the tiny edge; needs fast execution.',
+   guard:'Only when net of all costs is clearly positive; automate execution.',
+   params:[['Edge','Basis'],['Need','Low latency']]},
+  // ---- Event-Driven ----
+  {id:'lib_earnings',name:'Earnings Drift',fam:'event',risk:'Aggressive',seg:'equity',best:'Any',
+   what:'Rides the post-results drift after a strong earnings surprise.',
+   rule:'After a big beat + gap on volume, enter on the day-1 close; trail the move.',
+   works:'Clear, high-quality surprises with institutional follow-through.',
+   fails:'“Buy the rumour, sell the news” fades; gaps that reverse.',
+   guard:'Wait for confirmation (no pre-results bet); stop under the results-day low.',
+   params:[['Trigger','Beat+gap'],['Stop','Day-1 low']]},
+  {id:'lib_rebal',name:'Index Rebalance',fam:'event',risk:'Moderate',seg:'equity',best:'Any',
+   what:'Front-runs forced index-fund buying/selling on add/drop announcements.',
+   rule:'Buy confirmed index additions / sell deletions ahead of the effective date.',
+   works:'Large, predictable passive flows around rebalance dates.',
+   fails:'Crowded trade — much of the move is already priced in.',
+   guard:'Enter early on the announcement, exit into the rebalance-day flow.',
+   params:[['Trigger','Add/Drop'],['Exit','Effective date']]},
+  {id:'lib_news',name:'News-Catalyst Momentum',fam:'event',risk:'Aggressive',seg:'equity',best:'High-Vol',
+   what:'Trades the immediate momentum from a material news catalyst.',
+   rule:'On confirmed material news + volume surge, trade the initial direction with a tight stop.',
+   works:'Genuine, high-impact catalysts with volume confirmation.',
+   fails:'Stale/priced-in news and fake-outs; spreads widen on the spike.',
+   guard:'Volume + price confirmation before entry; very tight stop; small size.',
+   params:[['Trigger','News+vol'],['Stop','Tight']]},
+  // ---- Sentiment / OI / Flow ----
+  {id:'lib_oibuildup',name:'OI Buildup',fam:'sentiment',risk:'Moderate',seg:'fno',best:'Bull',
+   what:'Reads price + open-interest together to classify long/short buildup.',
+   rule:'Price up + OI up = long buildup (go with it); price up + OI down = short covering (fade carefully).',
+   works:'Confirming a directional move with real positioning.',
+   fails:'OI lags; can mislead near expiry when positions roll.',
+   guard:'Combine with price action, not alone; avoid the last expiry hours.',
+   params:[['Inputs','Price+OI'],['Avoid','Expiry close']]},
+  {id:'lib_pcr',name:'PCR Contrarian',fam:'sentiment',risk:'Moderate',seg:'options',best:'Choppy',
+   what:'Uses the put-call ratio as a contrarian sentiment extreme gauge.',
+   rule:'Very high PCR (excess fear) = look for longs; very low PCR (greed) = caution/shorts.',
+   works:'Sentiment extremes that mark short-term turning points.',
+   fails:'In strong trends sentiment stays extreme far longer than you can stay solvent.',
+   guard:'Need a price-confirmation trigger; never fade a trend on PCR alone.',
+   params:[['High PCR','>1.3'],['Low PCR','<0.7']]},
+  {id:'lib_maxpain',name:'Max-Pain Pin',fam:'sentiment',risk:'Aggressive',seg:'options',best:'Choppy',
+   what:'Bets price gravitates to the max-pain strike into expiry.',
+   rule:'Sell defined-risk premium around the max-pain strike as expiry approaches.',
+   works:'Low-event, range-bound expiries where pinning tends to occur.',
+   fails:'Trending expiries ignore max-pain entirely.',
+   guard:'Defined-risk only; exit if price trends away from the pin.',
+   params:[['Anchor','Max-pain'],['Risk','Defined']]},
+  {id:'lib_fiiflow',name:'FII/DII Flow Follow',fam:'sentiment',risk:'Conservative',seg:'index',best:'Bull',
+   what:'Tilts with sustained institutional buying/selling pressure.',
+   rule:'Bias long on persistent net FII+DII inflows; reduce on sustained outflows.',
+   works:'As a slow regime/bias filter, not a precise timing signal.',
+   fails:'Flows are reported with a lag and are noisy day to day.',
+   guard:'Use as a bias overlay only; pair with a price trigger for timing.',
+   params:[['Input','Net flows'],['Use','Bias filter']]},
+  // ---- Factor / Rotation ----
+  {id:'lib_sectorrot',name:'Sector Rotation',fam:'factor',risk:'Moderate',seg:'equity',best:'Bull',
+   what:'Rotates capital into the strongest sectors, out of the weakest.',
+   rule:'Rank sectors by relative strength; overweight leaders, underweight laggards; rebalance monthly.',
+   works:'Markets with clear sector leadership cycles.',
+   fails:'Rapid rotations and reversals whipsaw the basket.',
+   guard:'Hold a diversified set; cap single-sector weight; trend filter on the index.',
+   params:[['Rank','Rel-strength'],['Rebalance','Monthly']]},
+  {id:'lib_mompf',name:'Momentum Factor Portfolio',fam:'factor',risk:'Moderate',seg:'equity',best:'Bull',
+   what:'Systematic long basket of the highest-momentum names.',
+   rule:'Hold top-momentum decile, equal-weight, monthly rebalance, market-trend filter.',
+   works:'Persistent bull trends — momentum is a durable long-run factor.',
+   fails:'Momentum crashes at sharp market turns.',
+   guard:'De-risk to cash below the index 200-DMA; cap volatility per name.',
+   params:[['Factor','12-1 mom'],['Filter','Index 200-DMA']]},
+  {id:'lib_lowvol',name:'Low-Volatility Factor',fam:'factor',risk:'Conservative',seg:'equity',best:'Bear',
+   what:'Holds the lowest-volatility names for smoother, defensive returns.',
+   rule:'Rank universe by realised volatility; hold the lowest-vol basket, rebalance quarterly.',
+   works:'Choppy/bear markets — it draws down far less.',
+   fails:'Lags badly in roaring bull markets.',
+   guard:'Use as the defensive sleeve; combine with momentum for balance.',
+   params:[['Factor','Low vol'],['Rebalance','Quarterly']]},
+  {id:'lib_quality',name:'Quality / Value Tilt',fam:'factor',risk:'Conservative',seg:'equity',best:'Any',
+   what:'Owns financially strong, reasonably-priced companies for the long run.',
+   rule:'Screen for high ROE/low debt + sensible valuation; hold long-term, rebalance yearly.',
+   works:'Long horizons — quality compounds and survives downturns.',
+   fails:'Can underperform for long stretches when junk rallies.',
+   guard:'Diversify; this is a survive-and-compound sleeve, not a trade.',
+   params:[['Screen','ROE/Debt/Val'],['Horizon','Years']]},
+  // ---- ML / Regime ----
+  {id:'lib_regimeswitch',name:'Regime-Switching Meta',fam:'ml',risk:'Moderate',seg:'index',best:'Any',
+   what:'A meta-strategy that turns sub-strategies on/off by the live regime.',
+   rule:'Detect regime (trend/chop/high-vol); run only the sub-strategy validated for that regime.',
+   works:'Across full market cycles — it stands aside when nothing fits.',
+   fails:'Regime detection lags at turning points; transitions are costly.',
+   guard:'This is the survival engine — when uncertain, it goes to cash.',
+   params:[['Detector','VIX+breadth+trend'],['Default','Stand aside']]},
+  {id:'lib_mlsignal',name:'ML Predictive Signal',fam:'ml',risk:'Aggressive',seg:'equity',best:'Any',
+   what:'A trained model outputs a directional probability used to size trades.',
+   rule:'Enter when model confidence clears a threshold; size proportional to confidence.',
+   works:'When the model has a genuine, walk-forward-validated edge.',
+   fails:'Overfitting and regime drift — the model decays as markets change.',
+   guard:'Strict walk-forward validation, live monitoring, kill-switch on decay.',
+   params:[['Validation','Walk-forward'],['Sizing','Confidence']]},
+  // ---- Options · Directional ----
+  {id:'lib_longopt',name:'Directional Long Option',fam:'opt_dir',risk:'Aggressive',seg:'options',best:'High-Vol',
+   what:'Buy a call or put for a leveraged, limited-risk directional bet.',
+   rule:'Buy ATM/ITM option in your direction; risk is capped at the premium paid.',
+   works:'Strong, fast directional moves where the move beats time decay.',
+   fails:'Time decay + falling IV bleed the premium even if you are “right” slowly.',
+   guard:'Size so total premium at risk is tiny; avoid buying into high IV.',
+   params:[['Strike','ATM/ITM'],['Risk','Premium only']]},
+  {id:'lib_debit',name:'Vertical Debit Spread',fam:'opt_dir',risk:'Moderate',seg:'options',best:'Bull',
+   what:'Directional bet with lower cost and lower time-decay drag than a naked long.',
+   rule:'Buy a near option, sell a further one in the same direction; defined risk & reward.',
+   works:'Moderate directional moves — cheaper and less IV-sensitive.',
+   fails:'Capped upside; still loses if the move doesn’t come.',
+   guard:'Risk = net debit, known up front; pick expiries with room for the move.',
+   params:[['Structure','Buy+Sell'],['Risk','Net debit']]},
+  // ---- Options · Income ----
+  {id:'lib_strangle',name:'Short Strangle',fam:'opt_income',risk:'Aggressive',seg:'options',best:'Choppy',
+   what:'Sell an OTM call and put to collect premium when price stays in a range.',
+   rule:'Sell OTM call + put; profit if price stays between strikes through expiry.',
+   works:'Range-bound, falling-volatility markets.',
+   fails:'A big move on either side — losses are theoretically unlimited if naked.',
+   guard:'Prefer the defined-risk Iron Condor; hard SL on premium; never naked + unhedged.',
+   params:[['Strikes','OTM C+P'],['Defend','SL on premium']]},
+  {id:'lib_condor',name:'Iron Condor',fam:'opt_income',risk:'Moderate',seg:'options',best:'Choppy',
+   what:'A defined-risk strangle — sells a range, buys wings to cap the tails.',
+   rule:'Sell an OTM call & put spread; max loss is capped by the long wings.',
+   works:'Range-bound markets with elevated IV to sell into.',
+   fails:'Trending/break-out moves push price through a short strike.',
+   guard:'Known max loss by design; adjust/roll the tested side; size to survive max loss.',
+   params:[['Wings','Long OTM'],['Risk','Defined']]},
+  {id:'lib_credit',name:'Credit Spread',fam:'opt_income',risk:'Moderate',seg:'options',best:'Bull',
+   what:'A one-sided defined-risk premium sell with a directional lean.',
+   rule:'Sell a put spread (bullish) or call spread (bearish); collect net credit.',
+   works:'When you have a directional bias and want a high-probability income trade.',
+   fails:'A move against you to the short strike realises the (capped) max loss.',
+   guard:'Risk = spread width − credit, fixed; close at a set loss multiple.',
+   params:[['Lean','Put/Call'],['Risk','Width−credit']]},
+  {id:'lib_coveredcall',name:'Covered Call',fam:'opt_income',risk:'Conservative',seg:'options',best:'Choppy',
+   what:'Sell calls against stock you own to earn income on flat-to-mild-up moves.',
+   rule:'Hold the stock, sell an OTM call each cycle; keep the premium if unexercised.',
+   works:'Sideways-to-slightly-up markets on holdings you already own.',
+   fails:'Caps your upside if the stock rallies hard; no downside protection.',
+   guard:'Only on stock you’re happy to sell at the strike; income, not protection.',
+   params:[['Need','Own stock'],['Strike','OTM call']]},
+  // ---- Options · Volatility / Neutral ----
+  {id:'lib_straddle',name:'Long Straddle',fam:'opt_vol',risk:'Aggressive',seg:'options',best:'High-Vol',
+   what:'Buy a call AND a put — profits from a big move either direction.',
+   rule:'Buy ATM call + put before an expected volatility event; profit on a large move.',
+   works:'Pre-event when a large move is likely and IV is still cheap.',
+   fails:'IV crush after the event + a small move — both legs bleed.',
+   guard:'Enter before IV ramps; exit fast post-event; cap premium at risk.',
+   params:[['Strikes','ATM C+P'],['Edge','Cheap IV']]},
+  {id:'lib_calendar',name:'Calendar Spread',fam:'opt_vol',risk:'Moderate',seg:'options',best:'Choppy',
+   what:'Sell a near-dated option, buy a far-dated one — harvest faster near-term decay.',
+   rule:'Same strike, sell front expiry / buy back expiry; profit from differential theta.',
+   works:'Stable price near the strike with a favourable term structure.',
+   fails:'A large directional move away from the strike hurts both legs.',
+   guard:'Defined-ish risk; manage if price leaves the strike zone.',
+   params:[['Legs','Sell front/Buy back'],['Edge','Theta diff']]},
+  {id:'lib_deltaneutral',name:'Delta-Neutral Theta',fam:'opt_vol',risk:'Moderate',seg:'options',best:'Choppy',
+   what:'Hold a net-zero-delta option book and earn time decay, re-hedging as it drifts.',
+   rule:'Sell premium, keep delta near zero by adjusting hedges as price moves.',
+   works:'Range-bound, mean-reverting volatility with active management.',
+   fails:'Gamma risk — fast moves force costly re-hedging (negative gamma bleed).',
+   guard:'Continuous monitoring + adjustment; cap gamma exposure; size small.',
+   params:[['Target','Δ≈0'],['Risk','Gamma']]},
+  // ---- Cash-Futures / Arb ----
+  {id:'lib_cashfut',name:'Cash-Futures Basis',fam:'arb',risk:'Conservative',seg:'fno',best:'Any',
+   what:'Lock the spread between a stock’s cash price and its future.',
+   rule:'When the future trades at a premium beyond carry, sell future / buy cash; converge at expiry.',
+   works:'Liquid names with a clear, cost-positive basis.',
+   fails:'Thin liquidity & costs erase the edge; needs capital for both legs.',
+   guard:'Only when net-of-cost positive; hold to convergence.',
+   params:[['Legs','Cash vs Future'],['Exit','Expiry']]},
+  {id:'lib_calroll',name:'Calendar Roll Spread',fam:'arb',risk:'Conservative',seg:'fno',best:'Any',
+   what:'Trade the spread between near and far expiries of the same future.',
+   rule:'Take the roll spread when it deviates from its typical band; revert as expiry nears.',
+   works:'Stable term structures with predictable roll behaviour.',
+   fails:'Demand/supply shocks distort the curve unexpectedly.',
+   guard:'Spread stop; modest leverage; close before the near expiry.',
+   params:[['Legs','Near vs Far'],['Edge','Roll band']]},
+];
+const LIB_RISK_CLASS={Conservative:'b-up',Moderate:'b-neu',Aggressive:'b-warn'};
+
 function renderAlgo(){
   const v=$('algoView'); if(!v) return;
   if(!isAlgo()){ v.innerHTML=''; return; }
   state.algo=state.algo||{view:'market',bt:{algo:0,period:'1Y'}};
   if(!state.algo.exec) state.algo.exec='paper';
   if(!BOT.loaded){ loadBotData().then(()=>{ if(isAlgo())renderAlgo(); }); }
-  const view=state.algo.view, live=ALGOS.filter(a=>a.status!=='idle');
-  const tabs=[['market','Marketplace'],['leaderboard','Leaderboard'],['backtest','Backtest'],['forward','Forward Test'],['monitor','Monitor'],['accuracy','Accuracy'],['analytics','Analytics']];
+  const view=state.algo.view, live=ALGOS.filter(a=>a.status!=='idle'), depN=ALGOS.filter(a=>a.deployed).length;
+  const tabs=[['library','Library'],['opportunity','Opportunity Engine'],['market','Marketplace'],['leaderboard','Leaderboard'],['backtest','Backtest'],['forward','Forward Test'],['monitor','Monitor'],['accuracy','Accuracy'],['analytics','Analytics']];
   const head=`<div class="av-head">
     <div class="av-title"><span class="av-ic">${icon('cpu',17)}</span><div><b>Algo Studio</b><span>Backtest, forward-test &amp; monitor rule-based strategies</span></div></div>
-    <div class="av-tabs" role="tablist" aria-label="Algo views">${tabs.map(([k,l])=>`<button class="av-tab${k===view?' on':''}" role="tab" aria-selected="${k===view}" data-algoview="${k}">${l}${k==='monitor'&&live.length?` <i class="av-tn">${live.length}</i>`:''}</button>`).join('')}</div></div>`;
-  const body=view==='market'?algoMarket():view==='leaderboard'?algoLeaderboard():view==='backtest'?algoBacktest():view==='forward'?algoForward():view==='accuracy'?algoAccuracy():view==='analytics'?algoAnalytics():algoMonitor();
+    <div class="av-tabs" role="tablist" aria-label="Algo views">${tabs.map(([k,l])=>`<button class="av-tab${k===view?' on':''}" role="tab" aria-selected="${k===view}" data-algoview="${k}">${l}${k==='monitor'&&depN?` <i class="av-tn">${depN}</i>`:''}</button>`).join('')}</div></div>`;
+  const body=view==='library'?algoLibrary():view==='opportunity'?algoOpportunity():view==='market'?algoMarket():view==='leaderboard'?algoLeaderboard():view==='backtest'?algoBacktest():view==='forward'?algoForward():view==='accuracy'?algoAccuracy():view==='analytics'?algoAnalytics():algoMonitor();
   v.innerHTML=`<div class="av-wrap">${head}<div class="av-scroll">${algoStatusBar()}${body}</div></div>`;
   v.querySelectorAll('[data-algoview]').forEach(b=>b.onclick=()=>{state.algo.view=b.dataset.algoview;renderAlgo();});
   v.querySelectorAll('[data-algoseg]').forEach(b=>b.onclick=()=>{state.algo.seg=b.dataset.algoseg;renderAlgo();});
   v.querySelectorAll('[data-algogoto]').forEach(b=>b.onclick=()=>{state.algo.view=b.dataset.algogoto;renderAlgo();});
   v.querySelectorAll('[data-algobt]').forEach(b=>b.onclick=()=>{state.algo.bt.algo=+b.dataset.algobt;state.algo.view='backtest';renderAlgo();});
   v.querySelectorAll('[data-algodep]').forEach(b=>b.onclick=()=>algoDeploy(ALGOS[+b.dataset.algodep]));
+  v.querySelectorAll('[data-fwgoto]').forEach(b=>b.onclick=()=>algoDeploy(ALGOS[+b.dataset.fwgoto]));
   v.querySelectorAll('[data-algogl]').forEach(b=>b.onclick=()=>{const a=ALGOS[+b.dataset.algogl]; if(b.classList.contains('is-locked')){quickToast('Go-Live locked','Keep paper-trading — unlocks after the forward-test gate (≥'+(BOT.nudgeMin||10)+' profitable closed trades).');return;} goLiveChecklist(a);});
   v.querySelectorAll('[data-lcpause]').forEach(b=>b.onclick=()=>{const a=ALGOS[+b.dataset.lcpause];setStrategyState(a.id,'paused','Paused — '+a.name);});
   v.querySelectorAll('[data-lcresume]').forEach(b=>b.onclick=()=>{const a=ALGOS[+b.dataset.lcresume];setStrategyState(a.id,'paper','Resumed — '+a.name);});
@@ -2934,6 +3348,7 @@ function renderAlgo(){
     el.onclick=tog;
     el.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();tog(e);} };
   });
+  v.querySelectorAll('[data-adapt]').forEach(b=>b.onclick=()=>toggleAdapt(+b.dataset.adapt));
   v.querySelectorAll('[data-execmode]').forEach(b=>b.onclick=()=>{state.algo.exec=b.dataset.execmode;renderAlgo();});
   v.querySelectorAll('[data-execjump]').forEach(b=>b.onclick=()=>{state.algo.view='monitor';state.algo.exec=b.dataset.execjump;renderAlgo();});
   const pc=v.querySelector('#algoPlanCap'); if(pc)pc.onchange=()=>{state.algo.capital=Math.max(0,Math.round(+pc.value||0));renderAlgo();};
@@ -2942,8 +3357,19 @@ function renderAlgo(){
   v.querySelectorAll('[data-algobuild]').forEach(b=>b.onclick=algoBuilder);
   v.querySelectorAll('[data-anexport]').forEach(b=>b.onclick=exportAnalyticsCSV);
   v.querySelectorAll('[data-btperiod]').forEach(b=>b.onclick=()=>{state.algo.bt.period=b.dataset.btperiod;renderAlgo();});
+  v.querySelectorAll('[data-btuni]').forEach(b=>b.onclick=()=>{state.algo.bt.uni=b.dataset.btuni;renderAlgo();});
+  const btuc=v.querySelector('#btUniCustom'); if(btuc) btuc.onkeydown=e=>{ if(e.key==='Enter'){ const val=btuc.value.trim().toUpperCase().replace(/\s+/g,''); state.algo.bt.uni=val||'default'; renderAlgo(); } };
   v.querySelectorAll('[data-lbsort]').forEach(b=>b.onclick=()=>{state.algo.lbSort=b.dataset.lbsort;renderAlgo();});
   v.querySelectorAll('[data-harness]').forEach(b=>b.onclick=()=>toggleHarness(b.dataset.harness));
+  const fgx=v.querySelector('[data-fgdismiss]'); if(fgx) fgx.onclick=()=>{ BOT.algoGuideDone=true; try{localStorage.setItem('tp.algoGuide','1');}catch(e){} renderAlgo(); };
+  // ---- Strategy Library: filters · search · DIY expand · regime jump ----
+  v.querySelectorAll('[data-libfam]').forEach(b=>b.onclick=()=>{ libState().fam=b.dataset.libfam; renderAlgo(); });
+  v.querySelectorAll('[data-librisk]').forEach(b=>b.onclick=()=>{ libState().risk=b.dataset.librisk; renderAlgo(); });
+  v.querySelectorAll('[data-libseg]').forEach(b=>b.onclick=()=>{ libState().seg=b.dataset.libseg; renderAlgo(); });
+  v.querySelectorAll('[data-libfav]').forEach(b=>b.onclick=()=>{ const l=libState(); l.fam='all'; l.risk='all'; l.seg='all'; l.favOnly=!l.favOnly; renderAlgo(); });
+  v.querySelectorAll('[data-libexpand]').forEach(el=>{ el.onclick=()=>{ const l=libState(); l.expand=l.expand||{}; l.expand[el.dataset.libexpand]=!l.expand[el.dataset.libexpand]; renderAlgo(); }; });
+  const lq=v.querySelector('#libSearch'); if(lq){ lq.oninput=()=>{ libState().q=lq.value; clearTimeout(lq._t); lq._t=setTimeout(()=>{ const ae=document.activeElement; renderAlgo(); const n=$('libSearch'); if(n&&ae&&ae.id==='libSearch'){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },180); }; }
+  const lqx=v.querySelector('[data-libclear]'); if(lqx) lqx.onclick=()=>{ const l=libState(); l.fam='all'; l.risk='all'; l.seg='all'; l.q=''; l.favOnly=false; renderAlgo(); };
   const bs=v.querySelector('#btAlgo'); if(bs)bs.onchange=()=>{state.algo.bt.algo=+bs.value;renderAlgo();};
   v.querySelectorAll('[data-algopause2]').forEach(b=>b.onclick=()=>{ALGOS[+b.dataset.algopause2].status='paused';renderAlgo();quickToast('Strategy paused','No new entries; open positions kept.');});
   v.querySelectorAll('[data-algoresume2]').forEach(b=>b.onclick=()=>{ALGOS[+b.dataset.algoresume2].status='live';renderAlgo();quickToast('Strategy resumed','Live and scanning for entries.');});
@@ -3045,15 +3471,130 @@ function toggleHarness(action){
     }).catch(()=>quickToast('Bot API offline','Run python3 bot_api.py in the bot folder.'))
     .then(()=>{ setTimeout(()=>{ BOT.harnessBusy=false; loadBotData().then(()=>{ if(isAlgo())renderAlgo(); }); }, action==='start'?1800:600); });
 }
+/* ===== Regime fit + adaptive risk (Forward Test "mission control") ===== */
+// Where does THIS strategy stand in the live regime, RIGHT NOW? Uses the real
+// per-regime backtested edge (regimeFit) — never a guess.
+function regimeVerdict(a,lr){
+  if(a.bestRegime==='Market-neutral') return {st:'fav',lab:'Market-neutral',cls:'fit-fav',ic:'◆',why:'Market-neutral — profits from the spread regardless of which way the market moves.'};
+  const f=a.regimeFit&&a.regimeFit[lr];
+  if(!f) return {st:'neu',lab:'No regime read',cls:'fit-neu',ic:'•',why:'No backtested sample in the current '+lr+' regime yet.'};
+  const avg=f[0],n=f[1],tone=f[2];
+  const base=`${avg>0?'+':''}${avg}% avg over ${n} backtested ${lr} trades.`;
+  if(tone==='good') return {st:'fav',lab:'Favoured now',cls:'fit-fav',ic:'▲',avg,n,why:'In its element — '+base+' This is the regime where its edge is strongest.'};
+  if(tone==='bad')  return {st:'hostile',lab:'Fighting the tape',cls:'fit-bad',ic:'▼',avg,n,why:'Hostile regime — '+base+' Historically loses money here.'};
+  return {st:'neu',lab:'Neutral',cls:'fit-neu',ic:'■',avg,n,why:'Marginal edge — '+base+' It works here, but this isn’t its best regime.'};
+}
+// REAL per-strategy cumulative forward paper-P&L curve, parsed from the live trade
+// log (BOT.analytics.trades). Returns null when there aren’t enough closed trades
+// for an honest line — we never draw a synthetic curve.
+function stratCurve(a){
+  const d=BOT.analytics; if(!d||!d.trades) return null;
+  let cum=0; const pts=[0];
+  d.trades.forEach(t=>{ if(t.strategy===a.name){ cum+=t.pnl; pts.push(+cum.toFixed(2)); } });
+  return pts.length>=3?pts:null;
+}
+function ftSparkSVG(pts){
+  const W=96,H=26,pad=3;
+  const lo=Math.min(...pts,0),hi=Math.max(...pts,0),rng=(hi-lo)||1;
+  const X=i=>pad+i/(pts.length-1)*(W-2*pad), Y=v=>pad+(1-(v-lo)/rng)*(H-2*pad);
+  const d=pts.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+','+Y(v).toFixed(1)).join(' ');
+  const up=pts[pts.length-1]>=0, zeroY=Y(0).toFixed(1);
+  const area=d+` L${X(pts.length-1).toFixed(1)},${H-pad} L${pad},${H-pad} Z`;
+  return `<svg class="ft-spark ${up?'up':'down'}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><path class="fs-area" d="${area}"/><line class="fs-base" x1="0" y1="${zeroY}" x2="${W}" y2="${zeroY}"/><path class="fs-line" d="${d}"/></svg>`;
+}
+/* Adaptive risk ("Adapt to regime") — the honest version of "harden this strategy".
+   It does NOT secretly rewrite the strategy or promise profit. It enforces one real,
+   transparent rule via the live engine: stand the strategy ASIDE (pause new entries)
+   when the live regime is one it has historically LOST in, and RE-ENGAGE it the moment
+   the regime turns favourable again. Cuts the bleed in hostile tape; never touches a
+   real-money (live) strategy without you. State persists across reloads. */
+function adaptStore(){
+  if(!state.algo) state.algo={};
+  if(!state.algo._adapt){ let s={on:{},paused:{}}; try{Object.assign(s,JSON.parse(localStorage.getItem('tp_adapt')||'{}'));}catch(e){} state.algo._adapt=s; }
+  return state.algo._adapt;
+}
+function adaptOn(a){ return !!adaptStore().on[a.id]; }
+function adaptSave(){ try{localStorage.setItem('tp_adapt',JSON.stringify(adaptStore()));}catch(e){} }
+// Enforce the adapt rule for ONE strategy against the live regime. Paper only.
+async function applyAdapt(a){
+  if(!a||!a.deployed||a.sub==='live') return null;          // never auto-touch real-money strategies
+  const lr=liveRegime(), st=adaptStore(), v=regimeVerdict(a,lr);
+  if(v.st==='hostile' && a.sub==='paper'){ st.paused[a.id]=true; adaptSave(); await setStrategyState(a.id,'paused','Standing aside — '+a.name); return 'aside'; }
+  if(v.st!=='hostile' && a.sub==='paused' && st.paused[a.id]){ delete st.paused[a.id]; adaptSave(); await setStrategyState(a.id,'paper','Re-engaging — '+a.name); return 'engaged'; }
+  return null;
+}
+// Re-check every adapt-enabled strategy (called when the live regime flips).
+async function enforceAdapt(){ for(const a of ALGOS){ if(adaptStore().on[a.id]) await applyAdapt(a); } }
+function toggleAdapt(i){
+  const a=ALGOS[i]; if(!a) return;
+  const st=adaptStore(), now=!st.on[a.id]; st.on[a.id]=now; if(!now) delete st.paused[a.id]; adaptSave();
+  const lr=liveRegime(), v=regimeVerdict(a,lr);
+  if(!now){ quickToast('Adapt off', esc(a.name)+' runs on its own rules again, regardless of the regime.'); renderAlgo(); return; }
+  if(a.sub==='live'){ quickToast('Adapt is advisory for live', esc(a.name)+' trades real money, so Adapt won’t auto-pause it. It will flag when the regime turns hostile — you stay in control.'); renderAlgo(); return; }
+  applyAdapt(a).then(act=>{
+    if(act==='aside') quickToast('Adapt on · standing aside', esc(a.name)+' stops taking new entries in the '+lr+' regime, where it loses'+(v.avg!=null?' ('+(v.avg>0?'+':'')+v.avg+'% avg)':'')+'. It re-engages automatically when the tape turns favourable.');
+    else quickToast('Adapt on · engaged', esc(a.name)+' keeps trading — the live '+lr+' regime '+(v.st==='fav'?'favours its edge':'is acceptable')+'. It will auto stand-aside if the regime turns hostile.');
+    renderAlgo();
+  });
+}
 function algoForward(){
-  const liveS=ALGOS.filter(a=>a.live);
-  if(!liveS.length) return secEmpty('cpu','No forward test running yet','One click starts the paper engine — it forward-tests every validated strategy on live data, at zero risk. No terminal needed.',harnessCta());
-  const total=liveS.reduce((s,a)=>s+(a.paperPnl||0),0);
+  const shown=ALGOS.filter(a=>a.deployed);               // paper + paused (standing aside) + live
+  if(!shown.length) return secEmpty('cpu','No forward test running yet','One click starts the paper engine — it forward-tests every validated strategy on live data, at zero risk. No terminal needed.',harnessCta());
+  ensureAnalytics();                                     // real per-strategy equity curves for the sparklines
+  const lr=liveRegime();
+  const total=shown.reduce((s,a)=>s+(a.paperPnl||0),0);
   const since=BOT.updated?new Date(BOT.updated).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'—';
-  const stat=secStats([{l:lbl('Strategies'),v:String(liveS.length)},{l:'Paper P&L'+infoI(ALGO_DEFS['Paper P&L']),v:sgn(total),tone:total>=0?'up':'down',id:'algoTotal'},{l:'Updated'+infoI('When the forward paper-trading state last refreshed.'),v:since},{l:lbl('Mode'),v:'Paper'}]);
-  const rows=liveS.map(a=>`<div class="mon-row live"><div class="mon-l"><span class="live-dot live"></span><div><b>${esc(a.name)}${infoI(STRAT_DEFS[a.id]||'')}</b><span class="mon-cat">${esc(a.cat)} · ${(a.openPositions||0)} open</span></div></div><div class="mon-pnl"><b class="num ${cls(a.paperPnl||0)}" data-live-pnl="${a.id}">${sgn(a.paperPnl||0)}</b><span>paper</span></div></div>`).join('');
-  const feed=(BOT.trades&&BOT.trades.length)?`<div class="ft-feed"><div class="ft-feedh">Recent forward trades${infoI('Live entries & exits from the forward paper-trading harness — genuine out-of-sample evidence, no real money.')}</div>${BOT.trades.slice(0,14).map(t=>`<div class="ft-trade">${esc(t)}</div>`).join('')}</div>`:`<p class="sec-hint">${icon('cpu',12)}<span>No forward trades yet — they stream in here as the paper harness runs during market hours.</span></p>`;
-  return (harnessRunning()?harnessCta():'')+stat+`<div class="mon-list">${rows}</div>`+feed+`<p class="sec-hint">${icon('shield',12)}<span>Forward test = real out-of-sample evidence on live data at zero risk — the honest gate before any live capital.</span></p>`;
+  const stat=secStats([{l:lbl('Strategies'),v:String(shown.length)},{l:'Paper P&L'+infoI(ALGO_DEFS['Paper P&L']),v:sgn(total),tone:total>=0?'up':'down',id:'algoTotal'},{l:'Updated'+infoI('When the forward paper-trading state last refreshed.'),v:since},{l:lbl('Mode'),v:'Paper'}]);
+  // ---- "Working right now" regime command banner — which strategies fit THIS moment ----
+  const verds=shown.map(a=>({a,v:regimeVerdict(a,lr)}));
+  const fav=verds.filter(x=>x.v.st==='fav'), hostile=verds.filter(x=>x.v.st==='hostile');
+  const er=regimeReadout();
+  const rdot={Bull:'dot-bull',Bear:'dot-bear',Choppy:'dot-neutral','High-Vol':'dot-amber'}[lr]||'dot-neutral';
+  const regLine=(REGIME_DEFS[lr]||'').split('—').slice(1).join('—').trim();
+  const banner=`<div class="ft-banner">
+    <div class="ft-bhead"><span class="seg-dot ${rdot}"></span><b>Live regime · ${lr}</b>${er?`<span class="ft-bscore ${er.score>=0?'up':'down'}">${er.score>=0?'+':''}${er.score}</span>`:''}${infoI(REGIME_DEFS[lr]||'')}${regLine?`<span class="ft-bsub">${esc(regLine)}</span>`:''}</div>
+    <div class="ft-blists">
+      <div class="ft-bcol"><span class="ft-bl up">▲ Working with the tape</span><div class="ft-bpills">${fav.length?fav.map(x=>`<span class="ft-pill fav" title="${esc(x.v.why)}">${esc(x.a.name)}</span>`).join(''):'<span class="ft-bnone">none of your running strategies are in their best regime right now</span>'}</div></div>
+      <div class="ft-bcol"><span class="ft-bl down">▼ Fighting the tape</span><div class="ft-bpills">${hostile.length?hostile.map(x=>`<span class="ft-pill bad" title="${esc(x.v.why)}">${esc(x.a.name)}</span>`).join(''):'<span class="ft-bnone">nothing is trading against the regime</span>'}</div></div>
+    </div>
+    ${hostile.length?`<div class="ft-btip">${icon('shield',12)}<span><b>Cut the drag:</b> turn on <b>Adapt</b> for ${hostile.length===1?'this strategy':'these'} — ${hostile.length===1?'it':'they'} will stand aside in the ${lr} regime and re-engage automatically when conditions turn favourable.</span></div>`:''}
+  </div>`;
+  // ---- per-strategy cards: fit badge · real sparkline · risk stats · graduation · adapt ----
+  const min=BOT.nudgeMin||10;
+  const cards=verds.map(({a,v})=>{
+    const i=ALGOS.indexOf(a), pnl=a.paperPnl||0, n=a.fwdTrades||0;
+    const paused=a.sub==='paused', isLive=a.sub==='live';
+    const curve=stratCurve(a), sparkEl=curve?ftSparkSVG(curve):`<span class="ft-nospark">curve builds as trades close</span>`;
+    const pf=a.fwdProfitFactor, exp=a.fwdExpectancy, win=a.fwdWinPct;
+    const stats=`<div class="ft-stats">
+      <div title="Forward win rate — closed paper trades that finished in profit. Win rate alone isn’t edge; read it with profit factor."><span>Win</span><b class="${win!=null?(win>=50?'up':'down'):''}">${win!=null?win+'%':'—'}</b></div>
+      <div title="Profit factor — gross profit ÷ gross loss on forward trades. Above 1 makes money out-of-sample, above 1.5 is strong."><span>PF</span><b class="${pf!=null?(pf>=1?'up':'down'):''}">${pf!=null?(pf>=99?'∞':pf):'—'}</b></div>
+      <div title="Expectancy — average P&L per closed forward trade. Positive = the edge pays per trade."><span>Exp</span><b class="num ${cls(exp||0)}">${exp!=null?sgn(exp):'—'}</b></div>
+      <div title="OOS Sharpe — risk-adjusted return from the backtest. Above ~1 is good."><span>Sharpe</span><b class="${a.sharpe!=null?(a.sharpe>0?'up':'down'):''}">${a.sharpe!=null?a.sharpe.toFixed(2):'—'}</b></div>
+    </div>`;
+    const pct=Math.min(100,Math.round(n/min*100)), eligible=!!a.nudge;
+    const grad=isLive?`<div class="ft-grad"><span class="ft-glive">● LIVE · trading real money</span></div>`
+      :`<div class="ft-grad"><div class="ft-gh"><span>${eligible?'Ready for live':'Proving for live'}${infoI('Go-Live unlocks after ≥'+min+' CLOSED, profitable forward trades on a funded, armed account. Proof, not hope.')}</span><span class="ft-gn">${Math.min(n,min)}/${min} trades</span></div><div class="lc-bar"><i style="width:${pct}%"></i></div></div>`;
+    const on=adaptOn(a);
+    const adaptBtn=`<button class="ft-adapt${on?' on':''}" data-adapt="${i}" role="switch" aria-checked="${on}" title="${on?'Adapt is ON — auto stand-aside in hostile regimes, auto re-engage when favourable.':'Turn on Adapt — the strategy steps aside in regimes where it loses and re-engages when conditions favour its edge. Honest risk control, not a profit guarantee.'}"><span class="ft-aknob"></span><span class="ft-alab">${on?'Adapt ON':'Adapt'}</span></button>`;
+    const adaptState=on?`<span class="ft-astate ${paused?'aside':'eng'}">${paused?'standing aside in '+lr:isLive?'advisory (live)':'engaged · watching regime'}</span>`:'';
+    const subTxt=(a.openPositions||0)?`${(a.openPositions)} open`:(n?'realised':'no trades yet');
+    const subEl=paused?`<span class="ft-asidetag">standing aside</span>`:`<span data-live-sub="${a.id}">${subTxt}</span>`;
+    const cta=isLive?`<button class="btn-go sm" data-algogl="${i}">${icon('shield',12)} Manage live</button>`
+      : eligible?`<button class="btn-go sm" data-algogl="${i}">${icon('shield',12)} Go Live →</button>`
+      : `<button class="btn-ghost sm is-locked" data-algogl="${i}" title="Locked until the forward-test gate (≥${min} profitable closed trades)">${icon('lock',11)} Go Live</button>`;
+    return `<div class="ft-card fit-${v.st}${paused?' is-aside':''}${isLive?' is-live':''}">
+      <div class="ft-top">
+        <div class="ft-id"><span class="live-dot ${paused?'warn':'live'}"></span><div><b>${esc(a.name)}${infoI(STRAT_DEFS[a.id]||'')}</b><span class="ft-cat">${esc(a.cat)} · ${(a.openPositions||0)} open · ${n} closed</span></div></div>
+        <div class="ft-pnl"><b class="num ${cls(pnl)}" data-live-pnl="${a.id}">${sgn(pnl)}</b>${subEl}</div>
+      </div>
+      <div class="ft-mid"><span class="ft-fit ${v.cls}" title="${esc(v.why)}">${v.ic} ${v.lab}</span><div class="ft-sparkwrap" title="Cumulative forward paper P&L for this strategy — real closed trades, no real money.">${sparkEl}</div></div>
+      ${stats}${grad}
+      <div class="ft-foot"><div class="ft-adaptwrap">${adaptBtn}${adaptState}</div>${cta}</div>
+    </div>`;
+  }).join('');
+  const feed=(BOT.trades&&BOT.trades.length)?`<div class="ft-feed"><div class="ft-feedh">Recent forward trades${infoI('Live entries & exits from the forward paper-trading harness — genuine out-of-sample evidence, no real money.')}</div>${BOT.trades.slice(0,12).map(t=>`<div class="ft-trade">${esc(t)}</div>`).join('')}</div>`:`<p class="sec-hint">${icon('cpu',12)}<span>No forward trades yet — they stream in here as the paper harness runs during market hours.</span></p>`;
+  return (harnessRunning()?harnessCta():'')+stat+banner+`<div class="ft-grid">${cards}</div>`+feed+`<p class="sec-hint">${icon('shield',12)}<span>Forward test = real out-of-sample evidence on live data at zero risk. <b>Adapt</b> only stands a strategy aside in regimes where it has historically lost — it manages risk, it does not promise profit.</span></p>`;
 }
 function algoCard(a,i,lr,cap){
   cap=cap==null?algoPlanCapital():cap;
@@ -3084,6 +3625,7 @@ function algoCard(a,i,lr,cap){
     <div class="algo-h"><div><b>${esc(a.name)}${infoI(STRAT_DEFS[a.id]||a.desc)}</b><span class="algo-cat">${esc(a.cat)}</span></div><span class="badge ${rk}">${esc(a.risk)}</span></div>
     <div class="vbadge-row">${sbadge}${tag}${chip}${affChip}</div>
     <p class="algo-desc">${esc(a.desc)}</p>
+    ${algoMeta(a)}
     ${stats}${rgrid}${verdict}
     <div class="lc-cta">${primary}</div>
     <div class="lc-row">${controls}${bt}</div></div>`;
@@ -3132,23 +3674,16 @@ function algoPlanCapital(){
 }
 function algoRunnable(a,lr,cap){ return cap>=a.minCap && a.vstatus==='validated' && (a.bestRegime===lr||a.bestRegime==='Market-neutral'); }
 function algoNudge(){
-  const prov=ALGOS.filter(a=>a.readyExceptCapital);   // proven + safe; only funding & arming remain
+  // Only the prominent "ready to consider live" CTA lives here now. The per-strategy
+  // "building evidence" progress moved into the My-strategies chips (at-a-glance) and each
+  // strategy card's lc-prog (detail), so we no longer repeat a full banner per proving strategy.
+  const prov=ALGOS.filter(a=>a.nudge);
   if(!prov.length) return '';
-  const min=BOT.nudgeMin||10;
   const cards=prov.map(a=>{
     const i=ALGOS.indexOf(a);
-    if(a.nudge) return `<div class="nudge-card go"><span class="nudge-ic">${icon('bolt',16)}</span>
+    return `<div class="nudge-card go"><span class="nudge-ic">${icon('bolt',16)}</span>
       <div class="nudge-b"><b>${esc(a.name)} — ready to consider live</b><span>${esc(a.nudgeMsg||'')}</span></div>
       <button class="btn-go sm" data-algogl="${i}">${icon('shield',12)} Review go-live checklist</button></div>`;
-    const n=Math.min(a.fwdTrades||0,min), toGo=Math.max(0,min-n);
-    const pips=Array.from({length:min},(_,k)=>`<i class="${k<n?'on':''}"></i>`).join('');
-    return `<div class="nudge-card build"><span class="nudge-ic">${icon('shield',16)}</span>
-      <div class="nudge-b">
-        <div class="nudge-top"><b>${esc(a.name)}</b><span class="nudge-tag">Proven &amp; safe · building evidence</span></div>
-        <span>Paper P&amp;L <b class="${a.paperPnl>=0?'up':'down'}">${a.paperPnl>=0?'+':'−'}${inr(Math.abs(a.paperPnl||0))}</b> · a go-live nudge unlocks after <b>${min} profitable</b> forward trades — proof, not hope.</span>
-        <div class="nudge-meter"><div class="nudge-pips" role="img" aria-label="${n} of ${min} forward trades logged">${pips}</div><span class="nudge-mlab"><b>${n}/${min}</b> closed${toGo?` · ${toGo} to go`:' · ready to review'}</span></div>
-      </div>
-      <button class="btn-ghost sm" data-algogl="${i}">View gates</button></div>`;
   }).join('');
   return `<div class="nudge-wrap">${cards}</div>`;
 }
@@ -3159,11 +3694,17 @@ function myStrategiesBar(){
   if(!dep.length) return `<div class="mystrat empty">${icon('cpu',15)}<span>No strategies deployed yet — pick one below and <b>Deploy in Paper</b> to start risk-free.</span></div>`;
   const paper=dep.filter(a=>a.sub!=='live'), live=dep.filter(a=>a.sub==='live');
   const totPnl=dep.reduce((s,a)=>s+(a.paperPnl||0),0);
+  const min=BOT.nudgeMin||10;
   const chips=dep.map(a=>{const i=ALGOS.indexOf(a), st=a.sub==='live'?'live':a.sub==='paused'?'paused':'paper';
-    return `<span class="ms-chip ${st}"><i class="ms-dot"></i><b>${esc(a.name)}</b><span class="ms-pnl num ${cls(a.paperPnl||0)}">${sgn(a.paperPnl||0)}</span><button class="ms-x" data-lcstop="${i}" aria-label="Stop ${esc(a.name)}" title="Stop ${esc(a.name)}">${icon('close',10)}</button></span>`;}).join('');
+    // compact go-live progress, folded in from the old nudge banner
+    let prog='';
+    if(a.nudge) prog=`<span class="ms-prog ready" title="Cleared the forward-test gate — open its card to review go-live">✓ go-live ready</span>`;
+    else if(a.vstatus==='validated'&&st==='paper'){const n=Math.min(a.fwdTrades||0,min),pc=Math.round(n/min*100);   // mirror the card's "Proving for live" gate (every validated paper strategy)
+      prog=`<span class="ms-prog" title="${n}/${min} closed forward trades toward the go-live gate — proof, not hope"><i class="ms-mini"><b style="width:${pc}%"></b></i>${n}/${min}</span>`;}
+    return `<span class="ms-chip ${st}"><i class="ms-dot"></i><b>${esc(a.name)}</b><span class="ms-pnl num ${cls(a.paperPnl||0)}">${sgn(a.paperPnl||0)}</span>${prog}<button class="ms-x" data-lcstop="${i}" aria-label="Stop ${esc(a.name)}" title="Stop ${esc(a.name)}">${icon('close',10)}</button></span>`;}).join('');
   return `<div class="mystrat">
     <div class="ms-head"><b>${icon('cpu',14)} My strategies</b>
-      <span class="ms-sum">${paper.length} paper${live.length?` · <b class="lc-live-txt">${live.length} live</b>`:''} · net paper P&L <b class="num ${cls(totPnl)}">${sgn(totPnl)}</b></span>
+      <span class="ms-sum">${dep.length} deployed · net paper P&L <b class="num ${cls(totPnl)}">${sgn(totPnl)}</b></span>
       <button class="btn-ghost sm danger" data-stopall title="Stop every deployed strategy">${icon('alert',12)} Stop all</button></div>
     <div class="ms-chips">${chips}</div></div>`;
 }
@@ -3175,6 +3716,306 @@ async function stopAll(){
     onConfirm(){ Promise.all(dep.map(a=>fetch(BOT_API+'/api/strategy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:a.id,state:'off'})}).catch(()=>{})))
       .then(()=>loadBotData()).then(()=>{ if(typeof renderAlgo==='function')renderAlgo(); quickToast('All stopped','Every strategy stopped; paper positions square off next cycle.'); }); }});
 }
+/* First-time funnel guide — explains the 6 tabs as one honest path (Discover→Prove→Paper→
+   Monitor→Go-Live). Dismissible + persisted, so the studio isn't a maze on first visit. */
+function funnelGuide(){
+  if(BOT.algoGuideDone) return '';
+  try{ if(localStorage.getItem('tp.algoGuide')==='1'){ BOT.algoGuideDone=true; return ''; } }catch(e){}
+  const steps=[['cpu','Discover','Browse strategies — each shows its validated edge &amp; best regime.'],
+    ['trendUp','Prove','Backtest on real history — vs buy-&amp;-hold, drawdown, monthly returns. No invented numbers.'],
+    ['bolt','Paper','One click forward-tests on live data at zero risk.'],
+    ['shield','Monitor','Real P&amp;L, exposure &amp; a live kill-switch as it runs.'],
+    ['check','Go-Live','Only after 16 safety gates pass — money never moves on a click.']];
+  return `<div class="funnel-guide"><button class="fg-x" data-fgdismiss aria-label="Dismiss guide" title="Dismiss">${icon('close',13)}</button>
+    <div class="fg-h">${icon('cpu',15)}<b>How Algo Studio works</b><span>a transparent path from idea to live</span></div>
+    <div class="fg-steps">${steps.map(([ic,t,d],i)=>`${i?'<span class="fg-arrow">→</span>':''}<div class="fg-step"><span class="fg-ic">${icon(ic,15)}</span><b>${i+1} · ${t}</b><span>${d}</span></div>`).join('')}</div></div>`;
+}
+/* ===== capital + risk + style line shown on every strategy card ===== */
+const STYLE_DESC={
+  'Trend':'Rides persistence — wins when moves continue, bleeds in chop.',
+  'Reversion':'Fades overreaction — wins in ranges, hurt by strong trends.',
+  'Relative-value':'Market-neutral spreads — regime-agnostic, low directional beta.',
+  'Carry':'Harvests theta / basis premium — steady income, tail-risk to manage.',
+  'Defensive':'Low-vol / quality — the sleeve that holds up in bear & high-vol.',
+};
+const styleSlug=s=>(s||'').toLowerCase().replace(/[^a-z]/g,'');
+function styleChip(s){ return s?`<span class="sty-chip sty-${styleSlug(s)}" title="${esc(STYLE_DESC[s]||'')}">${esc(s)}</span>`:''; }
+function algoMeta(a){
+  const md=a.minDeploy||a.minCap||0;
+  const dd=a.maxDD!=null?a.maxDD:(a.dd!=null?a.dd:null);
+  const rpt=a.riskPerTrade;
+  return `<div class="algo-meta">
+    ${styleChip(a.style)}
+    <span class="mt-cap" title="Minimum capital to deploy one unit. For F&amp;O this is the lot-size margin estimate (not a live broker quote).">${icon('wallet',11)} Min to deploy <b>${inr(md)}</b></span>
+    <span class="mt-risk" title="Risk appetite — worst backtested drawdown ~${dd!=null?dd+'%':'—'}; about ${rpt!=null?rpt+'%':'—'} of deployed capital at risk per position.">${icon('shield',11)} ${esc(a.risk||'—')} · DD ~${dd!=null?dd+'%':'—'} · ${rpt!=null?rpt+'%':'—'}/trade</span>
+  </div>`;
+}
+
+/* ===== Strategy Framework — the regime switch (which STYLES to run as conditions change) ===== */
+const FW_STYLES=['Trend','Reversion','Relative-value','Carry','Defensive'];
+const FW_REGIME={
+  'Bull':    {favor:['Trend','Carry'],                       avoid:['Reversion']},
+  'Bear':    {favor:['Defensive','Relative-value'],          avoid:['Trend','Carry']},
+  'Choppy':  {favor:['Carry','Reversion','Relative-value'],  avoid:['Trend']},
+  'High-Vol':{favor:['Reversion','Defensive'],               avoid:['Carry','Trend']},
+};
+const fwFit=(style,pref)=>pref.favor.includes(style)?'favored':pref.avoid.includes(style)?'avoid':'neutral';
+function frameworkBand(lr,cap){
+  if(!ALGOS||!ALGOS.length) return '';
+  const pref=FW_REGIME[lr]||{favor:[],avoid:[]};
+  const styleCells=FW_STYLES.map(st=>{
+    const n=ALGOS.filter(a=>a.style===st).length, fit=fwFit(st,pref);
+    const fl=fit==='favored'?'Favoured':fit==='avoid'?'Stand aside':'Neutral';
+    return `<div class="fw-sty ${fit}" title="${esc(STYLE_DESC[st]||'')} — ${fl.toLowerCase()} in a ${lr} market.">
+      <b>${st}</b><i>${fl}</i><span class="fw-sty-n">${n}</span></div>`;
+  }).join('');
+  const rec=ALGOS.filter(a=>a.vstatus==='validated'&&(a.bestRegime===lr||a.bestRegime==='Market-neutral'));
+  const inv=rec.map(a=>1/Math.max(a.maxDD||a.dd||5,1)), tot=inv.reduce((s,x)=>s+x,0)||1;
+  const recCards=rec.map((a,k)=>{
+    const pct=Math.round(inv[k]/tot*100), amt=cap>0?inr(Math.round(cap*pct/100)):null, i=ALGOS.indexOf(a);
+    return `<button class="fw-rec-card" data-fwgoto="${i}" title="Deploy ${esc(a.name)} in paper">
+      <span class="fw-rc-top"><b>${esc(a.name)}</b>${styleChip(a.style)}</span>
+      <span class="fw-rc-alloc"><b>${pct}%</b>${amt?` · ${amt}`:''}</span>
+      <span class="fw-rc-min">min ${inr(a.minDeploy||a.minCap||0)}</span></button>`;
+  }).join('');
+  const recBlock=rec.length
+    ? `<div class="fw-rec-grid">${recCards}</div>`
+    : `<div class="fw-rec-empty">${icon('shield',12)}<span>No <b>validated</b> strategy fits a ${lr} market right now — favour the ${(pref.favor||[]).join(' / ')||'market-neutral'} styles below; their candidates are still gathering forward evidence.</span></div>`;
+  const dep=ALGOS.filter(a=>a.deployed), depStyles=[...new Set(dep.map(a=>a.style).filter(Boolean))];
+  const missing=FW_STYLES.filter(s=>!depStyles.includes(s)&&(s==='Carry'||s==='Defensive'));
+  const divNote=dep.length
+    ? `You're running ${depStyles.length} style${depStyles.length===1?'':'s'}${depStyles.length?` (${depStyles.join(', ')})`:''}. ${missing.length?`Adding a <b>${missing[0]}</b> sleeve cuts drawdown more than another correlated bet.`:'Good spread across styles.'}`
+    : `Diversification only works across LOW-correlated styles — spread capital across a few, don't stack three Trend bets.`;
+  return `<div class="fw-band">
+    <div class="fw-head"><div><b>${icon('sliders',14)} Strategy Framework</b><span>what to run in a <b>${lr}</b> market — the studio tilts by style as conditions change</span></div>
+      <span class="fw-regime">● ${lr}</span></div>
+    <div class="fw-styles">${styleCells}</div>
+    <div class="fw-rec"><div class="fw-rec-h">Recommended now${cap>0?` · suggested split of ${inr(cap)}`:''}${infoI('Validated strategies whose best regime matches the live market (or are market-neutral). The split is inverse-risk — a calmer strategy gets a bigger slice. Diversify across these rather than picking one.')}</div>${recBlock}</div>
+    <p class="fw-note">${icon('shield',12)}<span>${divNote}</span></p></div>`;
+}
+
+/* ===== STRATEGY LIBRARY view — browse every type, learn, filter, regime-match ===== */
+function libState(){ state.algo=state.algo||{}; return state.algo.lib=state.algo.lib||{fam:'all',risk:'all',seg:'all',q:'',favOnly:false,expand:{}}; }
+const famMeta=k=>STRAT_FAMILIES.find(f=>f[0]===k)||['?','Other','cpu',''];
+// liveRegime() already returns a label ('Bull'|'Bear'|'Choppy'|'High-Vol'); High-Vol also overlays from VIX
+function libHighVol(){ const v=(BOT.live&&BOT.market&&BOT.market.vix&&BOT.market.vix.ltp)||0; return v>=20; }
+// favoured = matches the live regime, or High-Vol when VIX is hot, or works in Any
+function libFav(s,regLabel,hv){ return s.best==='Any' || (regLabel&&s.best===regLabel) || (hv&&s.best==='High-Vol'); }
+function libHostile(s,regLabel){ return regLabel && ((regLabel==='Bull'&&s.best==='Bear')||(regLabel==='Bear'&&s.best==='Bull')); }
+// a library entry is "Validated" only if a real backend strategy of the same name exists
+function libValidated(s){ return ALGOS.some(a=>a.vstatus==='validated' && a.name && a.name.toLowerCase()===s.name.toLowerCase()); }
+
+function algoLibrary(){
+  const l=libState();
+  const regLabel=BOT.live?liveRegime():null;     // 'Bull'|'Bear'|'Choppy'|'High-Vol' when live; null offline
+  const hv=libHighVol();
+  const q=(l.q||'').trim().toLowerCase();
+  // filter pipeline
+  let rows=STRAT_LIBRARY.filter(s=>
+    (l.fam==='all'||s.fam===l.fam) &&
+    (l.risk==='all'||s.risk===l.risk) &&
+    (l.seg==='all'||s.seg===l.seg) &&
+    (!l.favOnly || libFav(s,regLabel,hv)) &&
+    (!q || (s.name+' '+s.what+' '+famMeta(s.fam)[1]).toLowerCase().includes(q))
+  );
+  // sort: favoured-for-now first (only when we know the live regime), else by family order
+  if(regLabel||hv) rows=rows.slice().sort((a,b)=>(libFav(b,regLabel,hv)?1:0)-(libFav(a,regLabel,hv)?1:0));
+
+  // ---- risk-first hero ----
+  const hero=`<div class="lib-hero">
+    <div class="lib-hero-ic">${icon('shield',20)}</div>
+    <div class="lib-hero-tx"><b>Survive first, profit second.</b>
+      <span>Every strategy type, explained plainly. We lead with how each one <b>loses</b> and the guard that keeps you in the game — then match what fits <b>today’s</b> market. When nothing fits, the right move is to stand aside.</span></div>
+  </div>`;
+
+  // ---- "Favoured right now" regime strip (auto-switch intelligence) ----
+  let favStrip;
+  if(BOT.live && (regLabel||hv)){
+    const favs=STRAT_LIBRARY.filter(s=>libFav(s,regLabel,hv));
+    const fams=[...new Set(favs.map(s=>s.fam))].slice(0,7);
+    const tag=hv?`High-Vol${regLabel?' · '+regLabel:''}`:regLabel;
+    favStrip=`<div class="lib-fav">
+      <div class="lib-fav-h"><span class="lib-live"><span class="live-dot live"></span>Live regime: <b>${esc(tag)}</b></span>
+        <span class="lib-fav-sub">${favs.length} strategy types favour this regime${infoI('Auto-matched to the regime TradePro detects from live Kite data (trend, breadth & VIX). Markets shift — this set updates the moment the regime flips.')}</span>
+        <button class="lib-fav-btn${l.favOnly?' on':''}" data-libfav>${icon(l.favOnly?'check':'spark',12)} ${l.favOnly?'Showing favoured only':'Show favoured only'}</button></div>
+      <div class="lib-fav-pills">${fams.map(fk=>{const fm=famMeta(fk);return `<button class="lib-fav-pill" data-libfam="${fk}">${icon(fm[2],12)} ${esc(fm[1])}</button>`;}).join('')}</div>
+      ${hv?`<p class="lib-fav-warn">${icon('alert',12)}<span>Volatility is elevated — favour <b>defined-risk</b> structures and smaller size. This is when accounts get hurt.</span></p>`:''}
+    </div>`;
+  } else {
+    favStrip=`<div class="lib-fav offline">${icon('shield',14)}<span><b>Connect Kite to auto-match strategies to the live regime.</b> Run <code>python3 login.py</code> — until then, browse and learn freely; we won’t guess today’s regime.</span></div>`;
+  }
+
+  // ---- filters ----
+  const famCounts={}; STRAT_LIBRARY.forEach(s=>famCounts[s.fam]=(famCounts[s.fam]||0)+1);
+  const famChips=`<button class="lib-chip${l.fam==='all'?' on':''}" data-libfam="all">All <i>${STRAT_LIBRARY.length}</i></button>`+
+    STRAT_FAMILIES.map(f=>`<button class="lib-chip${l.fam===f[0]?' on':''}" data-libfam="${f[0]}" title="${esc(f[3])}">${icon(f[2],12)} ${esc(f[1])} <i>${famCounts[f[0]]||0}</i></button>`).join('');
+  const riskChips=['all','Conservative','Moderate','Aggressive'].map(r=>`<button class="lib-mini${l.risk===r?' on':''}" data-librisk="${r}">${r==='all'?'Any risk':r}</button>`).join('');
+  const segChips=['all','equity','index','fno','options'].map(s=>`<button class="lib-mini${l.seg===s?' on':''}" data-libseg="${s}">${s==='all'?'Any instrument':SEG_LABEL[s]}</button>`).join('');
+  const filterActive=l.fam!=='all'||l.risk!=='all'||l.seg!=='all'||q||l.favOnly;
+  const filters=`<div class="lib-filters">
+    <div class="lib-search"><span class="lib-search-ic">${icon('search',14)}</span><input id="libSearch" class="lib-search-in" type="text" placeholder="Search strategies — e.g. straddle, breakout, theta…" value="${esc(l.q||'')}"></div>
+    <div class="lib-chiprow">${famChips}</div>
+    <div class="lib-minirow"><span class="lib-minilbl">Risk</span>${riskChips}<span class="lib-minilbl">Instrument</span>${segChips}${filterActive?`<button class="lib-clear" data-libclear>${icon('close',11)} Clear</button>`:''}</div>
+  </div>`;
+
+  // ---- grid ----
+  const grid=rows.length
+    ? `<div class="lib-grid">${rows.map(s=>libCard(s,regLabel,hv)).join('')}</div>`
+    : secEmpty('search','No strategies match','Loosen the filters or clear the search to see the full library.');
+  const count=`<p class="sec-hint">${icon('cpu',12)}<span>Showing <b>${rows.length}</b> of ${STRAT_LIBRARY.length} strategy types across ${STRAT_FAMILIES.length} families. Each is a <b>candidate</b> until it passes a real engine backtest — then it graduates to the Marketplace as <b>Validated</b>.</span></p>`;
+  return hero+favStrip+filters+count+grid;
+}
+
+function libCard(s,regLabel,hv){
+  const l=libState();
+  const fm=famMeta(s.fam);
+  const open=!!(l.expand&&l.expand[s.id]);
+  const validated=libValidated(s);
+  const fav=BOT.live&&libFav(s,regLabel,hv);
+  const hostile=BOT.live&&libHostile(s,regLabel);
+  const rk=LIB_RISK_CLASS[s.risk]||'b-neu';
+  const ribbon=fav?`<div class="lib-rib fav">${icon('spark',11)} Favoured in the live regime</div>`
+    :hostile?`<div class="lib-rib bad">${icon('alert',11)} Fights today’s regime — stand aside</div>`:'';
+  const sbadge=validated?'<span class="vbadge ok">Validated</span>':'<span class="vbadge cand" title="Recognised strategy, not yet engine-backtested. Browse & learn; validate before deploying.">Candidate</span>';
+  const meta=`<div class="lib-meta">
+    <span class="lib-mtag">${icon(fm[2],11)} ${esc(fm[1])}</span>
+    <span class="lib-mtag">${icon('layout',11)} ${esc(SEG_LABEL[s.seg]||s.seg)}</span>
+    <span class="lib-mtag">${icon('target',11)} Best in ${esc(s.best)}</span>
+  </div>`;
+  // risk-first: surface the failure + guard up front, before any upside
+  const riskline=`<div class="lib-risk">
+    <div class="lib-rl fail">${icon('alert',12)}<div><b>Fails when</b><span>${esc(s.fails)}</span></div></div>
+    <div class="lib-rl guard">${icon('shield',12)}<div><b>Survival guard</b><span>${esc(s.guard)}</span></div></div>
+  </div>`;
+  const params=(s.params||[]).map(p=>`<span class="lib-param">${esc(p[0])} <b>${esc(p[1])}</b></span>`).join('');
+  const detail=open?`<div class="lib-detail">
+    <div class="lib-dl"><span class="lib-dh">${icon('bolt',12)} The rule</span><p>${esc(s.rule)}</p></div>
+    <div class="lib-dl"><span class="lib-dh up">${icon('check',12)} When it works</span><p>${esc(s.works)}</p></div>
+    <div class="lib-dl"><span class="lib-dh">${icon('sliders',12)} Key parameters</span><div class="lib-params">${params||'—'}</div></div>
+    ${validated?`<button class="btn-ghost sm" data-algogoto="market">${icon('bolt',12)} Open in Marketplace</button>`
+      :`<span class="cand-pill">${icon('shield',12)} Candidate · backtest in the engine before going live</span>`}
+  </div>`:'';
+  return `<div class="lib-card${fav?' is-fav':''}${hostile?' is-hostile':''}${open?' open':''}">
+    ${ribbon}
+    <div class="lib-h"><div class="lib-name"><b>${esc(s.name)}</b>${sbadge}</div><span class="badge ${rk}">${esc(s.risk)}</span></div>
+    ${meta}
+    <p class="lib-what">${esc(s.what)}</p>
+    ${riskline}
+    <button class="lib-learn" data-libexpand="${s.id}" aria-expanded="${open}">${icon(open?'compress':'expand',12)} ${open?'Hide details':'Learn — how it works, params & more'}</button>
+    ${detail}
+  </div>`;
+}
+
+/* ===== OPPORTUNITY ENGINE view — the explainable high-conviction decision engine ===== */
+let OPPS={loaded:false,loading:false,data:null,error:false};
+function loadOpps(force){
+  if(OPPS.loading) return; if(OPPS.loaded && !force) return;
+  OPPS.loading=true;
+  fetch(BOT_API+'/api/opportunities').then(r=>r.json()).then(d=>{
+    OPPS.data=d; OPPS.error=!d||d.real===false; OPPS.loaded=true; OPPS.loading=false; OPPS.at=Date.now();
+    if(typeof isAlgo==='function'&&isAlgo()&&state.algo&&state.algo.view==='opportunity') renderAlgo();
+  }).catch(()=>{ OPPS.error=true; OPPS.loaded=true; OPPS.loading=false; if(isAlgo()&&state.algo.view==='opportunity')renderAlgo(); });
+}
+const OPP_BANDS={execute:['Execute','exec'],execute_if_filters:['Execute if filters pass','execif'],watchlist:['Watchlist only','watch'],ignore:['Ignore','ign']};
+function confTone(c){ return c>=90?'exec':c>=75?'execif':c>=60?'watch':'ign'; }
+
+/* ===== Moonshot Mission tracker — ₹5,000 → ₹5,000 Cr, honest log-scale journey ===== */
+function inrShort(v){
+  const n=Math.abs(v); const s=v<0?'−':'';
+  if(n>=1e7) return s+'₹'+(n/1e7).toFixed(n>=1e8?1:2)+' Cr';
+  if(n>=1e5) return s+'₹'+(n/1e5).toFixed(2)+' L';
+  return s+'₹'+Math.round(n).toLocaleString('en-IN');
+}
+function missionBanner(){
+  const a=ALGOS.find(x=>x.id==='moonshot'); if(!a) return '';
+  const START=5000, TARGET=5e10;                       // ₹5,000 → ₹5,000 Cr
+  const eq=START+(a.paperPnl||0), mult=eq/START;
+  const prog=Math.max(0,Math.min(100, Math.log(Math.max(eq,1)/START)/Math.log(TARGET/START)*100));
+  const i=ALGOS.indexOf(a);
+  // honest milestones on the log road
+  const mosts=[[START,'₹5K'],[1e5,'₹1L'],[1e7,'₹1Cr'],[1e9,'₹100Cr'],[TARGET,'₹5000Cr']];
+  const ticks=mosts.map(([v,l])=>{const p=Math.log(v/START)/Math.log(TARGET/START)*100;return `<span class="msn-tick" style="left:${p}%"><i></i><b>${l}</b></span>`;}).join('');
+  // status / deploy
+  const chip=a.sub==='paper'?`<span class="lc-chip paper">${icon('bolt',10)} Paper · running</span>`:a.sub==='paused'?'<span class="lc-chip paused">❚❚ Paused</span>':a.sub==='live'?'<span class="lc-chip live">● LIVE</span>':'';
+  const pos=(a.positions&&a.positions[0])?`<span class="msn-pos">holding ${esc(a.positions[0].sym)} · ${sgn(a.openPnl||0)} open</span>`:'';
+  const cta=a.sub?`${chip}${pos}`:`<button class="btn-primary sm" data-algodep="${i}">${icon('bolt',12)} Deploy ₹5,000 paper</button>`;
+  return `<div class="msn">
+    <div class="msn-top">
+      <div class="msn-title"><span class="msn-rocket">🚀</span><div><b>Moonshot Mission</b><span>₹5,000 → ₹5,000 Cr · reinvest every rupee, ride the best setup</span></div></div>
+      <div class="msn-eq"><b class="${(a.paperPnl||0)>=0?'up':'down'}">${inrShort(eq)}</b><span>${mult>=1?mult.toFixed(mult>=100?0:2)+'× start':'−'+((1-mult)*100).toFixed(1)+'%'}</span></div>
+    </div>
+    <div class="msn-track"><div class="msn-fill" style="width:${prog.toFixed(4)}%"></div>${ticks}</div>
+    <div class="msn-foot">
+      <span class="msn-prog">${prog.toFixed(prog<1?4:2)}% of the way (log scale)</span>
+      <span class="msn-honest">${icon('shield',11)} 10,000,000× to target — ~57 yrs even at a stellar 50%/yr. Markets are probabilistic; this maximises compounding, it doesn't promise the moon.</span>
+      <span class="msn-cta">${cta}</span>
+    </div>
+  </div>`;
+}
+
+function algoOpportunity(){
+  const a=ALGOS.find(x=>x.id==='opportunity');
+  // ---- hero / explainer ----
+  const hero=`<div class="opp-hero">
+    <div class="opp-hero-ic">${icon('cpu',20)}</div>
+    <div class="opp-hero-tx"><b>Opportunity Engine — the strict judge.</b>
+      <span>Not another strategy. It detects the regime, lets only regime-appropriate specialists <b>vote</b> (weighted), scores every setup <b>0–100</b> on 8 confirmations, and <b>refuses</b> anything that isn't high-conviction. The goal isn't to win every trade — it's to never take a low-quality one.</span></div>
+  </div>`;
+  // ---- pipeline diagram ----
+  const pipe=`<div class="opp-pipe">${['Market data','Indicators','Regime','Weighted vote','Confidence 0–100','Risk filters','Execute'].map((s,i,arr)=>`<span class="opp-pstep${i===arr.length-1?' last':''}">${esc(s)}</span>${i<arr.length-1?'<span class="opp-parrow">→</span>':''}`).join('')}</div>`;
+  // ---- lifecycle bar for the engine bot (deploy / prove / go-live after 10) ----
+  let life='';
+  if(a){
+    const min=BOT.nudgeMin||10, n=a.fwdTrades||0, pc=Math.min(100,Math.round(n/min*100));
+    const chip=a.sub==='live'?'<span class="lc-chip live">● LIVE · real money</span>':a.sub==='paper'?`<span class="lc-chip paper">${icon('bolt',10)} Paper · running</span>`:a.sub==='paused'?'<span class="lc-chip paused">❚❚ Paused</span>':'';
+    const i=ALGOS.indexOf(a);
+    const gate=a.sub==='live'?`<button class="btn-go sm" data-algogl="${i}">${icon('shield',12)} Manage live</button>`
+      :`<div class="opp-gate"><div class="opp-gate-h"><span>Go-Live gate${infoI('The engine earns real-money execution after ≥'+min+' profitable CLOSED forward paper trades + funded account + ALLOW_LIVE armed.')}</span><span>${n}/${min} profitable paper trades</span></div><div class="lc-bar"><i style="width:${pc}%"></i></div>${a.nudge?`<button class="btn-go sm wide" data-algogl="${i}">${icon('shield',12)} Go Live →</button>`:`<button class="btn-go sm wide is-locked" data-algogl="${i}" aria-disabled="true">${icon('lock',12)} Go Live — locked until ${min} profitable trades</button>`}</div>`;
+    life=`<div class="opp-life">
+      <div class="opp-life-l"><b>${esc(a.name)}</b>${chip}<span class="opp-pnl ${a.paperPnl>0?'up':a.paperPnl<0?'down':''}">${a.paperPnl>=0?'+':'−'}₹${Math.abs(Math.round(a.paperPnl||0)).toLocaleString('en-IN')} paper P&L</span></div>
+      ${a.sub?gate:`<button class="btn-primary sm" data-algodep="${i}">${icon('bolt',12)} Deploy in Paper</button>`}
+    </div>`;
+  }
+  // ---- live scan ----
+  const d=OPPS.data;
+  if(!OPPS.loaded){ loadOpps(); return missionBanner()+hero+pipe+life+`<div class="opp-load">${icon('cpu',16)}<span>Scoring the universe against the live regime…</span></div>`; }
+  if(OPPS.error || !d || d.real===false){
+    return missionBanner()+hero+pipe+life+`<div class="opp-offline">${icon('shield',14)}<span><b>Connect Kite for the live decision scan.</b> ${esc((d&&d.error)||'')||'Run python3 login.py — the engine scores real setups only; it never invents an opportunity.'}</span></div>`;
+  }
+  // regime + enabled specialists with weights
+  const reg=d.regime, w=d.weights||{};
+  const specs=(d.specialists||[]);
+  const weightChips=specs.map(s=>{const wt=w[s.style]||0;const tone=wt>=8?'hi':wt>=4?'mid':'lo';return `<span class="opp-wchip ${tone}" title="${esc(s.style)} carries weight ${wt} in a ${esc(reg)} regime">${esc(s.key)} <i>${wt}</i></span>`;}).join('');
+  const regBar=`<div class="opp-regime">
+    <div class="opp-reg-h"><span class="lib-live"><span class="live-dot live"></span>Live regime: <b>${esc(reg)}</b></span><span class="opp-reg-sub">specialist vote weights this regime — the regime decides who gets a say${infoI('In each regime the engine up-weights the specialists that historically work and mutes the rest. Trend names lead in Bull; reversion in Choppy/High-Vol.')}</span></div>
+    <div class="opp-wchips">${weightChips}</div></div>`;
+  // bands legend
+  const bands=`<div class="opp-legend">${[['exec','90–100 Execute'],['execif','75–89 Execute if filters'],['watch','60–74 Watchlist'],['ign','&lt;60 Ignore']].map(([k,l])=>`<span class="opp-lg ${k}">${l}</span>`).join('')}</div>`;
+  const opps=d.opportunities||[];
+  const top=opps.filter(o=>o.confidence>=60);
+  const feed=opps.length?`<div class="opp-grid">${opps.slice(0,12).map(oppCard).join('')}</div>`
+    :secEmpty('shield','Nothing clears the bar right now',`The engine scored ${opps.length} names and none reached the watchlist threshold in this ${esc(reg)} regime — so it stands aside. That's the engine working: no low-quality trades.`);
+  const summ=`<p class="sec-hint">${icon('cpu',12)}<span>Scored <b>${opps.length}</b> names · <b>${top.length}</b> on the watchlist+ · <b>${opps.filter(o=>o.confidence>=75).length}</b> in an execute band. Refreshed ${OPPS.at?timeAgo(new Date(OPPS.at).toISOString()):'now'}. <button class="opp-refresh" data-oppref>↻ Rescan</button></span></p>`;
+  return missionBanner()+hero+pipe+life+regBar+bands+summ+feed;
+}
+function oppCard(o){
+  const tone=confTone(o.confidence), band=OPP_BANDS[o.band]||['',''];
+  const comps=o.components||{};
+  const COMPLBL={regime_match:'Regime',ema_trend:'EMA trend',rsi_ok:'RSI',macd:'MACD',supertrend:'Supertrend',volume_spike:'Volume',atr_healthy:'ATR',strong_candle:'Candle'};
+  const compChips=Object.keys(COMPLBL).map(k=>{const on=(comps[k]||0)>0;return `<span class="opp-comp${on?' on':''}" title="${COMPLBL[k]}: ${on?'+'+comps[k]:'0'}">${COMPLBL[k]}${on?` +${comps[k]}`:''}</span>`;}).join('');
+  const votes=(o.votes||[]);
+  const voteChips=votes.map(v=>`<span class="opp-vote${v.vote?' yes':''}" title="${esc(v.strategy)} (${esc(v.style)}, weight ${v.weight}) ${v.vote?'votes BUY':'no signal'}">${esc(v.strategy)}${v.vote?` ·${v.weight}`:''}</span>`).join('');
+  return `<div class="opp-card ${tone}">
+    <div class="opp-c-h"><div class="opp-c-sym"><b>${esc(o.symbol)}</b><span class="opp-c-px">₹${(o.price||0).toLocaleString('en-IN')}</span></div>
+      <div class="opp-score ${tone}"><b>${o.confidence}</b><span>/100</span></div></div>
+    <div class="opp-band ${tone}">${icon(tone==='exec'||tone==='execif'?'bolt':tone==='watch'?'clock':'minus',11)} ${esc(band[0])}</div>
+    <div class="opp-bar"><i class="${tone}" style="width:${o.confidence}%"></i></div>
+    <div class="opp-c-meta"><span>${o.agree}/${votes.length} specialists agree</span>${o.rsi!=null?`<span>RSI ${o.rsi}</span>`:''}${o.mtfOk===false?'<span class="opp-mtf">⚠ higher-TF disagrees</span>':''}</div>
+    <div class="opp-comps">${compChips}</div>
+    <details class="opp-det"><summary>Specialist votes</summary><div class="opp-votes">${voteChips}</div></details>
+  </div>`;
+}
+
 function algoMarket(){
   const segs=BOT.segments||[{id:'cash',label:'All',note:''}];
   const seg=state.algo.seg||segs[0].id;
@@ -3204,7 +4045,7 @@ function algoMarket(){
   ]);
   const cards=shown.length?shown.map(a=>algoCard(a,ALGOS.indexOf(a),lr,cap)).join(''):secEmpty('shield','Nothing runnable at this size',`No validated strategy in this segment both fits ${inr(cap)} and matches the live ${lr} regime. Add capital, switch off the filter, or wait for the regime to favour a validated edge.`);
   const build=onlyRun?'':`<button class="algo-build" data-algobuild>${icon('plus',20)}<b>Build a strategy</b><span>Define your own entry &amp; exit rules</span></button>`;
-  return myStrategiesBar()+algoNudge()+segTabs+capStrip+stat+`<div class="algo-grid">${cards}${build}</div>`;
+  return funnelGuide()+myStrategiesBar()+algoNudge()+frameworkBand(lr,cap)+segTabs+capStrip+stat+`<div class="algo-grid">${cards}${build}</div>`;
 }
 /* ===== Go-Live readiness: the hard checklist that gates Paper→Live ===== */
 function goLiveChecklist(a){
@@ -3250,31 +4091,71 @@ function wireReadiness(body,d,a){
       }).catch(()=>{ go.disabled=false; go.textContent='Retry'; quickToast('Could not reach the bot','Switch was not applied.'); });
   };
 }
+/* human "x ago" for data-freshness tags (transparency: when was this computed?) */
+function timeAgo(iso){ try{ const s=Math.max(0,(Date.now()-new Date(iso).getTime())/1000);
+  if(s<60)return Math.round(s)+'s ago'; if(s<3600)return Math.round(s/60)+'m ago';
+  if(s<86400)return Math.round(s/3600)+'h ago'; return Math.round(s/86400)+'d ago'; }catch(e){return '';} }
 function eqCurveSVG(bt,oosFrac){
   const W=600,H=160,padT=10,padB=10,padL=4,padR=4;
   const pts=(bt&&Array.isArray(bt.pts)&&bt.pts.length>1)?bt.pts:[100,100];   // guard degenerate series
-  const lo=Math.min(...pts),hi=Math.max(...pts),rng=(hi-lo)||1;
+  const bench=(bt&&bt.benchmark&&Array.isArray(bt.benchmark.pts)&&bt.benchmark.pts.length>1)?bt.benchmark.pts:null;
+  const all=bench?pts.concat(bench):pts;                                     // shared y-scale so both fit
+  const lo=Math.min(...all),hi=Math.max(...all),rng=(hi-lo)||1;
   const X=i=>padL+i/(pts.length-1)*(W-padL-padR), Y=v=>padT+(1-(v-lo)/rng)*(H-padT-padB);
   const d=pts.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+','+Y(v).toFixed(1)).join(' ');
   const area=d+` L${X(pts.length-1).toFixed(1)},${(H-padB).toFixed(1)} L${X(0).toFixed(1)},${(H-padB).toFixed(1)} Z`;
   const up=pts[pts.length-1]>=pts[0], baseY=Y(100).toFixed(1);
   const end=Math.round(pts[pts.length-1]);
+  // benchmark (buy & hold) overlay — dashed line on the same scale
+  let benchPath='';
+  if(bench){ const BX=i=>padL+i/(bench.length-1)*(W-padL-padR);
+    benchPath=`<path class="eq-bench" d="${bench.map((v,i)=>(i?'L':'M')+BX(i).toFixed(1)+','+Y(v).toFixed(1)).join(' ')}"/>`; }
   // out-of-sample split: shade the held-out region + mark the train/test divider (walk-forward viz)
   let oos='';
   if(oosFrac){ const sx=X((pts.length-1)*oosFrac).toFixed(1);
     oos=`<rect class="eq-oos" x="${sx}" y="0" width="${(W-parseFloat(sx)).toFixed(1)}" height="${H}"/>`+
         `<line class="eq-split" x1="${sx}" y1="0" x2="${sx}" y2="${H}"/>`+
         `<text class="eq-oostx" x="${(parseFloat(sx)+4).toFixed(1)}" y="11">out-of-sample →</text>`; }
-  return `<svg class="eq-svg ${up?'up':'down'}" width="100%" height="160" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Equity curve: ₹100 ${up?'grew to':'fell to'} ₹${end} over the backtest${oosFrac?', with the out-of-sample period shaded':''}">${oos}<path class="eq-area" d="${area}"/><line class="eq-base" x1="0" y1="${baseY}" x2="${W}" y2="${baseY}"/><path class="eq-line" d="${d}"/></svg>`;
+  return `<svg class="eq-svg ${up?'up':'down'}" width="100%" height="160" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Equity curve: ₹100 ${up?'grew to':'fell to'} ₹${end} over the backtest${bench?', dashed line is buy-and-hold':''}${oosFrac?', with the out-of-sample period shaded':''}">${oos}<path class="eq-area" d="${area}"/><line class="eq-base" x1="0" y1="${baseY}" x2="${W}" y2="${baseY}"/>${benchPath}<path class="eq-line" d="${d}"/></svg>`;
 }
-function btKey(id,period){ return id+'|'+period; }
-function ensureBacktest(id,period){
+/* Underwater / drawdown curve — how deep & how long below the prior peak (dd values ≤ 0). */
+function ddCurveSVG(dd){
+  const W=600,H=70,pad=6;
+  const pts=(Array.isArray(dd)&&dd.length>1)?dd:[0,0];
+  const lo=Math.min(...pts,-0.01);                          // most-negative; avoid /0
+  const X=i=>i/(pts.length-1)*W, Y=v=>pad+(v/lo)*(H-2*pad); // 0 at top, worst at bottom
+  const d=pts.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+','+Y(v).toFixed(1)).join(' ');
+  const area=d+` L${W},${pad} L0,${pad} Z`;
+  return `<svg class="dd-svg" width="100%" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Drawdown curve, worst ${Math.round(Math.min(...pts))} percent"><path class="dd-area" d="${area}"/><path class="dd-line" d="${d}"/></svg>`;
+}
+/* Calendar heatmap of monthly returns — year rows × 12 month cells. */
+function monthlyHeat(monthly){
+  if(!Array.isArray(monthly)||!monthly.length) return '';
+  const byY={}; monthly.forEach(m=>{const p=String(m.ym).split('-');(byY[p[0]]=byY[p[0]]||{})[+p[1]]=m.ret;});
+  const years=Object.keys(byY).sort();
+  const mn=['J','F','M','A','M','J','J','A','S','O','N','D'];
+  const cell=v=>{ if(v==null) return '<td class="mh-cell mh-na"></td>'; const a=Math.min(Math.abs(v)/8,.5)+.08; const g=v>=0;
+    return `<td class="mh-cell" style="background:${g?`rgba(0,171,78,${a})`:`rgba(229,56,59,${a})`}" title="${v>=0?'+':''}${v}%">${v>=0?'+':''}${Math.round(v)}</td>`; };
+  return `<div class="bt-monthly"><div class="bt-anh">${icon('clock',13)} Monthly returns <i>green = up month, red = down</i></div>
+    <div class="mh-scroll"><table class="mh-tbl"><thead><tr><th></th>${mn.map((m,i)=>`<th>${m}</th>`).join('')}</tr></thead>
+    <tbody>${years.map(y=>`<tr><td class="mh-y">${esc(y)}</td>${[1,2,3,4,5,6,7,8,9,10,11,12].map(mo=>cell(byY[y][mo])).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+}
+function btKey(id,period,uni){ return id+'|'+period+'|'+(uni||''); }
+// universe selector → CSV of symbols ('' = default 14-stock universe)
+function btUniCsv(){
+  const u=state.algo.bt&&state.algo.bt.uni;
+  if(u==='watchlist') return SYMS.filter(s=>isEq(s)).map(s=>s.sym).slice(0,20).join(',');
+  if(typeof u==='string'&&u&&u!=='default'&&u!=='watchlist') return u;   // explicit CSV
+  return '';
+}
+function ensureBacktest(id,period,uniCsv){
   if(!BOT.live) return;
+  uniCsv=uniCsv||'';
   BOT.backtests=BOT.backtests||{};
-  const k=btKey(id,period), rec=BOT.backtests[k];
+  const k=btKey(id,period,uniCsv), rec=BOT.backtests[k];
   if(rec && (rec.loading || Date.now()-rec.t<300000)) return;   // fresh (5min) or in-flight
   BOT.backtests[k]={...(rec||{}),loading:true,t:rec?rec.t:0};
-  fetch(`${BOT_API}/api/backtest?strategy=${encodeURIComponent(id)}&period=${encodeURIComponent(period)}`).then(r=>r.json()).then(p=>{
+  fetch(`${BOT_API}/api/backtest?strategy=${encodeURIComponent(id)}&period=${encodeURIComponent(period)}${uniCsv?'&symbols='+encodeURIComponent(uniCsv):''}`).then(r=>r.json()).then(p=>{
     BOT.backtests[k]={p:(p&&p.real)?p:null,err:(p&&!p.real)?p.error:null,loading:false,t:Date.now()};
     if(typeof isAlgo==='function'&&isAlgo()&&state.algo.view==='backtest') renderAlgo();
   }).catch(()=>{BOT.backtests[k]={p:null,err:'fetch failed',loading:false,t:Date.now()};});
@@ -3285,24 +4166,36 @@ function algoBacktest(){
   const ctrl=`<div class="bt-controls">
     <div class="dc-sel"><label class="dc-lab" for="btAlgo">Strategy</label><select id="btAlgo" class="dc-input">${ALGOS.map((x,i)=>`<option value="${i}" ${i===ai?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>
     <div class="bt-periods" role="tablist" aria-label="Backtest period">${periods.map(([k])=>`<button class="bt-period${k===period?' on':''}" data-btperiod="${k}" role="tab" aria-selected="${k===period}">${k}</button>`).join('')}</div></div>`;
-  if(a.real&&a.vstatus!=='validated')
+  // Custom (user-built) strategies map to a real engine — let them backtest. Other candidates
+  // (not yet through validation) stay gated so we don't imply a proven edge.
+  if(a.real&&a.vstatus!=='validated'&&!a.custom)
     return ctrl+secEmpty('cpu','Candidate — not yet validated',esc(a.name)+' is a realistic strategy but hasn’t passed the regime-segmented validation. '+(a.requires?('Needs '+esc(a.requires)+' data. '):'')+'Backtest numbers appear once it’s validated.');
   if(a.id==='pairs')
     return ctrl+secEmpty('scale','Pairs is a 2-leg strategy',esc(a.name)+' is market-neutral (long one stock future, short another) — it isn’t a single-symbol backtest. See its live forward-test results under Forward Test / Monitor.');
   // REAL backtest (Kite history). Honest connect/loading state — no simulated projection.
   if(!BOT.live)
     return ctrl+secEmpty('cpu','Connect Kite to run a real backtest',esc(a.name)+' backtests on real Kite daily history across a 14-stock universe (using the same engine that validated it). Connect — <b>python3 login.py</b> — to run it. No simulated numbers are shown.');
-  ensureBacktest(a.id,period);
-  const rec=(BOT.backtests||{})[btKey(a.id,period)];
+  // universe selector — default 14 / your watchlist / a custom symbol list
+  const uni=(state.algo.bt&&state.algo.bt.uni)||'default', wlN=Math.min(SYMS.filter(s=>isEq(s)).length,20);
+  const uniSel=`<div class="bt-uni"><span class="bt-unil">Backtest on</span>
+    <div class="bt-unitabs" role="tablist" aria-label="Backtest universe">
+      <button class="bt-unitab${uni==='default'?' on':''}" data-btuni="default" role="tab" aria-selected="${uni==='default'}">Default 14</button>
+      <button class="bt-unitab${uni==='watchlist'?' on':''}" data-btuni="watchlist" role="tab" aria-selected="${uni==='watchlist'}" ${wlN?'':'disabled'}>My watchlist${wlN?' ('+wlN+')':''}</button>
+    </div>
+    <input class="bt-unicustom" id="btUniCustom" placeholder="or symbols: RELIANCE,INFY" value="${(typeof uni==='string'&&uni!=='default'&&uni!=='watchlist')?esc(uni):''}" autocomplete="off">
+  </div>`;
+  const uniCsv=btUniCsv();
+  ensureBacktest(a.id,period,uniCsv);
+  const rec=(BOT.backtests||{})[btKey(a.id,period,uniCsv)];
   if(!rec || rec.loading || !rec.p)
-    return ctrl+secEmpty('cpu', (rec&&rec.err)?'Backtest unavailable':'Running real backtest…', (rec&&rec.err)?esc(rec.err):'Running '+esc(a.name)+' across the universe on real Kite history — a few seconds.');
+    return ctrl+uniSel+secEmpty('cpu', (rec&&rec.err)?'Backtest unavailable':'Running real backtest…', (rec&&rec.err)?esc(rec.err):'Running '+esc(a.name)+' on real Kite history — a few seconds.');
   const bt=rec.p;
   const endEq=Math.round(bt.pts[bt.pts.length-1]||100), peakEq=Math.round(Math.max(...bt.pts));
   const eqCap=`<div class="eq-cap">
     <span>Start <b class="num">₹100</b></span>
     <span>Peak <b class="num up">₹${peakEq.toLocaleString('en-IN')}</b></span>
     <span>End <b class="num ${endEq>=100?'up':'down'}">₹${endEq.toLocaleString('en-IN')}</b> <i class="num ${cls(bt.totalRet)}">${pct(bt.totalRet)}</i></span></div>`;
-  const card=`<div class="bt-card"><div class="bt-cardh"><b title="${esc(a.name)}">${esc(a.name)}</b><span><span class="live-dot live"></span>${period} · real Kite history · ${bt.universe} stocks</span></div>${eqCurveSVG(bt,0.7)}${eqCap}</div>`;
+  const card=`<div class="bt-card"><div class="bt-cardh"><b title="${esc(a.name)}">${esc(a.name)}</b><span><span class="live-dot live"></span>${period} · real Kite history · ${bt.universe} stocks${bt.asOf?' · <span class="bt-fresh">computed '+timeAgo(bt.asOf)+'</span>':''}</span></div>${eqCurveSVG(bt,0.7)}${eqCap}</div>`;
   const metrics=secStats([{l:'Total return',v:pct(bt.totalRet),tone:tone(bt.totalRet)},{l:'CAGR',v:pct(bt.cagr),tone:tone(bt.cagr)},{l:'Max DD',v:'−'+bt.maxDD.toFixed(1)+'%',tone:'down'},{l:'Win rate',v:bt.winRate+'%'},{l:'Sharpe',v:bt.sharpe.toFixed(2),tone:bt.sharpe>=1?'up':bt.sharpe<0?'down':''},{l:'Trades',v:String(bt.trades)}]);
   // VALIDATION REPORT — the honest in-sample vs out-of-sample cut (the moat)
   const o=bt.oos||{}, held=(o.oos_ret||0)>=0 && (o.oos_avg||0)>=-0.1;
@@ -3324,19 +4217,51 @@ function algoBacktest(){
       <div class="bt-anc"><span>Avg hold</span><b class="num">${an.avgHold||0}d</b></div>
       <div class="bt-anc"><span>Max streak</span><b class="num"><span class="up">${an.winStreak||0}W</span> <span class="down">${an.lossStreak||0}L</span></b></div>
     </div></div>`;
-  return ctrl+card+metrics+vr+analytics+`<div class="bt-logwrap"><div class="bt-logttl">Recent trades</div>${log}</div>`;
+  // ---- vs Buy & hold (the honest "did timing beat just owning these?") ----
+  const bm=bt.benchmark;
+  const beat=bm&&bt.totalRet>=bm.totalRet;
+  const benchBlock=bm?`<div class="bt-bench"><div class="bt-anh">${icon('scale',13)} vs Buy &amp; hold <i>same ${bt.universe} stock${bt.universe>1?'s':''}, dashed on the curve</i></div>
+    <div class="bt-bgrid">
+      <div class="bt-bc"><span>Strategy</span><b class="num ${tone(bt.totalRet)}">${pct(bt.totalRet)}</b></div>
+      <div class="bt-bc"><span>Buy &amp; hold</span><b class="num ${tone(bm.totalRet)}">${pct(bm.totalRet)}</b></div>
+      <div class="bt-bc"><span>Alpha · ann.${infoI('Annualised return the strategy added beyond just holding these stocks. Positive = real edge; negative = the timing cost more than it added.')}</span><b class="num ${tone(bm.alpha)}">${bm.alpha!=null?pct(bm.alpha):'—'}</b></div>
+      <div class="bt-bc"><span>Beta${infoI('Sensitivity to the benchmark. ~1 moves with it, <1 is less exposed, ~0 is market-neutral.')}</span><b class="num">${bm.beta!=null?bm.beta.toFixed(2):'—'}</b></div>
+    </div>
+    <p class="bt-bverdict ${beat?'ok':'warn'}">${icon(beat?'check':'alert',12)}<span>${beat?'The strategy <b>beat</b> simply holding these stocks.':'The strategy <b>underperformed</b> buy &amp; hold over this window — the timing cost more than it added. An honest result, shown anyway.'}</span></p></div>`:'';
+  // ---- drawdown / underwater + time in market ----
+  const ddBlock=(Array.isArray(bt.dd)&&bt.dd.length>1)?`<div class="bt-dd"><div class="bt-anh">${icon('trendDown',13)} Drawdown — underwater <i>worst −${bt.maxDD.toFixed(1)}% · time in market ${bt.timeInMarket!=null?bt.timeInMarket+'%':'—'}</i></div>${ddCurveSVG(bt.dd)}<p class="bt-ddcap">${icon('shield',11)}<span>How deep and how long the strategy sat below its prior peak — the pain you'd have had to sit through.</span></p></div>`:'';
+  const uniTag=bt.customUniverse?`<span class="bt-unitag">${esc((bt.symbols||[]).slice(0,4).join(', '))}${(bt.symbols||[]).length>4?' +'+((bt.symbols||[]).length-4):''}</span>`:'';
+  // ---- Monte-Carlo robustness (bootstrap of the real trades) ----
+  const mc=bt.montecarlo;
+  const robust=mc&&mc.profitableShare>=60;
+  const mcBlock=mc?`<div class="bt-bench"><div class="bt-anh">${icon('shield',13)} Monte-Carlo robustness <i>${mc.runs} resamples of your trades</i></div>
+    <div class="bt-bgrid">
+      <div class="bt-bc"><span>Worst 5%${infoI('5th-percentile outcome across 1000 bootstrap resamples of your trades — a bad-luck draw.')}</span><b class="num down">${pct(mc.p5)}</b></div>
+      <div class="bt-bc"><span>Median</span><b class="num ${tone(mc.p50)}">${pct(mc.p50)}</b></div>
+      <div class="bt-bc"><span>Best 5%</span><b class="num up">${pct(mc.p95)}</b></div>
+      <div class="bt-bc"><span>Profitable${infoI('Share of the 1000 resampled runs that ended in profit. >60% = a robust edge; near 50% = close to a coin-flip.')}</span><b class="num ${mc.profitableShare>=60?'up':mc.profitableShare<50?'down':''}">${mc.profitableShare}%</b></div>
+    </div>
+    <p class="bt-bverdict ${robust?'ok':'warn'}">${icon(robust?'check':'alert',12)}<span>${robust?'<b>Robust</b> — '+mc.profitableShare+'% of resampled runs profited, so the edge isn’t one lucky sequence.':'<b>Fragile</b> — only '+mc.profitableShare+'% of resampled runs profited; the result leans on a few trades. Treat with caution.'} Across draws, returns spanned <b>${pct(mc.p5)}</b> to <b>${pct(mc.p95)}</b>.</span></p></div>`:'';
+  // ---- edge consistency over time (folds into the monthly section) ----
+  const ed=bt.edgeDecay;
+  const decayLine=ed?`<p class="bt-ddcap">${icon('clock',11)}<span><b>${ed.posMonths}%</b> of ${ed.totalMonths} months positive.${ed.fading!=null?(ed.fading?' Edge is <b>fading</b> — recent months ('+pct(ed.secondHalfAvg)+'/mo) weaker than earlier ('+pct(ed.firstHalfAvg)+'/mo).':' Edge is <b>holding</b> — recent ('+pct(ed.secondHalfAvg)+'/mo) ≈ earlier ('+pct(ed.firstHalfAvg)+'/mo).'):''}</span></p>`:'';
+  return ctrl+uniSel+uniTag+card+benchBlock+metrics+vr+ddBlock+monthlyHeat(bt.monthly)+decayLine+mcBlock+analytics+`<div class="bt-logwrap"><div class="bt-logttl">Recent trades</div>${log}</div>`;
 }
 /* ===== Strategy Leaderboard — rank validated strategies + edge-by-regime matrix (real catalog) ===== */
 function algoLeaderboard(){
   const lr=liveRegime();
-  const sort=state.algo.lbSort||'sharpe';
+  // Default-rank by Return (a metric populated for every validated strategy). Sharpe is only
+  // computed where validation produced it — never fabricated, and strategies without it rank last.
+  const sort=state.algo.lbSort||'ret';
   const validated=ALGOS.filter(a=>a.vstatus==='validated');
   const cands=ALGOS.filter(a=>a.vstatus!=='validated');
   if(!validated.length) return secEmpty('cpu','No validated strategies yet','Strategies appear here once they pass the regime-segmented validation. Until then they’re candidates in the Marketplace.');
-  const metric={sharpe:a=>(a.sharpe!=null?a.sharpe:(a.totalRet||0)/8), ret:a=>a.totalRet||0, win:a=>a.win||0, dd:a=>-(a.dd||99), paper:a=>a.paperPnl||0};
+  const haveSharpe=validated.some(a=>a.sharpe!=null);
+  const metric={sharpe:a=>(a.sharpe!=null?a.sharpe:-Infinity), ret:a=>a.totalRet||0, win:a=>a.win||0, dd:a=>-(a.dd||99), paper:a=>a.paperPnl||0};
   const ranked=[...validated].sort((x,y)=>metric[sort](y)-metric[sort](x));
   const sorts=[['sharpe','Sharpe'],['ret','Return'],['win','Win %'],['dd','Drawdown'],['paper','Paper P&L']];
   const ctrl=`<div class="lb-ctrl"><span class="lb-lab">Rank by</span><div class="lb-sorts" role="tablist" aria-label="Rank strategies by">${sorts.map(([k,l])=>`<button class="lb-sort${k===sort?' on':''}" data-lbsort="${k}" role="tab" aria-selected="${k===sort}">${l}</button>`).join('')}</div></div>`;
+  const sharpeNote=(sort==='sharpe'&&!validated.every(a=>a.sharpe!=null))?`<p class="sec-hint">${icon('shield',12)}<span>Sharpe is shown only where validation computed it — strategies without it rank last (never a guessed value). Run a <b>Backtest</b> to compute a real Sharpe on live history.</span></p>`:'';
   const rows=ranked.map((a,i)=>{const active=a.bestRegime===lr||a.bestRegime==='Market-neutral';
     return `<div class="lb-row${active?' active':''}">
       <span class="lb-rank">${i+1}</span>
@@ -3355,11 +4280,57 @@ function algoLeaderboard(){
     <tbody>${validated.map(a=>`<tr><td class="lb-mname">${esc(a.name)}</td>${regs.map(r=>{const f=a.regimeFit&&a.regimeFit[r];if(!f)return '<td class="lb-mcell">—</td>';const tn=f[2]==='good'?'rg-good':f[2]==='weak'?'rg-weak':'rg-bad';return `<td class="lb-mcell ${tn}${r===lr?' live':''}" title="${esc(a.name)} in ${r}: ${f[0]>0?'+':''}${f[0]}% over ${f[1]} trades">${f[0]>0?'+':''}${f[0]}</td>`;}).join('')}</tr>`).join('')}</tbody></table></div>
     <p class="lb-mnote">${icon('shield',12)}<span>The honest takeaway: <b>no strategy wins everywhere</b>. The live regime is <b>${esc(lr)}</b> — the engine favours strategies validated for it and stands aside otherwise.</span></p></div>`;
   const candNote=cands.length?`<p class="sec-hint">${icon('cpu',12)}<span>${cands.length} candidate strateg${cands.length===1?'y is':'ies are'} not ranked — they haven’t passed validation (see Marketplace). We rank proof, not promises.</span></p>`:'';
-  return ctrl+`<div class="lb-list">${rows}</div>${matrix}${candNote}`;
+  return ctrl+sharpeNote+`<div class="lb-list">${rows}</div>${matrix}${corrSection()}${candNote}`;
+}
+/* Strategy correlation — lazy-loaded real correlation of validated strategies' daily returns,
+   so users don't deploy redundant bets. Reuses the regime-matrix table styling. */
+function ensureCorrelation(){
+  if(!BOT.live) return;
+  if(BOT.correlation && (BOT.correlation.loading || Date.now()-BOT.correlation.t<1800000)) return;
+  BOT.correlation={...(BOT.correlation||{}),loading:true,t:BOT.correlation?BOT.correlation.t:0};
+  fetch(BOT_API+'/api/correlation').then(r=>r.json()).then(p=>{
+    BOT.correlation={p:(p&&p.real)?p:null,err:(p&&!p.real)?p.error:null,loading:false,t:Date.now()};
+    if(typeof isAlgo==='function'&&isAlgo()&&state.algo.view==='leaderboard')renderAlgo();
+  }).catch(()=>{BOT.correlation={p:null,err:'fetch failed',loading:false,t:Date.now()};});
+}
+function corrSection(){
+  if(!BOT.live) return '';
+  ensureCorrelation();
+  const rec=BOT.correlation;
+  if(!rec||rec.loading) return `<div class="lb-matrix"><div class="lb-mh">${icon('scale',13)} Strategy correlation — are these the same bet?</div><p class="sec-hint">${icon('cpu',12)}<span>Computing correlation across validated strategies on real history… (a few seconds)</span></p></div>`;
+  if(!rec.p) return '';
+  const c=rec.p;
+  const cell=v=>{const tn=v>=0.7?'rg-bad':v>=0.4?'rg-weak':'rg-good';return `<td class="lb-mcell ${v===1?'':tn}" title="correlation ${v}">${v.toFixed(2)}</td>`;};
+  const mc=c.mostCorrelated;
+  const note=mc?`<p class="lb-mnote">${icon('shield',12)}<span>${mc.r>=0.7?'<b>'+esc(mc.a)+'</b> &amp; <b>'+esc(mc.b)+'</b> move together ('+mc.r+') — running both adds little diversification.':'Your validated strategies are <b>weakly correlated</b> (max '+mc.r+') — they diversify each other well, so running them together spreads risk.'}</span></p>`:'';
+  return `<div class="lb-matrix"><div class="lb-mh">${icon('scale',13)} Strategy correlation — are these the same bet?${infoI('Correlation of the strategies’ daily returns on real history. Green = complementary (diversifies), red = the same bet. Don’t stack highly-correlated strategies.')}</div>
+    <div class="lb-mscroll"><table class="lb-mtbl"><thead><tr><th></th>${c.names.map(n=>`<th>${esc(String(n).split(' ')[0])}</th>`).join('')}</tr></thead>
+    <tbody>${c.matrix.map((row,i)=>`<tr><td class="lb-mname">${esc(c.names[i])}</td>${row.map(cell).join('')}</tr>`).join('')}</tbody></table></div>${note}</div>`;
+}
+/* Risk & safety panel — real aggregate exposure / position cap / loss-limit / kill-switch
+   from /api/monitor.risk. The honest "can this hurt me?" view before any live capital. */
+function riskPanel(){
+  const r=BOT.monitor&&BOT.monitor.risk; if(!r) return '';
+  const cap=r.positionCapTotal||1, posPct=Math.min(100,Math.round((r.openPositions||0)/cap*100));
+  const armed=!!r.liveArmed;
+  return `<div class="risk-panel">
+    <div class="rp-h">${icon('shield',13)} Risk &amp; safety<span class="rp-live">● live</span></div>
+    <div class="rp-grid">
+      <div class="rp-c"><span>Exposure${infoI('Total market value of all open paper positions across strategies, marked to live price.')}</span><b class="num">${inrL(r.exposure||0)}</b><i>${r.openPositions||0} open · ${r.activeStrategies||0} active</i></div>
+      <div class="rp-c"><span>Positions vs cap${infoI('Open positions against the bot’s hard cap ('+r.maxPositionsPerStrategy+' per strategy). Prevents over-exposure.')}</span><b class="num ${posPct>=80?'down':''}">${r.openPositions||0} / ${cap}</b><div class="rp-bar"><i class="${posPct>=80?'hot':''}" style="width:${posPct}%"></i></div></div>
+      <div class="rp-c"><span>Daily-loss halt${infoI('The bot auto-halts a strategy if its day loss exceeds this — a circuit breaker, enforced in the engine.')}</span><b class="num down">−${r.dailyLossLimitPct}%</b><i>≈ −${inr(r.dailyLossLimitPerStrategy||0)}/strategy</i></div>
+      <div class="rp-c rp-kill ${armed?'armed':'safe'}"><span>Kill switch${infoI('ALLOW_LIVE is the hard arming key. SAFE = paper only, real orders are impossible. ARMED = real orders enabled on the bot machine.')}</span><b>${armed?'● ARMED':'● SAFE'}</b><i>${armed?'real orders enabled':'paper only — real orders blocked'}</i></div>
+    </div></div>`;
+}
+/* Honest scaffold for live-only safety features — reconciliation (C2) is active once a strategy
+   goes live; alerts (C4) need a Telegram token. We state this plainly rather than fake either. */
+function liveSafetyNote(){
+  const tg=BOT.status&&BOT.status.telegram;
+  return `<div class="exec-ready" style="margin-top:10px">${icon('shield',13)}<div><b>Live-mode safety</b><span>When a strategy goes live, the bot <b>reconciles</b> its positions against your Kite account each cycle (flagging any drift), and the daily-loss circuit-breaker + kill-switch stay enforced. Entry/exit &amp; risk <b>alerts</b> ${tg?'are configured.':'need a Telegram bot token on the bot machine — <b>not set up</b>, so the studio never pretends to notify you.'}</span></div></div>`;
 }
 function algoMonitor(){
   const exec=state.algo.exec||'paper';
-  const paperRun=ALGOS.filter(a=>a.live);          // running in the forward PAPER harness
+  const paperRun=ALGOS.filter(a=>a.deployed);      // the strategies you've deployed (paper/paused/live) — the engine's live book
   const liveRun=ALGOS.filter(a=>a.execLive);       // actually placing REAL orders (none until the live runner trades it)
   const ready=ALGOS.filter(a=>a.readyExceptCapital);
   const toggle=`<div class="exec-toggle" role="tablist" aria-label="Execution mode">
@@ -3371,17 +4342,20 @@ function algoMonitor(){
       ? `<div class="exec-ready">${icon('shield',13)}<div><b>Ready for live once funded &amp; armed:</b> ${ready.map(a=>esc(a.name)).join(' · ')}<span>Open each strategy’s Go-Live check, then fund the account + set ALLOW_LIVE.</span></div></div>`
       : '';
     if(!liveRun.length)
-      return toggle+secEmpty('shield','No strategies are live','Nothing is placing real orders. Live execution stays locked until a strategy clears the Go-Live checklist — fund the account + arm ALLOW_LIVE on the bot. Everything runs in paper until then.')+readyNote;
+      return toggle+secEmpty('shield','No strategies are live','Nothing is placing real orders. Live execution stays locked until a strategy clears the Go-Live checklist — fund the account + arm ALLOW_LIVE on the bot. Everything runs in paper until then.')+readyNote+liveSafetyNote();
     const lrows=liveRun.map(a=>{const i=ALGOS.indexOf(a);
       return `<div class="mon-row live"><div class="mon-l"><span class="live-dot live"></span><div><b>${esc(a.name)}</b><span class="mon-cat">${esc(a.cat)} · ${(a.openPositions||0)} open</span></div></div>
         <div class="mon-pnl"><b class="num ${cls(a.livePnl||0)}" data-live-pnl="${a.id}">${sgn(a.livePnl||0)}</b><span>LIVE · real ₹</span></div>
         <div class="mon-ctrls"><button class="btn-ghost sm" data-algogl="${i}">Gates</button></div></div>`;}).join('');
-    return toggle+`<div class="mon-list">${lrows}</div>`+readyNote;
+    return toggle+riskPanel()+`<div class="mon-list">${lrows}</div>`+readyNote+liveSafetyNote();
   }
   // ---- PAPER view ----
   if(!paperRun.length) return toggle+secEmpty('cpu','No paper strategies running','Start the paper engine to run every validated strategy live in paper mode — zero real-money risk, no terminal.',harnessCta());
   const total=paperRun.reduce((s,a)=>s+(a.paperPnl||0),0);
-  const stat=secStats([{l:'Running · paper',v:String(paperRun.length)},{l:'Paper P&L'+infoI(ALGO_DEFS['Paper P&L']),v:sgn(total),tone:total>=0?'up':'down',id:'monTotal'},{l:'Mode',v:'Paper · no real orders'}]);
+  const stat=secStats([
+    {l:'Deployed',v:String(paperRun.length)},
+    {l:'Paper P&L'+infoI(ALGO_DEFS['Paper P&L']),v:sgn(total),tone:total>=0?'up':'down',id:'monTotal'},
+    {l:'Mode',v:'Paper · no real orders'}]);
   const me=state.algo.monExpand=state.algo.monExpand||{};
   const rows=paperRun.map(a=>{const i=ALGOS.indexOf(a);
     const open=!!me[a.id];
@@ -3400,13 +4374,26 @@ function algoMonitor(){
   const note=paperRun.some(a=>!a.openPositions&&!a.fwdTrades)
     ? `Strategies at ₹0 simply haven’t triggered an entry signal yet — they only trade when their setup appears. P&L moves as positions open and close.`
     : `Open positions are marked to live market price; the go-live nudge needs ≥${BOT.nudgeMin||10} <b>closed</b> profitable trades.`;
-  return toggle+(harnessRunning()?harnessCta():'')+stat+`<div class="mon-list">${rows}</div><p class="sec-hint">${icon('shield',12)}<span>${note} All run in <b>PAPER</b> — zero real-money risk.</span></p>`;
+  return toggle+(harnessRunning()?harnessCta():'')+riskPanel()+stat+`<div class="mon-list">${rows}</div>`+stoppedPanel()+`<p class="sec-hint">${icon('shield',12)}<span>${note} All run in <b>PAPER</b> — zero real-money risk.</span></p>`;
+}
+/* When you STOP a strategy, the harness squares off its open paper book at the live mark and
+   files the liquidation here — deliberately OUT of any strategy's P&L (a stop isn't a signal),
+   so the close is auditable rather than hidden on disk. */
+function stoppedPanel(){
+  const recs=BOT.stopped||[]; if(!recs.length) return '';
+  const tot=BOT.stoppedTotal||0;
+  const rows=recs.map(r=>{
+    const pos=(r.closed||[]).map(c=>`<span class="st-pos"><b>${esc(c.sym)}</b> ${c.qty}@₹${(+c.entry).toFixed(1)}→₹${(+c.exit).toFixed(1)} <i class="num ${cls(c.pnl)}">${sgn(c.pnl)}</i></span>`).join('');
+    const when=r.stoppedAt?new Date(r.stoppedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'';
+    return `<div class="st-row"><div class="st-head"><b>${esc(r.name||r.strategy)}</b><span class="st-meta">${when} · ${esc(r.reason||'')}</span><b class="num ${cls(r.flattenPnl)} st-pnl">${sgn(r.flattenPnl)}</b></div><div class="st-pos-list">${pos}</div></div>`;
+  }).join('');
+  return `<details class="stopped-panel"><summary>${icon('scissors',13)} Stopped strategies <i class="st-n">${recs.length}</i><span class="st-sum">liquidation total <b class="num ${cls(tot)}">${sgn(tot)}</b> · kept out of strategy P&L</span></summary><div class="st-body">${rows}</div></details>`;
 }
 /* ===== ACCURACY — backtest edge vs LIVE forward results: can you trust it? ===== */
 function algoAccuracy(){
   if(!BOT.live) return secEmpty('shield','Connect Kite to measure accuracy','Accuracy pits each strategy’s backtested edge against its LIVE forward-test results — real out-of-sample proof. Reconnect to load it.');
   const MIN=BOT.nudgeMin||10, lr=liveRegime();
-  const list=ALGOS.filter(a=>a.vstatus==='validated'||a.live);
+  const list=ALGOS.filter(a=>a.vstatus==='validated'||a.deployed);   // validated (for comparison) + whatever you've deployed
   const vset=list.filter(a=>a.vstatus==='validated');
   const avgBt=vset.length?Math.round(vset.reduce((s,a)=>s+(a.win||0),0)/vset.length):0;
   const totClosed=list.reduce((s,a)=>s+(a.fwdTrades||0),0);
@@ -3490,15 +4477,20 @@ function exportAnalyticsCSV(){
 function algoAnalytics(){
   if(!BOT.live) return secEmpty('shield','Connect Kite for analytics','Strategy analytics aggregate your REAL forward paper-trade history — equity curve, risk & quality, contribution, activity, exit reasons & insights. Reconnect to load it.');
   if(!BOT.analytics){ ensureAnalytics(true); return secEmpty('spark','Loading analytics…','Crunching your forward trade log.'); }
-  const d=BOT.analytics, t=d.totals||{}, op=d.open||{positions:0,unrealised:0};
-  if(!t.trades && !op.positions) return secEmpty('spark','No activity yet','Analytics build up as the paper harness opens and closes forward trades. Open positions and closed-trade reports appear here.');
-  const bookTotal=(t.realised||0)+(op.unrealised||0);
+  const d=BOT.analytics, t=d.totals||{};
+  // P&L totals come from the SAME live ALGOS data Monitor uses (a.deployed) → identical numbers, patched every 2s
+  const liveS=ALGOS.filter(a=>a.deployed);
+  const realised=liveS.reduce((s,a)=>s+(a.realisedPnl||0),0);
+  const open=liveS.reduce((s,a)=>s+(a.openPnl||0),0);
+  const openPos=liveS.reduce((s,a)=>s+(a.openPositions||0),0);
+  const bookTotal=realised+open;
+  if(!t.trades && !liveS.length) return secEmpty('spark','No activity yet','Analytics build up as the paper harness opens and closes forward trades. Open positions and closed-trade reports appear here.');
   const stat=secStats([
     {l:'Closed trades'+infoI('Total CLOSED forward paper trades across all strategies.'),v:String(t.trades||0)},
     {l:'Win rate',v:t.winPct!=null?t.winPct+'%':'—',tone:t.winPct!=null?(t.winPct>=50?'up':'down'):''},
-    {l:'Realised P&L'+infoI('Cumulative CLOSED-trade P&L (paper).'),v:sgn(t.realised||0),tone:(t.realised||0)>=0?'up':'down'},
-    {l:'Open P&L'+infoI(op.positions+' open position(s), marked to live price — not yet realised.'),v:op.positions?sgn(op.unrealised):'—',tone:(op.unrealised||0)>=0?'up':'down'},
-    {l:'Total book'+infoI('Realised + open unrealised = your full paper book right now.'),v:sgn(bookTotal),tone:bookTotal>=0?'up':'down'}
+    {l:'Realised P&L'+infoI('Cumulative CLOSED-trade P&L (paper) — live, in sync with Monitor.'),v:sgn(realised),tone:realised>=0?'up':'down',id:'anRealised'},
+    {l:'Open P&L'+infoI(openPos+' open position(s), marked to live price — not yet realised.'),v:openPos?sgn(open):'—',tone:open>=0?'up':'down',id:'anOpen'},
+    {l:'Total book'+infoI('Realised + open unrealised = your full live paper book.'),v:sgn(bookTotal),tone:bookTotal>=0?'up':'down',id:'anBook'}
   ]);
   const eqPts=(d.equity&&d.equity.length>1)?d.equity:[0,0];
   const endEq=eqPts[eqPts.length-1], peak=Math.max(...eqPts), trough=Math.min(...eqPts);
@@ -3528,6 +4520,10 @@ function algoAnalytics(){
   const rMax=Math.max(1,...(d.byReason||[]).map(r=>r.count));
   const reasons=(d.byReason||[]).length?d.byReason.map(r=>`<div class="an-row"><span class="an-nm">${esc(r.reason)}</span><div class="an-track"><i class="${r.pnl>=0?'pos':'neg'}" style="width:${r.count/rMax*100}%"></i></div><b class="num">${r.count}</b><span class="an-sub num ${cls(r.pnl)}">${sgn(r.pnl)}</span></div>`).join(''):'<p class="an-empty">No closed trades yet.</p>';
   const reasonCard=`<div class="an-card"><div class="an-h">${icon('flag',13)}<b>How trades close</b><span>exit reason breakdown</span></div><div class="an-rows">${reasons}</div></div>`;
+  const rgMax=Math.max(1,...(d.byRegime||[]).map(r=>Math.abs(r.pnl)));
+  const rgReal=(d.byRegime||[]).filter(r=>r.regime&&r.regime!=='—');
+  const regimes=rgReal.length?(d.byRegime||[]).map(r=>`<div class="an-row"><span class="an-nm">${esc(r.regime)}</span><div class="an-track"><i class="${r.pnl>=0?'pos':'neg'}" style="width:${Math.abs(r.pnl)/rgMax*100}%"></i></div><b class="num ${cls(r.pnl)}">${sgn(r.pnl)}</b><span class="an-sub">${r.trades} tr · ${r.winPct!=null?r.winPct+'%':'—'}</span></div>`).join(''):`<p class="an-empty">Regime tagging is now live — closed trades will attribute to Bull / Bear / Choppy / High-Vol from here on (earlier trades show as “—”).</p>`;
+  const regimeCard=`<div class="an-card"><div class="an-h">${icon('cpu',13)}<b>P&L by regime</b><span>which market conditions pay</span></div><div class="an-rows">${regimes}</div></div>`;
   const wp=t.trades?Math.round((t.wins||0)/t.trades*100):0;
   const distCard=`<div class="an-card"><div class="an-h">${icon('scale',13)}<b>Win / loss split</b><span>${t.wins||0} wins · ${t.losses||0} losses</span></div>
     <div class="an-split">${wp>0?`<i class="w" style="width:${wp}%">${t.wins||''}</i>`:''}${wp<100?`<i class="l" style="width:${100-wp}%">${t.losses||''}</i>`:''}</div>
@@ -3536,7 +4532,7 @@ function algoAnalytics(){
   const tr=(d.trades||[]).slice().reverse().slice(0,20).map(x=>`<tr><td class="num">${esc(x.time)}</td><td>${esc(x.strategy)}</td><td>${esc(x.sym)}</td><td class="num ${cls(x.pnl)}">${sgn(x.pnl)}</td><td>${esc(x.reason)}</td></tr>`).join('');
   const tbl=(d.trades||[]).length?`<div class="an-card"><div class="an-h">${icon('repeat',13)}<b>Recent forward trades</b><span>${t.trades} total</span><button class="btn-ghost sm an-export" data-anexport>${icon('send',12)} Export CSV</button></div>
     <table class="tbl an-tbl"><thead><tr><th>Time</th><th>Strategy</th><th>Symbol</th><th>P&L</th><th>Exit</th></tr></thead><tbody>${tr}</tbody></table></div>`:'';
-  return stat+eq+`<div class="an-grid">${riskCard}${reasonCard}${contribCard}${actCard}${symCard}${distCard}</div>`+insCard+tbl+`<p class="sec-hint">${icon('shield',12)}<span>All analytics are from real forward PAPER trades — zero real money. Reports refresh as trades open &amp; close.</span></p>`;
+  return stat+eq+`<div class="an-grid">${riskCard}${reasonCard}${regimeCard}${contribCard}${actCard}${symCard}${distCard}</div>`+insCard+tbl+`<p class="sec-hint">${icon('shield',12)}<span>All analytics are from real forward PAPER trades — zero real money. Reports refresh as trades open &amp; close.</span></p>`;
 }
 function algoBuilder(){
   flowModal({title:'Build a strategy', confirm:'Create strategy',
@@ -3551,10 +4547,16 @@ function algoBuilder(){
     focus:'#abName',
     onConfirm(body){const name=body.querySelector('#abName').value.trim()||'My Strategy';
       const risk=body.querySelector('#abRisk').value, cap=Math.max(5000,Math.round(+body.querySelector('#abCap').value||25000));
-      const cagr=risk==='Aggressive'?22:risk==='Conservative'?12:17, dd=risk==='Aggressive'?20:risk==='Conservative'?8:13;
       const entry=body.querySelector('#abEntry').value, exit=body.querySelector('#abExit').value;
-      ALGOS.push({name,cat:'Custom · paper',cagr,win:58,dd,minCap:cap,risk,status:'idle',desc:entry+' → '+exit+'.'});
-      state.algo.view='market'; renderAlgo(); quickToast('Strategy created — '+name,'Backtest it, then deploy when ready.');}
+      // Map the chosen entry to a REAL backtest engine — so the custom strategy backtests on live
+      // history instead of showing invented numbers. No fabricated win-rate / CAGR is ever stored.
+      const ENG={'20-day breakout':['momentum','20-day breakout'],'RSI(2) oversold':['rsi2','RSI(2) reversion'],
+                 '50/200 DMA cross':['macross','50/200 cross'],'Opening-range break':['orb','opening-range breakout']};
+      const [engKey,engLabel]=ENG[entry]||['momentum',entry];
+      ALGOS.push({id:engKey,name,cat:'Custom · candidate',minCap:cap,risk,status:'idle',vstatus:'candidate',
+        real:true,custom:true,product:'CNC',desc:entry+' → '+exit+'. Backtests on the '+engLabel+' engine.'});
+      state.algo.bt={algo:ALGOS.length-1,period:'1Y'}; state.algo.view='backtest'; renderAlgo();
+      quickToast('Strategy created — '+name,'Running a real backtest on the '+engLabel+' engine — no invented numbers.');}
   });
 }
 
@@ -4314,6 +5316,7 @@ function init(){
   tapeLoop();
   loadMarket(); setInterval(loadMarket, 30000);   // 100% real Kite market data (funds, regime, VIX, breadth)
   setInterval(()=>{ loadTicks();                  // real-time prices via Kite WebSocket (watchlist + chart)
+    loadTape();                                   // real-time index tape (WS-fed) — patched in place, no scroll reset
     if(BOT.live && document.querySelector('.wg-card[data-wkey="depth"]')) loadDepth(state.selected||'RELIANCE');
   }, 2000);
   // fast real-time poll (2s): refresh live paper P&L + positions across ALL live algo
@@ -4328,7 +5331,7 @@ function init(){
       if(!(isAlgo()&&ALGO_LIVE_VIEWS.includes(state.algo.view))) return;
       const ae=document.activeElement;
       if(ae&&ae.closest&&ae.closest('#algoView')&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName)) return; // don't interrupt typing
-      if(state.algo.view==='analytics'){ ensureAnalytics(); return; } // analytics: own throttled fetch+render
+      if(state.algo.view==='analytics'){ patchAlgoLive(); ensureAnalytics(); return; } // analytics: live P&L patched in sync (2s) + breakdowns refreshed (throttled)
       if(algoLiveSig()!==state.algo._sig){           // structure changed (a trade opened/closed) → one full re-render
         const av=$('algoView'), sc=av?av.scrollTop:0; renderAlgo(); if(av) av.scrollTop=sc;
       } else {
