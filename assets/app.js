@@ -94,10 +94,11 @@ const NEWS_FEED=[
 /* ---------- helpers ---------- */
 const $ = id => document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const inr=n=>'₹'+Math.round(n).toLocaleString('en-IN');
-const inrL=n=>'₹'+(n/100000).toFixed(2)+'L';
-const pct=n=>(n>=0?'+':'')+n.toFixed(2)+'%';
-const cls=n=>n>=0?'up':'down';
+// Formatters are null/NaN-safe: missing live data renders an honest "—" / neutral, never "₹NaN", "NaN%", or a false green.
+const inr=n=>Number.isFinite(n)?'₹'+Math.round(n).toLocaleString('en-IN'):'—';
+const inrL=n=>Number.isFinite(n)?'₹'+(n/100000).toFixed(2)+'L':'—';
+const pct=n=>Number.isFinite(n)?(n>=0?'+':'')+n.toFixed(2)+'%':'—';
+const cls=n=>Number.isFinite(n)?(n>=0?'up':'down'):'';
 const tone=n=>n>0?'up':n<0?'down':'';
 const bySym=s=>SYMS.find(x=>x.sym===s||itemKey(x)===s);
 
@@ -160,6 +161,14 @@ function classify(S,prev){
   if(prev==='bear')return S>-15?(S>=25?'bull':'neutral'):'bear';
   return S>=25?'bull':S<=-25?'bear':'neutral';
 }
+// 4-state regime LABEL (the bot's taxonomy) ← 3-state directional THEME + VIX. The terminal skin stays 3-state
+// (bull/neutral/bear); High-Vol and Choppy are richer *labels* that map onto the bear/neutral skins respectively.
+const THEME_OF={Bull:'bull',Bear:'bear',Choppy:'neutral','High-Vol':'bear'};   // label → terminal theme
+function regime4(theme3,vix,prevLabel){
+  const hi = vix>=20 || (prevLabel==='High-Vol' && vix>=18);   // VIX band: enter High-Vol at 20, hold until <18 (no flicker)
+  if(hi) return 'High-Vol';
+  return theme3==='bull'?'Bull':theme3==='bear'?'Bear':'Choppy';
+}
 function confidence(S,sc){const sign=Math.sign(S)||1;const agree=[sc.trend,sc.vix,sc.ad,sc.mom,sc.pers].filter(v=>Math.sign(v)===sign).length/5;return Math.round((0.6*Math.min(Math.abs(S)/50,1)+0.4*agree)*100);}
 function reasonText(regime,sc){
   const map=[[sc.trend,'Nifty '+(sc.trend>0?'above stacked MAs':'broke below key MAs')],[sc.vix,sc.vix>0?'VIX cooling':'VIX spiking'],[sc.ad,sc.ad>0?'breadth strong':'breadth collapsing'],[sc.mom,sc.mom>0?'momentum up':'momentum weak'],[sc.pers,sc.pers>0?'your P&L rising':'your portfolio drawing down']];
@@ -202,6 +211,8 @@ const state={mode:'auto',displayed:'bull',engine:'bull',prevVix:12.4,forceHard:f
   toolState:{},                                        // ephemeral per-tool UI (sub-tab/filter/draft); not persisted
   widgets:null, dragWidget:null,                       // per-persona widget stack
   revealing:false,                                     // cinematic transition in flight
+  simOverride:false,                                   // regime panel: false = mirrors live Kite signals; true = user what-if (drag/preset/demo)
+  regimeLabel:null,                                     // 4-state regime label (Bull/Bear/Choppy/High-Vol) shown in the panel readout
   cards:{},                                            // per-card min/max state
   ticker:{items:TICKER_DEFAULT.items.slice(),speed:TICKER_DEFAULT.speed,rolling:TICKER_DEFAULT.rolling}, // rolling index tape (user-configurable)
   lastFocus:null};
@@ -251,7 +262,7 @@ function saveState(){try{localStorage.setItem(LS_KEY,JSON.stringify({
   watchlist:SYMS.map(s=>({sym:s.sym,name:s.name,exch:s.exch,type:s.type,key:itemKey(s),token:s.token,sector:s.sector,beta:s.beta,lot:s.lot,expiry:s.expiry,strike:s.strike,seg:s.seg,hold:s.hold})),wlCustom:!!state.wlCustom,
   selected:state.selected,paneW:state.paneW,chartH:state.chartH,
   plan:state.plan,billing:state.billing,
-  persona:state.persona,investSection:state.investSection,layout:state.layout,customLayouts:state.customLayouts,activeCustom:state.activeCustom,aiCfg:state.aiCfg,widgets:state.widgets,cards:state.cards,ticker:state.ticker,chart:(window.TPChart?TPChart.serialize():null)}));}catch(e){}}
+  persona:state.persona,investSection:state.investSection,layout:state.layout,customLayouts:state.customLayouts,activeCustom:state.activeCustom,aiCfg:state.aiCfg,widgets:state.widgets,cards:state.cards,ticker:state.ticker,algo:(state.algo?{view:state.algo.view,exec:state.algo.exec,market:state.algo.market}:null),chart:(window.TPChart?TPChart.serialize():null)}));}catch(e){}}
 function saveChart(){saveState();}   // persist callback for the chart engine
 function loadState(){
   let s; try{s=JSON.parse(localStorage.getItem(LS_KEY));}catch(e){return null;}
@@ -326,20 +337,52 @@ function announce(msg){const el=$('srAnnounce');if(el)el.textContent=msg;}
    ============================================================ */
 function liveS(){return composite(scoreSignals(readSignals()));}
 function tickerItems(){ const uni=new Map(TICKER_UNIVERSE.map(u=>[u.name,u])); return (state.ticker.items||[]).map(n=>uni.get(n)).filter(Boolean); }
+// Header market toggle (left of search) — Indian ⇄ Crypto. Always visible; drives the rolling tape + Algo Studio scope.
+function renderHdrMarket(){
+  const el=$('hdrMkt'); if(!el) return;
+  if(!state.algo) state.algo={}; if(!state.algo.market) state.algo.market='in';
+  const crypto=state.algo.market==='crypto';
+  el.innerHTML=`<div class="mkt-toggle hdr" role="tablist" aria-label="Market">`
+    +`<button class="mkt-tab${!crypto?' on':''}" role="tab" aria-selected="${!crypto}" data-algomkt="in"><span class="mkt-fl">🇮🇳</span> Indian</button>`
+    +`<button class="mkt-tab${crypto?' on':''}" role="tab" aria-selected="${crypto}" data-algomkt="crypto"><span class="mkt-fl">₿</span> Crypto</button></div>`;
+  el.querySelectorAll('[data-algomkt]').forEach(b=>b.onclick=()=>setMarket(b.dataset.algomkt));
+}
+// Single source of truth for the market switch — used by the header toggle (and any other surface).
+function setMarket(m){
+  if(!state.algo) state.algo={};
+  if(state.algo.market===m) return;
+  state.algo.market=m; saveState();
+  renderHdrMarket();
+  renderTopIndex();                                   // swap the rolling tape (Indian ⇄ Crypto)
+  if(m==='crypto') loadCrypto().then(()=>{ if(state.algo.market==='crypto'){ patchCryptoTape(); if(isAlgo()) renderAlgo(); } });
+  if(isAlgo()) renderAlgo();                           // re-scope the Algo Studio if it's open
+}
 function renderTopIndex(){
   const track=$('topIndex'); if(!track) return;
+  // CRYPTO MODE: the global tape rolls live Binance prices (independent of Kite). Real data only.
+  const bar=track.closest('.ticker-bar'); const crypto=!!(state.algo&&state.algo.market==='crypto');
+  if(bar) bar.classList.toggle('crypto',crypto);
+  if(crypto){ renderCryptoTape(track); return; }
   // NO FAKE PRICES: when Kite isn't connected, show an honest banner instead of synthetic ticks.
   if(!BOT.live){
     track.classList.remove('rolling'); const vp0=track.parentElement; if(vp0) vp0.classList.add('static');
     track.innerHTML=`<div class="tb-seq"><div class="tix tix-offline">${icon('shield',12)}<span>Live market data off — run <b>python3 login.py</b> to connect Kite</span></div></div>`;
+    track.dataset.tsig='off';
     return;
   }
   const items=tickerItems();
+  // Structure guard: when the instrument SET + rolling flag are unchanged, DON'T rebuild the DOM
+  // (a full innerHTML swap flickers and resets the scroll). Patch live values in place instead —
+  // so the tape is flicker-free no matter who calls this (loadMarket / recompute / ticker settings).
+  const tsig='L|'+(!!state.ticker.rolling)+'|'+items.map(i=>i.name).join(',');
+  if(track.dataset.tsig===tsig && track.querySelector('.tix')){ patchTape(); return; }
+  track.dataset.tsig=tsig;
   const seq=items.map(({name})=>{
     const rq=realQuote(name);
-    if(!rq) return `<div class="tix"><span class="tix-name">${esc(name)}</span><div class="tix-row"><span class="tix-val num muted">—</span></div></div>`;
+    // data-tname lets patchTopIndex() update the value/chg in place on every tick (no animation restart)
+    if(!rq) return `<div class="tix" data-tname="${esc(name)}"><span class="tix-name">${esc(name)}</span><div class="tix-row"><span class="tix-val num muted">—</span><span class="tix-chg num" hidden></span></div></div>`;
     const dec=rq.ltp>=20000?0:(rq.ltp>=1000?1:2);
-    return `<div class="tix"><span class="tix-name">${esc(name)}</span><div class="tix-row">
+    return `<div class="tix" data-tname="${esc(name)}"><span class="tix-name">${esc(name)}</span><div class="tix-row">
       <span class="tix-val num">${rq.ltp.toLocaleString('en-IN',{maximumFractionDigits:dec})}</span>
       <span class="tix-chg ${cls(rq.chg||0)} num">${pct(rq.chg||0)}</span></div></div>`;
   }).join('') || `<div class="tix tix-empty">No instruments — add some from ticker settings ▸</div>`;
@@ -349,6 +392,64 @@ function renderTopIndex(){
   // two identical sequences let the track loop seamlessly at translateX(-50%)
   track.innerHTML=`<div class="tb-seq tb-seq-a">${seq}</div>`+(roll?`<div class="tb-seq tb-seq-b" aria-hidden="true">${seq}</div>`:'');
   applyTickerSpeed();
+  connectStream();   // keep the live tick subscription in sync with the ticker's instruments
+}
+// Patch ONLY the rolling tape's price/chg cells in place (both looping copies) so the scroll
+// animation never restarts. Driven by the fast tick loop + SSE — not the 30s market poll.
+function patchTopIndex(){
+  const track=$('topIndex'); if(!track||!BOT.live) return;
+  track.querySelectorAll('.tix[data-tname]').forEach(el=>{
+    const name=el.dataset.tname, rq=realQuote(name);
+    const valEl=el.querySelector('.tix-val'), chgEl=el.querySelector('.tix-chg');
+    if(!valEl) return;
+    if(!rq){ valEl.textContent='—'; valEl.classList.add('muted'); if(chgEl)chgEl.hidden=true; return; }
+    const dec=rq.ltp>=20000?0:(rq.ltp>=1000?1:2);
+    const txt=rq.ltp.toLocaleString('en-IN',{maximumFractionDigits:dec});
+    if(valEl.textContent!==txt){
+      const prev=parseFloat(valEl.dataset.raw); const dir=isFinite(prev)?Math.sign(rq.ltp-prev):0;
+      valEl.textContent=txt; valEl.classList.remove('muted'); valEl.dataset.raw=rq.ltp;
+      if(dir){ valEl.classList.remove('tick-up','tick-dn'); void valEl.offsetWidth; valEl.classList.add(dir>0?'tick-up':'tick-dn'); }
+    }
+    if(chgEl){ chgEl.hidden=false; chgEl.textContent=pct(rq.chg||0); chgEl.className='tix-chg '+cls(rq.chg||0)+' num'; }
+  });
+}
+/* ---- CRYPTO rolling tape: same flicker-free marquee, fed by live Binance data (no Kite) ---- */
+function renderCryptoTape(track){
+  // Kick a fetch if we've never loaded crypto; patch the tape (+resize) once it lands.
+  if(!CRYPTO.loaded && !CRYPTO.busy) loadCrypto().then(()=>{ if(state.algo&&state.algo.market==='crypto'){ patchCryptoTape(); applyTickerSpeed(); } });
+  const tsig='C|'+CRYPTO_UNIVERSE.map(c=>c.sym).join(',');
+  // Structure guard (same as the Indian tape): only rebuild the DOM when the SET changes — else patch in place.
+  if(track.dataset.tsig===tsig && track.querySelector('.tix[data-cname]')){ patchCryptoTape(); return; }
+  track.dataset.tsig=tsig;
+  const seq=CRYPTO_UNIVERSE.map(c=>{ const q=CRYPTO.quotes[c.sym];
+    if(!q) return `<div class="tix" data-cname="${esc(c.sym)}"><span class="tix-name">${esc(c.tk)}</span><div class="tix-row"><span class="tix-val num muted">—</span><span class="tix-chg num" hidden></span></div></div>`;
+    return `<div class="tix" data-cname="${esc(c.sym)}"><span class="tix-name">${esc(c.tk)}</span><div class="tix-row">`
+      +`<span class="tix-val num" data-raw="${q.ltp}">${cryptoFmt(q.ltp)}</span>`
+      +`<span class="tix-chg ${cls(q.chg)} num">${pct(q.chg)}</span></div></div>`;
+  }).join('');
+  track.classList.add('rolling');
+  const vp=track.parentElement; if(vp) vp.classList.remove('static');
+  // two identical sequences → seamless translateX(-50%) loop, regardless of tile width
+  track.innerHTML=`<div class="tb-seq tb-seq-a">${seq}</div><div class="tb-seq tb-seq-b" aria-hidden="true">${seq}</div>`;
+  applyTickerSpeed();
+}
+// Patch ONLY the crypto tape's value/chg cells in place (both looped copies) — driven by the 5s Binance poll.
+function patchCryptoTape(){
+  const track=$('topIndex'); if(!track) return;
+  track.querySelectorAll('.tix[data-cname]').forEach(el=>{
+    const q=CRYPTO.quotes[el.dataset.cname], valEl=el.querySelector('.tix-val'), chgEl=el.querySelector('.tix-chg');
+    if(!valEl) return;
+    if(!q){ valEl.textContent='—'; valEl.classList.add('muted'); if(chgEl)chgEl.hidden=true; return; }
+    const txt=cryptoFmt(q.ltp);
+    if(valEl.textContent!==txt){
+      const prev=parseFloat(valEl.dataset.raw); const dir=isFinite(prev)?Math.sign(q.ltp-prev):0;
+      valEl.textContent=txt; valEl.classList.remove('muted'); valEl.dataset.raw=q.ltp;
+      if(dir){ valEl.classList.remove('tick-up','tick-dn'); void valEl.offsetWidth; valEl.classList.add(dir>0?'tick-up':'tick-dn'); }
+    }
+    if(chgEl){ chgEl.hidden=false; chgEl.textContent=pct(q.chg); chgEl.className='tix-chg '+cls(q.chg)+' num'; }
+  });
+  const src=$('tbCryptoSrc');
+  if(src) src.textContent=CRYPTO.live?'● Live · Binance · 24h':(CRYPTO.error?'Binance unreachable — retrying':'Connecting to Binance…');
 }
 function applyTickerSpeed(){
   const track=$('topIndex'); if(!track) return;
@@ -478,6 +579,11 @@ function renderRegimeBar(r){
   const pTag=isInvestor()?'Investing':'Trading';
   if(state.regimeCollapsed===undefined) state.regimeCollapsed=true;   // compact by default — engine stats live in the header now
   const collapsed=state.regimeCollapsed;
+  // Guard: the bar's content is purely regime + persona + collapsed. When none changed, skip the
+  // rebuild so the 30s poll (and recompute, called every poll) don't flicker the banner.
+  const rbsig=r+'|'+(state.persona||'trader')+'|'+(collapsed?1:0)+'|'+pTag;
+  if(bar.dataset.rbsig===rbsig) return;
+  bar.dataset.rbsig=rbsig;
   bar.classList.toggle('collapsed',collapsed);
   if(collapsed){
     bar.innerHTML=`<button class="rb-toggle" id="rbToggle" aria-expanded="false" title="Show the market read">
@@ -565,6 +671,12 @@ function removeInstrument(key){
   if(SYMS.length<=1){ quickToast('Keep at least one','Add another instrument before removing the last one.'); return; }
   SYMS.splice(i,1);
   if(state.selected===key||state.selected===was) state.selected=null;
+  // if this stock was also pinned to the rolling tape, drop it so it can't become a dead "—" cell
+  if(state.ticker&&Array.isArray(state.ticker.items)&&state.ticker.items.includes(was)){
+    state.ticker.items=state.ticker.items.filter(n=>n!==was);
+    if(BOT.tickerLive) delete BOT.tickerLive[was];
+    renderTopIndex();
+  }
   saveState(); if(BOT.live) connectStream();
   renderWatchlist(state.displayed); renderChart(state.displayed);
   announce(was+' removed from watchlist');
@@ -1093,23 +1205,36 @@ function cinematicPersona(p){
 function updateClock(){const el=$('mktStatus');if(!el)return;const d=new Date();const p=n=>String(n).padStart(2,'0');
   const t=`${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
   const mk=BOT.live&&BOT.market&&BOT.market.market;
-  if(mk){
-    el.innerHTML=`<span class="mkt-dot ${mk.open?'open':'closed'}" title="NSE equity session"></span>`
-      +`<span class="mkt-live">${mk.open?'MARKET OPEN':esc(mk.status.toUpperCase())}</span>`
-      +`<span class="mkt-sess" title="NSE equity trading hours">${mk.openTime}–${mk.closeTime} IST</span>`
-      +`<span class="mkt-time num">${t}</span>`;
+  // Only rebuild the strip when its NON-time content changes; otherwise just tick the clock text in
+  // place. Rebuilding the whole strip (and the VIX/breadth chips) every second was a subtle flicker.
+  const csig=mk?('m|'+(mk.open?1:0)+'|'+mk.status+'|'+mk.openTime+'|'+mk.closeTime)
+              :('o|'+(BOT.loaded&&BOT.connected===false&&!BOT.error?1:0)+'|'+(BOT.reconnecting?1:0));
+  if(el.dataset.csig!==csig){
+    el.dataset.csig=csig;
+    if(mk){
+      el.innerHTML=`<span class="mkt-dot ${mk.open?'open':'closed'}" title="NSE equity session"></span>`
+        +`<span class="mkt-live">${mk.open?'MARKET OPEN':esc(mk.status.toUpperCase())}</span>`
+        +`<span class="mkt-sess" title="NSE equity trading hours">${mk.openTime}–${mk.closeTime} IST</span>`
+        +`<span class="mkt-time num">${t}</span>`;
+    } else {
+      const showRe = BOT.loaded && BOT.connected===false && !BOT.error;
+      el.innerHTML=`<span class="mkt-dot off" title="Kite not connected"></span><span class="mkt-live">OFFLINE</span>`
+        +(showRe?`<button class="mkt-relogin" data-relogin title="Reconnect to Kite — refreshes the daily token">${BOT.reconnecting?'Reconnecting…':'Reconnect'}</button>`:'')
+        +`<span class="mkt-time num">${t}</span>`;
+    }
   } else {
-    const showRe = BOT.loaded && BOT.connected===false && !BOT.error;
-    el.innerHTML=`<span class="mkt-dot off" title="Kite not connected"></span><span class="mkt-live">OFFLINE</span>`
-      +(showRe?`<button class="mkt-relogin" data-relogin title="Reconnect to Kite — refreshes the daily token">${BOT.reconnecting?'Reconnecting…':'Reconnect'}</button>`:'')
-      +`<span class="mkt-time num">${t}</span>`;
+    const tn=el.querySelector('.mkt-time'); if(tn) tn.textContent=t;   // steady state → just tick the clock
   }
   renderHdrEngine();}
 function renderHdrEngine(){
   const el=$('hdrEngine'); if(!el) return;
   const live=BOT.live&&BOT.market&&BOT.market.engine;
-  if(!live){ el.innerHTML=`<span class="he-stat off">${icon('shield',11)} engine offline</span>`; return; }
+  if(!live){ if(el.dataset.hsig!=='off'){ el.dataset.hsig='off'; el.innerHTML=`<span class="he-stat off">${icon('shield',11)} engine offline</span>`; } return; }
   const vix=(BOT.market.vix&&BOT.market.vix.ltp)||0, ad=(BOT.market.breadth&&BOT.market.breadth.ad)||0, score=BOT.market.engine.score, reg=BOT.market.engine.regime;
+  // Called every 1s by updateClock — only rebuild when a DISPLAYED value actually changed.
+  const hsig='on|'+vix.toFixed(1)+'|'+ad.toFixed(2)+'|'+score+'|'+reg;
+  if(el.dataset.hsig===hsig) return;
+  el.dataset.hsig=hsig;
   el.innerHTML=
     `<div class="he-stat"><span class="he-l">India VIX<span class="he-live" title="Live from Kite">● LIVE</span></span><b class="num ${vix>18?'down':'up'}">${vix.toFixed(1)}</b></div>`
    +`<span class="he-div"></span>`
@@ -2707,7 +2832,7 @@ let BOT={loaded:false,connected:false,status:null,paperMode:true,error:false,cha
 async function loadBotData(){
   try{
     const [s,st,tr,sp]=await Promise.all([
-      fetch(BOT_API+'/api/strategies').then(r=>r.json()),
+      fetch(BOT_API+'/api/strategies').then(r=>r.json()).catch(()=>({strategies:[]})),
       fetch(BOT_API+'/api/status').then(r=>r.json()).catch(()=>({connected:false})),
       fetch(BOT_API+'/api/trades').then(r=>r.json()).catch(()=>({trades:[]})),
       fetch(BOT_API+'/api/stopped').then(r=>r.json()).catch(()=>({stopped:[]}))
@@ -2733,6 +2858,18 @@ async function loadBotData(){
 }
 /* ---- 100% real market data from Kite (/api/market). No fake fallback: when the bot
    is offline or the Kite token has expired, displays show honest blanks, never mock. ---- */
+// Structural signature: everything that, if changed, genuinely needs a heavy panel re-render.
+// Deliberately EXCLUDES live prices/P&L — those are patched in place by the 2s loops + 1s clock,
+// so the 30s poll no longer repaints the whole screen (that was the idle "flickers on its own").
+function marketSig(){
+  const m=BOT.market||{};
+  const funds=(m.funds!=null)?Math.round(m.funds):'x';
+  const hold=BOT.holdings?(Array.isArray(BOT.holdings)?BOT.holdings.length:Object.keys(BOT.holdings).length):0;
+  const reg=(m.engine&&m.engine.regime)||state.displayed;
+  return [BOT.live?1:0, BOT.connected?1:0, reg, funds, hold, state.selected||'', state.layout||'',
+    state.persona||'', state.panelTab||'', (state.desk&&state.desk.view)||'',
+    SYMS.map(s=>itemKey(s)).join(','), (typeof algoLiveSig==='function'?algoLiveSig():'')].join('~');
+}
 async function loadMarket(){
   try{
     const m=await fetch(BOT_API+'/api/market').then(r=>r.json());
@@ -2749,8 +2886,8 @@ async function loadMarket(){
       // illiquid / market-closed) stays BLANK, never the stale catalog price.
       SYMS.forEach(s=>{const r=BOT.quotes[itemKey(s)]; if(r&&r.ltp!=null){s.ltp=r.ltp; if(r.chg!=null)s.chg=r.chg; s.live=true;} else {s.live=false;}});
       BOT.holdings=(h&&!h.error)?h:null;
-    } else { BOT.quotes=null; BOT.holdings=null; SYMS.forEach(s=>{s.live=false;}); }
-  }catch(e){ BOT.live=false; BOT.market=null; BOT.quotes=null; BOT.holdings=null; SYMS.forEach(s=>{s.live=false;}); }
+    } else { BOT.quotes=null; BOT.holdings=null; BOT.tickerLive={}; BOT._regimeSynced=false; SYMS.forEach(s=>{s.live=false;}); }
+  }catch(e){ BOT.live=false; BOT.market=null; BOT.quotes=null; BOT.holdings=null; BOT.tickerLive={}; BOT._regimeSynced=false; SYMS.forEach(s=>{s.live=false;}); }
   // Adaptive risk: when the LIVE regime actually flips, re-apply every "Adapt"-enabled
   // strategy's stand-aside / re-engage rule (paper only; never silent on real money).
   if(BOT.live && BOT.market && BOT.market.engine){
@@ -2758,16 +2895,30 @@ async function loadMarket(){
     if(BOT._adaptRegime && BOT._adaptRegime!==reg && typeof enforceAdapt==='function') enforceAdapt();
     BOT._adaptRegime=reg;
   }
+  // Regime panel mirrors the LIVE Kite signals (unless the user is running a what-if): feed the
+  // real signals into the sliders so the gauge, composite and AUTO switching reflect the real market.
+  if(BOT.live && !state.simOverride && typeof syncSlidersFromLive==='function' && syncSlidersFromLive()){
+    if(!BOT._regimeSynced){ BOT._regimeSynced=true; recompute({silent:true}); }  // adopt live regime quietly on first connect
+    else recompute();                                                            // later polls → AUTO reacts to genuine flips
+  } else if(typeof renderEngineSrc==='function'){ renderEngineSrc(); }
   if(BOT.live) connectStream(); else disconnectStream();   // sub-second push when live; keeps symset in sync
   applyFunds(); updateClock();
+  // renderTopIndex + renderRegimeBar self-guard (patch in place / skip when unchanged) → cheap every poll.
   if(typeof renderTopIndex==='function') renderTopIndex();
   if(typeof renderRegimeBar==='function') renderRegimeBar(state.displayed);
-  if(typeof renderWatchlist==='function') renderWatchlist(state.displayed);
-  if(typeof renderWidgetStack==='function') renderWidgetStack();
-  if(typeof renderDeskView==='function') renderDeskView();   // refresh canvas cards (movers/pnl/heatmap) with live SYMS
-  if(typeof renderChart==='function') renderChart(state.displayed);  // pull real candles once live
-  if(typeof renderPanel==='function') renderPanel(state.displayed);  // holdings/positions panels -> real
-  if(typeof isAlgo==='function' && isAlgo() && typeof renderAlgo==='function') renderAlgo();
+  // The heavy panels do FULL innerHTML rebuilds, so only run them when something STRUCTURAL changed
+  // (regime, connection, funds, holdings, symbol set, selection, layout/persona/tab, a trade opening
+  // or closing). Live prices stay fresh via the 2s loops (applyTickDom / patchTape / patchAlgoLive).
+  const _msig=marketSig();
+  if(_msig!==BOT._mktSig){
+    BOT._mktSig=_msig;
+    if(typeof renderWatchlist==='function') renderWatchlist(state.displayed);
+    if(typeof renderWidgetStack==='function') renderWidgetStack();
+    if(typeof renderDeskView==='function') renderDeskView();   // refresh canvas cards (movers/pnl/heatmap) with live SYMS
+    if(typeof renderChart==='function') renderChart(state.displayed);  // pull real candles once live
+    if(typeof renderPanel==='function') renderPanel(state.displayed);  // holdings/positions panels -> real
+    if(typeof isAlgo==='function' && isAlgo() && typeof renderAlgo==='function') renderAlgo();
+  }
 }
 /* ---- REAL-TIME ticks via Kite WebSocket (/api/ticks, KiteTicker-fed). Updates only
    the watchlist price cells + chart last candle IN PLACE (no full re-render → drag,
@@ -2778,7 +2929,7 @@ async function loadMarket(){
    automatic fallback: it only fires when the stream isn't actively delivering (first paint,
    stream dropped, or EventSource unsupported), so prices are never stale and never doubled. */
 const STREAM={es:null, syms:'', on:false, last:0};
-function streamSyms(){ return watchKeys().join(','); }   // now EXCH:TS keys (any segment)
+function streamSyms(){ return liveKeys().join(','); }   // EXCH:TS keys: watchlist ∪ rolling-tape indices
 function connectStream(){
   if(!BOT.live || typeof EventSource==='undefined') return;
   const keys=streamSyms();
@@ -2801,6 +2952,7 @@ function applyTicks(ticks){
   for(const key in ticks){ const t=ticks[key], s=byKey(key);
     if(s&&t&&t.ltp!=null){ dir[key]=Math.sign(t.ltp-(s.ltp||t.ltp)); s.ltp=t.ltp; if(t.chg!=null)s.chg=t.chg; s.live=true; } }
   applyTickDom(ticks,dir);
+  applyTickerTicks(ticks);   // same ticks drive the rolling tape (indices + pinned stocks) in lock-step
 }
 
 let TICK_BUSY=false;
@@ -2809,13 +2961,14 @@ async function loadTicks(){
   if(STREAM.on && Date.now()-STREAM.last < 6000) return;   // push stream is live → skip the poll
   TICK_BUSY=true;
   try{
-    const d=await fetch(`${BOT_API}/api/ticks?keys=${encodeURIComponent(watchKeys().join(','))}`).then(r=>r.json());
+    const d=await fetch(`${BOT_API}/api/ticks?keys=${encodeURIComponent(liveKeys().join(','))}`).then(r=>r.json());
     if(d&&d.ticks){
       const dir={};
       SYMS.forEach(s=>{const k=itemKey(s),t=d.ticks[k];
         if(t&&t.ltp!=null){ dir[k]=Math.sign(t.ltp-(s.ltp||t.ltp)); s.ltp=t.ltp; if(t.chg!=null)s.chg=t.chg; s.live=true; }
         else { s.live=false; }});
       applyTickDom(d.ticks,dir);
+      applyTickerTicks(d.ticks);   // refresh the rolling tape's indices on the same poll
       BOT.tickStream=d.stream;
     }
   }catch(e){}
@@ -2827,7 +2980,7 @@ function applyTickDom(ticks,dir){
     const ltpEl=row.querySelector('.wl-ltp'), chgEl=row.querySelector('.wl-chg');
     if(ltpEl){ ltpEl.textContent=(+t.ltp).toLocaleString('en-IN'); ltpEl.classList.remove('muted');
       const dr=dir[key]; if(dr){ltpEl.classList.remove('tick-up','tick-dn');void ltpEl.offsetWidth;ltpEl.classList.add(dr>0?'tick-up':'tick-dn');} }
-    if(chgEl){ chgEl.textContent=pct(t.chg); chgEl.className='wl-chg num '+cls(t.chg); }
+    if(chgEl){ const c=t.chg!=null?t.chg:0; chgEl.textContent=pct(c); chgEl.className='wl-chg num '+cls(c); }
   });
   // nudge the chart's last candle for the SELECTED instrument
   const si=state.selected&&bySym(state.selected); const t=si&&ticks[itemKey(si)];
@@ -2891,11 +3044,44 @@ function applyFunds(){ const e=$('fundsVal'); if(e) e.textContent=fundsText(); }
 // Map a ticker/headline name to its REAL quote from /api/market (indices+commodities) or /api/quotes (stocks).
 const MKT_INDEX={'NIFTY 50':['indices','NIFTY 50'],'SENSEX':['indices','SENSEX'],'BANK NIFTY':['indices','NIFTY BANK'],
   'FIN NIFTY':['indices','NIFTY FIN SERVICE'],'GOLD':['commodities','GOLD'],'SILVER':['commodities','SILVER'],'CRUDE OIL':['commodities','CRUDEOIL']};
+// EXCH:TS tick keys for the headline instruments. Indices stream over the Kite WS (sub-second);
+// MCX commodities don't, so they have no tick key and fall back to the 30s /api/market snapshot.
+const TICKER_TICK_KEY={'NIFTY 50':'NSE:NIFTY 50','SENSEX':'BSE:SENSEX','BANK NIFTY':'NSE:NIFTY BANK','FIN NIFTY':'NSE:NIFTY FIN SERVICE'};
+// {tickKey -> tickerName} for every ticker item that can stream live (indices + any pinned, watched stock).
+function tickerTickMap(){
+  const out={};
+  (state.ticker.items||[]).forEach(name=>{
+    const k=TICKER_TICK_KEY[name];
+    if(k){ out[k]=name; return; }                          // headline index
+    const s=bySym(name); if(s) out[itemKey(s)]=name;       // a stock pinned to the tape (rides its watchlist quote)
+  });
+  return out;
+}
+// All EXCH:TS keys the live tick path should subscribe/poll: watchlist ∪ ticker indices.
+function liveKeys(){ const set=new Set(watchKeys()); Object.keys(tickerTickMap()).forEach(k=>set.add(k)); return [...set]; }
+// Fold a fresh tick payload into the ticker's live overlay, then patch the tape in place. Returns true if anything changed.
+// Iterates the ticker's OWN keys (not the payload) so a poll that returns a null/stale quote drops the overlay entry —
+// indices then fall back to the 30s snapshot, a stale pinned stock blanks honestly. SSE partials (key absent) are left alone.
+function applyTickerTicks(ticks){
+  if(!ticks) return false; const map=tickerTickMap(); let changed=false;
+  for(const key in map){ const name=map[key], t=ticks[key];
+    if(t===undefined) continue;                                   // not in this (partial SSE) payload → leave as-is
+    if(t && t.ltp!=null){ (BOT.tickerLive||(BOT.tickerLive={}))[name]={ltp:t.ltp,chg:t.chg!=null?t.chg:0}; changed=true; }
+    else if(BOT.tickerLive && BOT.tickerLive[name]!=null){ delete BOT.tickerLive[name]; changed=true; }   // source went stale
+  }
+  if(changed) patchTopIndex();
+  return changed;
+}
 function realQuote(name){
-  if(!BOT.live||!BOT.market) return null;
+  if(!BOT.live) return null;
+  // 1) live tick overlay (indices stream sub-second; refreshed every tick by the fast path)
+  const lv=BOT.tickerLive&&BOT.tickerLive[name];
+  if(lv&&lv.ltp!=null) return {ltp:lv.ltp,chg:lv.chg};
+  // 2) headline index/commodity from the latest /api/market snapshot (commodities don't tick → 30s refresh)
   const m=MKT_INDEX[name];
-  if(m){ const o=(BOT.market[m[0]]||{})[m[1]]; return (o&&o.ltp!=null)?{ltp:o.ltp,chg:o.chgPct}:null; }
-  const q=(BOT.quotes||{})[name]; return (q&&q.ltp!=null)?{ltp:q.ltp,chg:q.chg}:null;
+  if(m){ if(!BOT.market) return null; const o=(BOT.market[m[0]]||{})[m[1]]; return (o&&o.ltp!=null)?{ltp:o.ltp,chg:o.chgPct}:null; }
+  // 3) a stock pinned to the tape → its live watchlist quote (SYMS carry tick-updated ltp/chg)
+  const s=bySym(name); return (s&&s.live&&s.ltp!=null)?{ltp:s.ltp,chg:s.chg||0}:null;
 }
 function botBanner(){
   if(!BOT.loaded) return `<div class="bot-banner">${icon('cpu',13)}<span>Connecting to your trading bot…</span></div>`;
@@ -3315,19 +3501,191 @@ const STRAT_LIBRARY=[
 ];
 const LIB_RISK_CLASS={Conservative:'b-up',Moderate:'b-neu',Aggressive:'b-warn'};
 
+/* ============================================================
+   CRYPTO MARKET LAYER — the Algo Studio can scope to Indian (Kite)
+   or Crypto (Binance). REAL prices only, no fake fallback: Binance's
+   public data mirror (no API key, read-only). Strategy EXECUTION is
+   preview/paper — honestly flagged. Real crypto orders would route via
+   the Binance Algo API (TWAP/POV), which needs server-side key signing
+   — that's the roadmap engine, never the browser.
+   ============================================================ */
+const CRYPTO_API='https://data-api.binance.vision';   // public market-data mirror: CORS-ok, not geo-fenced, no key
+const CRYPTO_UNIVERSE=[
+  {sym:'BTCUSDT',tk:'BTC',name:'Bitcoin'},   {sym:'ETHUSDT',tk:'ETH',name:'Ethereum'},
+  {sym:'SOLUSDT',tk:'SOL',name:'Solana'},    {sym:'BNBUSDT',tk:'BNB',name:'BNB'},
+  {sym:'XRPUSDT',tk:'XRP',name:'XRP'},       {sym:'ADAUSDT',tk:'ADA',name:'Cardano'},
+  {sym:'DOGEUSDT',tk:'DOGE',name:'Dogecoin'},{sym:'AVAXUSDT',tk:'AVAX',name:'Avalanche'},
+  {sym:'LINKUSDT',tk:'LINK',name:'Chainlink'},{sym:'MATICUSDT',tk:'MATIC',name:'Polygon'},
+];
+const CRYPTO={loaded:false,live:false,error:false,quotes:{},t:0,busy:false};
+function cryptoSyms(){ return CRYPTO_UNIVERSE.map(c=>c.sym); }
+// Risk-first strategy TEMPLATES (educational, preview/paper) — same survival-first ethos as the Indian library.
+const CRYPTO_STRATEGIES=[
+  {id:'cx_btc_trend',name:'BTC Trend (MA200)',cat:'Trend',risk:'Moderate',pair:'BTCUSDT',
+   what:'Long BTC while it holds above its long-term moving average; flat below.',
+   rule:'BUY when price closes above the 200-period MA; exit on a close back below.',
+   works:'Strong, sustained bull legs — crypto trends long and hard.',
+   fails:'Chop around the MA whipsaws you in and out at small losses repeatedly.',
+   guard:'Only long above the MA; ATR-sized stop; one position; stand aside in chop.'},
+  {id:'cx_grid',name:'Range Grid (ETH)',cat:'Mean-Reversion',risk:'Aggressive',pair:'ETHUSDT',
+   what:'A ladder of staggered buys & sells across a defined band, harvesting oscillation.',
+   rule:'Buy each rung down, sell each rung up within a set price band.',
+   works:'Sideways, high-volatility ranges — it monetises the wiggle.',
+   fails:'A clean breakout leaves you holding the whole ladder against the move.',
+   guard:'Hard band-exit if price leaves the range; cap total grid exposure & leverage.'},
+  {id:'cx_funding',name:'Funding-Rate Carry',cat:'Income',risk:'Moderate',pair:'BTC spot vs perp',
+   what:'Delta-neutral: long spot, short perpetual — collect funding each interval.',
+   rule:'When funding is positive, hold spot + short perp; pocket the funding payments.',
+   works:'Calm, positive-funding regimes — steady market-neutral yield.',
+   fails:'Funding flips negative or the basis blows out in a liquidation cascade.',
+   guard:'Watch funding + basis; unwind on negative funding; respect exchange limits.'},
+  {id:'cx_rsi2',name:'RSI-2 Dip (Alts)',cat:'Mean-Reversion',risk:'Aggressive',pair:'SOLUSDT',
+   what:'Buys very short-term oversold dips inside a higher-timeframe uptrend.',
+   rule:'In an uptrend, BUY when RSI(2) < 5; exit when RSI(2) > 70 or after N bars.',
+   works:'Pullbacks within an established alt uptrend.',
+   fails:'Catching a falling knife once the trend has actually broken.',
+   guard:'Only above the 200-MA; time-stop + hard stop; small size on alts.'},
+  {id:'cx_breakout',name:'Volatility Breakout',cat:'Breakout',risk:'Aggressive',pair:'BTCUSDT',
+   what:'Enters as price escapes a tight range on expanding volume.',
+   rule:'BUY on a close above the N-day high with above-average volume; trail a stop.',
+   works:'The start of a fresh expansion leg after compression.',
+   fails:'False breakouts in thin liquidity hours snap straight back.',
+   guard:'Require volume confirmation; trade liquid majors; trail, don’t fix a target.'},
+  {id:'cx_pairs',name:'ETH/BTC Ratio Pairs',cat:'Stat-Arb',risk:'Moderate',pair:'ETH vs BTC',
+   what:'Trades the ETH/BTC ratio back to its mean — neutral to overall crypto beta.',
+   rule:'Short the rich leg, long the cheap leg when the ratio z-score is stretched.',
+   works:'When ETH & BTC stay cointegrated and the spread mean-reverts.',
+   fails:'A narrative regime-shift breaks the relationship and the spread runs.',
+   guard:'Z-score entry/exit bands; stop if the spread breaks its historical range.'},
+  {id:'cx_dca',name:'Disciplined DCA',cat:'Time / Calendar',risk:'Conservative',pair:'BTCUSDT',
+   what:'Cost-averages a fixed amount on a fixed schedule — accumulation, not timing.',
+   rule:'Buy a fixed notional every interval regardless of price; optional dip boosts.',
+   works:'Long-horizon accumulation through full cycles; removes timing risk.',
+   fails:'Prolonged bear markets test conviction; capital sits in drawdown.',
+   guard:'Only commit what you can hold for years; size the schedule to your cashflow.'},
+  {id:'cx_momentum',name:'Cross-Sectional Momentum',cat:'Factor / Rotation',risk:'Aggressive',pair:'Top-10 majors',
+   what:'Rotates into the strongest recent performers across a basket of majors.',
+   rule:'Each week, hold the top-N by trailing return; drop the laggards.',
+   works:'Persistent momentum regimes where winners keep winning.',
+   fails:'Sharp momentum crashes reverse and gut the whole basket at once.',
+   guard:'Cap per-name weight; vol-target the basket; kill-switch on a drawdown limit.'},
+];
+async function loadCrypto(){
+  if(CRYPTO.busy) return; CRYPTO.busy=true;
+  const url=`${CRYPTO_API}/api/v3/ticker/24hr?symbols=${encodeURIComponent(JSON.stringify(cryptoSyms()))}`;
+  try{
+    const d=await fetch(url).then(r=>r.json());
+    if(Array.isArray(d)){
+      const q={}; d.forEach(t=>{ const ltp=parseFloat(t.lastPrice), chg=parseFloat(t.priceChangePercent);
+        if(isFinite(ltp)) q[t.symbol]={ltp,chg:isFinite(chg)?chg:0}; });
+      CRYPTO.quotes=q; CRYPTO.live=Object.keys(q).length>0; CRYPTO.error=!CRYPTO.live; CRYPTO.t=Date.now();
+    } else { CRYPTO.live=false; CRYPTO.error=true; }
+  }catch(e){ CRYPTO.live=false; CRYPTO.error=true; }
+  CRYPTO.loaded=true; CRYPTO.busy=false;
+}
+function cryptoFmt(p){ if(!isFinite(p)) return '—'; const dec=p>=1?2:p>=0.01?4:6; return '$'+p.toLocaleString('en-US',{minimumFractionDigits:Math.min(dec,2),maximumFractionDigits:dec}); }
+// ---- crypto views ----
+function cryptoStatusBar(){
+  const live=CRYPTO.live, t=CRYPTO.t?new Date(CRYPTO.t).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'';
+  const cells=[
+    `<div class="asb-cell"><span class="asb-l">Venue${infoI('Binance public market data (read-only, no API key). Real prices, never simulated.')}</span><span class="asb-v"><span class="live-dot ${live?'live':''}"></span>Binance</span></div>`,
+    `<div class="asb-cell"><span class="asb-l">Data</span><span class="asb-v">${live?`● LIVE${t?` · ${t}`:''}`:(CRYPTO.error?'Unreachable — retrying':'Connecting…')}</span></div>`,
+    `<div class="asb-cell"><span class="asb-l">Mode${infoI('Crypto strategies are in preview — paper only. No crypto orders are placed; a live crypto engine (Binance Algo API, server-signed) is on the roadmap.')}</span><span class="asb-v"><span class="mode-badge paper">PAPER · preview</span></span></div>`,
+    `<div class="asb-cell asb-grow"><span class="asb-l">Market</span><span class="asb-v">Crypto · USDT spot</span></div>`
+  ].join('<span class="asb-div"></span>');
+  return `<div class="algo-statusbar${live?'':' off'}">${cells}</div>`;
+}
+function cryptoPriceStrip(){
+  const tiles=CRYPTO_UNIVERSE.map(c=>{ const q=CRYPTO.quotes[c.sym], ch=q?q.chg:null;
+    return `<div class="cx-tile" data-cprice="${c.sym}">
+      <div class="cx-tk"><b>${esc(c.tk)}</b><span>${esc(c.name)}</span></div>
+      <div class="cx-px"><span class="cx-ltp num"${q?` data-raw="${q.ltp}"`:''}>${q?cryptoFmt(q.ltp):'—'}</span>
+        <span class="cx-chg num ${cls(ch)}" data-cchg>${ch==null?'·':pct(ch)+' · 24h'}</span></div></div>`; }).join('');
+  const note=CRYPTO.live?`<span class="cx-src live">● Live · Binance · 24h change</span>`
+    :(CRYPTO.error?`<span class="cx-src off">Can’t reach Binance — retrying…</span>`:`<span class="cx-src off">Connecting to Binance…</span>`);
+  return `<div class="cx-strip-wrap"><div class="cx-strip-head">${icon('spark',13)}<b>Live crypto prices</b>${note}</div><div class="cx-strip">${tiles}</div></div>`;
+}
+function patchCryptoPrices(){
+  document.querySelectorAll('[data-cprice]').forEach(el=>{ const q=CRYPTO.quotes[el.dataset.cprice]; if(!q) return;
+    const l=el.querySelector('.cx-ltp'), c=el.querySelector('[data-cchg]');
+    if(l){ const txt=cryptoFmt(q.ltp); if(l.textContent!==txt){ const prev=parseFloat(l.dataset.raw); const dir=isFinite(prev)?Math.sign(q.ltp-prev):0;
+      l.textContent=txt; l.dataset.raw=q.ltp; if(dir){ l.classList.remove('tick-up','tick-dn'); void l.offsetWidth; l.classList.add(dir>0?'tick-up':'tick-dn'); } } }
+    if(c){ c.textContent=pct(q.chg)+' · 24h'; c.className='cx-chg num '+cls(q.chg); c.setAttribute('data-cchg',''); } });
+  const note=document.querySelector('.cx-strip-head .cx-src');
+  if(note){ note.className='cx-src '+(CRYPTO.live?'live':'off'); note.textContent=CRYPTO.live?'● Live · Binance · 24h change':(CRYPTO.error?'Can’t reach Binance — retrying…':'Connecting to Binance…'); }
+}
+function cryptoStratCard(s){
+  const rk=LIB_RISK_CLASS[s.risk]||'b-neu';
+  return `<div class="cx-card">
+    <div class="cx-card-h"><div><b>${esc(s.name)}</b><span class="cx-cat">${esc(s.cat)} · ${esc(s.pair)}</span></div><span class="badge ${rk}">${esc(s.risk)}</span></div>
+    <p class="cx-what">${esc(s.what)}</p>
+    <div class="cx-line cx-rule">${icon('bolt',11)}<span><b>Rule.</b> ${esc(s.rule)}</span></div>
+    <div class="cx-line cx-works">${icon('check',11)}<span><b>Works.</b> ${esc(s.works)}</span></div>
+    <div class="cx-line cx-fails">${icon('alert',11)}<span><b>Fails.</b> ${esc(s.fails)}</span></div>
+    <div class="cx-line cx-guard">${icon('shield',11)}<span><b>Survival guard.</b> ${esc(s.guard)}</span></div>
+    <div class="cx-card-f"><span class="cx-tag">Preview · paper</span><button class="btn-ghost sm" disabled title="Crypto paper engine is on the roadmap">Paper-test (soon)</button></div></div>`;
+}
+function cryptoMarket(){
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Crypto is in preview.</b> Prices are <b>real</b> (Binance public data) — never simulated. The strategies below are educational templates: <b>no crypto orders are placed</b>. A paper/live crypto engine (Binance Algo API, server-signed) is on the roadmap. Indian markets stay fully wired via Kite — switch back anytime.</span></div>`;
+  const stat=secStats([
+    {l:'Instruments',v:String(CRYPTO_UNIVERSE.length),s:'USDT spot majors'},
+    {l:'Strategy templates',v:String(CRYPTO_STRATEGIES.length),s:'preview · paper'},
+    {l:'Data',v:CRYPTO.live?'Live':'—',s:CRYPTO.live?'real · Binance':'connecting',tone:CRYPTO.live?'up':''},
+    {l:'Execution',v:'Paper',s:'engine on roadmap'},
+  ]);
+  return note+stat+`<div class="cx-grid">${CRYPTO_STRATEGIES.map(cryptoStratCard).join('')}</div>`;
+}
+function cryptoSoon(label){
+  return secEmpty('cpu',label+' · crypto preview',
+    `${esc(label)} for crypto arrives with the crypto strategy engine. For now, explore the live prices above and the strategy templates under <b>Library</b> / <b>Marketplace</b>. Indian markets have the full ${esc(label.toLowerCase())} today — switch the toggle back to <b>Indian</b>.`);
+}
+// Real 24h movers from the live Binance data — honest momentum snapshot, not a scored signal.
+function cryptoOpportunity(){
+  if(!CRYPTO.live) return secEmpty('cpu','Scanning crypto…','Pulling live 24h moves from Binance. If this persists, the public data API may be unreachable from your network.');
+  // relative leaders/laggards (top & bottom of the same sorted set) — never an empty column, even on an all-red day
+  const m=CRYPTO_UNIVERSE.map(c=>({...c,q:CRYPTO.quotes[c.sym]})).filter(r=>r.q).sort((a,b)=>b.q.chg-a.q.chg);
+  const n=Math.min(5,Math.ceil(m.length/2)), lead=m.slice(0,n), lag=m.slice(-n).reverse();
+  const row=r=>`<div class="cx-mv-row"><div class="cx-mv-tk"><b>${esc(r.tk)}</b><span>${esc(r.name)}</span></div><span class="cx-mv-px num">${cryptoFmt(r.q.ltp)}</span><span class="cx-mv-chg num ${cls(r.q.chg)}">${pct(r.q.chg)}</span></div>`;
+  const col=(title,arr,ic)=>`<div class="cx-mv-col"><div class="cx-mv-h">${icon(ic,12)} ${title}</div>${arr.map(row).join('')||'<div class="cx-mv-empty">—</div>'}</div>`;
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Honest scan.</b> These are <b>real 24h moves</b> from Binance — relative leaders vs laggards, a momentum snapshot and <b>not a validated signal</b>. The explainable, scored crypto opportunity engine arrives with the strategy engine; nothing is traded.</span></div>`;
+  return note+`<div class="cx-movers">${col('Leaders · 24h',lead,'trendUp')}${col('Laggards · 24h',lag,'alert')}</div>`;
+}
+// Templates grouped by family — no fabricated track record; real ranking unlocks with the engine.
+function cryptoLeaderboard(){
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>No fabricated track record.</b> Crypto strategies are templates — there's no live performance to rank yet, so we won't invent one. They're grouped by family below; a real, forward-tested leaderboard unlocks with the crypto paper engine.</span></div>`;
+  const byCat={}; CRYPTO_STRATEGIES.forEach(s=>{(byCat[s.cat]=byCat[s.cat]||[]).push(s);});
+  const groups=Object.keys(byCat).map(cat=>`<div class="cx-lb-grp"><div class="cx-lb-h">${esc(cat)} <i>${byCat[cat].length}</i></div>${byCat[cat].map(s=>`<div class="cx-lb-row"><b>${esc(s.name)}</b><span class="cx-cat">${esc(s.pair)}</span><span class="badge ${LIB_RISK_CLASS[s.risk]||'b-neu'}">${esc(s.risk)}</span></div>`).join('')}</div>`).join('');
+  return note+`<div class="cx-lb">${groups}</div>`;
+}
+// Crypto-scoped router: every Algo Studio tab stays in sync with the crypto market (no Indian content leaks).
+function cryptoBody(view,label){
+  if(view==='library'||view==='market') return cryptoMarket();
+  if(view==='opportunity') return cryptoOpportunity();
+  if(view==='leaderboard') return cryptoLeaderboard();
+  return cryptoSoon(label);
+}
+
 function renderAlgo(){
   const v=$('algoView'); if(!v) return;
   if(!isAlgo()){ v.innerHTML=''; return; }
   state.algo=state.algo||{view:'market',bt:{algo:0,period:'1Y'}};
   if(!state.algo.exec) state.algo.exec='paper';
+  if(!state.algo.market) state.algo.market='in';
+  const crypto=state.algo.market==='crypto';
   if(!BOT.loaded){ loadBotData().then(()=>{ if(isAlgo())renderAlgo(); }); }
-  const view=state.algo.view, live=ALGOS.filter(a=>a.status!=='idle'), depN=ALGOS.filter(a=>a.deployed).length;
-  const tabs=[['library','Library'],['opportunity','Opportunity Engine'],['market','Marketplace'],['leaderboard','Leaderboard'],['backtest','Backtest'],['forward','Forward Test'],['monitor','Monitor'],['accuracy','Accuracy'],['analytics','Analytics']];
+  if(crypto && !CRYPTO.loaded && !CRYPTO.busy){ loadCrypto().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); }
+  const view=state.algo.view, live=ALGOS.filter(a=>a.status!=='idle');
+  const depN=crypto?0:ALGOS.filter(a=>a.deployed).length;   // Monitor badge reflects the active market — no Indian count leaks onto Crypto
+  const tabs=[['library','Library'],['opportunity','Opportunity Engine'],['risk','Risk Governor'],['positions','Positions'],['market','Marketplace'],['leaderboard','Leaderboard'],['backtest','Backtest'],['forward','Forward Test'],['monitor','Monitor'],['accuracy','Accuracy'],['analytics','Analytics']];
   const head=`<div class="av-head">
-    <div class="av-title"><span class="av-ic">${icon('cpu',17)}</span><div><b>Algo Studio</b><span>Backtest, forward-test &amp; monitor rule-based strategies</span></div></div>
+    <div class="av-title"><span class="av-ic">${icon('cpu',17)}</span><div><b>Algo Studio</b><span>${crypto?'Crypto strategies · live Binance prices · paper preview':'Backtest, forward-test &amp; monitor rule-based strategies'}</span></div></div>
     <div class="av-tabs" role="tablist" aria-label="Algo views">${tabs.map(([k,l])=>`<button class="av-tab${k===view?' on':''}" role="tab" aria-selected="${k===view}" data-algoview="${k}">${l}${k==='monitor'&&depN?` <i class="av-tn">${depN}</i>`:''}</button>`).join('')}</div></div>`;
-  const body=view==='library'?algoLibrary():view==='opportunity'?algoOpportunity():view==='market'?algoMarket():view==='leaderboard'?algoLeaderboard():view==='backtest'?algoBacktest():view==='forward'?algoForward():view==='accuracy'?algoAccuracy():view==='analytics'?algoAnalytics():algoMonitor();
-  v.innerHTML=`<div class="av-wrap">${head}<div class="av-scroll">${algoStatusBar()}${body}</div></div>`;
+  const tabLabel=(tabs.find(t=>t[0]===view)||[,'This view'])[1];
+  const body=crypto
+    ? cryptoBody(view,tabLabel)
+    : (view==='library'?algoLibrary():view==='opportunity'?algoOpportunity():view==='risk'?algoRisk():view==='positions'?algoPositions():view==='market'?algoMarket():view==='leaderboard'?algoLeaderboard():view==='backtest'?algoBacktest():view==='forward'?algoForward():view==='accuracy'?algoAccuracy():view==='analytics'?algoAnalytics():algoMonitor());
+  v.innerHTML=`<div class="av-wrap">${head}<div class="av-scroll">${crypto?cryptoStatusBar():algoStatusBar()}${body}</div></div>`;
+  v.querySelectorAll('[data-algomkt]').forEach(b=>b.onclick=()=>setMarket(b.dataset.algomkt));
   v.querySelectorAll('[data-algoview]').forEach(b=>b.onclick=()=>{state.algo.view=b.dataset.algoview;renderAlgo();});
   v.querySelectorAll('[data-algoseg]').forEach(b=>b.onclick=()=>{state.algo.seg=b.dataset.algoseg;renderAlgo();});
   v.querySelectorAll('[data-algogoto]').forEach(b=>b.onclick=()=>{state.algo.view=b.dataset.algogoto;renderAlgo();});
@@ -3412,8 +3770,7 @@ const STRAT_DEFS={
 function lbl(t){return ALGO_DEFS[t]?t+infoI(ALGO_DEFS[t]):t;}
 function simRegime(){
   let vix=12; try{vix=+document.getElementById('sVix').value||12;}catch(e){}
-  if(vix>=20) return 'High-Vol';   // a volatility spike dominates the trend regime
-  return {bull:'Bull',bear:'Bear',neutral:'Choppy'}[document.documentElement.dataset.regime||state.displayed]||'Bull';
+  return regime4(document.documentElement.dataset.regime||state.displayed||'bull', vix, state.regimeLabel);
 }
 function liveRegime(){
   if(BOT.live && BOT.market && BOT.market.engine) return BOT.market.engine.regime;   // real, from Kite
@@ -3996,7 +4353,7 @@ function algoOpportunity(){
   const feed=opps.length?`<div class="opp-grid">${opps.slice(0,12).map(oppCard).join('')}</div>`
     :secEmpty('shield','Nothing clears the bar right now',`The engine scored ${opps.length} names and none reached the watchlist threshold in this ${esc(reg)} regime — so it stands aside. That's the engine working: no low-quality trades.`);
   const summ=`<p class="sec-hint">${icon('cpu',12)}<span>Scored <b>${opps.length}</b> names · <b>${top.length}</b> on the watchlist+ · <b>${opps.filter(o=>o.confidence>=75).length}</b> in an execute band. Refreshed ${OPPS.at?timeAgo(new Date(OPPS.at).toISOString()):'now'}. <button class="opp-refresh" data-oppref>↻ Rescan</button></span></p>`;
-  return missionBanner()+hero+pipe+life+regBar+bands+summ+feed;
+  return missionBanner()+hero+pipe+life+regBar+bands+summ+feed+allocationPanel()+learningPanel()+decisionLog();
 }
 function oppCard(o){
   const tone=confTone(o.confidence), band=OPP_BANDS[o.band]||['',''];
@@ -4005,15 +4362,243 @@ function oppCard(o){
   const compChips=Object.keys(COMPLBL).map(k=>{const on=(comps[k]||0)>0;return `<span class="opp-comp${on?' on':''}" title="${COMPLBL[k]}: ${on?'+'+comps[k]:'0'}">${COMPLBL[k]}${on?` +${comps[k]}`:''}</span>`;}).join('');
   const votes=(o.votes||[]);
   const voteChips=votes.map(v=>`<span class="opp-vote${v.vote?' yes':''}" title="${esc(v.strategy)} (${esc(v.style)}, weight ${v.weight}) ${v.vote?'votes BUY':'no signal'}">${esc(v.strategy)}${v.vote?` ·${v.weight}`:''}</span>`).join('');
+  // ---- Score 2.0: structured sub-scores + expected value + reasons ----
+  const s=o.sub||{};
+  const SUBS=[['trendQuality','Trend'],['momentum','Mom'],['volume','Vol'],['volatility','Volat'],['liquidity','Liq']];
+  const subBars=SUBS.map(([k,l])=>{const v=s[k]||0;const t=v>=70?'hi':v>=40?'mid':'lo';return `<div class="opp-sub"><span>${l}</span><div class="opp-sbar"><i class="${t}" style="width:${v}%"></i></div><b>${v}</b></div>`;}).join('');
+  const ev=s.expReturnPct!=null?`<span title="Estimated favourable move (~1.5×ATR) — an estimate, not a promise">Exp +${s.expReturnPct}%</span>`:'';
+  const hold=s.expDurationDays?`<span>~${s.expDurationDays}d hold</span>`:'';
+  const risk=s.risk!=null?`<span class="opp-risk ${s.risk<=30?'lo':s.risk<=60?'mid':'hi'}">Risk ${s.risk}</span>`:'';
+  const reasons=(o.reasons||[]);
+  const reasonList=reasons.length?`<ul class="opp-reasons">${reasons.map(r=>`<li>${/disagree/.test(r)?'⚠':'✓'} ${esc(r)}</li>`).join('')}</ul>`:'';
   return `<div class="opp-card ${tone}">
     <div class="opp-c-h"><div class="opp-c-sym"><b>${esc(o.symbol)}</b><span class="opp-c-px">₹${(o.price||0).toLocaleString('en-IN')}</span></div>
       <div class="opp-score ${tone}"><b>${o.confidence}</b><span>/100</span></div></div>
     <div class="opp-band ${tone}">${icon(tone==='exec'||tone==='execif'?'bolt':tone==='watch'?'clock':'minus',11)} ${esc(band[0])}</div>
     <div class="opp-bar"><i class="${tone}" style="width:${o.confidence}%"></i></div>
-    <div class="opp-c-meta"><span>${o.agree}/${votes.length} specialists agree</span>${o.rsi!=null?`<span>RSI ${o.rsi}</span>`:''}${o.mtfOk===false?'<span class="opp-mtf">⚠ higher-TF disagrees</span>':''}</div>
-    <div class="opp-comps">${compChips}</div>
-    <details class="opp-det"><summary>Specialist votes</summary><div class="opp-votes">${voteChips}</div></details>
+    <div class="opp-c-meta"><span>${o.agree}/${votes.length} agree</span>${ev}${hold}${risk}${o.mtfOk===false?'<span class="opp-mtf">⚠ higher-TF</span>':''}</div>
+    <div class="opp-subs">${subBars}</div>
+    <details class="opp-det"><summary>Why — reasons, components & votes</summary>
+      ${reasonList}
+      <div class="opp-det-h">Confirmations</div><div class="opp-comps">${compChips}</div>
+      <div class="opp-det-h">Specialist votes</div><div class="opp-votes">${voteChips}</div></details>
   </div>`;
+}
+
+/* ===== Decision Log — the auditable entry/exit trail (Phase 12/13/16) ===== */
+let DECS={loaded:false,loading:false,data:null};
+function loadDecisions(force){
+  if(DECS.loading) return; if(DECS.loaded && !force) return;
+  DECS.loading=true;
+  fetch(BOT_API+'/api/decisions').then(r=>r.json()).then(d=>{
+    DECS.data=d; DECS.loaded=true; DECS.loading=false;
+    if(typeof isAlgo==='function'&&isAlgo()&&state.algo&&state.algo.view==='opportunity') renderAlgo();
+  }).catch(()=>{ DECS.loaded=true; DECS.loading=false; });
+}
+function decisionLog(){
+  loadDecisions();
+  const recs=(DECS.data&&DECS.data.decisions)||[];
+  const head=`<div class="dlog-h">${icon('flag',13)}<b>Decision Log</b><span>every entry & exit, with the reasoning — fully auditable</span></div>`;
+  if(!recs.length) return `<div class="dlog">${head}<p class="sec-hint" style="margin-top:8px">${icon('cpu',12)}<span>No decisions logged yet — the Moonshot records each trade here with regime, confidence, sub-scores and rationale the moment it acts.</span></p></div>`;
+  const rows=recs.slice(0,30).map(r=>{
+    const isE=r.action==='ENTER';
+    const when=r.ts?timeAgo(r.ts):'';
+    if(isE){
+      const reasons=(r.reasons||[]).slice(0,4).map(x=>esc(x)).join(' · ');
+      return `<div class="dlog-row enter">
+        <span class="dlog-tag enter">BUY</span>
+        <div class="dlog-main"><b>${esc(r.symbol)}</b> <span class="dlog-meta">conf ${r.confidence} · size ${Math.round((r.alloc||0)*100)}% · ${r.qty} sh @₹${(r.entry||0).toLocaleString('en-IN')} · ${esc(r.regime||'')}</span>
+          <span class="dlog-why">${reasons}${r.expReturnPct!=null?` · exp +${r.expReturnPct}%`:''}</span></div>
+        <span class="dlog-when">${when}</span></div>`;
+    }
+    return `<div class="dlog-row exit">
+      <span class="dlog-tag exit">SELL</span>
+      <div class="dlog-main"><b>${esc(r.symbol)}</b> <span class="dlog-meta">${esc(r.reason||'')} · equity ₹${(r.equity||0).toLocaleString('en-IN')}</span></div>
+      <span class="dlog-pnl ${cls(r.pnl||0)}">${sgn(r.pnl||0)}</span><span class="dlog-when">${when}</span></div>`;
+  }).join('');
+  return `<div class="dlog">${head}<div class="dlog-rows">${rows}</div></div>`;
+}
+
+/* ===== Capital Allocation — the proposal→competition→allocation result ===== */
+let CAPALLOC={loaded:false,loading:false,data:null};
+function loadAllocation(force){
+  if(CAPALLOC.loading) return; if(CAPALLOC.loaded && !force) return;
+  CAPALLOC.loading=true;
+  fetch(BOT_API+'/api/allocation').then(r=>r.json()).then(d=>{
+    CAPALLOC.data=d; CAPALLOC.loaded=true; CAPALLOC.loading=false;
+    if(typeof isAlgo==='function'&&isAlgo()&&state.algo&&state.algo.view==='opportunity') renderAlgo();
+  }).catch(()=>{ CAPALLOC.loaded=true; CAPALLOC.loading=false; });
+}
+function allocationPanel(){
+  loadAllocation();
+  const d=CAPALLOC.data; if(!d || d.real===false) return '';
+  const funded=d.funded||[], skipped=d.skipped||[];
+  const head=`<div class="alc-h">${icon('scale',13)}<b>Capital Allocation</b><span>bots propose · the Governor constrains · the Allocator funds the best diversified set</span></div>`;
+  const fund=funded.length?funded.map(f=>`<div class="alc-row fund">
+      <span class="alc-tag fund">FUND</span>
+      <div class="alc-main"><b>${esc(f.symbol)}</b> <span class="alc-meta">${esc(f.sector)} · conf ${Math.round(f.confidence)} · score ${f.score}</span></div>
+      <span class="alc-alloc">${f.allocPct}%<i>${f.qty} sh</i></span></div>`).join(''):'<p class="sec-hint" style="margin:6px 0">Nothing funded this round — no proposal cleared conviction + the Governor.</p>';
+  const skip=skipped.slice(0,8).map(s=>`<div class="alc-row skip">
+      <span class="alc-tag skip">SKIP</span>
+      <div class="alc-main"><b>${esc(s.symbol)}</b> <span class="alc-meta">${esc(s.sector||'')} · conf ${Math.round(s.confidence||0)}</span></div>
+      <span class="alc-reason">${esc(s.reason)}</span></div>`).join('');
+  return `<div class="alc">${head}
+    <div class="alc-summ">Competed <b>${d.ranked||0}</b> proposals · funded <b class="up">${funded.length}</b> · deployed <b>${inrShort(d.deployed||0)}</b> of ${inrShort(d.budget||0)} budget</div>
+    <div class="alc-cols"><div class="alc-col"><div class="alc-ch up">Funded — won capital</div>${fund}</div>
+    <div class="alc-col"><div class="alc-ch">Skipped — and why</div>${skip||'<p class="sec-hint" style="margin:6px 0">—</p>'}</div></div></div>`;
+}
+
+/* ===== Learning Engine panel — what the system has learned from the decision log ===== */
+let LEARN={loaded:false,loading:false,data:null};
+function loadLearning(force){
+  if(LEARN.loading) return; if(LEARN.loaded && !force) return;
+  LEARN.loading=true;
+  fetch(BOT_API+'/api/learning').then(r=>r.json()).then(d=>{
+    LEARN.data=d; LEARN.loaded=true; LEARN.loading=false;
+    if(typeof isAlgo==='function'&&isAlgo()&&state.algo&&state.algo.view==='opportunity') renderAlgo();
+  }).catch(()=>{ LEARN.loaded=true; LEARN.loading=false; });
+}
+const LEARN_LBL={regime_match:'Regime fit',ema_trend:'EMA trend',rsi_ok:'RSI',macd:'MACD',supertrend:'Supertrend',volume_spike:'Volume',atr_healthy:'ATR',strong_candle:'Candle'};
+function learningPanel(){
+  loadLearning();
+  const d=LEARN.data; if(!d || d.real===false) return '';
+  const active=d.status==='active';
+  const chip=active?`<span class="lrn-chip on">${icon('check',11)} Active · learned from ${d.nTrades} trades</span>`
+    :`<span class="lrn-chip">${icon('cpu',11)} Gathering · ${d.nTrades}/${d.minTrades} closed trades</span>`;
+  const w=d.weights||{}, p=d.priors||{}, st=d.stats||{};
+  const maxw=(Math.max.apply(null,Object.values(p))*1.4)||20;
+  const rows=Object.keys(p).map(k=>{
+    const lw=w[k], pw=p[k], delta=lw-pw, s=st[k]||{};
+    const arrow=Math.abs(delta)<0.3?'':delta>0?'<i class="lrn-up">▲</i>':'<i class="lrn-dn">▼</i>';
+    const ev=(active&&s.n)?`${s.winPct!=null?s.winPct+'% win · ':''}${s.n} trades${s.edge?` · edge ${s.edge>0?'+':''}${s.edge}%`:''}`:'—';
+    return `<div class="lrn-row"><span class="lrn-name">${LEARN_LBL[k]||k}</span>
+      <div class="lrn-bar"><i style="width:${Math.min(100,lw/maxw*100)}%"></i><span class="lrn-prior" style="left:${Math.min(100,pw/maxw*100)}%" title="prior ${pw}"></span></div>
+      <span class="lrn-w">${lw}${arrow}</span><span class="lrn-edge">${ev}</span></div>`;
+  }).join('');
+  return `<div class="lrn">
+    <div class="lrn-h">${icon('cpu',13)}<b>Learning Engine</b>${chip}</div>
+    <p class="lrn-note">${icon('shield',11)}<span>Scoring weights update from <b>real closed-trade outcomes</b> — each signal shrunk toward its prior by sample size, then renormalised so the 0–100 scale &amp; bands stay fixed. Nothing moves until ${d.minTrades} closed trades. ${active?'It now up-weights the signals that have preceded winners and mutes the noise.':'Priors stay in use until the evidence is robust — no overfitting to a handful of trades.'}</span></p>
+    <div class="lrn-rows"><div class="lrn-row lrn-head"><span>Signal</span><span>prior → learned weight</span><span></span><span>evidence</span></div>${rows}</div>
+  </div>`;
+}
+
+/* ===== Risk Governor tab — portfolio health, concentration, drawdown kill-switch, audit ===== */
+let RISK={loaded:false,loading:false,data:null};
+function loadRisk(force){
+  if(RISK.loading) return; if(RISK.loaded && !force) return;
+  RISK.loading=true;
+  fetch(BOT_API+'/api/risk').then(r=>r.json()).then(d=>{
+    RISK.data=d; RISK.loaded=true; RISK.loading=false;
+    if(typeof isAlgo==='function'&&isAlgo()&&state.algo&&state.algo.view==='risk') renderAlgo();
+  }).catch(()=>{ RISK.loaded=true; RISK.loading=false; });
+}
+/* ===== Strategy Rebalancing panel (regime capital rotation, capital-preservation) ===== */
+let REBAL={loaded:false,loading:false,data:null};
+function loadRebalance(force){
+  if(REBAL.loading) return; if(REBAL.loaded && !force) return;
+  REBAL.loading=true;
+  fetch(BOT_API+'/api/rebalance').then(r=>r.json()).then(d=>{
+    REBAL.data=d; REBAL.loaded=true; REBAL.loading=false;
+    if(typeof isAlgo==='function'&&isAlgo()&&state.algo&&state.algo.view==='risk') renderAlgo();
+  }).catch(()=>{ REBAL.loaded=true; REBAL.loading=false; });
+}
+function rebalancePanel(){
+  loadRebalance();
+  const d=REBAL.data; if(!d || d.real===false) return '';
+  const en=d.enabled||[], st=d.stoodDown||[];
+  const enChips=en.length?en.map(x=>`<span class="rb2-chip on">${esc(x.name)}<i>${esc(x.style)}</i></span>`).join(''):'<span class="sec-hint">—</span>';
+  const stChips=st.length?st.map(x=>`<span class="rb2-chip off">${esc(x.name)}<i>${esc(x.style)}</i></span>`).join(''):'<span class="sec-hint">none — all styles fit this regime</span>';
+  return `<div class="rb2">
+    <div class="rb2-h">${icon('repeat',13)}<b>Strategy Rebalancing</b><span>capital rotates to the regime-fit strategies — the rest stand down to cash (capital-preservation)</span></div>
+    <div class="rb2-summ"><span class="rb2-live"><span class="live-dot live"></span>${esc(d.regime||'—')}</span>
+      <span>Cash target <b>${d.cashPct}%</b></span><span>Conviction floor <b>${d.convictionFloor}</b></span>
+      ${d.preservation?'<span class="rb2-pres">🛡 preservation</span>':''}<span class="rb2-note">${esc(d.note||'')}</span></div>
+    <div class="rb2-cols">
+      <div class="rb2-col"><div class="rb2-ch up">Taking risk (${en.length})</div><div class="rb2-chips">${enChips}</div></div>
+      <div class="rb2-col"><div class="rb2-ch">Stood down · cash (${st.length})</div><div class="rb2-chips">${stChips}</div></div>
+    </div></div>`;
+}
+
+function algoRisk(){
+  loadRisk();
+  const hero=`<div class="rk-hero"><div class="rk-hero-ic">${icon('shield',20)}</div>
+    <div class="rk-hero-tx"><b>Portfolio Risk Governor</b><span>Every trade passes through here — no exceptions. It caps concentration, governs exposure, and trips a portfolio-wide kill-switch on drawdown. Bots propose; the Governor disposes.</span></div></div>`;
+  const d=RISK.data;
+  if(!RISK.loaded) return hero+`<div class="opp-load">${icon('cpu',16)}<span>Reading the live book…</span></div>`;
+  if(!d || d.real===false) return hero+`<div class="opp-offline">${icon('shield',14)}<span><b>Governor publishes during market hours.</b> ${esc((d&&d.error)||'')||'Start the paper harness while the market is open to see live portfolio risk.'}</span></div>`;
+  const grade=d.score>=80?['Excellent','up']:d.score>=60?['Healthy','']:d.score>=40?['Caution','down']:['Critical','down'];
+  const killed=d.killSwitch;
+  const kill=killed?`<div class="rk-kill">${icon('alert',16)}<div><b>KILL-SWITCH ACTIVE — ${esc(d.mode).toUpperCase()}</b><span>Portfolio drawdown ${d.drawdownPct}% — new entries are blocked across all bots until it recovers.</span></div></div>`
+    :d.mode!=='normal'?`<div class="rk-warn">${icon('alert',13)}<span>Risk-reduction mode <b>${esc(d.mode)}</b> — new positions sized to ${Math.round((d.sizeMult||1)*100)}% (drawdown ${d.drawdownPct}%).</span></div>`:'';
+  const health=`<div class="rk-health">
+    <div class="rk-score ${grade[1]}"><b>${d.score}</b><span>/100</span></div>
+    <div class="rk-grade"><b class="${grade[1]}">${grade[0]}</b><span>portfolio health</span></div>
+    <div class="rk-kpis">
+      <div><span>Exposure</span><b class="${d.exposurePct>100?'down':''}">${d.exposurePct}%</b></div>
+      <div><span>Drawdown</span><b class="${d.drawdownPct>0?'down':'up'}">−${d.drawdownPct}%</b></div>
+      <div><span>Top symbol</span><b class="${(d.topSymbol||{}).pct>d.limits.symbol?'down':''}">${esc((d.topSymbol||{}).sym||'—')} ${Math.round((d.topSymbol||{}).pct||0)}%</b></div>
+      <div><span>Top sector</span><b class="${(d.topSector||{}).pct>d.limits.sector?'down':''}">${esc((d.topSector||{}).sector||'—')} ${Math.round((d.topSector||{}).pct||0)}%</b></div>
+    </div></div>`;
+  const bar=(label,pct,lim)=>{const over=pct>lim;return `<div class="rk-cbar"><span class="rk-cl">${esc(label)}</span><div class="rk-ctrack"><i class="${over?'over':''}" style="width:${Math.min(100,pct)}%"></i><span class="rk-clim" style="left:${Math.min(100,lim)}%" title="limit ${lim}%"></span></div><b class="${over?'down':''}">${Math.round(pct)}%</b></div>`;};
+  const secs=Object.entries(d.sectors||{});
+  const secBars=secs.length?secs.map(([s,p])=>bar(s,p,d.limits.sector)).join(''):'<p class="sec-hint">No open positions — book is flat.</p>';
+  const symBars=Object.entries(d.symbols||{}).slice(0,8).map(([s,p])=>bar(s,p,d.limits.symbol)).join('');
+  const conc=`<div class="rk-grid2">
+    <div class="rk-card"><div class="rk-ch">${icon('pie',13)} Sector concentration <i>limit ${d.limits.sector}%</i></div>${secBars}</div>
+    <div class="rk-card"><div class="rk-ch">${icon('layout',13)} Symbol concentration <i>limit ${d.limits.symbol}%</i></div>${symBars||'<p class="sec-hint">—</p>'}</div></div>`;
+  // drawdown ladder
+  const tiers=(d.ddTiers||[]).slice().reverse();
+  const ladder=`<div class="rk-card"><div class="rk-ch">${icon('shield',13)} Drawdown kill-switch ladder</div><div class="rk-ladder">
+    ${tiers.map(t=>`<div class="rk-tier${d.mode===t.mode?' on':''}"><b>${t.at}%</b><span>${esc(t.mode)}</span></div>`).join('<span class="rk-arr">→</span>')}
+    <div class="rk-tier${d.mode==='normal'?' on':''}" style="order:-1"><b>0%</b><span>normal</span></div></div>
+    <p class="rk-cur">Currently: <b class="${d.mode==='normal'?'up':'down'}">${esc(d.mode)}</b> at ${d.drawdownPct}% drawdown</p></div>`;
+  // audit
+  const audit=(d.audit||[]);
+  const aud=audit.length?`<div class="rk-card"><div class="rk-ch">${icon('flag',13)} Trade audit — every proposal, approved or vetoed</div><div class="rk-audit">${audit.slice(0,20).map(a=>`<div class="rk-arow ${a.approved?'ok':'veto'}"><span class="rk-atag ${a.approved?'ok':'veto'}">${a.approved?'PASS':'VETO'}</span><span class="rk-amain"><b>${esc(a.bot)}</b> ${esc(a.symbol||'')}</span><span class="rk-areason">${esc(a.reason)}</span><span class="rk-awhen">${a.ts?timeAgo(a.ts):''}</span></div>`).join('')}</div></div>`:`<div class="rk-card"><div class="rk-ch">${icon('flag',13)} Trade audit</div><p class="sec-hint">No proposals reviewed yet — every bot entry will appear here with the Governor's verdict.</p></div>`;
+  return hero+kill+health+rebalancePanel()+conc+ladder+aud;
+}
+
+/* ===== Positions tab — Position Intelligence (post-entry management) ===== */
+let POSNS={loaded:false,loading:false,data:null};
+function loadPositions(force){
+  if(POSNS.loading) return; if(POSNS.loaded && !force) return;
+  POSNS.loading=true;
+  fetch(BOT_API+'/api/positions').then(r=>r.json()).then(d=>{
+    POSNS.data=d; POSNS.loaded=true; POSNS.loading=false;
+    if(typeof isAlgo==='function'&&isAlgo()&&state.algo&&state.algo.view==='positions') renderAlgo();
+  }).catch(()=>{ POSNS.loaded=true; POSNS.loading=false; });
+}
+const POS_ACT={hold:['Hold','hold'],protect:['Protect profit','protect'],watch:['Watch','watch'],exit:['Exit — thesis decayed','exit']};
+function posTone(h){ return (h==null)?'na':h>=70?'hi':h>=50?'mid':'lo'; }
+function algoPositions(){
+  loadPositions();
+  const hero=`<div class="pi-hero"><div class="pi-hero-ic">${icon('shield',20)}</div>
+    <div class="pi-hero-tx"><b>Position Intelligence</b><span>Every open position, managed live. Health = is the original thesis still valid? It protects profit as gains grow and exits only on <b>persistent</b> thesis decay — never on a single down-tick, so winners are let run.</span></div></div>`;
+  const d=POSNS.data;
+  if(!POSNS.loaded) return hero+`<div class="opp-load">${icon('cpu',16)}<span>Reading open positions…</span></div>`;
+  if(!d||d.real===false) return hero+`<div class="opp-offline">${icon('shield',14)}<span>${esc((d&&d.error)||'')||'Connect the harness to manage live positions.'}</span></div>`;
+  const ps=d.positions||[];
+  if(!ps.length) return hero+`<div class="opp-offline">${icon('check',14)}<span><b>No open positions</b> — nothing to manage right now. As the bots enter, each position appears here with a live health score and a recommended action.</span></div>`;
+  const summ=`<p class="sec-hint">${icon('cpu',12)}<span><b>${ps.length}</b> open position(s)${d.avgHealth!=null?` · avg health <b>${d.avgHealth}</b>`:''} · weakest first. Health updates every cycle from the live thesis.</span></p>`;
+  const cards=ps.map(p=>{
+    const tone=posTone(p.health), act=POS_ACT[p.action]||['—','na'];
+    const hv=p.health==null?'—':p.health;
+    const gain=p.gainPct;
+    return `<div class="pi-card ${tone}">
+      <div class="pi-h"><div class="pi-sym"><b>${esc(p.symbol)}</b><span>${esc(p.botName||p.bot)}</span></div>
+        <div class="pi-score ${tone}"><b>${hv}</b><span>health</span></div></div>
+      <div class="pi-bar"><i class="${tone}" style="width:${p.health==null?0:p.health}%"></i></div>
+      <div class="pi-meta">
+        <span class="pi-act ${act[1]}">${esc(act[0])}</span>
+        ${gain!=null?`<span class="pi-gain ${gain>=0?'up':'down'}">${gain>=0?'+':''}${gain}%</span>`:''}
+        ${p.entry?`<span>entry ₹${(p.entry).toLocaleString('en-IN')}</span>`:''}
+        ${p.stop?`<span>stop ₹${(p.stop).toLocaleString('en-IN')}</span>`:''}
+        ${p.weak?`<span class="pi-weak">weak ${p.weak}/2</span>`:''}
+      </div>
+      ${p.reason?`<p class="pi-reason">${icon(p.action==='exit'?'alert':p.action==='protect'?'shield':'cpu',11)} ${esc(p.reason)}</p>`:''}
+    </div>`;
+  }).join('');
+  return hero+summ+`<div class="pi-grid">${cards}</div>`;
 }
 
 function algoMarket(){
@@ -4935,6 +5520,7 @@ function doTick(){
   // movement on top of them. This synthetic tape only animates the offline demo.
   // (BOT is a module-scoped `let`, NOT on window — reference it directly.)
   if(typeof BOT!=='undefined' && BOT.live) return;
+  if(state.algo && state.algo.market==='crypto') return;   // crypto tape is fed by real Binance data — never synth-tick it
   const vix=+$('sVix').value, vol=clamp((vix-8)/27,0,1), night=state.surface==='night'?1.4:1;
   const upd=(el,dec)=>{const base=parseFloat(el.textContent.replace(/,/g,''))||0; if(!base)return;
     const mv=(Math.random()-0.5)*base*0.0007*(0.4+vol*3.2)*night;
@@ -4965,7 +5551,7 @@ function applyChartHeight(){
    WIDGET LIBRARY — persona-aware, user-composable cards (right rail)
    Two distinct catalogs are the trader/investor differentiator.
    ============================================================ */
-const sgn=n=>(n>=0?'+':'−')+'₹'+Math.abs(Math.round(n)).toLocaleString('en-IN');
+const sgn=n=>Number.isFinite(n)?(n>=0?'+':'−')+'₹'+Math.abs(Math.round(n)).toLocaleString('en-IN'):'—';
 const WIDGET_CATALOG={
   trader:[
     {key:'movers',name:'Top Movers',icon:'trendUp',desc:'Biggest gainers & losers right now',render(){
@@ -5133,9 +5719,10 @@ function restoreMaxCard(){ let changed=false; Object.keys(CARD_EL).forEach(k=>{i
 /* ============================================================
    ENGINE READOUT
    ============================================================ */
-function renderEngine(S,sc,conf,regime){
+function renderEngine(S,sc,conf,regime,label){
   $('gaugeNeedle').style.left=clamp((S+100)/200*100,1,99)+'%';
-  $('erScore').textContent=(S>=0?'+':'')+S; $('erRegime').textContent=regime.toUpperCase(); $('erConf').textContent=conf+'%';
+  const rd=$('erRegime'); rd.textContent=(label||regime).toUpperCase(); rd.dataset.reg=label||regime;   // 4-state label (Bull/Bear/Choppy/High-Vol)
+  $('erScore').textContent=(S>=0?'+':'')+S; $('erConf').textContent=conf+'%';
   const sigs=[['Trend',sc.trend,'.30'],['Volatility',sc.vix,'.20'],['Breadth',sc.ad,'.20'],['Momentum',sc.mom,'.20'],['Personal',sc.pers,'.10']];
   $('signals').innerHTML=sigs.map(([nm,v,w])=>{const pos=v>=0,width=Math.abs(v)/100*50;
     return `<div class="sig"><span class="sig-name">${nm} <i style="color:var(--slate-2)">${w}</i></span>
@@ -5152,27 +5739,69 @@ function syncSliderLabels(){const s=readSignals();
 function recompute(opts={}){
   syncSliderLabels();
   const raw=readSignals(),sc=scoreSignals(raw),S=composite(sc),conf=confidence(S,sc);
-  const newEngine=classify(S,state.engine);state.engine=newEngine;
-  renderEngine(S,sc,conf,newEngine);$('autoConf').textContent=conf+'%';
+  // Live: the bot's regime is authoritative for BOTH the 4-state label and the 3-state terminal theme (via THEME_OF).
+  // What-if / offline: classify the composite with hysteresis, then derive the label from theme + VIX.
+  const liveReg=(!state.simOverride && BOT.live && BOT.market && BOT.market.engine)?BOT.market.engine.regime:null;
+  const newEngine=(liveReg&&THEME_OF[liveReg])?THEME_OF[liveReg]:classify(S,state.engine); state.engine=newEngine;
+  const label=liveReg||regime4(newEngine,raw.vix,state.regimeLabel); state.regimeLabel=label;
+  renderEngine(S,sc,conf,newEngine,label);$('autoConf').textContent=conf+'%';
   renderTopIndex(); renderRegimeBar(state.displayed);
   const vixROC=(raw.vix-state.prevVix)/Math.max(1,state.prevVix);
   const hard=state.forceHard||vixROC>0.15;state.forceHard=false;
   const mismatch=newEngine!==state.displayed;
   if(state.mode==='auto'){
-    if(mismatch&&!state.suggesting){
-      if(hard){applyRegime(newEngine);infoToast(newEngine,S,conf,sc,true);}
-      else if(conf>=65){suggestToast(newEngine,S,conf,sc,false);}
+    if(opts.silent){ if(mismatch) applyRegime(newEngine); }     // quiet adoption (boot / first live sync) — no toast/cinematic
+    else if(mismatch&&!state.suggesting){
+      if(hard){applyRegime(newEngine);infoToast(newEngine,S,conf,sc,true,label);}
+      else if(conf>=65){suggestToast(newEngine,S,conf,sc,false,label);}
     }
-  }else if(mismatch&&conf>=65&&!state.suggesting&&!opts.silent){suggestToast(newEngine,S,conf,sc,true);}
+  }else if(mismatch&&conf>=65&&!state.suggesting&&!opts.silent){suggestToast(newEngine,S,conf,sc,true,label);}
   state.prevVix=raw.vix;
+  renderEngineSrc();
 }
+/* ---- Regime panel ↔ live Kite: feed the real signals into the sliders so the panel,
+   gauge and AUTO switching all reflect the live market. scoreSignals() over these raw
+   values reproduces the bot's engine.components exactly (same weights). ---- */
+function syncSlidersFromLive(){
+  const sg=BOT.live&&BOT.market&&BOT.market.signals; if(!sg) return false;
+  const set=(id,v,lo,hi)=>{ if(typeof v!=='number'||!isFinite(v)) return; const el=$(id); if(el) el.value=clamp(v,lo,hi); };
+  set('sTrend',sg.trend,-100,100); set('sVix',sg.vix,8,35); set('sAd',sg.ad,0.2,3);
+  set('sRsi',sg.rsi,20,80); set('sPnl',sg.pnl,-10,10);
+  if(typeof sg.macd==='boolean'){ const mt=$('macdToggle'); if(mt){ mt.dataset.on=String(sg.macd); mt.textContent=sg.macd?'Bullish ↑':'Bearish ↓'; } }
+  return true;
+}
+// Pull the panel back onto live data (clears a what-if). Called by the "Use live" button.
+function resyncLive(){
+  state.simOverride=false; BOT._regimeSynced=false;
+  if(BOT.live && syncSlidersFromLive()){ recompute({silent:true}); BOT._regimeSynced=true; }
+  else { recompute(); }
+}
+// Honest source badge: LIVE (mirrors Kite) · WHAT-IF (user override) · SIMULATED (offline demo).
+function renderEngineSrc(){
+  const el=$('engSrc'); if(!el) return;
+  if(state.simOverride){
+    el.className='eng-src sim';
+    el.innerHTML=`<span class="es-dot"></span><span class="es-txt"><b>What-if</b> · simulated inputs, not the live market</span>${BOT.live?`<button class="es-reset" id="esReset" type="button">Use live</button>`:''}`;
+  } else if(BOT.live && BOT.market){
+    const reg=(BOT.market.engine&&BOT.market.engine.regime)||'—';
+    const t=BOT.market.asOf?new Date(BOT.market.asOf).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'';
+    el.className='eng-src live';
+    el.innerHTML=`<span class="es-dot live"></span><span class="es-txt"><b>● LIVE from Kite</b> · ${esc(reg)}${t?` · ${t}`:''} · updates every 30s</span>`;
+  } else {
+    el.className='eng-src off';
+    el.innerHTML=`<span class="es-dot"></span><span class="es-txt"><b>Simulated</b> · connect Kite for the live regime — drag to explore</span>`;
+  }
+  const rb=$('esReset'); if(rb) rb.onclick=resyncLive;
+}
+// Any manual interaction switches the panel into what-if mode (stops live mirroring until "Use live").
+function markSimOverride(){ if(!state.simOverride){ state.simOverride=true; renderEngineSrc(); } }
 
 /* ---------- toasts ---------- */
 function clearToasts(){$('toastWrap').innerHTML='';state.suggesting=false;}
-function suggestToast(regime,S,conf,sc,manual){
+function suggestToast(regime,S,conf,sc,manual,label){
   state.suggesting=true;
   const t=document.createElement('div');t.className='toast';
-  t.innerHTML=`<div class="toast-ico">${icon(regime,22)}</div><div class="toast-body"><b>Market shifting to ${regime.toUpperCase()}</b>
+  t.innerHTML=`<div class="toast-ico">${icon(regime,22)}</div><div class="toast-body"><b>Market shifting to ${(label||regime).toUpperCase()}</b>
     <span>Composite ${S>=0?'+':''}${S} · ${conf}% confidence · ${reasonText(regime,sc)}</span></div>
     <div class="toast-acts"><button class="tbtn primary" data-act="switch">Switch view</button><button class="tbtn ghost" data-act="stay">Stay</button></div>`;
   $('toastWrap').appendChild(t);
@@ -5180,10 +5809,11 @@ function suggestToast(regime,S,conf,sc,manual){
   t.querySelector('[data-act="stay"]').onclick=()=>{if(!manual)setMode('manual',true);dismiss(t);};
   if(!manual)t._timer=setTimeout(()=>{if(document.body.contains(t)){cinematicRegime(regime);dismiss(t);}},6500);
 }
-function infoToast(regime,S,conf,sc,hard){
+function infoToast(regime,S,conf,sc,hard,label){
   state.suggesting=true;
+  const L=(label||regime).toUpperCase();
   const t=document.createElement('div');t.className='toast'+(hard?' hard':'');
-  t.innerHTML=`<div class="toast-ico">${icon(hard?'bolt':regime,22)}</div><div class="toast-body"><b>${hard?'Hard signal — switched to '+regime.toUpperCase():'Switched to '+regime.toUpperCase()}</b>
+  t.innerHTML=`<div class="toast-ico">${icon(hard?'bolt':regime,22)}</div><div class="toast-body"><b>${hard?'Hard signal — switched to '+L:'Switched to '+L}</b>
     <span>Composite ${S>=0?'+':''}${S} · ${conf}% · ${reasonText(regime,sc)}. No orders were changed.</span></div>
     <div class="toast-acts"><button class="tbtn ghost" data-act="keep">Override</button><button class="tbtn primary" data-act="ok">Got it</button></div>`;
   $('toastWrap').appendChild(t);
@@ -5199,22 +5829,24 @@ function openEngine(o){$('engine').classList.toggle('collapsed',!o);$('engineScr
 
 /* ---------- simulation ---------- */
 function toggleSim(){const btn=$('simRun');
-  if(state.simTimer){clearInterval(state.simTimer);state.simTimer=null;btn.textContent='▶ Run live simulation';btn.classList.remove('running');return;}
-  btn.textContent='⏸ Pause simulation';btn.classList.add('running');
+  if(state.simTimer){clearInterval(state.simTimer);state.simTimer=null;btn.textContent='▶ Simulate a move (demo)';btn.classList.remove('running');return;}
+  markSimOverride();   // the random-walk demo is explicitly a what-if, not live data
+  btn.textContent='⏸ Pause demo';btn.classList.add('running');
   state.simTimer=setInterval(()=>{const walk=(id,mn,mx,st)=>{const e=$(id);e.value=clamp(+e.value+(Math.random()-0.5)*st,mn,mx);};
     walk('sTrend',-100,100,16);walk('sVix',8,35,1.4);walk('sAd',0.2,3,0.18);walk('sRsi',20,80,5);walk('sPnl',-10,10,0.9);recompute();},1400);}
 
 /* ---------- presets ---------- */
 const PRESETS={rally:{sTrend:88,sVix:11.5,sAd:2.6,sRsi:68,sPnl:4.5,macd:true},choppy:{sTrend:8,sVix:16,sAd:1.0,sRsi:50,sPnl:-0.5,macd:true},crash:{sTrend:-78,sVix:24,sAd:0.4,sRsi:32,sPnl:-6,macd:false,hard:true},spike:{sTrend:-32,sVix:28,sAd:0.5,sRsi:38,sPnl:-3.5,macd:false,hard:true}};
 function applyPreset(name){const p=PRESETS[name];if(!p)return;
+  markSimOverride();   // a preset is a hypothetical scenario, not the live market
   ['sTrend','sVix','sAd','sRsi','sPnl'].forEach(k=>{if(p[k]!=null)$(k).value=p[k];});
   const mt=$('macdToggle');mt.dataset.on=String(p.macd);mt.textContent=p.macd?'Bullish ↑':'Bearish ↓';
   if(p.hard)state.forceHard=true;clearToasts();recompute();}
 
 /* ---------- init ---------- */
 function init(){
-  ['sTrend','sVix','sAd','sRsi','sPnl'].forEach(id=>$(id).addEventListener('input',()=>recompute()));
-  $('macdToggle').addEventListener('click',()=>{const b=$('macdToggle');const on=b.dataset.on!=='true';b.dataset.on=String(on);b.textContent=on?'Bullish ↑':'Bearish ↓';recompute();});
+  ['sTrend','sVix','sAd','sRsi','sPnl'].forEach(id=>$(id).addEventListener('input',()=>{markSimOverride();recompute();}));
+  $('macdToggle').addEventListener('click',()=>{const b=$('macdToggle');const on=b.dataset.on!=='true';b.dataset.on=String(on);b.textContent=on?'Bullish ↑':'Bearish ↓';markSimOverride();recompute();});
   document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>applyPreset(b.dataset.preset)));
   $('simRun').addEventListener('click',toggleSim);
   $('engineBtn').addEventListener('click',()=>openEngine(true));
@@ -5284,6 +5916,17 @@ function init(){
   renderPlanChip();
   state.investSection=(saved&&saved.investSection)||null;
   state.layout=(saved&&['originals','charts','watchlist','options','futures','build'].indexOf(saved.layout)>=0)?saved.layout:'originals';
+  // restore the active Algo sub-tab (Monitor / Library / …) so a refresh keeps you on the page you were on,
+  // instead of always snapping back to Marketplace (the default) when the async data loads settle.
+  if(saved&&saved.algo&&typeof saved.algo==='object'){
+    const AV=['library','opportunity','risk','market','leaderboard','backtest','forward','monitor','accuracy','analytics'];
+    if(AV.indexOf(saved.algo.view)>=0){
+      state.algo=state.algo||{bt:{algo:0,period:'1Y'}};
+      state.algo.view=saved.algo.view;
+      if(saved.algo.exec==='live'||saved.algo.exec==='paper') state.algo.exec=saved.algo.exec;
+    }
+    if(saved.algo.market==='in'||saved.algo.market==='crypto'){ state.algo=state.algo||{bt:{algo:0,period:'1Y'}}; state.algo.market=saved.algo.market; }
+  }
   if(state.layout==='options')state.desk.view='chain'; else if(state.layout==='futures')state.desk.view='futures';
   // restore named custom layouts (validate card keys against the live catalog)
   const validCard=c=>c&&canvasCatalog().some(w=>w.key===c.key);
@@ -5313,12 +5956,17 @@ function init(){
   setMode(startMode,true);
   applyRegime(startMode==='manual'&&saved&&saved.regime?saved.regime:'bull');
   recompute({silent:true});
+  renderHdrMarket();                                // header Indian⇄Crypto toggle (left of search)
+  if(state.algo&&state.algo.market==='crypto'){ renderTopIndex(); loadCrypto().then(()=>{ if(state.algo.market==='crypto'){ patchCryptoTape(); applyTickerSpeed(); } }); }
   tapeLoop();
   loadMarket(); setInterval(loadMarket, 30000);   // 100% real Kite market data (funds, regime, VIX, breadth)
   setInterval(()=>{ loadTicks();                  // real-time prices via Kite WebSocket (watchlist + chart)
     loadTape();                                   // real-time index tape (WS-fed) — patched in place, no scroll reset
     if(BOT.live && document.querySelector('.wg-card[data-wkey="depth"]')) loadDepth(state.selected||'RELIANCE');
   }, 2000);
+  // live crypto prices (Binance public, real) — drives the global rolling tape whenever Crypto is selected (5s poll)
+  setInterval(()=>{ if(state.algo && state.algo.market==='crypto' && document.visibilityState==='visible')
+    loadCrypto().then(()=>{ if(state.algo&&state.algo.market==='crypto') patchCryptoTape(); }); }, 5000);
   // fast real-time poll (2s): refresh live paper P&L + positions across ALL live algo
   // views — Marketplace, Leaderboard, Forward Test, Monitor. (Backtest is static, skip it.)
   // Safe re-render: skips the tick while a field is focused (no clobbering the capital box)
@@ -5326,6 +5974,7 @@ function init(){
   const ALGO_LIVE_VIEWS=['market','leaderboard','forward','monitor','accuracy','analytics'];
   setInterval(()=>{
     if(!(typeof isAlgo==='function'&&isAlgo())) return;
+    if(state.algo&&state.algo.market==='crypto') return;   // Indian P&L poll is paused while the studio is scoped to Crypto
     if(!ALGO_LIVE_VIEWS.includes(state.algo&&state.algo.view)) return;
     loadMonitor().then(()=>{
       if(!(isAlgo()&&ALGO_LIVE_VIEWS.includes(state.algo.view))) return;

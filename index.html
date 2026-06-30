@@ -36,6 +36,9 @@
 
   <div class="tb-spacer"></div>
 
+  <!-- Indian ⇄ Crypto market toggle (JS-rendered) — drives the rolling tape + Algo Studio scope -->
+  <div class="hdr-mkt" id="hdrMkt" aria-label="Market"></div>
+
   <div class="search">
     <svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
     <input type="text" placeholder="Search a stock, e.g. INFY" aria-label="Search for a stock by name or symbol" />
@@ -68,6 +71,7 @@
   <div class="tb-viewport"><div class="tb-ticker" id="topIndex"></div></div>
   <!-- Live market pulse — relocated here from the top bar so every metric has room to breathe -->
   <div class="tb-market">
+    <span class="tb-crypto-src" id="tbCryptoSrc">● Live · Binance · 24h</span>
     <div class="mkt-status" id="mktStatus"></div>
     <span class="tb-mdiv"></span>
     <div class="hdr-engine" id="hdrEngine" aria-label="Live regime engine"></div>
@@ -129,10 +133,11 @@
 <!-- ====================== REGIME ENGINE PANEL ====================== -->
 <aside class="engine collapsed" id="engine">
   <div class="engine-head">
-    <div><b>Regime Detection Engine</b><span>Simulate the market · watch AUTO switch the terminal</span></div>
+    <div><b>Regime Detection Engine</b><span>Live regime from Kite · drag any input to run a what-if</span></div>
     <button class="icon-btn" id="engineClose" aria-label="Close engine panel"><svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   </div>
   <div class="engine-body">
+    <div class="eng-src" id="engSrc" aria-live="polite"></div>
     <div class="presets">
       <button class="preset" data-preset="rally"><span class="seg-dot dot-bull"></span>Rally</button>
       <button class="preset" data-preset="choppy"><span class="seg-dot dot-neutral"></span>Choppy</button>
@@ -160,7 +165,7 @@
         <button id="macdToggle" class="mini-toggle" data-on="true">Bullish ↑</button></label>
     </div>
 
-    <button class="sim-run" id="simRun">▶ Run live simulation</button>
+    <button class="sim-run" id="simRun">▶ Simulate a move (demo)</button>
 
     <div class="readout">
       <div class="gauge">
