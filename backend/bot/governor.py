@@ -31,9 +31,10 @@ SECTOR = {
 }
 
 # portfolio limits (concentration as % of the live book; exposure as % of governed capital)
-MAX_SYMBOL_PCT = 25.0
+MAX_SYMBOL_PCT = 18.0        # tightened 25→18: no single name dominates (concentration = tail risk)
 MAX_SECTOR_PCT = 35.0
 MAX_TOTAL_PCT = 150.0
+MAX_BOTS_PER_SYMBOL = 2      # at most N distinct bots may crowd the SAME name (correlation cap)
 # drawdown tiers on realised P&L vs governed capital → (threshold %, mode, size multiplier)
 DD_TIERS = [(8.0, "emergency", 0.0), (6.0, "pause", 0.0), (4.0, "half", 0.5), (2.0, "reduce", 0.75)]
 
@@ -51,6 +52,7 @@ class RiskGovernor:
         self.size_mult = 1.0
         self.by_sym: dict[str, float] = {}
         self.by_sector: dict[str, float] = {}
+        self.bots_by_sym: dict[str, set] = {}   # distinct bots holding each name (correlation cap)
         self.total = 0.0
         self.audit: list[dict] = []     # recent approve/reject decisions
 
@@ -62,12 +64,16 @@ class RiskGovernor:
         equity = self.capital + realised
         self.peak = max(self.peak, equity)
         self.by_sym, self.by_sector, self.total = {}, {}, 0.0
+        self.bots_by_sym = {}
         for p in positions:
             v = float(p.get("value") or 0)
             sym = p.get("sym", "?")
             self.by_sym[sym] = self.by_sym.get(sym, 0.0) + v
             self.by_sector[sector_of(sym)] = self.by_sector.get(sector_of(sym), 0.0) + v
             self.total += v
+            bot = p.get("bot")
+            if bot:
+                self.bots_by_sym.setdefault(sym, set()).add(bot)
         # drawdown tier → mode + size multiplier (the global kill-switch)
         dd = (self.peak - equity) / self.peak * 100 if self.peak > 0 else 0.0
         self.dd = round(dd, 2)
@@ -93,6 +99,11 @@ class RiskGovernor:
         if v > 0 and (self.by_sym.get(sym, 0) + v) / cap * 100 > MAX_SYMBOL_PCT:
             pct = (self.by_sym.get(sym, 0) + v) / cap * 100
             return self._decide(bot, sym, False, scale, f"symbol concentration {sym} {pct:.0f}% > {MAX_SYMBOL_PCT:.0f}% of capital")
+        # 2b) crowding cap — too many DISTINCT bots on the same name = one correlated bet in disguise
+        held = self.bots_by_sym.get(sym, set())
+        if v > 0 and bot not in held and len(held) >= MAX_BOTS_PER_SYMBOL:
+            return self._decide(bot, sym, False, scale,
+                                f"crowding {sym}: {len(held)} bots already hold it (max {MAX_BOTS_PER_SYMBOL})")
         # 3) sector concentration
         if v > 0 and (self.by_sector.get(sec, 0) + v) / cap * 100 > MAX_SECTOR_PCT:
             pct = (self.by_sector.get(sec, 0) + v) / cap * 100
@@ -103,6 +114,7 @@ class RiskGovernor:
         # approved → add to the running book so later proposals THIS cycle see it
         self.by_sym[sym] = self.by_sym.get(sym, 0) + v
         self.by_sector[sec] = self.by_sector.get(sec, 0) + v
+        self.bots_by_sym.setdefault(sym, set()).add(bot)
         self.total += v
         note = "approved" if scale >= 1.0 else f"approved · scaled to {scale:.0%} ({self.mode} mode)"
         return self._decide(bot, sym, True, scale, note)
@@ -139,7 +151,8 @@ class RiskGovernor:
                 "topSector": {"sector": top_sec[0], "pct": round(sec_pct, 1)},
                 "sectors": {s: round(v / cap * 100, 1) for s, v in sorted(self.by_sector.items(), key=lambda kv: -kv[1]) if v > 0},
                 "symbols": {s: round(v / cap * 100, 1) for s, v in sorted(self.by_sym.items(), key=lambda kv: -kv[1]) if v > 0},
-                "limits": {"symbol": MAX_SYMBOL_PCT, "sector": MAX_SECTOR_PCT, "total": MAX_TOTAL_PCT},
+                "crowding": {s: len(b) for s, b in sorted(self.bots_by_sym.items(), key=lambda kv: -len(kv[1])) if len(b) > 1},
+                "limits": {"symbol": MAX_SYMBOL_PCT, "sector": MAX_SECTOR_PCT, "total": MAX_TOTAL_PCT, "botsPerSymbol": MAX_BOTS_PER_SYMBOL},
                 "ddTiers": [{"at": t, "mode": m} for t, m, _ in DD_TIERS]}
 
     def persist(self) -> None:

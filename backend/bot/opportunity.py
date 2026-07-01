@@ -174,6 +174,13 @@ def score_symbol(df: pd.DataFrame, regime: str, mtf_df: pd.DataFrame | None = No
     confidence = sum(comp.values())
     if not mtf_ok:
         confidence = int(confidence * 0.6)   # higher-TF disagrees → heavily discount
+    # anti-chase: price stretched far above EMA20 (in ATRs) = a vertical move → a poor entry.
+    # Buying extended is the classic way to enter right before the pullback. Discount it.
+    ema20 = row.get("ema20")
+    ext_atr = (price - ema20) / row["atr"] if (ema20 is not None and not pd.isna(ema20) and row["atr"]) else 0.0
+    chasing = ext_atr > 3.0
+    if chasing:
+        confidence = int(confidence * 0.7)   # >3 ATR above the mean → wait for a better price
 
     # ---- Opportunity Score 2.0: structured sub-scores + expected value + reasons ----
     def _c(x, lo=0, hi=100):
@@ -209,6 +216,8 @@ def score_symbol(df: pd.DataFrame, regime: str, mtf_df: pd.DataFrame | None = No
         reasons.append("Strong close near high")
     if not mtf_ok:
         reasons.append("higher-timeframe disagrees")
+    if chasing:
+        reasons.append(f"over-extended ({ext_atr:.1f} ATR above EMA20) — not chasing")
     if not reasons:
         reasons.append("No confirmations fired — below conviction")
 

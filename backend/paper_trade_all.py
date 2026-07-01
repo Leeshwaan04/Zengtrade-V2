@@ -48,6 +48,8 @@ def _engine_capital(e) -> float:
 
 
 GOVERNED_CAPITAL = 1_000_000.0   # the unified governed pool the portfolio limits are measured against
+FUT_MARGIN_PCT = 0.15            # futures trade on ~15% SPAN+exposure margin — book the CAPITAL AT RISK,
+                                 # not full notional (else one NIFTY lot ≈ 180% of the pool distorts every cap)
 
 
 def update_governor(engines, pairs, dep):
@@ -59,8 +61,11 @@ def update_governor(engines, pairs, dep):
         if CATALOG_ID[k] not in dep:
             continue
         realised += getattr(e, "realised", 0.0)
+        is_fut = isinstance(e, FuturesPaperEngine)
         for sym, p in getattr(e, "positions", {}).items():
-            book.append({"sym": sym, "value": (p.get("qty", 0) or 0) * (p.get("entry", 0) or 0)})
+            notional = (p.get("qty", 0) or 0) * (p.get("entry", 0) or 0)
+            value = notional * FUT_MARGIN_PCT if is_fut else notional   # margin for futures, cash for equity
+            book.append({"sym": sym, "value": value, "bot": getattr(e, "name", k)})
     realised += getattr(pairs, "realised", 0.0)
     GOVERNOR.set_book(book, realised, GOVERNED_CAPITAL)
     # drive the regime rebalancer from the live regime + portfolio health (capital-preservation)

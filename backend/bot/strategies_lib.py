@@ -328,6 +328,8 @@ class NR7Strategy:
 @dataclass
 class ORBConfig:
     or_bars: int = 3            # first 3×5min = first 15 minutes = the opening range
+    vol_mult: float = 1.3       # breakout bar must carry above-average volume (real conviction)
+    buf_atr: float = 0.10       # require a close this many ATRs ABOVE the range high (skip a marginal poke)
     trend_period: int = 12      # small warmup gate (intraday)
     atr_period: int = 14
 
@@ -335,7 +337,12 @@ class ORBConfig:
 class ORBStrategy:
     """Opening Range Breakout: marks the first 15 minutes' high/low, then goes long on a
     break above the range high; exits on a break below the range low (or the engine's
-    daily square-off). A classic high-volatility intraday momentum play."""
+    daily square-off). A classic high-volatility intraday momentum play.
+
+    Two confirmations reject the fakeout breaks that bled the naive version:
+      • ATR buffer   → the close must clear the range high by buf_atr×ATR, not just tick past it.
+      • volume       → the breakout bar must trade ≥ vol_mult × its 20-bar average volume;
+                        a break on thin volume is the classic bull-trap and is skipped."""
 
     def __init__(self, cfg: ORBConfig | None = None):
         self.cfg = cfg or ORBConfig()
@@ -349,15 +356,21 @@ class ORBStrategy:
         # Entry is gated to _n >= or_bars, so those bars are all in the past → no look-ahead.
         out["or_high"] = out["high"].where(in_or).groupby(day).transform("max")
         out["or_low"] = out["low"].where(in_or).groupby(day).transform("min")
+        out["vsma"] = indicators.sma(out["volume"], 20)
         out["atr"] = indicators.atr(out["high"], out["low"], out["close"], self.cfg.atr_period)
         out["bb_lower"] = out["or_high"]                        # warmup gate
         return out
 
     def _entry_long(self, row):
-        oh, n = row.get("or_high"), row.get("_n")
-        if oh is None or pd.isna(oh) or n is None:
+        oh, n, a, vs = row.get("or_high"), row.get("_n"), row.get("atr"), row.get("vsma")
+        if oh is None or pd.isna(oh) or n is None or n < self.cfg.or_bars:
             return False
-        return n >= self.cfg.or_bars and row["close"] > oh
+        buf = self.cfg.buf_atr * a if a and not pd.isna(a) else 0.0
+        if row["close"] <= oh + buf:
+            return False                                        # not a clean break beyond the range
+        if vs is not None and not pd.isna(vs) and vs > 0 and row["volume"] < self.cfg.vol_mult * vs:
+            return False                                        # thin-volume break = bull trap → skip
+        return True
 
     def _exit_long(self, row):
         ol = row.get("or_low")
@@ -367,13 +380,20 @@ class ORBStrategy:
 @dataclass
 class VWAPRevConfig:
     dist_atr: float = 1.5       # enter when price is this many ATRs BELOW the session VWAP
+    adx_max: float = 22.0       # ONLY fade on a range day — never into a strong trend (falling-knife guard)
+    adx_period: int = 14
     trend_period: int = 12
     atr_period: int = 14
 
 
 class VWAPRevStrategy:
     """Intraday VWAP reversion: when price stretches well below the session VWAP (a panic
-    dip on a balanced day), buy expecting reversion back to VWAP; exit at VWAP (or square-off).
+    dip on a BALANCED day), buy expecting reversion back to VWAP; exit at VWAP (or square-off).
+
+    Two guards keep it from fading a genuine one-way trend (the classic mean-reversion killer):
+      • ADX < adx_max  → the tape is ranging, not trending. A high-ADX down-day is NOT faded.
+      • bounce confirm → the current bar must close ABOVE the prior bar (the knife has stopped
+        falling). No catching a live down-move; wait for the first up-tick.
     Session VWAP resets each day via a per-day cumulative calc (no look-ahead)."""
 
     def __init__(self, cfg: VWAPRevConfig | None = None):
@@ -384,15 +404,22 @@ class VWAPRevStrategy:
         day = out.index.normalize()
         tp = (out["high"] + out["low"] + out["close"]) / 3.0
         out["vwap"] = (tp * out["volume"]).groupby(day).cumsum() / out["volume"].groupby(day).cumsum()
+        adx, _pdi, _mdi = indicators.adx(out["high"], out["low"], out["close"], self.cfg.adx_period)
+        out["adx"] = adx
+        out["prev_close"] = out["close"].groupby(day).shift(1)   # per-day → no cross-session bleed
         out["atr"] = indicators.atr(out["high"], out["low"], out["close"], self.cfg.atr_period)
         out["bb_lower"] = out["vwap"]                           # warmup gate
         return out
 
     def _entry_long(self, row):
-        v, a = row.get("vwap"), row.get("atr")
+        v, a, adx, pc = row.get("vwap"), row.get("atr"), row.get("adx"), row.get("prev_close")
         if v is None or pd.isna(v) or not a:
             return False
-        return (v - row["close"]) >= self.cfg.dist_atr * a      # stretched below VWAP
+        if adx is None or pd.isna(adx) or adx >= self.cfg.adx_max:
+            return False                                        # trending tape → don't fade it
+        if pc is None or pd.isna(pc) or row["close"] <= pc:
+            return False                                        # no up-tick yet → don't catch the knife
+        return (v - row["close"]) >= self.cfg.dist_atr * a      # stretched below VWAP + range + bounce
 
     def _exit_long(self, row):
         v = row.get("vwap")
