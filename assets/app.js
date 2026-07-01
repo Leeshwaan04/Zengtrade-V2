@@ -3120,11 +3120,13 @@ function algoLiveSig(){
 function patchAlgoLive(){
   const exec=(state.algo&&state.algo.exec)||'paper';
   const setNum=(el,v)=>{ if(!el)return; el.textContent=sgn(v||0); el.classList.remove('up','down'); el.classList.add(cls(v||0)); };
-  let total=0, depTotal=0;        // total = actively-running (Monitor); depTotal = all deployed incl. paused/aside (Forward Test)
+  let total=0, depTotal=0;        // total = actively-running IN THE ACTIVE CLASS (Monitor); depTotal = all deployed (Forward Test)
+  const brk={equity:0,options:0,futures:0}; let overall=0;   // per-class + combined (all classes) for the Monitor breakdown
   ALGOS.forEach(a=>{
     const v=exec==='live'?(a.livePnl||0):(a.paperPnl||0);
-    if(a.live) total+=v;
+    if(a.live && inScope(a)) total+=v;   // scoped to the Equity/Options/Futures toggle — matches the list shown
     if(a.deployed) depTotal+=v;
+    if(a.deployed){ const ik=algoInstr(a); if(brk[ik]!=null) brk[ik]+=v; overall+=v; }
     document.querySelectorAll('[data-live-pnl="'+a.id+'"]').forEach(el=>setNum(el,v));
     const sub=document.querySelector('[data-live-sub="'+a.id+'"]');
     if(sub) sub.textContent=(a.openPositions||0)?`${sgn(a.openPnl||0)} unrealised`:((a.openPositions||a.fwdTrades)?'realised':'no trades yet');
@@ -3138,6 +3140,10 @@ function patchAlgoLive(){
   });
   document.querySelectorAll('[data-live="monTotal"]').forEach(el=>setNum(el,total));
   document.querySelectorAll('[data-live="algoTotal"]').forEach(el=>setNum(el,depTotal));
+  document.querySelectorAll('[data-live="monOverall"]').forEach(el=>setNum(el,overall));
+  document.querySelectorAll('[data-live="brkEquity"]').forEach(el=>setNum(el,brk.equity));
+  document.querySelectorAll('[data-live="brkOptions"]').forEach(el=>setNum(el,brk.options));
+  document.querySelectorAll('[data-live="brkFutures"]').forEach(el=>setNum(el,brk.futures));
   let anReal=0, anOpen=0;
   ALGOS.forEach(a=>{ if(a.live){ anReal+=(a.realisedPnl||0); anOpen+=(a.openPnl||0); } });
   document.querySelectorAll('[data-live="anRealised"]').forEach(el=>setNum(el,anReal));
@@ -5040,11 +5046,20 @@ function algoMonitor(){
   }
   // ---- PAPER view ----
   if(!paperRun.length) return toggle+secEmpty('cpu','No paper strategies running','Start the paper engine to run every validated strategy live in paper mode — zero real-money risk, no terminal.',harnessCta());
-  const total=paperRun.reduce((s,a)=>s+(a.paperPnl||0),0);
+  const total=paperRun.reduce((s,a)=>s+(a.paperPnl||0),0);   // scoped to the active class
+  const {instr}=studioScope();
+  // per-class + combined P&L across EVERY deployed strategy (independent of the toggle)
+  const allDep=ALGOS.filter(a=>a.deployed);
+  const brk={equity:0,options:0,futures:0};
+  allDep.forEach(a=>{ const ik=algoInstr(a); if(brk[ik]!=null) brk[ik]+=((exec==='live'?a.livePnl:a.paperPnl)||0); });
+  const overall=brk.equity+brk.options+brk.futures;
   const stat=secStats([
     {l:'Deployed',v:String(paperRun.length)},
-    {l:'Paper P&L'+infoI(ALGO_DEFS['Paper P&L']),v:sgn(total),tone:total>=0?'up':'down',id:'monTotal'},
-    {l:'Mode',v:'Paper · no real orders'}]);
+    {l:esc(INSTR_LABEL[instr])+' P&L'+infoI('Live paper P&L of just the '+esc(INSTR_LABEL[instr])+' strategies — the ones shown below, per the instrument toggle above.'),v:sgn(total),tone:total>=0?'up':'down',id:'monTotal'},
+    {l:'Overall P&L'+infoI('Combined across Equity + Options + Futures — every deployed strategy, whatever the toggle is set to.'),v:sgn(overall),tone:overall>=0?'up':'down',id:'monOverall'},
+    {l:'Mode',v:'Paper'}]);
+  const mbCell=(k,lab)=>`<span class="mb-cell${instr===k?' on':''}" data-algoinstr="${k}" role="button" tabindex="0" title="Switch scope to ${lab}"><i>${esc(lab)}</i><b class="num ${cls(brk[k])}" data-live="brk${k.charAt(0).toUpperCase()+k.slice(1)}">${sgn(brk[k])}</b></span>`;
+  const brkStrip=`<div class="mon-brk"><span class="mb-lead">P&L by class</span>${mbCell('equity','Equity')}${mbCell('options','Options')}${mbCell('futures','Futures')}<span class="mb-cell mb-all"><i>Overall</i><b class="num ${cls(overall)}" data-live="monOverall">${sgn(overall)}</b></span></div>`;
   const me=state.algo.monExpand=state.algo.monExpand||{};
   const rows=paperRun.map(a=>{const i=ALGOS.indexOf(a);
     const open=!!me[a.id];
@@ -5065,7 +5080,7 @@ function algoMonitor(){
   const note=paperRun.some(a=>!a.openPositions&&!a.fwdTrades)
     ? `Strategies at ₹0 simply haven’t triggered an entry signal yet — they only trade when their setup appears. P&L moves as positions open and close.`
     : `Open positions are marked to live market price; the go-live nudge needs ≥${BOT.nudgeMin||10} <b>closed</b> profitable trades.`;
-  return toggle+(harnessRunning()?harnessCta():'')+riskPanel()+stat+`<div class="mon-list">${rows}</div>`+stoppedPanel()+`<p class="sec-hint">${icon('shield',12)}<span>${note} All run in <b>PAPER</b> — zero real-money risk.</span></p>`;
+  return toggle+(harnessRunning()?harnessCta():'')+riskPanel()+stat+brkStrip+`<div class="mon-list">${rows}</div>`+stoppedPanel()+`<p class="sec-hint">${icon('shield',12)}<span>${note} All run in <b>PAPER</b> — zero real-money risk.</span></p>`;
 }
 /* When you STOP a strategy, the harness squares off its open paper book at the live mark and
    files the liquidation here — deliberately OUT of any strategy's P&L (a stop isn't a signal),

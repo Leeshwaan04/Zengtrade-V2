@@ -1,0 +1,6 @@
+kiteconnect>=4.2.0
+pandas>=2.0
+numpy>=1.24
+yfinance>=0.2          # free historical data for backtesting (no broker needed)
+py5paisa>=0.7          # free 5paisa data + execution (needs a 5paisa account)
+pyotp>=2.8           # generate 5paisa TOTP from secret seed

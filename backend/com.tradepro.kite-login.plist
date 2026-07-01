@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Hands-free daily Kite login. Runs auto_login.py every morning at 06:10 IST so a fresh
+  access_token is in .env before the 09:15 open. Requires the KITE_USER_ID / KITE_PASSWORD /
+  KITE_TOTP_SECRET creds in .env (see .env.example) + `pip3 install pyotp`.
+
+  Install:
+    cp com.tradepro.kite-login.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.tradepro.kite-login.plist
+  Test now:        launchctl start com.tradepro.kite-login
+  Watch the log:   tail -f /Users/sumitbagewadi/kite-mean-reversion-bot/auto_login.log
+  Uninstall:       launchctl unload ~/Library/LaunchAgents/com.tradepro.kite-login.plist
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.tradepro.kite-login</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Library/Frameworks/Python.framework/Versions/3.13/bin/python3</string>
+    <string>/Users/sumitbagewadi/kite-mean-reversion-bot/auto_login.py</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/sumitbagewadi/kite-mean-reversion-bot</string>
+
+  <!-- 06:10 every day (token rolls over at ~06:00 IST; machine clock is IST) -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key><integer>6</integer>
+    <key>Minute</key><integer>10</integer>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/Users/sumitbagewadi/kite-mean-reversion-bot/auto_login.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/sumitbagewadi/kite-mean-reversion-bot/auto_login.log</string>
+  <key>RunAtLoad</key>
+  <false/>
+</dict>
+</plist>
