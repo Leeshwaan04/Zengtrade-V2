@@ -3168,6 +3168,70 @@ const STRAT_FAMILIES=[
   ['arb',        'Cash-Futures / Arb',   'scissors','Lock a near-riskless spread between cash & futures or across expiries.'],
 ];
 const SEG_LABEL={equity:'Equity',index:'Index F&O',fno:'Stock F&O',options:'Options',any:'Any market'};
+/* ── Instrument × holding-style bifurcation (Library navigation) ──────────────
+   Primary class is DERIVED from the catalog seg (equity→Equity, options→Options,
+   index|fno→Futures). Holding style is an explicit per-strategy tag — a judgement
+   call about how the strategy is actually held; retune freely in STRAT_HOLD. */
+const INSTR_LABEL={equity:'Equity',options:'Options',futures:'Futures'};
+const INSTR_TABS=[
+  ['equity', 'Equity',  'layers',  'Cash stocks — delivery & intraday'],
+  ['options','Options', 'target',  'Defined-risk & premium — calls & puts'],
+  ['futures','Futures', 'trendUp', 'Leveraged index & stock F&O'],
+];
+const HOLD_LABEL={carry:'Carry-forward',intraday:'Intraday',swing:'Swing',expiry:'Expiry',scalper:'Scalper'};
+const HOLD_DESC={
+  carry:'Positional — held overnight to multi-day (CNC / carried F&O).',
+  intraday:'Entered and squared off within the same session.',
+  swing:'Held a few days on a directional or volatility view.',
+  expiry:'Anchored to the options expiry cycle — theta, pin, expiry-day.',
+  scalper:'Very short intraday — many small, fast trades.',
+};
+// per-instrument holding-style tabs (order as the user mapped them)
+const HOLD_TABS={
+  equity:['carry','intraday','scalper'],
+  options:['carry','intraday','swing','expiry','scalper'],
+  futures:['carry','intraday','swing','expiry','scalper'],
+};
+const instrOf=s=>(s.seg==='equity'||s.seg==='any')?'equity':(s.seg==='options')?'options':'futures';
+const STRAT_HOLD={
+  // Equity (cash stocks)
+  lib_adx:'carry',lib_rsmom:'carry',lib_rsi2:'carry',lib_bollrev:'carry',lib_donchian:'carry',
+  lib_vcp:'carry',lib_btst:'carry',lib_pairs:'carry',lib_earnings:'carry',lib_rebal:'carry',
+  lib_sectorrot:'carry',lib_mompf:'carry',lib_lowvol:'carry',lib_quality:'carry',lib_mlsignal:'carry',
+  lib_nr7:'intraday',lib_eodsq:'intraday',lib_news:'intraday',lib_gapfill:'scalper',
+  // Futures (index & stock F&O)
+  lib_macross:'carry',lib_fiiflow:'carry',lib_regimeswitch:'carry',lib_supertrend:'carry',
+  lib_orb:'intraday',lib_dow:'swing',lib_ratio:'swing',lib_oibuildup:'swing',
+  lib_idxarb:'expiry',lib_cashfut:'expiry',lib_calroll:'expiry',lib_ema921:'scalper',lib_vwaprev:'scalper',
+  // Options
+  lib_coveredcall:'carry',lib_calendar:'carry',lib_deltaneutral:'carry',lib_longopt:'intraday',
+  lib_pcr:'swing',lib_debit:'swing',lib_credit:'swing',lib_straddle:'swing',
+  lib_expiry:'expiry',lib_maxpain:'expiry',lib_strangle:'expiry',lib_condor:'expiry',lib_920:'scalper',
+};
+const holdOf=s=>STRAT_HOLD[s.id]||'carry';
+/* Same Equity/Options/Futures × holding-style classes, but for the REAL backend bots (ALGOS).
+   Instrument from segment+name; holding from product (CNC=carry, MIS=intraday, NRML=swing) with
+   an explicit per-id map for the cases where that's too coarse. Scope is studio-wide. */
+const ALGO_HOLD={
+  orb:'intraday',vwap_rev:'scalper',vwap_mom:'scalper',ema_scalp:'scalper',bb_breakout:'intraday',meanrev:'intraday',
+  momentum:'carry',rsi2:'carry',macross:'carry',supertrend:'carry',lowvol:'carry',xs_momentum:'carry',
+  ema_cross:'carry',adx_trend:'carry',bollinger:'carry',zscore:'carry',nr7:'carry',opportunity:'carry',moonshot:'carry',
+  pairs:'swing',strangle:'expiry',fut_trend:'swing',iron_condor:'expiry',basis:'expiry',mcx_trend:'swing',goldsilver:'swing',
+};
+function algoInstr(a){ const id=(a&&a.id||'').toLowerCase(), seg=(a&&a.segment||'').toLowerCase(), nm=(a&&a.name||'').toLowerCase();
+  if(/strangle|condor|straddle|option|theta|premium selling|iron/.test(id+' '+nm)) return 'options';
+  if(seg==='cash') return 'equity';
+  if(seg==='fno'||seg==='commodity') return 'futures';
+  return 'equity'; }
+function algoHold(a){ const id=(a&&a.id||'').toLowerCase(); if(ALGO_HOLD[id]) return ALGO_HOLD[id];
+  if(/scalp/.test(id)) return 'scalper'; const p=(a&&a.product||'').toUpperCase();
+  if(p==='MIS') return 'intraday'; if(p==='NRML') return 'swing'; return 'carry'; }
+// studio-wide instrument × holding scope — the single source of truth every Algo tab honours
+function studioScope(){ const a=state.algo=state.algo||{};
+  if(!a.instr){ a.instr=(a.lib&&a.lib.instr)||'equity'; } if(!a.hold){ a.hold=(a.lib&&a.lib.hold)||'all'; }
+  return {instr:a.instr,hold:a.hold}; }
+function inScope(a){ const sc=studioScope(); return algoInstr(a)===sc.instr && (sc.hold==='all'||algoHold(a)===sc.hold); }       // ALGOS
+function libInScope(s){ const sc=studioScope(); return instrOf(s)===sc.instr && (sc.hold==='all'||holdOf(s)===sc.hold); }       // STRAT_LIBRARY
 // risk → existing badge class (Conservative=b-up, Moderate=b-neu, Aggressive=b-warn)
 const STRAT_LIBRARY=[
   // ---- Trend / Momentum ----
@@ -3665,17 +3729,42 @@ function cryptoBody(view,label){
   return cryptoSoon(label);
 }
 
+// Studio-wide scope toggle (Equity/Options/Futures + holding style) — rendered once in the
+// chrome, below the tabs, so every Indian tab is scoped consistently. Counts are the strategy
+// universe (the Library catalog) so the number means the same on every tab.
+function studioScopeBar(){
+  const {instr,hold}=studioScope();
+  const instrCount=i=>STRAT_LIBRARY.filter(s=>instrOf(s)===i).length;
+  const holdCount=(i,h)=>STRAT_LIBRARY.filter(s=>instrOf(s)===i&&holdOf(s)===h).length;
+  const instrBar=`<div class="lib-instr" role="tablist" aria-label="Instrument class">${INSTR_TABS.map(([id,lab,ic,desc])=>
+    `<button class="lib-instr-tab${instr===id?' on':''}" data-algoinstr="${id}" role="tab" aria-selected="${instr===id}">
+      <span class="lii-top">${icon(ic,15)}<b>${esc(lab)}</b><i class="lii-n">${instrCount(id)}</i></span>
+      <span class="lii-desc">${esc(desc)}</span></button>`).join('')}</div>`;
+  const holdBar=`<div class="lib-hold" role="tablist" aria-label="Holding style">`+
+    `<button class="lib-hold-tab${hold==='all'?' on':''}" data-algohold="all" role="tab" aria-selected="${hold==='all'}">All <i>${instrCount(instr)}</i></button>`+
+    (HOLD_TABS[instr]||[]).map(h=>`<button class="lib-hold-tab${hold===h?' on':''}" data-algohold="${h}" role="tab" aria-selected="${hold===h}" title="${esc(HOLD_DESC[h])}">${esc(HOLD_LABEL[h])} <i>${holdCount(instr,h)}</i></button>`).join('')+
+    `</div>`;
+  return `<div class="av-scope">${instrBar}${holdBar}</div>`;
+}
+// honest empty state that names the active scope (used when a tab is empty BECAUSE of the scope)
+function scopeEmpty(ic,title,msg,cta){ const {instr,hold}=studioScope();
+  const chip=`<div class="av-scope-empty">${icon('layout',12)}<span>Scope · <b>${esc(INSTR_LABEL[instr])}${hold!=='all'?' · '+esc(HOLD_LABEL[hold]):''}</b></span></div>`;
+  return chip+secEmpty(ic,title,msg,cta); }
+// honest note for portfolio/engine-level tabs that are deliberately NOT scoped by instrument
+function scopeNote(msg){ return `<div class="av-scope-note">${icon('layout',12)}<span>${msg}</span></div>`; }
 function renderAlgo(){
   const v=$('algoView'); if(!v) return;
   if(!isAlgo()){ v.innerHTML=''; return; }
   state.algo=state.algo||{view:'market',bt:{algo:0,period:'1Y'}};
+  if(!state.algo.view) state.algo.view='market';
+  if(!state.algo.bt) state.algo.bt={algo:0,period:'1Y'};   // guard: setMarket/studioScope can create state.algo before this default
   if(!state.algo.exec) state.algo.exec='paper';
   if(!state.algo.market) state.algo.market='in';
   const crypto=state.algo.market==='crypto';
   if(!BOT.loaded){ loadBotData().then(()=>{ if(isAlgo())renderAlgo(); }); }
   if(crypto && !CRYPTO.loaded && !CRYPTO.busy){ loadCrypto().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); }
   const view=state.algo.view, live=ALGOS.filter(a=>a.status!=='idle');
-  const depN=crypto?0:ALGOS.filter(a=>a.deployed).length;   // Monitor badge reflects the active market — no Indian count leaks onto Crypto
+  const depN=crypto?0:ALGOS.filter(a=>a.deployed&&inScope(a)).length;   // Monitor badge reflects the active market + studio scope
   const tabs=[['library','Library'],['opportunity','Opportunity Engine'],['risk','Risk Governor'],['positions','Positions'],['market','Marketplace'],['leaderboard','Leaderboard'],['backtest','Backtest'],['forward','Forward Test'],['monitor','Monitor'],['accuracy','Accuracy'],['analytics','Analytics']];
   const head=`<div class="av-head">
     <div class="av-title"><span class="av-ic">${icon('cpu',17)}</span><div><b>Algo Studio</b><span>${crypto?'Crypto strategies · live Binance prices · paper preview':'Backtest, forward-test &amp; monitor rule-based strategies'}</span></div></div>
@@ -3684,10 +3773,13 @@ function renderAlgo(){
   const body=crypto
     ? cryptoBody(view,tabLabel)
     : (view==='library'?algoLibrary():view==='opportunity'?algoOpportunity():view==='risk'?algoRisk():view==='positions'?algoPositions():view==='market'?algoMarket():view==='leaderboard'?algoLeaderboard():view==='backtest'?algoBacktest():view==='forward'?algoForward():view==='accuracy'?algoAccuracy():view==='analytics'?algoAnalytics():algoMonitor());
-  v.innerHTML=`<div class="av-wrap">${head}<div class="av-scroll">${crypto?cryptoStatusBar():algoStatusBar()}${body}</div></div>`;
+  v.innerHTML=`<div class="av-wrap">${head}<div class="av-scroll">${crypto?cryptoStatusBar():algoStatusBar()}${crypto?'':studioScopeBar()}${body}</div></div>`;
   v.querySelectorAll('[data-algomkt]').forEach(b=>b.onclick=()=>setMarket(b.dataset.algomkt));
   v.querySelectorAll('[data-algoview]').forEach(b=>b.onclick=()=>{state.algo.view=b.dataset.algoview;renderAlgo();});
   v.querySelectorAll('[data-algoseg]').forEach(b=>b.onclick=()=>{state.algo.seg=b.dataset.algoseg;renderAlgo();});
+  // studio-wide instrument × holding scope (every Indian tab honours it)
+  v.querySelectorAll('[data-algoinstr]').forEach(b=>b.onclick=()=>{ const a=state.algo; if(a.instr===b.dataset.algoinstr) return; a.instr=b.dataset.algoinstr; a.hold='all'; if(a.lib) a.lib.fam='all'; renderAlgo(); });
+  v.querySelectorAll('[data-algohold]').forEach(b=>b.onclick=()=>{ state.algo.hold=b.dataset.algohold; renderAlgo(); });
   v.querySelectorAll('[data-algogoto]').forEach(b=>b.onclick=()=>{state.algo.view=b.dataset.algogoto;renderAlgo();});
   v.querySelectorAll('[data-algobt]').forEach(b=>b.onclick=()=>{state.algo.bt.algo=+b.dataset.algobt;state.algo.view='backtest';renderAlgo();});
   v.querySelectorAll('[data-algodep]').forEach(b=>b.onclick=()=>algoDeploy(ALGOS[+b.dataset.algodep]));
@@ -3720,10 +3812,9 @@ function renderAlgo(){
   v.querySelectorAll('[data-lbsort]').forEach(b=>b.onclick=()=>{state.algo.lbSort=b.dataset.lbsort;renderAlgo();});
   v.querySelectorAll('[data-harness]').forEach(b=>b.onclick=()=>toggleHarness(b.dataset.harness));
   const fgx=v.querySelector('[data-fgdismiss]'); if(fgx) fgx.onclick=()=>{ BOT.algoGuideDone=true; try{localStorage.setItem('tp.algoGuide','1');}catch(e){} renderAlgo(); };
-  // ---- Strategy Library: filters · search · DIY expand · regime jump ----
+  // ---- Strategy Library: family/risk filters · search · DIY expand · regime jump (instrument & holding live in the studio scope toggle) ----
   v.querySelectorAll('[data-libfam]').forEach(b=>b.onclick=()=>{ libState().fam=b.dataset.libfam; renderAlgo(); });
   v.querySelectorAll('[data-librisk]').forEach(b=>b.onclick=()=>{ libState().risk=b.dataset.librisk; renderAlgo(); });
-  v.querySelectorAll('[data-libseg]').forEach(b=>b.onclick=()=>{ libState().seg=b.dataset.libseg; renderAlgo(); });
   v.querySelectorAll('[data-libfav]').forEach(b=>b.onclick=()=>{ const l=libState(); l.fam='all'; l.risk='all'; l.seg='all'; l.favOnly=!l.favOnly; renderAlgo(); });
   v.querySelectorAll('[data-libexpand]').forEach(el=>{ el.onclick=()=>{ const l=libState(); l.expand=l.expand||{}; l.expand[el.dataset.libexpand]=!l.expand[el.dataset.libexpand]; renderAlgo(); }; });
   const lq=v.querySelector('#libSearch'); if(lq){ lq.oninput=()=>{ libState().q=lq.value; clearTimeout(lq._t); lq._t=setTimeout(()=>{ const ae=document.activeElement; renderAlgo(); const n=$('libSearch'); if(n&&ae&&ae.id==='libSearch'){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },180); }; }
@@ -3895,8 +3986,9 @@ function toggleAdapt(i){
   });
 }
 function algoForward(){
-  const shown=ALGOS.filter(a=>a.deployed);               // paper + paused (standing aside) + live
-  if(!shown.length) return secEmpty('cpu','No forward test running yet','One click starts the paper engine — it forward-tests every validated strategy on live data, at zero risk. No terminal needed.',harnessCta());
+  const {instr,hold}=studioScope();
+  const shown=ALGOS.filter(a=>a.deployed&&inScope(a));    // paper + paused (standing aside) + live, scoped to the active class
+  if(!shown.length) return scopeEmpty('cpu','No forward test in this class','No deployed bot in this class is forward-testing yet — switch the scope above (Equity holds the live book), or deploy one from the Marketplace.',harnessCta());
   ensureAnalytics();                                     // real per-strategy equity curves for the sparklines
   const lr=liveRegime();
   const total=shown.reduce((s,a)=>s+(a.paperPnl||0),0);
@@ -4152,7 +4244,7 @@ function frameworkBand(lr,cap){
 }
 
 /* ===== STRATEGY LIBRARY view — browse every type, learn, filter, regime-match ===== */
-function libState(){ state.algo=state.algo||{}; return state.algo.lib=state.algo.lib||{fam:'all',risk:'all',seg:'all',q:'',favOnly:false,expand:{}}; }
+function libState(){ state.algo=state.algo||{}; return state.algo.lib=state.algo.lib||{instr:'equity',hold:'all',fam:'all',risk:'all',seg:'all',q:'',favOnly:false,expand:{}}; }
 const famMeta=k=>STRAT_FAMILIES.find(f=>f[0]===k)||['?','Other','cpu',''];
 // liveRegime() already returns a label ('Bull'|'Bear'|'Choppy'|'High-Vol'); High-Vol also overlays from VIX
 function libHighVol(){ const v=(BOT.live&&BOT.market&&BOT.market.vix&&BOT.market.vix.ltp)||0; return v>=20; }
@@ -4167,11 +4259,12 @@ function algoLibrary(){
   const regLabel=BOT.live?liveRegime():null;     // 'Bull'|'Bear'|'Choppy'|'High-Vol' when live; null offline
   const hv=libHighVol();
   const q=(l.q||'').trim().toLowerCase();
+  const {instr,hold}=studioScope();   // instrument class + holding style come from the studio-wide toggle (chrome)
   // filter pipeline
   let rows=STRAT_LIBRARY.filter(s=>
+    libInScope(s) &&
     (l.fam==='all'||s.fam===l.fam) &&
     (l.risk==='all'||s.risk===l.risk) &&
-    (l.seg==='all'||s.seg===l.seg) &&
     (!l.favOnly || libFav(s,regLabel,hv)) &&
     (!q || (s.name+' '+s.what+' '+famMeta(s.fam)[1]).toLowerCase().includes(q))
   );
@@ -4202,24 +4295,24 @@ function algoLibrary(){
     favStrip=`<div class="lib-fav offline">${icon('shield',14)}<span><b>Connect Kite to auto-match strategies to the live regime.</b> Run <code>python3 login.py</code> — until then, browse and learn freely; we won’t guess today’s regime.</span></div>`;
   }
 
-  // ---- filters ----
-  const famCounts={}; STRAT_LIBRARY.forEach(s=>famCounts[s.fam]=(famCounts[s.fam]||0)+1);
-  const famChips=`<button class="lib-chip${l.fam==='all'?' on':''}" data-libfam="all">All <i>${STRAT_LIBRARY.length}</i></button>`+
-    STRAT_FAMILIES.map(f=>`<button class="lib-chip${l.fam===f[0]?' on':''}" data-libfam="${f[0]}" title="${esc(f[3])}">${icon(f[2],12)} ${esc(f[1])} <i>${famCounts[f[0]]||0}</i></button>`).join('');
+  // ---- filters (family + risk + search) — instrument & holding handled by the studio scope toggle (chrome) ----
+  const instrCount=i=>STRAT_LIBRARY.filter(s=>instrOf(s)===i).length;
+  const famCounts={}; STRAT_LIBRARY.forEach(s=>{ if(instrOf(s)===instr) famCounts[s.fam]=(famCounts[s.fam]||0)+1; });
+  const famChips=`<button class="lib-chip${l.fam==='all'?' on':''}" data-libfam="all">All <i>${instrCount(instr)}</i></button>`+
+    STRAT_FAMILIES.filter(f=>famCounts[f[0]]).map(f=>`<button class="lib-chip${l.fam===f[0]?' on':''}" data-libfam="${f[0]}" title="${esc(f[3])}">${icon(f[2],12)} ${esc(f[1])} <i>${famCounts[f[0]]}</i></button>`).join('');
   const riskChips=['all','Conservative','Moderate','Aggressive'].map(r=>`<button class="lib-mini${l.risk===r?' on':''}" data-librisk="${r}">${r==='all'?'Any risk':r}</button>`).join('');
-  const segChips=['all','equity','index','fno','options'].map(s=>`<button class="lib-mini${l.seg===s?' on':''}" data-libseg="${s}">${s==='all'?'Any instrument':SEG_LABEL[s]}</button>`).join('');
-  const filterActive=l.fam!=='all'||l.risk!=='all'||l.seg!=='all'||q||l.favOnly;
+  const filterActive=l.fam!=='all'||l.risk!=='all'||q||l.favOnly;
   const filters=`<div class="lib-filters">
     <div class="lib-search"><span class="lib-search-ic">${icon('search',14)}</span><input id="libSearch" class="lib-search-in" type="text" placeholder="Search strategies — e.g. straddle, breakout, theta…" value="${esc(l.q||'')}"></div>
     <div class="lib-chiprow">${famChips}</div>
-    <div class="lib-minirow"><span class="lib-minilbl">Risk</span>${riskChips}<span class="lib-minilbl">Instrument</span>${segChips}${filterActive?`<button class="lib-clear" data-libclear>${icon('close',11)} Clear</button>`:''}</div>
+    <div class="lib-minirow"><span class="lib-minilbl">Risk</span>${riskChips}${filterActive?`<button class="lib-clear" data-libclear>${icon('close',11)} Clear</button>`:''}</div>
   </div>`;
 
   // ---- grid ----
   const grid=rows.length
     ? `<div class="lib-grid">${rows.map(s=>libCard(s,regLabel,hv)).join('')}</div>`
-    : secEmpty('search','No strategies match','Loosen the filters or clear the search to see the full library.');
-  const count=`<p class="sec-hint">${icon('cpu',12)}<span>Showing <b>${rows.length}</b> of ${STRAT_LIBRARY.length} strategy types across ${STRAT_FAMILIES.length} families. Each is a <b>candidate</b> until it passes a real engine backtest — then it graduates to the Marketplace as <b>Validated</b>.</span></p>`;
+    : secEmpty('search','No strategies match','Loosen the filters or clear the search — or switch holding style / instrument above.');
+  const count=`<p class="sec-hint">${icon('cpu',12)}<span>Showing <b>${rows.length}</b> ${esc(INSTR_LABEL[instr])} strateg${rows.length===1?'y':'ies'}${hold!=='all'?` · <b>${esc(HOLD_LABEL[hold])}</b>`:''} of ${instrCount(instr)} in this class. Each is a <b>candidate</b> until a real engine backtest graduates it to <b>Validated</b>.</span></p>`;
   return hero+favStrip+filters+count+grid;
 }
 
@@ -4236,7 +4329,7 @@ function libCard(s,regLabel,hv){
   const sbadge=validated?'<span class="vbadge ok">Validated</span>':'<span class="vbadge cand" title="Recognised strategy, not yet engine-backtested. Browse & learn; validate before deploying.">Candidate</span>';
   const meta=`<div class="lib-meta">
     <span class="lib-mtag">${icon(fm[2],11)} ${esc(fm[1])}</span>
-    <span class="lib-mtag">${icon('layout',11)} ${esc(SEG_LABEL[s.seg]||s.seg)}</span>
+    <span class="lib-mtag">${icon('layout',11)} ${esc(INSTR_LABEL[instrOf(s)])} · ${esc(HOLD_LABEL[holdOf(s)])}</span>
     <span class="lib-mtag">${icon('target',11)} Best in ${esc(s.best)}</span>
   </div>`;
   // risk-first: surface the failure + guard up front, before any upside
@@ -4312,8 +4405,11 @@ function missionBanner(){
 
 function algoOpportunity(){
   const a=ALGOS.find(x=>x.id==='opportunity');
+  const {instr}=studioScope();
+  // engine-level tab: not filtered by instrument — flag it when the scope isn't Equity (where it runs)
+  const sNote=instr!=='equity'?scopeNote(`The Opportunity Engine &amp; Moonshot run on the <b>Equity</b> book — they aren't scoped to ${esc(INSTR_LABEL[instr])}. Switch the scope to <b>Equity</b> to act on these.`):'';
   // ---- hero / explainer ----
-  const hero=`<div class="opp-hero">
+  const hero=sNote+`<div class="opp-hero">
     <div class="opp-hero-ic">${icon('cpu',20)}</div>
     <div class="opp-hero-tx"><b>Opportunity Engine — the strict judge.</b>
       <span>Not another strategy. It detects the regime, lets only regime-appropriate specialists <b>vote</b> (weighted), scores every setup <b>0–100</b> on 8 confirmations, and <b>refuses</b> anything that isn't high-conviction. The goal isn't to win every trade — it's to never take a low-quality one.</span></div>
@@ -4521,7 +4617,7 @@ function rebalancePanel(){
 
 function algoRisk(){
   loadRisk();
-  const hero=`<div class="rk-hero"><div class="rk-hero-ic">${icon('shield',20)}</div>
+  const hero=scopeNote('Portfolio-wide — the Governor spans <b>every</b> instrument class at once, regardless of the scope above. Risk is managed across the whole book.')+`<div class="rk-hero"><div class="rk-hero-ic">${icon('shield',20)}</div>
     <div class="rk-hero-tx"><b>Portfolio Risk Governor</b><span>Every trade passes through here — no exceptions. It caps concentration, governs exposure, and trips a portfolio-wide kill-switch on drawdown. Bots propose; the Governor disposes.</span></div></div>`;
   const d=RISK.data;
   if(!RISK.loaded) return hero+`<div class="opp-load">${icon('cpu',16)}<span>Reading the live book…</span></div>`;
@@ -4577,8 +4673,10 @@ function algoPositions(){
   const d=POSNS.data;
   if(!POSNS.loaded) return hero+`<div class="opp-load">${icon('cpu',16)}<span>Reading open positions…</span></div>`;
   if(!d||d.real===false) return hero+`<div class="opp-offline">${icon('shield',14)}<span>${esc((d&&d.error)||'')||'Connect the harness to manage live positions.'}</span></div>`;
-  const ps=d.positions||[];
-  if(!ps.length) return hero+`<div class="opp-offline">${icon('check',14)}<span><b>No open positions</b> — nothing to manage right now. As the bots enter, each position appears here with a live health score and a recommended action.</span></div>`;
+  const allPs=d.positions||[];
+  const ps=allPs.filter(p=>inScope(ALGOS.find(x=>x.id===(p.bot))||{id:p.bot}));   // scope to the active instrument class
+  if(!allPs.length) return hero+`<div class="opp-offline">${icon('check',14)}<span><b>No open positions</b> — nothing to manage right now. As the bots enter, each position appears here with a live health score and a recommended action.</span></div>`;
+  if(!ps.length) return hero+scopeEmpty('check','No open positions in this class',`${allPs.length} position(s) are open in other classes — switch the scope above (Equity holds the live book) to manage them.`);
   const summ=`<p class="sec-hint">${icon('cpu',12)}<span><b>${ps.length}</b> open position(s)${d.avgHealth!=null?` · avg health <b>${d.avgHealth}</b>`:''} · weakest first. Health updates every cycle from the live thesis.</span></p>`;
   const cards=ps.map(p=>{
     const tone=posTone(p.health), act=POS_ACT[p.action]||['—','na'];
@@ -4602,14 +4700,12 @@ function algoPositions(){
 }
 
 function algoMarket(){
-  const segs=BOT.segments||[{id:'cash',label:'All',note:''}];
-  const seg=state.algo.seg||segs[0].id;
+  const {instr,hold}=studioScope();                       // instrument class & holding from the studio scope toggle (chrome)
   const lr=liveRegime();
   const cap=algoPlanCapital();
   const onlyRun=!!(state.algo&&state.algo.onlyRun);
-  const inSeg=ALGOS.filter(a=>!a.segment||a.segment===seg);
+  const inSeg=ALGOS.filter(a=>inScope(a));                 // deployable bots in the active class · holding style
   const shown=onlyRun?inSeg.filter(a=>algoRunnable(a,lr,cap)):inSeg;
-  const segTabs=`<div class="seg-tabs" role="tablist">${segs.map(sg=>`<button class="seg-tab${sg.id===seg?' on':''}" data-algoseg="${sg.id}" role="tab" aria-selected="${sg.id===seg}"><b>${esc(sg.label)}</b><i>${esc(sg.note||'')}</i></button>`).join('')}</div>`;
   const affordN=inSeg.filter(a=>cap>=a.minCap).length, matchN=inSeg.filter(a=>algoRunnable(a,lr,cap)).length;
   const quick=[[50000,'₹50K'],[100000,'₹1L'],[500000,'₹5L'],[1000000,'₹10L']];
   const capQuick=`<div class="cap-quick" role="group" aria-label="Quick capital presets">${quick.map(([qv,ql])=>`<button class="cap-chip${cap===qv?' on':''}" data-capset="${qv}">${ql}</button>`).join('')}</div>`;
@@ -4621,16 +4717,19 @@ function algoMarket(){
   </div>`;
   const valid=inSeg.filter(a=>a.vstatus==='validated').length;
   const regimeReady=inSeg.filter(a=>a.vstatus==='validated'&&(a.bestRegime===lr||a.bestRegime==='Market-neutral')).length;
-  const segLabel=(segs.find(s=>s.id===seg)||{}).label||'segment';
+  const segLabel=INSTR_LABEL[instr]+(hold!=='all'?' · '+HOLD_LABEL[hold]:'');
   const stat=secStats([
     {l:lbl('Strategies'),v:String(inSeg.length),s:'in '+esc(segLabel)},
     {l:lbl('Validated'),v:String(valid),s:'passed validation',tone:valid?'up':''},
     {l:'Fit '+esc(lr)+infoI('Validated strategies whose best regime matches the current live regime — the ones the engine can deploy right now.'),v:String(regimeReady),s:'match the live regime'},
     {l:'Runnable now'+infoI('Validated strategies that BOTH fit the live regime AND clear your planned capital’s lot-size / margin minimum.'),v:cap>0?String(matchN):'—',s:cap>0?'fit '+inr(cap):'set your capital',tone:cap>0&&matchN>0?'up':''}
   ]);
-  const cards=shown.length?shown.map(a=>algoCard(a,ALGOS.indexOf(a),lr,cap)).join(''):secEmpty('shield','Nothing runnable at this size',`No validated strategy in this segment both fits ${inr(cap)} and matches the live ${lr} regime. Add capital, switch off the filter, or wait for the regime to favour a validated edge.`);
+  const emptyMsg=inSeg.length===0
+    ? `No deployable <b>${esc(segLabel)}</b> bot exists yet — this class is in the Library as candidates. As options/futures engines come online they appear here. Switch the scope above to <b>Equity</b> for the live book.`
+    : `No <b>${esc(segLabel)}</b> strategy both fits ${inr(cap)} and matches the live ${lr} regime. Add capital, switch off the filter, or wait for the regime to favour a validated edge.`;
+  const cards=shown.length?shown.map(a=>algoCard(a,ALGOS.indexOf(a),lr,cap)).join(''):secEmpty('shield',inSeg.length===0?'Nothing deployable in this class yet':'Nothing runnable at this size',emptyMsg);
   const build=onlyRun?'':`<button class="algo-build" data-algobuild>${icon('plus',20)}<b>Build a strategy</b><span>Define your own entry &amp; exit rules</span></button>`;
-  return funnelGuide()+myStrategiesBar()+algoNudge()+frameworkBand(lr,cap)+segTabs+capStrip+stat+`<div class="algo-grid">${cards}${build}</div>`;
+  return funnelGuide()+myStrategiesBar()+algoNudge()+frameworkBand(lr,cap)+capStrip+stat+`<div class="algo-grid">${cards}${build}</div>`;
 }
 /* ===== Go-Live readiness: the hard checklist that gates Paper→Live ===== */
 function goLiveChecklist(a){
@@ -4746,10 +4845,15 @@ function ensureBacktest(id,period,uniCsv){
   }).catch(()=>{BOT.backtests[k]={p:null,err:'fetch failed',loading:false,t:Date.now()};});
 }
 function algoBacktest(){
-  const ai=Math.min(state.algo.bt.algo,ALGOS.length-1), period=state.algo.bt.period, a=ALGOS[ai];
+  const period=state.algo.bt.period;
+  const pick=ALGOS.map((x,i)=>({x,i})).filter(o=>inScope(o.x));   // strategies in the active class
+  if(!pick.length) return scopeEmpty('cpu','No backtestable strategy in this class','Switch the scope above — Equity holds the single-symbol backtests. Switch instrument/holding to see another class.');
+  let ai=Math.min(state.algo.bt.algo,ALGOS.length-1);
+  if(!pick.some(o=>o.i===ai)) ai=pick[0].i;                       // selected fell out of scope → first in-scope
+  const a=ALGOS[ai];
   const periods=[['1M'],['3M'],['1Y'],['3Y']];
   const ctrl=`<div class="bt-controls">
-    <div class="dc-sel"><label class="dc-lab" for="btAlgo">Strategy</label><select id="btAlgo" class="dc-input">${ALGOS.map((x,i)=>`<option value="${i}" ${i===ai?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>
+    <div class="dc-sel"><label class="dc-lab" for="btAlgo">Strategy</label><select id="btAlgo" class="dc-input">${pick.map(o=>`<option value="${o.i}" ${o.i===ai?'selected':''}>${esc(o.x.name)}</option>`).join('')}</select></div>
     <div class="bt-periods" role="tablist" aria-label="Backtest period">${periods.map(([k])=>`<button class="bt-period${k===period?' on':''}" data-btperiod="${k}" role="tab" aria-selected="${k===period}">${k}</button>`).join('')}</div></div>`;
   // Custom (user-built) strategies map to a real engine — let them backtest. Other candidates
   // (not yet through validation) stay gated so we don't imply a proven edge.
@@ -4838,9 +4942,9 @@ function algoLeaderboard(){
   // Default-rank by Return (a metric populated for every validated strategy). Sharpe is only
   // computed where validation produced it — never fabricated, and strategies without it rank last.
   const sort=state.algo.lbSort||'ret';
-  const validated=ALGOS.filter(a=>a.vstatus==='validated');
-  const cands=ALGOS.filter(a=>a.vstatus!=='validated');
-  if(!validated.length) return secEmpty('cpu','No validated strategies yet','Strategies appear here once they pass the regime-segmented validation. Until then they’re candidates in the Marketplace.');
+  const validated=ALGOS.filter(a=>a.vstatus==='validated'&&inScope(a));
+  const cands=ALGOS.filter(a=>a.vstatus!=='validated'&&inScope(a));
+  if(!validated.length) return scopeEmpty('cpu','No validated strategies in this class','No bot in this class has passed regime-segmented validation yet — switch the scope above (Equity holds most validated edges), or see candidates in the Marketplace & Library.');
   const haveSharpe=validated.some(a=>a.sharpe!=null);
   const metric={sharpe:a=>(a.sharpe!=null?a.sharpe:-Infinity), ret:a=>a.totalRet||0, win:a=>a.win||0, dd:a=>-(a.dd||99), paper:a=>a.paperPnl||0};
   const ranked=[...validated].sort((x,y)=>metric[sort](y)-metric[sort](x));
@@ -4915,9 +5019,9 @@ function liveSafetyNote(){
 }
 function algoMonitor(){
   const exec=state.algo.exec||'paper';
-  const paperRun=ALGOS.filter(a=>a.deployed);      // the strategies you've deployed (paper/paused/live) — the engine's live book
-  const liveRun=ALGOS.filter(a=>a.execLive);       // actually placing REAL orders (none until the live runner trades it)
-  const ready=ALGOS.filter(a=>a.readyExceptCapital);
+  const paperRun=ALGOS.filter(a=>a.deployed&&inScope(a));      // deployed (paper/paused/live) in the active class — the engine's live book
+  const liveRun=ALGOS.filter(a=>a.execLive&&inScope(a));       // actually placing REAL orders (none until the live runner trades it)
+  const ready=ALGOS.filter(a=>a.readyExceptCapital&&inScope(a));
   const toggle=`<div class="exec-toggle" role="tablist" aria-label="Execution mode">
     <button class="exec-tab${exec==='paper'?' on':''}" data-execmode="paper" role="tab" aria-selected="${exec==='paper'}"><span class="exec-dot paper"></span>Paper<i>${paperRun.length}</i></button>
     <button class="exec-tab${exec==='live'?' on':''}" data-execmode="live" role="tab" aria-selected="${exec==='live'}"><span class="exec-dot ${liveRun.length?'live':'off'}"></span>Live<i>${liveRun.length}</i></button>
@@ -4956,6 +5060,8 @@ function algoMonitor(){
       <div class="mon-pnl"><b class="num ${cls(a.paperPnl||0)}" data-live-pnl="${a.id}">${sgn(a.paperPnl||0)}</b><span data-live-sub="${a.id}" title="Open positions are marked to live market price; closed-trade P&L drives the go-live nudge.">${sub}</span></div>
       <div class="mon-ctrls"><button class="btn-ghost sm" data-algogl="${i}">${icon('shield',12)} Go-Live check</button><span class="mon-chev">▾</span></div></div>
       <div class="mon-exp">${expInner}</div></div>`;}).join('');
+  if(!paperRun.length)
+    return toggle+(harnessRunning()?harnessCta():'')+riskPanel()+scopeEmpty('cpu','No deployed bots in this class','Nothing is forward-trading in this class right now — switch the scope above (Equity holds the live book) or deploy one from the Marketplace.')+stoppedPanel();
   const note=paperRun.some(a=>!a.openPositions&&!a.fwdTrades)
     ? `Strategies at ₹0 simply haven’t triggered an entry signal yet — they only trade when their setup appears. P&L moves as positions open and close.`
     : `Open positions are marked to live market price; the go-live nudge needs ≥${BOT.nudgeMin||10} <b>closed</b> profitable trades.`;
@@ -4978,7 +5084,8 @@ function stoppedPanel(){
 function algoAccuracy(){
   if(!BOT.live) return secEmpty('shield','Connect Kite to measure accuracy','Accuracy pits each strategy’s backtested edge against its LIVE forward-test results — real out-of-sample proof. Reconnect to load it.');
   const MIN=BOT.nudgeMin||10, lr=liveRegime();
-  const list=ALGOS.filter(a=>a.vstatus==='validated'||a.deployed);   // validated (for comparison) + whatever you've deployed
+  const list=ALGOS.filter(a=>(a.vstatus==='validated'||a.deployed)&&inScope(a));   // validated + deployed, scoped to the active class
+  if(!list.length) return scopeEmpty('cpu','No strategies to measure in this class','Accuracy compares each strategy’s backtest edge with its LIVE forward results — switch the scope above (Equity holds the validated/forward book).');
   const vset=list.filter(a=>a.vstatus==='validated');
   const avgBt=vset.length?Math.round(vset.reduce((s,a)=>s+(a.win||0),0)/vset.length):0;
   const totClosed=list.reduce((s,a)=>s+(a.fwdTrades||0),0);
@@ -5117,7 +5224,8 @@ function algoAnalytics(){
   const tr=(d.trades||[]).slice().reverse().slice(0,20).map(x=>`<tr><td class="num">${esc(x.time)}</td><td>${esc(x.strategy)}</td><td>${esc(x.sym)}</td><td class="num ${cls(x.pnl)}">${sgn(x.pnl)}</td><td>${esc(x.reason)}</td></tr>`).join('');
   const tbl=(d.trades||[]).length?`<div class="an-card"><div class="an-h">${icon('repeat',13)}<b>Recent forward trades</b><span>${t.trades} total</span><button class="btn-ghost sm an-export" data-anexport>${icon('send',12)} Export CSV</button></div>
     <table class="tbl an-tbl"><thead><tr><th>Time</th><th>Strategy</th><th>Symbol</th><th>P&L</th><th>Exit</th></tr></thead><tbody>${tr}</tbody></table></div>`:'';
-  return stat+eq+`<div class="an-grid">${riskCard}${reasonCard}${regimeCard}${contribCard}${actCard}${symCard}${distCard}</div>`+insCard+tbl+`<p class="sec-hint">${icon('shield',12)}<span>All analytics are from real forward PAPER trades — zero real money. Reports refresh as trades open &amp; close.</span></p>`;
+  const sNote=studioScope().instr!=='equity'?scopeNote(`Analytics are <b>portfolio-wide</b> (all instrument classes) — not scoped to ${esc(INSTR_LABEL[studioScope().instr])}. The book is currently equity-led.`):'';
+  return sNote+stat+eq+`<div class="an-grid">${riskCard}${reasonCard}${regimeCard}${contribCard}${actCard}${symCard}${distCard}</div>`+insCard+tbl+`<p class="sec-hint">${icon('shield',12)}<span>All analytics are from real forward PAPER trades — zero real money. Reports refresh as trades open &amp; close.</span></p>`;
 }
 function algoBuilder(){
   flowModal({title:'Build a strategy', confirm:'Create strategy',

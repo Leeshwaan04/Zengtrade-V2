@@ -3176,6 +3176,37 @@ html[data-persona="ai"] #widgetBtn{display:none}
   border-radius:8px;padding:4px 9px;cursor:pointer;transition:.15s}
 .lib-mini:hover{border-color:var(--green);color:var(--navy)}
 .lib-mini.on{background:var(--accent-soft);color:var(--green-d);border-color:var(--accent-line)}
+/* studio-wide scope toggle (rendered in the Algo chrome, below the tabs) */
+.av-scope{display:flex;flex-direction:column;gap:10px;margin:2px 0 4px}
+.av-scope-empty{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--slate);background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:4px 11px;margin-bottom:10px}
+.av-scope-empty .ico,.av-scope-note .ico{color:var(--slate-2);flex:0 0 auto;margin-top:1px}
+.av-scope-note{display:flex;align-items:flex-start;gap:7px;font-size:11.5px;color:var(--slate);line-height:1.45;background:var(--surface-2);border:1px dashed var(--line-2);border-radius:10px;padding:8px 12px;margin-bottom:12px}
+.av-scope-note b{color:var(--navy);font-weight:700}
+/* LAYER 1 — instrument class (Equity / Options / Futures) */
+.lib-instr{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.lib-instr-tab{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;
+  padding:11px 14px;border-radius:13px;cursor:pointer;transition:.15s;background:var(--surface);border:1px solid var(--line-2)}
+.lib-instr-tab:hover{border-color:var(--green);box-shadow:var(--shadow)}
+/* active highlight at 50% opacity (softer than solid navy) */
+.lib-instr-tab.on{background:color-mix(in srgb, var(--navy) 50%, transparent);border-color:color-mix(in srgb, var(--navy) 60%, transparent)}
+.lib-instr-tab:focus-visible{outline:none;box-shadow:var(--ring)}
+.lii-top{display:inline-flex;align-items:center;gap:7px;color:var(--navy)}
+.lii-top b{font-size:14.5px;font-weight:800}
+.lii-top .ico{color:var(--green-d)}
+.lii-n{font-style:normal;font-size:10px;font-weight:800;color:var(--slate-2);background:var(--surface-2);border-radius:999px;padding:1px 7px;min-width:18px;text-align:center}
+.lii-desc{font-size:11px;color:var(--slate);line-height:1.35}
+.lib-instr-tab.on .lii-top,.lib-instr-tab.on .lii-desc{color:var(--navy)}
+.lib-instr-tab.on .lii-n{color:var(--navy);background:rgba(255,255,255,.6)}
+/* LAYER 2 — holding style (per-instrument sub-tabs) */
+.lib-hold{display:flex;flex-wrap:wrap;gap:6px}
+.lib-hold-tab{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--slate);
+  background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:6px 13px;cursor:pointer;transition:.15s}
+.lib-hold-tab:hover{border-color:var(--green);color:var(--navy)}
+.lib-hold-tab.on{background:var(--accent-soft);color:var(--green-d);border-color:var(--accent-line)}
+.lib-hold-tab:focus-visible{outline:none;box-shadow:var(--ring)}
+.lib-hold-tab i{font-style:normal;font-size:9.5px;font-weight:800;color:var(--slate-2);background:var(--surface);border-radius:999px;padding:0 5px;min-width:15px;text-align:center}
+.lib-hold-tab.on i{color:var(--green-d);background:rgba(0,171,78,.12)}
+@media(max-width:680px){.lib-instr{grid-template-columns:1fr}}
 .lib-clear{margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--red-d);
   background:var(--tint-down);border:1px solid var(--bd-down);border-radius:8px;padding:4px 9px;cursor:pointer}
 
