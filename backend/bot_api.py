@@ -1848,6 +1848,8 @@ _CRYPTO_NAMES = {
     "mean-rev": "Mean Reversion", "orb": "Opening Range Breakout", "vwap_rev": "VWAP Reversion",
     "vwap_mom": "VWAP Momentum", "ema_scalp": "EMA Scalp", "bb_breakout": "BB Squeeze Breakout",
     "opportunity": "Opportunity Engine", "moonshot": "Moonshot Compounder", "pairs": "Stat-Arb Pairs",
+    "perp_trend": "Perp Trend (BTC)", "perp_trend_eth": "Perp Trend (ETH)",
+    "perp_funding": "Funding Carry (BTC)", "perp_funding_eth": "Funding Carry (ETH)",
 }
 
 
@@ -1873,21 +1875,32 @@ def crypto_monitor_payload() -> dict:
         state = json.load(open(path))
     except Exception:
         return empty
+    instr = state.get("instr", {})
+    # spot positions are marked to live spot LTP; perps/options self-mark (side + funding) via openMark
     syms = set()
-    for v in state.values():
-        if isinstance(v, dict):
+    for k, v in state.items():
+        if isinstance(v, dict) and instr.get(k, "spot") == "spot":
             syms.update((v.get("positions") or {}).keys())
     marks = _crypto_feed().ltp(list(syms)) if syms else {}
     rows, tR, tU, tO = [], 0.0, 0.0, 0
     for k, v in state.items():
         if not isinstance(v, dict) or ("realised" not in v):
             continue
+        cls = instr.get(k, "spot")
         realised = round(v.get("realised", 0.0), 2)
         positions, unreal = [], 0.0
         if k == "pairs":
             for n, p in (v.get("pairs") or {}).items():
                 if p.get("pos"):
                     positions.append({"sym": n, "spread": p.get("pos")})
+        elif "openMark" in v:
+            # self-marker (perps/options): trust the engine's openMark (handles side + funding accrual)
+            unreal = round(v.get("openMark", 0.0), 2)
+            plist = list((v.get("positions") or {}).items())
+            for i, (sym, p) in enumerate(plist):
+                positions.append({"sym": sym, "qty": p.get("qty", 0), "side": p.get("side", 1),
+                                  "entry": round(p.get("entry", 0) or 0, 4),
+                                  "pnl": unreal if len(plist) == 1 else None})
         else:
             for sym, p in (v.get("positions") or {}).items():
                 entry = p.get("entry", 0) or 0
@@ -1900,7 +1913,7 @@ def crypto_monitor_payload() -> dict:
                                   "pnlPct": round((mark / entry - 1) * 100, 2) if entry else 0})
         unreal = round(unreal, 2)
         tR += realised; tU += unreal; tO += len(positions)
-        rows.append({"id": k, "name": _CRYPTO_NAMES.get(k, k), "realisedPnl": realised,
+        rows.append({"id": k, "name": _CRYPTO_NAMES.get(k, k), "instr": cls, "realisedPnl": realised,
                      "openPnl": unreal, "paperPnl": round(realised + unreal, 2),
                      "openPositions": len(positions), "positions": positions})
     rows.sort(key=lambda r: -r["paperPnl"])

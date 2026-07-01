@@ -48,12 +48,14 @@ from bot.strategies_lib import (RSI2Strategy, MACrossStrategy, SupertrendStrateg
 from bot.xs import CrossSectionalPaperEngine
 from bot.opportunity import OpportunityPaperEngine, MoonshotCompounderEngine
 from bot.crypto_data import CryptoDataFeed
+from bot.crypto_perps import CryptoPerpEngine
 from bot.governor import GOVERNOR
 from bot.rebalancer import REBALANCER
 
 POLL_SECONDS = 300
 PAPER_CAPITAL = 500_000        # engine sizing (matches the NSE book so P&L is legible & comparable)
 GOVERNED_CAPITAL = 1_000_000   # the governed pool the crypto concentration/crowding caps measure against
+PERP_MARGIN_PCT = 0.20         # perps trade on margin — book capital-at-risk, not full notional
 STATE_FILE = os.path.join(_REPO, "crypto_state.json")
 
 # top-10 liquid majors (USDT spot) — the same universe the Algo Studio shows
@@ -131,9 +133,21 @@ def build_crypto_engines(data):
             top_n=3, min_agree=2, max_positions=3, mtf=False),
         "moonshot": MoonshotCompounderEngine("moonshot", 5_000, data, UNIVERSE,
             min_conf=65, deploy_frac=0.95, trail_pct=0.08),
+        # ---- PERPETUALS (Binance USDT-M): long/short trend + funding-carry ----
+        "perp_trend": CryptoPerpEngine("perp_trend", "trend", "BTCUSDT", PAPER_CAPITAL, trend_period=20),
+        "perp_trend_eth": CryptoPerpEngine("perp_trend_eth", "trend", "ETHUSDT", PAPER_CAPITAL, trend_period=20),
+        "perp_funding": CryptoPerpEngine("perp_funding", "funding", "BTCUSDT", PAPER_CAPITAL),
+        "perp_funding_eth": CryptoPerpEngine("perp_funding_eth", "funding", "ETHUSDT", PAPER_CAPITAL),
     }
     pairs = PairsPaperEngine(PAIRS, data, PAPER_CAPITAL)
     return engines, pairs
+
+
+def instr_of(e) -> str:
+    """Instrument class of an engine — drives the Spot/Perps/Options bifurcation in the UI."""
+    if isinstance(e, CryptoPerpEngine):
+        return "perps"
+    return "spot"   # LongOnly/XS/Opportunity/Moonshot/Pairs all trade spot majors (options added in Phase 2)
 
 
 def crypto_regime(data) -> str:
@@ -167,9 +181,11 @@ def update_governor(engines, pairs):
     book, realised = [], 0.0
     for k, e in engines.items():
         realised += getattr(e, "realised", 0.0)
+        is_perp = isinstance(e, CryptoPerpEngine)
         for sym, p in getattr(e, "positions", {}).items():
-            book.append({"sym": sym, "value": (p.get("qty", 0) or 0) * (p.get("entry", 0) or 0),
-                         "bot": getattr(e, "name", k)})
+            notional = (p.get("qty", 0) or 0) * (p.get("entry", 0) or 0)
+            value = notional * PERP_MARGIN_PCT if is_perp else notional   # margin for perps, cash for spot
+            book.append({"sym": sym, "value": value, "bot": getattr(e, "name", k)})
     realised += getattr(pairs, "realised", 0.0)
     GOVERNOR.set_book(book, realised, GOVERNED_CAPITAL)
     REBALANCER.set(_pe.CURRENT_REGIME, GOVERNOR.health().get("score", 100))
@@ -180,6 +196,8 @@ def save(engines, pairs):
     d["pairs"] = pairs.state()
     d["market"] = "crypto"
     d["regime"] = _pe.CURRENT_REGIME
+    d["instr"] = {k: instr_of(e) for k, e in engines.items()}
+    d["instr"]["pairs"] = "spot"
     d["updated"] = datetime.now().isoformat()
     json.dump(d, open(STATE_FILE, "w"), indent=2, default=str)
 

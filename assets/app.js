@@ -3739,25 +3739,44 @@ async function loadCryptoMonitor(){
 }
 function cxMoney(v){ if(v==null||!isFinite(v)) return '—'; const s=v<0?'−':(v>0?'+':''); return s+'$'+Math.abs(v).toLocaleString('en-US',{maximumFractionDigits:0}); }
 function cxActive(){ const d=CRYPTOMON.data; return d&&d.strategies?d.strategies.filter(s=>s.openPositions>0||s.realisedPnl!==0).length:0; }
+// crypto instrument bifurcation (Spot / Perps / Options) — the crypto analog of Equity/Options/Futures
+const CX_INSTR=[['spot','Spot','spark','Long-only on spot majors'],['perps','Perpetuals','trendUp','Long / short + funding carry'],['options','Options','layers','Premium selling']];
+function cxScopeCounts(){ const by={spot:{n:0,pnl:0,open:0},perps:{n:0,pnl:0,open:0},options:{n:0,pnl:0,open:0}};
+  ((CRYPTOMON.data&&CRYPTOMON.data.strategies)||[]).forEach(s=>{ const c=by[s.instr||'spot']; if(c){ c.n++; c.pnl+=s.paperPnl||0; c.open+=s.openPositions||0; } }); return by; }
+function cryptoScopeBar(){
+  const cur=state.algo.cinstr||'spot', by=cxScopeCounts();
+  const bar=CX_INSTR.map(([id,lab,ic,desc])=>{ const c=by[id]||{n:0,pnl:0};
+    return `<button class="lib-instr-tab${cur===id?' on':''}" data-cinstr="${id}" role="tab" aria-selected="${cur===id}">
+      <span class="lii-top">${icon(ic,15)}<b>${lab}</b><i class="lii-n">${c.n}</i></span>
+      <span class="lii-desc">${c.n?esc(desc)+' · '+cxMoney(c.pnl):esc(desc)+' · coming online'}</span></button>`; }).join('');
+  return `<div class="av-scope"><div class="lib-instr" role="tablist" aria-label="Crypto instrument class">${bar}</div></div>`;
+}
 function cryptoMonitor(){
   const d=CRYPTOMON.data;
   if(!d){ if(!CRYPTOMON.busy) loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); });
     return secEmpty('cpu','Loading crypto book…','Fetching the live crypto paper P&L from the bot on :8756.'); }
   if(CRYPTOMON.err && !d.running){ return secEmpty('cpu','Bot API unreachable','Start the dashboard API + crypto harness in the bot folder — <b>python3 bot_api.py</b> then <b>python3 paper_trade_crypto.py</b>. Prices are real Binance; the book is paper.'); }
   if(d.running===false){ return secEmpty('cpu','Crypto harness not running','Start it with <b>python3 paper_trade_crypto.py</b> in the bot folder — it runs 24/7 on live Binance data, paper only.'); }
-  const t=d.totals||{}, g=d.governor||{};
+  const cur=state.algo.cinstr||'spot', g=d.governor||{};
+  const scoped=(d.strategies||[]).filter(s=>(s.instr||'spot')===cur);
+  const t=scoped.reduce((a,s)=>{a.realised+=s.realisedPnl||0;a.unreal+=s.openPnl||0;a.pnl+=s.paperPnl||0;a.open+=s.openPositions||0;return a;},{realised:0,unreal:0,pnl:0,open:0});
+  const clsLabel=(CX_INSTR.find(x=>x[0]===cur)||[,'Spot'])[1];
   const upd=d.updated?new Date(d.updated).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'';
-  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Live crypto paper book.</b> Real Binance spot prices, simulated fills — <b>no crypto orders are placed</b>. Regime-gated by the same survival-first Governor as the Indian book. P&L is USDT-denominated on a $${Math.round((d.capital||1e6)/1000)}K sizing sandbox.</span></div>`;
+  const gate=cur==='perps'?' Perps can go long OR short and harvest funding.':cur==='options'?' Premium selling, regime-gated (never sold into a strong trend).':' Long-only on spot majors.';
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Live crypto paper book — ${esc(clsLabel)}.</b> Real Binance prices, simulated fills — <b>no crypto orders are placed</b>.${gate} Same survival-first Governor as the Indian book. P&L is USDT on a $${Math.round((d.capital||1e6)/1000)}K sizing sandbox.</span></div>`;
+  if(cur==='options' && !scoped.length){
+    return note+cryptoScopeBar()+secEmpty('layers','Crypto options — coming online','The crypto options desk (USDT-settled premium selling on Binance, regime-gated like the Indian iron-condor/strangle) is being wired next. Spot & Perpetuals are live now — switch the toggle above.'); }
   const stat=secStats([
-    {l:'Total P&L',v:cxMoney(t.pnl),s:'realised + open',tone:t.pnl>0?'up':(t.pnl<0?'down':'')},
+    {l:clsLabel+' P&L',v:cxMoney(t.pnl),s:'realised + open',tone:t.pnl>0?'up':(t.pnl<0?'down':'')},
     {l:'Realised',v:cxMoney(t.realised),s:'booked'},
     {l:'Unrealised',v:cxMoney(t.unreal),s:'marked live',tone:t.unreal>0?'up':(t.unreal<0?'down':'')},
-    {l:'Open positions',v:String(t.open||0),s:'across strategies'},
+    {l:'Open positions',v:String(t.open||0),s:esc(clsLabel)+' strategies'},
     {l:'Regime',v:esc(d.regime||'—'),s:'BTC-led'},
     {l:'Risk score',v:g.score==null?'—':String(g.score),s:g.exposurePct!=null?`${g.exposurePct}% exposure`:'governor'},
   ]);
-  const rows=(d.strategies||[]).map(s=>{
+  const rows=scoped.map(s=>{
     const chips=(s.positions||[]).map(p=>{
+      if(p.side!=null) return `<span class="cxm-chip ${cls(p.pnl)}">${p.side<0?'▼':'▲'} ${esc((p.sym||'').replace('USDT',''))}${p.pnl!=null?` <i>${cxMoney(p.pnl)}</i>`:''}</span>`;
       if(p.qty!=null) return `<span class="cxm-chip ${cls(p.pnl)}">${esc((p.sym||'').replace('USDT',''))} <i>${pct(p.pnlPct)}</i></span>`;
       if(p.spread!=null) return `<span class="cxm-chip">${esc((p.sym||'').replace(/USDT/g,''))} ${p.spread>0?'L':'S'}</span>`;
       return ''; }).join('');
@@ -3769,7 +3788,8 @@ function cryptoMonitor(){
       <span class="cxm-n num ${cls(s.paperPnl)}"><b>${cxMoney(s.paperPnl)}</b></span></div>`;
   }).join('');
   const head=`<div class="cxm-row cxm-head"><div class="cxm-name">Strategy</div><span class="cxm-n">Open</span><span class="cxm-n">Realised</span><span class="cxm-n">Unreal.</span><span class="cxm-n">Total</span></div>`;
-  return note+stat+`<div class="cxm-tbl-h">${icon('activity',13)}<b>Strategies</b><span>${cxActive()} active · ${(d.strategies||[]).length} running${upd?` · updated ${upd}`:''}</span></div><div class="cxm-tbl">${head}${rows}</div>`;
+  const act=scoped.filter(s=>s.openPositions>0||s.realisedPnl!==0).length;
+  return note+cryptoScopeBar()+stat+`<div class="cxm-tbl-h">${icon('activity',13)}<b>${esc(clsLabel)} strategies</b><span>${act} active · ${scoped.length} running${upd?` · updated ${upd}`:''}</span></div><div class="cxm-tbl">${head}${rows}</div>`;
 }
 // Crypto-scoped router: every Algo Studio tab stays in sync with the crypto market (no Indian content leaks).
 function cryptoBody(view,label){
@@ -3811,6 +3831,7 @@ function renderAlgo(){
   if(!state.algo.bt) state.algo.bt={algo:0,period:'1Y'};   // guard: setMarket/studioScope can create state.algo before this default
   if(!state.algo.exec) state.algo.exec='paper';
   if(!state.algo.market) state.algo.market='in';
+  if(!state.algo.cinstr) state.algo.cinstr='spot';   // crypto instrument scope (Spot/Perps/Options)
   const crypto=state.algo.market==='crypto';
   if(!BOT.loaded){ loadBotData().then(()=>{ if(isAlgo())renderAlgo(); }); }
   if(crypto && !CRYPTO.loaded && !CRYPTO.busy){ loadCrypto().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); }
@@ -3819,7 +3840,7 @@ function renderAlgo(){
   const depN=crypto?cxActive():ALGOS.filter(a=>a.deployed&&inScope(a)).length;   // Monitor badge reflects the active market + studio scope
   const tabs=[['library','Library'],['opportunity','Opportunity Engine'],['risk','Risk Governor'],['positions','Positions'],['market','Marketplace'],['leaderboard','Leaderboard'],['backtest','Backtest'],['forward','Forward Test'],['monitor','Monitor'],['accuracy','Accuracy'],['analytics','Analytics']];
   const head=`<div class="av-head">
-    <div class="av-title"><span class="av-ic">${icon('cpu',17)}</span><div><b>Algo Studio</b><span>${crypto?'Crypto strategies · live Binance prices · paper preview':'Backtest, forward-test &amp; monitor rule-based strategies'}</span></div></div>
+    <div class="av-title"><span class="av-ic">${icon('cpu',17)}</span><div><b>Algo Studio</b><span>${crypto?'Crypto · live Binance data · paper trading, 24/7':'Backtest, forward-test &amp; monitor rule-based strategies'}</span></div></div>
     <div class="av-tabs" role="tablist" aria-label="Algo views">${tabs.map(([k,l])=>`<button class="av-tab${k===view?' on':''}" role="tab" aria-selected="${k===view}" data-algoview="${k}">${l}${k==='monitor'&&depN?` <i class="av-tn">${depN}</i>`:''}</button>`).join('')}</div></div>`;
   const tabLabel=(tabs.find(t=>t[0]===view)||[,'This view'])[1];
   const body=crypto
@@ -3832,6 +3853,7 @@ function renderAlgo(){
   // studio-wide instrument × holding scope (every Indian tab honours it)
   v.querySelectorAll('[data-algoinstr]').forEach(b=>b.onclick=()=>{ const a=state.algo; if(a.instr===b.dataset.algoinstr) return; a.instr=b.dataset.algoinstr; a.hold='all'; if(a.lib) a.lib.fam='all'; renderAlgo(); });
   v.querySelectorAll('[data-algohold]').forEach(b=>b.onclick=()=>{ state.algo.hold=b.dataset.algohold; renderAlgo(); });
+  v.querySelectorAll('[data-cinstr]').forEach(b=>b.onclick=()=>{ state.algo.cinstr=b.dataset.cinstr; renderAlgo(); });
   v.querySelectorAll('[data-algogoto]').forEach(b=>b.onclick=()=>{state.algo.view=b.dataset.algogoto;renderAlgo();});
   v.querySelectorAll('[data-algobt]').forEach(b=>b.onclick=()=>{state.algo.bt.algo=+b.dataset.algobt;state.algo.view='backtest';renderAlgo();});
   v.querySelectorAll('[data-algodep]').forEach(b=>b.onclick=()=>algoDeploy(ALGOS[+b.dataset.algodep]));
