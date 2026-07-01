@@ -18,6 +18,9 @@ from __future__ import annotations
 import datetime as _dt
 import logging
 
+import pandas as pd
+
+from . import indicators
 from . import paper_engine as _pe
 
 log = logging.getLogger("paper")
@@ -36,10 +39,15 @@ class OptionsPaperEngine:
 
     def __init__(self, name, kind, kite, capital, underlying="NIFTY",
                  short_pct=0.02, wing_pts=200, take_profit=0.5, stop_mult=2.0,
-                 lots=1):
+                 lots=1, data=None, adx_max=30.0, ext_atr_max=2.5, trend_period=20):
         self.name = name
         self.kind = kind                  # 'iron_condor' | 'strangle'
         self.kite = kite
+        self.data = data                  # index daily history → the regime gate (skip selling into a trend)
+        self.adx_max = adx_max            # skip NEW premium sells when the index ADX says a strong trend
+        self.ext_atr_max = ext_atr_max    # skip when the index is already stretched >N ATRs from its MA
+        self.trend_period = trend_period
+        self._idx_token = None
         self.capital = capital
         self.underlying = underlying
         self.short_pct = short_pct        # short strikes ~this far OTM
@@ -72,6 +80,33 @@ class OptionsPaperEngine:
                "FINNIFTY": "NSE:NIFTY FIN SERVICE"}.get(self.underlying, "NSE:" + self.underlying)
         d = (self.kite.ohlc([key]) or {}).get(key, {}) or {}
         return d.get("last_price")
+
+    def _index_regime(self, spot):
+        """(adx, extension-in-ATRs) of the underlying index from daily bars — the regime gate.
+        Premium selling (short gamma) survives on RANGE days and dies in a runaway trend, so we
+        skip opening a NEW structure when the index is strongly trending or already stretched.
+        Returns (None, None) when history is unavailable → caller falls back to selling (green path)."""
+        if self.data is None:
+            return None, None
+        try:
+            key = {"NIFTY": "NSE:NIFTY 50", "BANKNIFTY": "NSE:NIFTY BANK",
+                   "FINNIFTY": "NSE:NIFTY FIN SERVICE"}.get(self.underlying, "NSE:" + self.underlying)
+            if self._idx_token is None:
+                q = self.kite.ltp([key]) or {}
+                self._idx_token = (q.get(key) or {}).get("instrument_token")
+            if not self._idx_token:
+                return None, None
+            df = self.data.historical(self._idx_token, "day", self.trend_period + 20)
+            if df is None or getattr(df, "empty", True) or len(df) < self.trend_period + 1:
+                return None, None
+            adx, _p, _m = indicators.adx(df["high"], df["low"], df["close"], 14)
+            atr = indicators.atr(df["high"], df["low"], df["close"], 14)
+            a = adx.iloc[-1]; at = atr.iloc[-1]
+            ma = float(df["close"].tail(self.trend_period).mean())
+            ext = abs(spot - ma) / at if (at and not pd.isna(at)) else 0.0
+            return (None if pd.isna(a) else float(a)), float(ext)
+        except Exception:
+            return None, None
 
     def _weekly_expiry(self, opts):
         exps = sorted({i["expiry"] for i in opts if i.get("expiry") and i["expiry"] >= _dt.date.today()})
@@ -164,6 +199,16 @@ class OptionsPaperEngine:
             self.open_mark = round(mark_pts * self.lot * self.lots, 2)
             # one structure at a time
             if square_off or self.positions:
+                return
+            # regime gate: never SELL premium into a strong trend / breakout (the short-gamma killer)
+            adx, ext = self._index_regime(spot)
+            if adx is not None and adx >= self.adx_max:
+                log.info("[%s] SKIP — index ADX %.1f ≥ %.0f (strong trend; won't sell premium into it)",
+                         self.name, adx, self.adx_max)
+                return
+            if ext is not None and ext >= self.ext_atr_max:
+                log.info("[%s] SKIP — index stretched %.1f ATR from MA ≥ %.1f (breakout risk)",
+                         self.name, ext, self.ext_atr_max)
                 return
             legs = self._build_legs(opts, self._weekly_expiry(opts), spot)
             if not legs:

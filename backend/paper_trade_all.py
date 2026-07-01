@@ -185,9 +185,9 @@ def build_engines(data):
             top_n=3, min_agree=2, max_positions=3),
         # ---- Wave-3 options forward-paper bots (weekly Nifty premium selling) ----
         "iron_condor": OptionsPaperEngine("iron_condor", "iron_condor", getattr(data, "kite", None),
-            PAPER_CAPITAL, underlying="NIFTY", wing_pts=200),
+            PAPER_CAPITAL, underlying="NIFTY", wing_pts=200, data=data),
         "strangle": OptionsPaperEngine("strangle", "strangle", getattr(data, "kite", None),
-            PAPER_CAPITAL, underlying="NIFTY"),
+            PAPER_CAPITAL, underlying="NIFTY", data=data),
         # ---- index-futures forward-paper bots (near-month NIFTY future) ----
         "fut_trend": FuturesPaperEngine("fut_trend", "trend", getattr(data, "kite", None), data,
             PAPER_CAPITAL, underlying="NIFTY", trend_period=20),

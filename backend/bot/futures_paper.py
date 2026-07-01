@@ -21,6 +21,9 @@ from __future__ import annotations
 import datetime as _dt
 import logging
 
+import pandas as pd
+
+from . import indicators
 from . import paper_engine as _pe
 
 log = logging.getLogger("paper")
@@ -32,7 +35,8 @@ SPOT_KEY = {"NIFTY": "NSE:NIFTY 50", "BANKNIFTY": "NSE:NIFTY BANK",
 
 class FuturesPaperEngine:
     def __init__(self, name, kind, kite, data, capital, underlying="NIFTY",
-                 trend_period=20, basis_hi=0.10, basis_lo=-0.02, lots=1):
+                 trend_period=20, basis_hi=0.10, basis_lo=-0.02, lots=1,
+                 adx_min=18.0, basis_min_dte=2):
         self.name = name
         self.kind = kind                    # 'trend' | 'basis'
         self.kite = kite
@@ -40,6 +44,8 @@ class FuturesPaperEngine:
         self.capital = capital
         self.underlying = underlying
         self.trend_period = trend_period
+        self.adx_min = adx_min              # trend: only hold when the index trend is REAL (not chop)
+        self.basis_min_dte = basis_min_dte  # basis: ignore near-expiry annualisation noise
         self.basis_hi = basis_hi            # SHORT the future above this annualised premium
         self.basis_lo = basis_lo            # LONG the future below this (backwardation)
         self.lots = lots
@@ -81,20 +87,28 @@ class FuturesPaperEngine:
         d = (self.kite.ohlc([key]) or {}).get(key, {}) or {}
         return d.get("last_price")
 
-    def _index_ma(self):
-        """Continuous INDEX daily closes -> the trend signal (the future tracks the index;
-        this avoids the roll gaps a per-contract future history would introduce)."""
+    def _index_trend(self):
+        """Continuous INDEX daily closes -> the trend signal (last, N-day MA, ADX). The future
+        tracks the index; using the index avoids the roll gaps a per-contract future history has.
+        ADX gauges trend STRENGTH so the trend bot sits out chop (whipsaw = death by a thousand cuts)."""
         key = SPOT_KEY.get(self.underlying, "NSE:" + self.underlying)
         if self._idx_token is None:
             q = self.kite.ltp([key]) or {}
             self._idx_token = (q.get(key) or {}).get("instrument_token")
         if not self._idx_token:
-            return None, None
+            return None, None, None
         df = self.data.historical(self._idx_token, "day", self.history_days)
         if df is None or getattr(df, "empty", True) or len(df) < self.trend_period + 1:
-            return None, None
+            return None, None, None
         closes = df["close"]
-        return float(closes.iloc[-1]), float(closes.tail(self.trend_period).mean())
+        adx_val = None
+        try:
+            adx, _p, _m = indicators.adx(df["high"], df["low"], df["close"], 14)
+            a = adx.iloc[-1]
+            adx_val = None if pd.isna(a) else float(a)
+        except Exception:
+            adx_val = None
+        return float(closes.iloc[-1]), float(closes.tail(self.trend_period).mean()), adx_val
 
     # ---- cycle (fully guarded) ----
     def run_cycle(self, square_off: bool = False) -> None:
@@ -117,7 +131,7 @@ class FuturesPaperEngine:
                 side = pos["side"]                       # +1 long future, -1 short future
                 if self.kind == "trend":
                     self.open_mark = round((fut_ltp - pos["entry"]) * side * self.lot * self.lots, 2)
-                    last, ma = self._index_ma()
+                    last, ma, _adx = self._index_trend()
                     flip = (last is not None and ma is not None
                             and ((side > 0 and last < ma) or (side < 0 and last > ma)))
                     if square_off or _dt.date.today() >= exp or flip:
@@ -139,13 +153,17 @@ class FuturesPaperEngine:
 
             # ---- entry ----
             if self.kind == "trend":
-                last, ma = self._index_ma()
+                last, ma, adx = self._index_trend()
                 if last is None or ma is None:
                     return
-                if last > ma:
-                    self._enter(ts, fut_ltp, +1, exp, {})
+                strong = adx is None or adx >= self.adx_min   # if ADX unavailable, fall back to MA-only
+                if last > ma and strong:                      # uptrend AND it's a REAL trend, not chop
+                    self._enter(ts, fut_ltp, +1, exp, {"adx": round(adx, 1) if adx else None})
+                elif last > ma and not strong:
+                    log.info("[%s] SKIP trend — index above MA but ADX %.1f < %.0f (chop, no edge)",
+                             self.name, adx or 0, self.adx_min)
             else:                                          # basis
-                if dte <= 0 or spot <= 0:
+                if dte < self.basis_min_dte or spot <= 0:  # too close to expiry → annualised basis is noise
                     return
                 ann = (basis / spot) / (dte / 365.0)
                 if ann >= self.basis_hi:
