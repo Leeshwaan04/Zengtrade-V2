@@ -2049,6 +2049,22 @@ html[data-persona="ai"] #chartCard,html[data-persona="ai"] #chartResize,html[dat
 .cx-lb-row b{font-size:12px;color:var(--navy);font-weight:700;flex:1}
 .cx-lb-row .cx-cat{font-size:10px;color:var(--slate-2)}
 
+/* live crypto paper book (Monitor) */
+.cxm-tbl-h{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--navy);margin:14px 2px 8px}
+.cxm-tbl-h span{margin-left:auto;font-size:10.5px;font-weight:600;color:var(--slate-2)}
+.cxm-tbl{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.cxm-row{display:grid;grid-template-columns:1fr 52px 92px 92px 100px;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.cxm-row:last-child{border-bottom:0}
+.cxm-head{background:var(--surface-2);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--slate-2)}
+.cxm-head .cxm-n,.cxm-head .cxm-name{text-align:right}
+.cxm-head .cxm-name{text-align:left}
+.cxm-name b{font-size:12.5px;font-weight:700;color:var(--navy)}
+.cxm-n{font-size:12px;font-weight:700;text-align:right;color:var(--navy)}
+.cxm-pos{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.cxm-chip{font-size:9.5px;font-weight:700;color:var(--slate);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:2px 6px}
+.cxm-chip i{font-style:normal;font-weight:700;margin-left:3px}
+.cxm-chip.up{color:var(--green);border-color:#bfe6c8} .cxm-chip.down{color:var(--red);border-color:#f2c9c9}
+
 /* algo marketplace grid */
 .algo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
 .algo-build{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:170px;cursor:pointer;

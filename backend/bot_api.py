@@ -1839,6 +1839,87 @@ def open_position_pnl(state: dict):
     return totals, detail
 
 
+_CRYPTO_FEED = None
+_CRYPTO_NAMES = {
+    "momentum": "Momentum", "rsi2": "RSI(2) Reversion", "macross": "MA Crossover",
+    "supertrend": "Supertrend", "ema_cross": "EMA Crossover", "adx_trend": "ADX Trend",
+    "bollinger": "Bollinger Reversion", "zscore": "Z-Score Reversion", "nr7": "NR7 Breakout",
+    "xs_momentum": "Cross-Sectional Momentum", "lowvol": "Low-Volatility Basket",
+    "mean-rev": "Mean Reversion", "orb": "Opening Range Breakout", "vwap_rev": "VWAP Reversion",
+    "vwap_mom": "VWAP Momentum", "ema_scalp": "EMA Scalp", "bb_breakout": "BB Squeeze Breakout",
+    "opportunity": "Opportunity Engine", "moonshot": "Moonshot Compounder", "pairs": "Stat-Arb Pairs",
+}
+
+
+def _crypto_feed():
+    global _CRYPTO_FEED
+    if _CRYPTO_FEED is None:
+        from bot.crypto_data import CryptoDataFeed
+        _CRYPTO_FEED = CryptoDataFeed()
+    return _CRYPTO_FEED
+
+
+def crypto_monitor_payload() -> dict:
+    """Live crypto paper book — per-strategy realised + unrealised (marked to live Binance spot),
+    totals, regime and Governor health. Read-only over crypto_state.json (written by the 24/7
+    crypto harness). Positions are marked HERE so the Monitor shows real-time P&L, never a stale
+    entry price. Prices are real Binance spot; the book is paper (no orders placed)."""
+    empty = {"market": "crypto", "running": False, "strategies": [],
+             "totals": {"realised": 0, "unreal": 0, "pnl": 0, "open": 0}}
+    path = os.path.join(HERE, "crypto_state.json")
+    if not os.path.exists(path):
+        return empty
+    try:
+        state = json.load(open(path))
+    except Exception:
+        return empty
+    syms = set()
+    for v in state.values():
+        if isinstance(v, dict):
+            syms.update((v.get("positions") or {}).keys())
+    marks = _crypto_feed().ltp(list(syms)) if syms else {}
+    rows, tR, tU, tO = [], 0.0, 0.0, 0
+    for k, v in state.items():
+        if not isinstance(v, dict) or ("realised" not in v):
+            continue
+        realised = round(v.get("realised", 0.0), 2)
+        positions, unreal = [], 0.0
+        if k == "pairs":
+            for n, p in (v.get("pairs") or {}).items():
+                if p.get("pos"):
+                    positions.append({"sym": n, "spread": p.get("pos")})
+        else:
+            for sym, p in (v.get("positions") or {}).items():
+                entry = p.get("entry", 0) or 0
+                qty = p.get("qty", 0) or 0
+                mark = marks.get(sym) or entry
+                pnl = (mark - entry) * qty
+                unreal += pnl
+                positions.append({"sym": sym, "qty": qty, "entry": round(entry, 4),
+                                  "mark": round(mark, 4), "pnl": round(pnl, 2),
+                                  "pnlPct": round((mark / entry - 1) * 100, 2) if entry else 0})
+        unreal = round(unreal, 2)
+        tR += realised; tU += unreal; tO += len(positions)
+        rows.append({"id": k, "name": _CRYPTO_NAMES.get(k, k), "realisedPnl": realised,
+                     "openPnl": unreal, "paperPnl": round(realised + unreal, 2),
+                     "openPositions": len(positions), "positions": positions})
+    rows.sort(key=lambda r: -r["paperPnl"])
+    gov = {}
+    gpath = os.path.join(HERE, "crypto_governor_state.json")
+    if os.path.exists(gpath):
+        try:
+            gov = json.load(open(gpath))
+        except Exception:
+            gov = {}
+    return {"market": "crypto", "running": True, "regime": state.get("regime", "—"),
+            "updated": state.get("updated"), "capital": 1_000_000, "strategies": rows,
+            "totals": {"realised": round(tR, 2), "unreal": round(tU, 2),
+                       "pnl": round(tR + tU, 2), "open": int(tO)},
+            "governor": {"score": gov.get("score"), "exposurePct": gov.get("exposurePct"),
+                         "crowding": gov.get("crowding"), "topSymbol": gov.get("topSymbol"),
+                         "sectors": gov.get("sectors"), "limits": gov.get("limits")}}
+
+
 def monitor_payload() -> dict:
     """FAST, lean endpoint for the live Monitor — every running strategy's real-time P&L +
     per-position detail, cached quotes, NO heavy readiness calls. Safe to poll every ~2s."""
@@ -2430,6 +2511,7 @@ class Handler(BaseHTTPRequestHandler):
                 "/api/positions": positions_payload,
                 "/api/rebalance": rebalance_payload,
                 "/api/monitor": monitor_payload,
+                "/api/crypto/monitor": crypto_monitor_payload,
                 "/api/stopped": stopped_payload,
                 "/api/analytics": analytics_payload,
                 "/api/market": market_snapshot,

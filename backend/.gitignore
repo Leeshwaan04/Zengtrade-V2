@@ -21,6 +21,12 @@ rebalance_state.json
 learned_weights.json
 stopped_positions.json
 decisions.jsonl
+# crypto harness runtime state (24/7 book — generated, never source)
+crypto_state.json
+crypto_governor_state.json
+crypto_rebalance_state.json
+crypto_learned_weights.json
+crypto_decisions.jsonl
 
 # runtime (per-machine / per-session)
 harness.pid

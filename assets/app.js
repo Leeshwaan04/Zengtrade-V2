@@ -3727,11 +3727,56 @@ function cryptoLeaderboard(){
   const groups=Object.keys(byCat).map(cat=>`<div class="cx-lb-grp"><div class="cx-lb-h">${esc(cat)} <i>${byCat[cat].length}</i></div>${byCat[cat].map(s=>`<div class="cx-lb-row"><b>${esc(s.name)}</b><span class="cx-cat">${esc(s.pair)}</span><span class="badge ${LIB_RISK_CLASS[s.risk]||'b-neu'}">${esc(s.risk)}</span></div>`).join('')}</div>`).join('');
   return note+`<div class="cx-lb">${groups}</div>`;
 }
+// ---- LIVE crypto paper book (24/7 harness on :8756 → /api/crypto/monitor) ----
+const CRYPTOMON={loaded:false,busy:false,data:null,err:false,t:0};
+async function loadCryptoMonitor(){
+  if(CRYPTOMON.busy) return; CRYPTOMON.busy=true;
+  try{
+    const d=await fetch(`${BOT_API}/api/crypto/monitor`).then(r=>r.json());
+    CRYPTOMON.data=d; CRYPTOMON.err=false; CRYPTOMON.t=Date.now();
+  }catch(e){ CRYPTOMON.err=true; }
+  CRYPTOMON.loaded=true; CRYPTOMON.busy=false;
+}
+function cxMoney(v){ if(v==null||!isFinite(v)) return '—'; const s=v<0?'−':(v>0?'+':''); return s+'$'+Math.abs(v).toLocaleString('en-US',{maximumFractionDigits:0}); }
+function cxActive(){ const d=CRYPTOMON.data; return d&&d.strategies?d.strategies.filter(s=>s.openPositions>0||s.realisedPnl!==0).length:0; }
+function cryptoMonitor(){
+  const d=CRYPTOMON.data;
+  if(!d){ if(!CRYPTOMON.busy) loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); });
+    return secEmpty('cpu','Loading crypto book…','Fetching the live crypto paper P&L from the bot on :8756.'); }
+  if(CRYPTOMON.err && !d.running){ return secEmpty('cpu','Bot API unreachable','Start the dashboard API + crypto harness in the bot folder — <b>python3 bot_api.py</b> then <b>python3 paper_trade_crypto.py</b>. Prices are real Binance; the book is paper.'); }
+  if(d.running===false){ return secEmpty('cpu','Crypto harness not running','Start it with <b>python3 paper_trade_crypto.py</b> in the bot folder — it runs 24/7 on live Binance data, paper only.'); }
+  const t=d.totals||{}, g=d.governor||{};
+  const upd=d.updated?new Date(d.updated).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'';
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Live crypto paper book.</b> Real Binance spot prices, simulated fills — <b>no crypto orders are placed</b>. Regime-gated by the same survival-first Governor as the Indian book. P&L is USDT-denominated on a $${Math.round((d.capital||1e6)/1000)}K sizing sandbox.</span></div>`;
+  const stat=secStats([
+    {l:'Total P&L',v:cxMoney(t.pnl),s:'realised + open',tone:t.pnl>0?'up':(t.pnl<0?'down':'')},
+    {l:'Realised',v:cxMoney(t.realised),s:'booked'},
+    {l:'Unrealised',v:cxMoney(t.unreal),s:'marked live',tone:t.unreal>0?'up':(t.unreal<0?'down':'')},
+    {l:'Open positions',v:String(t.open||0),s:'across strategies'},
+    {l:'Regime',v:esc(d.regime||'—'),s:'BTC-led'},
+    {l:'Risk score',v:g.score==null?'—':String(g.score),s:g.exposurePct!=null?`${g.exposurePct}% exposure`:'governor'},
+  ]);
+  const rows=(d.strategies||[]).map(s=>{
+    const chips=(s.positions||[]).map(p=>{
+      if(p.qty!=null) return `<span class="cxm-chip ${cls(p.pnl)}">${esc((p.sym||'').replace('USDT',''))} <i>${pct(p.pnlPct)}</i></span>`;
+      if(p.spread!=null) return `<span class="cxm-chip">${esc((p.sym||'').replace(/USDT/g,''))} ${p.spread>0?'L':'S'}</span>`;
+      return ''; }).join('');
+    const pos=chips?`<div class="cxm-pos">${chips}</div>`:'';
+    return `<div class="cxm-row"><div class="cxm-name"><b>${esc(s.name)}</b>${pos}</div>
+      <span class="cxm-n num">${s.openPositions||0}</span>
+      <span class="cxm-n num ${cls(s.realisedPnl)}">${cxMoney(s.realisedPnl)}</span>
+      <span class="cxm-n num ${cls(s.openPnl)}">${cxMoney(s.openPnl)}</span>
+      <span class="cxm-n num ${cls(s.paperPnl)}"><b>${cxMoney(s.paperPnl)}</b></span></div>`;
+  }).join('');
+  const head=`<div class="cxm-row cxm-head"><div class="cxm-name">Strategy</div><span class="cxm-n">Open</span><span class="cxm-n">Realised</span><span class="cxm-n">Unreal.</span><span class="cxm-n">Total</span></div>`;
+  return note+stat+`<div class="cxm-tbl-h">${icon('activity',13)}<b>Strategies</b><span>${cxActive()} active · ${(d.strategies||[]).length} running${upd?` · updated ${upd}`:''}</span></div><div class="cxm-tbl">${head}${rows}</div>`;
+}
 // Crypto-scoped router: every Algo Studio tab stays in sync with the crypto market (no Indian content leaks).
 function cryptoBody(view,label){
   if(view==='library'||view==='market') return cryptoMarket();
   if(view==='opportunity') return cryptoOpportunity();
   if(view==='leaderboard') return cryptoLeaderboard();
+  if(view==='monitor'||view==='positions') return cryptoMonitor();
   return cryptoSoon(label);
 }
 
@@ -3770,7 +3815,8 @@ function renderAlgo(){
   if(!BOT.loaded){ loadBotData().then(()=>{ if(isAlgo())renderAlgo(); }); }
   if(crypto && !CRYPTO.loaded && !CRYPTO.busy){ loadCrypto().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); }
   const view=state.algo.view, live=ALGOS.filter(a=>a.status!=='idle');
-  const depN=crypto?0:ALGOS.filter(a=>a.deployed&&inScope(a)).length;   // Monitor badge reflects the active market + studio scope
+  if(crypto && (view==='monitor'||view==='positions') && !CRYPTOMON.loaded && !CRYPTOMON.busy){ loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); }
+  const depN=crypto?cxActive():ALGOS.filter(a=>a.deployed&&inScope(a)).length;   // Monitor badge reflects the active market + studio scope
   const tabs=[['library','Library'],['opportunity','Opportunity Engine'],['risk','Risk Governor'],['positions','Positions'],['market','Marketplace'],['leaderboard','Leaderboard'],['backtest','Backtest'],['forward','Forward Test'],['monitor','Monitor'],['accuracy','Accuracy'],['analytics','Analytics']];
   const head=`<div class="av-head">
     <div class="av-title"><span class="av-ic">${icon('cpu',17)}</span><div><b>Algo Studio</b><span>${crypto?'Crypto strategies · live Binance prices · paper preview':'Backtest, forward-test &amp; monitor rule-based strategies'}</span></div></div>
@@ -6090,6 +6136,10 @@ function init(){
   // live crypto prices (Binance public, real) — drives the global rolling tape whenever Crypto is selected (5s poll)
   setInterval(()=>{ if(state.algo && state.algo.market==='crypto' && document.visibilityState==='visible')
     loadCrypto().then(()=>{ if(state.algo&&state.algo.market==='crypto') patchCryptoTape(); }); }, 5000);
+  // live crypto paper book (7s poll) — refresh the Monitor/Positions P&L while the studio is scoped to Crypto
+  setInterval(()=>{ if(isAlgo() && state.algo && state.algo.market==='crypto'
+      && (state.algo.view==='monitor'||state.algo.view==='positions') && document.visibilityState==='visible')
+    loadCryptoMonitor().then(()=>{ if(isAlgo() && state.algo.market==='crypto' && (state.algo.view==='monitor'||state.algo.view==='positions')) renderAlgo(); }); }, 7000);
   // fast real-time poll (2s): refresh live paper P&L + positions across ALL live algo
   // views — Marketplace, Leaderboard, Forward Test, Monitor. (Backtest is static, skip it.)
   // Safe re-render: skips the tick while a field is focused (no clobbering the capital box)
