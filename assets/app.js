@@ -3728,8 +3728,41 @@ function cryptoFmt(p){ if(!isFinite(p)) return '—'; const dec=p>=1?2:p>=0.01?4
 const CRYPTO_WS='wss://data-stream.binance.vision';
 const CWS={ws:null,url:'',on:false,lastMsg:0,backoff:1000,reT:null,raf:0};
 function cryptoWsUrl(){ return CRYPTO_WS+'/stream?streams='+CRYPTO_UNIVERSE.map(c=>c.sym.toLowerCase()+'@ticker').join('/'); }
-// Coalesce tape DOM patches to one per animation frame (the universe pushes ~10 msgs/s combined).
-function scheduleTapePatch(){ if(CWS.raf) return; CWS.raf=requestAnimationFrame(()=>{ CWS.raf=0; if(state.algo&&state.algo.market==='crypto') patchCryptoTape(); }); }
+// Coalesce DOM patches to one per animation frame (the universe pushes ~10 msgs/s combined).
+function scheduleTapePatch(){ if(CWS.raf) return; CWS.raf=requestAnimationFrame(()=>{ CWS.raf=0;
+  if(!(state.algo&&state.algo.market==='crypto')) return;
+  patchCryptoTape();
+  // also re-mark the crypto Monitor/Positions P&L sub-second (spot marked to WS price)
+  if(typeof isAlgo==='function' && isAlgo() && (state.algo.view==='monitor'||state.algo.view==='positions')) patchCryptoMonitorLive();
+}); }
+// Sub-second P&L: re-mark SPOT open positions to the live WS price between the bot's 7s polls. Perps/options
+// keep the bot's authoritative mark (funding / option-credit aren't a plain qty×spot). Patches in place.
+function cxLiveOpen(s){
+  if(((s&&s.instr)||'spot')!=='spot') return (s&&s.openPnl)||0;
+  let open=0, marked=false;
+  ((s&&s.positions)||[]).forEach(p=>{ const q=p.qty, e=p.entry, w=CRYPTO.quotes&&CRYPTO.quotes[p.sym];
+    if(q!=null && e!=null && w && w.ltp!=null){ open+=q*(w.ltp-e); marked=true; }
+    else if(p.unreal!=null){ open+=p.unreal; } });   // no WS quote for this coin → keep the bot mark
+  return marked?open:((s&&s.openPnl)||0);
+}
+function patchCryptoMonitorLive(){
+  const d=CRYPTOMON.data; if(!d||!d.strategies) return;
+  const cur=(state.algo&&state.algo.cinstr)||'spot';
+  const segTot={spot:0,perps:0,options:0}, segOpen={spot:0,perps:0,options:0};
+  const rowMap={}; document.querySelectorAll('[data-cxrow]').forEach(r=>rowMap[r.getAttribute('data-cxrow')]=r);
+  const setCls=(el,v)=>{ el.classList.remove('up','down'); const c=cls(v); if(c) el.classList.add(c); };
+  d.strategies.forEach(s=>{
+    const open=cxLiveOpen(s), total=((s.realisedPnl)||0)+open, instr=s.instr||'spot';
+    segTot[instr]=(segTot[instr]||0)+total; segOpen[instr]=(segOpen[instr]||0)+open;
+    const row=rowMap[s.id]; if(!row) return;
+    const u=row.querySelector('.cxm-unreal'); if(u){ u.textContent=cxMoney(open); setCls(u,open); }
+    const tb=row.querySelector('.cxm-total>b'); if(tb) tb.textContent=cxMoney(total);
+    const t=row.querySelector('.cxm-total'); if(t) setCls(t,total);
+  });
+  const setLive=(id,v)=>document.querySelectorAll('[data-live="'+id+'"]').forEach(el=>{ el.textContent=cxMoney(v); setCls(el,v); });
+  setLive('cxClsPnl', segTot[cur]); setLive('cxUnreal', segOpen[cur]);
+  ['spot','perps','options'].forEach(k=>document.querySelectorAll('[data-cxseg="'+k+'"]').forEach(el=>el.textContent=cxMoney(segTot[k])));
+}
 function connectCryptoWS(){
   if(typeof WebSocket==='undefined') return;
   if(!(state.algo&&state.algo.market==='crypto')) return;
@@ -3760,7 +3793,7 @@ function cryptoStatusBar(){
   const cells=[
     `<div class="asb-cell"><span class="asb-l">Venue${infoI('Binance public market data (read-only, no API key). Real prices, never simulated.')}</span><span class="asb-v"><span class="live-dot ${live?'live':''}"></span>Binance</span></div>`,
     `<div class="asb-cell"><span class="asb-l">Data</span><span class="asb-v">${live?`● LIVE${t?` · ${t}`:''}`:(CRYPTO.error?'Unreachable — retrying':'Connecting…')}</span></div>`,
-    `<div class="asb-cell"><span class="asb-l">Mode${infoI('Crypto strategies are in preview — paper only. No crypto orders are placed; a live crypto engine (Binance Algo API, server-signed) is on the roadmap.')}</span><span class="asb-v"><span class="mode-badge paper">PAPER · preview</span></span></div>`,
+    `<div class="asb-cell"><span class="asb-l">Mode${infoI('Live 24/7 paper engine on real Binance data — simulated fills, no real crypto orders are placed. Live execution (Binance Algo API, server-signed) is on the roadmap.')}</span><span class="asb-v"><span class="mode-badge paper">PAPER · live</span></span></div>`,
     `<div class="asb-cell asb-grow"><span class="asb-l">Market</span><span class="asb-v">Crypto · USDT spot</span></div>`
   ].join('<span class="asb-div"></span>');
   return `<div class="algo-statusbar${live?'':' off'}">${cells}</div>`;
