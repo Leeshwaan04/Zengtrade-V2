@@ -3891,6 +3891,43 @@ function cryptoForward(mode){   // mode: 'forward' | 'accuracy'
     <span class="cxm-n num ${cls(s.netPnl)}"><b>${cxMoney(s.netPnl)}</b></span></div>`).join('');
   return note+stat+`<div class="cxm-tbl-h">${icon('activity',13)}<b>Per-strategy ${acc?'accuracy':'track record'}</b><span>${rows.length} with closed trades</span></div><div class="cxm-tbl">${head}${body}</div>`;
 }
+// ---- crypto Analytics (P&L attribution by instrument / strategy / regime) ----
+const CRYPTOAN={loaded:false,busy:false,data:null};
+async function loadCryptoAn(){ if(CRYPTOAN.busy) return; CRYPTOAN.busy=true;
+  try{ CRYPTOAN.data=await fetch(`${BOT_API}/api/crypto/analytics`).then(r=>r.json()); }catch(e){ CRYPTOAN.data={running:false}; }
+  CRYPTOAN.loaded=true; CRYPTOAN.busy=false; }
+const CX_INSTR_LABEL={spot:'Spot',perps:'Perpetuals',options:'Options'};
+function cryptoAnalytics(){
+  const d=CRYPTOAN.data;
+  if(!d){ if(!CRYPTOAN.busy) loadCryptoAn().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); return secEmpty('activity','Loading analytics…','Attributing the crypto P&L by instrument, strategy and regime.'); }
+  if(d.running===false){ return secEmpty('activity','Analytics offline','Start the crypto harness — analytics attributes its live book once it is running.'); }
+  const t=d.totals||{}, note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>P&L attribution.</b> Where the crypto book's edge is coming from — by instrument class, by strategy, and by the market regime trades closed in. Open P&L is marked live; regime splits are realised (from closed trades).</span></div>`;
+  const stat=secStats([
+    {l:'Total P&L',v:cxMoney(t.pnl),s:'realised + open',tone:t.pnl>0?'up':(t.pnl<0?'down':'')},
+    {l:'Realised',v:cxMoney(t.realised),s:'booked'},
+    {l:'Unrealised',v:cxMoney(t.unreal),s:'open, live',tone:t.unreal>0?'up':(t.unreal<0?'down':'')},
+    {l:'Current regime',v:esc(d.regime||'—'),s:'BTC-led'},
+  ]);
+  // instrument attribution
+  const inst=Object.entries(d.byInstrument||{}).sort((a,b)=>b[1].pnl-a[1].pnl).map(([k,v])=>
+    `<div class="cxm-row"><div class="cxm-name"><b>${esc(CX_INSTR_LABEL[k]||k)}</b> <span class="cxf-cls">${v.n} strat</span></div>
+      <span class="cxm-n num">${v.openPos}</span>
+      <span class="cxm-n num ${cls(v.realised)}">${cxMoney(v.realised)}</span>
+      <span class="cxm-n num ${cls(v.open)}">${cxMoney(v.open)}</span>
+      <span class="cxm-n num ${cls(v.pnl)}"><b>${cxMoney(v.pnl)}</b></span></div>`).join('')
+    ||'<div class="cxr-empty" style="padding:11px 13px">No positions yet</div>';
+  const instHead=`<div class="cxm-row cxm-head"><div class="cxm-name">Instrument</div><span class="cxm-n">Open</span><span class="cxm-n">Realised</span><span class="cxm-n">Unreal.</span><span class="cxm-n">Total</span></div>`;
+  // regime attribution
+  const regs=Object.entries(d.byRegime||{}).sort((a,b)=>b[1].net-a[1].net);
+  const regChips=regs.length?regs.map(([r,v])=>`<span class="cxm-chip ${cls(v.net)}">${esc(r)} <i>${cxMoney(v.net)} · ${v.n}t</i></span>`).join(''):'<span class="cxr-empty">No closed trades yet</span>';
+  // strategy contributors
+  const strat=(d.byStrategy||[]);
+  const contrib=strat.length?strat.map(s=>`<div class="cxm-row cxf-row" style="grid-template-columns:1.5fr 90px 90px"><div class="cxm-name"><b>${esc(s.name)}</b> <span class="cxf-cls">${esc(s.instr)}</span></div><span class="cxm-n"></span><span class="cxm-n num ${cls(s.pnl)}"><b>${cxMoney(s.pnl)}</b></span></div>`).join(''):'<div class="cxr-empty" style="padding:11px 13px">No active strategies</div>';
+  return note+stat+
+    `<div class="cxm-tbl-h">${icon('layout',13)}<b>By instrument class</b><span>Spot / Perps / Options</span></div><div class="cxm-tbl">${instHead}${inst}</div>`+
+    `<div class="cxm-tbl-h">${icon('cpu',13)}<b>By regime</b><span>realised, from closed trades</span></div><div class="cxm-pos">${regChips}</div>`+
+    `<div class="cxm-tbl-h">${icon('activity',13)}<b>Strategy contributors</b><span>top by total P&L</span></div><div class="cxm-tbl">${contrib}</div>`;
+}
 // Crypto-scoped router: every Algo Studio tab stays in sync with the crypto market (no Indian content leaks).
 function cryptoBody(view,label){
   if(view==='library'||view==='market') return cryptoMarket();
@@ -3901,6 +3938,7 @@ function cryptoBody(view,label){
   if(view==='backtest') return cryptoBacktest();
   if(view==='forward') return cryptoForward('forward');
   if(view==='accuracy') return cryptoForward('accuracy');
+  if(view==='analytics') return cryptoAnalytics();
   return cryptoSoon(label);
 }
 
@@ -6269,7 +6307,8 @@ function init(){
     const v=state.algo.view;
     if(v==='monitor'||v==='positions') loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&(state.algo.view==='monitor'||state.algo.view==='positions')) renderAlgo(); });
     else if(v==='risk') loadCryptoRisk().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='risk') renderAlgo(); });
-    else if(v==='forward'||v==='accuracy') loadCryptoFwd().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&(state.algo.view==='forward'||state.algo.view==='accuracy')) renderAlgo(); }); }, 7000);
+    else if(v==='forward'||v==='accuracy') loadCryptoFwd().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&(state.algo.view==='forward'||state.algo.view==='accuracy')) renderAlgo(); });
+    else if(v==='analytics') loadCryptoAn().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='analytics') renderAlgo(); }); }, 7000);
   // fast real-time poll (2s): refresh live paper P&L + positions across ALL live algo
   // views — Marketplace, Leaderboard, Forward Test, Monitor. (Backtest is static, skip it.)
   // Safe re-render: skips the tick while a field is focused (no clobbering the capital box)

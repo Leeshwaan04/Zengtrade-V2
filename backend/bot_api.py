@@ -2051,6 +2051,46 @@ def crypto_forward_payload() -> dict:
                        "winPct": winPct, "profitFactor": pf, "netPnl": round(agg["net"], 2)}}
 
 
+def crypto_analytics_payload() -> dict:
+    """P&L attribution for the crypto book — by instrument class (spot/perps/options), by strategy
+    (top contributors + drags), and by market regime (realised, from the closed-trade log)."""
+    mon = crypto_monitor_payload()
+    if not mon.get("running"):
+        return {"running": False}
+    by_instr, by_strat = {}, []
+    for s in mon.get("strategies", []):
+        c = s.get("instr", "spot")
+        b = by_instr.setdefault(c, {"realised": 0.0, "open": 0.0, "pnl": 0.0, "n": 0, "openPos": 0})
+        b["realised"] += s["realisedPnl"]; b["open"] += s["openPnl"]; b["pnl"] += s["paperPnl"]
+        b["n"] += 1; b["openPos"] += s["openPositions"]
+        if s["paperPnl"] != 0 or s["openPositions"] > 0:
+            by_strat.append({"id": s["id"], "name": s["name"], "instr": c, "pnl": s["paperPnl"]})
+    for b in by_instr.values():
+        b["realised"] = round(b["realised"], 2); b["open"] = round(b["open"], 2); b["pnl"] = round(b["pnl"], 2)
+    by_strat.sort(key=lambda x: -x["pnl"])
+    by_regime = {}
+    logp = os.path.join(HERE, "crypto_trades.log")
+    if os.path.exists(logp):
+        try:
+            with open(logp) as f:
+                for ln in f:
+                    if "] EXIT" not in ln or "pnl=" not in ln:
+                        continue
+                    try:
+                        pnl = float(ln.split("pnl=", 1)[1].split()[0].rstrip(")"))
+                    except ValueError:
+                        continue
+                    reg = ln.split("regime=", 1)[1].strip().split()[0] if "regime=" in ln else "—"
+                    r = by_regime.setdefault(reg, {"net": 0.0, "n": 0})
+                    r["net"] += pnl; r["n"] += 1
+            for r in by_regime.values():
+                r["net"] = round(r["net"], 2)
+        except Exception:
+            pass
+    return {"running": True, "regime": mon.get("regime"), "totals": mon.get("totals"),
+            "byInstrument": by_instr, "byStrategy": by_strat[:12], "byRegime": by_regime}
+
+
 def crypto_risk_payload() -> dict:
     """The crypto Governor state (score, mode, concentration, crowding, kill-switch) — the same
     portfolio control layer as the Indian book, published each cycle by the crypto harness."""
@@ -2664,6 +2704,7 @@ class Handler(BaseHTTPRequestHandler):
                 "/api/crypto/monitor": crypto_monitor_payload,
                 "/api/crypto/risk": crypto_risk_payload,
                 "/api/crypto/forward": crypto_forward_payload,
+                "/api/crypto/analytics": crypto_analytics_payload,
                 "/api/stopped": stopped_payload,
                 "/api/analytics": analytics_payload,
                 "/api/market": market_snapshot,
