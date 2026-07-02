@@ -2089,6 +2089,9 @@ html[data-persona="ai"] #chartCard,html[data-persona="ai"] #chartResize,html[dat
 .cxbt-legend{display:flex;gap:12px;margin:8px 2px 4px;font-size:11px;font-weight:600}
 .cxbt-lg{color:var(--slate)}
 .cxbt-lg.eq{color:var(--blue)} .cxbt-lg.bh{color:var(--slate-2)}
+/* crypto forward test / accuracy table (6 cols) */
+.cxf-row{grid-template-columns:1.4fr 58px 58px 52px 92px 92px}
+.cxf-cls{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--slate-2);background:var(--surface-2);border:1px solid var(--line);border-radius:5px;padding:1px 5px;margin-left:4px}
 
 /* algo marketplace grid */
 .algo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}

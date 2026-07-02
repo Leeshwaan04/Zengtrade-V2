@@ -3864,6 +3864,33 @@ function cryptoBacktest(){
   }
   return note+picker+body;
 }
+// ---- crypto Forward Test + Accuracy (real closed-trade track record from the 24/7 harness) ----
+const CRYPTOFWD={loaded:false,busy:false,data:null};
+async function loadCryptoFwd(){ if(CRYPTOFWD.busy) return; CRYPTOFWD.busy=true;
+  try{ CRYPTOFWD.data=await fetch(`${BOT_API}/api/crypto/forward`).then(r=>r.json()); }catch(e){ CRYPTOFWD.data={running:false}; }
+  CRYPTOFWD.loaded=true; CRYPTOFWD.busy=false; }
+function cryptoForward(mode){   // mode: 'forward' | 'accuracy'
+  const d=CRYPTOFWD.data;
+  if(!d){ if(!CRYPTOFWD.busy) loadCryptoFwd().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); return secEmpty('activity','Loading track record…','Reading closed crypto trades from the harness log.'); }
+  const rows=d.strategies||[], t=d.totals||{};
+  if(!rows.length){ return secEmpty('activity','No closed trades yet',`The 24/7 crypto harness books this as it runs — win%, profit factor and expectancy appear once positions close. Open positions are on the <b>Monitor</b> tab.`); }
+  const acc=mode==='accuracy';
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>${acc?'Forward accuracy':'Forward test'} — real out-of-sample.</b> Every metric below is from <b>closed</b> paper trades on live Binance data (not a backtest, not fabricated). ${acc?'Win% and profit factor are the honest edge measure.':'This is the live track record the go-live gate would judge.'}</span></div>`;
+  const stat=secStats([
+    {l:'Closed trades',v:String(t.closed||0),s:`${t.wins||0}W / ${t.losses||0}L`},
+    {l:'Win rate',v:t.winPct==null?'—':t.winPct+'%',s:'across all strategies',tone:(t.winPct>=50)?'up':(t.winPct<45?'down':'')},
+    {l:'Profit factor',v:t.profitFactor==null?'—':(+t.profitFactor).toFixed(2),s:'gross win ÷ loss',tone:(t.profitFactor>=1.3)?'up':(t.profitFactor<1?'down':'')},
+    {l:'Net P&L',v:cxMoney(t.netPnl),s:'realised, closed',tone:(t.netPnl>0)?'up':(t.netPnl<0?'down':'')},
+  ]);
+  const head=`<div class="cxm-row cxf-row cxm-head"><div class="cxm-name">Strategy</div><span class="cxm-n">Trades</span><span class="cxm-n">Win%</span><span class="cxm-n">PF</span><span class="cxm-n">Expectancy</span><span class="cxm-n">Net</span></div>`;
+  const body=rows.map(s=>`<div class="cxm-row cxf-row"><div class="cxm-name"><b>${esc(s.name)}</b> <span class="cxf-cls">${esc(s.instr||'spot')}</span></div>
+    <span class="cxm-n num">${s.closed}</span>
+    <span class="cxm-n num ${s.winPct>=50?'up':(s.winPct<45?'down':'')}">${s.winPct==null?'—':s.winPct+'%'}</span>
+    <span class="cxm-n num ${s.profitFactor>=1.3?'up':(s.profitFactor<1?'down':'')}">${s.profitFactor==null?'—':(+s.profitFactor).toFixed(2)}</span>
+    <span class="cxm-n num ${cls(s.expectancy)}">${cxMoney(s.expectancy)}</span>
+    <span class="cxm-n num ${cls(s.netPnl)}"><b>${cxMoney(s.netPnl)}</b></span></div>`).join('');
+  return note+stat+`<div class="cxm-tbl-h">${icon('activity',13)}<b>Per-strategy ${acc?'accuracy':'track record'}</b><span>${rows.length} with closed trades</span></div><div class="cxm-tbl">${head}${body}</div>`;
+}
 // Crypto-scoped router: every Algo Studio tab stays in sync with the crypto market (no Indian content leaks).
 function cryptoBody(view,label){
   if(view==='library'||view==='market') return cryptoMarket();
@@ -3872,6 +3899,8 @@ function cryptoBody(view,label){
   if(view==='monitor'||view==='positions') return cryptoMonitor();
   if(view==='risk') return cryptoRisk();
   if(view==='backtest') return cryptoBacktest();
+  if(view==='forward') return cryptoForward('forward');
+  if(view==='accuracy') return cryptoForward('accuracy');
   return cryptoSoon(label);
 }
 
@@ -6239,7 +6268,8 @@ function init(){
   setInterval(()=>{ if(!(isAlgo() && state.algo && state.algo.market==='crypto' && document.visibilityState==='visible')) return;
     const v=state.algo.view;
     if(v==='monitor'||v==='positions') loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&(state.algo.view==='monitor'||state.algo.view==='positions')) renderAlgo(); });
-    else if(v==='risk') loadCryptoRisk().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='risk') renderAlgo(); }); }, 7000);
+    else if(v==='risk') loadCryptoRisk().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='risk') renderAlgo(); });
+    else if(v==='forward'||v==='accuracy') loadCryptoFwd().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&(state.algo.view==='forward'||state.algo.view==='accuracy')) renderAlgo(); }); }, 7000);
   // fast real-time poll (2s): refresh live paper P&L + positions across ALL live algo
   // views — Marketplace, Leaderboard, Forward Test, Monitor. (Backtest is static, skip it.)
   // Safe re-render: skips the tick while a field is focused (no clobbering the capital box)

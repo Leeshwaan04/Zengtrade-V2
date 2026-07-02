@@ -1987,6 +1987,70 @@ def crypto_backtest_payload(strategy: str, period: str) -> dict:
         return {"real": False, "error": str(e)[:120]}
 
 
+def _fwd_from_log(key: str, logpath: str) -> dict:
+    """Closed-trade stats for one strategy from a paper log (EXIT lines). Shared by crypto."""
+    out = {"closed": 0, "wins": 0, "losses": 0, "winPct": None, "profitFactor": None,
+           "avgWin": None, "avgLoss": None, "expectancy": None, "netPnl": 0.0}
+    if not key or not os.path.exists(logpath):
+        return out
+    tag = f"[{key}] EXIT"
+    pnls = []
+    try:
+        with open(logpath) as f:
+            for ln in f:
+                if tag not in ln or "pnl=" not in ln:
+                    continue
+                tok = ln.split("pnl=", 1)[1].split()[0].rstrip(")")
+                try:
+                    pnls.append(float(tok))
+                except ValueError:
+                    pass
+    except Exception:
+        return out
+    out["closed"] = len(pnls)
+    if not pnls:
+        return out
+    wins = [p for p in pnls if p > 0]
+    losses = [p for p in pnls if p < 0]
+    gw, gl = sum(wins), -sum(losses)
+    out.update(wins=len(wins), losses=len(losses), winPct=round(len(wins) / len(pnls) * 100, 1),
+               avgWin=round(gw / len(wins), 2) if wins else 0.0,
+               avgLoss=round(gl / len(losses), 2) if losses else 0.0,
+               profitFactor=round(gw / gl, 2) if gl > 0 else (99.0 if gw > 0 else None),
+               expectancy=round(sum(pnls) / len(pnls), 2), netPnl=round(sum(pnls), 2))
+    return out
+
+
+def crypto_forward_payload() -> dict:
+    """Forward-test accuracy for the crypto book — real closed-trade stats per strategy, parsed
+    from the 24/7 harness log (win%, profit factor, expectancy). This is the honest out-of-sample
+    track record; it accrues as the harness runs."""
+    logp = os.path.join(HERE, "crypto_trades.log")
+    instr = {}
+    sp = os.path.join(HERE, "crypto_state.json")
+    if os.path.exists(sp):
+        try:
+            instr = json.load(open(sp)).get("instr", {})
+        except Exception:
+            instr = {}
+    rows, agg = [], {"closed": 0, "wins": 0, "losses": 0, "net": 0.0, "gw": 0.0, "gl": 0.0}
+    for k, name in _CRYPTO_NAMES.items():
+        s = _fwd_from_log(k, logp)
+        if s["closed"] == 0:
+            continue
+        s.update(id=k, name=name, instr=instr.get(k, "spot"))
+        rows.append(s)
+        agg["closed"] += s["closed"]; agg["wins"] += s["wins"]; agg["losses"] += s["losses"]
+        agg["net"] += s["netPnl"]
+        agg["gw"] += (s["avgWin"] or 0) * s["wins"]; agg["gl"] += (s["avgLoss"] or 0) * s["losses"]
+    rows.sort(key=lambda r: -r["closed"])
+    winPct = round(agg["wins"] / agg["closed"] * 100, 1) if agg["closed"] else None
+    pf = round(agg["gw"] / agg["gl"], 2) if agg["gl"] > 0 else (99.0 if agg["gw"] > 0 else None)
+    return {"running": os.path.exists(logp), "strategies": rows,
+            "totals": {"closed": agg["closed"], "wins": agg["wins"], "losses": agg["losses"],
+                       "winPct": winPct, "profitFactor": pf, "netPnl": round(agg["net"], 2)}}
+
+
 def crypto_risk_payload() -> dict:
     """The crypto Governor state (score, mode, concentration, crowding, kill-switch) — the same
     portfolio control layer as the Indian book, published each cycle by the crypto harness."""
@@ -2599,6 +2663,7 @@ class Handler(BaseHTTPRequestHandler):
                 "/api/monitor": monitor_payload,
                 "/api/crypto/monitor": crypto_monitor_payload,
                 "/api/crypto/risk": crypto_risk_payload,
+                "/api/crypto/forward": crypto_forward_payload,
                 "/api/stopped": stopped_payload,
                 "/api/analytics": analytics_payload,
                 "/api/market": market_snapshot,
