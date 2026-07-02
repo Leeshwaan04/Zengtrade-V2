@@ -3149,6 +3149,15 @@ function patchAlgoLive(){
   document.querySelectorAll('[data-live="anRealised"]').forEach(el=>setNum(el,anReal));
   document.querySelectorAll('[data-live="anOpen"]').forEach(el=>setNum(el,anOpen));
   document.querySelectorAll('[data-live="anBook"]').forEach(el=>setNum(el,total));
+  // Moonshot Mission banner (computed inline in missionBanner, so patch its live numbers here)
+  const ms=ALGOS.find(a=>a.id==='moonshot');
+  if(ms){ const START=5000, TARGET=5e10, eq=START+(ms.paperPnl||0), mult=eq/START;
+    const prog=Math.max(0,Math.min(100,Math.log(Math.max(eq,1)/START)/Math.log(TARGET/START)*100));
+    document.querySelectorAll('[data-live="msnEq"]').forEach(el=>{ el.textContent=inrShort(eq); el.className=(ms.paperPnl||0)>=0?'up':'down'; });
+    document.querySelectorAll('[data-live="msnMult"]').forEach(el=>{ el.textContent=mult>=1?mult.toFixed(mult>=100?0:2)+'× start':'−'+((1-mult)*100).toFixed(1)+'%'; });
+    document.querySelectorAll('[data-live="msnFill"]').forEach(el=>{ el.style.width=prog.toFixed(4)+'%'; });
+    document.querySelectorAll('[data-live="msnProg"]').forEach(el=>{ el.textContent=prog.toFixed(prog<1?4:2)+'% of the way (log scale)'; });
+  }
 }
 /* ============================================================
    STRATEGY LIBRARY — every strategy family, as honest, browseable,
@@ -3741,15 +3750,28 @@ function cxMoney(v){ if(v==null||!isFinite(v)) return '—'; const s=v<0?'−':(
 function cxActive(){ const d=CRYPTOMON.data; return d&&d.strategies?d.strategies.filter(s=>s.openPositions>0||s.realisedPnl!==0).length:0; }
 // crypto instrument bifurcation (Spot / Perps / Options) — the crypto analog of Equity/Options/Futures
 const CX_INSTR=[['spot','Spot','spark','Long-only on spot majors'],['perps','Perpetuals','trendUp','Long / short + funding carry'],['options','Options','layers','Premium selling']];
-function cxScopeCounts(){ const by={spot:{n:0,pnl:0,open:0},perps:{n:0,pnl:0,open:0},options:{n:0,pnl:0,open:0}};
-  ((CRYPTOMON.data&&CRYPTOMON.data.strategies)||[]).forEach(s=>{ const c=by[s.instr||'spot']; if(c){ c.n++; c.pnl+=s.paperPnl||0; c.open+=s.openPositions||0; } }); return by; }
+// Compact unsigned money for exposure/deployed figures ($492K / $1.0M).
+function cxAbs(v){ if(v==null||!isFinite(v)) return '—'; const a=Math.abs(v);
+  if(a>=1e6) return '$'+(a/1e6).toFixed(a>=1e7?0:1)+'M';
+  if(a>=1e3) return '$'+(a/1e3).toFixed(a>=1e5?0:1)+'K';
+  return '$'+Math.round(a); }
+function cxScopeCounts(){ const by={spot:{n:0,pnl:0,open:0,book:0},perps:{n:0,pnl:0,open:0,book:0},options:{n:0,pnl:0,open:0,book:0}};
+  ((CRYPTOMON.data&&CRYPTOMON.data.strategies)||[]).forEach(s=>{ const seg=s.instr||'spot', c=by[seg]; if(!c) return;
+    c.n++; c.pnl+=s.paperPnl||0; c.open+=s.openPositions||0;
+    // deployed = capital-at-risk, mirroring the backend Governor: spot/options = full notional (qty×entry); perps = 20% margin
+    (s.positions||[]).forEach(p=>{ const notional=Math.abs((p.qty||0)*(p.entry||0)); c.book += seg==='perps'?notional*0.20:notional; }); });
+  return by; }
 function cryptoScopeBar(){
   const cur=state.algo.cinstr||'spot', by=cxScopeCounts();
-  const bar=CX_INSTR.map(([id,lab,ic,desc])=>{ const c=by[id]||{n:0,pnl:0};
+  const pool=(CRYPTOMON.data&&CRYPTOMON.data.capital)||0;
+  const bar=CX_INSTR.map(([id,lab,ic,desc])=>{ const c=by[id]||{n:0,pnl:0,book:0};
+    const dep=c.n?`<span class="lii-dep">Deployed <b class="num">${cxAbs(c.book)}</b>${pool?` · ${(c.book/pool*100).toFixed(1)}% of pool`:''}</span>`:'';
     return `<button class="lib-instr-tab${cur===id?' on':''}" data-cinstr="${id}" role="tab" aria-selected="${cur===id}">
       <span class="lii-top">${icon(ic,15)}<b>${lab}</b><i class="lii-n">${c.n}</i></span>
-      <span class="lii-desc">${c.n?esc(desc)+' · '+cxMoney(c.pnl):esc(desc)+' · coming online'}</span></button>`; }).join('');
-  return `<div class="av-scope"><div class="lib-instr" role="tablist" aria-label="Crypto instrument class">${bar}</div></div>`;
+      <span class="lii-desc">${c.n?esc(desc)+' · '+cxMoney(c.pnl):esc(desc)+' · coming online'}</span>${dep}</button>`; }).join('');
+  const totBook=by.spot.book+by.perps.book+by.options.book;
+  const note=totBook>0?`<div class="av-scope-note">${icon('shield',12)}<span><b>Deployed</b> = capital-at-risk against the ${pool?cxAbs(pool)+' ':''}governed pool${pool?` (≈${(totBook/pool*100).toFixed(1)}% total exposure — matches the Risk Score)`:''}. Perps book only <b>20% margin</b>; options premium-selling ties up <b>~no notional</b>, so their margin/tail risk isn't reflected here.</span></div>`:'';
+  return `<div class="av-scope"><div class="lib-instr" role="tablist" aria-label="Crypto instrument class">${bar}</div>${note}</div>`;
 }
 function cryptoMonitor(){
   const d=CRYPTOMON.data;
@@ -4610,11 +4632,11 @@ function missionBanner(){
   return `<div class="msn">
     <div class="msn-top">
       <div class="msn-title"><span class="msn-rocket">🚀</span><div><b>Moonshot Mission</b><span>₹5,000 → ₹5,000 Cr · reinvest every rupee, ride the best setup</span></div></div>
-      <div class="msn-eq"><b class="${(a.paperPnl||0)>=0?'up':'down'}">${inrShort(eq)}</b><span>${mult>=1?mult.toFixed(mult>=100?0:2)+'× start':'−'+((1-mult)*100).toFixed(1)+'%'}</span></div>
+      <div class="msn-eq"><b class="${(a.paperPnl||0)>=0?'up':'down'}" data-live="msnEq">${inrShort(eq)}</b><span data-live="msnMult">${mult>=1?mult.toFixed(mult>=100?0:2)+'× start':'−'+((1-mult)*100).toFixed(1)+'%'}</span></div>
     </div>
-    <div class="msn-track"><div class="msn-fill" style="width:${prog.toFixed(4)}%"></div>${ticks}</div>
+    <div class="msn-track"><div class="msn-fill" data-live="msnFill" style="width:${prog.toFixed(4)}%"></div>${ticks}</div>
     <div class="msn-foot">
-      <span class="msn-prog">${prog.toFixed(prog<1?4:2)}% of the way (log scale)</span>
+      <span class="msn-prog" data-live="msnProg">${prog.toFixed(prog<1?4:2)}% of the way (log scale)</span>
       <span class="msn-honest">${icon('shield',11)} 10,000,000× to target — ~57 yrs even at a stellar 50%/yr. Markets are probabilistic; this maximises compounding, it doesn't promise the moon.</span>
       <span class="msn-cta">${cta}</span>
     </div>
@@ -6313,7 +6335,7 @@ function init(){
   // views — Marketplace, Leaderboard, Forward Test, Monitor. (Backtest is static, skip it.)
   // Safe re-render: skips the tick while a field is focused (no clobbering the capital box)
   // and preserves scroll so live numbers update without any UI disruption.
-  const ALGO_LIVE_VIEWS=['market','leaderboard','forward','monitor','accuracy','analytics'];
+  const ALGO_LIVE_VIEWS=['market','leaderboard','forward','monitor','accuracy','analytics','opportunity'];
   setInterval(()=>{
     if(!(typeof isAlgo==='function'&&isAlgo())) return;
     if(state.algo&&state.algo.market==='crypto') return;   // Indian P&L poll is paused while the studio is scoped to Crypto
