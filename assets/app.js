@@ -4018,6 +4018,24 @@ function readinessView(mkt){
   const head=`<div class="cxm-row rdy-row cxm-head"><div class="cxm-name">Strategy · verdict</div><span class="cxm-n">Trades</span><span class="cxm-n">Win%</span><span class="cxm-n">PF</span><span class="cxm-n">Expectancy</span></div>`;
   return banner+note+`<div class="cxm-tbl-h">${icon('activity',13)}<b>Per-strategy verdict</b><span>ranked: ready → gathering → cull</span></div><div class="cxm-tbl">${head}${rows||'<div class="cxr-empty" style="padding:11px 13px">No closed trades yet — the gate fills as the harness runs</div>'}</div>`;
 }
+// ---- Strategy × regime fit matrix (learned, drives live selection) ----
+const RFIT={data:{},busy:{}};
+async function loadRegimeFit(mkt){ if(RFIT.busy[mkt]) return; RFIT.busy[mkt]=true;
+  try{ RFIT.data[mkt]=await fetch(`${BOT_API}/api/regime-fit?market=${mkt}`).then(r=>r.json()); }catch(e){ RFIT.data[mkt]={err:true}; }
+  RFIT.busy[mkt]=false; }
+function regimeFitMatrix(mkt){
+  const d=RFIT.data[mkt];
+  if(!d){ if(!RFIT.busy[mkt]) loadRegimeFit(mkt).then(()=>{ if(isAlgo())renderAlgo(); }); return ''; }
+  if(d.err||!(d.strategies||[]).length) return '';
+  const regs=d.regimes||[], cur=d.currentRegime;
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Regime fit — learned, not assumed.</b> Each cell is a strategy's <b>net-of-cost</b> edge in that regime (needs ${d.minTrades}+ trades to call it). In the live regime (<b>${esc(cur)}</b> ●) the book <b>benches proven losers and deploys proven winners</b>; the safe default stands where evidence is thin — so we run the right strategies for the conditions.</span></div>`;
+  const head=`<div class="rf-row rf-head"><span class="rf-name">Strategy</span>${regs.map(r=>`<span class="rf-col${r===cur?' cur':''}">${esc(r)}${r===cur?' ●':''}</span>`).join('')}</div>`;
+  const cell=c=>{ if(!c||!c.n) return '<span class="rf-cell rf-none">·</span>';
+    const lbl=c.verdict==='fit'?'FIT':c.verdict==='unfit'?'UNFIT':'…';
+    return `<span class="rf-cell rf-${esc(c.verdict)}" title="${c.n} trades · win ${c.winPct}% · PF ${c.pf} · expectancy ${c.expectancy}">${lbl} <i>${c.n}</i></span>`; };
+  const rows=d.strategies.map(s=>`<div class="rf-row"><span class="rf-name"><b>${esc(s.name)}</b></span>${regs.map(r=>cell((s.cells||{})[r])).join('')}</div>`).join('');
+  return `<div class="cxm-tbl-h">${icon('cpu',13)}<b>Strategy × regime fit</b><span>green FIT · red UNFIT · grey gathering — drives live selection</span></div>`+note+`<div class="rf-grid" style="grid-template-columns:1.6fr repeat(${regs.length},1fr)">${head}${rows}</div>`;
+}
 // Crypto-scoped router: every Algo Studio tab stays in sync with the crypto market (no Indian content leaks).
 function cryptoBody(view,label){
   if(view==='library'||view==='market') return cryptoMarket();
@@ -4028,7 +4046,7 @@ function cryptoBody(view,label){
   if(view==='backtest') return cryptoBacktest();
   if(view==='forward') return cryptoForward('forward');
   if(view==='accuracy') return readinessView('crypto');
-  if(view==='analytics') return cryptoAnalytics();
+  if(view==='analytics') return cryptoAnalytics()+regimeFitMatrix('crypto');
   return cryptoSoon(label);
 }
 
@@ -4077,14 +4095,18 @@ function renderAlgo(){
   const tabLabel=(tabs.find(t=>t[0]===view)||[,'This view'])[1];
   const body=crypto
     ? cryptoBody(view,tabLabel)
-    : (view==='library'?algoLibrary():view==='opportunity'?algoOpportunity():view==='risk'?algoRisk():view==='positions'?algoPositions():view==='market'?algoMarket():view==='leaderboard'?algoLeaderboard():view==='backtest'?algoBacktest():view==='forward'?algoForward():view==='accuracy'?(readinessView('in')+algoAccuracy()):view==='analytics'?algoAnalytics():algoMonitor());
-  // Preserve page scroll across the full innerHTML rebuild so in-place CTAs (sort, filter, toggles, live
-  // patches) don't flick/jump. Reset to top only when the view/market/scope actually changed (real navigation).
+    : (view==='library'?algoLibrary():view==='opportunity'?algoOpportunity():view==='risk'?algoRisk():view==='positions'?algoPositions():view==='market'?algoMarket():view==='leaderboard'?algoLeaderboard():view==='backtest'?algoBacktest():view==='forward'?algoForward():view==='accuracy'?(readinessView('in')+algoAccuracy()):view==='analytics'?(algoAnalytics()+regimeFitMatrix('in')):algoMonitor());
+  // Preserve scroll across the full innerHTML rebuild so in-place CTAs (sort, filter, toggles, live P&L
+  // patches) don't flick/jump. The algo view scrolls EITHER the page OR the inner .av-scroll depending on
+  // layout, so preserve both. Reset to top only when the view/market/scope actually changed (real navigation).
   const _scEl=document.scrollingElement||document.documentElement;
+  const _av0=v.querySelector('.av-scroll');
   const _vk=(state.algo.market||'in')+'/'+view+'/'+(state.algo.cinstr||'')+'/'+(state.algo.instr||'')+'/'+(state.algo.hold||'');
-  const _sy=(state.algo._vk===_vk)?_scEl.scrollTop:0;   state.algo._vk=_vk;
+  const _keep=(state.algo._vk===_vk); state.algo._vk=_vk;
+  const _sy=_keep?_scEl.scrollTop:0, _avy=(_keep&&_av0)?_av0.scrollTop:0;
   v.innerHTML=`<div class="av-wrap">${head}<div class="av-scroll">${crypto?cryptoStatusBar():algoStatusBar()}${crypto?'':studioScopeBar()}${body}</div></div>`;
   _scEl.scrollTop=_sy;
+  const _av1=v.querySelector('.av-scroll'); if(_av1) _av1.scrollTop=_avy;
   v.querySelectorAll('[data-algomkt]').forEach(b=>b.onclick=()=>setMarket(b.dataset.algomkt));
   v.querySelectorAll('[data-algoview]').forEach(b=>b.onclick=()=>{state.algo.view=b.dataset.algoview;renderAlgo();});
   v.querySelectorAll('[data-algoseg]').forEach(b=>b.onclick=()=>{state.algo.seg=b.dataset.algoseg;renderAlgo();});
@@ -6415,6 +6437,20 @@ function init(){
   // live crypto prices (Binance public, real) — drives the global rolling tape whenever Crypto is selected (5s poll)
   setInterval(()=>{ if(state.algo && state.algo.market==='crypto' && document.visibilityState==='visible')
     loadCrypto().then(()=>{ if(state.algo&&state.algo.market==='crypto') patchCryptoTape(); }); }, 5000);
+  // Instant refresh the moment the tab regains focus. Background tabs throttle setInterval (Chrome caps
+  // hidden-tab timers to ~1/min), so on return the crypto tape/book can look frozen until the next tick —
+  // pull fresh data immediately instead of waiting for it.
+  const refreshVisible=()=>{
+    if(document.visibilityState!=='visible') return;
+    if(state.algo && state.algo.market==='crypto'){
+      loadCrypto().then(()=>{ if(state.algo.market==='crypto') patchCryptoTape(); });
+      if(typeof isAlgo==='function' && isAlgo()){ const v=state.algo.view;
+        if((v==='monitor'||v==='positions')&&typeof loadCryptoMonitor==='function') loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); });
+        else if(v==='risk'&&typeof loadCryptoRisk==='function') loadCryptoRisk().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); }
+    } else if(BOT.live){ loadTicks(); }   // Indian book: pull fresh ticks on return too
+  };
+  document.addEventListener('visibilitychange',refreshVisible);
+  window.addEventListener('focus',refreshVisible);
   // live crypto paper book (7s poll) — refresh the Monitor/Positions/Risk while the studio is scoped to Crypto
   setInterval(()=>{ if(!(isAlgo() && state.algo && state.algo.market==='crypto' && document.visibilityState==='visible')) return;
     const v=state.algo.view;
@@ -6422,7 +6458,8 @@ function init(){
     else if(v==='risk') loadCryptoRisk().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='risk') renderAlgo(); });
     else if(v==='forward'||v==='accuracy') loadCryptoFwd().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&(state.algo.view==='forward'||state.algo.view==='accuracy')) renderAlgo(); });
     else if(v==='analytics') loadCryptoAn().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='analytics') renderAlgo(); });
-    else if(v==='accuracy') loadReadiness('crypto').then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='accuracy') renderAlgo(); }); }, 7000);
+    else if(v==='accuracy') loadReadiness('crypto').then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='accuracy') renderAlgo(); });
+    else if(v==='analytics') loadRegimeFit('crypto'); }, 7000);
   // fast real-time poll (2s): refresh live paper P&L + positions across ALL live algo
   // views — Marketplace, Leaderboard, Forward Test, Monitor. (Backtest is static, skip it.)
   // Safe re-render: skips the tick while a field is focused (no clobbering the capital box)

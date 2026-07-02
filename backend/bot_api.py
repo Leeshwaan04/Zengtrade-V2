@@ -2060,6 +2060,36 @@ def _regimes_from_log(key: str, logpath: str) -> list:
     return sorted(regs)
 
 
+_REGIME_ORDER = ["Bull", "Bear", "Choppy", "High-Vol"]
+
+
+def _current_regime(market: str) -> str:
+    f = os.path.join(HERE, "crypto_state.json" if market == "crypto" else "rebalance_state.json")
+    if os.path.exists(f):
+        try:
+            return json.load(open(f)).get("regime", "—") or "—"
+        except Exception:
+            pass
+    return "—"
+
+
+def regime_fit_payload(market: str = "in") -> dict:
+    """Strategy × regime expectancy matrix — which strategy PROVES it profits in which regime,
+    net of costs. This is what makes the live selection data-driven: proven losers in the live
+    regime are benched, proven winners deployed, the hand-written prior stands where evidence is thin."""
+    from bot import regime_fit
+    logp = os.path.join(HERE, "crypto_trades.log" if market == "crypto" else "paper_trades.log")
+    mat = regime_fit.matrix_from_log(logp)
+    rows = []
+    for key in mat:
+        cells = {r: mat[key].get(r) for r in _REGIME_ORDER}
+        total = sum(c["n"] for c in mat[key].values())
+        rows.append({"id": key, "name": _BOOK_NAMES.get(key, key), "cells": cells, "total": total})
+    rows.sort(key=lambda r: -r["total"])
+    return {"market": market, "regimes": _REGIME_ORDER, "currentRegime": _current_regime(market),
+            "minTrades": regime_fit.MIN_CELL, "strategies": rows}
+
+
 def book_readiness_payload(market: str = "in") -> dict:
     """The honest go-live gate: per strategy, net-of-cost win%/PF/expectancy, regimes survived,
     and a verdict (READY / GATHERING / CULL) against the bar. This is what decides real capital —
@@ -2766,6 +2796,8 @@ class Handler(BaseHTTPRequestHandler):
                                                           (qs.get("period") or ["1Y"])[0]))
             if path == "/api/readiness/book":
                 return self._send(book_readiness_payload((qs.get("market") or ["in"])[0]))
+            if path == "/api/regime-fit":
+                return self._send(regime_fit_payload((qs.get("market") or ["in"])[0]))
             routes = {
                 "/api/status": kite_status,
                 "/api/strategies": strategies_payload,

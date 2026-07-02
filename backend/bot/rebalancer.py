@@ -50,6 +50,7 @@ class Rebalancer:
         self.cash_pct = 10
         self.note = ""
         self.culled: set = set()      # strategies auto-benched for negative expectancy over a real sample
+        self.regime_fit: dict = {}    # {strategy: 'fit'|'unfit'|'gathering'} for the CURRENT regime (data-driven)
 
     def set(self, regime: str, health: float) -> None:
         self.regime = regime or "Bull"
@@ -76,10 +77,19 @@ class Rebalancer:
         NO new risk until they earn their place back. Managing existing positions is unaffected."""
         self.culled = set(names or [])
 
+    def set_regime_fit(self, fit: dict) -> None:
+        """Feed the data-driven per-regime verdicts for the CURRENT regime (from regime_fit)."""
+        self.regime_fit = dict(fit or {})
+
     def allows(self, name: str) -> bool:
         if name in self.culled:
-            return False           # auto-culled → stand down, no new entries
-        return STRATEGY_STYLE.get(name, "Trend") in self.enabled
+            return False                       # auto-culled overall → stand down
+        fit = self.regime_fit.get(name)
+        if fit == "unfit":
+            return False                       # PROVEN to lose in THIS regime → bench it here
+        if fit == "fit":
+            return True                        # PROVEN to win in THIS regime → deploy (override the prior)
+        return STRATEGY_STYLE.get(name, "Trend") in self.enabled   # no evidence yet → safe heuristic prior
 
     def conviction_floor(self) -> float:
         base = CONVICTION_FLOOR.get(self.regime, 75)
@@ -92,7 +102,8 @@ class Rebalancer:
         return {"regime": self.regime, "health": self.health, "cashPct": self.cash_pct,
                 "preservation": self.preservation, "convictionFloor": self.conviction_floor(),
                 "enabledStyles": sorted(self.enabled), "note": self.note,
-                "enabled": enabled, "stoodDown": stood, "culled": sorted(self.culled)}
+                "enabled": enabled, "stoodDown": stood, "culled": sorted(self.culled),
+                "regimeFit": dict(self.regime_fit)}
 
     def persist(self, names: list[str]) -> None:
         try:

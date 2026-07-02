@@ -36,6 +36,7 @@ _lrn.DECISIONS_FILE = os.path.join(_REPO, "crypto_decisions.jsonl")
 _lrn.WEIGHTS_FILE = os.path.join(_REPO, "crypto_learned_weights.json")
 
 from bot import indicators
+from bot import regime_fit as _rfit
 from bot import paper_engine as _pe
 from bot.paper_engine import LongOnlyPaperEngine, PairsPaperEngine
 from bot.risk import RiskConfig, RiskManager
@@ -249,10 +250,25 @@ def cull_check(engines):
     return culled
 
 
+CRYPTO_LOG = os.path.join(_REPO, "crypto_trades.log")
+
+
+def regime_fit_check(engines, regime):
+    """Data-driven regime selection: bench strategies PROVEN to lose in the live regime, deploy
+    those proven to win — heuristic prior stands where there's no evidence yet."""
+    fit = _rfit.regime_verdicts(CRYPTO_LOG, regime)
+    REBALANCER.set_regime_fit(fit)                 # rebalancer-gated engines consult this in allows()
+    for k, e in engines.items():
+        if fit.get(getattr(e, "name", k)) == "unfit":
+            e.frozen = True                        # proven loser here → freeze self-gating engines too
+    return fit
+
+
 def run_cycle(engines, pairs, data):
     _pe.CURRENT_REGIME = crypto_regime(data)
     update_governor(engines, pairs)     # prime the book (dd/health) + rebalancer BEFORE any entries
-    cull_check(engines)                 # bench negative-expectancy strategies before any new entries
+    cull_check(engines)                 # bench negative-expectancy strategies (overall)
+    regime_fit_check(engines, _pe.CURRENT_REGIME)   # + bench strategies proven to lose in THIS regime
     for k, e in engines.items():
         try:
             e.run_cycle(square_off=False)   # crypto never closes → never square off

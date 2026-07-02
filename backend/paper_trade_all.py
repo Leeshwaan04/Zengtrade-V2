@@ -40,6 +40,7 @@ from bot.futures_paper import FuturesPaperEngine
 from bot.learning import compute_learning, save_weights
 from bot.governor import GOVERNOR
 from bot.rebalancer import REBALANCER
+from bot import regime_fit as _rfit
 
 
 def _engine_capital(e) -> float:
@@ -90,6 +91,20 @@ def cull_check(engines):
     if culled:
         log.info("AUTO-CULL benched (negative expectancy ≥%d trades): %s", CULL_MIN_TRADES, ", ".join(culled))
     return culled
+
+
+_LOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "paper_trades.log")
+
+
+def regime_fit_check(engines, regime):
+    """Data-driven regime selection: bench strategies PROVEN to lose in the live regime, deploy
+    those proven to win — the hand-written prior stands where there's no evidence yet."""
+    fit = _rfit.regime_verdicts(_LOG_PATH, regime)
+    REBALANCER.set_regime_fit(fit)
+    for k, e in engines.items():
+        if fit.get(getattr(e, "name", k)) == "unfit":
+            e.frozen = True
+    return fit
 from bot.subscriptions import deployed_ids, all_subs, ensure_seeded
 
 # harness engine key -> catalog strategy id (what the user deploys in the UI)
@@ -364,7 +379,8 @@ def main() -> None:
                 dep = deployed_ids()          # paper/live only (paused excluded → keeps positions)
                 subs = all_subs()
                 update_governor(engines, pairs, dep)   # refresh the book + drawdown BEFORE any entries
-                cull_check(engines)                    # auto-bench negative-expectancy strategies
+                cull_check(engines)                    # auto-bench negative-expectancy strategies (overall)
+                regime_fit_check(engines, _pe.CURRENT_REGIME)   # + bench strategies proven to lose in THIS regime
                 # Stop = subscription removed entirely → flatten its open paper book once,
                 # archiving the liquidation out of the strategy's P&L. Restart-safe: it fires
                 # whenever an unsubscribed engine still holds positions, not on a remembered transition.
