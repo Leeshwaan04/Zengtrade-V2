@@ -2080,8 +2080,7 @@ html[data-persona="ai"] #chartCard,html[data-persona="ai"] #chartResize,html[dat
 .cxbt-pick-r{display:flex;flex-wrap:wrap;gap:6px}
 .cxbt-chip{font-size:11px;font-weight:600;color:var(--slate);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:5px 11px;cursor:pointer}
 .cxbt-chip:hover{border-color:var(--navy)}
-.cxbt-chip.on{background:color-mix(in srgb, var(--navy) 50%, transparent);color:#fff;border-color:transparent}
-.cxbt-per .cxbt-chip.on{background:var(--accent)}
+.cxbt-chip.on{background:var(--accent);color:#fff;border-color:transparent}
 .cxbt-chart{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:10px}
 .cxbt-svg{width:100%;height:150px;display:block}
 .cxbt-eq{fill:none;stroke:var(--blue);stroke-width:2;vector-effect:non-scaling-stroke}
@@ -3133,7 +3132,7 @@ html[data-persona="ai"] #widgetBtn{display:none}
 .sty-defensive{color:#475569;background:#eef1f5;border-color:#dde3ea}
 
 /* ===== Strategy Framework band (regime switch) ===== */
-.fw-band{margin:10px 0 4px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,var(--card-2,#fafbfc),#fff);padding:12px 14px}
+.fw-band{margin:10px 0 4px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,var(--surface-2),var(--surface));padding:12px 14px}
 .fw-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .fw-head>div{display:flex;flex-direction:column;gap:1px}
 .fw-head b{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy)}
@@ -3141,22 +3140,22 @@ html[data-persona="ai"] #widgetBtn{display:none}
 .fw-regime{margin-left:auto;font-size:11px;font-weight:800;color:var(--accent-d);background:var(--accent-soft);border-radius:999px;padding:3px 10px;white-space:nowrap}
 .fw-styles{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:11px}
 @media(max-width:760px){.fw-styles{grid-template-columns:repeat(2,1fr)}}
-.fw-sty{border:1px solid var(--line);border-radius:9px;padding:8px 9px;background:#fff;position:relative}
+.fw-sty{border:1px solid var(--line);border-radius:9px;padding:8px 9px;background:var(--surface);position:relative}
 .fw-sty b{display:block;font-size:11.5px;color:var(--navy)}
 .fw-sty i{font-style:normal;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--slate-2)}
 .fw-sty .fw-sty-n{position:absolute;top:7px;right:8px;font-size:9px;font-weight:800;color:var(--slate);background:var(--chip,#f0f0f3);border-radius:999px;padding:1px 6px}
-.fw-sty.favored{border-color:#bfe6cf;background:#f1fbf5}.fw-sty.favored i{color:#1f7a4d}
-.fw-sty.avoid{background:#fafafa;opacity:.72}.fw-sty.avoid i{color:#b06a2e}
+.fw-sty.favored{border-color:var(--accent-line);background:color-mix(in srgb, var(--accent) 12%, var(--surface))}.fw-sty.favored i{color:var(--accent-d)}
+.fw-sty.avoid{background:var(--surface-2);opacity:.72}.fw-sty.avoid i{color:var(--amber,#b06a2e)}
 .fw-rec-h{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--slate-2);margin-bottom:7px}
 .fw-rec-h span{font-weight:600;text-transform:none;letter-spacing:0;color:var(--slate)}
 .fw-rec-grid{display:flex;flex-wrap:wrap;gap:8px}
-.fw-rec-card{flex:1 1 180px;text-align:left;border:1px solid var(--line);border-radius:9px;background:#fff;padding:9px 11px;cursor:pointer;font-family:var(--sans);display:flex;flex-direction:column;gap:4px;transition:border-color .12s,box-shadow .12s}
+.fw-rec-card{flex:1 1 180px;text-align:left;border:1px solid var(--line);border-radius:9px;background:var(--surface);padding:9px 11px;cursor:pointer;font-family:var(--sans);display:flex;flex-direction:column;gap:4px;transition:border-color .12s,box-shadow .12s}
 .fw-rec-card:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.06)}
 .fw-rc-top{display:flex;align-items:center;gap:7px}
 .fw-rc-top b{font-size:12px;color:var(--navy)}
 .fw-rc-alloc{font-size:14px;color:var(--navy)}.fw-rc-alloc b{font-size:16px;color:var(--accent-d)}
 .fw-rc-min{font-size:10px;color:var(--slate-2)}
-.fw-rec-empty{display:flex;align-items:flex-start;gap:7px;font-size:11.5px;color:var(--slate);background:#fff;border:1px dashed var(--line);border-radius:9px;padding:9px 11px}
+.fw-rec-empty{display:flex;align-items:flex-start;gap:7px;font-size:11.5px;color:var(--slate);background:var(--surface);border:1px dashed var(--line);border-radius:9px;padding:9px 11px}
 .fw-note{display:flex;align-items:flex-start;gap:6px;margin:11px 0 0;font-size:11px;color:var(--slate-2);line-height:1.4}
 .fw-note b{color:var(--navy);font-weight:700}
 
@@ -3250,16 +3249,17 @@ html[data-surface="night"] .rk-tier.on{background:var(--white);border-color:var(
 .lib-instr-tab{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;
   padding:11px 14px;border-radius:13px;cursor:pointer;transition:.15s;background:var(--surface);border:1px solid var(--line-2)}
 .lib-instr-tab:hover{border-color:var(--green);box-shadow:var(--shadow)}
-/* active highlight at 50% opacity (softer than solid navy) */
-.lib-instr-tab.on{background:color-mix(in srgb, var(--navy) 50%, transparent);border-color:color-mix(in srgb, var(--navy) 60%, transparent)}
+/* active highlight — opaque accent tint (matches the hold sub-tabs; no muddy semi-transparent bleed) */
+.lib-instr-tab.on{background:var(--accent-soft);border-color:var(--accent-line)}
 .lib-instr-tab:focus-visible{outline:none;box-shadow:var(--ring)}
 .lii-top{display:inline-flex;align-items:center;gap:7px;color:var(--navy)}
 .lii-top b{font-size:14.5px;font-weight:800}
 .lii-top .ico{color:var(--green-d)}
 .lii-n{font-style:normal;font-size:10px;font-weight:800;color:var(--slate-2);background:var(--surface-2);border-radius:999px;padding:1px 7px;min-width:18px;text-align:center}
 .lii-desc{font-size:11px;color:var(--slate);line-height:1.35}
-.lib-instr-tab.on .lii-top,.lib-instr-tab.on .lii-desc{color:var(--navy)}
-.lib-instr-tab.on .lii-n{color:var(--navy);background:rgba(255,255,255,.6)}
+.lib-instr-tab.on .lii-top{color:var(--accent-d)} .lib-instr-tab.on .lii-top .ico{color:var(--accent-d)}
+.lib-instr-tab.on .lii-desc{color:var(--accent-d);opacity:.8}
+.lib-instr-tab.on .lii-n{color:#fff;background:var(--accent)}
 /* LAYER 2 — holding style (per-instrument sub-tabs) */
 .lib-hold{display:flex;flex-wrap:wrap;gap:6px}
 .lib-hold-tab{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--slate);
