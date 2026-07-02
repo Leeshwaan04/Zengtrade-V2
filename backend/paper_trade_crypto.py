@@ -267,8 +267,9 @@ def regime_fit_check(engines, regime):
 def run_cycle(engines, pairs, data):
     _pe.CURRENT_REGIME = crypto_regime(data)
     update_governor(engines, pairs)     # prime the book (dd/health) + rebalancer BEFORE any entries
-    cull_check(engines)                 # bench negative-expectancy strategies (overall)
-    regime_fit_check(engines, _pe.CURRENT_REGIME)   # + bench strategies proven to lose in THIS regime
+    governed = dict(engines, pairs=pairs)           # governance covers pairs too
+    cull_check(governed)                # bench negative-expectancy strategies (overall)
+    regime_fit_check(governed, _pe.CURRENT_REGIME)  # + bench strategies proven to lose in THIS regime
     for k, e in engines.items():
         try:
             e.run_cycle(square_off=False)   # crypto never closes → never square off

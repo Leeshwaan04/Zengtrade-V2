@@ -379,8 +379,9 @@ def main() -> None:
                 dep = deployed_ids()          # paper/live only (paused excluded → keeps positions)
                 subs = all_subs()
                 update_governor(engines, pairs, dep)   # refresh the book + drawdown BEFORE any entries
-                cull_check(engines)                    # auto-bench negative-expectancy strategies (overall)
-                regime_fit_check(engines, _pe.CURRENT_REGIME)   # + bench strategies proven to lose in THIS regime
+                governed = dict(engines, pairs=pairs)  # governance covers pairs too
+                cull_check(governed)                   # auto-bench negative-expectancy strategies (overall)
+                regime_fit_check(governed, _pe.CURRENT_REGIME)  # + bench strategies proven to lose in THIS regime
                 # Stop = subscription removed entirely → flatten its open paper book once,
                 # archiving the liquidation out of the strategy's P&L. Restart-safe: it fires
                 # whenever an unsubscribed engine still holds positions, not on a remembered transition.

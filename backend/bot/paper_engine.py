@@ -123,6 +123,9 @@ class PairsPaperEngine:
         self.cost_bps = cost_bps
         self.state_d: dict[str, dict] = {f"{a}/{b}": dict(pos=0, ea=0.0, eb=0.0) for a, b in pairs}
         self.realised = 0.0
+        self.closed_trades = 0
+        self.name = "pairs"
+        self.frozen = False          # auto-cull / regime-fit: freeze NEW spreads, still manage exits
 
     def run_cycle(self) -> None:
         for a, b in self.pairs:
@@ -140,6 +143,8 @@ class PairsPaperEngine:
                     continue
                 st = self.state_d[key]
                 if st["pos"] == 0:
+                    if self.frozen:
+                        continue                       # auto-culled / regime-unfit → no new spreads
                     if zi <= -self.entry_z:
                         self._enter(key, 1, pa, pb, zi)
                     elif zi >= self.entry_z:
@@ -162,12 +167,14 @@ class PairsPaperEngine:
         cost = self.cap_per * self.cost_bps / 10_000 * 2
         pnl = gross - cost
         self.realised += pnl
-        log.info("[pairs] EXIT  %s pnl=%+.0f z=%.2f regime=%s", key, pnl, zi, CURRENT_REGIME)
+        self.closed_trades += 1
+        log.info("[pairs] EXIT  %s pnl=%+.0f z=%.2f cost=%.0f regime=%s", key, pnl, zi, cost, CURRENT_REGIME)
         self.state_d[key] = dict(pos=0, ea=0.0, eb=0.0)
 
     def state(self) -> dict:
-        return {"realised": round(self.realised, 2), "pairs": self.state_d}
+        return {"realised": round(self.realised, 2), "pairs": self.state_d, "closed": self.closed_trades}
 
     def load(self, s: dict) -> None:
         self.realised = s.get("realised", 0.0)
         self.state_d = s.get("pairs", self.state_d)
+        self.closed_trades = s.get("closed", 0)
