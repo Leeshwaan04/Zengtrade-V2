@@ -157,7 +157,7 @@ html[data-regime="bear"] .terminal{grid-template-columns:332px 1fr 300px} /* ris
 .pane{display:flex;flex-direction:column;gap:var(--gap);min-width:0;min-height:0}
 .topbar,.ticker-bar,.regime-bar{flex-shrink:0}
 /* app-shell: each column scrolls independently inside the fixed shell */
-.pane-center,.pane-right{height:100%;overflow-y:auto;overflow-x:hidden;padding-bottom:2px}
+.pane-center,.pane-right{height:100%;min-height:0;overflow-y:auto;overflow-x:hidden;padding-bottom:2px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
 
 /* ---- LEFT watchlist ---- */
@@ -435,6 +435,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border:0;border-radiu
   /* below desktop: leave the fixed app-shell -> natural page scroll */
   body{height:auto;overflow-y:visible}
   .pane-left,.pane-center,.pane-right{height:auto;overflow:visible}
+  .algo-view{height:auto}   /* narrow layout scrolls the whole page, not an inner region */
   .terminal,html[data-regime="bear"] .terminal{grid-template-columns:260px 1fr}
   .pane-right{grid-column:1 / -1;flex-direction:row}
   .pane-right > *{flex:1}
@@ -1180,10 +1181,10 @@ body.card-maxed .chart-resize{display:none}
    classes that only render in investor mode). Trading mode is
    completely unaffected.
    ============================================================ */
-/* recolor: calm emerald accent + slightly cooler canvas, wins over
-   single-attribute regime accents by source order (appended last). */
-html[data-persona="investor"]{ --accent:#0e9f6e; --accent-d:#0b8a5f; --accent-soft:#e6f7f0; --accent-line:#bfe9d6; --bg:#eef3f1; }
-html[data-persona="investor"][data-surface="night"]{ --accent:#27d39a; --accent-d:#46e3ad; --accent-soft:rgba(39,211,154,.15); --accent-line:rgba(39,211,154,.42); --bg:#08120e; }
+/* Investor: accent follows the REGIME (green/blue/red) like Trading/Algo/AI — no fixed emerald pin.
+   Only the page-bg keeps a slightly cooler canvas; the regime colour reads through the whole skin. */
+html[data-persona="investor"]{ --bg:#eef3f1; }
+html[data-persona="investor"][data-surface="night"]{ --bg:#08120e; }
 
 /* center-pane swap: hub replaces the chart in investor mode only */
 #investHub{display:none}
@@ -1975,6 +1976,11 @@ html[data-persona="algo"] #chartCard,html[data-persona="algo"] #chartResize,html
 html[data-persona="ai"] #chartCard,html[data-persona="ai"] #chartResize,html[data-persona="ai"] .panel,html[data-persona="ai"] #investHub,html[data-persona="ai"] #deskBar,html[data-persona="ai"] #deskView{display:none!important}
 
 /* shared takeover shell */
+/* .algo-view must be a flex column that FILLS the pane height, else .av-wrap's flex:1 has no
+   basis and .av-scroll expands to full content height — killing its internal scroll (the tabs
+   scroll away instead of staying fixed). This completes the fixed-header + scrolling-body chain
+   the Crypto Spot/Perps/Options view (and every Algo tab) relies on. */
+.algo-view{display:flex;flex-direction:column;height:100%;min-height:0}
 .av-wrap,.ai-wrap{flex:1;min-height:0;display:flex;flex-direction:column}
 .av-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius) var(--radius) 0 0;border-bottom:0}
 .av-title{display:flex;align-items:center;gap:11px}
@@ -2494,13 +2500,13 @@ html[data-persona="ai"] #widgetBtn{display:none}
 .asb-pop-host{position:relative;cursor:default;outline:none}
 .asb-pop-host:focus-visible{box-shadow:inset 0 0 0 2px var(--accent-line);border-radius:11px}
 .asb-pop{position:absolute;top:calc(100% + 7px);left:8px;z-index:40;min-width:236px;
-  background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px 13px;
+  background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:9px 13px;
   box-shadow:var(--shadow-lg);opacity:0;transform:translateY(-5px);pointer-events:none;transition:.13s ease}
 .asb-pop-host:hover .asb-pop,.asb-pop-host:focus-within .asb-pop,.asb-pop-host:focus .asb-pop{opacity:1;transform:none;pointer-events:auto}
 .asb-prow{display:flex;align-items:center;justify-content:space-between;gap:26px;padding:4px 0;font-size:12.5px}
 .asb-prow span{color:var(--slate)}
 .asb-prow b.num{font-size:12.5px}
-.asb-prow b.up{color:#00803b} .asb-prow b.down{color:#b3261e}
+.asb-prow b.up{color:var(--green-d)} .asb-prow b.down{color:var(--red-d)}
 .asb-popf{font-size:10.5px;color:var(--slate-2);margin-top:6px;padding-top:7px;border-top:1px solid var(--line);font-style:italic}
 
 .ft-feed{margin-top:16px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
@@ -3260,8 +3266,12 @@ html[data-surface="night"] .rk-tier.on{background:var(--white);border-color:var(
 .lii-top .ico{color:var(--green-d)}
 .lii-n{font-style:normal;font-size:10px;font-weight:800;color:var(--slate-2);background:var(--surface-2);border-radius:999px;padding:1px 7px;min-width:18px;text-align:center}
 .lii-desc{font-size:11px;color:var(--slate);line-height:1.35}
+.lii-dep{font-size:10.5px;color:var(--slate-2);line-height:1.3;margin-top:1px}
+.lii-dep b{color:var(--navy);font-weight:700}
 .lib-instr-tab.on .lii-top{color:var(--accent-d)} .lib-instr-tab.on .lii-top .ico{color:var(--accent-d)}
 .lib-instr-tab.on .lii-desc{color:var(--accent-d);opacity:.8}
+.lib-instr-tab.on .lii-dep{color:var(--accent-d);opacity:.85}
+.lib-instr-tab.on .lii-dep b{color:var(--accent-d)}
 .lib-instr-tab.on .lii-n{color:#fff;background:var(--accent)}
 /* LAYER 2 — holding style (per-instrument sub-tabs) */
 .lib-hold{display:flex;flex-wrap:wrap;gap:6px}
