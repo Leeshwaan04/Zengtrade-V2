@@ -49,6 +49,7 @@ class Rebalancer:
         self.enabled: set = set(REGIME_ENABLED["Bull"])
         self.cash_pct = 10
         self.note = ""
+        self.culled: set = set()      # strategies auto-benched for negative expectancy over a real sample
 
     def set(self, regime: str, health: float) -> None:
         self.regime = regime or "Bull"
@@ -70,7 +71,14 @@ class Rebalancer:
         self.enabled = enabled
         self.cash_pct = cash
 
+    def set_culled(self, names) -> None:
+        """Bench a set of strategies (negative expectancy over a meaningful sample) — they take
+        NO new risk until they earn their place back. Managing existing positions is unaffected."""
+        self.culled = set(names or [])
+
     def allows(self, name: str) -> bool:
+        if name in self.culled:
+            return False           # auto-culled → stand down, no new entries
         return STRATEGY_STYLE.get(name, "Trend") in self.enabled
 
     def conviction_floor(self) -> float:
@@ -84,7 +92,7 @@ class Rebalancer:
         return {"regime": self.regime, "health": self.health, "cashPct": self.cash_pct,
                 "preservation": self.preservation, "convictionFloor": self.conviction_floor(),
                 "enabledStyles": sorted(self.enabled), "note": self.note,
-                "enabled": enabled, "stoodDown": stood}
+                "enabled": enabled, "stoodDown": stood, "culled": sorted(self.culled)}
 
     def persist(self, names: list[str]) -> None:
         try:

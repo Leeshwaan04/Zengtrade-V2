@@ -23,6 +23,7 @@ import logging
 
 import pandas as pd
 
+from . import costs
 from . import indicators
 from . import paper_engine as _pe
 
@@ -55,6 +56,7 @@ class FuturesPaperEngine:
         self.min_bars = 0
         self.positions: dict[str, dict] = {}   # at most one, keyed by the future tradingsymbol
         self.realised = 0.0
+        self.closed_trades = 0
         self.open_mark = 0.0
         self._nfo = None
         self._nfo_t = 0.0
@@ -152,6 +154,8 @@ class FuturesPaperEngine:
                 return
 
             # ---- entry ----
+            if getattr(self, "frozen", False):
+                return                                 # auto-culled → no new positions
             if self.kind == "trend":
                 last, ma, adx = self._index_trend()
                 if last is None or ma is None:
@@ -187,18 +191,21 @@ class FuturesPaperEngine:
 
     def _exit(self, key, pnl_pts, reason):
         pos = self.positions.pop(key)
-        pnl = pnl_pts * self.lot * self.lots
+        cost = costs.notional_cost(pos.get("entry", 0), pos.get("entry", 0), pos.get("qty", 0), "futures")
+        pnl = pnl_pts * self.lot * self.lots - cost
         self.realised += pnl
+        self.closed_trades += 1
         self.open_mark = 0.0
-        log.info("[%s] EXIT  %s qty=%d @%.2f pnl=%+.0f (%s) regime=%s", self.name, self.underlying,
-                 pos["qty"], pos.get("entry", 0), pnl, reason, pos.get("regime", "—"))
+        log.info("[%s] EXIT  %s qty=%d @%.2f pnl=%+.0f (%s) cost=%.0f regime=%s", self.name, self.underlying,
+                 pos["qty"], pos.get("entry", 0), pnl, reason, cost, pos.get("regime", "—"))
 
     # ---- persistence (identical shape to OptionsPaperEngine) ----
     def state(self) -> dict:
         return {"realised": round(self.realised, 2), "positions": self.positions,
-                "openMark": round(self.open_mark, 2)}
+                "openMark": round(self.open_mark, 2), "closed": self.closed_trades}
 
     def load(self, s: dict) -> None:
         self.realised = s.get("realised", 0.0)
         self.positions = s.get("positions", {})
         self.open_mark = s.get("openMark", 0.0)
+        self.closed_trades = s.get("closed", 0)

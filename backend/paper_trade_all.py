@@ -71,6 +71,25 @@ def update_governor(engines, pairs, dep):
     # drive the regime rebalancer from the live regime + portfolio health (capital-preservation)
     REBALANCER.set(_pe.CURRENT_REGIME, GOVERNOR.health().get("score", 100))
     REBALANCER.persist([CATALOG_ID.get(k, k) for k in engines] + ["pairs"])
+
+
+CULL_MIN_TRADES = 30   # cull only after a statistically meaningful sample
+
+
+def cull_check(engines):
+    """Auto-bench any strategy with negative net expectancy over ≥N closed trades — it takes no
+    new risk until it re-earns its place. Rebalancer-gated engines stop via allows(); self-gating
+    engines (options/futures) honour a `frozen` flag. Open positions are still managed to exit."""
+    culled = []
+    for k, e in engines.items():
+        bad = getattr(e, "closed_trades", 0) >= CULL_MIN_TRADES and getattr(e, "realised", 0.0) < 0
+        e.frozen = bool(bad)
+        if bad:
+            culled.append(getattr(e, "name", k))
+    REBALANCER.set_culled(culled)
+    if culled:
+        log.info("AUTO-CULL benched (negative expectancy ≥%d trades): %s", CULL_MIN_TRADES, ", ".join(culled))
+    return culled
 from bot.subscriptions import deployed_ids, all_subs, ensure_seeded
 
 # harness engine key -> catalog strategy id (what the user deploys in the UI)
@@ -345,6 +364,7 @@ def main() -> None:
                 dep = deployed_ids()          # paper/live only (paused excluded → keeps positions)
                 subs = all_subs()
                 update_governor(engines, pairs, dep)   # refresh the book + drawdown BEFORE any entries
+                cull_check(engines)                    # auto-bench negative-expectancy strategies
                 # Stop = subscription removed entirely → flatten its open paper book once,
                 # archiving the liquidation out of the strategy's P&L. Restart-safe: it fires
                 # whenever an unsubscribed engine still holds positions, not on a remembered transition.

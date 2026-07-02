@@ -16,6 +16,7 @@ from datetime import datetime, time
 import numpy as np
 import pandas as pd
 
+from . import costs
 from .governor import GOVERNOR
 from .position_intel import assess
 from .rebalancer import REBALANCER
@@ -43,6 +44,9 @@ class LongOnlyPaperEngine:
         self.history_days = history_days
         self.positions: dict[str, dict] = {}
         self.realised = 0.0
+        self.closed_trades = 0
+        # cost bucket: intraday (MIS) vs delivery (CNC); the crypto harness overrides to crypto_spot
+        self.cost_kind = "equity_mis" if getattr(risk.cfg, "product", "CNC") == "MIS" else "equity_cnc"
         self.min_bars = getattr(strategy.cfg, "trend_period", 200) + 5
 
     def run_cycle(self, square_off: bool = False) -> None:
@@ -92,17 +96,21 @@ class LongOnlyPaperEngine:
 
     def _exit(self, sym, price, reason):
         pos = self.positions.pop(sym)
-        pnl = (price - pos["entry"]) * pos["qty"]
+        cost = costs.notional_cost(pos["entry"], price, pos["qty"], self.cost_kind)   # honest friction
+        pnl = (price - pos["entry"]) * pos["qty"] - cost
         self.realised += pnl
-        log.info("[%s] EXIT  %s qty=%d @%.2f pnl=%+.0f (%s) regime=%s",
-                 self.name, sym, pos["qty"], price, pnl, reason, pos.get("regime", "—"))
+        self.closed_trades += 1
+        log.info("[%s] EXIT  %s qty=%d @%.2f pnl=%+.0f (%s) cost=%.0f regime=%s",
+                 self.name, sym, pos["qty"], price, pnl, reason, cost, pos.get("regime", "—"))
 
     def state(self) -> dict:
-        return {"realised": round(self.realised, 2), "positions": self.positions}
+        return {"realised": round(self.realised, 2), "positions": self.positions,
+                "closed": self.closed_trades}
 
     def load(self, s: dict) -> None:
         self.realised = s.get("realised", 0.0)
         self.positions = s.get("positions", {})
+        self.closed_trades = s.get("closed", 0)
 
 
 class PairsPaperEngine:

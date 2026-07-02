@@ -144,6 +144,10 @@ def build_crypto_engines(data):
         "cx_strangle_eth": CryptoOptionsEngine("cx_strangle_eth", "strangle", "ETHUSDT", PAPER_CAPITAL),
         "cx_condor": CryptoOptionsEngine("cx_condor", "condor", "BTCUSDT", PAPER_CAPITAL),
     }
+    # crypto spot engines default to equity cost buckets — retag them to crypto_spot (Binance fees)
+    for e in engines.values():
+        if getattr(e, "cost_kind", None) in ("equity_mis", "equity_cnc"):
+            e.cost_kind = "crypto_spot"
     pairs = PairsPaperEngine(PAIRS, data, PAPER_CAPITAL)
     return engines, pairs
 
@@ -226,9 +230,29 @@ def status(engines, pairs):
     log.info("crypto P&L | %s | pairs %+.0f", parts, pairs.realised)
 
 
+CULL_MIN_TRADES = 30   # only cull once a strategy has a statistically meaningful sample
+
+
+def cull_check(engines):
+    """Auto-bench any strategy with negative net expectancy over a real sample (≥N closed trades).
+    Rebalancer-gated engines stop via allows(); self-gating engines honour a `frozen` flag. Existing
+    positions are still managed to exit — culling only stops NEW risk."""
+    culled = []
+    for k, e in engines.items():
+        bad = getattr(e, "closed_trades", 0) >= CULL_MIN_TRADES and getattr(e, "realised", 0.0) < 0
+        e.frozen = bool(bad)                       # self-gating engines (perps/options) read this
+        if bad:
+            culled.append(getattr(e, "name", k))
+    REBALANCER.set_culled(culled)                  # LongOnly/XS/Opportunity/Moonshot honour this
+    if culled:
+        log.info("AUTO-CULL benched (negative expectancy ≥%d trades): %s", CULL_MIN_TRADES, ", ".join(culled))
+    return culled
+
+
 def run_cycle(engines, pairs, data):
     _pe.CURRENT_REGIME = crypto_regime(data)
     update_governor(engines, pairs)     # prime the book (dd/health) + rebalancer BEFORE any entries
+    cull_check(engines)                 # bench negative-expectancy strategies before any new entries
     for k, e in engines.items():
         try:
             e.run_cycle(square_off=False)   # crypto never closes → never square off

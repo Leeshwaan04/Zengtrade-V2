@@ -18,6 +18,8 @@ import logging
 import numpy as np
 import pandas as pd
 
+from . import costs
+
 log = logging.getLogger("paper")          # same logger the harness reads for forward trades
 from bot import paper_engine as _pe        # for CURRENT_REGIME stamping
 from bot.governor import GOVERNOR
@@ -60,6 +62,8 @@ class CrossSectionalPaperEngine:
         self.interval = "day"                    # used by the harness flatten path
         self.positions: dict[str, dict] = {}
         self.realised = 0.0
+        self.closed_trades = 0
+        self.cost_kind = "equity_cnc"            # daily rank-basket rebalance (crypto harness overrides)
         self.min_bars = trend_period + 5         # harness gate parity
 
     # ----- ranking -----------------------------------------------------------------
@@ -131,18 +135,22 @@ class CrossSectionalPaperEngine:
 
     def _exit(self, sym, price, reason):
         pos = self.positions.pop(sym)
-        pnl = (price - pos["entry"]) * pos["qty"]
+        cost = costs.notional_cost(pos["entry"], price, pos["qty"], self.cost_kind)
+        pnl = (price - pos["entry"]) * pos["qty"] - cost
         self.realised += pnl
-        log.info("[%s] EXIT  %s qty=%d @%.2f pnl=%+.0f (%s) regime=%s",
-                 self.name, sym, pos["qty"], price, pnl, reason, pos.get("regime", "—"))
+        self.closed_trades += 1
+        log.info("[%s] EXIT  %s qty=%d @%.2f pnl=%+.0f (%s) cost=%.0f regime=%s",
+                 self.name, sym, pos["qty"], price, pnl, reason, cost, pos.get("regime", "—"))
 
     # ----- persistence (identical shape to LongOnlyPaperEngine) --------------------
     def state(self) -> dict:
-        return {"realised": round(self.realised, 2), "positions": self.positions}
+        return {"realised": round(self.realised, 2), "positions": self.positions,
+                "closed": self.closed_trades}
 
     def load(self, s: dict) -> None:
         self.realised = s.get("realised", 0.0)
         self.positions = s.get("positions", {})
+        self.closed_trades = s.get("closed", 0)
 
 
 def xs_backtest(get_df, kind, symbols, top_n=4, mom_lookback=126, vol_lookback=20,

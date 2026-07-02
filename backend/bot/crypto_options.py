@@ -24,6 +24,7 @@ import time as _time
 
 import requests
 
+from . import costs
 from . import paper_engine as _pe
 
 log = logging.getLogger("crypto")
@@ -100,6 +101,7 @@ class CryptoOptionsEngine:
         self.min_bars = 0
         self.positions: dict[str, dict] = {}
         self.realised = 0.0
+        self.closed_trades = 0
         self.open_mark = 0.0
 
     # ---- chain helpers (defensive) ----
@@ -212,6 +214,8 @@ class CryptoOptionsEngine:
                 self.open_mark = 0.0
                 return
             # ---- entry: regime-gated (never sell premium into a vol shock / strong trend) ----
+            if getattr(self, "frozen", False):
+                return                                 # auto-culled → no new structures
             if _pe.CURRENT_REGIME in _SKIP_REGIMES:
                 log.info("[%s] SKIP — regime %s (won't sell premium into it)", self.name, _pe.CURRENT_REGIME)
                 return
@@ -242,16 +246,20 @@ class CryptoOptionsEngine:
 
     def _exit(self, key, pnl, reason):
         pos = self.positions.pop(key)
+        cost = costs.options_cost(pos.get("credit", 0) * pos.get("contracts", 1), venue="crypto")
+        pnl -= cost
         self.realised += pnl
+        self.closed_trades += 1
         self.open_mark = 0.0
-        log.info("[%s] EXIT  %s %s pnl=%+.0f (%s) regime=%s", self.name, self.underlying,
-                 pos.get("label", ""), pnl, reason, pos.get("regime", "—"))
+        log.info("[%s] EXIT  %s %s pnl=%+.0f (%s) cost=%.0f regime=%s", self.name, self.underlying,
+                 pos.get("label", ""), pnl, reason, cost, pos.get("regime", "—"))
 
     def state(self) -> dict:
         return {"realised": round(self.realised, 2), "positions": self.positions,
-                "openMark": round(self.open_mark, 2)}
+                "openMark": round(self.open_mark, 2), "closed": self.closed_trades}
 
     def load(self, s: dict) -> None:
         self.realised = s.get("realised", 0.0)
         self.positions = s.get("positions", {})
         self.open_mark = s.get("openMark", 0.0)
+        self.closed_trades = s.get("closed", 0)

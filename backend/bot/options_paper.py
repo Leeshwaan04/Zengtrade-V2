@@ -20,6 +20,7 @@ import logging
 
 import pandas as pd
 
+from . import costs
 from . import indicators
 from . import paper_engine as _pe
 
@@ -62,6 +63,7 @@ class OptionsPaperEngine:
         self.min_bars = 0
         self.positions: dict[str, dict] = {}   # at most one structure, keyed by expiry
         self.realised = 0.0
+        self.closed_trades = 0
         self.open_mark = 0.0
         self._nfo = None
         self._nfo_t = 0.0
@@ -200,6 +202,8 @@ class OptionsPaperEngine:
             # one structure at a time
             if square_off or self.positions:
                 return
+            if getattr(self, "frozen", False):
+                return                                 # auto-culled → no new structures
             # regime gate: never SELL premium into a strong trend / breakout (the short-gamma killer)
             adx, ext = self._index_regime(spot)
             if adx is not None and adx >= self.adx_max:
@@ -233,16 +237,19 @@ class OptionsPaperEngine:
 
     def _exit(self, key, pnl_pts, reason):
         pos = self.positions.pop(key)
-        pnl = pnl_pts * self.lot * self.lots
+        cost = costs.options_cost(pos.get("credit", 0) * self.lot * self.lots, venue="nse")
+        pnl = pnl_pts * self.lot * self.lots - cost
         self.realised += pnl
-        log.info("[%s] EXIT  %s qty=%d @%.2f pnl=%+.0f (%s) regime=%s",
+        self.closed_trades += 1
+        log.info("[%s] EXIT  %s qty=%d @%.2f pnl=%+.0f (%s) cost=%.0f regime=%s",
                  self.name, self.underlying, self.lot * self.lots, pos.get("credit", 0), pnl, reason,
-                 pos.get("regime", "—"))
+                 cost, pos.get("regime", "—"))
 
     def state(self) -> dict:
         return {"realised": round(self.realised, 2), "positions": self.positions,
-                "openMark": round(self.open_mark, 2)}
+                "openMark": round(self.open_mark, 2), "closed": self.closed_trades}
 
     def load(self, s: dict) -> None:
         self.realised = s.get("realised", 0.0)
         self.positions = s.get("positions", {})
+        self.closed_trades = s.get("closed", 0)

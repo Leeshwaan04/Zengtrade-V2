@@ -2021,6 +2021,77 @@ def _fwd_from_log(key: str, logpath: str) -> dict:
     return out
 
 
+_BOOK_NAMES = dict(_CRYPTO_NAMES, **{
+    "iron_condor": "Iron Condor (NIFTY)", "strangle": "Short Strangle (NIFTY)",
+    "fut_trend": "Futures Trend (NIFTY)", "basis": "Basis Carry (NIFTY)",
+})
+# the go-live BAR — evidence a strategy must show before it earns real capital
+READY_MIN_TRADES = 50      # a statistically meaningful sample (not 3 lucky trades)
+READY_MIN_PF = 1.2         # net-of-cost profit factor with a real margin
+READY_MIN_REGIMES = 2      # survived at least two distinct market regimes
+CULL_MIN_TRADES = 30       # negative expectancy over this many = auto-benched
+
+
+def _log_keys(logpath: str) -> set:
+    import re
+    keys = set()
+    if os.path.exists(logpath):
+        try:
+            for ln in open(logpath):
+                m = re.search(r"\[([\w-]+)\] EXIT", ln)
+                if m:
+                    keys.add(m.group(1))
+        except Exception:
+            pass
+    return keys
+
+
+def _regimes_from_log(key: str, logpath: str) -> list:
+    tag, regs = f"[{key}] EXIT", set()
+    if os.path.exists(logpath):
+        try:
+            for ln in open(logpath):
+                if tag in ln and "regime=" in ln:
+                    p = ln.split("regime=", 1)[1].split()
+                    if p and p[0] not in ("—", "-"):
+                        regs.add(p[0])
+        except Exception:
+            pass
+    return sorted(regs)
+
+
+def book_readiness_payload(market: str = "in") -> dict:
+    """The honest go-live gate: per strategy, net-of-cost win%/PF/expectancy, regimes survived,
+    and a verdict (READY / GATHERING / CULL) against the bar. This is what decides real capital —
+    a small sample or a single lucky streak reads as GATHERING, not READY."""
+    logp = os.path.join(HERE, "crypto_trades.log" if market == "crypto" else "paper_trades.log")
+    rows = ready = cull = gathering = 0
+    out = []
+    for key in sorted(_log_keys(logp)):
+        s = _fwd_from_log(key, logp)          # net-of-cost (logged pnl now includes friction)
+        if s["closed"] == 0:
+            continue
+        regs = _regimes_from_log(key, logp)
+        exp, pf, net, n = s["expectancy"], s["profitFactor"], s["netPnl"], s["closed"]
+        if n >= CULL_MIN_TRADES and net < 0:
+            verdict = "cull"; cull += 1
+        elif (n >= READY_MIN_TRADES and (exp or 0) > 0 and (pf or 0) >= READY_MIN_PF
+              and len(regs) >= READY_MIN_REGIMES):
+            verdict = "ready"; ready += 1
+        else:
+            verdict = "gathering"; gathering += 1
+        rows += 1
+        out.append({"id": key, "name": _BOOK_NAMES.get(key, key), "closed": n,
+                    "winPct": s["winPct"], "profitFactor": pf, "expectancy": exp, "netPnl": net,
+                    "regimes": regs, "verdict": verdict})
+    out.sort(key=lambda r: ({"ready": 0, "gathering": 1, "cull": 2}[r["verdict"]], -r["closed"]))
+    return {"market": market, "strategies": out,
+            "summary": {"total": rows, "ready": ready, "gathering": gathering, "cull": cull},
+            "bar": {"minTrades": READY_MIN_TRADES, "minProfitFactor": READY_MIN_PF,
+                    "minRegimes": READY_MIN_REGIMES, "cullMinTrades": CULL_MIN_TRADES},
+            "goLive": ready > 0 and cull == 0 and gathering == 0}
+
+
 def crypto_forward_payload() -> dict:
     """Forward-test accuracy for the crypto book — real closed-trade stats per strategy, parsed
     from the 24/7 harness log (win%, profit factor, expectancy). This is the honest out-of-sample
@@ -2693,6 +2764,8 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/crypto/backtest":
                 return self._send(crypto_backtest_payload((qs.get("strategy") or ["momentum"])[0],
                                                           (qs.get("period") or ["1Y"])[0]))
+            if path == "/api/readiness/book":
+                return self._send(book_readiness_payload((qs.get("market") or ["in"])[0]))
             routes = {
                 "/api/status": kite_status,
                 "/api/strategies": strategies_payload,

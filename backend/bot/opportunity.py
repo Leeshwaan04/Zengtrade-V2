@@ -24,6 +24,7 @@ from datetime import datetime, time
 import numpy as np
 import pandas as pd
 
+from . import costs
 from . import indicators
 from .governor import GOVERNOR
 from .rebalancer import REBALANCER
@@ -273,6 +274,8 @@ class OpportunityPaperEngine:
         self.mtf = mtf
         self.positions: dict[str, dict] = {}
         self.realised = 0.0
+        self.closed_trades = 0
+        self.cost_kind = "equity_cnc"
         self.min_bars = 210
         self.last_scan: list[dict] = []        # cached decisions for the dashboard
 
@@ -353,19 +356,23 @@ class OpportunityPaperEngine:
 
     def _exit(self, sym, price, reason):
         pos = self.positions.pop(sym)
-        pnl = (price - pos["entry"]) * pos["qty"]
+        cost = costs.notional_cost(pos["entry"], price, pos["qty"], self.cost_kind)
+        pnl = (price - pos["entry"]) * pos["qty"] - cost
         self.realised += pnl
-        log.info("[%s] EXIT  %s qty=%d @%.2f pnl=%+.0f (%s) regime=%s",
-                 self.name, sym, pos["qty"], price, pnl, reason, pos.get("regime", "—"))
+        self.closed_trades += 1
+        log.info("[%s] EXIT  %s qty=%d @%.2f pnl=%+.0f (%s) cost=%.0f regime=%s",
+                 self.name, sym, pos["qty"], price, pnl, reason, cost, pos.get("regime", "—"))
         log_decision({"bot": self.name, "action": "EXIT", "symbol": sym, "reason": reason,
                       "pnl": round(pnl, 2), "conf": pos.get("conf")})
 
     def state(self) -> dict:
-        return {"realised": round(self.realised, 2), "positions": self.positions}
+        return {"realised": round(self.realised, 2), "positions": self.positions,
+                "closed": self.closed_trades}
 
     def load(self, s: dict) -> None:
         self.realised = s.get("realised", 0.0)
         self.positions = s.get("positions", {})
+        self.closed_trades = s.get("closed", 0)
 
 
 class MoonshotCompounderEngine:
@@ -393,6 +400,8 @@ class MoonshotCompounderEngine:
         self.min_bars = 210
         self.positions: dict[str, dict] = {}
         self.realised = 0.0
+        self.closed_trades = 0
+        self.cost_kind = "equity_cnc"
         self.peak = float(start_capital)        # high-water mark for drawdown guardrails
         self.consec_losses = 0                  # consecutive losing trades
 
@@ -481,12 +490,14 @@ class MoonshotCompounderEngine:
 
     def _exit(self, sym, price, reason):
         pos = self.positions.pop(sym)
-        pnl = (price - pos["entry"]) * pos["qty"]
+        cost = costs.notional_cost(pos["entry"], price, pos["qty"], self.cost_kind)
+        pnl = (price - pos["entry"]) * pos["qty"] - cost
         self.realised += pnl
+        self.closed_trades += 1
         self.consec_losses = 0 if pnl > 0 else self.consec_losses + 1   # streak tracking for guardrails
         self.peak = max(self.peak, self.equity())
-        log.info("[%s] EXIT  %s qty=%d @%.2f pnl=%+.0f (%s) equity=%.0f regime=%s",
-                 self.name, sym, pos["qty"], price, pnl, reason, self.equity(), pos.get("regime", "—"))
+        log.info("[%s] EXIT  %s qty=%d @%.2f pnl=%+.0f (%s) cost=%.0f equity=%.0f regime=%s",
+                 self.name, sym, pos["qty"], price, pnl, reason, cost, self.equity(), pos.get("regime", "—"))
         log_decision({"bot": self.name, "action": "EXIT", "symbol": sym, "reason": reason,
                       "pnl": round(pnl, 2), "equity": round(self.equity(), 2),
                       "conf": pos.get("conf"), "consecLosses": self.consec_losses})
@@ -495,10 +506,12 @@ class MoonshotCompounderEngine:
         gmult, pause = self._guardrail()
         return {"realised": round(self.realised, 2), "positions": self.positions,
                 "start": self.start, "equity": round(self.equity(), 2), "peak": round(self.peak, 2),
-                "consecLosses": self.consec_losses, "sizeMult": gmult, "pause": pause}
+                "consecLosses": self.consec_losses, "sizeMult": gmult, "pause": pause,
+                "closed": self.closed_trades}
 
     def load(self, s: dict) -> None:
         self.realised = s.get("realised", 0.0)
         self.positions = s.get("positions", {})
         self.peak = s.get("peak", self.start)
         self.consec_losses = s.get("consecLosses", 0)
+        self.closed_trades = s.get("closed", 0)

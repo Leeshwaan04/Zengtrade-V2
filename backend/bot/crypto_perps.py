@@ -23,6 +23,7 @@ import time as _time
 import pandas as pd
 import requests
 
+from . import costs
 from . import indicators
 from . import paper_engine as _pe
 
@@ -67,6 +68,7 @@ class CryptoPerpEngine:
         self.min_bars = 0
         self.positions: dict[str, dict] = {}   # at most one, keyed by symbol
         self.realised = 0.0
+        self.closed_trades = 0
         self.open_mark = 0.0
         self._kl: tuple | None = None          # (ts, df) cache
 
@@ -146,6 +148,8 @@ class CryptoPerpEngine:
                 return
 
             # ---- entry ----
+            if getattr(self, "frozen", False):
+                return                                 # auto-culled → no new positions
             qty = self._qty(mark)
             if qty < 1:
                 return
@@ -189,16 +193,20 @@ class CryptoPerpEngine:
 
     def _exit(self, key, pnl, reason):
         pos = self.positions.pop(key)
+        cost = costs.notional_cost(pos.get("entry", 0), pos.get("entry", 0), pos.get("qty", 0), "crypto_perp")
+        pnl -= cost
         self.realised += pnl
+        self.closed_trades += 1
         self.open_mark = 0.0
-        log.info("[%s] EXIT  %s qty=%d @%.2f pnl=%+.0f (%s) regime=%s", self.name, self.symbol,
-                 pos["qty"], pos.get("entry", 0), pnl, reason, pos.get("regime", "—"))
+        log.info("[%s] EXIT  %s qty=%d @%.2f pnl=%+.0f (%s) cost=%.0f regime=%s", self.name, self.symbol,
+                 pos["qty"], pos.get("entry", 0), pnl, reason, cost, pos.get("regime", "—"))
 
     def state(self) -> dict:
         return {"realised": round(self.realised, 2), "positions": self.positions,
-                "openMark": round(self.open_mark, 2)}
+                "openMark": round(self.open_mark, 2), "closed": self.closed_trades}
 
     def load(self, s: dict) -> None:
         self.realised = s.get("realised", 0.0)
         self.positions = s.get("positions", {})
         self.open_mark = s.get("openMark", 0.0)
+        self.closed_trades = s.get("closed", 0)
