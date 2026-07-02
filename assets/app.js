@@ -1754,8 +1754,8 @@ algo:{
         : `<span class="live-pill ${a.status==='paused'?'paused':''}">${icon(a.status==='paused'?'clock':'bolt',12)} ${a.status==='paused'?'Paused':'Live'} · ${inr(a.cap)}</span>
            <div class="algo-ctrls">${a.status==='live'?`<button class="btn-ghost sm" data-algopause="${i}">Pause</button>`:`<button class="btn-ghost sm" data-algoresume="${i}">Resume</button>`}<button class="btn-ghost sm danger" data-algostop="${i}">Stop</button></div>`;
       return `<div class="algo-card${a.status!=='idle'?' is-live':''}">
-        <div class="algo-h"><div><b>${a.name}</b><span class="algo-cat">${a.cat}</span></div><span class="badge ${rk}">${a.risk}</span></div>
-        <p class="algo-desc">${a.desc}</p>
+        <div class="algo-h"><div><b>${esc(a.name)}</b><span class="algo-cat">${esc(a.cat)}</span></div><span class="badge ${rk}">${esc(a.risk)}</span></div>
+        <p class="algo-desc">${esc(a.desc)}</p>
         <div class="algo-stats">
           <div><span>CAGR</span><b class="num up">${a.cagr}%</b></div>
           <div><span>Win rate</span><b class="num">${a.win}%</b></div>
@@ -3238,6 +3238,14 @@ function algoInstr(a){ const id=(a&&a.id||'').toLowerCase(), seg=(a&&a.segment||
   if(seg==='cash') return 'equity';
   if(seg==='fno'||seg==='commodity') return 'futures';
   return 'equity'; }
+// Capital-at-risk deployed by a strategy = Σ open-position notional, marked to LTP (falls back to entry).
+// Reconciles with the backend risk.exposure; F&O legs are shown at NOTIONAL, not margin (see the monitor note).
+function algoDeployed(a){ return (a&&a.positions||[]).reduce((s,p)=>{ const q=p.qty,px=(p.ltp!=null?p.ltp:p.entry);
+  return s+((q!=null&&px!=null)?Math.abs(q*px):0); },0); }
+// Compact INR for capital figures: ₹99.9K · ₹9.95L · ₹1.20Cr.
+function inrC(v){ if(v==null||!isFinite(v)) return '—'; const a=Math.abs(v);
+  if(a>=1e7) return '₹'+(a/1e7).toFixed(2)+'Cr'; if(a>=1e5) return '₹'+(a/1e5).toFixed(2)+'L';
+  if(a>=1e3) return '₹'+(a/1e3).toFixed(1)+'K'; return '₹'+Math.round(a); }
 function algoHold(a){ const id=(a&&a.id||'').toLowerCase(); if(ALGO_HOLD[id]) return ALGO_HOLD[id];
   if(/scalp/.test(id)) return 'scalper'; const p=(a&&a.product||'').toUpperCase();
   if(p==='MIS') return 'intraday'; if(p==='NRML') return 'swing'; return 'carry'; }
@@ -3852,7 +3860,7 @@ async function loadCryptoBT(strat,period){ const key=strat+'|'+period; CRYPTOBT.
   catch(e){ CRYPTOBT.data={real:false,error:'Bot API unreachable on :8756'}; }
   CRYPTOBT.busy=false; }
 function cxCurve(a,b){ const all=(a||[]).concat(b||[]); if(all.length<2) return ''; const min=Math.min(...all),max=Math.max(...all),rng=(max-min)||1,W=560,H=150;
-  const path=arr=>arr.map((v,i)=>`${(i/(arr.length-1)*W).toFixed(1)},${(H-(v-min)/rng*H).toFixed(1)}`).join(' ');
+  const path=arr=>(!arr||arr.length<2)?'':arr.map((v,i)=>`${(i/(arr.length-1)*W).toFixed(1)},${(H-(v-min)/rng*H).toFixed(1)}`).join(' ');
   const base=(H-(100-min)/rng*H).toFixed(1);
   return `<svg class="cxbt-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
     <line class="cxbt-base" x1="0" y1="${base}" x2="${W}" y2="${base}"/>
@@ -4050,6 +4058,8 @@ function renderAlgo(){
   v.querySelectorAll('[data-btuni]').forEach(b=>b.onclick=()=>{state.algo.bt.uni=b.dataset.btuni;renderAlgo();});
   const btuc=v.querySelector('#btUniCustom'); if(btuc) btuc.onkeydown=e=>{ if(e.key==='Enter'){ const val=btuc.value.trim().toUpperCase().replace(/\s+/g,''); state.algo.bt.uni=val||'default'; renderAlgo(); } };
   v.querySelectorAll('[data-lbsort]').forEach(b=>b.onclick=()=>{state.algo.lbSort=b.dataset.lbsort;renderAlgo();});
+  v.querySelectorAll('[data-monsort]').forEach(b=>b.onclick=()=>{state.algo.monSort=b.dataset.monsort;renderAlgo();});
+  v.querySelectorAll('[data-monfilter]').forEach(b=>b.onclick=()=>{state.algo.monFilter=b.dataset.monfilter;renderAlgo();});
   v.querySelectorAll('[data-harness]').forEach(b=>b.onclick=()=>toggleHarness(b.dataset.harness));
   const fgx=v.querySelector('[data-fgdismiss]'); if(fgx) fgx.onclick=()=>{ BOT.algoGuideDone=true; try{localStorage.setItem('tp.algoGuide','1');}catch(e){} renderAlgo(); };
   // ---- Strategy Library: family/risk filters · search · DIY expand · regime jump (instrument & holding live in the studio scope toggle) ----
@@ -5287,15 +5297,30 @@ function algoMonitor(){
   const brk={equity:0,options:0,futures:0};
   allDep.forEach(a=>{ const ik=algoInstr(a); if(brk[ik]!=null) brk[ik]+=((exec==='live'?a.livePnl:a.paperPnl)||0); });
   const overall=brk.equity+brk.options+brk.futures;
+  // capital-at-risk deployed per class = Σ open-position notional (marked live), reconciles with engine exposure
+  const depBrk={equity:0,options:0,futures:0};
+  allDep.forEach(a=>{ const ik=algoInstr(a); if(depBrk[ik]!=null) depBrk[ik]+=algoDeployed(a); });
+  const totalDep=depBrk.equity+depBrk.options+depBrk.futures;
   const stat=secStats([
-    {l:'Deployed',v:String(paperRun.length)},
+    {l:'Running',v:String(paperRun.length),s:'strategies'},
+    {l:'Capital deployed'+infoI('Open-position notional across every deployed strategy, marked to live price (reconciles with the engine exposure). F&O legs are shown at notional, not margin.'),v:inrC(totalDep),s:'open notional'},
     {l:esc(INSTR_LABEL[instr])+' P&L'+infoI('Live paper P&L of just the '+esc(INSTR_LABEL[instr])+' strategies — the ones shown below, per the instrument toggle above.'),v:sgn(total),tone:total>=0?'up':'down',id:'monTotal'},
     {l:'Overall P&L'+infoI('Combined across Equity + Options + Futures — every deployed strategy, whatever the toggle is set to.'),v:sgn(overall),tone:overall>=0?'up':'down',id:'monOverall'},
     {l:'Mode',v:'Paper'}]);
   const mbCell=(k,lab)=>`<span class="mb-cell${instr===k?' on':''}" data-algoinstr="${k}" role="button" tabindex="0" title="Switch scope to ${lab}"><i>${esc(lab)}</i><b class="num ${cls(brk[k])}" data-live="brk${k.charAt(0).toUpperCase()+k.slice(1)}">${sgn(brk[k])}</b></span>`;
   const brkStrip=`<div class="mon-brk"><span class="mb-lead">P&L by class</span>${mbCell('equity','Equity')}${mbCell('options','Options')}${mbCell('futures','Futures')}<span class="mb-cell mb-all"><i>Overall</i><b class="num ${cls(overall)}" data-live="monOverall">${sgn(overall)}</b></span></div>`;
+  const depCell=(k,lab)=>`<span class="mon-dep-cell"><i>${esc(lab)}</i><b class="num">${inrC(depBrk[k])}</b></span>`;
+  const depStrip=`<div class="mon-dep"><span class="mb-lead">Deployed now</span>${depCell('equity','Equity')}${depCell('options','Options')}${depCell('futures','Futures')}<span class="mon-dep-cell mon-dep-all"><i>Total</i><b class="num">${inrC(totalDep)}</b></span><span class="mon-dep-hint">open notional · F&amp;O at notional, not margin</span></div>`;
+  // sort + filter across the deployed (paper) strategies — default: top P&L first
+  const mSort=state.algo.monSort||'pnl', mFilt=state.algo.monFilter||'all';
+  const MON_SORTS=[['pnl','Top P&L'],['unreal','Unrealised'],['deployed','Deployed'],['open','Open'],['name','Name']];
+  const MON_FILTS=[['all','All'],['profit','In profit'],['loss','Losing'],['open','Open now']];
+  const filtFn=({all:()=>true,profit:a=>(a.paperPnl||0)>0,loss:a=>(a.paperPnl||0)<0,open:a=>(a.openPositions||0)>0})[mFilt]||(()=>true);
+  const sortFn=({pnl:(a,b)=>(b.paperPnl||0)-(a.paperPnl||0),unreal:(a,b)=>(b.openPnl||0)-(a.openPnl||0),deployed:(a,b)=>algoDeployed(b)-algoDeployed(a),open:(a,b)=>(b.openPositions||0)-(a.openPositions||0),name:(a,b)=>String(a.name||'').localeCompare(String(b.name||''))})[mSort]||((a,b)=>(b.paperPnl||0)-(a.paperPnl||0));
+  const sortedRun=paperRun.filter(filtFn).sort(sortFn);
+  const ctrlBar=`<div class="mon-ctrl"><div class="mon-seg"><span class="msc-lead">Sort</span>${MON_SORTS.map(([k,l])=>`<button class="msc-chip${mSort===k?' on':''}" data-monsort="${k}">${esc(l)}</button>`).join('')}</div><div class="mon-seg"><span class="msc-lead">Show</span>${MON_FILTS.map(([k,l])=>`<button class="msc-chip${mFilt===k?' on':''}" data-monfilter="${k}">${esc(l)}</button>`).join('')}<span class="msc-count">${sortedRun.length} of ${paperRun.length}</span></div></div>`;
   const me=state.algo.monExpand=state.algo.monExpand||{};
-  const rows=paperRun.map(a=>{const i=ALGOS.indexOf(a);
+  const rows=sortedRun.map(a=>{const i=ALGOS.indexOf(a);
     const open=!!me[a.id];
     const sub=(a.openPositions||0)?`${sgn(a.openPnl||0)} unrealised`:((a.openPositions||a.fwdTrades)?'realised':'no trades yet');
     const pos=(a.positions||[]).map(p=>p.entry!=null
@@ -5305,7 +5330,7 @@ function algoMonitor(){
     const accLine=a.fwdTrades?`<div class="mon-acc"><span>Forward accuracy</span><b class="${a.fwdWinPct!=null&&a.fwdWinPct>=50?'up':'down'}">${a.fwdWinPct!=null?a.fwdWinPct+'% win':'—'}</b><i>·</i>PF <b class="${a.fwdProfitFactor!=null&&a.fwdProfitFactor>=1?'up':'down'}">${a.fwdProfitFactor!=null?(a.fwdProfitFactor>=99?'∞':a.fwdProfitFactor):'—'}</b><i>·</i>exp <b class="num ${cls(a.fwdExpectancy||0)}">${a.fwdExpectancy!=null?sgn(a.fwdExpectancy):'—'}</b><i>·</i>${a.fwdTrades} closed <a class="mon-acc-link" data-algogoto="accuracy">full accuracy →</a></div>`:'';
     const expInner=(posBlock+accLine)||`<div class="mon-exp-empty">No open positions or closed trades yet — this strategy trades only when its setup appears.</div>`;
     return `<div class="mon-card${open?' open':''}">
-      <div class="mon-row live mon-head" data-monexp="${a.id}" role="button" tabindex="0" aria-expanded="${open}" title="Show positions &amp; accuracy"><div class="mon-l"><span class="live-dot live"></span><div><b>${esc(a.name)}${a.vstatus==='validated'?'<span class="vbadge ok" style="margin-left:6px">Validated</span>':''}</b><span class="mon-cat">${esc(a.cat)} · ${(a.openPositions||0)} open · ${a.fwdTrades||0} closed</span></div></div>
+      <div class="mon-row live mon-head" data-monexp="${a.id}" role="button" tabindex="0" aria-expanded="${open}" title="Show positions &amp; accuracy"><div class="mon-l"><span class="live-dot live"></span><div><b>${esc(a.name)}${a.vstatus==='validated'?'<span class="vbadge ok" style="margin-left:6px">Validated</span>':''}</b><span class="mon-cat">${esc(a.cat)} · ${(a.openPositions||0)} open${algoDeployed(a)>0?` · <b class="mc-dep">${inrC(algoDeployed(a))}</b> deployed`:''} · ${a.fwdTrades||0} closed</span></div></div>
       <div class="mon-pnl"><b class="num ${cls(a.paperPnl||0)}" data-live-pnl="${a.id}">${sgn(a.paperPnl||0)}</b><span data-live-sub="${a.id}" title="Open positions are marked to live market price; closed-trade P&L drives the go-live nudge.">${sub}</span></div>
       <div class="mon-ctrls"><button class="btn-ghost sm" data-algogl="${i}">${icon('shield',12)} Go-Live check</button><span class="mon-chev">▾</span></div></div>
       <div class="mon-exp">${expInner}</div></div>`;}).join('');
@@ -5314,7 +5339,8 @@ function algoMonitor(){
   const note=paperRun.some(a=>!a.openPositions&&!a.fwdTrades)
     ? `Strategies at ₹0 simply haven’t triggered an entry signal yet — they only trade when their setup appears. P&L moves as positions open and close.`
     : `Open positions are marked to live market price; the go-live nudge needs ≥${BOT.nudgeMin||10} <b>closed</b> profitable trades.`;
-  return toggle+(harnessRunning()?harnessCta():'')+riskPanel()+stat+brkStrip+`<div class="mon-list">${rows}</div>`+stoppedPanel()+`<p class="sec-hint">${icon('shield',12)}<span>${note} All run in <b>PAPER</b> — zero real-money risk.</span></p>`;
+  const listHtml=rows||`<div class="mon-exp-empty" style="padding:14px">No strategies match this filter — <button class="mon-clearfilt" data-monfilter="all">show all</button>.</div>`;
+  return toggle+(harnessRunning()?harnessCta():'')+riskPanel()+stat+brkStrip+depStrip+ctrlBar+`<div class="mon-list">${listHtml}</div>`+stoppedPanel()+`<p class="sec-hint">${icon('shield',12)}<span>${note} All run in <b>PAPER</b> — zero real-money risk.</span></p>`;
 }
 /* When you STOP a strategy, the harness squares off its open paper book at the live mark and
    files the liquidation here — deliberately OUT of any strategy's P&L (a stop isn't a signal),

@@ -2078,9 +2078,12 @@ def crypto_analytics_payload() -> dict:
                         continue
                     try:
                         pnl = float(ln.split("pnl=", 1)[1].split()[0].rstrip(")"))
-                    except ValueError:
+                    except (ValueError, IndexError):
                         continue
-                    reg = ln.split("regime=", 1)[1].strip().split()[0] if "regime=" in ln else "—"
+                    reg = "—"
+                    if "regime=" in ln:
+                        _rp = ln.split("regime=", 1)[1].split()
+                        reg = _rp[0] if _rp else "—"          # guard: a trailing "regime=" won't IndexError
                     r = by_regime.setdefault(reg, {"net": 0.0, "n": 0})
                     r["net"] += pnl; r["n"] += 1
             for r in by_regime.values():
@@ -2726,6 +2729,15 @@ class Handler(BaseHTTPRequestHandler):
         path = self.path.split("?")[0]
         if path not in ("/api/mode", "/api/relogin", "/api/strategy", "/api/harness"):
             return self._send({"error": "not found"}, 404)
+        # CSRF guard (VAPT): these are state-changing. A browser always sends Origin on a
+        # cross-origin POST — reject any Origin that isn't a local page, and require the JSON
+        # content-type so a "simple request" (text/plain, no preflight) from a random site
+        # can't reach here. Non-browser callers (curl, same-origin) send no Origin → allowed.
+        if self.headers.get("Origin") and self._cors_origin() is None:
+            return self._send({"error": "forbidden origin"}, 403)
+        ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+        if ctype and ctype != "application/json":
+            return self._send({"error": "unsupported content-type"}, 415)
         try:
             n = int(self.headers.get("Content-Length", 0) or 0)
             body = json.loads(self.rfile.read(n) or b"{}") if n else {}

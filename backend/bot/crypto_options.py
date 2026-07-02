@@ -114,7 +114,7 @@ class CryptoOptionsEngine:
         return [s for s in _option_symbols() if s.get("underlying") == self.underlying]
 
     def _nearest_expiry(self, chain):
-        today = _dt.date.today()
+        today = _dt.datetime.now(_dt.timezone.utc).date()   # expiries are UTC ms — compare in UTC
         exps = sorted({int(s["expiryDate"]) for s in chain if s.get("expiryDate")})
         for e in exps:
             d = _dt.datetime.utcfromtimestamp(e / 1000).date()
@@ -179,23 +179,25 @@ class CryptoOptionsEngine:
             if not chain or not spot or not marks:
                 return
             # manage / exit / mark existing structure
+            today_utc = _dt.datetime.now(_dt.timezone.utc).date()
             for key in list(self.positions):
                 pos = self.positions[key]
-                exp = int(pos["expiry"])
-                expired = _dt.datetime.utcfromtimestamp(exp / 1000).date() <= _dt.date.today()
-                cost = self._net_cost(pos["legs"], marks)
                 contracts = pos["contracts"]
-                if cost is None:
-                    if expired:
-                        pnl = (pos["credit"] + self._intrinsic(pos["legs"], spot)) * contracts
-                        self._exit(key, pnl, "expiry-settle")
+                expired = _dt.datetime.utcfromtimestamp(int(pos["expiry"]) / 1000).date() <= today_utc
+                if expired:
+                    # expired-symbol marks are stale/absent — settle at INTRINSIC vs the index, always
+                    pnl = (pos["credit"] + self._intrinsic(pos["legs"], spot)) * contracts
+                    self._exit(key, pnl, "expiry-settle")
                     continue
-                pnl_pts = pos["credit"] + cost           # credit + (negative) cost = profit as premium decays
+                cost = self._net_cost(pos["legs"], marks)
+                if cost is None:
+                    continue                              # can't mark a LIVE structure this cycle — leave it
+                pnl_pts = pos["credit"] + cost            # credit + (negative) cost = profit as premium decays
                 self.open_mark = round(pnl_pts * contracts, 2)
                 hit_tp = pnl_pts >= self.take_profit * pos["credit"]
                 hit_sl = pnl_pts <= -self.stop_mult * pos["credit"]
-                if square_off or expired or hit_tp or hit_sl:
-                    reason = "square-off" if square_off else "expiry" if expired else "target" if hit_tp else "stop"
+                if square_off or hit_tp or hit_sl:
+                    reason = "square-off" if square_off else "target" if hit_tp else "stop"
                     self._exit(key, pnl_pts * contracts, reason)
             # mark any still-open structure (self-marker) then decide on a new one
             if self.positions:
