@@ -3821,6 +3821,49 @@ function cryptoRisk(){
     `<div class="cxm-tbl-h">${icon('activity',13)}<b>Symbol concentration</b><span>limit ${lim.symbol||18}%</span></div><div class="cxr-bars">${symBars}</div>`+
     `<div class="cxm-tbl-h">${icon('shield',13)}<b>Crowding</b><span>max ${lim.botsPerSymbol||2} bots/name</span></div><div class="cxm-pos">${crowd}</div>`;
 }
+// ---- crypto Backtest (reuses the same Backtester as the Indian side, on Binance klines) ----
+const CX_BT_STRATS=[['momentum','Momentum'],['rsi2','RSI(2)'],['macross','MA Cross'],['supertrend','Supertrend'],['ema_cross','EMA Cross'],['adx_trend','ADX Trend'],['bollinger','Bollinger'],['zscore','Z-Score'],['nr7','NR7'],['xs_momentum','XS Momentum'],['lowvol','Low-Vol']];
+const CX_BT_PERIODS=['1M','3M','1Y','3Y'];
+const CRYPTOBT={busy:false,key:'',data:null};
+async function loadCryptoBT(strat,period){ const key=strat+'|'+period; CRYPTOBT.busy=true; CRYPTOBT.key=key;
+  try{ CRYPTOBT.data=await fetch(`${BOT_API}/api/crypto/backtest?strategy=${encodeURIComponent(strat)}&period=${period}`).then(r=>r.json()); }
+  catch(e){ CRYPTOBT.data={real:false,error:'Bot API unreachable on :8756'}; }
+  CRYPTOBT.busy=false; }
+function cxCurve(a,b){ const all=(a||[]).concat(b||[]); if(all.length<2) return ''; const min=Math.min(...all),max=Math.max(...all),rng=(max-min)||1,W=560,H=150;
+  const path=arr=>arr.map((v,i)=>`${(i/(arr.length-1)*W).toFixed(1)},${(H-(v-min)/rng*H).toFixed(1)}`).join(' ');
+  const base=(H-(100-min)/rng*H).toFixed(1);
+  return `<svg class="cxbt-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <line class="cxbt-base" x1="0" y1="${base}" x2="${W}" y2="${base}"/>
+    ${(b&&b.length)?`<polyline class="cxbt-bh" points="${path(b)}"/>`:''}
+    <polyline class="cxbt-eq" points="${path(a)}"/></svg>`; }
+function cryptoBacktest(){
+  state.algo.cbt=state.algo.cbt||{strat:'macross',period:'1Y'};
+  const {strat,period}=state.algo.cbt, key=strat+'|'+period;
+  if(CRYPTOBT.key!==key && !CRYPTOBT.busy){ loadCryptoBT(strat,period).then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='backtest') renderAlgo(); }); }
+  const sPick=CX_BT_STRATS.map(([id,l])=>`<button class="cxbt-chip${strat===id?' on':''}" data-cbtstrat="${id}">${esc(l)}</button>`).join('');
+  const pPick=CX_BT_PERIODS.map(p=>`<button class="cxbt-chip${period===p?' on':''}" data-cbtperiod="${p}">${p}</button>`).join('');
+  const picker=`<div class="cxbt-pick"><div class="cxbt-pick-r">${sPick}</div><div class="cxbt-pick-r cxbt-per">${pPick}</div></div>`;
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Real crypto backtest.</b> The same Backtester as the Indian book, on historical Binance daily klines for the 10 majors (equal-weight portfolio, ${period} + warmup, 15bps costs). Past performance isn't a promise — it's evidence a rule had an edge, honestly measured.</span></div>`;
+  let body;
+  if(CRYPTOBT.busy || CRYPTOBT.key!==key){ body=secEmpty('activity','Backtesting…',`Running ${esc(strat)} over the crypto majors on Binance history.`); }
+  else{ const d=CRYPTOBT.data;
+    if(!d||d.real===false){ body=secEmpty('alert','Backtest unavailable',esc((d&&d.error)||'No result')); }
+    else{ const tone=v=>v>0?'up':(v<0?'down':'');
+      const stat=secStats([
+        {l:'Total return',v:pct(d.totalRet),s:esc(d.period||period),tone:tone(d.totalRet)},
+        {l:'CAGR',v:pct(d.cagr),s:'annualised',tone:tone(d.cagr)},
+        {l:'Max drawdown',v:pct(-Math.abs(d.maxDD||0)),s:'peak-to-trough',tone:'down'},
+        {l:'Sharpe',v:(d.sharpe==null?'—':(+d.sharpe).toFixed(2)),s:'risk-adjusted',tone:tone(d.sharpe)},
+        {l:'Win rate',v:(d.winRate==null?'—':d.winRate+'%'),s:`${d.trades||0} trades`},
+        {l:'Avg trade',v:pct(d.avgTrade),s:`${d.timeInMarket!=null?d.timeInMarket+'% in market':''}`,tone:tone(d.avgTrade)},
+      ]);
+      const bh=d.benchmark||{}; const curve=cxCurve(d.pts,bh.pts);
+      const legend=curve?`<div class="cxbt-legend"><span class="cxbt-lg eq">${esc((CX_BT_STRATS.find(x=>x[0]===strat)||[,strat])[1])}</span>${bh.pts?`<span class="cxbt-lg bh">${esc(bh.label||'Buy & hold')} ${bh.totalRet!=null?pct(bh.totalRet):''}</span>`:''}${bh.alpha!=null?`<span class="cxbt-lg">α ${pct(bh.alpha)}</span>`:''}</div>`:'';
+      body=stat+(curve?`<div class="cxm-tbl-h">${icon('activity',13)}<b>Equity curve</b><span>base 100 · vs buy & hold</span></div>${legend}<div class="cxbt-chart">${curve}</div>`:'');
+    }
+  }
+  return note+picker+body;
+}
 // Crypto-scoped router: every Algo Studio tab stays in sync with the crypto market (no Indian content leaks).
 function cryptoBody(view,label){
   if(view==='library'||view==='market') return cryptoMarket();
@@ -3828,6 +3871,7 @@ function cryptoBody(view,label){
   if(view==='leaderboard') return cryptoLeaderboard();
   if(view==='monitor'||view==='positions') return cryptoMonitor();
   if(view==='risk') return cryptoRisk();
+  if(view==='backtest') return cryptoBacktest();
   return cryptoSoon(label);
 }
 
@@ -3885,6 +3929,8 @@ function renderAlgo(){
   v.querySelectorAll('[data-algoinstr]').forEach(b=>b.onclick=()=>{ const a=state.algo; if(a.instr===b.dataset.algoinstr) return; a.instr=b.dataset.algoinstr; a.hold='all'; if(a.lib) a.lib.fam='all'; renderAlgo(); });
   v.querySelectorAll('[data-algohold]').forEach(b=>b.onclick=()=>{ state.algo.hold=b.dataset.algohold; renderAlgo(); });
   v.querySelectorAll('[data-cinstr]').forEach(b=>b.onclick=()=>{ state.algo.cinstr=b.dataset.cinstr; renderAlgo(); });
+  v.querySelectorAll('[data-cbtstrat]').forEach(b=>b.onclick=()=>{ state.algo.cbt=state.algo.cbt||{strat:'macross',period:'1Y'}; state.algo.cbt.strat=b.dataset.cbtstrat; renderAlgo(); });
+  v.querySelectorAll('[data-cbtperiod]').forEach(b=>b.onclick=()=>{ state.algo.cbt=state.algo.cbt||{strat:'macross',period:'1Y'}; state.algo.cbt.period=b.dataset.cbtperiod; renderAlgo(); });
   v.querySelectorAll('[data-algogoto]').forEach(b=>b.onclick=()=>{state.algo.view=b.dataset.algogoto;renderAlgo();});
   v.querySelectorAll('[data-algobt]').forEach(b=>b.onclick=()=>{state.algo.bt.algo=+b.dataset.algobt;state.algo.view='backtest';renderAlgo();});
   v.querySelectorAll('[data-algodep]').forEach(b=>b.onclick=()=>algoDeploy(ALGOS[+b.dataset.algodep]));

@@ -1940,6 +1940,53 @@ def crypto_monitor_payload() -> dict:
                          "sectors": gov.get("sectors"), "limits": gov.get("limits")}}
 
 
+CRYPTO_BT_UNIVERSE = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT",
+                      "ADAUSDT", "DOGEUSDT", "AVAXUSDT", "LINKUSDT", "MATICUSDT"]
+_cbt_cache = {}
+
+
+def crypto_backtest_payload(strategy: str, period: str) -> dict:
+    """Real historical backtest of a catalog strategy over the crypto majors, on Binance daily
+    klines — reuses the exact Backtester the Indian side uses (the strategies are market-agnostic).
+    Perps/options/pairs have no single-symbol backtest (like the Indian futures/options/pairs)."""
+    period = period if period in BT_PERIODS else "1Y"
+    ck = (strategy, period)
+    hit = _cbt_cache.get(ck)
+    if hit and time.time() - hit["t"] < 600:
+        return hit["payload"]
+    from datetime import datetime
+    feed = _crypto_feed()
+    days = BT_PERIODS[period] + 280            # +warmup for 200-bar filters (feed caps at 1000 bars)
+
+    def get_df(sym):
+        df = feed.historical(sym, "day", days)
+        return df if (df is not None and not getattr(df, "empty", True)) else None
+
+    try:
+        if strategy in ("xs_momentum", "lowvol"):
+            from bot.xs import xs_backtest
+            kind = "momentum" if strategy == "xs_momentum" else "lowvol"
+            res = xs_backtest(get_df, kind, CRYPTO_BT_UNIVERSE, top_n=4)
+            if not res:
+                return {"real": False, "error": "not enough crypto history for the rank-basket backtest"}
+            res.update(real=True, market="crypto", strategy=strategy,
+                       period="max avail (monthly rebalance)", asOf=datetime.now().isoformat())
+            _cbt_cache[ck] = {"t": time.time(), "payload": res}
+            return res
+        strat, risk_cfg = _bt_strategy(strategy)
+        if not strat:
+            return {"real": False, "error": f"{strategy} has no single-symbol crypto backtest (perps/options/pairs excluded — see Monitor)"}
+        res = _run_universe_backtest(get_df, strat, risk_cfg, CRYPTO_BT_UNIVERSE)
+        if not res:
+            return {"real": False, "error": "not enough crypto history to backtest these strategies"}
+        res.update(real=True, market="crypto", strategy=strategy, period=period,
+                   universe=len(CRYPTO_BT_UNIVERSE), asOf=datetime.now().isoformat())
+        _cbt_cache[ck] = {"t": time.time(), "payload": res}
+        return res
+    except Exception as e:
+        return {"real": False, "error": str(e)[:120]}
+
+
 def crypto_risk_payload() -> dict:
     """The crypto Governor state (score, mode, concentration, crowding, kill-switch) — the same
     portfolio control layer as the Indian book, published each cycle by the crypto harness."""
@@ -2536,6 +2583,9 @@ class Handler(BaseHTTPRequestHandler):
                                                    _syms.split(",") if _syms else None))
             if path == "/api/framework":
                 return self._send(framework_payload((qs.get("regime") or [None])[0]))
+            if path == "/api/crypto/backtest":
+                return self._send(crypto_backtest_payload((qs.get("strategy") or ["momentum"])[0],
+                                                          (qs.get("period") or ["1Y"])[0]))
             routes = {
                 "/api/status": kite_status,
                 "/api/strategies": strategies_payload,

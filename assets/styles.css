@@ -1958,10 +1958,12 @@ html[data-persona="trader"][data-layout="build"] .panel{display:none}
 /* ============================================================
    ALGO + AI MODES — distinct accents + full-width takeovers
    ============================================================ */
-html[data-persona="algo"]{ --accent:#6366f1; --accent-d:#4f46e5; --accent-soft:#eef0fe; --accent-line:#c7ccfb; --bg:#eef0f7; }
-html[data-persona="algo"][data-surface="night"]{ --accent:#818cf8; --accent-d:#a5b0fb; --accent-soft:rgba(129,140,248,.16); --accent-line:rgba(129,140,248,.42); --bg:#0a0c1c; }
-html[data-persona="ai"]{ --accent:#0d9488; --accent-d:#0b7e74; --accent-soft:#e3f6f3; --accent-line:#b6e6df; --bg:#eef4f3; }
-html[data-persona="ai"][data-surface="night"]{ --accent:#2dd4bf; --accent-d:#5eead4; --accent-soft:rgba(45,212,191,.15); --accent-line:rgba(45,212,191,.42); --bg:#06120f; }
+/* Algo & AI: accent now follows the REGIME (green/blue/red) like Trading — no fixed persona accent pin.
+   Only the page-bg keeps a whisper of persona texture; the regime colour reads through the whole skin. */
+html[data-persona="algo"]{ --bg:#eef0f7; }
+html[data-persona="algo"][data-surface="night"]{ --bg:#0a0c1c; }
+html[data-persona="ai"]{ --bg:#eef4f3; }
+html[data-persona="ai"][data-surface="night"]{ --bg:#06120f; }
 
 #algoView,#aiView{display:none}
 html[data-persona="algo"] #algoView{display:flex;flex-direction:column;flex:1;min-height:0}
@@ -2073,6 +2075,21 @@ html[data-persona="ai"] #chartCard,html[data-persona="ai"] #chartResize,html[dat
 .cxr-fill.over{background:var(--red)}
 .cxr-v{font-size:11.5px;font-weight:700;text-align:right;color:var(--navy)}
 .cxr-empty{font-size:11.5px;color:var(--slate-2);padding:2px}
+/* crypto backtest */
+.cxbt-pick{display:flex;flex-direction:column;gap:8px;margin:2px 0 4px}
+.cxbt-pick-r{display:flex;flex-wrap:wrap;gap:6px}
+.cxbt-chip{font-size:11px;font-weight:600;color:var(--slate);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:5px 11px;cursor:pointer}
+.cxbt-chip:hover{border-color:var(--navy)}
+.cxbt-chip.on{background:color-mix(in srgb, var(--navy) 50%, transparent);color:#fff;border-color:transparent}
+.cxbt-per .cxbt-chip.on{background:var(--accent)}
+.cxbt-chart{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:10px}
+.cxbt-svg{width:100%;height:150px;display:block}
+.cxbt-eq{fill:none;stroke:var(--blue);stroke-width:2;vector-effect:non-scaling-stroke}
+.cxbt-bh{fill:none;stroke:var(--slate-2);stroke-width:1.3;stroke-dasharray:4 3;vector-effect:non-scaling-stroke;opacity:.7}
+.cxbt-base{stroke:var(--line);stroke-width:1;stroke-dasharray:2 3;vector-effect:non-scaling-stroke}
+.cxbt-legend{display:flex;gap:12px;margin:8px 2px 4px;font-size:11px;font-weight:600}
+.cxbt-lg{color:var(--slate)}
+.cxbt-lg.eq{color:var(--blue)} .cxbt-lg.bh{color:var(--slate-2)}
 
 /* algo marketplace grid */
 .algo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
@@ -3221,6 +3238,13 @@ html[data-persona="ai"] #widgetBtn{display:none}
 .mb-cell.mb-all i{color:rgba(255,255,255,.72)}
 .mb-cell.mb-all b{color:#fff}
 .mb-cell.mb-all b.up{color:#5be584}.mb-cell.mb-all b.down{color:#ff9a9a}
+/* Night-mode fix: these "inverse" chips use background:var(--navy), but --navy flips to a LIGHT
+   token in night mode — which washed out their white text (e.g. "Overall +₹8,424" was unreadable).
+   Pin a dark elevated surface so the white/green text keeps its contrast in both themes. */
+html[data-surface="night"] .mb-cell.mb-all,
+html[data-surface="night"] .lib-chip.on,
+html[data-surface="night"] .opp-pstep.last,
+html[data-surface="night"] .rk-tier.on{background:var(--white);border-color:var(--line-2)}
 /* LAYER 1 — instrument class (Equity / Options / Futures) */
 .lib-instr{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
 .lib-instr-tab{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;
