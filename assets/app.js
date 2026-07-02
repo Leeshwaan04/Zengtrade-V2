@@ -3792,12 +3792,42 @@ function cryptoMonitor(){
   const act=scoped.filter(s=>s.openPositions>0||s.realisedPnl!==0).length;
   return note+cryptoScopeBar()+stat+`<div class="cxm-tbl-h">${icon('activity',13)}<b>${esc(clsLabel)} strategies</b><span>${act} active · ${scoped.length} running${upd?` · updated ${upd}`:''}</span></div><div class="cxm-tbl">${head}${rows}</div>`;
 }
+// ---- crypto Risk Governor (same control layer as the Indian book) ----
+const CRYPTORISK={loaded:false,busy:false,data:null};
+async function loadCryptoRisk(){ if(CRYPTORISK.busy) return; CRYPTORISK.busy=true;
+  try{ CRYPTORISK.data=await fetch(`${BOT_API}/api/crypto/risk`).then(r=>r.json()); }catch(e){ CRYPTORISK.data={running:false}; }
+  CRYPTORISK.loaded=true; CRYPTORISK.busy=false; }
+function cxRiskBar(p,limit,label){ const w=Math.min(100,(p/limit)*100), over=p>limit;
+  return `<div class="cxr-row"><span class="cxr-l">${esc(label)}</span><div class="cxr-track"><span class="cxr-fill${over?' over':''}" style="width:${w.toFixed(0)}%"></span></div><span class="cxr-v num${over?' down':''}">${(+p).toFixed(1)}%</span></div>`; }
+function cryptoRisk(){
+  const d=CRYPTORISK.data;
+  if(!d){ if(!CRYPTORISK.busy) loadCryptoRisk().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); return secEmpty('shield','Loading crypto risk…','Reading the crypto Governor state from the bot.'); }
+  if(d.running===false){ return secEmpty('shield','Crypto Governor offline','Start the crypto harness (python3 paper_trade_crypto.py) — it publishes the Governor state each cycle.'); }
+  const lim=d.limits||{};
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Crypto Risk Governor.</b> The same portfolio control layer as the Indian book — symbol/sector concentration, a crowding cap (max ${lim.botsPerSymbol||2} bots/name), total-exposure ceiling + a drawdown kill-switch. Crypto is grouped into Major / L1 / Alt sub-sectors so correlated coins can't quietly become one bet.</span></div>`;
+  const stat=secStats([
+    {l:'Health score',v:String(d.score),s:esc(d.mode||'normal'),tone:d.score>=70?'up':(d.score<40?'down':'')},
+    {l:'Mode',v:esc(d.mode||'normal'),s:d.killSwitch?'KILL-SWITCH':'live',tone:d.killSwitch?'down':''},
+    {l:'Exposure',v:(d.exposurePct||0)+'%',s:`limit ${lim.total||150}%`,tone:(d.exposurePct>(lim.total||150))?'down':''},
+    {l:'Drawdown',v:(d.drawdownPct||0)+'%',s:'realised vs peak',tone:(d.drawdownPct>=2)?'down':''},
+    {l:'Book',v:cxMoney(d.totalBook),s:`of $${Math.round((d.capital||1e6)/1000)}K pool`},
+    {l:'Equity',v:cxMoney(d.equity),s:'capital + realised'},
+  ]);
+  const secBars=Object.entries(d.sectors||{}).map(([s,p])=>cxRiskBar(p,lim.sector||35,s)).join('')||'<div class="cxr-empty">No sector exposure</div>';
+  const symBars=Object.entries(d.symbols||{}).slice(0,8).map(([s,p])=>cxRiskBar(p,lim.symbol||18,s.replace('USDT',''))).join('')||'<div class="cxr-empty">No open positions</div>';
+  const crowd=Object.entries(d.crowding||{}).filter(([s,n])=>n>1).map(([s,n])=>`<span class="cxm-chip${n>=(lim.botsPerSymbol||2)?' down':''}">${esc(s.replace('USDT',''))} · ${n} bots</span>`).join('')||'<span class="cxr-empty">No crowding — every name held by ≤1 bot</span>';
+  return note+stat+
+    `<div class="cxm-tbl-h">${icon('layout',13)}<b>Sector concentration</b><span>limit ${lim.sector||35}%</span></div><div class="cxr-bars">${secBars}</div>`+
+    `<div class="cxm-tbl-h">${icon('activity',13)}<b>Symbol concentration</b><span>limit ${lim.symbol||18}%</span></div><div class="cxr-bars">${symBars}</div>`+
+    `<div class="cxm-tbl-h">${icon('shield',13)}<b>Crowding</b><span>max ${lim.botsPerSymbol||2} bots/name</span></div><div class="cxm-pos">${crowd}</div>`;
+}
 // Crypto-scoped router: every Algo Studio tab stays in sync with the crypto market (no Indian content leaks).
 function cryptoBody(view,label){
   if(view==='library'||view==='market') return cryptoMarket();
   if(view==='opportunity') return cryptoOpportunity();
   if(view==='leaderboard') return cryptoLeaderboard();
   if(view==='monitor'||view==='positions') return cryptoMonitor();
+  if(view==='risk') return cryptoRisk();
   return cryptoSoon(label);
 }
 
@@ -6159,10 +6189,11 @@ function init(){
   // live crypto prices (Binance public, real) — drives the global rolling tape whenever Crypto is selected (5s poll)
   setInterval(()=>{ if(state.algo && state.algo.market==='crypto' && document.visibilityState==='visible')
     loadCrypto().then(()=>{ if(state.algo&&state.algo.market==='crypto') patchCryptoTape(); }); }, 5000);
-  // live crypto paper book (7s poll) — refresh the Monitor/Positions P&L while the studio is scoped to Crypto
-  setInterval(()=>{ if(isAlgo() && state.algo && state.algo.market==='crypto'
-      && (state.algo.view==='monitor'||state.algo.view==='positions') && document.visibilityState==='visible')
-    loadCryptoMonitor().then(()=>{ if(isAlgo() && state.algo.market==='crypto' && (state.algo.view==='monitor'||state.algo.view==='positions')) renderAlgo(); }); }, 7000);
+  // live crypto paper book (7s poll) — refresh the Monitor/Positions/Risk while the studio is scoped to Crypto
+  setInterval(()=>{ if(!(isAlgo() && state.algo && state.algo.market==='crypto' && document.visibilityState==='visible')) return;
+    const v=state.algo.view;
+    if(v==='monitor'||v==='positions') loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&(state.algo.view==='monitor'||state.algo.view==='positions')) renderAlgo(); });
+    else if(v==='risk') loadCryptoRisk().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='risk') renderAlgo(); }); }, 7000);
   // fast real-time poll (2s): refresh live paper P&L + positions across ALL live algo
   // views — Marketplace, Leaderboard, Forward Test, Monitor. (Backtest is static, skip it.)
   // Safe re-render: skips the tick while a field is focused (no clobbering the capital box)

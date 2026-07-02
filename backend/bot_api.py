@@ -1940,6 +1940,22 @@ def crypto_monitor_payload() -> dict:
                          "sectors": gov.get("sectors"), "limits": gov.get("limits")}}
 
 
+def crypto_risk_payload() -> dict:
+    """The crypto Governor state (score, mode, concentration, crowding, kill-switch) — the same
+    portfolio control layer as the Indian book, published each cycle by the crypto harness."""
+    path = os.path.join(HERE, "crypto_governor_state.json")
+    if not os.path.exists(path):
+        return {"running": False}
+    try:
+        d = json.load(open(path))
+        # hide the cosmetic options-expiry keys (value-0 structures) from the crowding view
+        d["crowding"] = {k: v for k, v in (d.get("crowding") or {}).items() if "USDT" in str(k)}
+        d["running"] = True
+        return d
+    except Exception:
+        return {"running": False}
+
+
 def monitor_payload() -> dict:
     """FAST, lean endpoint for the live Monitor — every running strategy's real-time P&L +
     per-position detail, cached quotes, NO heavy readiness calls. Safe to poll every ~2s."""
@@ -2532,6 +2548,7 @@ class Handler(BaseHTTPRequestHandler):
                 "/api/rebalance": rebalance_payload,
                 "/api/monitor": monitor_payload,
                 "/api/crypto/monitor": crypto_monitor_payload,
+                "/api/crypto/risk": crypto_risk_payload,
                 "/api/stopped": stopped_payload,
                 "/api/analytics": analytics_payload,
                 "/api/market": market_snapshot,
