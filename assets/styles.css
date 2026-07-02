@@ -435,7 +435,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border:0;border-radiu
   /* below desktop: leave the fixed app-shell -> natural page scroll */
   body{height:auto;overflow-y:visible}
   .pane-left,.pane-center,.pane-right{height:auto;overflow:visible}
-  .algo-view{height:auto}   /* narrow layout scrolls the whole page, not an inner region */
+  html .algo-view{height:auto}   /* narrow layout scrolls the whole page — `html` raises specificity so this beats the later unconditional `.algo-view{height:100%}` even inside this media query */
   .terminal,html[data-regime="bear"] .terminal{grid-template-columns:260px 1fr}
   .pane-right{grid-column:1 / -1;flex-direction:row}
   .pane-right > *{flex:1}
@@ -2098,6 +2098,19 @@ html[data-persona="ai"] #chartCard,html[data-persona="ai"] #chartResize,html[dat
 /* crypto forward test / accuracy table (6 cols) */
 .cxf-row{grid-template-columns:1.4fr 58px 58px 52px 92px 92px}
 .cxf-cls{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--slate-2);background:var(--surface-2);border:1px solid var(--line);border-radius:5px;padding:1px 5px;margin-left:4px}
+/* go-live readiness gate */
+.rdy-banner{display:flex;align-items:center;gap:12px;border-radius:12px;padding:12px 15px;margin:2px 0 4px}
+.rdy-banner.no{background:color-mix(in srgb,var(--red) 10%,var(--surface));border:1px solid color-mix(in srgb,var(--red) 30%,var(--line))}
+.rdy-banner.ok{background:var(--accent-soft);border:1px solid var(--accent-line)}
+.rdy-banner svg{flex:0 0 auto;color:var(--navy)}
+.rdy-banner b{font-size:14px;color:var(--navy);display:block}
+.rdy-banner span{font-size:11.5px;color:var(--slate)}
+.rdy-bar{margin-left:auto;font-size:10.5px;font-weight:600;color:var(--slate-2);text-align:right;max-width:320px;line-height:1.4}
+.rdy-row{grid-template-columns:1.7fr 58px 58px 52px 96px}
+.rdy-badge{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;border-radius:5px;padding:1px 6px;margin-left:5px;vertical-align:middle}
+.rdy-badge.ready{color:#fff;background:var(--green)}
+.rdy-badge.gathering{color:var(--amber,#b06a2e);background:color-mix(in srgb,var(--amber,#f5b148) 18%,var(--surface));border:1px solid color-mix(in srgb,var(--amber,#f5b148) 40%,var(--line))}
+.rdy-badge.cull{color:#fff;background:var(--red)}
 
 /* algo marketplace grid */
 .algo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
@@ -3253,6 +3266,25 @@ html[data-surface="night"] .mb-cell.mb-all,
 html[data-surface="night"] .lib-chip.on,
 html[data-surface="night"] .opp-pstep.last,
 html[data-surface="night"] .rk-tier.on{background:var(--white);border-color:var(--line-2)}
+/* deployed-capital-by-class strip (under the P&L-by-class strip) */
+.mon-dep{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:-4px 0 12px}
+.mon-dep-cell{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:9px;background:var(--surface-2);border:1px solid var(--line)}
+.mon-dep-cell i{font-style:normal;font-size:11px;font-weight:700;color:var(--slate)}
+.mon-dep-cell b{font-size:12px;font-weight:800;color:var(--navy)}
+.mon-dep-all{background:var(--accent-soft);border-color:var(--accent-line)}
+.mon-dep-all i,.mon-dep-all b{color:var(--accent-d)}
+.mon-dep-hint{font-size:10px;color:var(--slate-2);margin-left:2px}
+/* monitor sort + filter bar */
+.mon-ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin:2px 0 11px}
+.mon-seg{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.msc-lead{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--slate-2);margin-right:2px}
+.msc-chip{border:1px solid var(--line);background:var(--surface);color:var(--slate);font-family:var(--sans);font-weight:700;font-size:11.5px;padding:5px 11px;border-radius:8px;cursor:pointer;transition:.15s}
+.msc-chip:hover{color:var(--navy);border-color:var(--line-2)}
+.msc-chip.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-d)}
+.msc-chip:focus-visible{outline:none;box-shadow:var(--ring)}
+.msc-count{font-size:10.5px;color:var(--slate-2);margin-left:2px}
+.mc-dep{font-weight:700;color:var(--slate)}
+.mon-clearfilt{border:0;background:none;color:var(--accent-d);font-family:var(--sans);font-weight:700;font-size:inherit;cursor:pointer;padding:0;text-decoration:underline}
 /* LAYER 1 — instrument class (Equity / Options / Futures) */
 .lib-instr{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
 .lib-instr-tab{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;

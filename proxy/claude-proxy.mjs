@@ -25,7 +25,7 @@ const ALLOW = process.env.ALLOW_ORIGIN || ''; // explicit override; otherwise lo
 function setCors(req, res) {
   const o = req.headers.origin || '';
   const ok = ALLOW ? o === ALLOW
-    : (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(o) || o === 'null' || o === '');
+    : /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(o);   // require an explicit localhost Origin — no empty/null-origin bypass (curl/LAN without an Origin header is denied)
   if (ok && o) res.setHeader('Access-Control-Allow-Origin', o);
   res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -60,4 +60,5 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.listen(PORT, () => console.log(`✓ Claude proxy → POST http://localhost:${PORT}/v1/messages  (model handled by the app; key stays here)`));
+// Bind 127.0.0.1 only (not 0.0.0.0) so the API key relay is never reachable from the LAN.
+server.listen(PORT, '127.0.0.1', () => console.log(`✓ Claude proxy → POST http://127.0.0.1:${PORT}/v1/messages  (localhost-only; key stays here)`));

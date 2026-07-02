@@ -313,8 +313,8 @@ function loadState(){
       const exch=typeof it.exch==='string'?it.exch:'NSE';
       const key=(typeof it.key==='string'&&it.key.includes(':'))?it.key:exch+':'+it.sym;
       if(seen.has(key)) continue; seen.add(key);
-      wl.push({sym:it.sym, name:typeof it.name==='string'?it.name:it.sym, exch, key, ltp:0, chg:0, live:false,
-        type:typeof it.type==='string'?it.type:'EQ', token:Number.isFinite(it.token)?it.token:null,
+      wl.push({sym:sanInstr(it.sym), name:sanInstr(typeof it.name==='string'?it.name:it.sym), exch, key, ltp:0, chg:0, live:false,
+        type:sanInstr(typeof it.type==='string'?it.type:'EQ'), token:Number.isFinite(it.token)?it.token:null,
         sector:typeof it.sector==='string'?it.sector:undefined, beta:typeof it.beta==='number'?it.beta:undefined,
         lot:typeof it.lot==='number'?it.lot:undefined, expiry:typeof it.expiry==='string'?it.expiry:undefined,
         strike:typeof it.strike==='number'?it.strike:undefined, seg:typeof it.seg==='string'?it.seg:undefined,
@@ -486,13 +486,15 @@ async function loadTape(){
 function patchTape(){
   const track=$('topIndex'); if(!track) return;
   track.querySelectorAll('.tix').forEach(tx=>{
-    const nm=tx.querySelector('.tix-name'); if(!nm) return;
-    const rq=realQuote(nm.textContent.trim()); if(!rq||rq.ltp==null) return;
+    // key off data-tname (robust) not display text, so an esc()'d name still matches
+    const key=(tx.dataset.tname || (tx.querySelector('.tix-name')||{}).textContent || '').trim();
+    if(!key) return;
+    const rq=realQuote(key); if(!rq||rq.ltp==null) return;
     const dec=rq.ltp>=20000?0:(rq.ltp>=1000?1:2);
     const val=tx.querySelector('.tix-val');
     if(val){ val.classList.remove('muted'); val.textContent=rq.ltp.toLocaleString('en-IN',{maximumFractionDigits:dec}); }
     const chg=tx.querySelector('.tix-chg');
-    if(chg){ chg.textContent=pct(rq.chg||0); chg.className='tix-chg '+cls(rq.chg||0)+' num'; }
+    if(chg){ chg.hidden=false; chg.textContent=pct(rq.chg||0); chg.className='tix-chg '+cls(rq.chg||0)+' num'; }   // un-hide: a tile that first painted with no quote must show its % once live
   });
 }
 /* ---- ticker settings popover (speed · rolling · instruments) ---- */
@@ -590,7 +592,7 @@ function renderRegimeBar(r){
       <span class="rb-mini-ic rb-emo-${r}">${icon(r,13)}</span><b>${cfg.title}</b><span class="rb-mini-kick">${cfg.kick} · ${pTag}</span><span class="rb-chev">▾</span></button>`;
   } else {
     bar.innerHTML=`
-      <div class="rb-badge"><div class="rb-emo rb-emo-${r}"><img class="rb-mascot" src="assets/mascot-${r}.png" alt="" draggable="false" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex'"><span class="rb-emo-ic" style="display:none">${icon(r,21)}</span></div>
+      <div class="rb-badge"><div class="rb-emo rb-emo-${r}"><img class="rb-mascot" src="assets/mascot-${r}.png" alt="" draggable="false"><span class="rb-emo-ic" style="display:none">${icon(r,21)}</span></div>
         <div><div class="rb-title"><small>${cfg.kick} · ${pTag}</small>${cfg.title}</div></div></div>
       <div class="rb-read">${read}</div>
       <button class="rb-toggle mini" id="rbToggle" aria-expanded="true" aria-label="Minimize market read" title="Minimize">${icon('compress',13)}<span>Minimize</span></button>`;
@@ -657,7 +659,7 @@ function renderWatchlist(r){
 function addInstrument(meta){
   if(!meta||!meta.key) return;
   if(byKey(meta.key)){ selectSym(meta.sym); return; }   // already pinned → just select it
-  SYMS.push({sym:meta.ts||meta.sym, name:meta.name||meta.ts||meta.sym, exch:meta.exch, type:meta.type||'EQ',
+  SYMS.push({sym:sanInstr(meta.ts||meta.sym), name:sanInstr(meta.name||meta.ts||meta.sym), exch:meta.exch, type:sanInstr(meta.type||'EQ'),
     key:meta.key, token:meta.token, seg:meta.seg, lot:meta.lot, ltp:0, chg:0,
     expiry:meta.expiry, strike:meta.strike, sector:meta.sector, live:false});
   saveState();
@@ -915,7 +917,7 @@ function renderOrder(r){
     ? `<div class="fld"><label>Target <i>from chart · R:R ${rr.toFixed(2)}</i></label><div class="inp">${Math.round(m.target).toLocaleString('en-IN')}</div></div>`
     : (r==='bull'&&m.priced)?`<div class="fld"><label>Target ladder</label><div class="inp">T1 ${Math.round(m.px*1.022).toLocaleString('en-IN')} · T2 ${Math.round(m.px*1.046).toLocaleString('en-IN')} · T3 ${Math.round(m.px*1.073).toLocaleString('en-IN')}</div></div>`:'';
   $('orderPad').innerHTML=`<div class="order-card">
-    <div class="order-head"><span class="oh-sym">${m.sym} <i class="paper-tag" title="Orders here are simulated — no real order is placed. Real execution is on the roadmap.">PAPER</i></span><span class="oh-px ${cls(m.s.chg)} num"><span id="ordLtp">${m.priced?m.px.toLocaleString('en-IN'):'—'}</span> ${m.s.live!==false?pct(m.s.chg):''}</span>${cardCtl('order')}</div>
+    <div class="order-head"><span class="oh-sym">${esc(m.sym)} <i class="paper-tag" title="Orders here are simulated — no real order is placed. Real execution is on the roadmap.">PAPER</i></span><span class="oh-px ${cls(m.s.chg)} num"><span id="ordLtp">${m.priced?m.px.toLocaleString('en-IN'):'—'}</span> ${m.s.live!==false?pct(m.s.chg):''}</span>${cardCtl('order')}</div>
     <div class="order-body">
       <div class="side-tabs"><div class="side-tab buy ${m.side==='buy'?'active':''}" data-side="buy">BUY</div><div class="side-tab sell ${m.side==='sell'?'active':''}" data-side="sell">${r==='bear'?'SELL / HEDGE':'SELL'}</div></div>
       <div class="type-row">${typePills}</div>
@@ -944,7 +946,7 @@ function openOrderModal(r){
   $('modalBody').innerHTML=`
     <div class="modal-top ${m.side==='buy'?'is-buy':'is-sell'}">
       <span class="modal-side">${sideTxt}</span>
-      <div><div class="modal-sym">${m.sym}</div><div class="modal-name">${m.s.name}</div></div>
+      <div><div class="modal-sym">${esc(m.sym)}</div><div class="modal-name">${esc(m.s.name)}</div></div>
       <span class="modal-px num">${m.priced?m.px.toLocaleString('en-IN'):'—'}</span></div>
     <div class="modal-grid">
       <div><span>Order type</span><b>${m.type}</b></div>
@@ -1164,8 +1166,7 @@ function buildMascot(r){
     <span class="rv-burst"></span><span class="rv-burst b2"></span>
     <div class="rv-streaks">${streaks}</div>${smoke}
     <div class="rv-glyph rv-${r}">
-      <img class="rv-img" src="assets/mascot-${r}.png" alt="" draggable="false"
-        onerror="this.style.display='none';var f=this.parentNode.querySelector('.rv-svg');if(f)f.style.display='block';">
+      <img class="rv-img" src="assets/mascot-${r}.png" alt="" draggable="false">
       <svg viewBox="0 0 200 200" class="rv-svg" style="display:none">${MASCOTS[r]}</svg>
     </div>
     ${pcl}
@@ -2821,6 +2822,18 @@ function canvasPicker(){
 
 /* HTML-escape any user-supplied / persisted text before it enters innerHTML (XSS-safe) */
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// Ingest sanitiser for instrument metadata (sym/name/type) that originates from the Kite instrument
+// master or persisted localStorage and is rendered via innerHTML at many sinks. Stripping the
+// HTML-active chars at the SOURCE neutralises stored-DOM XSS everywhere at once (defence-in-depth
+// on top of esc() at the sinks). Real symbols/names never contain these, so display is unaffected.
+function sanInstr(s){ return typeof s==='string' ? s.replace(/[<>"'`]/g,'') : s; }
+// CSP-safe image fallbacks — replaces the two inline `onerror=` handlers (which a strict
+// `script-src 'self'` CSP blocks). Image 'error' events don't bubble, so listen in CAPTURE.
+document.addEventListener('error', function(e){
+  const t=e.target; if(!(t instanceof HTMLImageElement)) return;
+  if(t.classList.contains('rb-mascot')){ t.style.display='none'; const ic=t.nextElementSibling; if(ic) ic.style.display='inline-flex'; }
+  else if(t.classList.contains('rv-img')){ t.style.display='none'; const f=t.parentNode&&t.parentNode.querySelector('.rv-svg'); if(f) f.style.display='block'; }
+}, true);
 
 /* ============================================================
    ALGO MODE — strategy studio (Marketplace · Backtest · Monitor)
@@ -3246,6 +3259,22 @@ function algoDeployed(a){ return (a&&a.positions||[]).reduce((s,p)=>{ const q=p.
 function inrC(v){ if(v==null||!isFinite(v)) return '—'; const a=Math.abs(v);
   if(a>=1e7) return '₹'+(a/1e7).toFixed(2)+'Cr'; if(a>=1e5) return '₹'+(a/1e5).toFixed(2)+'L';
   if(a>=1e3) return '₹'+(a/1e3).toFixed(1)+'K'; return '₹'+Math.round(a); }
+// Crypto deployed = Σ open-position notional (qty×entry); perps book 20% margin. Options premium ≈ 0 notional.
+function cryptoDeployed(s){ const seg=(s&&s.instr)||'spot'; return (s&&s.positions||[]).reduce((a,p)=>{
+  const n=Math.abs((p.qty||0)*(p.entry||0)); return a+(seg==='perps'?n*0.20:n); },0); }
+// Shared monitor sort+filter (Indian & crypto books). Returns {sorted, bar}; chips reuse state.algo.monSort/monFilter.
+const MON_SORTS=[['pnl','Top P&L'],['unreal','Unrealised'],['deployed','Deployed'],['open','Open'],['name','Name']];
+const MON_FILTS=[['all','All'],['profit','In profit'],['loss','Losing'],['open','Open now']];
+function monSortFilter(list){
+  const mSort=state.algo.monSort||'pnl', mFilt=state.algo.monFilter||'all';
+  const filtFn=({all:()=>true,profit:x=>(x.paperPnl||0)>0,loss:x=>(x.paperPnl||0)<0,open:x=>(x.openPositions||0)>0})[mFilt]||(()=>true);
+  const sortFn=({pnl:(a,b)=>(b.paperPnl||0)-(a.paperPnl||0),unreal:(a,b)=>(b.openPnl||0)-(a.openPnl||0),open:(a,b)=>(b.openPositions||0)-(a.openPositions||0),
+    deployed:(a,b)=>(b._dep||0)-(a._dep||0),name:(a,b)=>String(a.name||'').localeCompare(String(b.name||''))})[mSort]||((a,b)=>(b.paperPnl||0)-(a.paperPnl||0));
+  const sorted=list.filter(filtFn).sort(sortFn);
+  const bar=`<div class="mon-ctrl"><div class="mon-seg"><span class="msc-lead">Sort</span>${MON_SORTS.map(([k,l])=>`<button class="msc-chip${mSort===k?' on':''}" data-monsort="${k}">${esc(l)}</button>`).join('')}</div>`+
+    `<div class="mon-seg"><span class="msc-lead">Show</span>${MON_FILTS.map(([k,l])=>`<button class="msc-chip${mFilt===k?' on':''}" data-monfilter="${k}">${esc(l)}</button>`).join('')}<span class="msc-count">${sorted.length} of ${list.length}</span></div></div>`;
+  return {sorted,bar};
+}
 function algoHold(a){ const id=(a&&a.id||'').toLowerCase(); if(ALGO_HOLD[id]) return ALGO_HOLD[id];
   if(/scalp/.test(id)) return 'scalper'; const p=(a&&a.product||'').toUpperCase();
   if(p==='MIS') return 'intraday'; if(p==='NRML') return 'swing'; return 'carry'; }
@@ -3804,7 +3833,9 @@ function cryptoMonitor(){
     {l:'Regime',v:esc(d.regime||'—'),s:'BTC-led'},
     {l:'Risk score',v:g.score==null?'—':String(g.score),s:g.exposurePct!=null?`${g.exposurePct}% exposure`:'governor'},
   ]);
-  const rows=scoped.map(s=>{
+  scoped.forEach(s=>s._dep=cryptoDeployed(s));   // stamp deployed for the Deployed sort
+  const {sorted:sortedScoped, bar:ctrlBar}=monSortFilter(scoped);
+  const rows=sortedScoped.map(s=>{
     const chips=(s.positions||[]).map(p=>{
       if(p.credit!=null) return `<span class="cxm-chip ${cls(p.pnl)}">${esc(p.sym||'')}${p.pnl!=null?` <i>${cxMoney(p.pnl)}</i>`:` <i>cr ${cxMoney(p.credit)}</i>`}</span>`;
       if(p.side!=null) return `<span class="cxm-chip ${cls(p.pnl)}">${p.side<0?'▼':'▲'} ${esc((p.sym||'').replace('USDT',''))}${p.pnl!=null?` <i>${cxMoney(p.pnl)}</i>`:''}</span>`;
@@ -3820,7 +3851,8 @@ function cryptoMonitor(){
   }).join('');
   const head=`<div class="cxm-row cxm-head"><div class="cxm-name">Strategy</div><span class="cxm-n">Open</span><span class="cxm-n">Realised</span><span class="cxm-n">Unreal.</span><span class="cxm-n">Total</span></div>`;
   const act=scoped.filter(s=>s.openPositions>0||s.realisedPnl!==0).length;
-  return note+cryptoScopeBar()+stat+`<div class="cxm-tbl-h">${icon('activity',13)}<b>${esc(clsLabel)} strategies</b><span>${act} active · ${scoped.length} running${upd?` · updated ${upd}`:''}</span></div><div class="cxm-tbl">${head}${rows}</div>`;
+  const listHtml=rows||`<div class="mon-exp-empty" style="padding:14px">No strategies match this filter — <button class="mon-clearfilt" data-monfilter="all">show all</button>.</div>`;
+  return note+cryptoScopeBar()+stat+ctrlBar+`<div class="cxm-tbl-h">${icon('activity',13)}<b>${esc(clsLabel)} strategies</b><span>${act} active · ${scoped.length} running${upd?` · updated ${upd}`:''}</span></div><div class="cxm-tbl">${head}${listHtml}</div>`;
 }
 // ---- crypto Risk Governor (same control layer as the Indian book) ----
 const CRYPTORISK={loaded:false,busy:false,data:null};
@@ -3958,6 +3990,34 @@ function cryptoAnalytics(){
     `<div class="cxm-tbl-h">${icon('cpu',13)}<b>By regime</b><span>realised, from closed trades</span></div><div class="cxm-pos">${regChips}</div>`+
     `<div class="cxm-tbl-h">${icon('activity',13)}<b>Strategy contributors</b><span>top by total P&L</span></div><div class="cxm-tbl">${contrib}</div>`;
 }
+// ---- Go-live readiness gate (net-of-cost evidence per strategy vs the bar) ----
+const READY={data:{},busy:{}};
+async function loadReadiness(mkt){ if(READY.busy[mkt]) return; READY.busy[mkt]=true;
+  try{ READY.data[mkt]=await fetch(`${BOT_API}/api/readiness/book?market=${mkt}`).then(r=>r.json()); }catch(e){ READY.data[mkt]={err:true}; }
+  READY.busy[mkt]=false; }
+function readinessView(mkt){
+  const d=READY.data[mkt];
+  const money=mkt==='crypto'?cxMoney:(v=>(v==null||!isFinite(v))?'—':(v<0?'−':'+')+'₹'+Math.abs(Math.round(v)).toLocaleString('en-IN'));
+  if(!d){ if(!READY.busy[mkt]) loadReadiness(mkt).then(()=>{ if(isAlgo()) renderAlgo(); }); return secEmpty('shield','Assessing go-live readiness…','Scoring each strategy against the bar.'); }
+  if(d.err){ return secEmpty('shield','Readiness unavailable','Bot API unreachable on :8756 — start bot_api.py.'); }
+  const s=d.summary||{}, bar=d.bar||{};
+  const verdict=d.goLive?'READY':(s.ready>0?'PARTIAL — not all clear':'NOT READY');
+  const banner=`<div class="rdy-banner ${d.goLive?'ok':'no'}">${icon(d.goLive?'check':'shield',22)}
+    <div><b>Go-live: ${verdict}</b><span>${s.ready||0} ready · ${s.gathering||0} gathering · ${s.cull||0} to cull — of ${s.total||0} strategies with closed trades.</span></div>
+    <span class="rdy-bar">Bar: ≥${bar.minTrades} trades · PF ≥ ${bar.minProfitFactor} · ≥${bar.minRegimes} regimes · +expectancy after costs</span></div>`;
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Honest go-live gate.</b> Every number is <b>net of realistic costs</b> (brokerage + STT/fees + slippage) from CLOSED paper trades. A strategy is <b>READY</b> only with a real sample across multiple regimes — a few lucky trades read as <b>gathering</b>. <b>CULL</b> = auto-benched for negative expectancy.</span></div>`;
+  const rows=(d.strategies||[]).map(r=>{
+    const vlbl=r.verdict==='ready'?'READY':r.verdict==='cull'?'CULL':'GATHERING';
+    const regimes=(r.regimes||[]).length?`<div class="cxm-pos">${r.regimes.map(g=>`<span class="cxm-chip">${esc(g)}</span>`).join('')}</div>`:'';
+    return `<div class="cxm-row rdy-row"><div class="cxm-name"><b>${esc(r.name)}</b> <span class="rdy-badge ${esc(r.verdict)}">${vlbl}</span>${regimes}</div>
+      <span class="cxm-n num">${r.closed}</span>
+      <span class="cxm-n num ${r.winPct>=50?'up':(r.winPct<45?'down':'')}">${r.winPct==null?'—':r.winPct+'%'}</span>
+      <span class="cxm-n num ${r.profitFactor>=bar.minProfitFactor?'up':(r.profitFactor<1?'down':'')}">${r.profitFactor==null?'—':(+r.profitFactor).toFixed(2)}</span>
+      <span class="cxm-n num ${cls(r.expectancy)}">${money(r.expectancy)}</span></div>`;
+  }).join('');
+  const head=`<div class="cxm-row rdy-row cxm-head"><div class="cxm-name">Strategy · verdict</div><span class="cxm-n">Trades</span><span class="cxm-n">Win%</span><span class="cxm-n">PF</span><span class="cxm-n">Expectancy</span></div>`;
+  return banner+note+`<div class="cxm-tbl-h">${icon('activity',13)}<b>Per-strategy verdict</b><span>ranked: ready → gathering → cull</span></div><div class="cxm-tbl">${head}${rows||'<div class="cxr-empty" style="padding:11px 13px">No closed trades yet — the gate fills as the harness runs</div>'}</div>`;
+}
 // Crypto-scoped router: every Algo Studio tab stays in sync with the crypto market (no Indian content leaks).
 function cryptoBody(view,label){
   if(view==='library'||view==='market') return cryptoMarket();
@@ -3967,7 +4027,7 @@ function cryptoBody(view,label){
   if(view==='risk') return cryptoRisk();
   if(view==='backtest') return cryptoBacktest();
   if(view==='forward') return cryptoForward('forward');
-  if(view==='accuracy') return cryptoForward('accuracy');
+  if(view==='accuracy') return readinessView('crypto');
   if(view==='analytics') return cryptoAnalytics();
   return cryptoSoon(label);
 }
@@ -4017,8 +4077,14 @@ function renderAlgo(){
   const tabLabel=(tabs.find(t=>t[0]===view)||[,'This view'])[1];
   const body=crypto
     ? cryptoBody(view,tabLabel)
-    : (view==='library'?algoLibrary():view==='opportunity'?algoOpportunity():view==='risk'?algoRisk():view==='positions'?algoPositions():view==='market'?algoMarket():view==='leaderboard'?algoLeaderboard():view==='backtest'?algoBacktest():view==='forward'?algoForward():view==='accuracy'?algoAccuracy():view==='analytics'?algoAnalytics():algoMonitor());
+    : (view==='library'?algoLibrary():view==='opportunity'?algoOpportunity():view==='risk'?algoRisk():view==='positions'?algoPositions():view==='market'?algoMarket():view==='leaderboard'?algoLeaderboard():view==='backtest'?algoBacktest():view==='forward'?algoForward():view==='accuracy'?(readinessView('in')+algoAccuracy()):view==='analytics'?algoAnalytics():algoMonitor());
+  // Preserve page scroll across the full innerHTML rebuild so in-place CTAs (sort, filter, toggles, live
+  // patches) don't flick/jump. Reset to top only when the view/market/scope actually changed (real navigation).
+  const _scEl=document.scrollingElement||document.documentElement;
+  const _vk=(state.algo.market||'in')+'/'+view+'/'+(state.algo.cinstr||'')+'/'+(state.algo.instr||'')+'/'+(state.algo.hold||'');
+  const _sy=(state.algo._vk===_vk)?_scEl.scrollTop:0;   state.algo._vk=_vk;
   v.innerHTML=`<div class="av-wrap">${head}<div class="av-scroll">${crypto?cryptoStatusBar():algoStatusBar()}${crypto?'':studioScopeBar()}${body}</div></div>`;
+  _scEl.scrollTop=_sy;
   v.querySelectorAll('[data-algomkt]').forEach(b=>b.onclick=()=>setMarket(b.dataset.algomkt));
   v.querySelectorAll('[data-algoview]').forEach(b=>b.onclick=()=>{state.algo.view=b.dataset.algoview;renderAlgo();});
   v.querySelectorAll('[data-algoseg]').forEach(b=>b.onclick=()=>{state.algo.seg=b.dataset.algoseg;renderAlgo();});
@@ -4304,7 +4370,7 @@ function algoCard(a,i,lr,cap){
   const affChip=cap>0?(afford?`<span class="aff-chip ok" title="Your ${inr(cap)} clears the ${inr(a.minCap)} minimum.">✓ Fits your capital</span>`:`<span class="aff-chip no" title="Needs ${inr(a.minCap)} — add ${inr(a.minCap-cap)}.">${icon('lock',10)} +${inr(a.minCap-cap)} needed</span>`):'';
   const chip=lcChip(a);
   const sbadge=validated?'<span class="vbadge ok">Validated</span>':'<span class="vbadge cand">Candidate</span>';
-  const tag=a.bestRegime?(neutral?'<span class="rg-tag">Market-neutral</span>':`<span class="rg-tag">Best in ${a.bestRegime}</span>`):'';
+  const tag=a.bestRegime?(neutral?'<span class="rg-tag">Market-neutral</span>':`<span class="rg-tag">Best in ${esc(a.bestRegime)}</span>`):'';
   let stats;
   if(validated){
     const m=a.sharpe!=null?{l:'OOS Sharpe',v:a.sharpe.toFixed(2),up:a.sharpe>0}:{l:'Return',v:(a.totalRet>=0?'+':'')+a.totalRet+'%',up:a.totalRet>=0};
@@ -5312,13 +5378,8 @@ function algoMonitor(){
   const depCell=(k,lab)=>`<span class="mon-dep-cell"><i>${esc(lab)}</i><b class="num">${inrC(depBrk[k])}</b></span>`;
   const depStrip=`<div class="mon-dep"><span class="mb-lead">Deployed now</span>${depCell('equity','Equity')}${depCell('options','Options')}${depCell('futures','Futures')}<span class="mon-dep-cell mon-dep-all"><i>Total</i><b class="num">${inrC(totalDep)}</b></span><span class="mon-dep-hint">open notional · F&amp;O at notional, not margin</span></div>`;
   // sort + filter across the deployed (paper) strategies — default: top P&L first
-  const mSort=state.algo.monSort||'pnl', mFilt=state.algo.monFilter||'all';
-  const MON_SORTS=[['pnl','Top P&L'],['unreal','Unrealised'],['deployed','Deployed'],['open','Open'],['name','Name']];
-  const MON_FILTS=[['all','All'],['profit','In profit'],['loss','Losing'],['open','Open now']];
-  const filtFn=({all:()=>true,profit:a=>(a.paperPnl||0)>0,loss:a=>(a.paperPnl||0)<0,open:a=>(a.openPositions||0)>0})[mFilt]||(()=>true);
-  const sortFn=({pnl:(a,b)=>(b.paperPnl||0)-(a.paperPnl||0),unreal:(a,b)=>(b.openPnl||0)-(a.openPnl||0),deployed:(a,b)=>algoDeployed(b)-algoDeployed(a),open:(a,b)=>(b.openPositions||0)-(a.openPositions||0),name:(a,b)=>String(a.name||'').localeCompare(String(b.name||''))})[mSort]||((a,b)=>(b.paperPnl||0)-(a.paperPnl||0));
-  const sortedRun=paperRun.filter(filtFn).sort(sortFn);
-  const ctrlBar=`<div class="mon-ctrl"><div class="mon-seg"><span class="msc-lead">Sort</span>${MON_SORTS.map(([k,l])=>`<button class="msc-chip${mSort===k?' on':''}" data-monsort="${k}">${esc(l)}</button>`).join('')}</div><div class="mon-seg"><span class="msc-lead">Show</span>${MON_FILTS.map(([k,l])=>`<button class="msc-chip${mFilt===k?' on':''}" data-monfilter="${k}">${esc(l)}</button>`).join('')}<span class="msc-count">${sortedRun.length} of ${paperRun.length}</span></div></div>`;
+  paperRun.forEach(a=>a._dep=algoDeployed(a));   // stamp deployed for the Deployed sort
+  const {sorted:sortedRun, bar:ctrlBar}=monSortFilter(paperRun);
   const me=state.algo.monExpand=state.algo.monExpand||{};
   const rows=sortedRun.map(a=>{const i=ALGOS.indexOf(a);
     const open=!!me[a.id];
@@ -6345,6 +6406,10 @@ function init(){
   loadMarket(); setInterval(loadMarket, 30000);   // 100% real Kite market data (funds, regime, VIX, breadth)
   setInterval(()=>{ loadTicks();                  // real-time prices via Kite WebSocket (watchlist + chart)
     loadTape();                                   // real-time index tape (WS-fed) — patched in place, no scroll reset
+    // desk movers/P&L/heatmap are live-data cards but the 30s cascade gate skips them between
+    // structural changes → refresh them on the tick ONLY when the desk is the visible center view
+    // (localised rebuild, not the whole screen, so no global flicker).
+    if(BOT.live && typeof renderDeskView==='function' && ((typeof isDesk==='function'&&isDesk()) || (typeof isCenterTakeover==='function'&&isCenterTakeover()))) renderDeskView();
     if(BOT.live && document.querySelector('.wg-card[data-wkey="depth"]')) loadDepth(state.selected||'RELIANCE');
   }, 2000);
   // live crypto prices (Binance public, real) — drives the global rolling tape whenever Crypto is selected (5s poll)
@@ -6356,7 +6421,8 @@ function init(){
     if(v==='monitor'||v==='positions') loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&(state.algo.view==='monitor'||state.algo.view==='positions')) renderAlgo(); });
     else if(v==='risk') loadCryptoRisk().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='risk') renderAlgo(); });
     else if(v==='forward'||v==='accuracy') loadCryptoFwd().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&(state.algo.view==='forward'||state.algo.view==='accuracy')) renderAlgo(); });
-    else if(v==='analytics') loadCryptoAn().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='analytics') renderAlgo(); }); }, 7000);
+    else if(v==='analytics') loadCryptoAn().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='analytics') renderAlgo(); });
+    else if(v==='accuracy') loadReadiness('crypto').then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='accuracy') renderAlgo(); }); }, 7000);
   // fast real-time poll (2s): refresh live paper P&L + positions across ALL live algo
   // views — Marketplace, Leaderboard, Forward Test, Monitor. (Backtest is static, skip it.)
   // Safe re-render: skips the tick while a field is focused (no clobbering the capital box)
