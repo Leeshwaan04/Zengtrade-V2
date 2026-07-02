@@ -49,6 +49,7 @@ from bot.xs import CrossSectionalPaperEngine
 from bot.opportunity import OpportunityPaperEngine, MoonshotCompounderEngine
 from bot.crypto_data import CryptoDataFeed
 from bot.crypto_perps import CryptoPerpEngine
+from bot.crypto_options import CryptoOptionsEngine
 from bot.governor import GOVERNOR
 from bot.rebalancer import REBALANCER
 
@@ -138,6 +139,10 @@ def build_crypto_engines(data):
         "perp_trend_eth": CryptoPerpEngine("perp_trend_eth", "trend", "ETHUSDT", PAPER_CAPITAL, trend_period=20),
         "perp_funding": CryptoPerpEngine("perp_funding", "funding", "BTCUSDT", PAPER_CAPITAL),
         "perp_funding_eth": CryptoPerpEngine("perp_funding_eth", "funding", "ETHUSDT", PAPER_CAPITAL),
+        # ---- OPTIONS (Binance USDT-settled): regime-gated premium selling on BTC/ETH weeklies ----
+        "cx_strangle": CryptoOptionsEngine("cx_strangle", "strangle", "BTCUSDT", PAPER_CAPITAL),
+        "cx_strangle_eth": CryptoOptionsEngine("cx_strangle_eth", "strangle", "ETHUSDT", PAPER_CAPITAL),
+        "cx_condor": CryptoOptionsEngine("cx_condor", "condor", "BTCUSDT", PAPER_CAPITAL),
     }
     pairs = PairsPaperEngine(PAIRS, data, PAPER_CAPITAL)
     return engines, pairs
@@ -147,7 +152,9 @@ def instr_of(e) -> str:
     """Instrument class of an engine — drives the Spot/Perps/Options bifurcation in the UI."""
     if isinstance(e, CryptoPerpEngine):
         return "perps"
-    return "spot"   # LongOnly/XS/Opportunity/Moonshot/Pairs all trade spot majors (options added in Phase 2)
+    if isinstance(e, CryptoOptionsEngine):
+        return "options"
+    return "spot"   # LongOnly/XS/Opportunity/Moonshot/Pairs all trade spot majors
 
 
 def crypto_regime(data) -> str:

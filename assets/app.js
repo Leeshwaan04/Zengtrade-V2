@@ -3776,6 +3776,7 @@ function cryptoMonitor(){
   ]);
   const rows=scoped.map(s=>{
     const chips=(s.positions||[]).map(p=>{
+      if(p.credit!=null) return `<span class="cxm-chip ${cls(p.pnl)}">${esc(p.sym||'')}${p.pnl!=null?` <i>${cxMoney(p.pnl)}</i>`:` <i>cr ${cxMoney(p.credit)}</i>`}</span>`;
       if(p.side!=null) return `<span class="cxm-chip ${cls(p.pnl)}">${p.side<0?'▼':'▲'} ${esc((p.sym||'').replace('USDT',''))}${p.pnl!=null?` <i>${cxMoney(p.pnl)}</i>`:''}</span>`;
       if(p.qty!=null) return `<span class="cxm-chip ${cls(p.pnl)}">${esc((p.sym||'').replace('USDT',''))} <i>${pct(p.pnlPct)}</i></span>`;
       if(p.spread!=null) return `<span class="cxm-chip">${esc((p.sym||'').replace(/USDT/g,''))} ${p.spread>0?'L':'S'}</span>`;

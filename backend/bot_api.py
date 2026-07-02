@@ -1850,6 +1850,8 @@ _CRYPTO_NAMES = {
     "opportunity": "Opportunity Engine", "moonshot": "Moonshot Compounder", "pairs": "Stat-Arb Pairs",
     "perp_trend": "Perp Trend (BTC)", "perp_trend_eth": "Perp Trend (ETH)",
     "perp_funding": "Funding Carry (BTC)", "perp_funding_eth": "Funding Carry (ETH)",
+    "cx_strangle": "Short Strangle (BTC)", "cx_strangle_eth": "Short Strangle (ETH)",
+    "cx_condor": "Iron Condor (BTC)",
 }
 
 
@@ -1894,13 +1896,18 @@ def crypto_monitor_payload() -> dict:
                 if p.get("pos"):
                     positions.append({"sym": n, "spread": p.get("pos")})
         elif "openMark" in v:
-            # self-marker (perps/options): trust the engine's openMark (handles side + funding accrual)
+            # self-marker (perps/options): trust the engine's openMark (handles side + funding + intrinsic)
             unreal = round(v.get("openMark", 0.0), 2)
             plist = list((v.get("positions") or {}).items())
             for i, (sym, p) in enumerate(plist):
-                positions.append({"sym": sym, "qty": p.get("qty", 0), "side": p.get("side", 1),
-                                  "entry": round(p.get("entry", 0) or 0, 4),
-                                  "pnl": unreal if len(plist) == 1 else None})
+                if "credit" in p:      # options structure — show its label + collected credit
+                    positions.append({"sym": p.get("label", sym), "credit": round(p.get("credit", 0), 2),
+                                      "contracts": p.get("contracts", 1),
+                                      "pnl": unreal if len(plist) == 1 else None})
+                else:                  # perps — directional single leg
+                    positions.append({"sym": sym, "qty": p.get("qty", 0), "side": p.get("side", 1),
+                                      "entry": round(p.get("entry", 0) or 0, 4),
+                                      "pnl": unreal if len(plist) == 1 else None})
         else:
             for sym, p in (v.get("positions") or {}).items():
                 entry = p.get("entry", 0) or 0
