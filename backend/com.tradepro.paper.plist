@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Indian paper harness as a supervised service, via a token-gated launcher (run_paper_guarded.sh)
+  so it NEVER crash-loops when the daily Kite token is stale — it waits and self-recovers after the
+  morning login. Pairs with com.tradepro.kite-login (auto-login) + a manual login as fallback.
+  Install:   cp com.tradepro.paper.plist ~/Library/LaunchAgents/ && launchctl load ~/Library/LaunchAgents/com.tradepro.paper.plist
+  Uninstall: launchctl unload ~/Library/LaunchAgents/com.tradepro.paper.plist
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.tradepro.paper</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/sumitbagewadi/kite-mean-reversion-bot/run_paper_guarded.sh</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>/Users/sumitbagewadi/kite-mean-reversion-bot</string>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>30</integer>
+  <key>StandardOutPath</key>
+  <string>/Users/sumitbagewadi/kite-mean-reversion-bot/paper_run.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/sumitbagewadi/kite-mean-reversion-bot/paper_run.log</string>
+</dict>
+</plist>

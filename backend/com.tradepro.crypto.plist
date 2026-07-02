@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  24/7 crypto paper harness as a supervised service. No Kite token needed (Binance public data),
+  so this is truly hands-off: auto-starts on login, auto-restarts on crash, resumes from
+  crypto_state.json. (A sleeping Mac still pauses it; it resumes on wake.)
+  Install:   cp com.tradepro.crypto.plist ~/Library/LaunchAgents/ && launchctl load ~/Library/LaunchAgents/com.tradepro.crypto.plist
+  Uninstall: launchctl unload ~/Library/LaunchAgents/com.tradepro.crypto.plist
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.tradepro.crypto</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Library/Frameworks/Python.framework/Versions/3.13/bin/python3</string>
+    <string>/Users/sumitbagewadi/kite-mean-reversion-bot/paper_trade_crypto.py</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>/Users/sumitbagewadi/kite-mean-reversion-bot</string>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>15</integer>
+  <key>StandardOutPath</key>
+  <string>/Users/sumitbagewadi/kite-mean-reversion-bot/crypto_run.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/sumitbagewadi/kite-mean-reversion-bot/crypto_run.log</string>
+</dict>
+</plist>

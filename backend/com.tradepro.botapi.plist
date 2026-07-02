@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Dashboard API (:8756) as a supervised service — auto-starts on login, auto-restarts on crash.
+  Install:   cp com.tradepro.botapi.plist ~/Library/LaunchAgents/ && launchctl load ~/Library/LaunchAgents/com.tradepro.botapi.plist
+  Uninstall: launchctl unload ~/Library/LaunchAgents/com.tradepro.botapi.plist
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.tradepro.botapi</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Library/Frameworks/Python.framework/Versions/3.13/bin/python3</string>
+    <string>/Users/sumitbagewadi/kite-mean-reversion-bot/bot_api.py</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>/Users/sumitbagewadi/kite-mean-reversion-bot</string>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>10</integer>
+  <key>StandardOutPath</key>
+  <string>/Users/sumitbagewadi/kite-mean-reversion-bot/bot_api.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/sumitbagewadi/kite-mean-reversion-bot/bot_api.log</string>
+</dict>
+</plist>
