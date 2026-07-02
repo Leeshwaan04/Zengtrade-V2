@@ -372,7 +372,8 @@ function setMarket(m){
   state.algo.market=m; saveState();
   renderHdrMarket();
   renderTopIndex();                                   // swap the rolling tape (Indian ⇄ Crypto)
-  if(m==='crypto') loadCrypto().then(()=>{ if(state.algo.market==='crypto'){ patchCryptoTape(); if(isAlgo()) renderAlgo(); } });
+  if(m==='crypto'){ loadCrypto().then(()=>{ if(state.algo.market==='crypto'){ patchCryptoTape(); if(isAlgo()) renderAlgo(); } }); connectCryptoWS(); }
+  else disconnectCryptoWS();                            // leave crypto → tear down the socket
   if(isAlgo()) renderAlgo();                           // re-scope the Algo Studio if it's open
 }
 function renderTopIndex(){
@@ -3720,6 +3721,39 @@ async function loadCrypto(){
   CRYPTO.loaded=true; CRYPTO.busy=false;
 }
 function cryptoFmt(p){ if(!isFinite(p)) return '—'; const dec=p>=1?2:p>=0.01?4:6; return '$'+p.toLocaleString('en-US',{minimumFractionDigits:Math.min(dec,2),maximumFractionDigits:dec}); }
+/* ---- Binance WebSocket: sub-second tape. Free public data mirror (data-stream.binance.vision — the wss
+   twin of data-api, not geo-fenced, no key). One combined connection streams each coin's 24h ticker
+   (~1/s per symbol) straight into CRYPTO.quotes → the tape ticks live. The 5s REST poll stays as an
+   automatic fallback (only fires when the socket isn't delivering). ---- */
+const CRYPTO_WS='wss://data-stream.binance.vision';
+const CWS={ws:null,url:'',on:false,lastMsg:0,backoff:1000,reT:null,raf:0};
+function cryptoWsUrl(){ return CRYPTO_WS+'/stream?streams='+CRYPTO_UNIVERSE.map(c=>c.sym.toLowerCase()+'@ticker').join('/'); }
+// Coalesce tape DOM patches to one per animation frame (the universe pushes ~10 msgs/s combined).
+function scheduleTapePatch(){ if(CWS.raf) return; CWS.raf=requestAnimationFrame(()=>{ CWS.raf=0; if(state.algo&&state.algo.market==='crypto') patchCryptoTape(); }); }
+function connectCryptoWS(){
+  if(typeof WebSocket==='undefined') return;
+  if(!(state.algo&&state.algo.market==='crypto')) return;
+  const url=cryptoWsUrl();
+  if(CWS.ws && CWS.url===url && (CWS.ws.readyState===0||CWS.ws.readyState===1)) return;   // already connecting/open to this set
+  disconnectCryptoWS();
+  CWS.url=url;
+  try{
+    const ws=new WebSocket(url);
+    ws.onopen=()=>{ CWS.on=true; CWS.backoff=1000; };
+    ws.onmessage=ev=>{ try{ const d=JSON.parse(ev.data).data; if(d&&d.s){ const ltp=parseFloat(d.c), chg=parseFloat(d.P);
+      if(isFinite(ltp)){ (CRYPTO.quotes||(CRYPTO.quotes={}))[d.s]={ltp,chg:isFinite(chg)?chg:0};
+        CRYPTO.live=true; CRYPTO.error=false; CRYPTO.loaded=true; CRYPTO.t=Date.now(); CWS.lastMsg=Date.now(); scheduleTapePatch(); } } }catch(e){} };
+    ws.onerror=()=>{ CWS.on=false; };
+    ws.onclose=()=>{ CWS.on=false; CWS.ws=null; scheduleCryptoWSReconnect(); };   // Binance drops the socket every 24h → auto-reconnect
+    CWS.ws=ws;
+  }catch(e){ scheduleCryptoWSReconnect(); }
+}
+function disconnectCryptoWS(){ if(CWS.reT){clearTimeout(CWS.reT);CWS.reT=null;} if(CWS.ws){ try{CWS.ws.onclose=null;CWS.ws.close();}catch(e){} } CWS.ws=null; CWS.on=false; CWS.url=''; }
+function scheduleCryptoWSReconnect(){
+  if(!(state.algo&&state.algo.market==='crypto')||CWS.reT) return;
+  const delay=Math.min(CWS.backoff,15000); CWS.backoff=Math.min(CWS.backoff*2,15000);
+  CWS.reT=setTimeout(()=>{ CWS.reT=null; connectCryptoWS(); },delay);
+}
 // ---- crypto views ----
 function cryptoStatusBar(){
   const live=CRYPTO.live, t=CRYPTO.t?new Date(CRYPTO.t).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'';
@@ -6449,7 +6483,7 @@ function init(){
   applyRegime(startMode==='manual'&&saved&&saved.regime?saved.regime:'bull');
   recompute({silent:true});
   renderHdrMarket();                                // header Indian⇄Crypto toggle (left of search)
-  if(state.algo&&state.algo.market==='crypto'){ renderTopIndex(); loadCrypto().then(()=>{ if(state.algo.market==='crypto'){ patchCryptoTape(); applyTickerSpeed(); } }); }
+  if(state.algo&&state.algo.market==='crypto'){ renderTopIndex(); loadCrypto().then(()=>{ if(state.algo.market==='crypto'){ patchCryptoTape(); applyTickerSpeed(); } }); connectCryptoWS(); }
   tapeLoop();
   loadMarket(); setInterval(loadMarket, 30000);   // 100% real Kite market data (funds, regime, VIX, breadth)
   setInterval(()=>{ loadTicks();                  // real-time prices via Kite WebSocket (watchlist + chart)
@@ -6460,8 +6494,10 @@ function init(){
     if(BOT.live && typeof renderDeskView==='function' && ((typeof isDesk==='function'&&isDesk()) || (typeof isCenterTakeover==='function'&&isCenterTakeover()))) renderDeskView();
     if(BOT.live && document.querySelector('.wg-card[data-wkey="depth"]')) loadDepth(state.selected||'RELIANCE');
   }, 2000);
-  // live crypto prices (Binance public, real) — drives the global rolling tape whenever Crypto is selected (5s poll)
-  setInterval(()=>{ if(state.algo && state.algo.market==='crypto' && document.visibilityState==='visible')
+  // live crypto prices — the WebSocket drives the tape sub-second; this 5s REST poll is the FALLBACK,
+  // firing only when the socket isn't delivering (first paint, dropped socket, WS unsupported).
+  setInterval(()=>{ if(!(state.algo && state.algo.market==='crypto' && document.visibilityState==='visible')) return;
+    if(CWS.on && Date.now()-CWS.lastMsg<8000) return;   // socket is live → skip the REST poll
     loadCrypto().then(()=>{ if(state.algo&&state.algo.market==='crypto') patchCryptoTape(); }); }, 5000);
   // Instant refresh the moment the tab regains focus. Background tabs throttle setInterval (Chrome caps
   // hidden-tab timers to ~1/min), so on return the crypto tape/book can look frozen until the next tick —
@@ -6469,6 +6505,7 @@ function init(){
   const refreshVisible=()=>{
     if(document.visibilityState!=='visible') return;
     if(state.algo && state.algo.market==='crypto'){
+      connectCryptoWS();   // ensure the price socket is up again after the tab was hidden
       loadCrypto().then(()=>{ if(state.algo.market==='crypto') patchCryptoTape(); });
       if(typeof isAlgo==='function' && isAlgo()){ const v=state.algo.view;
         if((v==='monitor'||v==='positions')&&typeof loadCryptoMonitor==='function') loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); });

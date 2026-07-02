@@ -1435,6 +1435,16 @@ html[data-persona="investor"] .wg-body{gap:8px}
 .ss-l{font-size:10px;color:var(--slate);text-transform:uppercase;letter-spacing:.3px;font-weight:600}
 .ss-v{font-size:17px;font-weight:700;letter-spacing:-.4px}
 .ss-s{font-size:10.5px;color:var(--slate-2)}
+/* Unified P&L: compact inline Realised/Unrealised breakdown (pnlCompact) so a single Net number is never ambiguous */
+.pnl-net{font-weight:800}
+.pnl-ru{margin-left:7px;font-size:10.5px;color:var(--slate-2);white-space:nowrap}
+.pnl-ru i{font-style:normal;font-weight:600}
+.pnl-ru .up{color:var(--up)}.pnl-ru .down{color:var(--down)}
+/* header book-P&L chip: Net by default, Realised·Unrealised on hover (pnl-pop) */
+.pnl-chip{position:relative;cursor:default}
+.pnl-pop{position:absolute;top:calc(100% + 6px);right:0;z-index:40;display:none;background:var(--surface);border:1px solid var(--line-2);border-radius:10px;padding:8px 11px;box-shadow:0 8px 24px rgba(0,0,0,.28);white-space:nowrap;gap:10px}
+.pnl-chip:hover .pnl-pop,.pnl-chip:focus-within .pnl-pop{display:flex}
+.pnl-pop .he-stat{gap:1px}
 
 .sec-empty{text-align:center;padding:34px 18px;display:flex;flex-direction:column;align-items:center;gap:7px;
   background:var(--surface);border:1px dashed var(--line-2);border-radius:14px}
