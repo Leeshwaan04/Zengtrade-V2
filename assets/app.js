@@ -3892,10 +3892,43 @@ function cryptoScopeBar(){
     const dep=c.n?`<span class="lii-dep">Deployed <b class="num">${cxAbs(c.book)}</b>${pool?` · ${(c.book/pool*100).toFixed(1)}% of pool`:''}</span>`:'';
     return `<button class="lib-instr-tab${cur===id?' on':''}" data-cinstr="${id}" role="tab" aria-selected="${cur===id}">
       <span class="lii-top">${icon(ic,15)}<b>${lab}</b><i class="lii-n">${c.n}</i></span>
-      <span class="lii-desc">${c.n?esc(desc)+' · '+cxMoney(c.pnl):esc(desc)+' · coming online'}</span>${dep}</button>`; }).join('');
+      <span class="lii-desc">${c.n?esc(desc)+' · <span data-cxseg="'+id+'">'+cxMoney(c.pnl)+'</span>':esc(desc)+' · coming online'}</span>${dep}</button>`; }).join('');
   const totBook=by.spot.book+by.perps.book+by.options.book;
   const note=totBook>0?`<div class="av-scope-note">${icon('shield',12)}<span><b>Deployed</b> = capital-at-risk against the ${pool?cxAbs(pool)+' ':''}governed pool${pool?` (≈${(totBook/pool*100).toFixed(1)}% total exposure — matches the Risk Score)`:''}. Perps book only <b>20% margin</b>; options premium-selling ties up <b>~no notional</b>, so their margin/tail risk isn't reflected here.</span></div>`:'';
   return `<div class="av-scope"><div class="lib-instr" role="tablist" aria-label="Crypto instrument class">${bar}</div>${note}</div>`;
+}
+// shared chip renderer (used by full render AND the in-place patch) — one source of truth
+function cxChips(positions){ return (positions||[]).map(p=>{
+    if(p.credit!=null) return `<span class="cxm-chip ${cls(p.pnl)}">${esc(p.sym||'')}${p.pnl!=null?` <i>${cxMoney(p.pnl)}</i>`:` <i>cr ${cxMoney(p.credit)}</i>`}</span>`;
+    if(p.side!=null) return `<span class="cxm-chip ${cls(p.pnl)}">${p.side<0?'▼':'▲'} ${esc((p.sym||'').replace('USDT',''))}${p.pnl!=null?` <i>${cxMoney(p.pnl)}</i>`:''}</span>`;
+    if(p.qty!=null) return `<span class="cxm-chip ${cls(p.pnl)}">${esc((p.sym||'').replace('USDT',''))} <i>${pct(p.pnlPct)}</i></span>`;
+    if(p.spread!=null) return `<span class="cxm-chip">${esc((p.sym||'').replace(/USDT/g,''))} ${p.spread>0?'L':'S'}</span>`;
+    return ''; }).join(''); }
+// structural signature — a full re-render happens ONLY when this changes (position opens/closes,
+// scope/sort/filter/regime changes). Otherwise the 7s poll patches numbers in place → no flicker.
+function cryptoMonSig(){ const d=CRYPTOMON.data; if(!d||!d.strategies) return 'x'; const cur=state.algo.cinstr||'spot';
+  const scoped=d.strategies.filter(s=>(s.instr||'spot')===cur);
+  return [cur,d.running,CRYPTOMON.err?'e':'',d.regime||'',state.algo.monSort||'',state.algo.monFilter||'',
+    scoped.map(s=>s.id+':'+(s.openPositions||0)+':'+((s.positions||[]).length)).join(',')].join('|'); }
+function cxSetNum(el,txt,tone){ if(!el) return; if(el.textContent!==txt) el.textContent=txt; el.classList.remove('up','down'); if(tone) el.classList.add(tone); }
+// patch live numbers in place — no innerHTML rebuild of the tab, so no flicker
+function patchCryptoMon(){ const d=CRYPTOMON.data; if(!d||!d.strategies) return;
+  const cur=state.algo.cinstr||'spot';
+  const scoped=d.strategies.filter(s=>(s.instr||'spot')===cur);
+  const t=scoped.reduce((a,s)=>{a.realised+=s.realisedPnl||0;a.unreal+=s.openPnl||0;a.pnl+=s.paperPnl||0;a.open+=s.openPositions||0;return a;},{realised:0,unreal:0,pnl:0,open:0});
+  const tn=v=>v>0?'up':(v<0?'down':'');
+  cxSetNum(document.querySelector('[data-live="cxRealised"]'),cxMoney(t.realised),tn(t.realised));
+  cxSetNum(document.querySelector('[data-live="cxUnreal"]'),cxMoney(t.unreal),tn(t.unreal));
+  cxSetNum(document.querySelector('[data-live="cxClsPnl"]'),cxMoney(t.pnl),tn(t.pnl));
+  cxSetNum(document.querySelector('[data-live="cxOpen"]'),String(t.open||0),null);
+  const esc1=id=>(window.CSS&&CSS.escape)?CSS.escape(id):id;
+  scoped.forEach(s=>{ const row=document.querySelector('.cxm-row[data-cxrow="'+esc1(s.id)+'"]'); if(!row) return;
+    cxSetNum(row.querySelector('.cxm-open'),String(s.openPositions||0),null);
+    cxSetNum(row.querySelector('.cxm-real'),cxMoney(s.realisedPnl),tn(s.realisedPnl));
+    cxSetNum(row.querySelector('.cxm-unreal'),cxMoney(s.openPnl),tn(s.openPnl));
+    const tot=row.querySelector('.cxm-total'); if(tot){ tot.classList.remove('up','down'); const tt=tn(s.paperPnl); if(tt)tot.classList.add(tt); const h='<b>'+cxMoney(s.paperPnl)+'</b>'; if(tot.innerHTML!==h) tot.innerHTML=h; }
+    const posC=row.querySelector('.cxm-pos'); if(posC){ const h=cxChips(s.positions); if(posC.innerHTML!==h) posC.innerHTML=h; }
+  });
 }
 function cryptoMonitor(){
   const d=CRYPTOMON.data;
@@ -3913,32 +3946,26 @@ function cryptoMonitor(){
   if(cur==='options' && !scoped.length){
     return note+cryptoScopeBar()+secEmpty('layers','Crypto options — coming online','The crypto options desk (USDT-settled premium selling on Binance, regime-gated like the Indian iron-condor/strangle) is being wired next. Spot & Perpetuals are live now — switch the toggle above.'); }
   const stat=secStats([
-    {l:'Realised',v:cxMoney(t.realised),s:'booked',tone:t.realised>0?'up':(t.realised<0?'down':'')},
-    {l:'Unrealised',v:cxMoney(t.unreal),s:'open · live',tone:t.unreal>0?'up':(t.unreal<0?'down':'')},
-    {l:'Net',v:cxMoney(t.pnl),s:'realised + unrealised',tone:t.pnl>0?'up':(t.pnl<0?'down':'')},
-    {l:'Open positions',v:String(t.open||0),s:esc(clsLabel)+' strategies'},
+    {l:'Realised',v:cxMoney(t.realised),s:'booked',tone:t.realised>0?'up':(t.realised<0?'down':''),id:'cxRealised'},
+    {l:'Unrealised',v:cxMoney(t.unreal),s:'open · live',tone:t.unreal>0?'up':(t.unreal<0?'down':''),id:'cxUnreal'},
+    {l:'Net',v:cxMoney(t.pnl),s:'realised + unrealised',tone:t.pnl>0?'up':(t.pnl<0?'down':''),id:'cxClsPnl'},
+    {l:'Open positions',v:String(t.open||0),s:esc(clsLabel)+' strategies',id:'cxOpen'},
     {l:'Regime',v:esc(d.regime||'—'),s:'BTC-led'},
     {l:'Risk score',v:g.score==null?'—':String(g.score),s:g.exposurePct!=null?`${g.exposurePct}% exposure`:'governor'},
   ]);
   scoped.forEach(s=>s._dep=cryptoDeployed(s));   // stamp deployed for the Deployed sort
   const {sorted:sortedScoped, bar:ctrlBar}=monSortFilter(scoped);
   const rows=sortedScoped.map(s=>{
-    const chips=(s.positions||[]).map(p=>{
-      if(p.credit!=null) return `<span class="cxm-chip ${cls(p.pnl)}">${esc(p.sym||'')}${p.pnl!=null?` <i>${cxMoney(p.pnl)}</i>`:` <i>cr ${cxMoney(p.credit)}</i>`}</span>`;
-      if(p.side!=null) return `<span class="cxm-chip ${cls(p.pnl)}">${p.side<0?'▼':'▲'} ${esc((p.sym||'').replace('USDT',''))}${p.pnl!=null?` <i>${cxMoney(p.pnl)}</i>`:''}</span>`;
-      if(p.qty!=null) return `<span class="cxm-chip ${cls(p.pnl)}">${esc((p.sym||'').replace('USDT',''))} <i>${pct(p.pnlPct)}</i></span>`;
-      if(p.spread!=null) return `<span class="cxm-chip">${esc((p.sym||'').replace(/USDT/g,''))} ${p.spread>0?'L':'S'}</span>`;
-      return ''; }).join('');
-    const pos=chips?`<div class="cxm-pos">${chips}</div>`:'';
-    return `<div class="cxm-row"><div class="cxm-name"><b>${esc(s.name)}</b>${pos}</div>
-      <span class="cxm-n num">${s.openPositions||0}</span>
-      <span class="cxm-n num ${cls(s.realisedPnl)}">${cxMoney(s.realisedPnl)}</span>
-      <span class="cxm-n num ${cls(s.openPnl)}">${cxMoney(s.openPnl)}</span>
-      <span class="cxm-n num ${cls(s.paperPnl)}"><b>${cxMoney(s.paperPnl)}</b></span></div>`;
+    return `<div class="cxm-row" data-cxrow="${esc(s.id)}"><div class="cxm-name"><b>${esc(s.name)}</b><div class="cxm-pos">${cxChips(s.positions)}</div></div>
+      <span class="cxm-n num cxm-open">${s.openPositions||0}</span>
+      <span class="cxm-n num cxm-real ${cls(s.realisedPnl)}">${cxMoney(s.realisedPnl)}</span>
+      <span class="cxm-n num cxm-unreal ${cls(s.openPnl)}">${cxMoney(s.openPnl)}</span>
+      <span class="cxm-n num cxm-total ${cls(s.paperPnl)}"><b>${cxMoney(s.paperPnl)}</b></span></div>`;
   }).join('');
   const head=`<div class="cxm-row cxm-head"><div class="cxm-name">Strategy</div><span class="cxm-n">Open</span><span class="cxm-n">Realised</span><span class="cxm-n">Unreal.</span><span class="cxm-n">Net</span></div>`;
   const act=scoped.filter(s=>s.openPositions>0||s.realisedPnl!==0).length;
   const listHtml=rows||`<div class="mon-exp-empty" style="padding:14px">No strategies match this filter — <button class="mon-clearfilt" data-monfilter="all">show all</button>.</div>`;
+  CRYPTOMON._sig=cryptoMonSig();   // remember the structure so the next poll can patch-in-place (no flicker)
   return note+cryptoScopeBar()+stat+ctrlBar+`<div class="cxm-tbl-h">${icon('activity',13)}<b>${esc(clsLabel)} strategies</b><span>${act} active · ${scoped.length} running${upd?` · updated ${upd}`:''}</span></div><div class="cxm-tbl">${head}${listHtml}</div>`;
 }
 // ---- crypto Risk Governor (same control layer as the Indian book) ----
@@ -6541,7 +6568,8 @@ function init(){
       connectCryptoWS();   // ensure the price socket is up again after the tab was hidden
       loadCrypto().then(()=>{ if(state.algo.market==='crypto') patchCryptoTape(); });
       if(typeof isAlgo==='function' && isAlgo()){ const v=state.algo.view;
-        if((v==='monitor'||v==='positions')&&typeof loadCryptoMonitor==='function') loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); });
+        if((v==='monitor'||v==='positions')&&typeof loadCryptoMonitor==='function') loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&(state.algo.view==='monitor'||state.algo.view==='positions')){
+          if(document.querySelector('.cxm-tbl') && CRYPTOMON._sig===cryptoMonSig()) patchCryptoMon(); else renderAlgo(); } });
         else if(v==='risk'&&typeof loadCryptoRisk==='function') loadCryptoRisk().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); }
     } else if(BOT.live){ loadTicks(); }   // Indian book: pull fresh ticks on return too
   };
@@ -6550,7 +6578,10 @@ function init(){
   // live crypto paper book (7s poll) — refresh the Monitor/Positions/Risk while the studio is scoped to Crypto
   setInterval(()=>{ if(!(isAlgo() && state.algo && state.algo.market==='crypto' && document.visibilityState==='visible')) return;
     const v=state.algo.view;
-    if(v==='monitor'||v==='positions') loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&(state.algo.view==='monitor'||state.algo.view==='positions')) renderAlgo(); });
+    if(v==='monitor'||v==='positions') loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&(state.algo.view==='monitor'||state.algo.view==='positions')){
+      // steady state → patch the ticking numbers in place (NO rebuild, no flicker); only full-render on a structural change
+      if(document.querySelector('.cxm-tbl') && CRYPTOMON._sig===cryptoMonSig()) patchCryptoMon(); else renderAlgo();
+    } });
     else if(v==='risk') loadCryptoRisk().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='risk') renderAlgo(); });
     else if(v==='forward'||v==='accuracy') loadCryptoFwd().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&(state.algo.view==='forward'||state.algo.view==='accuracy')) renderAlgo(); });
     else if(v==='analytics') loadCryptoAn().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='analytics') renderAlgo(); });
