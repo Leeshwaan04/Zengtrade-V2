@@ -25,6 +25,10 @@ STRATEGY_STYLE = {
     "orb": "Breakout", "vwap_rev": "Reversion", "vwap_mom": "Trend", "ema_scalp": "Trend",
     "bb_breakout": "Breakout", "opportunity": "Decision", "moonshot": "Moonshot",
     "iron_condor": "Carry", "strangle": "Carry", "pairs": "Relative-value",
+    # Wave-5 active intraday equity bots
+    "st_intraday": "Trend", "vwap_pull": "Trend", "open_drive": "Trend",
+    "relvol_brk": "Breakout", "rsi_intraday": "Reversion",
+    "fut_trend": "Trend", "basis": "Carry",
 }
 
 # styles allowed to take NEW risk per regime (capital-preservation tuned).

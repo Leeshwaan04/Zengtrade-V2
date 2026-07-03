@@ -97,6 +97,41 @@ STRATEGIES = [
         "desc": "Buys an intraday breakout above the upper Bollinger band out of a squeeze, on volume; exits below the mid band or square-off.",
     },
     {
+        "id": "st_intraday", "segment": "cash", "name": "Intraday Supertrend",
+        "cat": "Equity intraday · MIS", "risk": "Aggressive", "minCap": 25000,
+        "product": "MIS", "status": "candidate", "dd": 6.0, "bestRegime": "Bull",
+        "verdict": "Live intraday forward-paper bot (5-min): a fast Supertrend (ATR bands) that rides sustained intraday trends and flips to cash when the trend breaks. Trades actively on any directional day; whipsaws in chop are the main risk. Squares off by close.",
+        "desc": "Goes long while a fast 5-min Supertrend points up; exits when it flips down or at square-off.",
+    },
+    {
+        "id": "vwap_pull", "segment": "cash", "name": "VWAP Pullback",
+        "cat": "Equity intraday · MIS", "risk": "Moderate", "minCap": 25000,
+        "product": "MIS", "status": "candidate", "dd": 5.0, "bestRegime": "Bull",
+        "verdict": "Live intraday forward-paper bot (5-min): on a day trending up (rising session VWAP, price above it), buys the first pullback to the VWAP that bounces — riding strength, the opposite of fading it. Exits on a loss of VWAP or square-off.",
+        "desc": "Buys the dip back to a rising session VWAP in an intraday uptrend; exits below VWAP or at square-off.",
+    },
+    {
+        "id": "open_drive", "segment": "cash", "name": "Opening Drive",
+        "cat": "Equity intraday · MIS", "risk": "Aggressive", "minCap": 25000,
+        "product": "MIS", "status": "candidate", "dd": 6.0, "bestRegime": "High-Vol",
+        "verdict": "Live intraday forward-paper bot (5-min): in the first 30 minutes, if price holds above the day's open and the session VWAP on above-average volume, rides the opening drive — the most liquid, most trending part of the day. Exits on a loss of VWAP or square-off.",
+        "desc": "Rides morning momentum: long in the first 30 min when price holds above the open + VWAP on volume; exits below VWAP or at square-off.",
+    },
+    {
+        "id": "relvol_brk", "segment": "cash", "name": "Relative-Volume Breakout",
+        "cat": "Equity intraday · MIS", "risk": "Aggressive", "minCap": 25000,
+        "product": "MIS", "status": "candidate", "dd": 6.0, "bestRegime": "High-Vol",
+        "verdict": "Live intraday forward-paper bot (5-min): breaks the high of the last several bars ONLY when that bar trades ≥2× its average volume and price is above the session VWAP — the relative-volume gate rejects thin fakeouts. Squares off by close.",
+        "desc": "Long on a 5-min breakout confirmed by a ≥2× relative-volume spike, above VWAP; exits below VWAP or at square-off.",
+    },
+    {
+        "id": "rsi_intraday", "segment": "cash", "name": "Intraday RSI(2)",
+        "cat": "Equity intraday · MIS", "risk": "Moderate", "minCap": 25000,
+        "product": "MIS", "status": "candidate", "dd": 5.0, "bestRegime": "Choppy",
+        "verdict": "Live intraday forward-paper bot (5-min): buys a fast RSI(2) oversold dip only while price is above its intraday EMA20 (a pullback, not a collapse) and ticking back up. Frequent small-edge trades for range days. Exits when RSI recovers, price loses EMA20, or square-off.",
+        "desc": "Buys 5-min RSI(2) oversold bounces in an intraday uptrend; exits on RSI recovery, below EMA20, or square-off.",
+    },
+    {
         "id": "meanrev", "segment": "cash", "name": "Mean Reversion (RSI+BB)",
         "cat": "Equity intraday · MIS", "risk": "Moderate", "minCap": 25000,
         "product": "MIS", "status": "candidate",
@@ -908,6 +943,9 @@ HARNESS_KEYS = {"momentum": "momentum", "meanrev": "mean-rev", "pairs": "pairs",
                 # Wave-4 intraday bots (5-min, session-aware)
                 "orb": "orb", "vwap_rev": "vwap_rev",
                 "vwap_mom": "vwap_mom", "ema_scalp": "ema_scalp", "bb_breakout": "bb_breakout",
+                # Wave-5 active intraday equity bots (5-min, trade frequently)
+                "st_intraday": "st_intraday", "vwap_pull": "vwap_pull", "open_drive": "open_drive",
+                "relvol_brk": "relvol_brk", "rsi_intraday": "rsi_intraday",
                 # Opportunity Engine (decision engine, LongOnly-shaped state)
                 "opportunity": "opportunity",
                 # Wave-3 options bots (self-marking; NOT in SINGLE_LEG_KEYS — multi-leg)
@@ -919,7 +957,8 @@ HARNESS_KEYS = {"momentum": "momentum", "meanrev": "mean-rev", "pairs": "pairs",
 SINGLE_LEG_KEYS = ["momentum", "mean-rev", "rsi2", "macross", "supertrend",
                    "ema_cross", "adx_trend", "bollinger", "zscore", "nr7",
                    "xs_momentum", "lowvol", "orb", "vwap_rev", "opportunity", "moonshot",
-                   "vwap_mom", "ema_scalp", "bb_breakout"]   # LongOnly-shaped engines (pairs is a spread)
+                   "vwap_mom", "ema_scalp", "bb_breakout",
+                   "st_intraday", "vwap_pull", "open_drive", "relvol_brk", "rsi_intraday"]   # LongOnly-shaped engines (pairs is a spread)
 
 # ---- shared LTP cache: fast polling reuses quotes within TTL, so we never hammer Kite ----
 _ltp_cache = {}   # sym -> {"t": ts, "ltp": float, "prevClose": float}

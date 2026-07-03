@@ -29,10 +29,12 @@ from bot import paper_engine as _pe
 from bot.risk import RiskConfig, RiskManager
 from bot.strategy import MeanReversionConfig, MeanReversionStrategy
 from bot.strategy_momentum import MomentumConfig, MomentumStrategy
-from bot.strategies_lib import (RSI2Strategy, MACrossStrategy, SupertrendStrategy,
+from bot.strategies_lib import (RSI2Strategy, MACrossStrategy, SupertrendStrategy, SupertrendConfig,
                                 EMACrossStrategy, ADXTrendStrategy, BollingerRevStrategy,
                                 ZScoreRevStrategy, NR7Strategy, ORBStrategy, VWAPRevStrategy,
-                                VWAPMomStrategy, EMAScalpStrategy, BBBreakStrategy)
+                                VWAPMomStrategy, EMAScalpStrategy, BBBreakStrategy,
+                                VWAPPullbackStrategy, OpeningDriveStrategy, RelVolBreakoutStrategy,
+                                IntradayRSIStrategy)
 from bot.xs import CrossSectionalPaperEngine
 from bot.opportunity import OpportunityPaperEngine, MoonshotCompounderEngine, COMPONENTS as OPP_PRIORS
 from bot.options_paper import OptionsPaperEngine
@@ -118,6 +120,8 @@ CATALOG_ID = {"mean-rev": "meanrev", "momentum": "momentum", "rsi2": "rsi2",
               # Wave-4 intraday bots + Opportunity decision engine
               "orb": "orb", "vwap_rev": "vwap_rev", "opportunity": "opportunity",
               "vwap_mom": "vwap_mom", "ema_scalp": "ema_scalp", "bb_breakout": "bb_breakout",
+              "st_intraday": "st_intraday", "vwap_pull": "vwap_pull", "open_drive": "open_drive",
+              "relvol_brk": "relvol_brk", "rsi_intraday": "rsi_intraday",
               # Wave-3 options forward-paper bots
               "iron_condor": "iron_condor", "strangle": "strangle",
               # index-futures forward-paper bots (engine key == catalog id)
@@ -214,6 +218,22 @@ def build_engines(data):
         "bb_breakout": LongOnlyPaperEngine("bb_breakout", BBBreakStrategy(),
             RiskManager(RiskConfig(capital=PAPER_CAPITAL, product="MIS", stop_atr_mult=1.5, target_atr_mult=2.5)),
             data, UNIVERSE, interval="5minute", history_days=12),
+        # ---- Wave-5 ACTIVE intraday equity bots (5-min, trade frequently → fast evidence) ----
+        "st_intraday": LongOnlyPaperEngine("st_intraday", SupertrendStrategy(SupertrendConfig(period=7, mult=2.0, trend_period=20)),
+            RiskManager(RiskConfig(capital=PAPER_CAPITAL, product="MIS", stop_atr_mult=2.0, target_atr_mult=0.0)),
+            data, UNIVERSE, interval="5minute", history_days=12),
+        "vwap_pull": LongOnlyPaperEngine("vwap_pull", VWAPPullbackStrategy(),
+            RiskManager(RiskConfig(capital=PAPER_CAPITAL, product="MIS", stop_atr_mult=1.5, target_atr_mult=2.5)),
+            data, UNIVERSE, interval="5minute", history_days=12),
+        "open_drive": LongOnlyPaperEngine("open_drive", OpeningDriveStrategy(),
+            RiskManager(RiskConfig(capital=PAPER_CAPITAL, product="MIS", stop_atr_mult=1.5, target_atr_mult=3.0)),
+            data, UNIVERSE, interval="5minute", history_days=12),
+        "relvol_brk": LongOnlyPaperEngine("relvol_brk", RelVolBreakoutStrategy(),
+            RiskManager(RiskConfig(capital=PAPER_CAPITAL, product="MIS", stop_atr_mult=1.5, target_atr_mult=2.5)),
+            data, UNIVERSE, interval="5minute", history_days=12),
+        "rsi_intraday": LongOnlyPaperEngine("rsi_intraday", IntradayRSIStrategy(),
+            RiskManager(RiskConfig(capital=PAPER_CAPITAL, product="MIS", stop_atr_mult=1.5, target_atr_mult=0.0)),
+            data, UNIVERSE, interval="5minute", history_days=12),
         # ---- the Opportunity Engine: high-conviction decision engine over the whole pool ----
         "opportunity": OpportunityPaperEngine("opportunity", PAPER_CAPITAL, data, UNIVERSE,
             top_n=3, min_agree=2, max_positions=3),
@@ -235,7 +255,8 @@ def build_engines(data):
     return engines, pairs
 
 
-INTRADAY = ["mean-rev", "orb", "vwap_rev", "vwap_mom", "ema_scalp", "bb_breakout"]   # 5-min engines: every cycle + daily square-off
+INTRADAY = ["mean-rev", "orb", "vwap_rev", "vwap_mom", "ema_scalp", "bb_breakout",
+            "st_intraday", "vwap_pull", "open_drive", "relvol_brk", "rsi_intraday"]   # 5-min engines: every cycle + daily square-off
 HOLD_CYCLE = ["moonshot",
               # self-marking options + futures: run EVERY cycle so their live unrealised P&L updates
               # (they self-guard entry — one structure/position at a time — and hold across days, no square-off)

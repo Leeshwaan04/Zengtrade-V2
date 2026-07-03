@@ -543,3 +543,169 @@ class BBBreakStrategy:
     def _exit_long(self, row):
         m = row.get("bb_mid")
         return m is not None and not pd.isna(m) and row["close"] < m
+
+
+# ---------------------------------------------------------------- VWAP Pullback (intraday trend-continuation)
+@dataclass
+class VWAPPullbackConfig:
+    near_atr: float = 0.30      # "at VWAP" = within this many ATRs of the session VWAP
+    trend_period: int = 12
+    atr_period: int = 14
+
+
+class VWAPPullbackStrategy:
+    """Intraday trend-continuation: on a day trending UP (rising session VWAP, price above it), buy the
+    first PULLBACK back to the VWAP that bounces — riding strength, not fading it (the opposite of VWAP
+    reversion). Exits when price loses VWAP (trend broke) or at square-off."""
+
+    def __init__(self, cfg: VWAPPullbackConfig | None = None):
+        self.cfg = cfg or VWAPPullbackConfig()
+
+    def compute(self, df):
+        out = df.copy()
+        day = out.index.normalize()
+        tp = (out["high"] + out["low"] + out["close"]) / 3.0
+        out["vwap"] = (tp * out["volume"]).groupby(day).cumsum() / out["volume"].groupby(day).cumsum()
+        out["vwap_prev"] = out["vwap"].groupby(day).shift(1)
+        out["prev_close"] = out["close"].groupby(day).shift(1)
+        out["atr"] = indicators.atr(out["high"], out["low"], out["close"], self.cfg.atr_period)
+        out["bb_lower"] = out["vwap"]
+        return out
+
+    def _entry_long(self, row):
+        v, vp, a, pc = row.get("vwap"), row.get("vwap_prev"), row.get("atr"), row.get("prev_close")
+        if any(x is None or pd.isna(x) for x in (v, vp, a, pc)) or not a:
+            return False
+        rising = v > vp                                     # session trend is up
+        pulled = (row["low"] - v) <= self.cfg.near_atr * a  # dipped to the VWAP
+        holds = row["close"] >= v and row["close"] > pc     # reclaimed VWAP + up-tick
+        return rising and pulled and holds
+
+    def _exit_long(self, row):
+        v = row.get("vwap")
+        return v is not None and not pd.isna(v) and row["close"] < v
+
+
+# ---------------------------------------------------------------- Opening Drive (first-30-min momentum)
+@dataclass
+class OpeningDriveConfig:
+    window: int = 6             # first 6×5min = first 30 minutes = the drive window
+    vol_mult: float = 1.2
+    trend_period: int = 12
+    atr_period: int = 14
+
+
+class OpeningDriveStrategy:
+    """Morning momentum: in the first 30 minutes, if price holds ABOVE the day's open and above the
+    session VWAP on above-average volume, ride the opening drive (the most liquid, most trending part of
+    the day). Exits on a loss of VWAP or at square-off. Only enters in the opening window."""
+
+    def __init__(self, cfg: OpeningDriveConfig | None = None):
+        self.cfg = cfg or OpeningDriveConfig()
+
+    def compute(self, df):
+        out = df.copy()
+        day = out.index.normalize()
+        out["_n"] = out.groupby(day).cumcount()
+        out["day_open"] = out["open"].groupby(day).transform("first")
+        tp = (out["high"] + out["low"] + out["close"]) / 3.0
+        out["vwap"] = (tp * out["volume"]).groupby(day).cumsum() / out["volume"].groupby(day).cumsum()
+        out["vsma"] = indicators.sma(out["volume"], 20)
+        out["atr"] = indicators.atr(out["high"], out["low"], out["close"], self.cfg.atr_period)
+        out["bb_lower"] = out["vwap"]
+        return out
+
+    def _entry_long(self, row):
+        n, o, v, vs = row.get("_n"), row.get("day_open"), row.get("vwap"), row.get("vsma")
+        if any(x is None or pd.isna(x) for x in (o, v, vs)) or n is None:
+            return False
+        if n < 1 or n >= self.cfg.window:                   # only during the opening drive window
+            return False
+        firm_vol = vs > 0 and row["volume"] >= self.cfg.vol_mult * vs
+        return row["close"] > o and row["close"] > v and firm_vol
+
+    def _exit_long(self, row):
+        v = row.get("vwap")
+        return v is not None and not pd.isna(v) and row["close"] < v
+
+
+# ---------------------------------------------------------------- Relative-Volume Breakout (intraday)
+@dataclass
+class RelVolBreakoutConfig:
+    brk_bars: int = 6           # break the high of the last N bars
+    vol_mult: float = 2.0       # require a genuine relative-volume spike
+    trend_period: int = 12
+    atr_period: int = 14
+
+
+class RelVolBreakoutStrategy:
+    """Intraday momentum breakout with a HARD volume filter: go long when price breaks the high of the
+    last N bars AND that bar trades ≥ vol_mult × its 20-bar average volume AND price is above the session
+    VWAP (intraday uptrend). The relative-volume gate rejects the thin fakeouts that bleed naive breakouts."""
+
+    def __init__(self, cfg: RelVolBreakoutConfig | None = None):
+        self.cfg = cfg or RelVolBreakoutConfig()
+
+    def compute(self, df):
+        out = df.copy()
+        day = out.index.normalize()
+        # prior-N-bar high (shifted so the current bar isn't in its own breakout level) — per session
+        out["brk_hi"] = out["high"].groupby(day).transform(lambda s: s.shift(1).rolling(self.cfg.brk_bars, min_periods=self.cfg.brk_bars).max())
+        tp = (out["high"] + out["low"] + out["close"]) / 3.0
+        out["vwap"] = (tp * out["volume"]).groupby(day).cumsum() / out["volume"].groupby(day).cumsum()
+        out["vsma"] = indicators.sma(out["volume"], 20)
+        out["atr"] = indicators.atr(out["high"], out["low"], out["close"], self.cfg.atr_period)
+        out["bb_lower"] = out["vwap"]
+        return out
+
+    def _entry_long(self, row):
+        bh, v, vs = row.get("brk_hi"), row.get("vwap"), row.get("vsma")
+        if any(x is None or pd.isna(x) for x in (bh, v, vs)):
+            return False
+        vol_ok = vs > 0 and row["volume"] >= self.cfg.vol_mult * vs
+        return row["close"] > bh and row["close"] >= v and vol_ok
+
+    def _exit_long(self, row):
+        v = row.get("vwap")
+        return v is not None and not pd.isna(v) and row["close"] < v
+
+
+# ---------------------------------------------------------------- Intraday RSI(2) reversion (5-min)
+@dataclass
+class IntradayRSIConfig:
+    rsi_period: int = 2
+    rsi_buy: float = 10.0
+    rsi_exit: float = 60.0
+    trend_ema: int = 20         # intraday trend filter — don't fade a falling knife
+    trend_period: int = 20
+    atr_period: int = 14
+
+
+class IntradayRSIStrategy:
+    """Fast intraday mean-reversion: buy a 5-min RSI(2) oversold dip ONLY while price is above its EMA20
+    (an intraday uptrend, so it's a pullback not a collapse) and ticking back up. Exits when RSI recovers
+    or price loses the EMA20, or at square-off. Frequent, small-edge — for range-bound days."""
+
+    def __init__(self, cfg: IntradayRSIConfig | None = None):
+        self.cfg = cfg or IntradayRSIConfig()
+
+    def compute(self, df):
+        out = df.copy(); c = out["close"]
+        out["rsi2"] = indicators.rsi(c, self.cfg.rsi_period)
+        out["ema_t"] = indicators.ema(c, self.cfg.trend_ema)
+        out["prev_close"] = c.groupby(out.index.normalize()).shift(1)
+        out["atr"] = indicators.atr(out["high"], out["low"], out["close"], self.cfg.atr_period)
+        out["bb_lower"] = out["ema_t"]
+        return out
+
+    def _entry_long(self, row):
+        r, e, pc = row.get("rsi2"), row.get("ema_t"), row.get("prev_close")
+        if any(x is None or pd.isna(x) for x in (r, e, pc)):
+            return False
+        return r < self.cfg.rsi_buy and row["close"] >= e and row["close"] > pc
+
+    def _exit_long(self, row):
+        r, e = row.get("rsi2"), row.get("ema_t")
+        if r is not None and not pd.isna(r) and r >= self.cfg.rsi_exit:
+            return True
+        return e is not None and not pd.isna(e) and row["close"] < e
