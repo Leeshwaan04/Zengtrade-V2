@@ -16,15 +16,20 @@ from __future__ import annotations
 BPS = {
     "equity_mis":  12.0,   # intraday: brokerage 0.03%×2 + STT 0.025% sell + txn+GST ≈6bps + ~6bps slippage
     "equity_cnc":  22.0,   # delivery: STT 0.1% sell dominant + stamp + txn+GST ≈14bps + ~8bps slippage
-    "crypto_spot": 25.0,   # Binance taker ~0.10%/side (20bps) + ~5bps slippage
-    "crypto_perp": 15.0,   # perp taker ~0.05%/side (10bps) + ~5bps slippage (funding modelled separately)
+    # INDIAN RESIDENT crypto reality (this is the honesty layer that protects real capital):
+    #   1% TDS on EVERY sell (Sec 194S) = 100bps — a turnover tax you pay whether you win or lose,
+    #   once yearly sell-volume crosses ₹10k (active trading of even ₹5k hits that fast). This is the
+    #   dominant real cost and it dwarfs exchange fees. Separate from the 30% tax on net GAINS,
+    #   which is a year-end haircut on profit (modelled in readiness, not here).
+    "crypto_spot": 135.0,  # 1% TDS sell (100) + taker ~0.10%/side (20) + ~15bps slippage = ~1.35%
+    "crypto_perp": 60.0,   # taker ~0.05%/side (10) + ~15bps slippage + conservative TDS hedge (VDA-derivative treatment unsettled)
     "futures":     10.0,   # index futures: low bps commission + STT sell + ~slippage
 }
 DEFAULT_KIND = "equity_cnc"
 
 # options: the dominant real cost is crossing the (wide) bid-ask on EACH leg at entry AND exit,
 # plus flat brokerage. Modelled as a fraction of the premium transacted per round-trip.
-OPT_COST_FRAC = {"nse": 0.10, "crypto": 0.15}   # crypto option books are thinner → wider spreads
+OPT_COST_FRAC = {"nse": 0.10, "crypto": 0.25}   # crypto: thin books (wide spreads) + 1% TDS on the sell leg
 
 
 def notional_cost(entry: float, exit_px: float, qty: float, kind: str = DEFAULT_KIND) -> float:
