@@ -92,6 +92,26 @@ adapters: KiteBroker (extend bot/broker.py) · BinanceBroker (new)
   assume; never double-fill.
 - **Partial fills.** Track filled qty; manage the position on what actually filled, not what was sent.
 
+### Order-type policy by segment (NOT one blanket type)
+
+The rule, not a single type: **entries prioritise price** (miss rather than overpay) → *marketable-limit
+with a `max_slippage_bps` cap*; **risk exits prioritise certainty of fill** (getting out beats saving a
+few bps) → *market / stop-market*. Raw MARKET is never the default for entries; options never use market.
+
+| Segment | Entry | Risk exit (stop / kill-switch) | Why |
+|---|---|---|---|
+| **Equity** (Kite MIS/CNC) | marketable-LIMIT + slippage cap | **SL-M** (stop-loss-market) | guaranteed exit on a stop; controlled entry |
+| **Crypto spot** (Binance) | marketable-LIMIT, **IOC** | aggressive marketable-LIMIT → MARKET | IOC = fill-now-at-my-price-or-cancel |
+| **Futures** (Kite) | marketable-LIMIT | **SL-M**; roll near expiry | liquid index futures |
+| **Perps** (Binance) | marketable-LIMIT, IOC | **reduce-only** MARKET | reduce-only can't accidentally flip/increase |
+| **Options** (both) | **LIMIT within the spread — ONLY** | LIMIT, or let defined-risk expire | market on a wide option book is self-harm |
+
+- **The slippage cap is the safety.** `LIVE_MAX_SLIPPAGE_BPS` (default 30) bounds a marketable-limit: if
+  the touch has run past it, the entry simply **doesn't fill** — a missed trade, not a bad one. This is the
+  order-type embodiment of the edge gate: never pay uncontrolled friction.
+- **Asymmetry is deliberate.** An entry that misses costs nothing; a stop that doesn't fill costs the whole
+  loss it was meant to cap. So exits lean fill-certain, entries lean price-certain.
+
 ---
 
 ## 4. Tick-level risk — the real payoff of the stream
