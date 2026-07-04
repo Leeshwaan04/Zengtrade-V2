@@ -41,6 +41,35 @@ def notional_cost(entry: float, exit_px: float, qty: float, kind: str = DEFAULT_
         return 0.0
 
 
+# ---- trade-selection gates: don't feed the broker ---------------------------------------
+# The quiet way to bleed an account is paying round-trip friction on trades whose edge can't
+# cover it. EDGE_MULT = how many times the round-trip cost the EXPECTED favourable move must
+# clear before a trade is (a) worth entering and (b) a booked profit counts as "real". This is
+# cost-PROPORTIONAL by construction: barely touches cheap equity-MIS (~0.12%) and bites hard on
+# crypto (~1.35% with 1% TDS) — caution scales with exactly where the friction actually hurts.
+EDGE_MULT = 2.0
+
+
+def cost_pct(kind: str = DEFAULT_KIND) -> float:
+    """Round-trip cost as a fraction of notional (e.g. 0.0135 for crypto_spot)."""
+    return BPS.get(kind, BPS[DEFAULT_KIND]) / 10_000.0
+
+
+def worth_trading(price, exp_move, qty=1.0, kind: str = DEFAULT_KIND, edge_mult: float = EDGE_MULT) -> bool:
+    """True only if the expected favourable move clears edge_mult × the round-trip cost.
+    The entry gate that refuses marginal trades which only feed the broker. Fails safe by
+    *blocking* on a bad input (0/neg move) and *allowing* on an internal calc error."""
+    try:
+        price = abs(float(price)); exp_move = abs(float(exp_move)); qty = abs(float(qty))
+        if price <= 0 or exp_move <= 0 or qty <= 0:
+            return False
+        exp_win = exp_move * qty
+        rt_cost = notional_cost(price, price + exp_move, qty, kind)
+        return exp_win >= edge_mult * max(rt_cost, 1e-9)
+    except Exception:
+        return True
+
+
 def options_cost(credit_currency: float, venue: str = "nse") -> float:
     """Round-trip cost (currency) for an options structure, as a fraction of the premium
     transacted (spread-crossing on every leg both ways dominates; scales with premium)."""

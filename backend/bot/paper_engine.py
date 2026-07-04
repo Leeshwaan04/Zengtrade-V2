@@ -11,7 +11,7 @@ out-of-sample evidence — the honest test before risking capital.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 
 import numpy as np
 import pandas as pd
@@ -27,10 +27,22 @@ CURRENT_REGIME = "—"   # set each cycle by the harness from /api/market (the s
 MARKET_OPEN = time(9, 15)
 MARKET_CLOSE = time(15, 30)
 
+RUN_HEALTH = 65        # a still-strong live thesis at target → trail & run instead of capping the winner
+COOLDOWN_BARS = 2      # after an exit, block re-entry of the SAME name for this many bars (anti-churn)
+
 
 def market_open(now: datetime | None = None) -> bool:
     now = now or datetime.now()
     return now.weekday() < 5 and MARKET_OPEN <= now.time() <= MARKET_CLOSE
+
+
+def _interval_min(interval) -> int:
+    """Minutes per bar from a Kite interval string ('5minute'→5, 'day'→one session)."""
+    s = str(interval).lower()
+    if "day" in s:
+        return 375
+    num = "".join(c for c in s if c.isdigit())
+    return int(num) if num else 5
 
 
 class LongOnlyPaperEngine:
@@ -48,6 +60,15 @@ class LongOnlyPaperEngine:
         # cost bucket: intraday (MIS) vs delivery (CNC); the crypto harness overrides to crypto_spot
         self.cost_kind = "equity_mis" if getattr(risk.cfg, "product", "CNC") == "MIS" else "equity_cnc"
         self.min_bars = getattr(strategy.cfg, "trend_period", 200) + 5
+        # cautious-trading rails: only pay friction when the edge clears it; don't churn a name
+        self.edge_mult = costs.EDGE_MULT
+        self._cd_min = COOLDOWN_BARS * _interval_min(interval)
+        self._blocked: dict[str, datetime] = {}     # sym → time until re-entry allowed (in-memory)
+
+    @property
+    def _cost_pct(self) -> float:
+        # live (not cached): the crypto harness retags cost_kind→crypto_spot AFTER __init__
+        return costs.cost_pct(self.cost_kind)
 
     def run_cycle(self, square_off: bool = False) -> None:
         for sym in self.symbols:
@@ -65,7 +86,7 @@ class LongOnlyPaperEngine:
                     if square_off:
                         self._exit(sym, price, "square-off"); continue
                     # ---- Position Intelligence: live thesis health + dynamic profit protection ----
-                    pi = assess(sym, pos, df, CURRENT_REGIME)
+                    pi = assess(sym, pos, df, CURRENT_REGIME, self._cost_pct, self.edge_mult)
                     pos["stop"] = max(pos.get("stop", 0) or 0, pi["newStop"])      # ratchet protective stop
                     pos["health"] = pi["health"]; pos["action"] = pi["action"]; pos["reason"] = pi["reason"]
                     pos["weak"] = pi["weak"]; pos["gainPct"] = pi["gainPct"]
@@ -74,12 +95,29 @@ class LongOnlyPaperEngine:
                     if pos["stop"] and price <= pos["stop"]:
                         self._exit(sym, price, "stop"); continue
                     if pos["target"] and price >= pos["target"]:
-                        self._exit(sym, price, "target"); continue
+                        # let a strong runner RUN: if the thesis is still strong at target, uncap and
+                        # trail (stop already ≥ breakeven-after-cost) to capture the full directional move.
+                        if pi["health"] >= RUN_HEALTH:
+                            pos["target"] = 0.0
+                            pos["stop"] = max(pos["stop"] or 0, round(pos["entry"] * (1 + self._cost_pct), 2))
+                            log.info("[%s] RUN   %s +%.1f%% — strong trend, trailing to capture the move (target uncapped)",
+                                     self.name, sym, pi.get("gainPct", 0.0))
+                        else:
+                            self._exit(sym, price, "target"); continue
                     if self.strategy._exit_long(row):
                         self._exit(sym, price, "signal")
                 elif (not square_off and REBALANCER.allows(self.name) and self.strategy._entry_long(row)
                       and len(self.positions) < self.risk.cfg.max_positions and atr > 0):
+                    if self._blocked.get(sym) and datetime.now() < self._blocked[sym]:
+                        continue                                    # cooldown — don't churn a just-exited name
                     stop, target = self.risk.stop_and_target(price, atr)
+                    # cost-aware edge gate: only pay brokerage/TDS when the expected move clears it
+                    exp_move = (target - price) if (target and target > price) else atr
+                    if not costs.worth_trading(price, exp_move, 1, self.cost_kind, self.edge_mult):
+                        log.info("[%s] SKIP  %s — edge %.2f%% < %.1f×cost %.2f%% (not worth the friction)",
+                                 self.name, sym, 100 * exp_move / max(price, 1e-9),
+                                 self.edge_mult, 100 * self._cost_pct)
+                        continue
                     qty = self.risk.position_size(self.risk.cfg.capital, price, stop)
                     if qty > 0:
                         gd = GOVERNOR.review(self.name, sym, qty * price)   # every trade through the Governor
@@ -100,6 +138,7 @@ class LongOnlyPaperEngine:
         pnl = (price - pos["entry"]) * pos["qty"] - cost
         self.realised += pnl
         self.closed_trades += 1
+        self._blocked[sym] = datetime.now() + timedelta(minutes=self._cd_min)         # anti-churn cooldown
         log.info("[%s] EXIT  %s qty=%d @%.2f pnl=%+.0f (%s) cost=%.0f regime=%s",
                  self.name, sym, pos["qty"], price, pnl, reason, cost, pos.get("regime", "—"))
 

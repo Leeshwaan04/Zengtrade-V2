@@ -31,8 +31,13 @@ def _profit_stop(entry: float, gain_pct: float) -> float:
     return 0.0
 
 
-def assess(symbol: str, pos: dict, df, regime: str) -> dict:
-    """Return the live decision for one open position: health, action, reason, new stop."""
+def assess(symbol: str, pos: dict, df, regime: str, cost_pct: float = 0.0, edge_mult: float = 2.0) -> dict:
+    """Return the live decision for one open position: health, action, reason, new stop.
+
+    cost_pct = round-trip friction as a fraction (e.g. 0.0135 for crypto). Once an open trade
+    has cleared edge_mult × that cost, we ratchet a breakeven-AFTER-COST stop: a *real* win can
+    no longer round-trip back to a loss. Crucially this is a FLOOR, not an exit — the position
+    keeps running so a strong trend still captures the full move (cut losers, let winners run)."""
     try:
         from .opportunity import score_symbol      # lazy — avoids import cycle
         d = score_symbol(df, regime)
@@ -51,15 +56,20 @@ def assess(symbol: str, pos: dict, df, regime: str) -> dict:
     # protective stop = max(existing stop, profit-ladder stop). Trend strength widens the floor:
     # a very strong score earns a looser ladder (let it run); a weak one we don't loosen.
     pstop = _profit_stop(entry, gain)
+    # cost-aware first rung: the moment the trade clears edge_mult × its round-trip cost, lock a
+    # breakeven-net-of-cost stop. This banks intraday/crypto wins the coarse %-ladder would miss,
+    # while still leaving the whole upside open for a runner.
+    if cost_pct > 0 and gain >= edge_mult * cost_pct * 100.0:
+        pstop = max(pstop, round(entry * (1 + cost_pct), 2))
     new_stop = max(pos.get("stop", 0) or 0, pstop)
 
     # decide — exit ONLY on persistent decay (anti-noise); else hold, protecting profit
     if health < DECAY_EXIT_FLOOR and weak >= PERSIST:
         action = "exit"
         reason = f"thesis decayed — health {health} for {weak} checks"
-    elif gain >= 5 and pstop > (pos.get("stop", 0) or 0):
+    elif new_stop > (pos.get("stop", 0) or 0):
         action = "protect"
-        reason = f"+{gain:.1f}% — lock stop ₹{new_stop}"
+        reason = f"+{gain:.1f}% — lock stop ₹{new_stop} (win protected, upside still open)"
     elif health < HEALTH_FLOOR:
         action = "watch"
         reason = f"thesis weakening (health {health}, {weak}/{PERSIST})"
