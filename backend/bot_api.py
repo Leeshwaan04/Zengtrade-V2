@@ -2195,9 +2195,49 @@ def crypto_forward_payload() -> dict:
                        "winPct": winPct, "profitFactor": pf, "netPnl": round(agg["net"], 2)}}
 
 
+def parse_crypto_trades(limit: int | None = None) -> list[dict]:
+    """Every CLOSED crypto trade, parsed from the real trade log — the single source of truth for
+    all realised analytics. One dict per EXIT line: {time, strat, sym, pnl, cost, reason, regime}.
+    No synthesis: a field the log doesn't carry is left blank, never invented."""
+    logp = os.path.join(HERE, "crypto_trades.log")
+    if not os.path.exists(logp):
+        return []
+    trades: list[dict] = []
+    try:
+        with open(logp) as f:
+            for ln in f:
+                if "] EXIT" not in ln or "pnl=" not in ln:
+                    continue
+                try:
+                    pnl = float(ln.split("pnl=", 1)[1].split()[0].rstrip(")"))
+                except (ValueError, IndexError):
+                    continue
+                t = ln.split(None, 1)[0] if ln[:2].isdigit() else ""     # leading HH:MM:SS
+                strat = ln.split("[", 1)[1].split("]", 1)[0] if "[" in ln else "—"
+                after = ln.split("] EXIT", 1)[1].split()                 # first token after EXIT = symbol
+                sym = after[0] if after else "—"
+                reason = ln.split("(", 1)[1].split(")", 1)[0] if "(" in ln else "—"
+                cost = 0.0
+                if "cost=" in ln:
+                    try:
+                        cost = float(ln.split("cost=", 1)[1].split()[0])
+                    except (ValueError, IndexError):
+                        cost = 0.0
+                reg = "—"
+                if "regime=" in ln:
+                    _rp = ln.split("regime=", 1)[1].split()
+                    reg = _rp[0] if _rp else "—"
+                trades.append({"time": t, "strat": strat, "sym": sym, "pnl": round(pnl, 2),
+                               "cost": round(cost, 2), "reason": reason, "regime": reg})
+    except Exception:
+        return trades
+    return trades[-limit:] if limit else trades
+
+
 def crypto_analytics_payload() -> dict:
-    """P&L attribution for the crypto book — by instrument class (spot/perps/options), by strategy
-    (top contributors + drags), and by market regime (realised, from the closed-trade log)."""
+    """P&L attribution for the crypto book — by instrument class, by strategy, and (from the real
+    closed-trade log) by regime / symbol / exit-reason / hour, plus the realised equity curve and a
+    recent-trade feed. Every realised figure is computed from parse_crypto_trades(); nothing invented."""
     mon = crypto_monitor_payload()
     if not mon.get("running"):
         return {"running": False}
@@ -2212,30 +2252,56 @@ def crypto_analytics_payload() -> dict:
     for b in by_instr.values():
         b["realised"] = round(b["realised"], 2); b["open"] = round(b["open"], 2); b["pnl"] = round(b["pnl"], 2)
     by_strat.sort(key=lambda x: -x["pnl"])
-    by_regime = {}
-    logp = os.path.join(HERE, "crypto_trades.log")
-    if os.path.exists(logp):
-        try:
-            with open(logp) as f:
-                for ln in f:
-                    if "] EXIT" not in ln or "pnl=" not in ln:
-                        continue
-                    try:
-                        pnl = float(ln.split("pnl=", 1)[1].split()[0].rstrip(")"))
-                    except (ValueError, IndexError):
-                        continue
-                    reg = "—"
-                    if "regime=" in ln:
-                        _rp = ln.split("regime=", 1)[1].split()
-                        reg = _rp[0] if _rp else "—"          # guard: a trailing "regime=" won't IndexError
-                    r = by_regime.setdefault(reg, {"net": 0.0, "n": 0})
-                    r["net"] += pnl; r["n"] += 1
-            for r in by_regime.values():
-                r["net"] = round(r["net"], 2)
-        except Exception:
-            pass
+
+    trades = parse_crypto_trades()
+
+    def _bucket(key_fn):
+        d = {}
+        for t in trades:
+            k = key_fn(t)
+            r = d.setdefault(k, {"net": 0.0, "n": 0, "wins": 0})
+            r["net"] += t["pnl"]; r["n"] += 1; r["wins"] += 1 if t["pnl"] > 0 else 0
+        for r in d.values():
+            r["net"] = round(r["net"], 2)
+        return d
+
+    by_regime = _bucket(lambda t: t["regime"])
+    by_symbol = _bucket(lambda t: t["sym"])
+    by_reason = _bucket(lambda t: t["reason"])
+    by_hour = _bucket(lambda t: (t["time"][:2] + ":00") if t["time"] else "—")
+
+    # realised equity curve — cumulative net over the closed-trade sequence (by trade #, since the
+    # log carries clock time but not date; labelled honestly as trade ordinal in the UI).
+    cum, equity, peak, max_dd = 0.0, [], 0.0, 0.0
+    for i, t in enumerate(trades, 1):
+        cum += t["pnl"]
+        peak = max(peak, cum)
+        max_dd = min(max_dd, cum - peak)
+        equity.append({"i": i, "cum": round(cum, 2)})
+    # thin very long curves to ~200 points so the payload stays lean (keep first/last, sample middle)
+    if len(equity) > 200:
+        step = len(equity) / 200.0
+        equity = [equity[int(j * step)] for j in range(200)] + [equity[-1]]
+
+    wins = [t["pnl"] for t in trades if t["pnl"] > 0]
+    losses = [t["pnl"] for t in trades if t["pnl"] < 0]
+    gross_win = round(sum(wins), 2); gross_loss = round(sum(losses), 2)
+    stats = {
+        "n": len(trades), "net": round(cum, 2),
+        "grossWin": gross_win, "grossLoss": gross_loss,
+        "totalCost": round(sum(t["cost"] for t in trades), 2),
+        "winRate": round(100 * len(wins) / len(trades), 1) if trades else 0.0,
+        "avgWin": round(gross_win / len(wins), 2) if wins else 0.0,
+        "avgLoss": round(gross_loss / len(losses), 2) if losses else 0.0,
+        "profitFactor": round(gross_win / abs(gross_loss), 2) if gross_loss else None,
+        "maxDrawdown": round(max_dd, 2),
+    }
+    recent = list(reversed(trades[-500:]))       # newest first (feed shows ~40; CSV exports the set)
+
     return {"running": True, "regime": mon.get("regime"), "totals": mon.get("totals"),
-            "byInstrument": by_instr, "byStrategy": by_strat[:12], "byRegime": by_regime}
+            "byInstrument": by_instr, "byStrategy": by_strat[:12], "byRegime": by_regime,
+            "bySymbol": by_symbol, "byReason": by_reason, "byHour": by_hour,
+            "equity": equity, "stats": stats, "recent": recent}
 
 
 def crypto_risk_payload() -> dict:

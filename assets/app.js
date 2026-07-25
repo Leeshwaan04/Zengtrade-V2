@@ -158,6 +158,8 @@ const ICONS={
   spark:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/><path d="M19 14l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2z"/>',
   cpu:'<rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 3v2M15 3v2M9 19v2M15 19v2M3 9h2M3 15h2M19 9h2M19 15h2"/>',
   send:'<path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>',
+  activity:'<path d="M3 12h4l2.5-7 5 14 2.5-7H21"/>',
+  download:'<path d="M12 3v11M8 10l4 4 4-4M4 20h16"/>',
 };
 function icon(name,size){const s=size||16;return `<svg class="ico" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]||''}</svg>`;}
 
@@ -4136,17 +4138,54 @@ async function loadCryptoAn(){ if(CRYPTOAN.busy) return; CRYPTOAN.busy=true;
   try{ CRYPTOAN.data=await fetch(`${BOT_API}/api/crypto/analytics`).then(r=>r.json()); }catch(e){ CRYPTOAN.data={running:false}; }
   CRYPTOAN.loaded=true; CRYPTOAN.busy=false; }
 const CX_INSTR_LABEL={spot:'Spot',perps:'Perpetuals',options:'Options'};
+// realised equity curve — cumulative net P&L over the closed-trade sequence (all real, from the log)
+function cxEquityCurve(pts){
+  if(!pts||pts.length<2) return '';
+  const ys=pts.map(p=>p.cum), min=Math.min(0,...ys), max=Math.max(0,...ys), rng=(max-min)||1, W=560,H=140;
+  const X=i=>(i/(pts.length-1)*W), Y=v=>(H-(v-min)/rng*H);
+  const line=pts.map((p,i)=>`${X(i).toFixed(1)},${Y(p.cum).toFixed(1)}`).join(' ');
+  const zero=Y(0).toFixed(1), last=pts[pts.length-1].cum, tone=last>=0?'up':'down';
+  const area=`0,${zero} ${line} ${W},${zero}`;
+  return `<svg class="cxeq-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <line class="cxbt-base" x1="0" y1="${zero}" x2="${W}" y2="${zero}"/>
+    <polygon class="cxeq-area ${tone}" points="${area}"/>
+    <polyline class="cxeq-line ${tone}" points="${line}"/></svg>`;
+}
+// download the closed-trade set the analytics is built from as CSV (real rows, nothing synthesised)
+function cxTradesCSV(){
+  const rows=(CRYPTOAN.data&&CRYPTOAN.data.recent)||[];
+  if(!rows.length){ announce('No closed trades to export'); return; }
+  const head=['time','strategy','symbol','pnl','cost','exit_reason','regime'];
+  const csv=[head.join(',')].concat(rows.map(r=>[r.time,r.strat,r.sym,r.pnl,r.cost,r.reason,r.regime]
+    .map(x=>`"${String(x==null?'':x).replace(/"/g,'""')}"`).join(','))).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='crypto-closed-trades.csv'; a.click(); URL.revokeObjectURL(a.href);
+}
 function cryptoAnalytics(){
   const d=CRYPTOAN.data;
-  if(!d){ if(!CRYPTOAN.busy) loadCryptoAn().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); return secEmpty('activity','Loading analytics…','Attributing the crypto P&L by instrument, strategy and regime.'); }
+  if(!d){ if(!CRYPTOAN.busy) loadCryptoAn().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); return secEmpty('activity','Loading analytics…','Attributing the crypto P&L by instrument, strategy, regime, symbol, exit-reason and hour.'); }
   if(d.running===false){ return secEmpty('activity','Analytics offline','Start the crypto harness — analytics attributes its live book once it is running.'); }
-  const t=d.totals||{}, note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>P&L attribution.</b> Where the crypto book's edge is coming from — by instrument class, by strategy, and by the market regime trades closed in. Open P&L is marked live; regime splits are realised (from closed trades).</span></div>`;
+  const t=d.totals||{}, st=d.stats||{}, note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>P&L attribution — real, from the closed-trade log.</b> Every realised figure below is computed from actual closed paper trades (not estimated): the equity curve, and the splits by regime, symbol, exit-reason and hour. Open P&L is marked live. Nothing here is synthesised.</span></div>`;
+  // live-book summary (open + realised) — the running picture
   const stat=secStats([
     {l:'Realised',v:cxMoney(t.realised),s:'booked',tone:t.realised>0?'up':(t.realised<0?'down':'')},
     {l:'Unrealised',v:cxMoney(t.unreal),s:'open · live',tone:t.unreal>0?'up':(t.unreal<0?'down':'')},
     {l:'Net',v:cxMoney(t.pnl),s:'realised + unrealised',tone:t.pnl>0?'up':(t.pnl<0?'down':'')},
     {l:'Current regime',v:esc(d.regime||'—'),s:'BTC-led'},
   ]);
+  // closed-trade quality (all real, from the log)
+  const qual=st.n?secStats([
+    {l:'Closed trades',v:String(st.n),s:`win ${st.winRate}%`},
+    {l:'Profit factor',v:st.profitFactor==null?'—':(+st.profitFactor).toFixed(2),s:'gross win ÷ loss',tone:(st.profitFactor>=1.3)?'up':(st.profitFactor<1?'down':'')},
+    {l:'Avg win / loss',v:`${cxMoney(st.avgWin)} / ${cxMoney(st.avgLoss)}`,s:'per trade',tone:(st.avgWin>=Math.abs(st.avgLoss))?'up':'down'},
+    {l:'Max drawdown',v:cxMoney(st.maxDrawdown),s:'realised, peak-to-trough',tone:'down'},
+    {l:'Cost paid',v:cxMoney(-Math.abs(st.totalCost||0)),s:'brokerage + TDS + fees',tone:'down'},
+    {l:'Realised net',v:cxMoney(st.net),s:`${st.n} closed`,tone:st.net>0?'up':(st.net<0?'down':'')},
+  ]):'';
+  // realised equity curve
+  const eq=cxEquityCurve(d.equity);
+  const eqBlock=eq?`<div class="cxm-tbl-h">${icon('activity',13)}<b>Realised equity curve</b><span>cumulative net · by closed-trade #</span></div><div class="cxbt-chart">${eq}</div>`:'';
   // instrument attribution
   const inst=Object.entries(d.byInstrument||{}).sort((a,b)=>b[1].pnl-a[1].pnl).map(([k,v])=>
     `<div class="cxm-row"><div class="cxm-name"><b>${esc(CX_INSTR_LABEL[k]||k)}</b> <span class="cxf-cls">${v.n} strat</span></div>
@@ -4156,16 +4195,41 @@ function cryptoAnalytics(){
       <span class="cxm-n num ${cls(v.pnl)}"><b>${cxMoney(v.pnl)}</b></span></div>`).join('')
     ||'<div class="cxr-empty" style="padding:11px 13px">No positions yet</div>';
   const instHead=`<div class="cxm-row cxm-head"><div class="cxm-name">Instrument</div><span class="cxm-n">Open</span><span class="cxm-n">Realised</span><span class="cxm-n">Unreal.</span><span class="cxm-n">Net</span></div>`;
-  // regime attribution
+  // a real breakdown table: label · net · trades · win% (sorted worst→best so the drags surface)
+  const bkTable=(obj,labfn,asc)=>{ const e=Object.entries(obj||{}).sort((a,b)=>asc?a[1].net-b[1].net:b[1].net-a[1].net);
+    if(!e.length) return '<div class="cxr-empty" style="padding:11px 13px">No closed trades yet</div>';
+    const head=`<div class="cxm-row cxf-row cxm-head" style="grid-template-columns:1.6fr 70px 90px 110px"><div class="cxm-name">Bucket</div><span class="cxm-n">Trades</span><span class="cxm-n">Win%</span><span class="cxm-n">Net</span></div>`;
+    return `<div class="cxm-tbl">${head}`+e.map(([k,v])=>{const wr=v.n?Math.round(100*v.wins/v.n):0;
+      return `<div class="cxm-row cxf-row" style="grid-template-columns:1.6fr 70px 90px 110px"><div class="cxm-name"><b>${esc(labfn?labfn(k):k)}</b></div>
+      <span class="cxm-n num">${v.n}</span><span class="cxm-n num ${wr>=50?'up':(wr<45?'down':'')}">${wr}%</span>
+      <span class="cxm-n num ${cls(v.net)}"><b>${cxMoney(v.net)}</b></span></div>`;}).join('')+`</div>`; };
+  // regime attribution (chips, quick glance)
   const regs=Object.entries(d.byRegime||{}).sort((a,b)=>b[1].net-a[1].net);
   const regChips=regs.length?regs.map(([r,v])=>`<span class="cxm-chip ${cls(v.net)}">${esc(r)} <i>${cxMoney(v.net)} · ${v.n}t</i></span>`).join(''):'<span class="cxr-empty">No closed trades yet</span>';
+  // by-hour mini bars (net per hour-of-day — shows when the book makes/loses money)
+  const hrs=Object.entries(d.byHour||{}).filter(([k])=>k!=='—').sort((a,b)=>a[0].localeCompare(b[0]));
+  const hrMax=hrs.length?Math.max(...hrs.map(([,v])=>Math.abs(v.net)),1):1;
+  const hrBars=hrs.length?`<div class="cxhr-bars">`+hrs.map(([h,v])=>{const up=v.net>=0,ph=Math.round(Math.abs(v.net)/hrMax*100);
+    return `<div class="cxhr-col" title="${esc(h)} · ${v.n} trades · net ${cxMoney(v.net)}"><div class="cxhr-track"><i class="cxhr-fill ${up?'up':'down'}" style="height:${Math.max(4,ph)}%"></i></div><span class="cxhr-lbl">${esc(h.slice(0,2))}</span></div>`;}).join('')+`</div>`:'';
   // strategy contributors
   const strat=(d.byStrategy||[]);
   const contrib=strat.length?strat.map(s=>`<div class="cxm-row cxf-row" style="grid-template-columns:1.5fr 90px 90px"><div class="cxm-name"><b>${esc(s.name)}</b> <span class="cxf-cls">${esc(s.instr)}</span></div><span class="cxm-n"></span><span class="cxm-n num ${cls(s.pnl)}"><b>${cxMoney(s.pnl)}</b></span></div>`).join(''):'<div class="cxr-empty" style="padding:11px 13px">No active strategies</div>';
-  return note+stat+
+  // recent closed-trade feed (newest first, capped) + CSV export
+  const rec=(d.recent||[]).slice(0,40);
+  const feedHead=`<div class="cxm-tbl-h">${icon('activity',13)}<b>Recent closed trades</b><span>newest first · ${(d.recent||[]).length} exported</span><button class="cxan-csv" data-cxcsv="1">${icon('download',12)} CSV</button></div>`;
+  const feed=rec.length?`<div class="cxm-tbl">`+rec.map(r=>`<div class="cxm-row cxf-row" style="grid-template-columns:56px 1.3fr 1fr 90px">
+    <span class="cxm-n" style="text-align:left;opacity:.6;font-variant-numeric:tabular-nums">${esc(r.time||'')}</span>
+    <div class="cxm-name"><b>${esc(r.strat)}</b> <span class="cxf-cls">${esc(r.sym.replace('USDT',''))}</span></div>
+    <span class="cxm-n" style="text-align:left"><span class="cxrsn cxrsn-${esc((r.reason||'').replace(/[^a-z]/gi,''))}">${esc(r.reason)}</span> <i style="opacity:.5">${esc(r.regime)}</i></span>
+    <span class="cxm-n num ${cls(r.pnl)}"><b>${cxMoney(r.pnl)}</b></span></div>`).join('')+`</div>`:'<div class="cxr-empty" style="padding:11px 13px">No closed trades yet</div>';
+  return note+stat+qual+eqBlock+
     `<div class="cxm-tbl-h">${icon('layout',13)}<b>By instrument class</b><span>Spot / Perps / Options</span></div><div class="cxm-tbl">${instHead}${inst}</div>`+
+    `<div class="cxm-tbl-h">${icon('cpu',13)}<b>By exit reason</b><span>where P&L is made & lost — worst first</span></div>${bkTable(d.byReason,null,true)}`+
+    `<div class="cxm-tbl-h">${icon('activity',13)}<b>By symbol</b><span>net per coin — worst first</span></div>${bkTable(d.bySymbol,k=>k.replace('USDT',''),true)}`+
+    (hrBars?`<div class="cxm-tbl-h">${icon('activity',13)}<b>By hour of day</b><span>net per hour (UTC clock)</span></div>${hrBars}`:'')+
     `<div class="cxm-tbl-h">${icon('cpu',13)}<b>By regime</b><span>realised, from closed trades</span></div><div class="cxm-pos">${regChips}</div>`+
-    `<div class="cxm-tbl-h">${icon('activity',13)}<b>Strategy contributors</b><span>top by total P&L</span></div><div class="cxm-tbl">${contrib}</div>`;
+    `<div class="cxm-tbl-h">${icon('activity',13)}<b>Strategy contributors</b><span>top by total P&L</span></div><div class="cxm-tbl">${contrib}</div>`+
+    feedHead+feed;
 }
 // ---- Go-live readiness gate (net-of-cost evidence per strategy vs the bar) ----
 const READY={data:{},busy:{}};
@@ -4303,6 +4367,7 @@ function renderAlgo(){
   v.querySelectorAll('[data-cinstr]').forEach(b=>b.onclick=()=>{ state.algo.cinstr=b.dataset.cinstr; renderAlgo(); });
   v.querySelectorAll('[data-cbtstrat]').forEach(b=>b.onclick=()=>{ state.algo.cbt=state.algo.cbt||{strat:'macross',period:'1Y'}; state.algo.cbt.strat=b.dataset.cbtstrat; renderAlgo(); });
   v.querySelectorAll('[data-cbtperiod]').forEach(b=>b.onclick=()=>{ state.algo.cbt=state.algo.cbt||{strat:'macross',period:'1Y'}; state.algo.cbt.period=b.dataset.cbtperiod; renderAlgo(); });
+  v.querySelectorAll('[data-cxcsv]').forEach(b=>b.onclick=cxTradesCSV);
   v.querySelectorAll('[data-algogoto]').forEach(b=>b.onclick=()=>{state.algo.view=b.dataset.algogoto;renderAlgo();});
   v.querySelectorAll('[data-algobt]').forEach(b=>b.onclick=()=>{state.algo.bt.algo=+b.dataset.algobt;state.algo.view='backtest';renderAlgo();});
   v.querySelectorAll('[data-algodep]').forEach(b=>b.onclick=()=>algoDeploy(ALGOS[+b.dataset.algodep]));
