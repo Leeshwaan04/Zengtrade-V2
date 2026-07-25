@@ -5,10 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script>document.documentElement.className+=" js";</script><!-- set before first paint: scroll-reveal is a JS enhancement; page is fully visible without JS -->
 <title>zengtrade — a terminal that would rather do nothing</title>
-<meta name="description" content="zengtrade is a survival-first, regime-aware trading terminal for Indian markets and crypto. It never fabricates a number. Paper-first, private software. Not investment advice.">
+<meta name="description" content="zengtrade — regime-aware algorithmic crypto trading strategies you can paper-trade, backtest and forward-test on live data before risking a dollar. Survival-first, honest about every cost, non-custodial. Not investment advice.">
+<meta name="keywords" content="crypto trading strategies, algorithmic trading, paper trading, crypto backtesting, trading bot, algo trading, market regime, Bitcoin trading strategy, non-custodial trading, forward testing, quantitative trading">
+<meta name="author" content="zengtrade">
 <meta name="theme-color" content="#f4f6fa" id="themeColor">
 <meta name="color-scheme" content="light dark">
-<meta name="robots" content="index, follow">
+<meta name="robots" content="index, follow, max-image-preview:large">
 <link rel="canonical" href="https://zengtrade.in/">
 
 <meta property="og:type" content="website">
@@ -17,12 +19,23 @@
 <meta property="og:title" content="zengtrade — a terminal that would rather do nothing">
 <meta property="og:description" content="Survival-first, regime-aware trading for Indian markets and crypto. When it can't source a number, it shows a dash. Paper-first. Private software. Not investment advice.">
 <meta property="og:image" content="https://zengtrade.in/assets/mascot-bull.png">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="zengtrade — a terminal that would rather do nothing">
-<meta name="twitter:description" content="Survival-first, regime-aware trading for Indian markets and crypto. When it can't source a number, it shows a dash.">
+<meta property="og:locale" content="en_US">
+<meta property="og:image:alt" content="zengtrade — regime-aware crypto trading strategies">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="zengtrade — regime-aware crypto trading strategies">
+<meta name="twitter:description" content="Paper-trade, backtest and forward-test algorithmic crypto strategies on live data before risking a dollar. Honest about every cost. Non-custodial.">
 <meta name="twitter:image" content="https://zengtrade.in/assets/mascot-bull.png">
 
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+
+<!-- structured data: helps Google understand the product (rich results, knowledge graph) -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"zengtrade",
+"applicationCategory":"FinanceApplication","operatingSystem":"Web","url":"https://zengtrade.in/",
+"description":"Regime-aware algorithmic crypto trading strategies you can paper-trade, backtest and forward-test on live data before risking a dollar. Survival-first, honest about every cost, non-custodial.",
+"offers":{"@type":"Offer","price":"0","priceCurrency":"USD","description":"Free to start — paper trading"},
+"publisher":{"@type":"Organization","name":"zengtrade","url":"https://zengtrade.in/","logo":"https://zengtrade.in/assets/logo.svg"}}
+</script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -219,6 +232,29 @@ html[data-surface="night"] .grid-motion{opacity:.14}
 .surface-toggle:focus-visible{outline:2px solid var(--accent-t,var(--accent));outline-offset:2px;box-shadow:none}
 
 /* ================= INDEX TICKER TAPE (verbatim) ================= */
+/* LANDING-ONLY: primary mega-nav */
+.lp-nav{display:flex;align-items:center;gap:2px;margin-left:18px}
+.lp-nav-item{position:relative}
+.lp-nav-link{display:inline-flex;align-items:center;gap:5px;font:600 13.5px/1 var(--sans);color:var(--slate);
+  background:none;border:0;border-radius:9px;padding:9px 12px;cursor:pointer;text-decoration:none;transition:color .16s,background .16s;white-space:nowrap}
+.lp-nav-link:hover,.lp-nav-item:hover .lp-nav-link,.lp-nav-item:focus-within .lp-nav-link{color:var(--navy);background:var(--surface-2)}
+.lp-caret{transition:transform .2s}
+.lp-nav-item:hover .lp-caret,.lp-nav-item:focus-within .lp-caret{transform:rotate(180deg)}
+.lp-mega{position:absolute;top:calc(100% + 10px);left:0;min-width:330px;background:var(--surface);
+  border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow,0 20px 50px -18px rgba(16,30,54,.28));
+  padding:8px;display:grid;gap:2px;opacity:0;visibility:hidden;transform:translateY(-6px);
+  transition:opacity .18s,transform .18s,visibility .18s;z-index:60}
+.lp-mega.lp-mega-sm{min-width:250px}
+.lp-mega::before{content:"";position:absolute;top:-10px;left:0;right:0;height:10px}/* hover bridge */
+.lp-nav-item:hover .lp-mega,.lp-nav-item:focus-within .lp-mega{opacity:1;visibility:visible;transform:translateY(0)}
+.lp-mega-card{display:flex;align-items:flex-start;gap:11px;padding:11px 12px;border-radius:11px;text-decoration:none;transition:background .14s}
+.lp-mega-card:hover{background:var(--surface-2)}
+.lp-mega-ic{flex:0 0 auto;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:15px;
+  background:var(--green-soft,#e7f8ef);color:var(--green);font-weight:800}
+.lp-mega-tx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.lp-mega-tx b{font:700 13.5px/1.2 var(--sans);color:var(--navy)}
+.lp-mega-tx i{font:500 12px/1.4 var(--sans);font-style:normal;color:var(--slate)}
+@media(max-width:900px){.lp-nav{display:none}}
 .ticker-bar{flex:0 0 auto;display:flex;align-items:center;padding:0 10px;background:var(--surface);
   border-bottom:1px solid var(--line);overflow:hidden;position:relative;z-index:1;gap:0;min-height:34px}
 .tb-viewport{flex:1 1 auto;min-width:0;overflow:hidden;display:flex}
@@ -244,6 +280,17 @@ html[data-surface="night"] .grid-motion{opacity:.14}
    This page has no feed, so the label reads NO FEED and takes the muted colour. */
 .mkt-live{font-size:9.5px;font-weight:800;letter-spacing:.7px;color:var(--slate)}
 .mkt-sess{font-size:10.5px;font-weight:600;color:var(--slate);margin:0 2px}
+/* LANDING-ONLY: live crypto tape — continuous roll + live/up/down states */
+.tb-roll{animation:tbRoll 42s linear infinite;will-change:transform}
+.tb-viewport:hover .tb-roll{animation-play-state:paused}
+@keyframes tbRoll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.tb-roll{animation:none}}
+.tix-chg{font-family:var(--mono);font-size:11px;font-weight:700}
+.tix-chg.up{color:var(--green)} .tix-chg.down{color:#e0483d}
+.tix-val.live{color:var(--navy)}
+.mkt-dot.live{background:var(--green);box-shadow:0 0 0 0 color-mix(in srgb,var(--green) 60%,transparent);animation:feedPulse 1.8s ease-in-out infinite}
+@keyframes feedPulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--green) 55%,transparent)}50%{box-shadow:0 0 0 5px transparent}}
+.mkt-live.live{color:var(--green)}
 
 /* ================= REGIME INSIGHT BAR (verbatim) ================= */
 .regime-bar{display:flex;align-items:center;gap:16px;padding:11px 18px;
@@ -602,6 +649,31 @@ html.js .lp-rv.in{opacity:1;transform:none}
     <span class="brand-pro">zengtrade</span>
   </div>
 
+  <!-- ===== primary mega-nav (CSS-driven: hover + focus-within, no JS needed) ===== -->
+  <nav class="lp-nav" aria-label="Primary">
+    <div class="lp-nav-item">
+      <button class="lp-nav-link" type="button" aria-expanded="false" aria-haspopup="true">Products
+        <svg class="lp-caret" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></button>
+      <div class="lp-mega" role="menu">
+        <a class="lp-mega-card" role="menuitem" href="#regime"><span class="lp-mega-ic">◐</span><span class="lp-mega-tx"><b>Algo Studio</b><i>Regime-aware strategies that read Bull · Neutral · Bear.</i></span></a>
+        <a class="lp-mega-card" role="menuitem" href="#survival"><span class="lp-mega-ic">◈</span><span class="lp-mega-tx"><b>Survival-first risk</b><i>Governor, kill-switch, position intelligence.</i></span></a>
+        <a class="lp-mega-card" role="menuitem" href="#books"><span class="lp-mega-ic">₿</span><span class="lp-mega-tx"><b>Crypto &amp; Indian books</b><i>One engine, two markets, paper 24/7.</i></span></a>
+        <a class="lp-mega-card" role="menuitem" href="#honesty"><span class="lp-mega-ic">✓</span><span class="lp-mega-tx"><b>Honest analytics</b><i>Never a fabricated number — a dash when it can't source one.</i></span></a>
+      </div>
+    </div>
+    <a class="lp-nav-link" href="#regime">How it works</a>
+    <a class="lp-nav-link" href="#go-live">Pricing</a>
+    <div class="lp-nav-item">
+      <button class="lp-nav-link" type="button" aria-expanded="false" aria-haspopup="true">Learn
+        <svg class="lp-caret" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></button>
+      <div class="lp-mega lp-mega-sm" role="menu">
+        <a class="lp-mega-card" role="menuitem" href="#books"><span class="lp-mega-tx"><b>Strategy library</b><i>Every strategy type, explained.</i></span></a>
+        <a class="lp-mega-card" role="menuitem" href="#regime"><span class="lp-mega-tx"><b>Reading market regimes</b><i>Bull, Neutral, Bear — and what changes.</i></span></a>
+        <a class="lp-mega-card" role="menuitem" href="#honesty"><span class="lp-mega-tx"><b>Why honesty matters</b><i>Costs, slippage, and the dash.</i></span></a>
+      </div>
+    </div>
+  </nav>
+
   <div class="tb-spacer"></div>
 
   <div class="topbar-right">
@@ -617,25 +689,19 @@ html.js .lp-rv.in{opacity:1;transform:none}
   </div>
 </header>
 
-<!-- ====================== INDEX TICKER TAPE ======================
-     The terminal's own tape. Every value is an em-dash: this page is served as
-     static files and has no market feed, so it has no number it could source. -->
+<!-- ====================== LIVE CRYPTO TAPE ======================
+     Real Binance 24h prices (public data-api mirror, CORS-ok, no key) rolling continuously.
+     Crypto-only — the one feed a static page can honestly source live. Falls back to a dash
+     if Binance is unreachable (never a fabricated number). -->
 <div class="ticker-bar">
-  <div class="tb-viewport static">
-    <div class="tb-ticker" role="list" aria-label="Index tape — no feed is connected to this page">
-      <div class="tix" role="listitem"><span class="tix-name">NIFTY 50</span><div class="tix-row"><span class="tix-val num muted">—</span></div></div>
-      <div class="tix" role="listitem"><span class="tix-name">SENSEX</span><div class="tix-row"><span class="tix-val num muted">—</span></div></div>
-      <div class="tix" role="listitem"><span class="tix-name">BANK NIFTY</span><div class="tix-row"><span class="tix-val num muted">—</span></div></div>
-      <div class="tix" role="listitem"><span class="tix-name">INDIA VIX</span><div class="tix-row"><span class="tix-val num muted">—</span></div></div>
-      <div class="tix" role="listitem"><span class="tix-name">BTC</span><div class="tix-row"><span class="tix-val num muted">—</span></div></div>
-      <div class="tix" role="listitem"><span class="tix-name">ETH</span><div class="tix-row"><span class="tix-val num muted">—</span></div></div>
-    </div>
+  <div class="tb-viewport" id="cryptoTape">
+    <div class="tb-ticker tb-roll" role="list" aria-label="Live crypto prices from Binance" id="cryptoTicker"></div>
   </div>
   <div class="tb-market">
     <div class="mkt-status">
-      <span class="mkt-dot off" aria-hidden="true"></span>
-      <span class="mkt-live">NO FEED</span>
-      <span class="mkt-sess">this page is static</span>
+      <span class="mkt-dot off" id="feedDot" aria-hidden="true"></span>
+      <span class="mkt-live" id="feedLabel">CONNECTING</span>
+      <span class="mkt-sess">live crypto · Binance · 24h</span>
     </div>
   </div>
 </div>
@@ -1261,6 +1327,58 @@ html.js .lp-rv.in{opacity:1;transform:none}
       document.body.classList.toggle("lp-scrolled", !entries[0].isIntersecting);
     }, { rootMargin: "-60px 0px 0px 0px" }).observe(heroControl);
   }
+})();
+</script>
+<script>
+/* Live crypto tape — real Binance 24h prices (public data-api mirror: CORS-ok, no key, not
+   geo-blocked). Rolls continuously; on failure it shows a dash, never a fabricated number. */
+(function () {
+  "use strict";
+  var PAIRS = ["BTC","ETH","SOL","BNB","XRP","ADA","DOGE","AVAX","LINK","MATIC"];
+  var SYMS = PAIRS.map(function (p) { return p + "USDT"; });
+  var el = document.getElementById("cryptoTicker");
+  var dot = document.getElementById("feedDot");
+  var lab = document.getElementById("feedLabel");
+  if (!el) return;
+
+  function fmt(n) {
+    n = +n;
+    if (n >= 1000) return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+    if (n >= 1)    return n.toLocaleString("en-US", { maximumFractionDigits: 2 });
+    return n.toLocaleString("en-US", { maximumFractionDigits: 4 });
+  }
+  function tile(name, price, chg) {
+    var up = chg >= 0;
+    return '<div class="tix" role="listitem"><span class="tix-name">' + name + '</span>' +
+      '<div class="tix-row"><span class="tix-val num live">$' + fmt(price) + '</span>' +
+      '<span class="tix-chg ' + (up ? "up" : "down") + '">' + (up ? "+" : "") + chg.toFixed(2) + '%</span></div></div>';
+  }
+  function render(map) {
+    var one = PAIRS.map(function (p) {
+      var d = map[p + "USDT"];
+      return d ? tile(p, d.price, d.chg)
+               : '<div class="tix" role="listitem"><span class="tix-name">' + p + '</span><div class="tix-row"><span class="tix-val num muted">—</span></div></div>';
+    }).join("");
+    el.innerHTML = one + one;        // duplicate the set → seamless -50% roll
+    if (dot) dot.className = "mkt-dot live";
+    if (lab) { lab.textContent = "LIVE"; lab.className = "mkt-live live"; }
+  }
+  function pull() {
+    fetch("https://data-api.binance.vision/api/v3/ticker/24hr")
+      .then(function (r) { return r.json(); })
+      .then(function (rows) {
+        if (!Array.isArray(rows)) return;
+        var want = {}; SYMS.forEach(function (s) { want[s] = 1; });
+        var map = {};
+        rows.forEach(function (row) {
+          if (want[row.symbol]) map[row.symbol] = { price: +row.lastPrice, chg: +row.priceChangePercent };
+        });
+        if (Object.keys(map).length) render(map);
+      })
+      .catch(function () { /* leave the dashes — never invent a number */ });
+  }
+  pull();
+  setInterval(pull, 15000);          // refresh every 15s
 })();
 </script>
 </body>
