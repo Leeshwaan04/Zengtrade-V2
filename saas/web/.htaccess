@@ -1,0 +1,31 @@
+# zengtrade SaaS -- Hostinger / Apache config.
+# Translated from the Cloudflare _headers + _redirects so the site behaves the same on Hostinger.
+
+RewriteEngine On
+
+# --- Force HTTPS (enable free SSL in hPanel first: Websites -> SSL -> your domain) ---
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# --- Pretty paths -> .html (optional; the site's own links already use .html) ---
+RewriteRule ^login/?$   login.html   [L]
+RewriteRule ^app/?$     app.html     [L]
+RewriteRule ^terms/?$   terms.html   [L]
+RewriteRule ^privacy/?$ privacy.html [L]
+RewriteRule ^risk/?$    risk.html    [L]
+
+# --- Security headers (from the Cloudflare _headers file) ---
+<IfModule mod_headers.c>
+  Header set X-Frame-Options "DENY"
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()"
+</IfModule>
+
+# --- Correct MIME so ES modules (import/export) load, not download ---
+<IfModule mod_mime.c>
+  AddType application/javascript .js
+  AddType application/javascript .mjs
+</IfModule>
+# (No ErrorDocument -> index.html: with ES modules, a missing .js would then return HTML
+#  and break with a cryptic parse error. Let real 404s be 404s.)
