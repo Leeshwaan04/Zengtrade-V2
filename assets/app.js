@@ -4012,7 +4012,7 @@ function cryptoMonitor(){
     const fitRegs=Object.entries(fitAllMap[s.id]||{}).filter(([r,c])=>c&&c.verdict==='fit').map(([r])=>r);
     const onDeck=benched?`<div class="mon-ondeck">${icon('repeat',12)}<span><b>Stood down in ${esc(curReg)}</b> — it loses here, so the engine holds its capital in cash. ${fitRegs.length?`It's your bench for <b>${fitRegs.map(esc).join(' · ')}</b> — proven to win there, ready to redeploy the moment the regime turns.`:`No regime has cleared it yet — it stays benched, still gathering evidence.`}</span></div>`:'';
     const expInner=(onDeck+posBlock+accLine+allocCtl)||`<div class="mon-exp-empty">No open positions or closed trades yet — this strategy trades only when its setup appears.</div>`;
-    const badge=cxStratBadge(s, fitMap[s.id], curReg);
+    const badge=cxStratBadge(s, fitMap[s.id], curReg, allocMap[s.id]===0);
     return `<div class="mon-card${open?' open':''}" data-cxrow="${esc(s.id)}">
       <div class="mon-row live mon-head" data-monexp="${esc(s.id)}" role="button" tabindex="0" aria-expanded="${open}" title="Show positions &amp; forward accuracy"><div class="mon-l"><span class="live-dot live"></span><div><b>${esc(s.name)} <span class="cxf-cls">${esc(s.instr||'spot')}</span>${badge}</b><span class="mon-cat">${s.openPositions||0} open${dep>0?` · <b class="mc-dep">${cxMoney(dep)}</b> deployed`:''} · ${f.closed||0} closed</span></div></div>
       <div class="mon-pnl"><b class="num cxm-net ${cls(s.paperPnl)}">${cxMoney(s.paperPnl)}</b><span class="mon-sub" data-cxsub="${esc(s.id)}">${sub}</span></div>
@@ -4025,20 +4025,23 @@ function cryptoMonitor(){
   if((state.algo.exec||'paper')==='live') return note+cryptoScopeBar()+_xt+liveLockedPanel();
   CRYPTOMON._sig=cryptoMonSig();   // remember the structure so the next poll can patch-in-place (no flicker)
   const brk=cxClassStrip();   // P&L by instrument class (Spot / Perps / Options) — like the Indian mon-brk
-  const engine=cxLiveEnginePanel(scoped, fitMap, curReg);   // honest "what's working now" transparency
+  const engine=cxLiveEnginePanel(scoped, fitMap, curReg, allocMap);   // honest "what's working now" transparency
   return note+cryptoScopeBar()+_xt+engine+stat+brk+ctrlBar+`<div class="cxm-tbl-h">${icon('activity',13)}<b>${esc(clsLabel)} strategies</b><span>${act} active · ${scoped.length} running${upd?` · updated ${upd}`:''}</span></div><div class="mon-list">${listHtml}</div>`;
 }
 // Per-strategy badge: LIVE (has open positions right now) + regime verdict (FIT / STOOD DOWN /
 // GATHERING) for the current regime — so the user sees, at a glance, which strategies the engine
 // is running vs benching AND which are actively in a trade. All from the learned regime-fit data.
-function cxStratBadge(s, cell, regime){
+function cxStratBadge(s, cell, regime, paused){
   const active=(s.openPositions||0)>0;
+  const act=active?`<span class="cxb reg-live"><i class="cxb-dot"></i>LIVE</span>`:'';
+  if(paused){   // YOU set this to 0% — distinct from the engine standing it down for the regime
+    return act+`<span class="cxb reg-paused" title="You paused this strategy (allocation 0%) — it takes no new trades until you raise it. Open positions are still managed.">${icon('lock',10)} PAUSED BY YOU</span>`;
+  }
   const v=cell&&cell.verdict;
   let reg='';
   if(v==='fit') reg=`<span class="cxb reg-fit" title="Proven to WIN in ${esc(regime)} (net of cost, ${cell.n} trades) — the engine keeps it running">FIT · ${esc(regime)}</span>`;
   else if(v==='unfit') reg=`<span class="cxb reg-unfit" title="Proven to LOSE in ${esc(regime)} (${cell.n} trades, ${cell.expectancy!=null?cxMoney(cell.expectancy)+'/trade':''}) — stood down to cash">STOOD DOWN</span>`;
   else if(cell&&cell.n) reg=`<span class="cxb reg-gath" title="Gathering evidence for ${esc(regime)} (${cell.n} trades so far)">GATHERING</span>`;
-  const act=active?`<span class="cxb reg-live"><i class="cxb-dot"></i>LIVE</span>`:'';
   return act+reg;
 }
 // Shared regime-fit lens for every crypto tab — ensures /api/regime-fit is loaded and returns the
@@ -4056,10 +4059,12 @@ function cxRegimeFit(){
 // the ugly all-time number with the forward picture: the strategies that caused the loss are now
 // STOOD DOWN; what's cleared to run has a real positive edge in this regime. No fabricated profit —
 // every figure is the learned, net-of-135bps regime-fit evidence.
-function cxLiveEnginePanel(scoped, fitMap, regime){
+function cxLiveEnginePanel(scoped, fitMap, regime, allocMap){
+  allocMap=allocMap||{};
   const fit=[], unfit=[];
   scoped.forEach(s=>{ const c=fitMap[s.id]; if(!c) return; if(c.verdict==='fit') fit.push({s,c}); else if(c.verdict==='unfit') unfit.push({s,c}); });
-  if(!fit.length && !unfit.length) return '';   // no learned verdicts yet — don't invent a story
+  const paused=scoped.filter(s=>allocMap[s.id]===0);   // strategies YOU turned off (distinct from regime stand-down)
+  if(!fit.length && !unfit.length && !paused.length) return '';   // no learned verdicts yet — don't invent a story
   const N=fit.reduce((a,x)=>a+(x.c.n||0),0);
   const wWin=N?fit.reduce((a,x)=>a+(x.c.n||0)*(x.c.winPct||0),0)/N:null;      // trade-weighted win-rate
   const wExp=N?fit.reduce((a,x)=>a+(x.c.n||0)*(x.c.expectancy||0),0)/N:null;  // trade-weighted expectancy
@@ -4081,6 +4086,7 @@ function cxLiveEnginePanel(scoped, fitMap, regime){
     ? `<span class="cxe-tag ok">${icon('check',13)} Positive edge, net of cost</span>`
     : (N?`<span class="cxe-tag warn">${icon('alert',13)} Edge not yet proven positive — trading small / mostly cash</span>`:'');
   const stood=unfit.length?`<div class="cxe-stood">${icon('shield',13)}<span><b>${unfit.length} strateg${unfit.length===1?'y':'ies'} stood down</b> — proven to lose in ${esc(regime)}${unfitExp!=null?` (avg <b class="down">${cxMoney(unfitExp)}</b>/trade)`:''}. Their capital is held in <b>cash</b> by design — this is the engine refusing to trade a losing setup, not idleness. <a class="mon-acc-link" data-algogoto="analytics">see the damage they did →</a></span></div>`:'';
+  const pausedLine=paused.length?`<div class="cxe-stood cxe-paused">${icon('lock',13)}<span><b>${paused.length} paused by you</b> — allocation set to 0% (${paused.slice(0,4).map(s=>esc(s.name)).join(', ')}${paused.length>4?` +${paused.length-4}`:''}). These take no new trades until you raise them — <b>your choice, not the engine's</b>. Expand a row to adjust.</span></div>`:'';
   return `<div class="cxe-panel ${good?'ok':'warn'}">
     <div class="cxe-head"><div class="cxe-ic">${icon('cpu',18)}</div>
       <div class="cxe-hx"><b>Live engine · ${esc(regime)} regime</b><span>What's <b>cleared to run right now</b>, net of cost. The engine learned from the losses: the strategies that bled are benched below; what's running here has real evidence behind it.</span></div>
@@ -4088,6 +4094,7 @@ function cxLiveEnginePanel(scoped, fitMap, regime){
     ${edge}
     <div class="cxe-run"><span class="cxe-run-l">Running now</span><div class="cxe-chips">${runChips}</div></div>
     ${stood}
+    ${pausedLine}
     <p class="cxe-foot">${icon('shield',12)}<span>Win-rate and edge are the <b>real forward record</b> of these strategies in ${esc(regime)} (net of 135bps) — evidence, <b>not a promise</b>. Markets can still hand any single trade a loss; the edge is a long-run average.</span></p>
   </div>`;
 }
@@ -4591,8 +4598,10 @@ function renderAlgo(){
   v.querySelectorAll('[data-cxcsv]').forEach(b=>b.onclick=cxTradesCSV);
   v.querySelectorAll('[data-cxgl]').forEach(b=>b.onclick=e=>{e.stopPropagation();cryptoGoLiveCheck(b.dataset.cxgl);});
   v.querySelectorAll('[data-cxalloc]').forEach(sl=>{
-    sl.oninput=()=>{ const lab=v.querySelector('[data-cxallocval="'+CSS.escape(sl.dataset.cxalloc)+'"]'); if(lab)lab.textContent=sl.value+'%'; };
-    sl.onchange=()=>cxSetAlloc(sl.dataset.cxalloc,(+sl.value)/100);
+    let _t=null;
+    sl.oninput=()=>{ const lab=v.querySelector('[data-cxallocval="'+CSS.escape(sl.dataset.cxalloc)+'"]'); if(lab)lab.textContent=sl.value+'%';
+      clearTimeout(_t); _t=setTimeout(()=>cxSetAlloc(sl.dataset.cxalloc,(+sl.value)/100), 400); };   // debounce the write while dragging
+    sl.onchange=()=>{ clearTimeout(_t); cxSetAlloc(sl.dataset.cxalloc,(+sl.value)/100); };            // commit immediately on release
     sl.onclick=e=>e.stopPropagation();
   });
   v.querySelectorAll('[data-algogoto]').forEach(b=>b.onclick=()=>{state.algo.view=b.dataset.algogoto;renderAlgo();});
