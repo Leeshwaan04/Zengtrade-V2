@@ -160,6 +160,8 @@ const ICONS={
   send:'<path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>',
   activity:'<path d="M3 12h4l2.5-7 5 14 2.5-7H21"/>',
   download:'<path d="M12 3v11M8 10l4 4 4-4M4 20h16"/>',
+  lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/>',
+  layers:'<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>',
 };
 function icon(name,size){const s=size||16;return `<svg class="ico" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]||''}</svg>`;}
 
