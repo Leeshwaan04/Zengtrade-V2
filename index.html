@@ -6,10 +6,14 @@
 <!-- Content-Security-Policy (defence-in-depth for the innerHTML surface). script-src 'self' (no
      'unsafe-inline') neutralises any injected inline <script>/on*= handler even if an esc() is
      ever missed. style-src keeps 'unsafe-inline' (the app sets style="" attrs pervasively — low
-     risk). connect-src allows the local bot API + Claude proxy + https (Binance data + a user's
-     AI endpoint). object/base/frame locked down. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' http://localhost:8756 http://127.0.0.1:8756 http://localhost:8787 http://127.0.0.1:8787 https:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'" />
-<title>TradePro · Bull/Bear Terminal</title>
+     risk). connect-src is an EXPLICIT allowlist — same-origin (the bot API via the tunnel), the
+     local bot API + local Claude proxy (localhost:8756/8787), and Binance data only. The old bare
+     'https:' wildcard was removed: it let injected content POST to any host (the AI-endpoint
+     exfiltration hole from the audit). A REMOTE AI proxy (non-localhost) must be added here
+     explicitly by host. object/base/frame locked down. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' http://localhost:8756 http://127.0.0.1:8756 http://localhost:8787 http://127.0.0.1:8787 https://data-api.binance.vision wss://data-stream.binance.vision; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'" />
+<title>zengtrade · Bull/Bear Terminal</title>
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -33,8 +37,14 @@
 <!-- ====================== TOP BAR ====================== -->
 <header class="topbar">
   <div class="tb-brand">
-    <img class="brand-logo" src="assets/logo.svg" alt="TradePro" />
-    <span class="brand-pro">TradePro</span>
+    <!-- Ensō Breakout — inlined (not <img>) so `currentColor` picks up the live regime accent.
+         aria-hidden: the wordmark beside it already announces the name. -->
+    <svg class="brand-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+      <rect width="32" height="32" rx="8" fill="currentColor"/>
+      <path d="M24.69 13.67A9 9 0 1 1 20.5 8.21" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M12.5 19.5L17 15L20 17.5L26.5 8.8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="brand-pro">zengtrade</span>
   </div>
 
   <!-- Workspace selector (JS-rendered in Trading mode) — replaces the old NSE/BSE/MCX exchange switch -->
@@ -229,13 +239,17 @@
 </div>
 
 <!-- ====================== FIRST-RUN PERSONA GATE ====================== -->
-<div class="persona-gate" id="personaGate" data-step="1" role="dialog" aria-modal="true" aria-label="Set up TradePro">
+<div class="persona-gate" id="personaGate" data-step="1" role="dialog" aria-modal="true" aria-label="Set up zengtrade">
   <div class="pg-card">
-    <img class="pg-logo" src="assets/logo.svg" alt="TradePro" />
+    <svg class="pg-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+      <rect width="32" height="32" rx="8" fill="currentColor"/>
+      <path d="M24.69 13.67A9 9 0 1 1 20.5 8.21" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M12.5 19.5L17 15L20 17.5L26.5 8.8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
     <div class="pg-steps" aria-hidden="true"><span class="pg-dot on"></span><span class="pg-dot"></span></div>
 
     <div class="pg-step pg-step1">
-      <h2 class="pg-title">How will you use TradePro today?</h2>
+      <h2 class="pg-title">How will you use zengtrade today?</h2>
       <p class="pg-sub">We'll tailor the entire terminal — order pad, panels, chart and signals — to your style. Switch anytime from the floating control.</p>
       <div class="pg-opts">
         <button class="pg-opt" data-persona="trader">
