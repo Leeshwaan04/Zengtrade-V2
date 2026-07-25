@@ -4041,6 +4041,17 @@ function cxStratBadge(s, cell, regime){
   const act=active?`<span class="cxb reg-live"><i class="cxb-dot"></i>LIVE</span>`:'';
   return act+reg;
 }
+// Shared regime-fit lens for every crypto tab — ensures /api/regime-fit is loaded and returns the
+// current regime + per-strategy verdict maps (by id). Keeps the FIT/STOOD-DOWN story consistent
+// across Monitor / Forward / Positions instead of each tab re-deriving it.
+function cxRegimeFit(){
+  if(!RFIT.data.crypto && !RFIT.busy.crypto) loadRegimeFit('crypto').then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); });
+  const rf=RFIT.data.crypto||{};
+  const curReg=rf.currentRegime||(CRYPTOMON.data&&CRYPTOMON.data.regime)||'—';
+  const fitMap={}, fitAllMap={};
+  (rf.strategies||[]).forEach(x=>{ fitMap[x.id]=(x.cells||{})[curReg]||null; fitAllMap[x.id]=x.cells||{}; });
+  return {curReg, fitMap, fitAllMap};
+}
 // The honest "Live Engine" panel — what's actually working RIGHT NOW, net of costs. It reconciles
 // the ugly all-time number with the forward picture: the strategies that caused the loss are now
 // STOOD DOWN; what's cleared to run has a real positive edge in this regime. No fabricated profit —
@@ -4129,8 +4140,9 @@ function cryptoPositions(){
   if(CRYPTOMON.err && !d.running) return hero+`<div class="opp-offline">${icon('shield',14)}<span>Bot API unreachable — start it with <b>python3 bot_api.py</b>.</span></div>`;
   if(d.running===false) return hero+`<div class="opp-offline">${icon('shield',14)}<span>Crypto harness not running — start <b>python3 paper_trade_crypto.py</b>.</span></div>`;
   const cur=state.algo.cinstr||'spot';
+  const {curReg, fitMap}=cxRegimeFit();
   const scoped=(d.strategies||[]).filter(s=>(s.instr||'spot')===cur);
-  const ps=[]; scoped.forEach(s=>(s.positions||[]).forEach(p=>ps.push(Object.assign({strat:s.name},p))));
+  const ps=[]; scoped.forEach(s=>(s.positions||[]).forEach(p=>ps.push(Object.assign({strat:s.name,stratId:s.id},p))));
   if(!ps.length) return hero+cryptoScopeBar()+secEmpty('check','No open positions',`Nothing to manage right now — in this regime the survival-first engine is largely in cash. As strategies enter, each position appears here with a live health score and a recommended action.`);
   ps.sort((a,b)=>(a.health==null?999:a.health)-(b.health==null?999:b.health));   // weakest first
   const withH=ps.filter(p=>p.health!=null);
@@ -4140,8 +4152,9 @@ function cryptoPositions(){
     const tone=posTone(p.health), act=POS_ACT[p.action]||null, hv=p.health==null?'—':p.health;
     const gain=p.gainPct!=null?p.gainPct:(p.pnlPct!=null?p.pnlPct:null);
     const dir=p.side!=null?(p.side<0?'SHORT ':'LONG '):'', sym=(p.sym||'').replace(/USDT/g,'');
+    const fc=fitMap[p.stratId], fitB=fc&&fc.verdict==='fit'?`<span class="cxb reg-fit" title="Its strategy is proven to win in ${esc(curReg)} — a healthy live position">FIT · ${esc(curReg)}</span>`:fc&&fc.verdict==='unfit'?`<span class="cxb reg-unfit" title="Its strategy is stood down in ${esc(curReg)} — this is a legacy position being wound down, not a fresh entry">WINDING DOWN</span>`:'';
     return `<div class="pi-card ${tone}">
-      <div class="pi-h"><div class="pi-sym"><b>${esc(dir+sym)}</b><span>${esc(p.strat||'')}</span></div>
+      <div class="pi-h"><div class="pi-sym"><b>${esc(dir+sym)}</b><span>${esc(p.strat||'')}${fitB}</span></div>
         <div class="pi-score ${tone}"><b>${hv}</b><span>health</span></div></div>
       <div class="pi-bar"><i class="${tone}" style="width:${p.health==null?0:p.health}%"></i></div>
       <div class="pi-meta">
@@ -4325,12 +4338,12 @@ function cryptoForward(mode){   // mode: 'forward' | 'accuracy'
     {l:'Profit factor',v:t.profitFactor==null?'—':(+t.profitFactor).toFixed(2),s:'gross win ÷ loss',tone:(t.profitFactor>=1.3)?'up':(t.profitFactor<1?'down':'')},
     {l:'Net P&L',v:cxMoney(t.netPnl),s:'realised, closed',tone:(t.netPnl>0)?'up':(t.netPnl<0?'down':'')},
   ]);
-  const reg=(CRYPTOMON.data&&CRYPTOMON.data.regime)||null;
-  const regBanner=reg?`<div class="ft-regime"><div class="ft-regime-ic">${icon('activity',15)}</div><div><b>Live regime: ${esc(reg)}</b><span>The go-live gate judges each strategy net of costs. Strategies proven <b>fit for this regime</b> carry the edge; the rest are stood down to cash — that's survival-first, not idle.</span></div></div>`:'';
+  const {curReg:reg, fitMap}=cxRegimeFit();
+  const regBanner=reg&&reg!=='—'?`<div class="ft-regime"><div class="ft-regime-ic">${icon('activity',15)}</div><div><b>Live regime: ${esc(reg)}</b><span>The go-live gate judges each strategy net of costs. Strategies proven <b>fit for this regime</b> (green) carry the edge; the rest are stood down to cash — that's survival-first, not idle.</span></div></div>`:'';
   const GRAD=50;   // go-live sample bar: ≥50 closed trades to be judged
   const head=`<div class="cxm-row cxf-row cxm-head"><div class="cxm-name">Strategy · go-live progress</div><span class="cxm-n">Trades</span><span class="cxm-n">Win%</span><span class="cxm-n">PF</span><span class="cxm-n">Expectancy</span><span class="cxm-n">Net</span></div>`;
   const body=rows.map(s=>{const g=Math.min(100,Math.round((s.closed/GRAD)*100)),cleared=s.closed>=GRAD;
-    return `<div class="cxm-row cxf-row"><div class="cxm-name"><b>${esc(s.name)}</b> <span class="cxf-cls">${esc(s.instr||'spot')}</span>
+    return `<div class="cxm-row cxf-row"><div class="cxm-name"><b>${esc(s.name)}</b> <span class="cxf-cls">${esc(s.instr||'spot')}</span>${cxStratBadge(s, fitMap[s.id], reg)}
     <div class="cxf-grad" title="${s.closed}/${GRAD} closed trades toward the go-live sample"><i class="${cleared?'done':''}" style="width:${g}%"></i></div>
     <span class="cxf-gradlbl">${cleared?'✓ sample cleared':`${s.closed}/${GRAD} to go-live`}</span></div>
     <span class="cxm-n num">${s.closed}</span>
