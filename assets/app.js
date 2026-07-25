@@ -3837,14 +3837,21 @@ function cryptoStratCard(s){
     <div class="cx-card-f"><span class="cx-tag">Preview · paper</span><button class="btn-ghost sm" disabled title="Crypto paper engine is on the roadmap">Paper-test (soon)</button></div></div>`;
 }
 function cryptoMarket(){
-  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Crypto is in preview.</b> Prices are <b>real</b> (Binance public data) — never simulated. The strategies below are educational templates: <b>no crypto orders are placed</b>. A paper/live crypto engine (Binance Algo API, server-signed) is on the roadmap. Indian markets stay fully wired via Kite — switch back anytime.</span></div>`;
+  // Honest framing: the crypto paper engine IS live 24/7 (not "preview/roadmap") — real Binance prices,
+  // simulated fills, no real orders. Live execution unlocks per strategy once proven + connected + armed.
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Live crypto paper book — 24/7.</b> Prices are <b>real</b> (Binance), fills are <b>simulated</b> — <b>no real orders are placed</b>. These strategies run continuously in paper; watch them live on <b>Monitor</b>. Live execution unlocks <i>per strategy</i> only once it clears the Go-Live bar, you connect Binance, and arm ALLOW_LIVE.</span></div>`;
   const stat=secStats([
-    {l:'Instruments',v:String(CRYPTO_UNIVERSE.length),s:'USDT spot majors'},
-    {l:'Strategy templates',v:String(CRYPTO_STRATEGIES.length),s:'preview · paper'},
+    {l:'Instruments',v:String(CRYPTO_UNIVERSE.length),s:'USDT majors'},
+    {l:'Strategies',v:String(CRYPTO_STRATEGIES.length),s:'running in paper'},
     {l:'Data',v:CRYPTO.live?'Live':'—',s:CRYPTO.live?'real · Binance':'connecting',tone:CRYPTO.live?'up':''},
-    {l:'Execution',v:'Paper',s:'engine on roadmap'},
+    {l:'Execution',v:'Paper',s:'live: locked until proven'},
   ]);
-  return note+stat+`<div class="cx-grid">${CRYPTO_STRATEGIES.map(cryptoStratCard).join('')}</div>`;
+  const cats=['all',...Array.from(new Set(CRYPTO_STRATEGIES.map(s=>s.cat)))];
+  const sel=(state.algo&&state.algo.cxLibCat)||'all';
+  const shown=sel==='all'?CRYPTO_STRATEGIES:CRYPTO_STRATEGIES.filter(s=>s.cat===sel);
+  const filters=`<div class="mon-ctrl"><div class="mon-seg"><span class="msc-lead">Family</span>${cats.map(c=>`<button class="msc-chip${sel===c?' on':''}" data-cxlibcat="${esc(c)}">${c==='all'?'All':esc(c)}</button>`).join('')}<span class="msc-count">${shown.length} of ${CRYPTO_STRATEGIES.length}</span></div></div>`;
+  const grid=shown.length?`<div class="cx-grid">${shown.map(cryptoStratCard).join('')}</div>`:secEmpty('search','No strategies in this family','Pick another family or <button class="mon-clearfilt" data-cxlibcat="all">show all</button>.');
+  return note+stat+filters+grid;
 }
 function cryptoSoon(label){
   return secEmpty('cpu',label+' · crypto preview',
@@ -4319,6 +4326,7 @@ function renderAlgo(){
   v.querySelectorAll('[data-lbsort]').forEach(b=>b.onclick=()=>{state.algo.lbSort=b.dataset.lbsort;renderAlgo();});
   v.querySelectorAll('[data-monsort]').forEach(b=>b.onclick=()=>{state.algo.monSort=b.dataset.monsort;renderAlgo();});
   v.querySelectorAll('[data-monfilter]').forEach(b=>b.onclick=()=>{state.algo.monFilter=b.dataset.monfilter;renderAlgo();});
+  v.querySelectorAll('[data-cxlibcat]').forEach(b=>b.onclick=()=>{state.algo.cxLibCat=b.dataset.cxlibcat;renderAlgo();});
   v.querySelectorAll('[data-harness]').forEach(b=>b.onclick=()=>toggleHarness(b.dataset.harness));
   const fgx=v.querySelector('[data-fgdismiss]'); if(fgx) fgx.onclick=()=>{ BOT.algoGuideDone=true; try{localStorage.setItem('tp.algoGuide','1');}catch(e){} renderAlgo(); };
   // ---- Strategy Library: family/risk filters · search · DIY expand · regime jump (instrument & holding live in the studio scope toggle) ----
