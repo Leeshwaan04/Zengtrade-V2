@@ -29,6 +29,7 @@ MARKET_CLOSE = time(15, 30)
 
 RUN_HEALTH = 65        # a still-strong live thesis at target → trail & run instead of capping the winner
 COOLDOWN_BARS = 2      # after an exit, block re-entry of the SAME name for this many bars (anti-churn)
+MAX_LOSS_PCT = 0.06    # hard per-trade loss cap: no single trade may lose more than this (RCA: ema_cross −₹8,763 on one un-capped trade)
 
 
 def market_open(now: datetime | None = None) -> bool:
@@ -111,6 +112,7 @@ class LongOnlyPaperEngine:
                     if self._blocked.get(sym) and datetime.now() < self._blocked[sym]:
                         continue                                    # cooldown — don't churn a just-exited name
                     stop, target = self.risk.stop_and_target(price, atr)
+                    stop = max(stop, round(price * (1 - MAX_LOSS_PCT), 8))   # hard per-trade loss cap (tighten, never loosen)
                     # cost-aware edge gate: only pay brokerage/TDS when the expected move clears it
                     exp_move = (target - price) if (target and target > price) else atr
                     if not costs.worth_trading(price, exp_move, 1, self.cost_kind, self.edge_mult):

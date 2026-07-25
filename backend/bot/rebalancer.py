@@ -44,10 +44,22 @@ BASE_CASH = {"Bull": 10, "Choppy": 40, "Bear": 60, "High-Vol": 55}
 CONVICTION_FLOOR = {"Bull": 70, "Choppy": 80, "Bear": 82, "High-Vol": 85}
 SAFE_STYLES = {"Defensive", "Relative-value"}
 
+# CRYPTO has NO defensive LONG — a low-volatility crypto basket is still 100% long crypto and falls
+# with the market in a bear. The "Defensive" label is equity logic; here it caused lowvol (−$20.5k,
+# our biggest loss) to keep trading through the bear. Reclassify the long-only crypto baskets as
+# directional so they stand down in a crypto bear like every other long.
+CRYPTO_STYLE = {
+    "lowvol": "Trend", "xs_momentum": "Trend",                       # long baskets = directional → stand down in bear
+    "cx_strangle": "Carry", "cx_strangle_eth": "Carry", "cx_condor": "Carry",  # short-premium → the bear survivors, keep on
+    "perp_funding": "Carry", "perp_funding_eth": "Carry",            # funding carry = market-neutral-ish → keep on
+    "perp_trend": "Trend", "perp_trend_eth": "Trend",                # directional perps → stand down in bear
+}
+
 
 class Rebalancer:
     def __init__(self, preservation: bool = True):
         self.preservation = preservation
+        self.market = "indian"      # the crypto harness sets this to "crypto" for crypto-specific gating
         self.regime = "Bull"
         self.health = 100
         self.enabled: set = set(REGIME_ENABLED["Bull"])
@@ -71,8 +83,13 @@ class Rebalancer:
             self.note = f"cautious — health {self.health}: trimmed risk, {cash}% cash"
         else:
             self.note = f"{self.regime} regime: {', '.join(sorted(enabled))}"
-        if self.preservation and self.regime in ("Bear", "High-Vol"):
-            enabled &= (SAFE_STYLES | {"Reversion"})    # extra-defensive in the worst regimes
+        if self.market == "crypto" and self.regime in ("Bear", "High-Vol"):
+            # crypto has no safe long — go to CASH; only market-neutral (pairs) + short-premium survive.
+            # SET (not intersect): Carry isn't in the equity Bear base set, so an intersect would drop it.
+            enabled = {"Relative-value", "Carry"}
+            self.note = f"crypto {self.regime} — cash; only market-neutral + short-premium"
+        elif self.preservation and self.regime in ("Bear", "High-Vol"):
+            enabled &= (SAFE_STYLES | {"Reversion"})    # extra-defensive in the worst regimes (equity)
         self.enabled = enabled
         self.cash_pct = cash
 
@@ -85,6 +102,12 @@ class Rebalancer:
         """Feed the data-driven per-regime verdicts for the CURRENT regime (from regime_fit)."""
         self.regime_fit = dict(fit or {})
 
+    def _style(self, name: str) -> str:
+        """Gating style — crypto overrides the equity-style label (no defensive long in crypto)."""
+        if self.market == "crypto" and name in CRYPTO_STYLE:
+            return CRYPTO_STYLE[name]
+        return STRATEGY_STYLE.get(name, "Trend")
+
     def allows(self, name: str) -> bool:
         if name in self.culled:
             return False                       # auto-culled overall → stand down
@@ -93,7 +116,7 @@ class Rebalancer:
             return False                       # PROVEN to lose in THIS regime → bench it here
         if fit == "fit":
             return True                        # PROVEN to win in THIS regime → deploy (override the prior)
-        return STRATEGY_STYLE.get(name, "Trend") in self.enabled   # no evidence yet → safe heuristic prior
+        return self._style(name) in self.enabled   # no evidence yet → safe heuristic prior
 
     def conviction_floor(self) -> float:
         base = CONVICTION_FLOOR.get(self.regime, 75)
@@ -102,7 +125,7 @@ class Rebalancer:
     def plan(self, names: list[str]) -> dict:
         enabled, stood = [], []
         for n in names:
-            (enabled if self.allows(n) else stood).append({"name": n, "style": STRATEGY_STYLE.get(n, "?")})
+            (enabled if self.allows(n) else stood).append({"name": n, "style": self._style(n)})
         return {"regime": self.regime, "health": self.health, "cashPct": self.cash_pct,
                 "preservation": self.preservation, "convictionFloor": self.conviction_floor(),
                 "enabledStyles": sorted(self.enabled), "note": self.note,

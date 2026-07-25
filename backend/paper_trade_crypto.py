@@ -53,6 +53,7 @@ from bot.crypto_perps import CryptoPerpEngine
 from bot.crypto_options import CryptoOptionsEngine
 from bot.governor import GOVERNOR
 from bot.rebalancer import REBALANCER
+REBALANCER.market = "crypto"   # crypto-specific gating: no defensive long; Bear/High-Vol → cash + pairs + short-premium
 
 POLL_SECONDS = 300
 PAPER_CAPITAL = 500_000        # engine sizing (matches the NSE book so P&L is legible & comparable)
