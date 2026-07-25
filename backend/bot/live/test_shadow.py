@@ -6,7 +6,8 @@ exchange. Green here == the execution spine is proven with zero capital at risk.
 """
 from __future__ import annotations
 
-from .broker import KiteBrokerAdapter, ShadowBroker
+from .binance_client import BinanceRestClient
+from .broker import ShadowBroker
 from .config import LiveConfig
 from .orders import Order, OrderIntent, OrderState, Side
 from .router import OrderRouter
@@ -171,10 +172,11 @@ def _is_frozen(c) -> bool:
 
 # ---- B3: real adapter refuses until armed --------------------------------------------
 def test_B3_real_adapter_refuses_unarmed():
-    k = KiteBrokerAdapter()
+    # the REAL Binance adapter: any signed/live call must fail safe unless the two-key OS lock is armed.
+    c = BinanceRestClient()
     try:
-        k.place(Order(coid="x", intent=_intent()))
-        assert False, "should have refused"
+        c.new_order({"symbol": "BTCUSDT", "side": "BUY", "type": "MARKET", "quantity": 0.01})
+        assert False, "should have refused a signed order while unarmed"
     except (PermissionError, NotImplementedError):
         pass
 
