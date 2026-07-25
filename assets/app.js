@@ -3768,9 +3768,9 @@ function patchCryptoMonitorLive(){
     const open=cxLiveOpen(s), total=((s.realisedPnl)||0)+open, instr=s.instr||'spot';
     segTot[instr]=(segTot[instr]||0)+total; segOpen[instr]=(segOpen[instr]||0)+open;
     const row=rowMap[s.id]; if(!row) return;
-    const u=row.querySelector('.cxm-unreal'); if(u){ u.textContent=cxMoney(open); setCls(u,open); }
-    const tb=row.querySelector('.cxm-total>b'); if(tb) tb.textContent=cxMoney(total);
-    const t=row.querySelector('.cxm-total'); if(t) setCls(t,total);
+    // mon-card structure: patch the Net figure + the "R … · U …" sub in place (no re-render/flicker)
+    const nb=row.querySelector('.cxm-net'); if(nb){ nb.textContent=cxMoney(total); setCls(nb,total); }
+    const sub=row.querySelector('[data-cxsub]'); if(sub) sub.textContent=`R ${cxMoney(s.realisedPnl||0)} · U ${cxMoney(open)}`;
   });
   const setLive=(id,v)=>document.querySelectorAll('[data-live="'+id+'"]').forEach(el=>{ el.textContent=cxMoney(v); setCls(el,v); });
   setLive('cxClsPnl', segTot[cur]); setLive('cxUnreal', segOpen[cur]);
@@ -3973,22 +3973,77 @@ function cryptoMonitor(){
     {l:'Regime',v:esc(d.regime||'—'),s:'BTC-led'},
     {l:'Risk score',v:g.score==null?'—':String(g.score),s:g.exposurePct!=null?`${g.exposurePct}% exposure`:'governor'},
   ]);
+  // forward stats (win%/PF/expectancy/closed per strategy) power the accuracy line + go-live check —
+  // same as the Indian book, joined by strategy id from the /api/crypto/forward payload.
+  if(!CRYPTOFWD.loaded && !CRYPTOFWD.busy) loadCryptoFwd().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='monitor') renderAlgo(); });
+  const fwdMap={}; ((CRYPTOFWD.data&&CRYPTOFWD.data.strategies)||[]).forEach(f=>fwdMap[f.id]=f);
   scoped.forEach(s=>s._dep=cryptoDeployed(s));   // stamp deployed for the Deployed sort
   const {sorted:sortedScoped, bar:ctrlBar}=monSortFilter(scoped);
+  const me=state.algo.monExpand=state.algo.monExpand||{};
+  // accordion cards — identical structure/classes to the Indian Monitor (mon-card): click to expand
+  // positions + forward accuracy, a per-row Go-Live check CTA, and deployed capital in the subline.
   const rows=sortedScoped.map(s=>{
-    return `<div class="cxm-row" data-cxrow="${esc(s.id)}"><div class="cxm-name"><b>${esc(s.name)}</b><div class="cxm-pos">${cxChips(s.positions)}</div></div>
-      <span class="cxm-n num cxm-open">${s.openPositions||0}</span>
-      <span class="cxm-n num cxm-real ${cls(s.realisedPnl)}">${cxMoney(s.realisedPnl)}</span>
-      <span class="cxm-n num cxm-unreal ${cls(s.openPnl)}">${cxMoney(s.openPnl)}</span>
-      <span class="cxm-n num cxm-total ${cls(s.paperPnl)}"><b>${cxMoney(s.paperPnl)}</b></span></div>`;
+    const open=!!me[s.id], f=fwdMap[s.id]||{}, dep=cryptoDeployed(s);
+    const sub=(s.realisedPnl||s.openPnl||s.openPositions)?`R ${cxMoney(s.realisedPnl||0)} · U ${cxMoney(s.openPnl||0)}`:'no trades yet';
+    const pos=(s.positions||[]).map(p=>{
+      const sym=(p.sym||'').replace(/USDT/g,'');
+      if(p.entry!=null){ const dir=p.side!=null?(p.side<0?'SHORT ':'LONG '):''; const g=p.gainPct!=null?p.gainPct:(p.pnlPct!=null?p.pnlPct:null);
+        return `<div class="mon-posrow"><span class="mp-sym">${esc(dir+sym)}</span><span class="mp-q">${p.qty!=null?esc(String(p.qty))+' qty':''}</span><span class="mp-x num">entry ${(+p.entry).toLocaleString()}</span>${p.stop?`<span class="mp-x num">stop ${(+p.stop).toLocaleString()}</span>`:''}<b class="mp-pnl num ${cls(p.pnl)}">${p.pnl!=null?cxMoney(p.pnl):''}${g!=null?` · ${g>=0?'+':''}${g}%`:''}</b></div>`; }
+      return `<div class="mon-posrow"><span class="mp-sym">${esc(sym)}</span><span class="mp-q">spread ${p.spread>0?'long':'short'}</span><span class="mp-x">marks on close</span></div>`;
+    }).join('');
+    const posBlock=pos?`<div class="mon-pos">${pos}</div>`:'';
+    const accLine=f.closed?`<div class="mon-acc"><span>Forward accuracy</span><b class="${f.winPct!=null&&f.winPct>=50?'up':'down'}">${f.winPct!=null?f.winPct+'% win':'—'}</b><i>·</i>PF <b class="${f.profitFactor!=null&&f.profitFactor>=1?'up':'down'}">${f.profitFactor!=null?(+f.profitFactor).toFixed(2):'—'}</b><i>·</i>exp <b class="num ${cls(f.expectancy)}">${f.expectancy!=null?cxMoney(f.expectancy):'—'}</b><i>·</i>${f.closed} closed <a class="mon-acc-link" data-algogoto="accuracy">go-live gate →</a></div>`:'';
+    const expInner=(posBlock+accLine)||`<div class="mon-exp-empty">No open positions or closed trades yet — this strategy trades only when its setup appears.</div>`;
+    return `<div class="mon-card${open?' open':''}" data-cxrow="${esc(s.id)}">
+      <div class="mon-row live mon-head" data-monexp="${esc(s.id)}" role="button" tabindex="0" aria-expanded="${open}" title="Show positions &amp; forward accuracy"><div class="mon-l"><span class="live-dot live"></span><div><b>${esc(s.name)} <span class="cxf-cls">${esc(s.instr||'spot')}</span></b><span class="mon-cat">${s.openPositions||0} open${dep>0?` · <b class="mc-dep">${cxMoney(dep)}</b> deployed`:''} · ${f.closed||0} closed</span></div></div>
+      <div class="mon-pnl"><b class="num cxm-net ${cls(s.paperPnl)}">${cxMoney(s.paperPnl)}</b><span class="mon-sub" data-cxsub="${esc(s.id)}">${sub}</span></div>
+      <div class="mon-ctrls"><button class="btn-ghost sm" data-cxgl="${esc(s.id)}">${icon('shield',12)} Go-Live check</button><span class="mon-chev">▾</span></div></div>
+      <div class="mon-exp">${expInner}</div></div>`;
   }).join('');
-  const head=`<div class="cxm-row cxm-head"><div class="cxm-name">Strategy</div><span class="cxm-n">Open</span><span class="cxm-n">Realised</span><span class="cxm-n">Unreal.</span><span class="cxm-n">Net</span></div>`;
   const act=scoped.filter(s=>s.openPositions>0||s.realisedPnl!==0).length;
   const listHtml=rows||`<div class="mon-exp-empty" style="padding:14px">No strategies match this filter — <button class="mon-clearfilt" data-monfilter="all">show all</button>.</div>`;
   const _xt=execToggle(scoped.length, 0);   // Paper | Live toggle — unified with the Indian book (crypto live is locked)
   if((state.algo.exec||'paper')==='live') return note+cryptoScopeBar()+_xt+liveLockedPanel();
   CRYPTOMON._sig=cryptoMonSig();   // remember the structure so the next poll can patch-in-place (no flicker)
-  return note+cryptoScopeBar()+_xt+stat+ctrlBar+`<div class="cxm-tbl-h">${icon('activity',13)}<b>${esc(clsLabel)} strategies</b><span>${act} active · ${scoped.length} running${upd?` · updated ${upd}`:''}</span></div><div class="cxm-tbl">${head}${listHtml}</div>`;
+  const brk=cxClassStrip();   // P&L by instrument class (Spot / Perps / Options) — like the Indian mon-brk
+  return note+cryptoScopeBar()+_xt+stat+brk+ctrlBar+`<div class="cxm-tbl-h">${icon('activity',13)}<b>${esc(clsLabel)} strategies</b><span>${act} active · ${scoped.length} running${upd?` · updated ${upd}`:''}</span></div><div class="mon-list">${listHtml}</div>`;
+}
+// P&L by instrument class for the crypto Monitor — mirrors the Indian mon-brk strip; each cell
+// switches the scope (data-cinstr wiring already exists). Counts/P&L from cxScopeCounts().
+function cxClassStrip(){
+  const by=cxScopeCounts(), cur=state.algo.cinstr||'spot';
+  const cell=(k,lab)=>`<span class="mb-cell${cur===k?' on':''}" data-cinstr="${k}" role="button" tabindex="0" title="${lab} — net ${cxMoney(by[k].pnl)} · ${by[k].n} strategies. Click to scope."><i>${esc(lab)}</i><b class="num ${cls(by[k].pnl)}">${cxMoney(by[k].pnl)}</b></span>`;
+  const overall=by.spot.pnl+by.perps.pnl+by.options.pnl;
+  return `<div class="mon-brk"><span class="mb-lead">P&amp;L by class</span>${cell('spot','Spot')}${cell('perps','Perps')}${cell('options','Options')}<span class="mb-cell mb-all"><i>Overall</i><b class="num ${cls(overall)}">${cxMoney(overall)}</b></span></div>`;
+}
+// Per-strategy Go-Live check for crypto — the honest readiness modal (reuses the Indian gl-* UI).
+// Scores the strategy's forward evidence against the go-live bar and states plainly WHY crypto
+// live stays locked (browser can't arm ALLOW_LIVE + the book must clear the net-of-cost bar).
+function cryptoGoLiveCheck(id){
+  const s=((CRYPTOMON.data&&CRYPTOMON.data.strategies)||[]).find(x=>x.id===id)||{name:id};
+  flowModal({title:'Go-Live readiness — '+(s.name||id), hideConfirm:true,
+    body:`<div class="gl-load">${icon('cpu',16)}<span>Scoring ${esc(s.name||id)} against the go-live bar (net of 135bps costs)…</span></div>`,
+    wire(body){
+      fetch(BOT_API+'/api/readiness/book?market=crypto').then(r=>r.json())
+        .then(d=>{ body.innerHTML=cryptoGoLiveHTML(d,id); })
+        .catch(()=>{ body.innerHTML=`<p class="flow-note">${icon('shield',13)}<span>Bot API offline — run <b>python3 bot_api.py</b>, then retry.</span></p>`; });
+    }});
+}
+function cryptoGoLiveHTML(d,id){
+  const bar=d.bar||{}, r=(d.strategies||[]).find(x=>x.id===id)||{};
+  const gate=(ok,label,detail)=>`<div class="gl-row ${ok?'pass':'fail'}"><span class="gl-mk">${icon(ok?'check':'x',13)}</span><div class="gl-tx"><b>${esc(label)}</b><span>${esc(detail)}</span></div></div>`;
+  const nT=r.closed||0, pf=r.profitFactor, exp=r.expectancy, regs=(r.regimes||[]).length;
+  const g1=nT>=(bar.minTrades||30), g2=pf!=null&&pf>=(bar.minProfitFactor||1.3), g3=regs>=(bar.minRegimes||2), g4=exp!=null&&exp>0;
+  const passed=[g1,g2,g3,g4].filter(Boolean).length;
+  const head=`<div class="gl-head block"><div class="gl-score"><b>${passed}/4</b><span>evidence gates green</span></div>
+    <div class="gl-barwrap"><div class="gl-bar"><i style="width:${passed/4*100}%"></i></div><span class="gl-verdict">${icon('lock',13)} Crypto live is gated</span></div></div>`;
+  const gates=`<div class="gl-grp"><div class="gl-gh">Forward-test evidence · net of 135bps (1% TDS + fees)</div>
+    ${gate(g1,'Enough closed trades',`${nT} of ${bar.minTrades||30} needed for a real sample`)}
+    ${gate(g2,'Profit factor clears the bar',`PF ${pf!=null?(+pf).toFixed(2):'—'} vs ≥ ${bar.minProfitFactor||1.3}`)}
+    ${gate(g3,'Proven across regimes',`${regs} of ${bar.minRegimes||2} regimes with a real sample`)}
+    ${gate(g4,'Positive expectancy after cost',`${exp!=null?cxMoney(exp):'—'} per trade`)}</div>`;
+  const foot=`<div class="gl-blocked">${icon('lock',14)}<div><b>Crypto live is locked — by design, twice over.</b><span>1) A browser can <b>never</b> arm real orders — it needs <b>ALLOW_LIVE</b> set on the machine running the bot (a two-key OS gate). 2) The whole crypto book must clear the net-of-cost bar first, and today it is negative after the 1% TDS. ${passed===4?'This strategy has cleared the <b>evidence</b> gates — the capital/cost gate remains.':`This strategy still has <b>${4-passed}</b> evidence gate(s) open.`}</span></div></div>`;
+  return head+gates+foot;
 }
 // ---- crypto Positions — Position Intelligence, at parity with the Indian book ----
 // Reuses the SAME pi-card component (health score, action chip, thesis reason) that the Indian
@@ -4435,6 +4490,7 @@ function renderAlgo(){
   v.querySelectorAll('[data-cbtstrat]').forEach(b=>b.onclick=()=>{ state.algo.cbt=state.algo.cbt||{strat:'macross',period:'1Y'}; state.algo.cbt.strat=b.dataset.cbtstrat; renderAlgo(); });
   v.querySelectorAll('[data-cbtperiod]').forEach(b=>b.onclick=()=>{ state.algo.cbt=state.algo.cbt||{strat:'macross',period:'1Y'}; state.algo.cbt.period=b.dataset.cbtperiod; renderAlgo(); });
   v.querySelectorAll('[data-cxcsv]').forEach(b=>b.onclick=cxTradesCSV);
+  v.querySelectorAll('[data-cxgl]').forEach(b=>b.onclick=e=>{e.stopPropagation();cryptoGoLiveCheck(b.dataset.cxgl);});
   v.querySelectorAll('[data-algogoto]').forEach(b=>b.onclick=()=>{state.algo.view=b.dataset.algogoto;renderAlgo();});
   v.querySelectorAll('[data-algobt]').forEach(b=>b.onclick=()=>{state.algo.bt.algo=+b.dataset.algobt;state.algo.view='backtest';renderAlgo();});
   v.querySelectorAll('[data-algodep]').forEach(b=>b.onclick=()=>algoDeploy(ALGOS[+b.dataset.algodep]));
@@ -4447,7 +4503,7 @@ function renderAlgo(){
   // Monitor accordion: click a strategy to reveal its positions + forward accuracy.
   // Toggles the class directly (no re-render) → smooth, and survives the 2s live poll.
   v.querySelectorAll('[data-monexp]').forEach(el=>{
-    const tog=e=>{ if(e&&e.target&&e.target.closest('[data-algogl],[data-algogoto]'))return;
+    const tog=e=>{ if(e&&e.target&&e.target.closest('[data-algogl],[data-cxgl],[data-algogoto]'))return;
       const id=el.dataset.monexp, m=state.algo.monExpand=state.algo.monExpand||{}; m[id]=!m[id];
       const card=el.closest('.mon-card'); if(card)card.classList.toggle('open',m[id]); el.setAttribute('aria-expanded',String(!!m[id])); };
     el.onclick=tog;
