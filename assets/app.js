@@ -3977,6 +3977,11 @@ function cryptoMonitor(){
   // same as the Indian book, joined by strategy id from the /api/crypto/forward payload.
   if(!CRYPTOFWD.loaded && !CRYPTOFWD.busy) loadCryptoFwd().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='monitor') renderAlgo(); });
   const fwdMap={}; ((CRYPTOFWD.data&&CRYPTOFWD.data.strategies)||[]).forEach(f=>fwdMap[f.id]=f);
+  // regime fit (learned, net-of-cost verdict per strategy for the CURRENT regime) → drives the live
+  // engine panel + per-row FIT/STOOD-DOWN badges. Joined by id from /api/regime-fit?market=crypto.
+  if(!RFIT.data.crypto && !RFIT.busy.crypto) loadRegimeFit('crypto').then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='monitor') renderAlgo(); });
+  const rf=RFIT.data.crypto||{}, curReg=rf.currentRegime||d.regime||'—';
+  const fitMap={}; (rf.strategies||[]).forEach(x=>{ fitMap[x.id]=(x.cells||{})[curReg]||null; });
   scoped.forEach(s=>s._dep=cryptoDeployed(s));   // stamp deployed for the Deployed sort
   const {sorted:sortedScoped, bar:ctrlBar}=monSortFilter(scoped);
   const me=state.algo.monExpand=state.algo.monExpand||{};
@@ -3994,8 +3999,9 @@ function cryptoMonitor(){
     const posBlock=pos?`<div class="mon-pos">${pos}</div>`:'';
     const accLine=f.closed?`<div class="mon-acc"><span>Forward accuracy</span><b class="${f.winPct!=null&&f.winPct>=50?'up':'down'}">${f.winPct!=null?f.winPct+'% win':'—'}</b><i>·</i>PF <b class="${f.profitFactor!=null&&f.profitFactor>=1?'up':'down'}">${f.profitFactor!=null?(+f.profitFactor).toFixed(2):'—'}</b><i>·</i>exp <b class="num ${cls(f.expectancy)}">${f.expectancy!=null?cxMoney(f.expectancy):'—'}</b><i>·</i>${f.closed} closed <a class="mon-acc-link" data-algogoto="accuracy">go-live gate →</a></div>`:'';
     const expInner=(posBlock+accLine)||`<div class="mon-exp-empty">No open positions or closed trades yet — this strategy trades only when its setup appears.</div>`;
+    const badge=cxStratBadge(s, fitMap[s.id], curReg);
     return `<div class="mon-card${open?' open':''}" data-cxrow="${esc(s.id)}">
-      <div class="mon-row live mon-head" data-monexp="${esc(s.id)}" role="button" tabindex="0" aria-expanded="${open}" title="Show positions &amp; forward accuracy"><div class="mon-l"><span class="live-dot live"></span><div><b>${esc(s.name)} <span class="cxf-cls">${esc(s.instr||'spot')}</span></b><span class="mon-cat">${s.openPositions||0} open${dep>0?` · <b class="mc-dep">${cxMoney(dep)}</b> deployed`:''} · ${f.closed||0} closed</span></div></div>
+      <div class="mon-row live mon-head" data-monexp="${esc(s.id)}" role="button" tabindex="0" aria-expanded="${open}" title="Show positions &amp; forward accuracy"><div class="mon-l"><span class="live-dot live"></span><div><b>${esc(s.name)} <span class="cxf-cls">${esc(s.instr||'spot')}</span>${badge}</b><span class="mon-cat">${s.openPositions||0} open${dep>0?` · <b class="mc-dep">${cxMoney(dep)}</b> deployed`:''} · ${f.closed||0} closed</span></div></div>
       <div class="mon-pnl"><b class="num cxm-net ${cls(s.paperPnl)}">${cxMoney(s.paperPnl)}</b><span class="mon-sub" data-cxsub="${esc(s.id)}">${sub}</span></div>
       <div class="mon-ctrls"><button class="btn-ghost sm" data-cxgl="${esc(s.id)}">${icon('shield',12)} Go-Live check</button><span class="mon-chev">▾</span></div></div>
       <div class="mon-exp">${expInner}</div></div>`;
@@ -4006,7 +4012,60 @@ function cryptoMonitor(){
   if((state.algo.exec||'paper')==='live') return note+cryptoScopeBar()+_xt+liveLockedPanel();
   CRYPTOMON._sig=cryptoMonSig();   // remember the structure so the next poll can patch-in-place (no flicker)
   const brk=cxClassStrip();   // P&L by instrument class (Spot / Perps / Options) — like the Indian mon-brk
-  return note+cryptoScopeBar()+_xt+stat+brk+ctrlBar+`<div class="cxm-tbl-h">${icon('activity',13)}<b>${esc(clsLabel)} strategies</b><span>${act} active · ${scoped.length} running${upd?` · updated ${upd}`:''}</span></div><div class="mon-list">${listHtml}</div>`;
+  const engine=cxLiveEnginePanel(scoped, fitMap, curReg);   // honest "what's working now" transparency
+  return note+cryptoScopeBar()+_xt+engine+stat+brk+ctrlBar+`<div class="cxm-tbl-h">${icon('activity',13)}<b>${esc(clsLabel)} strategies</b><span>${act} active · ${scoped.length} running${upd?` · updated ${upd}`:''}</span></div><div class="mon-list">${listHtml}</div>`;
+}
+// Per-strategy badge: LIVE (has open positions right now) + regime verdict (FIT / STOOD DOWN /
+// GATHERING) for the current regime — so the user sees, at a glance, which strategies the engine
+// is running vs benching AND which are actively in a trade. All from the learned regime-fit data.
+function cxStratBadge(s, cell, regime){
+  const active=(s.openPositions||0)>0;
+  const v=cell&&cell.verdict;
+  let reg='';
+  if(v==='fit') reg=`<span class="cxb reg-fit" title="Proven to WIN in ${esc(regime)} (net of cost, ${cell.n} trades) — the engine keeps it running">FIT · ${esc(regime)}</span>`;
+  else if(v==='unfit') reg=`<span class="cxb reg-unfit" title="Proven to LOSE in ${esc(regime)} (${cell.n} trades, ${cell.expectancy!=null?cxMoney(cell.expectancy)+'/trade':''}) — stood down to cash">STOOD DOWN</span>`;
+  else if(cell&&cell.n) reg=`<span class="cxb reg-gath" title="Gathering evidence for ${esc(regime)} (${cell.n} trades so far)">GATHERING</span>`;
+  const act=active?`<span class="cxb reg-live"><i class="cxb-dot"></i>LIVE</span>`:'';
+  return act+reg;
+}
+// The honest "Live Engine" panel — what's actually working RIGHT NOW, net of costs. It reconciles
+// the ugly all-time number with the forward picture: the strategies that caused the loss are now
+// STOOD DOWN; what's cleared to run has a real positive edge in this regime. No fabricated profit —
+// every figure is the learned, net-of-135bps regime-fit evidence.
+function cxLiveEnginePanel(scoped, fitMap, regime){
+  const fit=[], unfit=[];
+  scoped.forEach(s=>{ const c=fitMap[s.id]; if(!c) return; if(c.verdict==='fit') fit.push({s,c}); else if(c.verdict==='unfit') unfit.push({s,c}); });
+  if(!fit.length && !unfit.length) return '';   // no learned verdicts yet — don't invent a story
+  const N=fit.reduce((a,x)=>a+(x.c.n||0),0);
+  const wWin=N?fit.reduce((a,x)=>a+(x.c.n||0)*(x.c.winPct||0),0)/N:null;      // trade-weighted win-rate
+  const wExp=N?fit.reduce((a,x)=>a+(x.c.n||0)*(x.c.expectancy||0),0)/N:null;  // trade-weighted expectancy
+  const activeFit=fit.filter(x=>(x.s.openPositions||0)>0).length;
+  const depFit=fit.reduce((a,x)=>a+cryptoDeployed(x.s),0);
+  const unfitExp=unfit.length?unfit.reduce((a,x)=>a+(x.c.expectancy||0),0)/unfit.length:null;
+  const good=wExp!=null&&wExp>0;
+  // running chips — the proven winners for this regime, with their REAL edge
+  const runChips=fit.sort((a,b)=>(b.c.expectancy||0)-(a.c.expectancy||0)).slice(0,6).map(x=>
+    `<span class="cxe-chip${(x.s.openPositions||0)>0?' on':''}" title="${esc(x.s.name)} in ${esc(regime)}: ${x.c.winPct}% win · PF ${x.c.pf} · ${cxMoney(x.c.expectancy)}/trade over ${x.c.n} trades">${esc(x.s.name)} <i class="${cls(x.c.expectancy)}">${cxMoney(x.c.expectancy)}</i></span>`).join('')
+    || `<span class="cxe-chip muted">No strategy has cleared the ${esc(regime)} bar yet — the book stays in cash.</span>`;
+  const edge=N?`<div class="cxe-edge">
+    <div class="cxe-metric"><span>Historical win-rate</span><b class="${wWin>=50?'up':'down'}">${Math.round(wWin)}%</b><i>of trades, running set</i></div>
+    <div class="cxe-metric"><span>Edge per trade</span><b class="num ${cls(wExp)}">${cxMoney(wExp)}</b><i>net of 135bps cost</i></div>
+    <div class="cxe-metric"><span>Evidence</span><b>${N}</b><i>closed ${esc(regime)} trades</i></div>
+    <div class="cxe-metric"><span>Capital at work</span><b class="num">${cxMoney(depFit)}</b><i>${activeFit} live now</i></div>
+  </div>`:'';
+  const verdict=good
+    ? `<span class="cxe-tag ok">${icon('check',13)} Positive edge, net of cost</span>`
+    : (N?`<span class="cxe-tag warn">${icon('alert',13)} Edge not yet proven positive — trading small / mostly cash</span>`:'');
+  const stood=unfit.length?`<div class="cxe-stood">${icon('shield',13)}<span><b>${unfit.length} strateg${unfit.length===1?'y':'ies'} stood down</b> — proven to lose in ${esc(regime)}${unfitExp!=null?` (avg <b class="down">${cxMoney(unfitExp)}</b>/trade)`:''}. Their capital is held in <b>cash</b> by design — this is the engine refusing to trade a losing setup, not idleness. <a class="mon-acc-link" data-algogoto="analytics">see the damage they did →</a></span></div>`:'';
+  return `<div class="cxe-panel ${good?'ok':'warn'}">
+    <div class="cxe-head"><div class="cxe-ic">${icon('cpu',18)}</div>
+      <div class="cxe-hx"><b>Live engine · ${esc(regime)} regime</b><span>What's <b>cleared to run right now</b>, net of cost. The engine learned from the losses: the strategies that bled are benched below; what's running here has real evidence behind it.</span></div>
+      ${verdict}</div>
+    ${edge}
+    <div class="cxe-run"><span class="cxe-run-l">Running now</span><div class="cxe-chips">${runChips}</div></div>
+    ${stood}
+    <p class="cxe-foot">${icon('shield',12)}<span>Win-rate and edge are the <b>real forward record</b> of these strategies in ${esc(regime)} (net of 135bps) — evidence, <b>not a promise</b>. Markets can still hand any single trade a loss; the edge is a long-run average.</span></p>
+  </div>`;
 }
 // P&L by instrument class for the crypto Monitor — mirrors the Indian mon-brk strip; each cell
 // switches the scope (data-cinstr wiring already exists). Counts/P&L from cxScopeCounts().

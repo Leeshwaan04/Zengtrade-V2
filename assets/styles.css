@@ -2128,6 +2128,38 @@ html[data-persona="ai"] #chartCard,html[data-persona="ai"] #chartResize,html[dat
 /* crypto forward test / accuracy table (6 cols) */
 .cxf-row{grid-template-columns:1.4fr 58px 58px 52px 92px 92px}
 .cxf-cls{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--slate-2);background:var(--surface-2);border:1px solid var(--line);border-radius:5px;padding:1px 5px;margin-left:4px}
+/* per-strategy regime + activity badges (Monitor rows) */
+.cxb{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border-radius:5px;padding:1px 6px;margin-left:5px;vertical-align:middle}
+.cxb.reg-fit{color:var(--green);background:color-mix(in srgb,var(--green) 12%,transparent);border:1px solid color-mix(in srgb,var(--green) 30%,var(--line))}
+.cxb.reg-unfit{color:var(--slate);background:var(--surface-2);border:1px solid var(--line)}
+.cxb.reg-gath{color:var(--slate-2);background:var(--surface-2);border:1px dashed var(--line)}
+.cxb.reg-live{color:var(--green);background:color-mix(in srgb,var(--green) 14%,transparent);border:1px solid color-mix(in srgb,var(--green) 34%,var(--line))}
+.cxb-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:cxbpulse 1.6s ease-in-out infinite}
+@keyframes cxbpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.72)}}
+@media (prefers-reduced-motion:reduce){.cxb-dot{animation:none}}
+/* the honest "Live Engine" panel */
+.cxe-panel{border:1px solid var(--line);border-radius:14px;padding:14px 15px;margin:4px 0 2px;background:var(--surface);position:relative;overflow:hidden}
+.cxe-panel::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px}
+.cxe-panel.ok::before{background:var(--green)} .cxe-panel.warn::before{background:var(--amber,#d9903a)}
+.cxe-head{display:flex;align-items:flex-start;gap:11px}
+.cxe-ic{flex:none;width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:var(--surface-2);color:var(--accent)}
+.cxe-hx{flex:1;min-width:0} .cxe-hx b{font-size:14px} .cxe-hx span{display:block;font-size:11.5px;color:var(--slate);line-height:1.5;margin-top:2px}
+.cxe-tag{flex:none;display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;border-radius:8px;padding:4px 9px;white-space:nowrap}
+.cxe-tag.ok{color:var(--green);background:color-mix(in srgb,var(--green) 12%,transparent)}
+.cxe-tag.warn{color:var(--amber,#b5730a);background:color-mix(in srgb,var(--amber,#d9903a) 14%,transparent)}
+.cxe-edge{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:13px 0 2px}
+.cxe-metric{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+.cxe-metric span{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--slate-2);font-weight:700}
+.cxe-metric b{display:block;font-size:20px;font-weight:750;letter-spacing:-.01em;margin-top:2px}
+.cxe-metric i{font-size:10.5px;color:var(--slate-2);font-style:normal}
+.cxe-run{margin-top:12px} .cxe-run-l{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--slate-2);font-weight:700}
+.cxe-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.cxe-chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;border:1px solid var(--line);border-radius:20px;padding:3px 10px;background:var(--bg)}
+.cxe-chip.on{border-color:color-mix(in srgb,var(--green) 40%,var(--line));background:color-mix(in srgb,var(--green) 8%,transparent)}
+.cxe-chip.muted{color:var(--slate-2);font-weight:500} .cxe-chip i{font-style:normal;font-weight:700;font-variant-numeric:tabular-nums}
+.cxe-stood{display:flex;gap:8px;align-items:flex-start;margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--surface-2);font-size:11.5px;line-height:1.5;color:var(--slate)}
+.cxe-foot{display:flex;gap:7px;align-items:flex-start;margin:11px 0 0;font-size:11px;color:var(--slate-2);line-height:1.5}
+@media (max-width:640px){.cxe-edge{grid-template-columns:repeat(2,1fr)}.cxe-head{flex-wrap:wrap}.cxe-tag{order:3}}
 /* go-live readiness gate */
 .rdy-banner{display:flex;align-items:center;gap:12px;border-radius:12px;padding:12px 15px;margin:2px 0 4px}
 .rdy-banner.no{background:color-mix(in srgb,var(--red) 10%,var(--surface));border:1px solid color-mix(in srgb,var(--red) 30%,var(--line))}
