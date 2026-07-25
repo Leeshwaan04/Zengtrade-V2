@@ -80,7 +80,8 @@ html[data-regime="bear"] .up{opacity:.75} html[data-regime="bull"] .down{opacity
   background:var(--surface);border-bottom:1px solid var(--line);
   position:sticky;top:0;z-index:50;
 }
-.brand-logo{height:26px;width:auto;display:block}
+/* inline SVG mark — color drives the ensō square via currentColor, so it breathes with the regime */
+.brand-logo{height:26px;width:auto;aspect-ratio:1;display:block;color:var(--accent);transition:color .25s}
 .brand-pro{font-weight:800;font-size:15px;color:var(--navy);letter-spacing:-.3px;
   padding-left:11px;margin-left:1px;border-left:1px solid var(--line-2)}
 .brand-pro::after{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;
@@ -892,7 +893,7 @@ html[data-persona="investor"] .ch-tool[data-tool="trade"]{display:none}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .pg-card{width:min(560px,94vw);background:var(--surface);border:1px solid var(--line-2);border-radius:20px;
   box-shadow:var(--shadow-lg);padding:30px 28px;text-align:center;animation:fadeUp .3s ease both}
-.pg-logo{height:25px;width:auto;margin-bottom:18px}
+.pg-logo{height:25px;width:auto;aspect-ratio:1;margin-bottom:18px;color:var(--accent)}
 .pg-title{font-size:21px;font-weight:800;margin:0 0 8px;letter-spacing:-.4px;color:var(--navy)}
 .pg-sub{color:var(--slate);font-size:13px;margin:0 auto 22px;max-width:450px;line-height:1.5}
 .pg-opts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -2742,6 +2743,16 @@ html[data-persona="ai"] #widgetBtn{display:none}
 .exec-tab.on i{background:var(--accent-soft);color:var(--accent-d)}
 .exec-dot{width:8px;height:8px;border-radius:50%;flex:none}
 .exec-dot.paper{background:#1667d9} .exec-dot.live{background:var(--green)} .exec-dot.off{background:var(--slate-2)}
+/* Live locked (honest Paper|Live toggle) */
+.exec-tab.locked{color:var(--slate-2);opacity:.85}
+.exec-tab.locked .exec-lock{font-size:11px;margin-left:2px;filter:grayscale(.2)}
+.exec-locked{display:flex;align-items:flex-start;gap:11px;margin:14px 0 4px;padding:15px 17px;border-radius:12px;
+  background:var(--tint-warn,#fdf0e0);border:1px solid var(--bd-warn,#f6dcb8)}
+.exec-locked b{font-size:14px;color:var(--navy)}
+.exec-locked > div > span{display:block;font-size:12.5px;color:var(--slate);margin-top:3px;line-height:1.5}
+.exec-req{margin:10px 0 6px;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.exec-req li{font-size:12.5px;color:var(--slate);line-height:1.45} .exec-req li b{color:var(--navy)}
+.exec-req-foot{font-size:11.5px;color:var(--slate-2);font-style:italic}
 .exec-ready{display:flex;align-items:flex-start;gap:10px;margin-top:14px;padding:12px 14px;border-radius:11px;
   background:var(--accent-soft);border:1px solid var(--accent-line)}
 .exec-ready b{font-size:12.5px;color:var(--navy)} .exec-ready span{display:block;font-size:11.5px;color:var(--slate);margin-top:2px}

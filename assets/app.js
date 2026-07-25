@@ -3973,8 +3973,10 @@ function cryptoMonitor(){
   const head=`<div class="cxm-row cxm-head"><div class="cxm-name">Strategy</div><span class="cxm-n">Open</span><span class="cxm-n">Realised</span><span class="cxm-n">Unreal.</span><span class="cxm-n">Net</span></div>`;
   const act=scoped.filter(s=>s.openPositions>0||s.realisedPnl!==0).length;
   const listHtml=rows||`<div class="mon-exp-empty" style="padding:14px">No strategies match this filter — <button class="mon-clearfilt" data-monfilter="all">show all</button>.</div>`;
+  const _xt=execToggle(scoped.length, 0);   // Paper | Live toggle — unified with the Indian book (crypto live is locked)
+  if((state.algo.exec||'paper')==='live') return note+cryptoScopeBar()+_xt+liveLockedPanel();
   CRYPTOMON._sig=cryptoMonSig();   // remember the structure so the next poll can patch-in-place (no flicker)
-  return note+cryptoScopeBar()+stat+ctrlBar+`<div class="cxm-tbl-h">${icon('activity',13)}<b>${esc(clsLabel)} strategies</b><span>${act} active · ${scoped.length} running${upd?` · updated ${upd}`:''}</span></div><div class="cxm-tbl">${head}${listHtml}</div>`;
+  return note+cryptoScopeBar()+_xt+stat+ctrlBar+`<div class="cxm-tbl-h">${icon('activity',13)}<b>${esc(clsLabel)} strategies</b><span>${act} active · ${scoped.length} running${upd?` · updated ${upd}`:''}</span></div><div class="cxm-tbl">${head}${listHtml}</div>`;
 }
 // ---- crypto Risk Governor (same control layer as the Indian book) ----
 const CRYPTORISK={loaded:false,busy:false,data:null};
@@ -5484,21 +5486,39 @@ function liveSafetyNote(){
   const tg=BOT.status&&BOT.status.telegram;
   return `<div class="exec-ready" style="margin-top:10px">${icon('shield',13)}<div><b>Live-mode safety</b><span>When a strategy goes live, the bot <b>reconciles</b> its positions against your Kite account each cycle (flagging any drift), and the daily-loss circuit-breaker + kill-switch stay enforced. Entry/exit &amp; risk <b>alerts</b> ${tg?'are configured.':'need a Telegram bot token on the bot machine — <b>not set up</b>, so the studio never pretends to notify you.'}</span></div></div>`;
 }
+// ---- Paper | Live execution mode — honest + unified across Indian and crypto ----
+// A browser can NEVER arm live trading: ALLOW_LIVE is an OS-level two-key lock on the bot machine.
+// liveArmed() reflects the REAL backend state (false until the live-order layer is built + armed),
+// so "Live" is a clearly-LOCKED preview until then. Deliberate — it's what keeps real money safe.
+function liveArmed(){ try{ return !!(typeof BOT!=='undefined'&&BOT.liveArmed) || !!(typeof CRYPTOMON!=='undefined'&&CRYPTOMON.data&&CRYPTOMON.data.liveArmed); }catch(e){ return false; } }
+function execToggle(paperN,liveN){
+  const exec=state.algo.exec||'paper', armed=liveArmed();
+  return `<div class="exec-toggle" role="tablist" aria-label="Execution mode">`
+    +`<button class="exec-tab${exec==='paper'?' on':''}" data-execmode="paper" role="tab" aria-selected="${exec==='paper'}"><span class="exec-dot paper"></span>Paper<i>${paperN||0}</i></button>`
+    +`<button class="exec-tab${exec==='live'?' on':''}${armed?'':' locked'}" data-execmode="live" role="tab" aria-selected="${exec==='live'}" title="${armed?'Live — placing real orders':'Live is locked — a browser can never arm real trading'}"><span class="exec-dot ${armed&&liveN?'live':'off'}"></span>Live${armed?`<i>${liveN||0}</i>`:'<span class="exec-lock" aria-hidden="true">🔒</span>'}</button>`
+    +`</div>`;
+}
+function liveLockedPanel(){
+  const crypto=state.algo.market==='crypto';
+  return `<div class="exec-locked">${icon('shield',15)}<div><b>Live trading is locked</b>`
+    +`<span>Nothing places real orders yet. Live turns on only when <b>all three</b> are true:</span>`
+    +`<ol class="exec-req"><li>A strategy has <b>cleared the Go-Live bar</b> — proven forward, net of costs</li>`
+    +`<li>Your <b>${crypto?'exchange (Binance)':'broker (Zerodha Kite)'}</b> is connected with <b>trade-only</b> keys</li>`
+    +`<li><b>ALLOW_LIVE</b> is armed at the OS level on the bot machine — <b>a browser can never do this</b></li></ol>`
+    +`<span class="exec-req-foot">Everything runs in paper until then. This is deliberate — it's what keeps your money safe.</span></div></div>`;
+}
 function algoMonitor(){
   const exec=state.algo.exec||'paper';
   const paperRun=ALGOS.filter(a=>a.deployed&&inScope(a));      // deployed (paper/paused/live) in the active class — the engine's live book
   const liveRun=ALGOS.filter(a=>a.execLive&&inScope(a));       // actually placing REAL orders (none until the live runner trades it)
   const ready=ALGOS.filter(a=>a.readyExceptCapital&&inScope(a));
-  const toggle=`<div class="exec-toggle" role="tablist" aria-label="Execution mode">
-    <button class="exec-tab${exec==='paper'?' on':''}" data-execmode="paper" role="tab" aria-selected="${exec==='paper'}"><span class="exec-dot paper"></span>Paper<i>${paperRun.length}</i></button>
-    <button class="exec-tab${exec==='live'?' on':''}" data-execmode="live" role="tab" aria-selected="${exec==='live'}"><span class="exec-dot ${liveRun.length?'live':'off'}"></span>Live<i>${liveRun.length}</i></button>
-  </div>`;
+  const toggle=execToggle(paperRun.length, liveRun.length);
   if(exec==='live'){
     const readyNote=ready.length
       ? `<div class="exec-ready">${icon('shield',13)}<div><b>Ready for live once funded &amp; armed:</b> ${ready.map(a=>esc(a.name)).join(' · ')}<span>Open each strategy’s Go-Live check, then fund the account + set ALLOW_LIVE.</span></div></div>`
       : '';
-    if(!liveRun.length)
-      return toggle+secEmpty('shield','No strategies are live','Nothing is placing real orders. Live execution stays locked until a strategy clears the Go-Live checklist — fund the account + arm ALLOW_LIVE on the bot. Everything runs in paper until then.')+readyNote+liveSafetyNote();
+    if(!liveArmed()||!liveRun.length)
+      return toggle+liveLockedPanel()+readyNote+liveSafetyNote();
     const lrows=liveRun.map(a=>{const i=ALGOS.indexOf(a);
       return `<div class="mon-row live"><div class="mon-l"><span class="live-dot live"></span><div><b>${esc(a.name)}</b><span class="mon-cat">${esc(a.cat)} · ${(a.openPositions||0)} open</span></div></div>
         <div class="mon-pnl"><b class="num ${cls(a.livePnl||0)}" data-live-pnl="${a.id}">${sgn(a.livePnl||0)}</b><span>LIVE · real ₹</span></div>
