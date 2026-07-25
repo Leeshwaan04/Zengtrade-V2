@@ -68,7 +68,7 @@ def shell(title, desc, canon, main, extra_head=""):
 <meta property="og:url" content="{canon}"><meta property="og:image" content="https://zengtrade.in/assets/mascot-bull.png">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{title}">
 <meta name="twitter:description" content="{desc}"><meta name="twitter:image" content="https://zengtrade.in/assets/mascot-bull.png">
-<meta name="theme-color" content="#f4f6fa"><meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f4f6fa" id="themeColor"><meta name="color-scheme" content="light dark">
 <link rel="icon" type="image/svg+xml" href="/assets/logo.svg">
 {FONTS}
 <link rel="stylesheet" href="/site.css">{extra_head}
