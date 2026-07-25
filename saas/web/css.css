@@ -1,0 +1,38 @@
+:root{--bg:#f4f6fa;--surface:#fff;--surface-2:#f8fafc;--line:#e6eaf1;--line-2:#d8deea;
+  --navy:#0f1a2a;--slate:#5c6a7e;--slate-2:#94a3b8;--green:#00ab4e;--green-d:#00803b;
+  --green-soft:#e7f8ef;--green-line:#b6e8cc;--blue:#1667d9;--red:#c8302f;--radius:15px;
+  --shadow:0 1px 2px rgba(16,30,54,.05),0 20px 50px -18px rgba(16,30,54,.22);
+  --sans:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'Roboto Mono',ui-monospace,Menlo,monospace}
+@media(prefers-color-scheme:dark){:root{--bg:#080d18;--surface:#101a2e;--surface-2:#0c1424;--line:#1f2c46;
+  --line-2:#2c3d5e;--navy:#e8eefb;--slate:#9aabc9;--slate-2:#62759a;--green:#1fd07a;--green-d:#3ae892;
+  --green-soft:rgba(31,208,122,.13);--green-line:rgba(31,208,122,.4);--blue:#5b9dff;--red:#ff6a6c;
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 26px 60px -18px rgba(0,0,0,.85)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--navy);font:16px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+.logo{width:28px;height:28px;flex:0 0 auto;display:block}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.01em}
+.btn{border:0;border-radius:11px;padding:13px;font:700 14.5px/1 var(--sans);cursor:pointer;width:100%;
+  display:flex;align-items:center;justify-content:center;gap:9px;transition:transform .12s}
+.btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.btn.primary{background:var(--green);color:#04140a}
+.btn.primary:hover{transform:translateY(-1px)}
+.btn.primary[disabled]{opacity:.6;cursor:not-allowed;transform:none}
+.btn.oauth{background:var(--surface);color:var(--navy);border:1px solid var(--line-2)}
+.btn.oauth:hover{border-color:var(--green-line)}
+.btn.link{background:transparent;color:var(--slate);border:1px dashed var(--line-2);font-weight:600;font-size:13px;padding:11px}
+input{width:100%;background:var(--surface-2);border:1px solid var(--line-2);color:var(--navy);
+  border-radius:10px;padding:12px 13px;font:500 15px/1 var(--sans)}
+input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px var(--green-soft);background:var(--surface)}
+label{display:block;font:600 12px/1 var(--sans);color:var(--slate);margin:14px 0 6px}
+.msg{margin-top:14px;padding:11px 13px;border-radius:9px;font-size:13.5px;display:none}
+.msg.err{display:block;background:rgba(200,48,47,.09);border:1px solid rgba(200,48,47,.3);color:var(--red)}
+.msg.ok{display:block;background:var(--green-soft);border:1px solid var(--green-line);color:var(--green-d)}
+
+/* checkout-activating notice (pricing page — honest "opening soon") */
+.soon-banner{display:flex;gap:11px;align-items:flex-start;max-width:760px;margin:0 auto 22px;padding:13px 16px;
+  border-radius:var(--radius);background:color-mix(in srgb,var(--blue) 8%,var(--surface));
+  border:1px solid color-mix(in srgb,var(--blue) 26%,var(--line));font-size:14px;line-height:1.5}
+.soon-banner b{color:var(--navy)} .soon-banner span{display:block;color:var(--slate);margin-top:2px;font-size:13px}
+.btn[data-soon]{opacity:.72;cursor:default}
+.btn[data-soon]:hover{opacity:.85}
