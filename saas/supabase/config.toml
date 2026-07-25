@@ -4,3 +4,6 @@ project_id = "ponvarxeytfcntckczbn"
 
 [functions.lemonsqueezy-webhook]
 verify_jwt = false   # Lemon Squeezy calls this with its OWN HMAC signature, not a Supabase JWT
+
+[functions.polar-webhook]
+verify_jwt = false   # Polar signs with a Standard-Webhooks HMAC, not a Supabase JWT

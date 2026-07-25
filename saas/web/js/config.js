@@ -10,12 +10,13 @@ export const SITE = {
   redirectTo: (typeof location !== "undefined" ? location.origin : "") + "/app.html",
 };
 
-// Lemon Squeezy checkout (PUBLIC — these appear in the buy link; safe in frontend).
-// From LS: Store URL slug + the Pro product's Variant ID (Products -> variant -> Share/Buy link).
-export const LEMONSQUEEZY = {
-  storeSlug:          window.__ZT_LS_STORE      || "zengtrade",
-  proVariantId:       window.__ZT_LS_PRO        || "YOUR_PRO_VARIANT_ID",
-  proAnnualVariantId: window.__ZT_LS_PRO_YEAR   || "YOUR_PRO_ANNUAL_VARIANT_ID",
-  eliteVariantId:     window.__ZT_LS_ELITE      || "YOUR_ELITE_VARIANT_ID",
-  eliteAnnualVariantId: window.__ZT_LS_ELITE_YEAR || "YOUR_ELITE_ANNUAL_VARIANT_ID",
+// Polar checkout links (PUBLIC — these are just hosted checkout URLs; safe in the frontend).
+// From Polar: Dashboard -> Products -> (each product) -> Checkout Link -> copy the URL.
+// One per plan + cycle. Leave "" until you have them — the pricing page shows an honest
+// "opening soon" state and openCheckout() no-ops gracefully until proMonth is a real URL.
+export const POLAR = {
+  proMonth:   window.__ZT_POLAR_PRO_M   || "",
+  proYear:    window.__ZT_POLAR_PRO_Y   || "",
+  eliteMonth: window.__ZT_POLAR_ELITE_M || "",
+  eliteYear:  window.__ZT_POLAR_ELITE_Y || "",
 };
