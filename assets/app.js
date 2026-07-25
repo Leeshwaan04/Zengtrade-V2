@@ -4115,14 +4115,20 @@ function cryptoForward(mode){   // mode: 'forward' | 'accuracy'
     {l:'Profit factor',v:t.profitFactor==null?'—':(+t.profitFactor).toFixed(2),s:'gross win ÷ loss',tone:(t.profitFactor>=1.3)?'up':(t.profitFactor<1?'down':'')},
     {l:'Net P&L',v:cxMoney(t.netPnl),s:'realised, closed',tone:(t.netPnl>0)?'up':(t.netPnl<0?'down':'')},
   ]);
-  const head=`<div class="cxm-row cxf-row cxm-head"><div class="cxm-name">Strategy</div><span class="cxm-n">Trades</span><span class="cxm-n">Win%</span><span class="cxm-n">PF</span><span class="cxm-n">Expectancy</span><span class="cxm-n">Net</span></div>`;
-  const body=rows.map(s=>`<div class="cxm-row cxf-row"><div class="cxm-name"><b>${esc(s.name)}</b> <span class="cxf-cls">${esc(s.instr||'spot')}</span></div>
+  const reg=(CRYPTOMON.data&&CRYPTOMON.data.regime)||null;
+  const regBanner=reg?`<div class="ft-regime"><div class="ft-regime-ic">${icon('activity',15)}</div><div><b>Live regime: ${esc(reg)}</b><span>The go-live gate judges each strategy net of costs. Strategies proven <b>fit for this regime</b> carry the edge; the rest are stood down to cash — that's survival-first, not idle.</span></div></div>`:'';
+  const GRAD=50;   // go-live sample bar: ≥50 closed trades to be judged
+  const head=`<div class="cxm-row cxf-row cxm-head"><div class="cxm-name">Strategy · go-live progress</div><span class="cxm-n">Trades</span><span class="cxm-n">Win%</span><span class="cxm-n">PF</span><span class="cxm-n">Expectancy</span><span class="cxm-n">Net</span></div>`;
+  const body=rows.map(s=>{const g=Math.min(100,Math.round((s.closed/GRAD)*100)),cleared=s.closed>=GRAD;
+    return `<div class="cxm-row cxf-row"><div class="cxm-name"><b>${esc(s.name)}</b> <span class="cxf-cls">${esc(s.instr||'spot')}</span>
+    <div class="cxf-grad" title="${s.closed}/${GRAD} closed trades toward the go-live sample"><i class="${cleared?'done':''}" style="width:${g}%"></i></div>
+    <span class="cxf-gradlbl">${cleared?'✓ sample cleared':`${s.closed}/${GRAD} to go-live`}</span></div>
     <span class="cxm-n num">${s.closed}</span>
     <span class="cxm-n num ${s.winPct>=50?'up':(s.winPct<45?'down':'')}">${s.winPct==null?'—':s.winPct+'%'}</span>
     <span class="cxm-n num ${s.profitFactor>=1.3?'up':(s.profitFactor<1?'down':'')}">${s.profitFactor==null?'—':(+s.profitFactor).toFixed(2)}</span>
     <span class="cxm-n num ${cls(s.expectancy)}">${cxMoney(s.expectancy)}</span>
-    <span class="cxm-n num ${cls(s.netPnl)}"><b>${cxMoney(s.netPnl)}</b></span></div>`).join('');
-  return note+stat+`<div class="cxm-tbl-h">${icon('activity',13)}<b>Per-strategy ${acc?'accuracy':'track record'}</b><span>${rows.length} with closed trades</span></div><div class="cxm-tbl">${head}${body}</div>`;
+    <span class="cxm-n num ${cls(s.netPnl)}"><b>${cxMoney(s.netPnl)}</b></span></div>`;}).join('');
+  return note+regBanner+stat+`<div class="cxm-tbl-h">${icon('activity',13)}<b>Per-strategy ${acc?'accuracy':'track record'}</b><span>${rows.length} with closed trades</span></div><div class="cxm-tbl">${head}${body}</div>`;
 }
 // ---- crypto Analytics (P&L attribution by instrument / strategy / regime) ----
 const CRYPTOAN={loaded:false,busy:false,data:null};
@@ -4282,7 +4288,10 @@ function renderAlgo(){
   const _vk=(state.algo.market||'in')+'/'+view;
   const _keep=(state.algo._vk===_vk); state.algo._vk=_vk;
   const _sy=_keep?_scEl.scrollTop:0, _py=(_keep&&_pane)?_pane.scrollTop:0, _avy=(_keep&&_av0)?_av0.scrollTop:0;
-  v.innerHTML=`<div class="av-wrap">${head}<div class="av-scroll">${crypto?cryptoStatusBar():algoStatusBar()}${crypto?'':studioScopeBar()}${body}</div></div>`;
+  // Cross-cutting parity: crypto instrument scope (Spot/Perps/Options) now shows on EVERY crypto tab
+  // (like the Indian studioScopeBar), not just Monitor/Positions which already render it inline.
+  const cxScope=crypto?(['monitor','positions'].includes(view)?'':cryptoScopeBar()):studioScopeBar();
+  v.innerHTML=`<div class="av-wrap">${head}<div class="av-scroll">${crypto?cryptoStatusBar():algoStatusBar()}${cxScope}${body}</div></div>`;
   _scEl.scrollTop=_sy; if(_pane) _pane.scrollTop=_py;
   const _av1=v.querySelector('.av-scroll'); if(_av1) _av1.scrollTop=_avy;
   v.querySelectorAll('[data-algomkt]').forEach(b=>b.onclick=()=>setMarket(b.dataset.algomkt));

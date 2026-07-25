@@ -3686,3 +3686,12 @@ html[data-surface="night"] .rk-tier.on{background:var(--white);border-color:var(
 .rb2-chip.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--green-d)}
 .rb2-chip.off{background:var(--surface-2);color:var(--slate-2);opacity:.8}
 .av-scroll>.rb2{flex:0 0 auto}
+
+/* Forward Test parity: regime banner + go-live graduation bar */
+.ft-regime{display:flex;align-items:flex-start;gap:11px;margin:0 0 14px;padding:13px 16px;border-radius:12px;
+  background:var(--accent-soft);border:1px solid var(--accent-line)}
+.ft-regime-ic{color:var(--accent-d);flex:none;margin-top:1px}
+.ft-regime b{font-size:13.5px;color:var(--navy)} .ft-regime span{display:block;font-size:12px;color:var(--slate);margin-top:2px;line-height:1.5}
+.cxf-grad{height:4px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0 3px;max-width:220px}
+.cxf-grad i{display:block;height:100%;border-radius:99px;background:var(--accent);transition:width .3s} .cxf-grad i.done{background:var(--green)}
+.cxf-gradlbl{font:600 10px/1 var(--mono);color:var(--slate-2);letter-spacing:.03em}
