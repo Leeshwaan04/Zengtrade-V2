@@ -10,6 +10,12 @@ export const SITE = {
   redirectTo: (typeof location !== "undefined" ? location.origin : "") + "/app.html",
 };
 
+// Cryptomus (crypto payments) — Merchant UUID is PUBLIC (appears in your dashboard URL). The
+// PAYMENT/API KEY is a SECRET and lives ONLY in a Supabase secret (server-side), never here.
+export const CRYPTOMUS = {
+  merchantId: window.__ZT_CRYPTOMUS_MERCHANT || "f24f3b06-a9b9-40d5-bfc5-f7f003f6ce87",
+};
+
 // Polar checkout links (PUBLIC — these are just hosted checkout URLs; safe in the frontend).
 // From Polar: Dashboard -> Products -> (each product) -> Checkout Link -> copy the URL.
 // One per plan + cycle. Leave "" until you have them — the pricing page shows an honest
