@@ -102,6 +102,46 @@ def test_stop_cap_never_loosens_a_tight_stop():
     assert abs(capped - tight_risk_stop) < 1e-6
 
 
+# ---- 4. per-strategy allocation dial (regression guard for the perp/options/pairs skip bug) ----
+def test_alloc_weight_clamps():
+    from bot.crypto_alloc import _clamp
+    assert _clamp(0.5) == 0.5
+    assert _clamp(2.0) == 1.0 and _clamp(-1) == 0.0        # capped to [0,1]
+    assert _clamp("x") == 1.0                               # garbage → full size (fail safe)
+
+
+def test_apply_alloc_covers_every_engine_shape():
+    """The bug: apply_alloc assumed .risk.cfg.capital and threw on perp/options/pairs, skipping them.
+    This pins that it scales whichever capital attr each engine type actually uses."""
+    import paper_trade_crypto as H
+
+    class Spot:   # spot / xs engines
+        def __init__(s): s.risk = type("R", (), {"cfg": type("C", (), {"capital": 1_000_000})()})(); s.name = "spot"
+    class Perp:   # perp / options engines
+        def __init__(s): s.capital = 1_000_000; s.name = "perp"
+    class Pairs:  # PairsPaperEngine
+        def __init__(s): s.cap_per = 500_000; s.name = "pairs"
+
+    sp, pe, pr = Spot(), Perp(), Pairs()
+    for e in (sp, pe, pr):
+        H.apply_alloc(e, 0.5)                               # must NOT raise on any shape
+    assert sp.risk.cfg.capital == 500_000
+    assert pe.capital == 500_000
+    assert pr.cap_per == 250_000
+
+
+def test_apply_alloc_scales_base_not_scaled_value():
+    import paper_trade_crypto as H
+
+    class Perp:
+        def __init__(s): s.capital = 1_000_000; s.name = "perp"
+    e = Perp()
+    H.apply_alloc(e, 0.3); H.apply_alloc(e, 1.0)            # 1.0 must restore the ORIGINAL base
+    assert e.capital == 1_000_000
+    H.apply_alloc(e, 0.5)
+    assert e.capital == 500_000                             # scales base, not the prior 0.3× value
+
+
 def _run():
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     passed = 0
