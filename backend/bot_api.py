@@ -1956,7 +1956,11 @@ def crypto_monitor_payload() -> dict:
                 unreal += pnl
                 positions.append({"sym": sym, "qty": qty, "entry": round(entry, 4),
                                   "mark": round(mark, 4), "pnl": round(pnl, 2),
-                                  "pnlPct": round((mark / entry - 1) * 100, 2) if entry else 0})
+                                  "pnlPct": round((mark / entry - 1) * 100, 2) if entry else 0,
+                                  # Position Intelligence (same engine as the Indian book) → drives crypto Positions parity
+                                  "health": p.get("health"), "action": p.get("action"),
+                                  "reason": p.get("reason"), "weak": p.get("weak"),
+                                  "gainPct": p.get("gainPct"), "stop": round(p.get("stop", 0) or 0, 4) or None})
         unreal = round(unreal, 2)
         tR += realised; tU += unreal; tO += len(positions)
         rows.append({"id": k, "name": _CRYPTO_NAMES.get(k, k), "instr": cls, "realisedPnl": realised,

@@ -3978,6 +3978,46 @@ function cryptoMonitor(){
   CRYPTOMON._sig=cryptoMonSig();   // remember the structure so the next poll can patch-in-place (no flicker)
   return note+cryptoScopeBar()+_xt+stat+ctrlBar+`<div class="cxm-tbl-h">${icon('activity',13)}<b>${esc(clsLabel)} strategies</b><span>${act} active · ${scoped.length} running${upd?` · updated ${upd}`:''}</span></div><div class="cxm-tbl">${head}${listHtml}</div>`;
 }
+// ---- crypto Positions — Position Intelligence, at parity with the Indian book ----
+// Reuses the SAME pi-card component (health score, action chip, thesis reason) that the Indian
+// Positions tab uses, fed by the crypto engine's live position_intel (health/action/reason/gainPct).
+function cryptoPositions(){
+  const hero=`<div class="pi-hero"><div class="pi-hero-ic">${icon('shield',20)}</div>
+    <div class="pi-hero-tx"><b>Position Intelligence</b><span>Every open crypto position, managed live by the same survival-first engine as the Indian book. Health = is the original thesis still valid? Profit is protected as gains grow; exits fire only on <b>persistent</b> decay — never a single down-tick, so winners run.</span></div></div>`;
+  const d=CRYPTOMON.data;
+  if(!d){ if(!CRYPTOMON.busy) loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); });
+    return hero+`<div class="opp-load">${icon('cpu',16)}<span>Reading open crypto positions…</span></div>`; }
+  if(CRYPTOMON.err && !d.running) return hero+`<div class="opp-offline">${icon('shield',14)}<span>Bot API unreachable — start it with <b>python3 bot_api.py</b>.</span></div>`;
+  if(d.running===false) return hero+`<div class="opp-offline">${icon('shield',14)}<span>Crypto harness not running — start <b>python3 paper_trade_crypto.py</b>.</span></div>`;
+  const cur=state.algo.cinstr||'spot';
+  const scoped=(d.strategies||[]).filter(s=>(s.instr||'spot')===cur);
+  const ps=[]; scoped.forEach(s=>(s.positions||[]).forEach(p=>ps.push(Object.assign({strat:s.name},p))));
+  if(!ps.length) return hero+cryptoScopeBar()+secEmpty('check','No open positions',`Nothing to manage right now — in this regime the survival-first engine is largely in cash. As strategies enter, each position appears here with a live health score and a recommended action.`);
+  ps.sort((a,b)=>(a.health==null?999:a.health)-(b.health==null?999:b.health));   // weakest first
+  const withH=ps.filter(p=>p.health!=null);
+  const avgH=withH.length?Math.round(withH.reduce((s,p)=>s+p.health,0)/withH.length):null;
+  const summ=`<p class="sec-hint">${icon('cpu',12)}<span><b>${ps.length}</b> open position(s)${avgH!=null?` · avg health <b>${avgH}</b>`:''} · weakest first. Health updates every cycle from the live thesis.</span></p>`;
+  const cards=ps.map(p=>{
+    const tone=posTone(p.health), act=POS_ACT[p.action]||null, hv=p.health==null?'—':p.health;
+    const gain=p.gainPct!=null?p.gainPct:(p.pnlPct!=null?p.pnlPct:null);
+    const dir=p.side!=null?(p.side<0?'SHORT ':'LONG '):'', sym=(p.sym||'').replace(/USDT/g,'');
+    return `<div class="pi-card ${tone}">
+      <div class="pi-h"><div class="pi-sym"><b>${esc(dir+sym)}</b><span>${esc(p.strat||'')}</span></div>
+        <div class="pi-score ${tone}"><b>${hv}</b><span>health</span></div></div>
+      <div class="pi-bar"><i class="${tone}" style="width:${p.health==null?0:p.health}%"></i></div>
+      <div class="pi-meta">
+        ${act?`<span class="pi-act ${act[1]}">${esc(act[0])}</span>`:''}
+        ${gain!=null?`<span class="pi-gain ${gain>=0?'up':'down'}">${gain>=0?'+':''}${gain}%</span>`:''}
+        ${p.entry?`<span>entry $${(p.entry).toLocaleString()}</span>`:''}
+        ${p.stop?`<span>stop $${(p.stop).toLocaleString()}</span>`:''}
+        ${p.pnl!=null?`<span class="${cls(p.pnl)}">${cxMoney(p.pnl)}</span>`:''}
+        ${p.weak?`<span class="pi-weak">weak ${p.weak}/2</span>`:''}
+      </div>
+      ${p.reason?`<p class="pi-reason">${icon(p.action==='exit'?'alert':p.action==='protect'?'shield':'cpu',11)} ${esc(p.reason)}</p>`:''}
+    </div>`;
+  }).join('');
+  return hero+cryptoScopeBar()+summ+`<div class="pi-grid">${cards}</div>`;
+}
 // ---- crypto Risk Governor (same control layer as the Indian book) ----
 const CRYPTORISK={loaded:false,busy:false,data:null};
 async function loadCryptoRisk(){ if(CRYPTORISK.busy) return; CRYPTORISK.busy=true;
@@ -4165,7 +4205,8 @@ function cryptoBody(view,label){
   if(view==='library'||view==='market') return cryptoMarket();
   if(view==='opportunity') return cryptoOpportunity();
   if(view==='leaderboard') return cryptoLeaderboard();
-  if(view==='monitor'||view==='positions') return cryptoMonitor();
+  if(view==='monitor') return cryptoMonitor();
+  if(view==='positions') return cryptoPositions();
   if(view==='risk') return cryptoRisk();
   if(view==='backtest') return cryptoBacktest();
   if(view==='forward') return cryptoForward('forward');
