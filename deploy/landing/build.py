@@ -22,6 +22,9 @@ def between(s, a, b):
 
 # ---- extract shared pieces from the original page --------------------------------------
 css = SRC[SRC.index("<style>") + 7: SRC.index("</style>")]
+# prebody = everything after <body> up to the header: the .ambient animated background
+# (aurora glows + grid-motion) + the skip link. MUST be carried onto every page.
+prebody = SRC[SRC.index("<body>") + len("<body>"): SRC.index('<header class="topbar">')]
 chrome = between(SRC, '<header class="topbar">', '<main id="main">').rsplit('<main id="main">', 1)[0]
 main_hiw = between(SRC, '<main id="main">', "</main>")
 tail = SRC[SRC.index("</main>") + len("</main>"): SRC.index("</body>")]     # footer + scripts
@@ -31,7 +34,7 @@ def absolutize(x):
     x = x.replace('href="assets/', 'href="/assets/').replace('src="assets/', 'src="/assets/')
     x = x.replace('url(assets/', 'url(/assets/').replace('"assets/mascot-', '"/assets/mascot-')
     return x
-css, chrome, main_hiw, tail = map(absolutize, (css, chrome, main_hiw, tail))
+css, prebody, chrome, main_hiw, tail = map(absolutize, (css, prebody, chrome, main_hiw, tail))
 
 # rewire the mega-nav to the real cross-page URLs
 navmap = {
@@ -73,6 +76,7 @@ def shell(title, desc, canon, main, extra_head=""):
 {FONTS}
 <link rel="stylesheet" href="/site.css">{extra_head}
 </head><body>
+{prebody}
 {chrome}
 {main}
 {tail}
