@@ -4051,10 +4051,27 @@ function cryptoRisk(){
   const secBars=Object.entries(d.sectors||{}).map(([s,p])=>cxRiskBar(p,lim.sector||35,s)).join('')||'<div class="cxr-empty">No sector exposure</div>';
   const symBars=Object.entries(d.symbols||{}).slice(0,8).map(([s,p])=>cxRiskBar(p,lim.symbol||18,s.replace('USDT',''))).join('')||'<div class="cxr-empty">No open positions</div>';
   const crowd=Object.entries(d.crowding||{}).filter(([s,n])=>n>1).map(([s,n])=>`<span class="cxm-chip${n>=(lim.botsPerSymbol||2)?' down':''}">${esc(s.replace('USDT',''))} · ${n} bots</span>`).join('')||'<span class="cxr-empty">No crowding — every name held by ≤1 bot</span>';
-  return note+stat+
+  // risk-mode banner — the Governor is actively de-risking (kill-switch or reduced sizing)
+  const modeBanner=d.killSwitch
+    ?`<div class="rk-kill">${icon('alert',16)}<div><b>KILL-SWITCH ACTIVE — ${esc((d.mode||'').toUpperCase())}</b><span>Portfolio drawdown ${d.drawdownPct}% — new entries are blocked across all crypto bots until it recovers.</span></div></div>`
+    :(d.mode&&d.mode!=='normal')?`<div class="rk-warn">${icon('alert',13)}<span>Risk-reduction mode <b>${esc(d.mode)}</b> — new positions sized to <b>${Math.round((d.sizeMult||1)*100)}%</b> (drawdown ${d.drawdownPct}%). Bots keep managing open positions; only new risk is throttled.</span></div>`:'';
+  // drawdown kill-switch ladder (real ddTiers from the Governor, current mode highlighted)
+  const tiers=(d.ddTiers||[]).slice().reverse();
+  const ladder=tiers.length?`<div class="cxm-tbl-h">${icon('shield',13)}<b>Drawdown kill-switch ladder</b><span>current: ${esc(d.mode||'normal')} at ${d.drawdownPct||0}%</span></div>
+    <div class="rk-ladder rk-card">
+      <div class="rk-tier${(d.mode||'normal')==='normal'?' on':''}" style="order:-1"><b>0%</b><span>normal</span></div>
+      ${tiers.map(t=>`<span class="rk-arr">→</span><div class="rk-tier${d.mode===t.mode?' on':''}"><b>${t.at}%</b><span>${esc(t.mode)}</span></div>`).join('')}
+    </div>`:'';
+  // trade audit — every proposal the Governor approved or vetoed (real, honest empty-state when quiet)
+  const audit=(d.audit||[]);
+  const aud=audit.length?`<div class="cxm-tbl-h">${icon('flag',13)}<b>Trade audit</b><span>every proposal — approved or vetoed</span></div>
+    <div class="rk-audit rk-card">${audit.slice(0,20).map(a=>`<div class="rk-arow ${a.approved?'ok':'veto'}"><span class="rk-atag ${a.approved?'ok':'veto'}">${a.approved?'PASS':'VETO'}</span><span class="rk-amain"><b>${esc(a.bot||'')}</b> ${esc((a.symbol||'').replace('USDT',''))}</span><span class="rk-areason">${esc(a.reason||'')}</span><span class="rk-awhen">${a.ts?timeAgo(a.ts):''}</span></div>`).join('')}</div>`
+    :`<div class="cxm-tbl-h">${icon('flag',13)}<b>Trade audit</b><span>every proposal — approved or vetoed</span></div><div class="cxr-empty" style="padding:11px 13px">No proposals reviewed since the last restart — each bot entry appears here with the Governor's verdict as the book trades.</div>`;
+  return note+modeBanner+stat+
     `<div class="cxm-tbl-h">${icon('layout',13)}<b>Sector concentration</b><span>limit ${lim.sector||35}%</span></div><div class="cxr-bars">${secBars}</div>`+
     `<div class="cxm-tbl-h">${icon('activity',13)}<b>Symbol concentration</b><span>limit ${lim.symbol||18}%</span></div><div class="cxr-bars">${symBars}</div>`+
-    `<div class="cxm-tbl-h">${icon('shield',13)}<b>Crowding</b><span>max ${lim.botsPerSymbol||2} bots/name</span></div><div class="cxm-pos">${crowd}</div>`;
+    `<div class="cxm-tbl-h">${icon('shield',13)}<b>Crowding</b><span>max ${lim.botsPerSymbol||2} bots/name</span></div><div class="cxm-pos">${crowd}</div>`+
+    ladder+aud;
 }
 // ---- crypto Backtest (reuses the same Backtester as the Indian side, on Binance klines) ----
 const CX_BT_STRATS=[['momentum','Momentum'],['rsi2','RSI(2)'],['macross','MA Cross'],['supertrend','Supertrend'],['ema_cross','EMA Cross'],['adx_trend','ADX Trend'],['bollinger','Bollinger'],['zscore','Z-Score'],['nr7','NR7'],['xs_momentum','XS Momentum'],['lowvol','Low-Vol']];
@@ -4094,7 +4111,54 @@ function cryptoBacktest(){
       ]);
       const bh=d.benchmark||{}; const curve=cxCurve(d.pts,bh.pts);
       const legend=curve?`<div class="cxbt-legend"><span class="cxbt-lg eq">${esc((CX_BT_STRATS.find(x=>x[0]===strat)||[,strat])[1])}</span>${bh.pts?`<span class="cxbt-lg bh">${esc(bh.label||'Buy & hold')} ${bh.totalRet!=null?pct(bh.totalRet):''}</span>`:''}${bh.alpha!=null?`<span class="cxbt-lg">α ${pct(bh.alpha)}</span>`:''}</div>`:'';
-      body=stat+(curve?`<div class="cxm-tbl-h">${icon('activity',13)}<b>Equity curve</b><span>base 100 · vs buy & hold</span></div>${legend}<div class="cxbt-chart">${curve}</div>`:'');
+      const curveBlock=curve?`<div class="cxm-tbl-h">${icon('activity',13)}<b>Equity curve</b><span>base 100 · vs buy & hold</span></div>${legend}<div class="cxbt-chart">${curve}</div>`:'';
+      // ---- validation: in-sample vs out-of-sample (the honest cut) ----
+      const o=d.oos||{}, held=(o.oos_ret||0)>=0 && (o.oos_avg||0)>=-0.1, thin=(d.trades||0)<30;
+      const vr=(o.is_trades!=null||o.oos_trades!=null)?`<div class="bt-vr"><div class="bt-vrh">${icon('shield',13)} Validation — the honest cut</div>
+        <div class="bt-vrgrid">
+          <div class="bt-vrcol"><span>In-sample (70%)</span><b class="num ${tone(o.is_ret)}">${pct(o.is_ret||0)}</b><i>${o.is_trades||0} trades · avg ${pct(o.is_avg||0)}/trade</i></div>
+          <div class="bt-vrcol"><span>Out-of-sample (30%)</span><b class="num ${tone(o.oos_ret)}">${pct(o.oos_ret||0)}</b><i>${o.oos_trades||0} trades · avg ${pct(o.oos_avg||0)}/trade</i></div>
+        </div>
+        <p class="bt-vrverdict ${held?'ok':'warn'}">${icon(held?'check':'alert',12)}<span>${held?'Edge <b>persisted out-of-sample</b> — held up on data it never trained on.':'Edge <b>weakened out-of-sample</b> — strong in-sample but faded on unseen data. Treat with caution.'} Costs: <b>${d.costBps||15} bps/leg applied</b>.${thin?' <b>Thin sample</b> ('+(d.trades||0)+' trades, &lt;30) — a hint, not proof.':''}</span></p></div>`:'';
+      // ---- vs buy & hold ----
+      const beat=bh&&bh.totalRet!=null&&d.totalRet>=bh.totalRet;
+      const benchBlock=(bh&&bh.totalRet!=null)?`<div class="bt-bench"><div class="bt-anh">${icon('scale',13)} vs Buy &amp; hold <i>same ${d.universe||10} coins, dashed on the curve</i></div>
+        <div class="bt-bgrid">
+          <div class="bt-bc"><span>Strategy</span><b class="num ${tone(d.totalRet)}">${pct(d.totalRet)}</b></div>
+          <div class="bt-bc"><span>Buy &amp; hold</span><b class="num ${tone(bh.totalRet)}">${pct(bh.totalRet)}</b></div>
+          <div class="bt-bc"><span>Alpha · ann.${infoI('Annualised return the strategy added beyond just holding these coins. Positive = real edge; negative = the timing cost more than it added.')}</span><b class="num ${tone(bh.alpha)}">${bh.alpha!=null?pct(bh.alpha):'—'}</b></div>
+          <div class="bt-bc"><span>Beta${infoI('Sensitivity to simply holding the basket. ~1 moves with it, <1 less exposed, ~0 market-neutral.')}</span><b class="num">${bh.beta!=null?bh.beta.toFixed(2):'—'}</b></div>
+        </div>
+        <p class="bt-bverdict ${beat?'ok':'warn'}">${icon(beat?'check':'alert',12)}<span>${beat?'The strategy <b>beat</b> simply holding these coins.':'The strategy <b>underperformed</b> buy &amp; hold over this window — an honest result, shown anyway.'}</span></p></div>`:'';
+      // ---- drawdown / underwater ----
+      const ddBlock=(Array.isArray(d.dd)&&d.dd.length>1)?`<div class="bt-dd"><div class="bt-anh">${icon('trendDown',13)} Drawdown — underwater <i>worst −${Math.abs(d.maxDD||0).toFixed(1)}% · time in market ${d.timeInMarket!=null?d.timeInMarket+'%':'—'}</i></div>${ddCurveSVG(d.dd)}<p class="bt-ddcap">${icon('shield',11)}<span>How deep and how long the strategy sat below its prior peak — the pain you'd have had to sit through.</span></p></div>`:'';
+      // ---- Monte-Carlo robustness ----
+      const mc=d.montecarlo, robust=mc&&mc.profitableShare>=60;
+      const mcBlock=mc?`<div class="bt-bench"><div class="bt-anh">${icon('shield',13)} Monte-Carlo robustness <i>${mc.runs} resamples of the trades</i></div>
+        <div class="bt-bgrid">
+          <div class="bt-bc"><span>Worst 5%${infoI('5th-percentile outcome across the bootstrap resamples of the real trades — a bad-luck draw.')}</span><b class="num down">${pct(mc.p5)}</b></div>
+          <div class="bt-bc"><span>Median</span><b class="num ${tone(mc.p50)}">${pct(mc.p50)}</b></div>
+          <div class="bt-bc"><span>Best 5%</span><b class="num up">${pct(mc.p95)}</b></div>
+          <div class="bt-bc"><span>Profitable${infoI('Share of resampled runs that ended in profit. >60% = a robust edge; near 50% = a coin-flip.')}</span><b class="num ${mc.profitableShare>=60?'up':mc.profitableShare<50?'down':''}">${mc.profitableShare}%</b></div>
+        </div>
+        <p class="bt-bverdict ${robust?'ok':'warn'}">${icon(robust?'check':'alert',12)}<span>${robust?'<b>Robust</b> — '+mc.profitableShare+'% of resampled runs profited, so the edge isn’t one lucky sequence.':'<b>Fragile</b> — only '+mc.profitableShare+'% of resampled runs profited; the result leans on a few trades. Treat with caution.'} Across draws, returns spanned <b>${pct(mc.p5)}</b> to <b>${pct(mc.p95)}</b>.</span></p></div>`:'';
+      // ---- edge decay ----
+      const ed=d.edgeDecay;
+      const decayLine=ed?`<p class="bt-ddcap">${icon('clock',11)}<span><b>${ed.posMonths}%</b> of ${ed.totalMonths} months positive.${ed.fading!=null?(ed.fading?' Edge is <b>fading</b> — recent months ('+pct(ed.secondHalfAvg)+'/mo) weaker than earlier ('+pct(ed.firstHalfAvg)+'/mo).':' Edge is <b>holding</b> — recent ('+pct(ed.secondHalfAvg)+'/mo) ≈ earlier ('+pct(ed.firstHalfAvg)+'/mo).'):''}</span></p>`:'';
+      // ---- trade analytics ----
+      const an=d.analytics||{}, pf=an.profitFactor!=null?an.profitFactor.toFixed(2):'∞';
+      const analytics=(an.wins!=null||an.losses!=null)?`<div class="bt-an"><div class="bt-anh">${icon('trendUp',13)} Trade analytics <i>${an.wins||0}W / ${an.losses||0}L</i></div>
+        <div class="bt-angrid">
+          <div class="bt-anc"><span>Avg win</span><b class="num up">${pct(an.avgWin||0)}</b></div>
+          <div class="bt-anc"><span>Avg loss</span><b class="num down">${pct(an.avgLoss||0)}</b></div>
+          <div class="bt-anc"><span>Profit factor</span><b class="num ${an.profitFactor>=1.2?'up':an.profitFactor!=null&&an.profitFactor<1?'down':''}">${pf}</b></div>
+          <div class="bt-anc"><span>Best / Worst</span><b class="num"><span class="up">${pct(an.best||0)}</span> <span class="down">${pct(an.worst||0)}</span></b></div>
+          <div class="bt-anc"><span>Avg hold</span><b class="num">${an.avgHold||0}d</b></div>
+          <div class="bt-anc"><span>Max streak</span><b class="num"><span class="up">${an.winStreak||0}W</span> <span class="down">${an.lossStreak||0}L</span></b></div>
+        </div></div>`:'';
+      // ---- trade log ----
+      const log=(d.log&&d.log.length)?`<div class="bt-logwrap"><div class="bt-logttl">Recent trades</div><table class="tbl bt-log"><thead><tr><th>#</th><th>Entry</th><th>Exit</th><th>Hold</th><th>Return</th></tr></thead><tbody>${d.log.map((t,i)=>`<tr><td>${i+1}</td><td class="num">${(+t.entry).toLocaleString('en-US')}</td><td class="num">${(+t.exit).toLocaleString('en-US')}</td><td class="num">${t.days}d</td><td class="num ${cls(t.ret)}">${pct(t.ret)}</td></tr>`).join('')}</tbody></table></div>`:'';
+      body=stat+curveBlock+benchBlock+vr+ddBlock+monthlyHeat(d.monthly)+decayLine+mcBlock+analytics+log;
     }
   }
   return note+picker+body;
