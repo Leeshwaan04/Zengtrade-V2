@@ -1,0 +1,36 @@
+# zengtrade — Cloudflare Tunnel ingress
+#
+# Serves the WHOLE private terminal from your Mac on ONE hostname (app.zengtrade.in):
+#   /api/*  -> the bot API   (127.0.0.1:8756)
+#   /*      -> the frontend  (127.0.0.1:8011, serve.py)
+#
+# Why one hostname: same-origin. No CORS, no mixed content, and the Cloudflare Access
+# cookie is sent automatically — so the bot needs no secret embedded in the JS.
+#
+# SECURITY: the tunnel dials OUT to Cloudflare. No inbound port is opened on your Mac,
+# and the bot keeps binding 127.0.0.1 only. Cloudflare Access is the auth gate — set the
+# policy BEFORE you route DNS (step 4), or the API is briefly reachable by anyone.
+#
+# Install:  brew install cloudflared
+# Path:     ~/.cloudflared/config.yml   (or pass --config to `cloudflared tunnel run`)
+
+tunnel: zengtrade
+credentials-file: /Users/sumitbagewadi/.cloudflared/<TUNNEL-UUID>.json
+
+ingress:
+  # --- bot API (must come FIRST: path rules are evaluated in order) ---
+  - hostname: app.zengtrade.in
+    path: ^/api/.*
+    service: http://127.0.0.1:8756
+    originRequest:
+      connectTimeout: 10s
+      noTLSVerify: true
+
+  # --- the terminal frontend (serve.py) ---
+  - hostname: app.zengtrade.in
+    service: http://127.0.0.1:8011
+    originRequest:
+      connectTimeout: 10s
+
+  # --- catch-all (required last rule) ---
+  - service: http_status:404
