@@ -665,7 +665,8 @@ function renderWatchlist(r){
     const ltpCell = lv
       ? `<div class="wl-ltp num">${(+s.ltp).toLocaleString('en-IN')}</div><div class="wl-chg ${cls(s.chg)} num">${pct(s.chg)}</div>`
       : `<div class="wl-ltp num muted" title="No live quote — connect Kite">—</div><div class="wl-chg num muted">·</div>`;
-    return `<div class="wl-row${(itemKey(s)===effSel||s.sym===effSel)?' sel':''}" draggable="true" data-sym="${esc(s.sym)}" data-key="${esc(itemKey(s))}">
+    const _selRow=(itemKey(s)===effSel||s.sym===effSel);
+    return `<div class="wl-row${_selRow?' sel':''}" draggable="true" data-sym="${esc(s.sym)}" data-key="${esc(itemKey(s))}" role="button" tabindex="0" aria-label="Select ${esc(s.sym)}${eq?'':' '+esc(s.type||'')}"${_selRow?' aria-current="true"':''}>
       <span class="wl-grip">${icon('grip',12)}</span>
       <div class="wl-l">
         <div class="wl-sym">${esc(s.sym)} ${!eq?`<i class="wl-seg ${s.type==='FUT'?'fut':s.type==='CE'?'ce':s.type==='PE'?'pe':'oth'}">${s.type}</i>`:(s.hold?`<span class="hold-star">${icon('star',11)}</span>`:'')}</div>
@@ -6852,6 +6853,18 @@ function initKeyboardNav(){
 function initWatchlistDnD(){
   const wl=$('wlRows');
   wl.addEventListener('click',e=>{if(e.target.closest('[data-wlremove]'))return;const row=e.target.closest('.wl-row');if(row)selectSym(row.dataset.key);});
+  // Keyboard a11y: rows are role="button" tabindex="0" — Enter/Space selects, Up/Down roves focus
+  // (WCAG 2.1.1). Without this the watchlist was mouse-only. The remove button keeps its own focus.
+  wl.addEventListener('keydown',e=>{
+    if(e.target.closest('[data-wlremove]'))return;             // let the remove button handle its own keys
+    const row=e.target.closest('.wl-row'); if(!row)return;
+    if(e.key==='Enter'||e.key===' '){ e.preventDefault(); selectSym(row.dataset.key); return; }
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){ e.preventDefault();
+      const rows=[...wl.querySelectorAll('.wl-row')], i=rows.indexOf(row);
+      const nxt=rows[e.key==='ArrowDown'?Math.min(i+1,rows.length-1):Math.max(i-1,0)];
+      if(nxt)nxt.focus();
+    }
+  });
   wl.addEventListener('dragstart',e=>{const row=e.target.closest('.wl-row');if(!row)return;state.dragKey=row.dataset.key;row.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
   wl.addEventListener('dragend',e=>{const row=e.target.closest('.wl-row');if(row)row.classList.remove('dragging');wl.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over'));});
   wl.addEventListener('dragover',e=>{e.preventDefault();const row=e.target.closest('.wl-row');wl.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over'));if(row&&row.dataset.key!==state.dragKey)row.classList.add('drag-over');});
