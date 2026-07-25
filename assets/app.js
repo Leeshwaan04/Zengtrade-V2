@@ -3980,8 +3980,10 @@ function cryptoMonitor(){
   // regime fit (learned, net-of-cost verdict per strategy for the CURRENT regime) → drives the live
   // engine panel + per-row FIT/STOOD-DOWN badges. Joined by id from /api/regime-fit?market=crypto.
   if(!RFIT.data.crypto && !RFIT.busy.crypto) loadRegimeFit('crypto').then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='monitor') renderAlgo(); });
+  if(!CRYPTOALLOC.loaded && !CRYPTOALLOC.busy) loadCryptoAlloc().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='monitor') renderAlgo(); });
   const rf=RFIT.data.crypto||{}, curReg=rf.currentRegime||d.regime||'—';
-  const fitMap={}; (rf.strategies||[]).forEach(x=>{ fitMap[x.id]=(x.cells||{})[curReg]||null; });
+  const fitMap={}, fitAllMap={}; (rf.strategies||[]).forEach(x=>{ fitMap[x.id]=(x.cells||{})[curReg]||null; fitAllMap[x.id]=x.cells||{}; });
+  const allocMap={}; ((CRYPTOALLOC.data&&CRYPTOALLOC.data.strategies)||[]).forEach(x=>{ allocMap[x.id]=x.weight; });
   scoped.forEach(s=>s._dep=cryptoDeployed(s));   // stamp deployed for the Deployed sort
   const {sorted:sortedScoped, bar:ctrlBar}=monSortFilter(scoped);
   const me=state.algo.monExpand=state.algo.monExpand||{};
@@ -3998,7 +4000,18 @@ function cryptoMonitor(){
     }).join('');
     const posBlock=pos?`<div class="mon-pos">${pos}</div>`:'';
     const accLine=f.closed?`<div class="mon-acc"><span>Forward accuracy</span><b class="${f.winPct!=null&&f.winPct>=50?'up':'down'}">${f.winPct!=null?f.winPct+'% win':'—'}</b><i>·</i>PF <b class="${f.profitFactor!=null&&f.profitFactor>=1?'up':'down'}">${f.profitFactor!=null?(+f.profitFactor).toFixed(2):'—'}</b><i>·</i>exp <b class="num ${cls(f.expectancy)}">${f.expectancy!=null?cxMoney(f.expectancy):'—'}</b><i>·</i>${f.closed} closed <a class="mon-acc-link" data-algogoto="accuracy">go-live gate →</a></div>`:'';
-    const expInner=(posBlock+accLine)||`<div class="mon-exp-empty">No open positions or closed trades yet — this strategy trades only when its setup appears.</div>`;
+    // allocation dial — the user's real control over how much of this strategy's normal size to use
+    const wgt=allocMap[s.id]!=null?allocMap[s.id]:1, wpct=Math.round(wgt*100);
+    const allocCtl=`<div class="mon-alloc"><div class="ma-h"><span>${icon('sliders',12)} Capital allocation</span><b class="ma-val" data-cxallocval="${esc(s.id)}">${wpct}%</b></div>
+      <input class="ma-slider" type="range" min="0" max="100" step="5" value="${wpct}" data-cxalloc="${esc(s.id)}" aria-label="Allocation for ${esc(s.name)}">
+      <div class="ma-scale"><span>Off</span><span>Full size</span></div>
+      <p class="ma-note">Caps how much of its normal size this strategy may use — <b>0% = paused</b> (no new trades; open ones still managed). The Governor's concentration caps still apply on top. Honoured by the engine next cycle.</p></div>`;
+    // "on deck" — for a strategy stood down in THIS regime, which regimes it's PROVEN to win in
+    // (why it's kept: it's your bench for those regimes). Answers "how are inactive strategies useful?"
+    const curCell=fitMap[s.id], benched=curCell&&curCell.verdict==='unfit';
+    const fitRegs=Object.entries(fitAllMap[s.id]||{}).filter(([r,c])=>c&&c.verdict==='fit').map(([r])=>r);
+    const onDeck=benched?`<div class="mon-ondeck">${icon('repeat',12)}<span><b>Stood down in ${esc(curReg)}</b> — it loses here, so the engine holds its capital in cash. ${fitRegs.length?`It's your bench for <b>${fitRegs.map(esc).join(' · ')}</b> — proven to win there, ready to redeploy the moment the regime turns.`:`No regime has cleared it yet — it stays benched, still gathering evidence.`}</span></div>`:'';
+    const expInner=(onDeck+posBlock+accLine+allocCtl)||`<div class="mon-exp-empty">No open positions or closed trades yet — this strategy trades only when its setup appears.</div>`;
     const badge=cxStratBadge(s, fitMap[s.id], curReg);
     return `<div class="mon-card${open?' open':''}" data-cxrow="${esc(s.id)}">
       <div class="mon-row live mon-head" data-monexp="${esc(s.id)}" role="button" tabindex="0" aria-expanded="${open}" title="Show positions &amp; forward accuracy"><div class="mon-l"><span class="live-dot live"></span><div><b>${esc(s.name)} <span class="cxf-cls">${esc(s.instr||'spot')}</span>${badge}</b><span class="mon-cat">${s.openPositions||0} open${dep>0?` · <b class="mc-dep">${cxMoney(dep)}</b> deployed`:''} · ${f.closed||0} closed</span></div></div>
@@ -4282,6 +4295,20 @@ function cryptoBacktest(){
 }
 // ---- crypto Forward Test + Accuracy (real closed-trade track record from the 24/7 harness) ----
 const CRYPTOFWD={loaded:false,busy:false,data:null};
+// per-strategy capital allocation (the user's deploy dial, 0-100%) — read from + written to the
+// backend, which the 24/7 harness honours when sizing (bot/crypto_alloc.py).
+const CRYPTOALLOC={loaded:false,busy:false,data:null};
+async function loadCryptoAlloc(){ if(CRYPTOALLOC.busy) return; CRYPTOALLOC.busy=true;
+  try{ CRYPTOALLOC.data=await fetch(`${BOT_API}/api/crypto/allocation`).then(r=>r.json()); }catch(e){ CRYPTOALLOC.data={running:false}; }
+  CRYPTOALLOC.loaded=true; CRYPTOALLOC.busy=false; }
+// write a strategy's allocation weight (0-1) — optimistic UI + persists to the harness.
+function cxSetAlloc(id, w){
+  w=Math.max(0,Math.min(1,w));
+  const rec=((CRYPTOALLOC.data&&CRYPTOALLOC.data.strategies)||[]).find(x=>x.id===id); if(rec) rec.weight=w;   // optimistic
+  fetch(`${BOT_API}/api/crypto/allocation`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,weight:w})})
+    .then(r=>r.json()).then(res=>{ if(res&&res.ok) announce(`Allocation for ${id} set to ${Math.round(w*100)}% — the engine sizes within this cap next cycle.`); })
+    .catch(()=>announce('Could not save allocation — bot API unreachable.'));
+}
 async function loadCryptoFwd(){ if(CRYPTOFWD.busy) return; CRYPTOFWD.busy=true;
   try{ CRYPTOFWD.data=await fetch(`${BOT_API}/api/crypto/forward`).then(r=>r.json()); }catch(e){ CRYPTOFWD.data={running:false}; }
   CRYPTOFWD.loaded=true; CRYPTOFWD.busy=false; }
@@ -4550,6 +4577,11 @@ function renderAlgo(){
   v.querySelectorAll('[data-cbtperiod]').forEach(b=>b.onclick=()=>{ state.algo.cbt=state.algo.cbt||{strat:'macross',period:'1Y'}; state.algo.cbt.period=b.dataset.cbtperiod; renderAlgo(); });
   v.querySelectorAll('[data-cxcsv]').forEach(b=>b.onclick=cxTradesCSV);
   v.querySelectorAll('[data-cxgl]').forEach(b=>b.onclick=e=>{e.stopPropagation();cryptoGoLiveCheck(b.dataset.cxgl);});
+  v.querySelectorAll('[data-cxalloc]').forEach(sl=>{
+    sl.oninput=()=>{ const lab=v.querySelector('[data-cxallocval="'+CSS.escape(sl.dataset.cxalloc)+'"]'); if(lab)lab.textContent=sl.value+'%'; };
+    sl.onchange=()=>cxSetAlloc(sl.dataset.cxalloc,(+sl.value)/100);
+    sl.onclick=e=>e.stopPropagation();
+  });
   v.querySelectorAll('[data-algogoto]').forEach(b=>b.onclick=()=>{state.algo.view=b.dataset.algogoto;renderAlgo();});
   v.querySelectorAll('[data-algobt]').forEach(b=>b.onclick=()=>{state.algo.bt.algo=+b.dataset.algobt;state.algo.view='backtest';renderAlgo();});
   v.querySelectorAll('[data-algodep]').forEach(b=>b.onclick=()=>algoDeploy(ALGOS[+b.dataset.algodep]));

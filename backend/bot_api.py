@@ -2304,6 +2304,23 @@ def crypto_analytics_payload() -> dict:
             "equity": equity, "stats": stats, "recent": recent}
 
 
+def crypto_allocation_payload() -> dict:
+    """Per-strategy capital allocation (0-100% of normal size) — the user's deploy dial. Lists every
+    running crypto strategy with its current weight, deployed capital and open count, so the UI can
+    show a slider per strategy. Weights the harness actually honours (bot/crypto_alloc.py)."""
+    from bot.crypto_alloc import load_alloc, weight
+    mon = crypto_monitor_payload()
+    if not mon.get("running"):
+        return {"running": False}
+    alloc = load_alloc()
+    rows = []
+    for s in mon.get("strategies", []):
+        rows.append({"id": s["id"], "name": s["name"], "instr": s.get("instr", "spot"),
+                     "weight": round(weight(s["id"], alloc), 3),
+                     "openPositions": s.get("openPositions", 0), "paperPnl": s.get("paperPnl", 0)})
+    return {"running": True, "capital": mon.get("capital"), "strategies": rows}
+
+
 def crypto_risk_payload() -> dict:
     """The crypto Governor state (score, mode, concentration, crowding, kill-switch) — the same
     portfolio control layer as the Indian book, published each cycle by the crypto harness."""
@@ -2922,6 +2939,7 @@ class Handler(BaseHTTPRequestHandler):
                 "/api/crypto/risk": crypto_risk_payload,
                 "/api/crypto/forward": crypto_forward_payload,
                 "/api/crypto/analytics": crypto_analytics_payload,
+                "/api/crypto/allocation": crypto_allocation_payload,
                 "/api/stopped": stopped_payload,
                 "/api/analytics": analytics_payload,
                 "/api/market": market_snapshot,
@@ -2941,7 +2959,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = self.path.split("?")[0]
-        if path not in ("/api/mode", "/api/relogin", "/api/strategy", "/api/harness"):
+        if path not in ("/api/mode", "/api/relogin", "/api/strategy", "/api/harness", "/api/crypto/allocation"):
             return self._send({"error": "not found"}, 404)
         # CSRF guard (VAPT): these are state-changing. A browser always sends Origin on a
         # cross-origin POST — reject any Origin that isn't a local page, and require the JSON
@@ -2960,6 +2978,18 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/harness":         # one-click Start/Stop the forward paper harness
                 act = body.get("action", "start")
                 return self._send(start_harness() if act == "start" else stop_harness())
+            if path == "/api/crypto/allocation":   # set a crypto strategy's capital dial (0-100%)
+                from bot.crypto_alloc import set_weight
+                sid = str(body.get("id", ""))
+                if not sid:
+                    return self._send({"error": "missing strategy id"}, 400)
+                w = body.get("weight", 1.0)
+                try:
+                    w = float(w)
+                except (TypeError, ValueError):
+                    return self._send({"error": "weight must be a number 0-1"}, 400)
+                alloc = set_weight(sid, w)
+                return self._send({"ok": True, "id": sid, "weight": max(0.0, min(1.0, w)), "allocation": alloc})
             if path == "/api/strategy":        # Deploy / Pause / Stop a strategy
                 sid = body.get("id", "")
                 if sid not in {x["id"] for x in STRATEGIES}:

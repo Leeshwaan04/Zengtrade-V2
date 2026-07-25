@@ -48,6 +48,7 @@ from bot.strategies_lib import (RSI2Strategy, MACrossStrategy, SupertrendStrateg
                                 VWAPMomStrategy, EMAScalpStrategy, BBBreakStrategy)
 from bot.xs import CrossSectionalPaperEngine
 from bot.opportunity import OpportunityPaperEngine, MoonshotCompounderEngine
+from bot.crypto_alloc import load_alloc, weight
 from bot.crypto_data import CryptoDataFeed
 from bot.crypto_perps import CryptoPerpEngine
 from bot.crypto_options import CryptoOptionsEngine
@@ -271,8 +272,10 @@ def run_cycle(engines, pairs, data):
     governed = dict(engines, pairs=pairs)           # governance covers pairs too
     cull_check(governed)                # bench negative-expectancy strategies (overall)
     regime_fit_check(governed, _pe.CURRENT_REGIME)  # + bench strategies proven to lose in THIS regime
+    alloc = load_alloc()                # user's per-strategy capital dial (0-100% of normal size)
     for k, e in engines.items():
         try:
+            e.risk.cfg.capital = PAPER_CAPITAL * weight(k, alloc)   # honour the allocation cap when sizing
             e.run_cycle(square_off=False)   # crypto never closes → never square off
         except Exception:
             log.exception("[%s] cycle error — skipped, harness unaffected", k)
