@@ -1,5 +1,5 @@
 /* ============================================================
-   TradePro · Indiabulls Securities — Bull/Bear Terminal
+   zengtrade · Indiabulls Securities — Bull/Bear Terminal
    Detection engine + AUTO/MANUAL switching + 3-pane reflow
    ============================================================ */
 'use strict';
@@ -1359,11 +1359,11 @@ function renderOnboardConnect(){
     <span><span class="ob-tag live">● LIVE</span> real Kite data</span>
     <span><span class="ob-tag paper">PAPER</span> simulated orders, real prices</span>
     <span><span class="ob-tag demo">DEMO</span> clearly-labelled sample</span>
-    <p>TradePro never fabricates numbers — anything not live simply shows “—”.</p></div>`;
+    <p>zengtrade never fabricates numbers — anything not live simply shows “—”.</p></div>`;
 
   el.innerHTML=`
     <h2 class="pg-title">Connect your Kite account</h2>
-    <p class="pg-sub">TradePro reads live data straight from your Zerodha Kite session. It never simulates prices or holdings.</p>
+    <p class="pg-sub">zengtrade reads live data straight from your Zerodha Kite session. It never simulates prices or holdings.</p>
     ${statusCard}${action}${legend}
     <div class="ob-foot">
       <button class="pg-skip" data-obback type="button">← Back</button>
@@ -2858,8 +2858,16 @@ document.addEventListener('error', function(e){
    ALGO MODE — strategy studio (Marketplace · Backtest · Monitor)
    Full-width center takeover; reuses ALGOS + algoDeploy.
    ============================================================ */
-/* ===== LIVE BOT INTEGRATION — kite-mean-reversion-bot API (:8756) ===== */
-const BOT_API='http://localhost:8756';
+/* ===== LIVE BOT INTEGRATION — kite-mean-reversion-bot API (:8756) =====
+   Origin-aware so ONE build works everywhere: served from localhost → talk to the local bot;
+   served from app.zengtrade.in → talk to the Cloudflare-tunnelled bot (Access-gated, HTTPS).
+   The bot itself still binds 127.0.0.1 only — the tunnel dials OUT, so no inbound port is ever opened. */
+const BOT_API=(()=>{
+  const h=location.hostname;
+  if(h==='localhost'||h==='127.0.0.1'||h==='::1'||h==='') return 'http://localhost:8756';
+  return '';   // production: SAME-ORIGIN — the tunnel routes /api/* to the bot, so the Cloudflare
+               // Access cookie rides along automatically. No CORS, no CSP change, no secret in JS.
+})();
 let BOT={loaded:false,connected:false,status:null,paperMode:true,error:false,chains:{},chainExp:{},futures:null};
 async function loadBotData(){
   try{
@@ -4190,8 +4198,9 @@ function scopeNote(msg){ return `<div class="av-scope-note">${icon('layout',12)}
 function renderAlgo(){
   const v=$('algoView'); if(!v) return;
   if(!isAlgo()){ v.innerHTML=''; return; }
-  state.algo=state.algo||{view:'market',bt:{algo:0,period:'1Y'}};
-  if(!state.algo.view) state.algo.view='market';
+  state.algo=state.algo||{view:'monitor',bt:{algo:0,period:'1Y'}};
+  if(!state.algo.view) state.algo.view='monitor';
+  if(['market','opportunity','leaderboard'].includes(state.algo.view)) state.algo.view='monitor';  // retired tabs → land on Monitor
   if(!state.algo.bt) state.algo.bt={algo:0,period:'1Y'};   // guard: setMarket/studioScope can create state.algo before this default
   if(!state.algo.exec) state.algo.exec='paper';
   if(!state.algo.market) state.algo.market='in';
@@ -4202,7 +4211,9 @@ function renderAlgo(){
   const view=state.algo.view, live=ALGOS.filter(a=>a.status!=='idle');
   if(crypto && (view==='monitor'||view==='positions') && !CRYPTOMON.loaded && !CRYPTOMON.busy){ loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); }
   const depN=crypto?cxActive():ALGOS.filter(a=>a.deployed&&inScope(a)).length;   // Monitor badge reflects the active market + studio scope
-  const tabs=[['library','Library'],['opportunity','Opportunity Engine'],['risk','Risk Governor'],['positions','Positions'],['market','Marketplace'],['leaderboard','Leaderboard'],['backtest','Backtest'],['forward','Forward Test'],['monitor','Monitor'],['accuracy','Accuracy'],['analytics','Analytics']];
+  // Decluttered for clarity: a simple left-to-right flow — watch → browse → hold → prove → protect → history.
+  // (Retired: Marketplace [dup of Library], Leaderboard [dup of Forward Test/Accuracy], Opportunity Engine [equity discretionary picker].)
+  const tabs=[['monitor','Monitor'],['library','Library'],['positions','Positions'],['forward','Forward Test'],['accuracy','Accuracy'],['analytics','Analytics'],['risk','Risk Governor'],['backtest','Backtest']];
   const head=`<div class="av-head">
     <div class="av-title"><span class="av-ic">${icon('cpu',17)}</span><div><b>Algo Studio</b><span>${crypto?'Crypto · live Binance data · paper trading, 24/7':'Backtest, forward-test &amp; monitor rule-based strategies'}</span></div></div>
     <div class="av-tabs" role="tablist" aria-label="Algo views">${tabs.map(([k,l])=>`<button class="av-tab${k===view?' on':''}" role="tab" aria-selected="${k===view}" data-algoview="${k}">${l}${k==='monitor'&&depN?` <i class="av-tn">${depN}</i>`:''}</button>`).join('')}</div></div>`;
@@ -4294,7 +4305,7 @@ const ALGO_DEFS={
   'Needs':'What this strategy requires to trade — product or segment (e.g. stock futures, index options, MCX).',
   'Strategies':'How many strategies are available in this segment.',
   'Validated':'How many strategies in this segment passed the regime backtest with a real edge (the rest are unproven candidates).',
-  'Live regime':'The market regime TradePro is detecting right now — it decides which strategy is the active engine.',
+  'Live regime':'The market regime zengtrade is detecting right now — it decides which strategy is the active engine.',
   'Mode':'Paper = simulated, zero real orders. Live = real money. Always paper-trade first.'};
 const REGIME_DEFS={
   Bull:'Bull — index above its 200-day average and trending up. Momentum / trend strategies are favoured.',
@@ -4742,7 +4753,7 @@ function algoLibrary(){
     const tag=hv?`High-Vol${regLabel?' · '+regLabel:''}`:regLabel;
     favStrip=`<div class="lib-fav">
       <div class="lib-fav-h"><span class="lib-live"><span class="live-dot live"></span>Live regime: <b>${esc(tag)}</b></span>
-        <span class="lib-fav-sub">${favs.length} strategy types favour this regime${infoI('Auto-matched to the regime TradePro detects from live Kite data (trend, breadth & VIX). Markets shift — this set updates the moment the regime flips.')}</span>
+        <span class="lib-fav-sub">${favs.length} strategy types favour this regime${infoI('Auto-matched to the regime zengtrade detects from live Kite data (trend, breadth & VIX). Markets shift — this set updates the moment the regime flips.')}</span>
         <button class="lib-fav-btn${l.favOnly?' on':''}" data-libfav>${icon(l.favOnly?'check':'spark',12)} ${l.favOnly?'Showing favoured only':'Show favoured only'}</button></div>
       <div class="lib-fav-pills">${fams.map(fk=>{const fm=famMeta(fk);return `<button class="lib-fav-pill" data-libfam="${fk}">${icon(fm[2],12)} ${esc(fm[1])}</button>`;}).join('')}</div>
       ${hv?`<p class="lib-fav-warn">${icon('alert',12)}<span>Volatility is elevated — favour <b>defined-risk</b> structures and smaller size. This is when accounts get hurt.</span></p>`:''}
@@ -5855,7 +5866,7 @@ const AI_ACTIONS={'open-chain':'Open option chain','open-strategy':'Open strateg
    The DATA tools below fetch REAL data from the local bot API (Kite). aiCallClaude runs a
    genuine tool_use → tool_result agentic loop, so Claude fetches live numbers instead of
    guessing. Every tool returns honest {connected:false,...} when Kite is offline. */
-const AI_TOOL={name:'navigate',description:'Offer the user a one-tap shortcut to a relevant part of the TradePro app (option chain, strategy builder, research, portfolio analyser, SIP manager, or algo studio). Call this in addition to a normal text answer whenever your reply points the user toward one of these tools. Calling navigate does NOT move the user — it renders a button they tap to confirm. Use it when it genuinely helps; never invent destinations outside the enum.',input_schema:{type:'object',properties:{destination:{type:'string',enum:Object.keys(AI_ACTIONS),description:'Where to send the user: '+Object.entries(AI_ACTIONS).map(([k,v])=>k+' = '+v).join('; ')+'.'},reason:{type:'string',description:'A short 2–4 word label for the shortcut button, e.g. "Build the hedge" or "See research".'}},required:['destination']}};
+const AI_TOOL={name:'navigate',description:'Offer the user a one-tap shortcut to a relevant part of the zengtrade app (option chain, strategy builder, research, portfolio analyser, SIP manager, or algo studio). Call this in addition to a normal text answer whenever your reply points the user toward one of these tools. Calling navigate does NOT move the user — it renders a button they tap to confirm. Use it when it genuinely helps; never invent destinations outside the enum.',input_schema:{type:'object',properties:{destination:{type:'string',enum:Object.keys(AI_ACTIONS),description:'Where to send the user: '+Object.entries(AI_ACTIONS).map(([k,v])=>k+' = '+v).join('; ')+'.'},reason:{type:'string',description:'A short 2–4 word label for the shortcut button, e.g. "Build the hedge" or "See research".'}},required:['destination']}};
 const AI_DATA_TOOLS=[
   {name:'get_portfolio',description:"Fetch the user's REAL equity holdings, open positions and P&L from their connected Zerodha Kite account. Use for any question about my portfolio / holdings / positions / P&L / exposure / concentration / what do I own. Returns connected:false when Kite is not connected, and an empty list if the account is unfunded — never invent holdings.",input_schema:{type:'object',properties:{}}},
   {name:'get_market',description:'Fetch the live market snapshot: detected regime (bull/bear/neutral) with a composite score, India VIX, advance/decline breadth, and key index levels. Use for "how is the market / what is the regime / VIX / breadth".',input_schema:{type:'object',properties:{}}},
@@ -5927,7 +5938,7 @@ function aiSystemPrompt(){
   const r=state.displayed;
   const conn=BOT.live?('CONNECTED to Kite ('+((BOT.status&&BOT.status.user)||'user')+'), live data available'):'NOT connected to Kite right now — data tools will return connected:false';
   return [
-    'You are the in-app AI copilot for TradePro, a real trading & investing terminal wired to the user\'s Zerodha Kite account via local tools.',
+    'You are the in-app AI copilot for zengtrade, a real trading & investing terminal wired to the user\'s Zerodha Kite account via local tools.',
     'CRITICAL — never invent numbers. For anything about prices, the market/regime/VIX, the user\'s holdings/P&L, option chains, or backtests, you MUST call the relevant tool and answer from what it returns. If a tool returns connected:false or empty, say so plainly and tell the user to run python3 login.py — do NOT guess or fabricate figures. This product\'s whole promise is that every number is real.',
     'You can call multiple tools and chain them (e.g. search_instruments → get_quote). Resolve ambiguous names with search_instruments first.',
     'Be concise and direct — a few sentences, no preamble. Plain text only; **bold** for key numbers is fine. No markdown headers, tables, or code blocks.',
