@@ -142,9 +142,10 @@ h1{{font-size:31px;letter-spacing:-.02em;margin:14px 0 4px}}.sym{{color:var(--sl
 .chg{{font:700 15px/1 var(--mono)}}.up{{color:var(--green)}}.down{{color:var(--red)}}
 .spark{{width:100%;height:90px;display:block;margin:12px 0;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:8px}}
 .stats{{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}}
-.stat{{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:11px}}
+.stat{{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:11px;min-width:0}}
 .stat span{{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--slate);font-weight:700}}
-.stat b{{display:block;font:700 16px/1.3 var(--mono);margin-top:3px}}
+.stat b{{display:block;font:700 16px/1.3 var(--mono);margin-top:3px;overflow-wrap:anywhere}}
+@media(max-width:600px){{.stats{{grid-template-columns:repeat(2,1fr)}}h1{{font-size:25px}}.price b{{font-size:24px}}}}
 .regime{{display:flex;gap:11px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--green);border-radius:12px;padding:14px;margin:18px 0}}
 h2{{font-size:20px;margin:26px 0 8px}}p{{color:var(--slate)}}p b,li b{{color:var(--navy)}}
 .faq{{border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin:8px 0;background:var(--surface)}}
