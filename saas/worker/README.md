@@ -1,0 +1,53 @@
+# zengtrade paper-trading worker
+
+Runs the proven strategy on **live Binance data** for every ACTIVE paper deployment across all
+users, writing trades + book_state back to Supabase. This is what makes deployed strategies
+actually *trade* — the site is inert without it running.
+
+Self-contained: the needed `bot/` modules (crypto_data, strategies_lib, indicators) are vendored
+here, so it has no dependency on the kite repo.
+
+## Run modes
+```
+python worker.py --once            # one live cycle (test)
+python worker.py --replay 800      # backfill real history (seed/demo)
+python worker.py                   # continuous, every WORKER_INTERVAL sec (default 300)
+```
+
+## Config
+Copy `.env.example` -> `.env`, set `DATABASE_URL` to your Supabase Postgres URI (Project Settings
+-> Database -> Connection string). Use the **rotated** DB password. Never commit `.env`.
+
+## Where to host (pick one)
+
+**A) Docker host — Railway / Render / Fly.io (easiest, ~$5/mo):**
+```
+# from saas/worker/
+# Railway:  railway up            (set DATABASE_URL in the dashboard)
+# Fly.io:   fly launch && fly secrets set DATABASE_URL=...  && fly deploy
+# Render:   new Background Worker, Docker, env DATABASE_URL
+```
+The Dockerfile runs continuous mode automatically.
+
+**B) Plain Linux VPS (systemd):**
+```
+sudo mkdir -p /opt/zengtrade-worker && sudo cp -r . /opt/zengtrade-worker/
+cd /opt/zengtrade-worker
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+cp .env.example .env   # then edit DATABASE_URL
+sudo cp zengtrade-worker.service /etc/systemd/system/
+sudo systemctl enable --now zengtrade-worker
+sudo journalctl -u zengtrade-worker -f    # watch it
+```
+
+**C) Cron (simplest, coarser cadence):** a `*/5 * * * *` job running `python worker.py --once`.
+
+## Verify it's working
+After a cycle, check Supabase: `select count(*) from trade;` grows, and `book_state` rows update.
+The user's dashboard then shows live P&L.
+
+## Notes
+- Reads `deployment` where `mode='paper' and status='running'` — so it only works on strategies
+  users actually deployed. RLS doesn't block it: the worker connects with the DB role (service),
+  not a user JWT.
+- Binance data is public (no key). No exchange keys live here — paper only.

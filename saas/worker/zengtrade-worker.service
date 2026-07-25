@@ -1,0 +1,17 @@
+# /etc/systemd/system/zengtrade-worker.service  — for a plain Linux VPS
+# 1) put this repo's saas/worker at /opt/zengtrade-worker
+# 2) python3 -m venv /opt/zengtrade-worker/.venv && /opt/zengtrade-worker/.venv/bin/pip install -r requirements.txt
+# 3) create /opt/zengtrade-worker/.env with DATABASE_URL (see .env.example)
+# 4) systemctl enable --now zengtrade-worker
+[Unit]
+Description=zengtrade paper-trading worker
+After=network-online.target
+Wants=network-online.target
+[Service]
+WorkingDirectory=/opt/zengtrade-worker
+EnvironmentFile=/opt/zengtrade-worker/.env
+ExecStart=/opt/zengtrade-worker/.venv/bin/python worker.py --interval ${WORKER_INTERVAL}
+Restart=always
+RestartSec=15
+[Install]
+WantedBy=multi-user.target
