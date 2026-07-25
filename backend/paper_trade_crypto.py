@@ -266,6 +266,28 @@ def regime_fit_check(engines, regime):
     return fit
 
 
+def apply_alloc(e, w: float) -> None:
+    """Scale an engine's sizing capital by the user's allocation weight (0-1), honouring whichever
+    capital attribute that engine type uses: spot/xs = e.risk.cfg.capital, perps/options = e.capital,
+    pairs = e.cap_per. The engine's ORIGINAL capital is remembered once (_base_cap) so weight always
+    scales the base, never a previously-scaled value. w=1.0 is a no-op. Never raises."""
+    try:
+        if hasattr(e, "risk") and hasattr(e.risk, "cfg"):
+            if not hasattr(e, "_base_cap"):
+                e._base_cap = e.risk.cfg.capital
+            e.risk.cfg.capital = e._base_cap * w
+        elif hasattr(e, "cap_per"):          # PairsPaperEngine
+            if not hasattr(e, "_base_cap"):
+                e._base_cap = e.cap_per
+            e.cap_per = e._base_cap * w
+        elif hasattr(e, "capital"):          # perp / options engines
+            if not hasattr(e, "_base_cap"):
+                e._base_cap = e.capital
+            e.capital = e._base_cap * w
+    except Exception:
+        log.exception("apply_alloc failed for %s — left at base size", getattr(e, "name", "?"))
+
+
 def run_cycle(engines, pairs, data):
     _pe.CURRENT_REGIME = crypto_regime(data)
     update_governor(engines, pairs)     # prime the book (dd/health) + rebalancer BEFORE any entries
@@ -275,11 +297,12 @@ def run_cycle(engines, pairs, data):
     alloc = load_alloc()                # user's per-strategy capital dial (0-100% of normal size)
     for k, e in engines.items():
         try:
-            e.risk.cfg.capital = PAPER_CAPITAL * weight(k, alloc)   # honour the allocation cap when sizing
+            apply_alloc(e, weight(k, alloc))    # honour the allocation cap when sizing (any engine type)
             e.run_cycle(square_off=False)   # crypto never closes → never square off
         except Exception:
             log.exception("[%s] cycle error — skipped, harness unaffected", k)
     try:
+        apply_alloc(pairs, weight("pairs", alloc))
         pairs.run_cycle()
     except Exception:
         log.exception("[pairs] cycle error — skipped")
