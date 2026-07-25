@@ -7,3 +7,4 @@ proxy/.env
 LEVELUP.md
 saas/zengtrade-hostinger.zip
 seo/out/
+deploy/landing/dist/
