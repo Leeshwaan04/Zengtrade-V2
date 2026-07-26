@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.2" baseProfile="tiny-ps" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <title>zengtrade</title>
+  <rect x="0" y="0" width="32" height="32" fill="#00AB4E"/>
+  <path d="M24.69 13.67A9 9 0 1 1 20.5 8.21" stroke="#ffffff" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M12.5 19.5L17 15L20 17.5L26.5 8.8" stroke="#ffffff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
