@@ -225,30 +225,31 @@ shutil.copytree(os.path.join(HERE, "assets"), os.path.join(DIST, "assets"))
 open(os.path.join(DIST, "site.css"), "w").write(css + HOME_CSS + coin_css)   # ONE stylesheet for every page
 
 # ---- bundle the Supabase auth app onto the SAME origin (login / dashboard / legal) -----
-# So the header CTAs resolve on zengtrade.in itself: /login, /app, /terms, /privacy, /risk.
-# We deliberately DON'T copy saas/web/index.html (that is the old SaaS landing; the real home
-# is this marketing build). Auth pages keep their own focused css.css + js/ (Supabase glue).
+# Written as FOLDERS (login/index.html) so clean URLs work on GitHub Pages, which has no
+# _redirects/rewrites. So /login, /dashboard, /reset, /terms, /privacy, /risk resolve as static
+# folders. We deliberately DON'T copy saas/web/index.html (old SaaS landing; the real home is this
+# build). Auth pages keep their focused css.css + js/ (Supabase glue).
 AUTH_SRC = os.path.abspath(os.path.join(HERE, "..", "..", "saas", "web"))
-auth_ok = []
-for f in ("login.html", "reset.html", "app.html", "terms.html", "privacy.html", "risk.html", "css.css"):
+AUTH_ROUTES = {                                   # source file -> clean route folder
+    "login.html": "login", "app.html": "dashboard", "reset.html": "reset",
+    "terms.html": "terms", "privacy.html": "privacy", "risk.html": "risk",
+}
+for f, route_dir in AUTH_ROUTES.items():
     src = os.path.join(AUTH_SRC, f)
     if os.path.exists(src):
-        shutil.copy(src, os.path.join(DIST, f)); auth_ok.append(f)
+        d = os.path.join(DIST, route_dir); os.makedirs(d, exist_ok=True)
+        shutil.copy(src, os.path.join(d, "index.html"))
+shutil.copy(os.path.join(AUTH_SRC, "css.css"), os.path.join(DIST, "css.css"))
 for d in ("js", "assets"):                        # js = auth glue; assets merge (logo etc.)
     sd = os.path.join(AUTH_SRC, d)
     if os.path.isdir(sd):
         shutil.copytree(sd, os.path.join(DIST, d), dirs_exist_ok=True)
 
-# _redirects: netlify.app -> apex, plus clean paths for the bundled auth app
-open(os.path.join(DIST, "_redirects"), "w").write(
-    "https://zengtrade.netlify.app/*   https://zengtrade.in/:splat   301!\n"
-    "/login      /login.html    200\n"
-    "/reset      /reset.html    200\n"      # password-recovery landing (set new password)
-    "/dashboard  /app.html      200\n"      # post-auth landing (Supabase redirect target)
-    "/app        /app.html      200\n"      # legacy alias, keep working
-    "/terms    /terms.html    200\n"
-    "/privacy  /privacy.html  200\n"
-    "/risk     /risk.html     200\n")
+# GitHub Pages custom domain (also harmless on other hosts)
+open(os.path.join(DIST, "CNAME"), "w").write("zengtrade.in\n")
+# 404 fallback so unknown paths get a branded page (GitHub Pages serves /404.html)
+open(os.path.join(DIST, "_redirects"), "w").write(   # kept for hosts that DO read it (CF/Netlify)
+    "https://zengtrade.netlify.app/*   https://zengtrade.in/:splat   301!\n")
 
 urls = []
 def emit(path, html_str, canon):

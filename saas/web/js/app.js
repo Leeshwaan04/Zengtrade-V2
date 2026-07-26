@@ -16,7 +16,7 @@ const route = () => (location.hash.replace("#", "") || "dashboard");
 
 // ---------------------------------------------------------------- boot
 (async function boot() {
-  user = await requireAuth();                 // redirects to /login.html if signed out
+  user = await requireAuth();                 // redirects to /login if signed out
   if (!user) return;
   $("#userEmail").textContent = user.email;
   $("#signout").onclick = () => signOut();
@@ -85,7 +85,7 @@ async function maybePaidReturn() {
     }
     if (Date.now() - started > 240000) {           // give up after ~4 min
       bar.querySelector("span")?.remove();
-      bar.textContent = "Still confirming on-chain. Some coins take a few minutes — refresh this page once your wallet shows the payment sent, or we'll update it automatically.";
+      bar.textContent = "Still confirming on-chain. Some coins take a few minutes, refresh this page once your wallet shows the payment sent, or we'll update it automatically.";
       return;
     }
     setTimeout(poll, 10000);                        // re-check every 10s
@@ -258,7 +258,7 @@ function renderAccount() {
       <div class="acc-row"><span>Trading mode</span><b>Paper only <span class="muted">· non-custodial · no real orders</span></b></div>
     </div>
     <div class="card acc">
-      <div class="acc-row"><span>Legal</span><span class="links"><a href="/terms.html">Terms</a><a href="/privacy.html">Privacy</a><a href="/risk.html">Risk</a></span></div>
+      <div class="acc-row"><span>Legal</span><span class="links"><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/risk">Risk</a></span></div>
       <div class="acc-row"><span>Support</span><a href="mailto:hello@zengtrade.in">hello@zengtrade.in</a></div>
     </div>
     <div class="card acc danger">

@@ -48,7 +48,7 @@ export async function resetPassword(email) {
 
 export async function signOut() {
   await sb.auth.signOut();
-  location.href = "/login.html";
+  location.href = "/login";
 }
 
 /* ---------------- session ---------------- */
@@ -61,7 +61,7 @@ export async function currentUser() {
 /** Route guard: call at the top of any protected page. Redirects out if not signed in. */
 export async function requireAuth() {
   const user = await currentUser();
-  if (!user) { location.replace("/login.html"); return null; }
+  if (!user) { location.replace("/login"); return null; }
   await ensureProfile(user);
   return user;
 }
