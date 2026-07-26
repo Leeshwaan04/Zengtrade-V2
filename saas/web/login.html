@@ -1,0 +1,109 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign in · zengtrade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/assets/logo.svg">
+<link rel="stylesheet" href="/css.css">
+<style>
+  body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px 18px;
+    background:radial-gradient(1200px 500px at 50% -10%,var(--green-soft),transparent 70%),var(--bg)}
+  /* ambient aurora + data grid, matching zengtrade.in */
+  .ambient{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+  .aurora{position:absolute;border-radius:50%;filter:blur(55px);will-change:transform;mix-blend-mode:multiply}
+  .aurora.a1{width:46vw;height:46vw;left:-8vw;top:-14vh;opacity:.4;background:radial-gradient(circle at 50% 50%,var(--green,#00AB4E),transparent 67%);animation:auroraA 30s ease-in-out infinite}
+  .aurora.a2{width:38vw;height:38vw;right:-6vw;top:6vh;opacity:.26;background:radial-gradient(circle at 50% 50%,var(--green-d,#059142),transparent 70%);animation:auroraB 36s ease-in-out infinite}
+  .aurora.a3{width:52vw;height:52vw;left:32vw;bottom:-26vh;opacity:.18;background:radial-gradient(circle at 50% 50%,var(--green,#00AB4E),transparent 72%);animation:auroraC 44s ease-in-out infinite}
+  @keyframes auroraA{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(13vw,9vh) scale(1.18)}}
+  @keyframes auroraB{0%,100%{transform:translate(0,0) scale(1.05)}50%{transform:translate(-11vw,7vh) scale(.9)}}
+  @keyframes auroraC{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(7vw,-9vh) scale(1.16)}}
+  .grid-motion{position:absolute;inset:-60%;opacity:.07;animation:gridPan 26s linear infinite;background-image:linear-gradient(var(--green,#00AB4E) 1px,transparent 1px),linear-gradient(90deg,var(--green,#00AB4E) 1px,transparent 1px);background-size:48px 48px}
+  @keyframes gridPan{from{transform:translate(0,0)}to{transform:translate(48px,48px)}}
+  @media(prefers-color-scheme:dark){.aurora{mix-blend-mode:screen}.aurora.a1{opacity:.5}.grid-motion{opacity:.12}}
+  @media(prefers-reduced-motion:reduce){.aurora,.grid-motion{animation:none}}
+  .auth{width:100%;max-width:410px;position:relative;z-index:1}
+  .brand{justify-content:center;margin-bottom:6px}
+  .tag{text-align:center;color:var(--slate);font-size:13.5px;margin:0 0 22px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px}
+  .tabs{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:4px;margin-bottom:20px}
+  .tabs button{flex:1;border:0;background:transparent;color:var(--slate);font:700 13.5px/1 var(--sans);padding:10px;border-radius:8px;cursor:pointer}
+  .tabs button[aria-selected=true]{background:var(--surface);color:var(--navy);box-shadow:0 1px 2px rgba(16,30,54,.08)}
+  .or{display:flex;align-items:center;gap:12px;color:var(--slate-2);font:600 11px/1 var(--mono);letter-spacing:.1em;margin:16px 0}
+  .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+  .row{display:flex;justify-content:flex-end;margin-top:9px}
+  .row a{font:600 12.5px/1 var(--sans);color:var(--blue);text-decoration:none}
+  .consent{display:flex;gap:9px;align-items:flex-start;margin-top:16px;font-size:12.5px;color:var(--slate);line-height:1.5}
+  .consent input{width:16px;height:16px;margin-top:2px;accent-color:var(--green);flex:0 0 auto}
+  .consent a{color:var(--blue)}
+  .pane[hidden]{display:none}
+  .foot{text-align:center;color:var(--slate-2);font-size:11.5px;margin-top:18px;line-height:1.6}
+  .foot a{color:var(--slate);text-decoration:none}
+  form>.btn{margin-top:16px}
+</style></head><body>
+<div class="ambient" aria-hidden="true"><span class="aurora a1"></span><span class="aurora a2"></span><span class="aurora a3"></span><span class="grid-motion"></span></div>
+<div class="auth">
+  <div class="brand"><svg class="logo" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#00AB4E"/><path d="M24.69 13.67A9 9 0 1 1 20.5 8.21" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M12.5 19.5L17 15L20 17.5L26.5 8.8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>zengtrade</div>
+  <p class="tag">Honest, survival-first crypto strategies</p>
+  <div class="card">
+    <div class="tabs" role="tablist">
+      <button role="tab" id="t-in" aria-selected="true">Sign in</button>
+      <button role="tab" id="t-up" aria-selected="false">Create account</button>
+    </div>
+    <button class="btn oauth" id="google" type="button">Continue with Google</button>
+    <div class="or">or</div>
+
+    <div class="pane" id="p-in">
+      <form id="f-in">
+        <label for="i-email">Email</label>
+        <input id="i-email" type="email" autocomplete="email" placeholder="you@email.com" required>
+        <label for="i-pw">Password</label>
+        <input id="i-pw" type="password" autocomplete="current-password" placeholder="••••••••" required>
+        <div class="row"><a href="#" id="forgot">Forgot password?</a></div>
+        <button class="btn primary" type="submit">Sign in</button>
+      </form>
+    </div>
+
+    <div class="pane" id="p-up" hidden>
+      <form id="f-up">
+        <label for="u-email">Email</label>
+        <input id="u-email" type="email" autocomplete="email" placeholder="you@email.com" required>
+        <label for="u-pw">Create a password</label>
+        <input id="u-pw" type="password" autocomplete="new-password" placeholder="At least 8 characters" required minlength="8">
+        <label class="consent"><input type="checkbox" id="u-ack" required>
+          <span>I understand crypto trading carries risk of loss, that zengtrade is <b>not investment advice</b>, and I accept the <a href="/terms.html">Terms</a> &amp; <a href="/privacy.html">Privacy Policy</a>.</span></label>
+        <button class="btn primary" type="submit">Create free account</button>
+      </form>
+    </div>
+    <div class="msg" id="msg" role="status"></div>
+  </div>
+  <p class="foot">Free · paper trading only · no card required<br><a href="/">← back to zengtrade.in</a></p>
+</div>
+<script type="module">
+import { signIn, signUp, signInWithGoogle, resetPassword, currentUser, niceError } from "/js/auth.js";
+const $=id=>document.getElementById(id), msg=$("msg");
+const show=(t,ok)=>{msg.className="msg "+(ok?"ok":"err");msg.textContent=t;};
+const busy=(b,on,txt)=>{b.disabled=on;if(txt)b.textContent=txt;};
+
+currentUser().then(u=>{ if(u) location.replace("/dashboard"); });
+
+$("t-in").onclick=()=>{$("t-in").ariaSelected="true";$("t-up").ariaSelected="false";$("p-in").hidden=false;$("p-up").hidden=true;msg.className="msg";};
+$("t-up").onclick=()=>{$("t-up").ariaSelected="true";$("t-in").ariaSelected="false";$("p-up").hidden=false;$("p-in").hidden=true;msg.className="msg";};
+// deep-link from the header "Sign up" CTA: /login?mode=signup opens the Create-account tab,
+// and ?plan=pro|elite is remembered so the dashboard can route them to that upgrade after signup.
+{ const _q=new URLSearchParams(location.search);
+  if(_q.get("mode")==="signup"){$("t-up").click();}
+  const _pl=_q.get("plan"); if(_pl==="pro"||_pl==="elite") localStorage.setItem("zt_intent_plan",_pl); }
+
+$("f-in").onsubmit=async e=>{e.preventDefault();const b=e.target.querySelector("button");busy(b,true,"Signing in…");
+  try{ await signIn($("i-email").value.trim(), $("i-pw").value); location.href="/dashboard"; }
+  catch(err){ show(niceError(err)); busy(b,false,"Sign in"); }};
+
+$("f-up").onsubmit=async e=>{e.preventDefault();const b=e.target.querySelector("button");busy(b,true,"Creating…");
+  try{ await signUp($("u-email").value.trim(), $("u-pw").value);
+       show("Account created, check your email to confirm, then sign in.",true); busy(b,false,"Create free account"); }
+  catch(err){ show(niceError(err)); busy(b,false,"Create free account"); }};
+
+$("google").onclick=async()=>{ try{ await signInWithGoogle(); }catch(e){ show(niceError(e)); } };
+$("forgot").onclick=async e=>{ e.preventDefault(); const em=$("i-email").value.trim(); if(!em) return show("Enter your email first.");
+  try{ await resetPassword(em); show("Password reset link sent.",true); }catch(err){ show(niceError(err)); } };
+</script></body></html>

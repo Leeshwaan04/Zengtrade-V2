@@ -1,0 +1,10 @@
+# Force the branded domain: the *.netlify.app subdomain 301-redirects to zengtrade.in.
+# End users only ever see/use zengtrade.in — the netlify.app URL is never a production URL.
+https://zengtrade.netlify.app/*   https://zengtrade.in/:splat   301!
+
+# clean paths -> .html
+/login    /login.html    200
+/app      /app.html      200
+/terms    /terms.html    200
+/privacy  /privacy.html  200
+/risk     /risk.html     200

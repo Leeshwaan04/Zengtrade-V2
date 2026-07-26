@@ -1,4 +1,4 @@
-// zengtrade — the post-login product. A small hash-routed SPA over Supabase (RLS-isolated data):
+// zengtrade, the post-login product. A small hash-routed SPA over Supabase (RLS-isolated data):
 // Dashboard · Strategies · Activity · Account, plus first-run onboarding. Every render is defensive
 // (loading / empty / error states), every action gives feedback, all user data is escaped.
 import { requireAuth, signOut, sb, niceError } from "./auth.js";
@@ -28,7 +28,70 @@ const route = () => (location.hash.replace("#", "") || "dashboard");
   await load();                               // then hydrate
   await maybeOnboard();
   render();
+  if (new URLSearchParams(location.search).get("paid") === "1") maybePaidReturn();
+  else maybeIntentUpgrade();                   // a "Get Pro/Elite" signup lands on the plan chooser
 })();
+
+// A visitor who clicked "Get Pro/Elite" on the pricing page arrives here after signup with an intent
+// stashed by login.html. Route them to the plan chooser instead of a generic dashboard.
+function maybeIntentUpgrade() {
+  let p = null;
+  try { p = localStorage.getItem("zt_intent_plan"); } catch { return; }
+  if (!p) return;
+  try { localStorage.removeItem("zt_intent_plan"); } catch { /* ignore */ }
+  if (isPro(tier)) return;                     // already on a paid plan, nothing to upsell
+  location.hash = "pricing";
+  toast(`You're all set. Choose ${p === "elite" ? "Elite" : "Pro"} below to go live.`, "info");
+}
+
+// ---------------------------------------------------------------- return from checkout (?paid=1)
+// The success_url lands the user here the instant they finish the hosted invoice, but the on-chain
+// confirmation + IPN webhook (which actually grants the tier) can take a few minutes. So we show a
+// reassuring "confirming" banner and poll profile.tier until it flips, then swap to a success state.
+async function maybePaidReturn() {
+  const q = new URLSearchParams(location.search);
+  if (q.get("paid") !== "1") return;
+  history.replaceState({}, "", location.pathname + location.hash);   // don't replay on refresh
+  if (isPro(tier)) { toast(`You're on ${tier === "elite" ? "Elite" : "Pro"} — thank you!`, "ok"); return; }
+
+  if (!document.getElementById("ztSpinKf")) {
+    const s = document.createElement("style"); s.id = "ztSpinKf";
+    s.textContent = "@keyframes ztspin{to{transform:rotate(360deg)}}"; document.head.appendChild(s);
+  }
+  const bar = document.createElement("div");
+  bar.id = "paidBanner";
+  bar.setAttribute("role", "status");
+  bar.style.cssText = "position:sticky;top:0;z-index:70;display:flex;gap:10px;align-items:center;" +
+    "justify-content:center;padding:12px 18px;background:var(--green-soft,#e7f8ef);" +
+    "color:var(--green-d,#067a3a);border-bottom:1px solid var(--green-line,#bfe9cf);" +
+    "font:600 13.5px/1.45 var(--sans,system-ui,sans-serif);text-align:center";
+  bar.innerHTML = '<span style="width:14px;height:14px;border:2px solid currentColor;' +
+    'border-top-color:transparent;border-radius:50%;display:inline-block;animation:ztspin .8s linear infinite">' +
+    '</span> Payment received. Your upgrade activates the moment the network confirms it (usually a few minutes). This page updates automatically.';
+  document.body.prepend(bar);
+
+  const started = Date.now();
+  const poll = async () => {
+    let t = "free";
+    try { t = await getTier(user.id); } catch { /* transient; keep polling */ }
+    if (isPro(t)) {
+      tier = t;
+      bar.style.background = "var(--green,#00ab4e)"; bar.style.color = "#04140a";
+      bar.innerHTML = `✓ You're on ${t === "elite" ? "Elite" : "Pro"} now. Enjoy the full library.`;
+      $("#upgradeBtn").style.display = "none";
+      await load(); render();
+      setTimeout(() => bar.remove(), 7000);
+      return;
+    }
+    if (Date.now() - started > 240000) {           // give up after ~4 min
+      bar.querySelector("span")?.remove();
+      bar.textContent = "Still confirming on-chain. Some coins take a few minutes — refresh this page once your wallet shows the payment sent, or we'll update it automatically.";
+      return;
+    }
+    setTimeout(poll, 10000);                        // re-check every 10s
+  };
+  setTimeout(poll, 6000);                           // first check after 6s
+}
 
 function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
 
@@ -44,7 +107,7 @@ async function load() {
     if (dep.error) throw dep.error; if (tr.error) throw tr.error;
     state.deployments = dep.data || [];
     state.trades = tr.data || [];
-    tier = prof.data?.tier === "pro" ? "pro" : "free";
+    tier = isPro(prof.data?.tier) ? prof.data.tier : "free";   // keep the real tier (pro OR elite)
   } catch (e) {
     state.error = niceError(e);
     toast(state.error, "error");
@@ -95,7 +158,7 @@ function renderDashboard() {
   if (state.loading) { app.innerHTML = `<div class="grid stats">${skeletonRows(4)}</div><div class="card" style="height:220px;margin-top:16px">${skeletonRows(1)}</div>`; return; }
   const m = metrics(), ps = perStrategy();
   const upsell = !isPro(tier) && state.deployments.length >= FREE_DEPLOY_LIMIT
-    ? `<div class="upsell"><div><b>You're on Free — ${FREE_DEPLOY_LIMIT} strategy.</b><span>Upgrade to Pro for unlimited strategies and live execution when a strategy clears the bar.</span></div><button class="btn primary" id="up2">Upgrade — $29/mo</button></div>` : "";
+    ? `<div class="upsell"><div><b>You're on Free, ${FREE_DEPLOY_LIMIT} strategy.</b><span>Upgrade to Pro for unlimited strategies and live execution when a strategy clears the bar.</span></div><button class="btn primary" id="up2">Upgrade, $29/mo</button></div>` : "";
   app.innerHTML = `
     ${upsell}
     <div class="grid stats">
@@ -112,7 +175,7 @@ function renderDashboard() {
       <div class="card-h"><h3>Your strategies</h3><button class="btn sm primary" id="goStrat">+ Deploy</button></div>
       ${ps.length ? ps.map(stratRow).join("") : emptyStrategies()}
     </div>
-    <p class="iso">🔒 Your data is yours alone — isolated per account and enforced at the database level (row-level security).</p>`;
+    <p class="iso">🔒 Your data is yours alone, isolated per account and enforced at the database level (row-level security).</p>`;
   drawCurve();
   $("#goStrat") && ($("#goStrat").onclick = () => location.hash = "strategies");
   $("#up2") && ($("#up2").onclick = () => location.hash = "pricing");
@@ -131,7 +194,7 @@ function stratRow(s) {
 }
 const emptyStrategies = () => `<div class="empty">
   <p><b>No strategies deployed yet.</b></p>
-  <p class="muted">Deploy one to start paper-trading on live crypto prices — zero money at risk.</p>
+  <p class="muted">Deploy one to start paper-trading on live crypto prices, zero money at risk.</p>
   <button class="btn primary" id="firstDeploy">Browse strategies</button></div>`;
 
 // ---- Strategies (marketplace) ----
@@ -139,7 +202,7 @@ function renderStrategies() {
   if (state.loading) { app.innerHTML = `<div class="grid cards">${skeletonRows(3)}</div>`; return; }
   const deployed = new Set(state.deployments.map(d => d.strategy_key));
   app.innerHTML = `
-    <div class="page-h"><h2>Strategies</h2><p class="muted">Deploy to paper-trade free. Backtest figures are ~2 years of real data, net of fees — <b>backtest, not forward-proven.</b> Watch each earn its track record in your own book before it ever runs live.</p></div>
+    <div class="page-h"><h2>Strategies</h2><p class="muted">Deploy to paper-trade free. Backtest figures are ~2 years of real data, net of fees, <b>backtest, not forward-proven.</b> Watch each earn its track record in your own book before it ever runs live.</p></div>
     <div class="grid cards">${STRATEGIES.map(s => stratCard(s, deployed.has(s.key))).join("")}</div>`;
   STRATEGIES.forEach(s => {
     const b = document.getElementById(`act-${s.key}`);
@@ -209,7 +272,7 @@ function renderAccount() {
 async function deploy(key) {
   const already = state.deployments.some(d => d.strategy_key === key);
   if (!isPro(tier) && !already && state.deployments.length >= FREE_DEPLOY_LIMIT) {
-    toast(`Free includes ${FREE_DEPLOY_LIMIT} strategy — upgrade to Pro for unlimited.`, "info");
+    toast(`Free includes ${FREE_DEPLOY_LIMIT} strategy, upgrade to Pro for unlimited.`, "info");
     setTimeout(() => location.hash = "pricing", 500); return;
   }
   const { error } = await sb.from("deployment").upsert(
@@ -231,17 +294,17 @@ async function stop(key) {
 // ---- Pricing ----
 function renderPricing() {
   const ready = checkoutReady();
-  const soon = ready ? "" : `<div class="soon-banner">${"⏳"} <div><b>Paid plans open in a few days.</b><span>The checkout is going through payment-provider activation. Free is fully live now — start there, and you'll be able to upgrade in-place the moment it opens (no re-signup).</span></div></div>`;
+  const soon = ready ? "" : `<div class="soon-banner">${"⏳"} <div><b>Paid plans open in a few days.</b><span>The checkout is going through payment-provider activation. Free is fully live now, start there, and you'll be able to upgrade in-place the moment it opens (no re-signup).</span></div></div>`;
   app.innerHTML = `
     <div class="page-h center"><h2>Simple, honest pricing</h2>
-      <p class="muted">Start free. Upgrade when you want more — cancel anytime.</p>
+      <p class="muted">Start free. Upgrade when you want more, cancel anytime.</p>
       <div class="cycle">
         <button data-c="month" class="${billCycle === "month" ? "on" : ""}">Monthly</button>
         <button data-c="year" class="${billCycle === "year" ? "on" : ""}">Annual <span class="save">2 months free</span></button>
       </div></div>
     ${soon}
     <div class="grid plans">${PLANS.map(p => planCard(p, ready)).join("")}</div>
-    <p class="iso center">* Live execution unlocks per strategy only after it clears the go-live bar in paper. Non-custodial — your keys, your coins. Not investment advice.</p>`;
+    <p class="iso center">* Live execution unlocks per strategy only after it clears the go-live bar in paper. Non-custodial, your keys, your coins. Not investment advice.</p>`;
   app.querySelectorAll(".cycle button").forEach(b => b.onclick = () => { billCycle = b.dataset.c; renderPricing(); });
   PLANS.forEach(p => {
     const b = document.getElementById(`plan-${p.id}`);

@@ -1,10 +1,14 @@
-.DS_Store
-node_modules/
-*.log
-proxy/.env
-
-# private product backlog — not for the public repo
-LEVELUP.md
-saas/zengtrade-hostinger.zip
-seo/out/
+# build output
 deploy/landing/dist/
+# python
+__pycache__/
+*.pyc
+# supabase cli state
+saas/supabase/.temp/
+# worker runtime output/state
+saas/worker/forward.out
+saas/worker/forward_state.json
+# stray finder duplicate
+assets/app 2.js
+# scratch
+*.DS_Store

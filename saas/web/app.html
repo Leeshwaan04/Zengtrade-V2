@@ -1,0 +1,144 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard · zengtrade</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/assets/logo.svg">
+<link rel="stylesheet" href="/css.css">
+<style>
+  .pos{color:var(--green-d)} .neg{color:var(--red)} .muted{color:var(--slate-2)!important;font-weight:500}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .r{text-align:right}
+  /* topbar */
+  .topbar{position:sticky;top:0;z-index:40;background:var(--surface);border-bottom:1px solid var(--line)}
+  .topbar .in{max-width:1080px;margin:0 auto;padding:0 20px;height:60px;display:flex;align-items:center;gap:12px}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:18px}
+  .logo{width:26px;height:26px;flex:0 0 auto}
+  .sp{flex:1}
+  .uchip{font:600 12.5px/1 var(--mono);color:var(--slate);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  @media(max-width:560px){.uchip{display:none}}
+  .btn{border:0;border-radius:10px;padding:11px 15px;font:700 13.5px/1 var(--sans);cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;text-decoration:none;transition:transform .1s,filter .1s}
+  .btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  .btn.primary{background:var(--green);color:#04140a} .btn.primary:hover{filter:brightness(1.05)}
+  .btn.ghost{background:var(--surface);color:var(--navy);border:1px solid var(--line-2)} .btn.ghost:hover{border-color:var(--green-line)}
+  .btn.sm{padding:8px 12px;font-size:12.5px} .btn.full{width:100%;margin-top:2px}
+  /* tabs */
+  .tabs{position:sticky;top:60px;z-index:39;background:var(--bg);border-bottom:1px solid var(--line)}
+  .tabs .in{max-width:1080px;margin:0 auto;padding:0 12px;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+  .tabs .in::-webkit-scrollbar{display:none}
+  #nav a{flex:0 0 auto;font:600 13.5px/1 var(--sans);color:var(--slate);text-decoration:none;padding:14px 14px;border-bottom:2px solid transparent;white-space:nowrap}
+  #nav a:hover{color:var(--navy)} #nav a.on{color:var(--green-d);border-bottom-color:var(--green)}
+  /* layout */
+  main{max-width:1080px;margin:0 auto;padding:22px 20px 90px}
+  .page-h{margin:2px 0 18px} .page-h h2{font:800 24px/1.15 var(--sans);letter-spacing:-.02em;margin:0 0 5px}
+  .page-h p{margin:0;font-size:14px;max-width:74ch;line-height:1.6}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+  .card-h{display:flex;align-items:center;gap:10px;margin-bottom:14px} .card-h h3{font:700 15px/1 var(--sans);margin:0} .card-h .muted,.card-h span{margin-left:auto;font:600 11.5px/1 var(--mono)}
+  /* stats */
+  .grid{display:grid;gap:14px}
+  .grid.stats{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-bottom:16px}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:15px 16px;box-shadow:var(--shadow)}
+  .stat span{display:block;font:600 10px/1.3 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--slate-2);margin-bottom:8px}
+  .stat b{font:700 24px/1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .curve-card canvas{width:100%;display:block}
+  /* strategy rows (dashboard) */
+  .srow{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid var(--line)}
+  .srow:last-child{border-bottom:0} .srow-main{flex:1;min-width:0} .srow-main b{font:700 14px/1.3 var(--sans)}
+  .tag{display:inline-block;margin-left:8px;font:700 9.5px/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;
+    color:var(--green-d);background:var(--green-soft);border:1px solid var(--green-line);border-radius:99px;padding:4px 8px;vertical-align:middle}
+  .srow-metric{text-align:right;min-width:56px} .srow-metric span{display:block;font:700 14px/1.2 var(--mono);font-variant-numeric:tabular-nums} .srow-metric small{font:600 9.5px/1 var(--mono);color:var(--slate-2);text-transform:uppercase}
+  /* strategy cards (marketplace) */
+  .grid.cards{grid-template-columns:1fr}@media(min-width:680px){.grid.cards{grid-template-columns:1fr 1fr}}@media(min-width:940px){.grid.cards{grid-template-columns:repeat(3,1fr)}}
+  .scard{background:var(--surface);border:1px solid var(--line);border-radius:15px;padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column}
+  .scard.on{border-color:var(--green-line);box-shadow:0 0 0 2px var(--green-soft),var(--shadow)}
+  .scard-top{display:flex;align-items:center;gap:8px;margin-bottom:8px} .scard-top b{font:700 16px/1.3 var(--sans)}
+  .scard-desc{margin:0 0 14px;color:var(--slate);font-size:13.5px;line-height:1.55;flex:1}
+  .scard-bt{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px}
+  .scard-bt div{text-align:center} .scard-bt b{display:block;font:700 14px/1.2 var(--mono);font-variant-numeric:tabular-nums} .scard-bt small{font:600 9px/1 var(--mono);color:var(--slate-2);text-transform:uppercase}
+  .scard-bt-label{font:600 10px/1.4 var(--mono);color:var(--slate-2);text-align:center;margin:8px 0 14px}
+  /* table */
+  .table-card{padding:0;overflow:hidden} .tbl-scroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
+  thead th{font:700 10px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--slate-2);text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--surface-2);position:sticky;top:0}
+  tbody td{padding:11px 14px;border-bottom:1px solid var(--line)} tbody tr:last-child td{border-bottom:0}
+  .tbl-foot{padding:12px 14px;font:600 11px/1 var(--mono);color:var(--slate-2);text-align:center}
+  /* account */
+  .acc{padding:6px 18px} .acc.danger{border-color:var(--line)}
+  .acc-row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)} .acc-row:last-child{border-bottom:0}
+  .acc-row>span:first-child{width:130px;flex:0 0 auto;color:var(--slate);font-size:13px;font-weight:600} .acc-row b{font-size:13.5px} .acc-row .sp,.acc-row>b{flex:1}
+  .acc-row a{color:var(--blue);text-decoration:none;font-size:13.5px;font-weight:600} .acc-row .links{display:flex;gap:14px}
+  .acc-row button{margin-left:auto}
+  /* upsell */
+  .upsell{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--green-soft);border:1px solid var(--green-line);border-radius:13px;padding:14px 18px;margin-bottom:16px}
+  .upsell b{display:block;font:700 14px/1.4 var(--sans);color:var(--navy)} .upsell span{font-size:13px;color:var(--slate)}
+  /* empty / iso */
+  .empty{text-align:center;padding:34px 18px} .empty.big{padding:60px 20px} .empty h3{font:800 20px/1.2 var(--sans);margin:0 0 8px}
+  .empty p{margin:0 0 6px;font-size:14px} .empty .btn{margin-top:14px}
+  .iso{margin-top:20px;font-size:12.5px;color:var(--slate-2);line-height:1.7}
+  /* skeleton */
+  .skel-row{height:46px;border-radius:12px;margin-bottom:10px;background:linear-gradient(90deg,var(--surface-2),var(--line),var(--surface-2));background-size:200% 100%;animation:sk 1.3s ease-in-out infinite}
+  @keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  @media(prefers-reduced-motion:reduce){.skel-row{animation:none}}
+  /* toast */
+  .toast-host{position:fixed;right:16px;bottom:16px;z-index:100;display:flex;flex-direction:column;gap:8px;max-width:min(92vw,360px)}
+  .toast{background:var(--navy);color:#fff;border-radius:11px;padding:12px 15px;font:600 13px/1.4 var(--sans);box-shadow:var(--shadow-lg,0 12px 30px -10px rgba(0,0,0,.4));cursor:pointer;opacity:0;transform:translateY(10px);transition:opacity .2s,transform .2s}
+  .toast.in{opacity:1;transform:none}
+  .toast.success{background:var(--green-d)} .toast.error{background:var(--red)} .toast.info{background:var(--navy)}
+  :root[data-theme="dark"] .toast{color:#04140a}:root[data-theme="dark"] .toast.info{background:var(--surface);color:var(--navy);border:1px solid var(--line)}
+  @media(prefers-color-scheme:dark){.toast.info{background:var(--surface);color:var(--navy);border:1px solid var(--line)}}
+  /* dialog */
+  dialog{border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--navy);padding:0;box-shadow:var(--shadow-lg,0 24px 60px -18px rgba(0,0,0,.3));max-width:440px;width:92%}
+  dialog::backdrop{background:rgba(8,13,24,.55)}
+  .ob{padding:26px 26px 22px;text-align:center} .ob .logo{width:44px;height:44px;margin:0 auto 14px}
+  .ob h2{font:800 22px/1.2 var(--sans);margin:0 0 8px} .ob p{color:var(--slate);font-size:14.5px;line-height:1.6;margin:0 auto 8px;max-width:34ch}
+  .ob .pts{text-align:left;margin:16px auto 20px;max-width:32ch;display:grid;gap:10px}
+  .ob .pt{display:flex;gap:10px;font-size:13.5px;color:var(--slate)} .ob .pt b{color:var(--navy)}
+  .ob .pt svg{flex:0 0 auto;width:18px;height:18px;stroke:var(--green-d);fill:none;stroke-width:2.4;margin-top:1px}
+  .ob .acts{display:flex;gap:10px} .ob .acts .btn{flex:1}
+  /* pricing */
+  .page-h.center{text-align:center} .page-h.center p{margin-left:auto;margin-right:auto} .iso.center{text-align:center}
+  .cycle{display:inline-flex;gap:3px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:4px;margin-top:14px}
+  .cycle button{border:0;background:transparent;color:var(--slate);font:700 13px/1 var(--sans);padding:9px 16px;border-radius:8px;cursor:pointer}
+  .cycle button.on{background:var(--surface);color:var(--navy);box-shadow:0 1px 2px rgba(16,30,54,.08)}
+  .cycle .save{font:700 10px/1 var(--mono);color:var(--green-d);margin-left:4px}
+  .grid.plans{grid-template-columns:1fr;max-width:1000px;margin:0 auto}
+  @media(min-width:760px){.grid.plans{grid-template-columns:repeat(3,1fr)}}
+  .plan{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px 22px;box-shadow:var(--shadow);display:flex;flex-direction:column}
+  .plan.feat{border-color:var(--green);box-shadow:0 0 0 2px var(--green-soft),var(--shadow)}
+  .ribbon{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--green);color:#04140a;font:700 10px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border-radius:99px;white-space:nowrap}
+  .plan-name{font:700 13px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--slate-2);margin-bottom:12px}
+  .plan.feat .plan-name{color:var(--green-d)}
+  .plan-price{font:800 34px/1 var(--sans);letter-spacing:-.02em;margin-bottom:4px} .plan-price span{font:600 14px/1 var(--sans);color:var(--slate)}
+  .plan-tag{font-size:13px;color:var(--slate);min-height:34px;margin-bottom:14px}
+  .plan ul{list-style:none;padding:0;margin:0 0 18px;flex:1;display:flex;flex-direction:column;gap:9px}
+  .plan ul li{position:relative;padding-left:22px;font-size:13.5px;color:var(--slate);line-height:1.4}
+  .plan ul li::before{content:"✓";position:absolute;left:0;color:var(--green-d);font-weight:700}
+  .btn.full[disabled]{opacity:.55;cursor:default}
+</style></head><body>
+
+<header class="topbar"><div class="in">
+  <span class="brand"><svg class="logo" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#00AB4E"/><path d="M24.69 13.67A9 9 0 1 1 20.5 8.21" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M12.5 19.5L17 15L20 17.5L26.5 8.8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>zengtrade</span>
+  <span class="sp"></span>
+  <button class="btn primary sm" id="upgradeBtn" style="display:none">Upgrade to Pro</button>
+  <span class="uchip" id="userEmail">…</span>
+  <button class="btn ghost sm" id="signout">Sign out</button>
+</div></header>
+<nav class="tabs"><div class="in" id="nav"></div></nav>
+<main id="view"></main>
+
+<dialog id="onboard"><div class="ob">
+  <svg class="logo" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#00AB4E"/><path d="M24.69 13.67A9 9 0 1 1 20.5 8.21" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M12.5 19.5L17 15L20 17.5L26.5 8.8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <h2>Welcome to zengtrade</h2>
+  <p>You're in paper mode, real crypto prices, simulated fills, zero money at risk.</p>
+  <div class="pts">
+    <div class="pt"><svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg><span><b>Deploy a strategy</b> and it trades on live prices in your own book.</span></div>
+    <div class="pt"><svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg><span><b>Watch the honest track record</b> build, costs booked on every trade.</span></div>
+    <div class="pt"><svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg><span><b>Go live later</b> on your own exchange, only when a strategy earns it.</span></div>
+  </div>
+  <div class="acts"><button class="btn ghost" id="ob-skip">Look around</button><button class="btn primary" id="ob-deploy">Deploy my first strategy</button></div>
+</div></dialog>
+
+<script type="module" src="/js/app.js"></script>
+</body></html>

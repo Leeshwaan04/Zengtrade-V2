@@ -7,3 +7,10 @@ verify_jwt = false   # Lemon Squeezy calls this with its OWN HMAC signature, not
 
 [functions.polar-webhook]
 verify_jwt = false   # Polar signs with a Standard-Webhooks HMAC, not a Supabase JWT
+
+[functions.nowpayments-ipn]
+verify_jwt = false   # NOWPayments signs with its own HMAC-SHA512 (x-nowpayments-sig), not a Supabase JWT
+
+[functions.nowpayments-create-invoice]
+verify_jwt = false   # gateway JWT check would 401 the CORS preflight; we validate the user IN-CODE
+                     # (auth.getUser on the caller's token) instead, which is equally strict.

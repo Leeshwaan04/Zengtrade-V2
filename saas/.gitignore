@@ -1,1 +1,3 @@
 .webhook_secret
+.nowpayments_api_key
+.nowpayments_ipn_secret

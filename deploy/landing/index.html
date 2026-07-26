@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script>document.documentElement.className+=" js";</script><!-- set before first paint: scroll-reveal is a JS enhancement; page is fully visible without JS -->
-<title>zengtrade — a terminal that would rather do nothing</title>
-<meta name="description" content="zengtrade — regime-aware algorithmic crypto trading strategies you can paper-trade, backtest and forward-test on live data before risking a dollar. Survival-first, honest about every cost, non-custodial. Not investment advice.">
+<title>zengtrade, a terminal that would rather do nothing</title>
+<meta name="description" content="zengtrade, regime-aware algorithmic crypto trading strategies you can paper-trade, backtest and forward-test on live data before risking a dollar. Survival-first, honest about every cost, non-custodial. Not investment advice.">
 <meta name="keywords" content="crypto trading strategies, algorithmic trading, paper trading, crypto backtesting, trading bot, algo trading, market regime, Bitcoin trading strategy, non-custodial trading, forward testing, quantitative trading">
 <meta name="author" content="zengtrade">
 <meta name="theme-color" content="#f4f6fa" id="themeColor">
@@ -16,13 +16,13 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="zengtrade">
 <meta property="og:url" content="https://zengtrade.in/">
-<meta property="og:title" content="zengtrade — a terminal that would rather do nothing">
+<meta property="og:title" content="zengtrade, a terminal that would rather do nothing">
 <meta property="og:description" content="Survival-first, regime-aware trading for Indian markets and crypto. When it can't source a number, it shows a dash. Paper-first. Private software. Not investment advice.">
 <meta property="og:image" content="https://zengtrade.in/assets/mascot-bull.png">
 <meta property="og:locale" content="en_US">
-<meta property="og:image:alt" content="zengtrade — regime-aware crypto trading strategies">
+<meta property="og:image:alt" content="zengtrade, regime-aware crypto trading strategies">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="zengtrade — regime-aware crypto trading strategies">
+<meta name="twitter:title" content="zengtrade, regime-aware crypto trading strategies">
 <meta name="twitter:description" content="Paper-trade, backtest and forward-test algorithmic crypto strategies on live data before risking a dollar. Honest about every cost. Non-custodial.">
 <meta name="twitter:image" content="https://zengtrade.in/assets/mascot-bull.png">
 
@@ -33,7 +33,7 @@
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"zengtrade",
 "applicationCategory":"FinanceApplication","operatingSystem":"Web","url":"https://zengtrade.in/",
 "description":"Regime-aware algorithmic crypto trading strategies you can paper-trade, backtest and forward-test on live data before risking a dollar. Survival-first, honest about every cost, non-custodial.",
-"offers":{"@type":"Offer","price":"0","priceCurrency":"USD","description":"Free to start — paper trading"},
+"offers":{"@type":"Offer","price":"0","priceCurrency":"USD","description":"Free to start, paper trading"},
 "publisher":{"@type":"Organization","name":"zengtrade","url":"https://zengtrade.in/","logo":"https://zengtrade.in/assets/logo.svg"}}
 </script>
 
@@ -43,7 +43,7 @@
 
 <style>
 /* ============================================================
-   zengtrade — landing page
+   zengtrade, landing page
    This page is the pre-login face of the zengtrade terminal, so it is built
    from the terminal's OWN design system. Everything between here and the
    "LANDING-ONLY" banner is lifted verbatim from assets/styles.css so the match
@@ -92,7 +92,7 @@ html[data-regime="bull"]{ --accent:#00ab4e; --accent-d:#079a49; --accent-soft:#e
 html[data-regime="neutral"]{ --accent:#1667d9; --accent-d:#1257bd; --accent-soft:#e8f0fc; --accent-line:#bcd5f5; --gap:14px; }
 html[data-regime="bear"]{ --accent:#e5383b; --accent-d:#cc2a2f; --accent-soft:var(--tint-down); --accent-line:var(--bd-down); --gap:11px; }
 
-/* ============ NIGHT — TRADING FLOOR SURFACE (verbatim) ============ */
+/* ============ NIGHT, TRADING FLOOR SURFACE (verbatim) ============ */
 html[data-surface="night"]{
   --bg:#080d18; --surface:#101a2e; --surface-2:#0c1424; --white:#16223a;
   --line:#1f2c46; --line-2:#2c3d5e;
@@ -120,9 +120,9 @@ html[data-surface="night"] .surface-toggle{color:var(--amber)}
    --accent-t : accent used AS TEXT on a light surface. Day --accent-d already
                 clears AA for neutral (#1257bd, 5.9:1) and bear (#cc2a2f, 5.3:1)
                 but not bull (#079a49, 3.7:1). #00803b is the system's own
-                accessible green — styles.css uses it for `.rb-src.live`.
+                accessible green, styles.css uses it for `.rb-src.live`.
    --slate-c  : --slate as text on the --bg CANVAS. #64748b is 4.76:1 on
-                --surface (fine — that is the only place the app puts it) but
+                --surface (fine, that is the only place the app puts it) but
                 4.40:1 on --bg. This page has muted text directly on the canvas,
                 which the app never does, so those few spots take --slate-c.
    --amber-t  : --amber as text on --tint-warn (#e8821f is 2.45:1 there).
@@ -160,7 +160,7 @@ body{
 *::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:6px;border:2px solid transparent;background-clip:content-box}
 *::-webkit-scrollbar-thumb:hover{background:var(--slate-2);background-clip:content-box}
 *::-webkit-scrollbar-track{background:transparent}
-/* WCAG 2.4.7 — a genuinely visible focus indicator in every regime + surface (the old --accent-soft
+/* WCAG 2.4.7, a genuinely visible focus indicator in every regime + surface (the old --accent-soft
    ring was ~1.1:1 and effectively invisible). Solid accent outline + a soft halo for contrast on any bg. */
 :focus-visible{outline:2px solid var(--accent-t,var(--accent));outline-offset:2px;box-shadow:0 0 0 4px var(--accent-soft);border-radius:8px}
 .num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.2px}
@@ -202,9 +202,16 @@ html[data-surface="night"] .grid-motion{opacity:.14}
   box-shadow:0 0 0 3px var(--accent-soft);animation:pulse 2.6s infinite}
 .tb-spacer{flex:1 1 auto}
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:9px}
+.tb-auth{display:flex;align-items:center;gap:8px}
+.tb-cta{display:inline-flex;align-items:center;justify-content:center;min-width:82px;box-sizing:border-box;font:700 13px/1 var(--sans);border-radius:9px;padding:9px 14px;text-decoration:none;white-space:nowrap;border:1px solid transparent;transition:transform .12s,background .2s,border-color .2s,color .2s}
+.tb-cta.ghost{color:var(--navy);border-color:var(--line-2,var(--line));background:transparent}
+.tb-cta.ghost:hover{border-color:var(--green);color:var(--green)}
+.tb-cta.primary{background:var(--green);color:#04140a}
+.tb-cta.primary:hover{transform:translateY(-1px);box-shadow:0 8px 20px -10px color-mix(in srgb,var(--green) 70%,transparent)}
+@media(max-width:600px){.tb-cta{padding:8px 11px;font-size:12.5px}.tb-auth{gap:6px}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
-/* ====== REGIME SEGMENTED CONTROL — the product's own control (verbatim) ====== */
+/* ====== REGIME SEGMENTED CONTROL, the product's own control (verbatim) ====== */
 .regime-control{display:flex;align-items:center;gap:8px}
 .seg{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--ctl-r);
   padding:3px;height:var(--ctl-h);box-sizing:border-box;align-items:center}
@@ -255,6 +262,18 @@ html[data-surface="night"] .grid-motion{opacity:.14}
 .lp-mega-tx b{font:700 13.5px/1.2 var(--sans);color:var(--navy)}
 .lp-mega-tx i{font:500 12px/1.4 var(--sans);font-style:normal;color:var(--slate)}
 @media(max-width:900px){.lp-nav{display:none}}
+/* mobile menu (native <details>, keyboard-accessible): shown only where .lp-nav is hidden */
+.lp-mobile{display:none;position:relative}
+@media(max-width:900px){.lp-mobile{display:block}}
+.lp-burger{list-style:none;cursor:pointer;width:40px;height:40px;border:1px solid var(--line-2,var(--line));border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--surface)}
+.lp-burger::-webkit-details-marker{display:none}
+.lp-burger span{width:16px;height:2px;background:var(--navy);border-radius:2px;transition:transform .2s,opacity .2s}
+.lp-mobile[open] .lp-burger span:nth-child(1){transform:translateY(6px) rotate(45deg)}
+.lp-mobile[open] .lp-burger span:nth-child(2){opacity:0}
+.lp-mobile[open] .lp-burger span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+.lp-mobile-panel{position:fixed;right:12px;top:56px;z-index:80;width:min(260px,calc(100vw - 24px));background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 22px 54px -22px rgba(8,13,24,.4);padding:8px;display:flex;flex-direction:column}
+.lp-mobile-panel a{padding:12px 12px;border-radius:9px;color:var(--navy);text-decoration:none;font:600 14px/1 var(--sans)}
+.lp-mobile-panel a:hover,.lp-mobile-panel a:focus-visible{background:var(--bg)}
 .ticker-bar{flex:0 0 auto;display:flex;align-items:center;padding:0 10px;background:var(--surface);
   border-bottom:1px solid var(--line);overflow:hidden;position:relative;z-index:1;gap:0;min-height:34px}
 .tb-viewport{flex:1 1 auto;min-width:0;overflow:hidden;display:flex}
@@ -280,7 +299,7 @@ html[data-surface="night"] .grid-motion{opacity:.14}
    This page has no feed, so the label reads NO FEED and takes the muted colour. */
 .mkt-live{font-size:9.5px;font-weight:800;letter-spacing:.7px;color:var(--slate)}
 .mkt-sess{font-size:10.5px;font-weight:600;color:var(--slate);margin:0 2px}
-/* LANDING-ONLY: live crypto tape — continuous roll + live/up/down states */
+/* LANDING-ONLY: live crypto tape, continuous roll + live/up/down states */
 .tb-roll{animation:tbRoll 42s linear infinite;will-change:transform}
 .tb-viewport:hover .tb-roll{animation-play-state:paused}
 @keyframes tbRoll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
@@ -321,7 +340,7 @@ html[data-surface="night"] .rb-emo:has(.rb-mascot){filter:drop-shadow(0 0 10px v
 .badge.b-neu{background:var(--surface-2);color:var(--slate);border:1px solid var(--line-2)}
 /* DEVIATION: --amber → --amber-t (2.45:1 → 5.1:1 on --tint-warn). */
 .b-warn{background:var(--tint-warn);color:var(--amber-t)}
-/* ADDED: `.b-accent` — the regime-safe accent chip. styles.css has no accent
+/* ADDED: `.b-accent`, the regime-safe accent chip. styles.css has no accent
    badge, but it pairs --accent-soft with accent text in `.sec-tn` and
    `.wl-tab.active`; this is that exact pairing, with --accent-t for AA. */
 .badge.b-accent{background:var(--accent-soft);color:var(--accent-t);border:1px solid var(--accent-line)}
@@ -466,7 +485,7 @@ html[data-regime="bear"] .lp-var[data-var="bear"]{opacity:1;visibility:visible;t
   -webkit-mask-image:radial-gradient(ellipse 70% 80% at 50% 50%,transparent 10%,#000 88%);
   mask-image:radial-gradient(ellipse 70% 80% at 50% 50%,transparent 10%,#000 88%)}
 /* --accent-d, not --accent: bull green (#00ab4e) is 2.97:1 on the card and this
-   glyph is the section's whole argument — it has to clear the 3:1 large-text bar. */
+   glyph is the section's whole argument, it has to clear the 3:1 large-text bar. */
 .lp-glyph{position:relative;font-family:var(--mono);font-weight:400;font-size:clamp(150px,21vw,270px);
   line-height:.34;color:var(--accent-d);transition:color .4s;
   filter:drop-shadow(0 0 60px var(--accent-line))}
@@ -564,6 +583,9 @@ html[data-regime="bear"] .lp-var[data-var="bear"]{opacity:1;visibility:visible;t
 .lp-foot-copy{max-width:72ch}
 .lp-foot-copy p{font-size:13.5px;line-height:1.75;color:var(--slate);margin:0 0 12px}
 .lp-foot-copy p b{color:var(--navy);font-weight:700}
+.lp-foot-links{display:flex;flex-wrap:wrap;gap:11px 22px;margin:2px 0 4px}
+.lp-foot-links a{font:600 13.5px/1 var(--sans);color:var(--slate);text-decoration:none}
+.lp-foot-links a:hover{color:var(--accent)}
 .lp-foot-rule{height:1px;background:var(--line);margin-block:24px 18px}
 .lp-foot-meta{display:flex;flex-wrap:wrap;gap:7px 16px;align-items:center;font-family:var(--mono);
   font-size:11px;color:var(--slate)}
@@ -639,8 +661,8 @@ html.js .lp-rv.in{opacity:1;transform:none}
 
 <!-- ====================== TOP BAR ====================== -->
 <header class="topbar">
-  <a class="tb-brand" href="/" aria-label="zengtrade — home">
-    <!-- Ensō Breakout — inlined (not <img>) so `currentColor` picks up the live regime accent. -->
+  <a class="tb-brand" href="/" aria-label="zengtrade, home">
+    <!-- Ensō Breakout, inlined (not <img>) so `currentColor` picks up the live regime accent. -->
     <svg class="brand-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
       <rect width="32" height="32" rx="8" fill="currentColor"/>
       <path d="M24.69 13.67A9 9 0 1 1 20.5 8.21" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/>
@@ -658,7 +680,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
         <a class="lp-mega-card" role="menuitem" href="#regime"><span class="lp-mega-ic">◐</span><span class="lp-mega-tx"><b>Algo Studio</b><i>Regime-aware strategies that read Bull · Neutral · Bear.</i></span></a>
         <a class="lp-mega-card" role="menuitem" href="#survival"><span class="lp-mega-ic">◈</span><span class="lp-mega-tx"><b>Survival-first risk</b><i>Governor, kill-switch, position intelligence.</i></span></a>
         <a class="lp-mega-card" role="menuitem" href="#books"><span class="lp-mega-ic">₿</span><span class="lp-mega-tx"><b>Crypto &amp; Indian books</b><i>One engine, two markets, paper 24/7.</i></span></a>
-        <a class="lp-mega-card" role="menuitem" href="#honesty"><span class="lp-mega-ic">✓</span><span class="lp-mega-tx"><b>Honest analytics</b><i>Never a fabricated number — a dash when it can't source one.</i></span></a>
+        <a class="lp-mega-card" role="menuitem" href="#honesty"><span class="lp-mega-ic">✓</span><span class="lp-mega-tx"><b>Honest analytics</b><i>Never a fabricated number, a dash when it can't source one.</i></span></a>
       </div>
     </div>
     <a class="lp-nav-link" href="#regime">How it works</a>
@@ -668,7 +690,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
         <svg class="lp-caret" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></button>
       <div class="lp-mega lp-mega-sm" role="menu">
         <a class="lp-mega-card" role="menuitem" href="#books"><span class="lp-mega-tx"><b>Strategy library</b><i>Every strategy type, explained.</i></span></a>
-        <a class="lp-mega-card" role="menuitem" href="#regime"><span class="lp-mega-tx"><b>Reading market regimes</b><i>Bull, Neutral, Bear — and what changes.</i></span></a>
+        <a class="lp-mega-card" role="menuitem" href="#regime"><span class="lp-mega-tx"><b>Reading market regimes</b><i>Bull, Neutral, Bear, and what changes.</i></span></a>
         <a class="lp-mega-card" role="menuitem" href="#honesty"><span class="lp-mega-tx"><b>Why honesty matters</b><i>Costs, slippage, and the dash.</i></span></a>
       </div>
     </div>
@@ -685,23 +707,38 @@ html.js .lp-rv.in{opacity:1;transform:none}
         <button class="seg-btn" type="button" data-regime-btn="bear" aria-label="Set regime: Bear" aria-pressed="false"><span class="seg-dot dot-bear"></span>Bear</button>
       </div>
     </div>
-    <button class="surface-toggle" id="surfaceToggle" type="button" title="Day / Night — Trading Floor mode" aria-label="Switch to night trading-floor mode" aria-pressed="false"></button>
+    <button class="surface-toggle" id="surfaceToggle" type="button" title="Day / Night, Trading Floor mode" aria-label="Switch to night trading-floor mode" aria-pressed="false"></button>
+    <details class="lp-mobile">
+      <summary class="lp-burger" aria-label="Open menu" title="Menu"><span></span><span></span><span></span></summary>
+      <nav class="lp-mobile-panel" aria-label="Mobile">
+        <a href="/how-it-works/">How it works</a>
+        <a href="/pricing/">Pricing</a>
+        <a href="/coins/">Coins</a>
+        <a href="/how-it-works/#regime">Reading market regimes</a>
+        <a href="/how-it-works/#books">Strategy library</a>
+        <a href="/how-it-works/#honesty">Why honesty matters</a>
+      </nav>
+    </details>
+    <div class="tb-auth">
+      <a class="tb-cta ghost" href="/login">Log in</a>
+      <a class="tb-cta primary" href="/login?mode=signup">Sign up</a>
+    </div>
   </div>
 </header>
 
 <!-- ====================== LIVE CRYPTO TAPE ======================
-     Real Binance 24h prices (public data-api mirror, CORS-ok, no key) rolling continuously.
-     Crypto-only — the one feed a static page can honestly source live. Falls back to a dash
-     if Binance is unreachable (never a fabricated number). -->
+     Real 24h crypto prices (public data-api mirror, CORS-ok, no key) rolling continuously.
+     Crypto-only, the one feed a static page can honestly source live. Falls back to a dash
+     if the feed is unreachable (never a fabricated number). -->
 <div class="ticker-bar">
   <div class="tb-viewport" id="cryptoTape">
-    <div class="tb-ticker tb-roll" role="list" aria-label="Live crypto prices from Binance" id="cryptoTicker"></div>
+    <div class="tb-ticker tb-roll" role="list" aria-label="Live crypto prices" id="cryptoTicker"></div>
   </div>
   <div class="tb-market">
     <div class="mkt-status">
       <span class="mkt-dot off" id="feedDot" aria-hidden="true"></span>
       <span class="mkt-live" id="feedLabel">CONNECTING</span>
-      <span class="mkt-sess">live crypto · Binance · 24h</span>
+      <span class="mkt-sess">live crypto · 24h</span>
     </div>
   </div>
 </div>
@@ -722,7 +759,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
       <p class="lp-lede">
         zengtrade is a regime-aware trading terminal for Indian markets and crypto. It reads the tape,
         names the regime, and retunes everything downstream to it. <b>When it cannot source a number,
-        it shows a dash</b> — never a stale one, never a plausible one. It runs paper-first, and it
+        it shows a dash</b>, never a stale one, never a plausible one. It runs paper-first, and it
         stands aside far more often than it trades.
       </p>
 
@@ -740,7 +777,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
 
       <p class="sec-hint lp-hero-hint">
         <svg class="ico" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>
-        <span>That is the terminal's actual regime control, and the panel below is its actual regime bar. Move it — the whole page retunes, down to the last hairline.</span>
+        <span>That is the terminal's actual regime control, and the panel below is its actual regime bar. Move it, the whole page retunes, down to the last hairline.</span>
       </p>
 
       <!-- The terminal's own .regime-bar, at hero scale. -->
@@ -778,7 +815,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
 
           <!-- NEUTRAL -->
           <div class="lp-var" data-var="neutral">
-            <div class="rb-title"><small>Neutral · Rangebound</small>Markets rangebound — wait for clarity</div>
+            <div class="rb-title"><small>Neutral · Rangebound</small>Markets rangebound, wait for clarity</div>
             <p class="rb-read">No edge in direction. The engine works the range on smaller size, or it works nothing at all.</p>
             <div class="lp-books">
               <div class="lp-book leads">
@@ -843,7 +880,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
         <p class="lp-body lp-rv" style="--d:60ms">
           Every terminal you have used will happily show you a stale price and let you believe it is live.
           This one will not. If the feed drops, if the position is unknown, if the value has not been
-          computed yet — the field shows an em-dash. Not the last known value. Not a zero. Not a
+          computed yet, the field shows an em-dash. Not the last known value. Not a zero. Not a
           reasonable guess. <b>A dash means: I do not know, and I will not pretend.</b>
         </p>
 
@@ -911,7 +948,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
 
         <p class="lp-body lp-rv" style="--d:60ms">
           Every cycle the engine takes live trend, India VIX, market breadth, momentum and persistence,
-          scores them into a single composite, and names the regime — <b>Bull, Neutral, Bear, Choppy
+          scores them into a single composite, and names the regime, <b>Bull, Neutral, Bear, Choppy
           or High-Vol</b>. Nothing downstream is hardcoded. Position sizing, which strategy styles are
           allowed to fire at all, how much room the exits get: all of it retunes to the name on the board.
         </p>
@@ -955,7 +992,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
         <p class="lp-tieback lp-rv" style="--d:160ms">
           The control at the top of this page <b>is</b> that mechanism, pointed at a webpage instead of a
           book. It is the same segmented control, driving the same regime bar, swapping the same three
-          mascots you would see after logging in. That is not a theme switcher — it is the idea, in the
+          mascots you would see after logging in. That is not a theme switcher, it is the idea, in the
           only form a static page can honestly show it.
         </p>
       </div>
@@ -1013,7 +1050,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
           </div>
           <div class="lp-gov-row">
             <span class="lp-key">drawdown.kill_switch</span>
-            <span class="lp-desc">the level at which the engine stops trading — and stays stopped.</span>
+            <span class="lp-desc">the level at which the engine stops trading, and stays stopped.</span>
             <span class="lp-val num">—</span>
           </div>
 
@@ -1041,8 +1078,8 @@ html.js .lp-rv.in{opacity:1;transform:none}
         <h2 class="lp-h2 lp-rv" id="h-books">Two books. One engine.</h2>
 
         <p class="lp-body lp-rv" style="--d:60ms">
-          Indian markets close. Crypto does not. That is the only real difference between the two books —
-          the same regime engine reads both, and the same survival-first Governor sits in front of both.
+          Indian markets close. Crypto does not. That is the only real difference between the two books.
+          The same regime engine reads both, and the same survival-first Governor sits in front of both.
           There is no separate “crypto mode” with looser rules, because the rules are the product.
         </p>
 
@@ -1053,7 +1090,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
               <span class="lp-bk-venue">zerodha kite</span>
             </div>
             <h3>Equities and F&amp;O</h3>
-            <p>Cash equity, index and stock derivatives, and commodities — routed through the Kite API on a session you hold yourself.</p>
+            <p>Cash equity, index and stock derivatives, and commodities, routed through the Kite API on a session you hold yourself.</p>
             <div class="lp-chips">
               <span class="lp-chip">equity cash</span>
               <span class="lp-chip">index F&amp;O</span>
@@ -1066,7 +1103,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
           <div class="card lp-bk">
             <div class="lp-bk-top">
               <span class="badge b-accent">Crypto</span>
-              <span class="lp-bk-venue">binance</span>
+              <span class="lp-bk-venue">your exchange</span>
             </div>
             <h3>Spot, perps and options</h3>
             <p>The same strategy library, the same gates, running against a venue that has no closing bell and no lunch break.</p>
@@ -1075,7 +1112,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
               <span class="lp-chip">perpetuals</span>
               <span class="lp-chip">options</span>
             </div>
-            <p class="lp-bk-clock">24/7. crypto never closes, so the paper engine never stops — which also means it is never rescued by the bell.</p>
+            <p class="lp-bk-clock">24/7. crypto never closes, so the paper engine never stops, which also means it is never rescued by the bell.</p>
           </div>
 
           <div class="card lp-spine">
@@ -1091,7 +1128,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
         </div>
 
         <p class="lp-note lp-rv" style="--d:140ms">
-          schematic · zerodha and binance are named as venues only · no affiliation or endorsement
+          schematic · zerodha is named as a venue only · no affiliation or endorsement
         </p>
       </div>
     </div>
@@ -1144,7 +1181,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
 
         <p class="lp-and lp-rv" style="--d:130ms">
           <span class="lp-op" aria-hidden="true">∧</span>
-          <span>gate 01 and gate 02 and gate 03 — never any two of three</span>
+          <span>gate 01 and gate 02 and gate 03, never any two of three</span>
         </p>
 
         <p class="lp-pull lp-rv" style="--d:160ms">
@@ -1174,10 +1211,22 @@ html.js .lp-rv.in{opacity:1;transform:none}
     </div>
 
     <div class="lp-foot-copy">
-      <p><b>zengtrade is private, personal software.</b> It is not a product, not a service, and not for sale. There is nothing here to sign up for.</p>
-      <p>Everything described on this page runs paper-first. <b>Nothing here is investment advice</b>, a recommendation, or an offer. Trading in equities, derivatives and crypto carries real risk of loss, up to and including the whole of your capital.</p>
-      <p>Not affiliated with, endorsed by, or connected to Zerodha or Binance. They are named only as the venues an order would be routed to.</p>
-      <p>No performance figures appear on this page because none could be verified here. That is the point.</p>
+      <nav class="lp-foot-links" aria-label="Footer">
+        <a href="/how-it-works/">How it works</a>
+        <a href="/pricing/">Pricing</a>
+        <a href="/coins/">Coins</a>
+        <a href="/login">Log in</a>
+        <a href="/login?mode=signup">Sign up</a>
+        <a href="/terms">Terms</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/risk">Risk</a>
+      </nav>
+
+      <div class="lp-foot-rule" aria-hidden="true"></div>
+
+      <p>Everything here starts <b>paper-first</b>, and it is <b>non-custodial</b>: live execution runs on your own exchange with your own keys, so zengtrade never holds your funds. <b>Nothing on this site is investment advice</b>, a recommendation, or an offer. Trading in crypto and derivatives carries real risk of loss, up to and including the whole of your capital.</p>
+      <p>Not affiliated with, endorsed by, or connected to any exchange or broker. Third-party venues are referenced only as where an order would be routed.</p>
+      <p>No past-performance figures are shown unless they can be sourced and verified net of costs. That is the point.</p>
 
       <div class="lp-foot-rule" aria-hidden="true"></div>
 
@@ -1242,7 +1291,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
       if (b) setRegime(b.getAttribute("data-regime-btn"));
     });
 
-    // roving tabindex — the tablist pattern
+    // roving tabindex, the tablist pattern
     seg.addEventListener("keydown", function (e) {
       var i = btns.indexOf(document.activeElement);
       if (i === -1) return;
@@ -1258,7 +1307,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
     });
   });
 
-  // the other two mascots are ~250KB each — fetch them once the page is idle so
+  // the other two mascots are ~250KB each, fetch them once the page is idle so
   // the first paint only pays for the one on screen, and switching stays instant
   var idle = window.requestIdleCallback || function (f) { return setTimeout(f, 1500); };
   idle(function () {
@@ -1330,16 +1379,21 @@ html.js .lp-rv.in{opacity:1;transform:none}
 })();
 </script>
 <script>
-/* Live crypto tape — real Binance 24h prices (public data-api mirror: CORS-ok, no key, not
+/* Live crypto tape, real 24h crypto prices (public data-api mirror: CORS-ok, no key, not
    geo-blocked). Rolls continuously; on failure it shows a dash, never a fabricated number. */
 (function () {
   "use strict";
   var PAIRS = ["BTC","ETH","SOL","BNB","XRP","ADA","DOGE","AVAX","LINK","MATIC"];
   var SYMS = PAIRS.map(function (p) { return p + "USDT"; });
+  // SCOPED request: ask only for the 10 pairs we show (~5 KB) instead of the whole
+  // exchange (~1.9 MB). The full pull was too heavy to refresh reliably every 15s.
+  var FEED = "https://data-api.binance.vision/api/v3/ticker/24hr?symbols=" +
+             encodeURIComponent(JSON.stringify(SYMS));
   var el = document.getElementById("cryptoTicker");
   var dot = document.getElementById("feedDot");
   var lab = document.getElementById("feedLabel");
   if (!el) return;
+  var built = false, inflight = false;
 
   function fmt(n) {
     n = +n;
@@ -1347,36 +1401,42 @@ html.js .lp-rv.in{opacity:1;transform:none}
     if (n >= 1)    return n.toLocaleString("en-US", { maximumFractionDigits: 2 });
     return n.toLocaleString("en-US", { maximumFractionDigits: 4 });
   }
-  function tile(name, price, chg) {
-    var up = chg >= 0;
-    return '<div class="tix" role="listitem"><span class="tix-name">' + name + '</span>' +
-      '<div class="tix-row"><span class="tix-val num live">$' + fmt(price) + '</span>' +
-      '<span class="tix-chg ' + (up ? "up" : "down") + '">' + (up ? "+" : "") + chg.toFixed(2) + '%</span></div></div>';
+  function tile(p) {                  // built once; values are filled/updated in place
+    return '<div class="tix" role="listitem"><span class="tix-name">' + p + '</span>' +
+      '<div class="tix-row"><span class="tix-val num muted" data-px="' + p + '">—</span>' +
+      '<span class="tix-chg" data-chg="' + p + '"></span></div></div>';
   }
-  function render(map) {
-    var one = PAIRS.map(function (p) {
-      var d = map[p + "USDT"];
-      return d ? tile(p, d.price, d.chg)
-               : '<div class="tix" role="listitem"><span class="tix-name">' + p + '</span><div class="tix-row"><span class="tix-val num muted">—</span></div></div>';
-    }).join("");
-    el.innerHTML = one + one;        // duplicate the set → seamless -50% roll
+  function build() {                  // duplicate the set → seamless -50% roll; DOM built ONCE
+    var one = PAIRS.map(tile).join("");
+    el.innerHTML = one + one;
+    built = true;
+  }
+  function apply(map) {               // update text in place, no innerHTML rebuild, no anim reset
+    PAIRS.forEach(function (p) {
+      var d = map[p + "USDT"]; if (!d) return;
+      var up = d.chg >= 0, k, px = el.querySelectorAll('[data-px="' + p + '"]'),
+          cg = el.querySelectorAll('[data-chg="' + p + '"]');
+      for (k = 0; k < px.length; k++) { px[k].textContent = "$" + fmt(d.price); px[k].className = "tix-val num live"; }
+      for (k = 0; k < cg.length; k++) { cg[k].textContent = (up ? "+" : "") + d.chg.toFixed(2) + "%"; cg[k].className = "tix-chg " + (up ? "up" : "down"); }
+    });
     if (dot) dot.className = "mkt-dot live";
     if (lab) { lab.textContent = "LIVE"; lab.className = "mkt-live live"; }
   }
   function pull() {
-    fetch("https://data-api.binance.vision/api/v3/ticker/24hr")
+    if (inflight) return;             // never let a slow request overlap the next tick
+    inflight = true;
+    fetch(FEED)
       .then(function (r) { return r.json(); })
       .then(function (rows) {
         if (!Array.isArray(rows)) return;
-        var want = {}; SYMS.forEach(function (s) { want[s] = 1; });
         var map = {};
-        rows.forEach(function (row) {
-          if (want[row.symbol]) map[row.symbol] = { price: +row.lastPrice, chg: +row.priceChangePercent };
-        });
-        if (Object.keys(map).length) render(map);
+        rows.forEach(function (row) { map[row.symbol] = { price: +row.lastPrice, chg: +row.priceChangePercent }; });
+        apply(map);
       })
-      .catch(function () { /* leave the dashes — never invent a number */ });
+      .catch(function () { /* keep last-known values, never invent a number */ })
+      .then(function () { inflight = false; });
   }
+  build();                           // stable rail immediately (dashes), then fill in live prices
   pull();
   setInterval(pull, 15000);          // refresh every 15s
 })();

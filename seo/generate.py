@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""zengtrade programmatic-SEO generator — one DATA-RICH page per coin (the quality-first pSEO play).
+"""zengtrade programmatic-SEO generator, one DATA-RICH page per coin (the quality-first pSEO play).
 
-Each page is genuinely unique: live Binance price + 24h/7d stats, a 30-day SVG sparkline, a
+Each page is genuinely unique: live price + 24h/7d stats, a 30-day SVG sparkline, a
 regime "read" computed from real daily candles (trend vs range), category-specific strategy
-guidance, an honest cost note, an FAQ, and hub-and-spoke internal links — with full per-page SEO
+guidance, an honest cost note, an FAQ, and hub-and-spoke internal links, with full per-page SEO
 (title/description/canonical/OG + BreadcrumbList + FAQPage + FinancialProduct schema) and a sitemap.
 
 NOT a thin-content mill: the data + the regime read + the category guidance vary per coin, so no
@@ -34,7 +34,7 @@ COINS = {
 }
 
 CATEGORY_ANGLE = {
-    "major": "As a large-cap major, {name} tends to lead the market's regime. zengtrade's engine reads {sym}'s own trend against the broader BTC-led regime and only deploys directional strategies when the tape confirms — otherwise it stands down to cash.",
+    "major": "As a large-cap major, {name} tends to lead the market's regime. zengtrade's engine reads {sym}'s own trend against the broader BTC-led regime and only deploys directional strategies when the tape confirms, otherwise it stands down to cash.",
     "layer-1": "{name} is a higher-beta layer-1: it can trend hard in a bull regime and bleed fast in a bear. The engine sizes {sym} smaller and leans on the chandelier/trailing exit so a strong run is captured but a reversal is cut early.",
     "payments": "{name} often ranges for long stretches then moves in bursts. zengtrade favours mean-reversion and breakout confirmation on {sym} in choppy regimes, and stands directional strategies down until a real trend prints.",
 }
@@ -64,23 +64,53 @@ def sparkline(closes, w=560, h=90):
 def regime_read(closes):
     """Honest, data-driven regime tilt from 30 daily closes: trend strength vs range."""
     if len(closes) < 20:
-        return ("Neutral", "Not enough recent data to call a regime — the engine would gather evidence before deploying.")
+        return ("Neutral", "Not enough recent data to call a regime, the engine would gather evidence before deploying.")
     first, last = closes[0], closes[-1]
     chg = (last / first - 1) * 100
     # simple trend/range: net move vs the path length (choppiness)
     path = sum(abs(closes[i] - closes[i-1]) for i in range(1, len(closes)))
     directness = abs(last - first) / (path or 1)   # 1 = straight line, ~0 = choppy
     if chg > 8 and directness > 0.35:
-        return ("Bull", f"{sym_hint} has trended up ~{chg:.0f}% over 30 days with a clean path — a Bull read. The engine would run breakout/trend strategies here, trailing the winner.")
+        return ("Bull", f"{sym_hint} has trended up ~{chg:.0f}% over 30 days with a clean path, a Bull read. The engine would run breakout/trend strategies here, trailing the winner.")
     if chg < -8 and directness > 0.35:
-        return ("Bear", f"Down ~{abs(chg):.0f}% over 30 days in a directed move — a Bear read. Directional longs stand down to cash; only market-neutral / short-premium sleeves stay on.")
-    return ("Neutral/Choppy", f"Net {chg:+.0f}% over 30 days but a choppy path — a ranging read. The engine favours mean-reversion and waits for a real trend before committing.")
+        return ("Bear", f"Down ~{abs(chg):.0f}% over 30 days in a directed move, a Bear read. Directional longs stand down to cash; only market-neutral / short-premium sleeves stay on.")
+    return ("Neutral/Choppy", f"Net {chg:+.0f}% over 30 days but a choppy path, a ranging read. The engine favours mean-reversion and waits for a real trend before committing.")
 
 
 sym_hint = "This coin"
 
 
-def page(sym, name, slug, cat, tk, closes):
+# ---- coin CSS: coin-specific bits only; everything else reuses the shared site.css --------
+# (lp-wrap, lp-sec, lp-hero, lp-eyebrow, lp-h1/h2, lp-sub, hl, home-card, faq, lp-cta come
+#  from the marketing design system, so coin pages inherit the exact same look + typography.)
+COIN_CSS = """
+/* ---- per-coin pSEO pages (share the marketing design system) ---- */
+.coin-crumb{font-size:12.5px;color:var(--slate);margin:0 0 14px}
+.coin-crumb a{color:var(--slate);text-decoration:none}
+.coin-crumb a:hover{color:var(--navy)}
+.coin-price{display:flex;align-items:baseline;gap:12px;margin:10px 0 4px;flex-wrap:wrap}
+.coin-price b{font:800 34px/1 var(--mono);color:var(--navy)}
+.coin-chg{font:700 15px/1 var(--mono)}
+.coin-chg.up{color:var(--green)}.coin-chg.down{color:var(--red)}
+.spark{width:100%;height:96px;display:block;margin:14px 0;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:10px}
+.coin-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin:16px 0}
+.coin-stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
+.coin-stat span{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--slate);font-weight:700}
+.coin-stat b{display:block;font:700 17px/1.3 var(--mono);margin-top:4px;overflow-wrap:anywhere;color:var(--navy)}
+.coin-stat b.up{color:var(--green)}.coin-stat b.down{color:var(--red)}
+.coin-asof{font-size:11.5px;color:var(--slate);margin:2px 0 0}
+.coin-regime{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--green);border-radius:14px;padding:16px;margin:0 0 10px}
+.coin-regime b{color:var(--navy)}.coin-regime span{color:var(--slate)}
+a.home-card{text-decoration:none}
+.coin-hub-lead{color:var(--slate);max-width:60ch}
+@media(max-width:600px){.coin-stats{grid-template-columns:repeat(2,1fr)}.coin-price b{font-size:27px}}
+"""
+
+
+def coin_parts(sym, name, slug, cat, tk, closes):
+    """Return (title, desc, canonical, main_html, extra_head) for a coin page.
+    main_html is a <main> that drops straight into the shared shell(); extra_head is the
+    coin's JSON-LD (BreadcrumbList + FAQPage). All chrome/footer/typography come from shell()."""
     global sym_hint
     sym_hint = name
     price = float(tk["lastPrice"]); chg = float(tk["priceChangePercent"])
@@ -91,13 +121,14 @@ def page(sym, name, slug, cat, tk, closes):
     fmt = lambda n: f"{n:,.0f}" if n >= 1000 else (f"{n:,.2f}" if n >= 1 else f"{n:,.4f}")
     as_of = time.strftime("%d %b %Y", time.gmtime())
     related = [(s, COINS[s][0], COINS[s][1]) for s in COINS if s != sym][:4]
+    e = html.escape
     faqs = [
         (f"Can I paper-trade {name} strategies on zengtrade?",
-         f"Yes. zengtrade runs regime-aware strategies on {name} ({sym}) using live Binance data, 24/7, in paper first — so you prove an edge before any real capital is at risk."),
+         f"Yes. zengtrade runs regime-aware strategies on {name} ({sym}) using live market data, 24/7, in paper first, so you prove an edge before any real capital is at risk."),
         (f"Is {name} trading on zengtrade custodial?",
-         f"No. zengtrade is non-custodial — live execution runs on your own exchange with your own keys. It never holds your {sym} or funds."),
+         f"No. zengtrade is non-custodial. Live execution runs on your own exchange with your own keys. It never holds your {sym} or funds."),
         (f"What market regime is {name} in right now?",
-         f"As of {as_of}, {name}'s 30-day tape reads {reg}. {reg_txt} Regimes change — the engine re-reads every cycle."),
+         f"As of {as_of}, {name}'s 30-day tape reads {reg}. {reg_txt} Regimes change, so the engine re-reads every cycle."),
     ]
     faq_schema = {"@context": "https://schema.org", "@type": "FAQPage",
                   "mainEntity": [{"@type": "Question", "name": q,
@@ -106,133 +137,107 @@ def page(sym, name, slug, cat, tk, closes):
         {"@type": "ListItem", "position": 1, "name": "Home", "item": f"{SITE}/"},
         {"@type": "ListItem", "position": 2, "name": "Coins", "item": f"{SITE}/coins/"},
         {"@type": "ListItem", "position": 3, "name": name, "item": f"{SITE}/coins/{slug}/"}]}
-    e = html.escape
-    title = f"{name} ({sym}) trading strategies — paper-trade, backtest & regime read | zengtrade"
+    title = f"{name} ({sym}) trading strategies, paper-trade, backtest & regime read | zengtrade"
     desc = (f"Live {name} price ${fmt(price)} ({chg:+.2f}% 24h). Paper-trade regime-aware {sym} "
-            f"strategies on live data, backtest the edge, and read {name}'s current market regime — "
-            f"honest about every cost, non-custodial. Not investment advice.")
+            f"strategies on live data, backtest the edge, and read {name}'s current market regime. "
+            f"Honest about every cost, non-custodial. Not investment advice.")
     faq_html = "".join(
         f'<details class="faq"><summary>{e(q)}</summary><p>{e(a)}</p></details>' for q, a in faqs)
     rel_html = "".join(
-        f'<a class="rel" href="/coins/{rslug}/"><b>{e(rn)}</b><span>{rs} strategies &amp; regime</span></a>'
+        f'<a class="home-card" href="/coins/{rslug}/"><b>{e(rn)}</b>'
+        f'<span>{rs} strategies &amp; live regime read</span></a>'
         for rs, rn, rslug in related)
-    return f"""<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{e(title)}</title>
-<meta name="description" content="{e(desc)}">
-<meta name="robots" content="index, follow, max-image-preview:large">
-<link rel="canonical" href="{SITE}/coins/{slug}/">
-<meta property="og:type" content="website"><meta property="og:title" content="{e(title)}">
-<meta property="og:description" content="{e(desc)}"><meta property="og:url" content="{SITE}/coins/{slug}/">
-<meta property="og:image" content="{SITE}/assets/mascot-bull.png">
-<meta name="twitter:card" content="summary_large_image">
-<link rel="icon" type="image/svg+xml" href="/assets/logo.svg">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<script type="application/ld+json">{json.dumps(crumb)}</script>
-<script type="application/ld+json">{json.dumps(faq_schema)}</script>
-<style>
-:root{{--bg:#f4f6fa;--surface:#fff;--line:#e6eaf1;--navy:#0f1a2a;--slate:#5c6a7e;--green:#00ab4e;--red:#e0483d;--sans:'Plus Jakarta Sans',system-ui,sans-serif;--mono:'Roboto Mono',ui-monospace,monospace}}
-@media(prefers-color-scheme:dark){{:root{{--bg:#080d18;--surface:#101a2e;--line:#1f2c46;--navy:#e8eefb;--slate:#9aabc9}}}}
-*{{box-sizing:border-box}}body{{margin:0;background:var(--bg);color:var(--navy);font-family:var(--sans);line-height:1.6}}
-.wrap{{max-width:820px;margin:0 auto;padding:22px}}
-a{{color:inherit}}.crumb{{font-size:12.5px;color:var(--slate)}}.crumb a{{text-decoration:none}}
-.brand{{display:flex;align-items:center;gap:9px;font-weight:800;margin-bottom:18px}}.brand svg{{width:26px;height:26px}}
-h1{{font-size:31px;letter-spacing:-.02em;margin:14px 0 4px}}.sym{{color:var(--slate);font-weight:600}}
-.price{{display:flex;align-items:baseline;gap:12px;margin:8px 0}}.price b{{font:800 30px/1 var(--mono)}}
-.chg{{font:700 15px/1 var(--mono)}}.up{{color:var(--green)}}.down{{color:var(--red)}}
-.spark{{width:100%;height:90px;display:block;margin:12px 0;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:8px}}
-.stats{{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}}
-.stat{{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:11px;min-width:0}}
-.stat span{{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--slate);font-weight:700}}
-.stat b{{display:block;font:700 16px/1.3 var(--mono);margin-top:3px;overflow-wrap:anywhere}}
-@media(max-width:600px){{.stats{{grid-template-columns:repeat(2,1fr)}}h1{{font-size:25px}}.price b{{font-size:24px}}}}
-.regime{{display:flex;gap:11px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--green);border-radius:12px;padding:14px;margin:18px 0}}
-h2{{font-size:20px;margin:26px 0 8px}}p{{color:var(--slate)}}p b,li b{{color:var(--navy)}}
-.faq{{border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin:8px 0;background:var(--surface)}}
-.faq summary{{font-weight:700;cursor:pointer}}.faq p{{margin:8px 0 0}}
-.rels{{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0}}
-.rel{{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:12px;text-decoration:none}}
-.rel b{{color:var(--navy)}}.rel span{{font-size:12.5px;color:var(--slate)}}
-.cta{{display:block;text-align:center;background:var(--green);color:#04140a;font-weight:800;padding:15px;border-radius:12px;text-decoration:none;margin:22px 0 6px}}
-.disc{{font-size:11.5px;color:var(--slate);text-align:center}}.asof{{font-size:11px;color:var(--slate)}}
-</style></head><body><div class="wrap">
-<div class="brand"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="var(--green)"/><path d="M24.69 13.67A9 9 0 1 1 20.5 8.21" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M12.5 19.5L17 15L20 17.5L26.5 8.8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>zengtrade</div>
-<nav class="crumb"><a href="/">Home</a> › <a href="/coins/">Coins</a> › {e(name)}</nav>
-<h1>{e(name)} <span class="sym">{sym}</span> trading strategies</h1>
-<div class="price"><b data-live-price="{sym}">${fmt(price)}</b><span class="chg {'up' if chg>=0 else 'down'}" data-live-chg="{sym}">{chg:+.2f}% 24h</span></div>
-{sparkline(closes)}
-<div class="stats">
-  <div class="stat"><span>24h High</span><b>${fmt(hi)}</b></div>
-  <div class="stat"><span>24h Low</span><b>${fmt(lo)}</b></div>
-  <div class="stat"><span>7d</span><b class="{'up' if d7>=0 else 'down'}">{d7:+.1f}%</b></div>
-  <div class="stat"><span>24h Volume</span><b>${fmt(vol)}</b></div>
-</div>
-<p class="asof">Live from Binance · snapshot {as_of} (refreshes on load)</p>
-<div class="regime"><div><b>Regime read: {e(reg)}</b><br><span style="color:var(--slate)">{e(reg_txt)}</span></div></div>
-<h2>How zengtrade trades {e(name)}</h2>
-<p>{e(angle)} Every strategy runs <b>paper-first</b> on live {sym} data — you prove an edge before a dollar is at risk, then run it on <b>your own exchange</b> (non-custodial, your keys).</p>
-<h2>Honest about the cost</h2>
-<p>zengtrade never hides friction. Fees, slippage and (for Indian users) the 1% TDS are subtracted from every {sym} backtest and paper trade, so the edge you see is the edge <b>net of cost</b> — not a gross number that evaporates live.</p>
-<h2>{e(name)} FAQ</h2>
-{faq_html}
-<h2>Related coins</h2>
-<div class="rels">{rel_html}</div>
-<a class="cta" href="/">Start free — paper-trade {e(name)} strategies</a>
-<p class="disc">Live data from Binance. Educational software, not investment advice. Paper-first, non-custodial.</p>
-</div>
-<script>
-/* client-side refresh of the price (keeps the page fresh without a rebuild) */
-fetch("{BASE}/api/v3/ticker/24hr?symbol={sym}USDT").then(r=>r.json()).then(d=>{{
-  var p=document.querySelector('[data-live-price="{sym}"]'), c=document.querySelector('[data-live-chg="{sym}"]');
-  if(p) p.textContent="$"+(+d.lastPrice).toLocaleString("en-US",{{maximumFractionDigits:(+d.lastPrice>=1?2:4)}});
-  if(c){{var v=+d.priceChangePercent; c.textContent=(v>=0?"+":"")+v.toFixed(2)+"% 24h"; c.className="chg "+(v>=0?"up":"down");}}
-}}).catch(()=>{{}});
-</script></body></html>"""
+    extra_head = (f'<script type="application/ld+json">{json.dumps(crumb)}</script>'
+                  f'<script type="application/ld+json">{json.dumps(faq_schema)}</script>')
+    main = f"""<main id="main">
+  <section class="lp-hero" aria-labelledby="h-coin">
+    <div class="lp-wrap">
+      <nav class="coin-crumb" aria-label="Breadcrumb"><a href="/">Home</a> &rsaquo; <a href="/coins/">Coins</a> &rsaquo; {e(name)}</nav>
+      <div class="lp-eyebrow"><span class="dot"></span> live price · regime read · paper-tradeable</div>
+      <h1 id="h-coin" class="lp-h1">{e(name)} <span class="hl">{sym}</span> trading strategies</h1>
+      <div class="coin-price"><b data-live-price="{sym}">${fmt(price)}</b><span class="coin-chg {'up' if chg>=0 else 'down'}" data-live-chg="{sym}">{chg:+.2f}% 24h</span></div>
+      {sparkline(closes)}
+      <div class="coin-stats">
+        <div class="coin-stat"><span>24h High</span><b>${fmt(hi)}</b></div>
+        <div class="coin-stat"><span>24h Low</span><b>${fmt(lo)}</b></div>
+        <div class="coin-stat"><span>7d change</span><b class="{'up' if d7>=0 else 'down'}">{d7:+.1f}%</b></div>
+        <div class="coin-stat"><span>24h Volume</span><b>${fmt(vol)}</b></div>
+      </div>
+      <p class="coin-asof">Live snapshot {as_of}, refreshes on load.</p>
+    </div>
+  </section>
+
+  <section class="lp-sec" aria-label="How zengtrade trades {e(name)}">
+    <div class="lp-wrap">
+      <div class="coin-regime"><div><b>Regime read: {e(reg)}</b><br><span>{e(reg_txt)}</span></div></div>
+      <h2 class="lp-h2">How zengtrade trades {e(name)}</h2>
+      <p class="lp-sub">{e(angle)} Every strategy runs <b>paper-first</b> on live {sym} data, so you prove an edge before a dollar is at risk, then run it on <b>your own exchange</b> (non-custodial, your keys).</p>
+      <h2 class="lp-h2">Honest about the cost</h2>
+      <p class="lp-sub">zengtrade never hides friction. Fees, slippage and (for Indian users) the 1% TDS are subtracted from every {sym} backtest and paper trade, so the edge you see is the edge <b>net of cost</b>, not a gross number that evaporates live.</p>
+    </div>
+  </section>
+
+  <section class="lp-sec" aria-label="{e(name)} FAQ">
+    <div class="lp-wrap">
+      <h2 class="lp-h2">{e(name)} FAQ</h2>
+      {faq_html}
+    </div>
+  </section>
+
+  <section class="lp-sec" aria-label="Related coins">
+    <div class="lp-wrap">
+      <h2 class="lp-h2">Related coins</h2>
+      <div class="lp-grid4">{rel_html}</div>
+      <a class="lp-cta primary" href="/login?mode=signup" style="margin-top:20px">Start free, paper-trade {e(name)} strategies</a>
+      <p class="lp-fineprint">Live data · educational software, not investment advice · paper-first, non-custodial</p>
+    </div>
+  </section>
+  <script>
+  fetch("{BASE}/api/v3/ticker/24hr?symbol={sym}USDT").then(r=>r.json()).then(d=>{{
+    var p=document.querySelector('[data-live-price="{sym}"]'), c=document.querySelector('[data-live-chg="{sym}"]');
+    if(p) p.textContent="$"+(+d.lastPrice).toLocaleString("en-US",{{maximumFractionDigits:(+d.lastPrice>=1?2:4)}});
+    if(c){{var v=+d.priceChangePercent; c.textContent=(v>=0?"+":"")+v.toFixed(2)+"% 24h"; c.className="coin-chg "+(v>=0?"up":"down");}}
+  }}).catch(()=>{{}});
+  </script>
+</main>"""
+    return title, desc, f"{SITE}/coins/{slug}/", main, extra_head
 
 
-def main():
-    do_all = "--all" in sys.argv
-    os.makedirs(OUT, exist_ok=True)
-    print("fetching Binance 24h tickers…")
+def coin_hub_main(syms_present):
+    """The /coins/ hub <main>, using the shared design system."""
+    cards = "".join(
+        f'<a class="home-card" href="/coins/{COINS[s][1]}/"><b>{html.escape(COINS[s][0])}</b>'
+        f'<span>{s} strategies &amp; live regime read</span></a>' for s in syms_present)
+    return f"""<main id="main">
+  <section class="lp-hero" aria-labelledby="h-hub">
+    <div class="lp-wrap">
+      <div class="lp-eyebrow"><span class="dot"></span> trading strategies by coin</div>
+      <h1 id="h-hub" class="lp-h1">Crypto strategies, <span class="hl">by coin</span></h1>
+      <p class="lp-sub coin-hub-lead">Live prices, a current market-regime read, and paper-tradeable regime-aware strategies for each major coin. Honest about every cost, non-custodial.</p>
+    </div>
+  </section>
+  <section class="lp-sec" aria-label="Coins">
+    <div class="lp-wrap"><div class="lp-grid4">{cards}</div></div>
+  </section>
+</main>"""
+
+
+def fetch_coins(syms=None):
+    """Fetch (tk, closes) for each coin. Returns [(sym,name,slug,cat,tk,closes), ...] present."""
+    syms = syms or list(COINS.keys())
+    print("fetching 24h tickers…")
     all24 = {t["symbol"]: t for t in get("/api/v3/ticker/24hr")}
-    syms = list(COINS.keys())
-    urls = []
+    out = []
     for sym in syms:
         name, slug, cat = COINS[sym]
         tk = all24.get(sym + "USDT")
         if not tk:
             print("  skip", sym, "(no ticker)"); continue
         kl = get("/api/v3/klines", symbol=sym + "USDT", interval="1d", limit=30)
-        closes = [float(k[4]) for k in kl]
-        d = os.path.join(OUT, "coins", slug)
-        os.makedirs(d, exist_ok=True)
-        open(os.path.join(d, "index.html"), "w").write(page(sym, name, slug, cat, tk, closes))
-        urls.append(f"{SITE}/coins/{slug}/")
-        print("  ✓ /coins/%s/  ($%s, %s%% 24h)" % (slug, tk["lastPrice"], tk["priceChangePercent"]))
-    # hub page
-    os.makedirs(os.path.join(OUT, "coins"), exist_ok=True)
-    hub_cards = "".join(
-        f'<a class="rel" href="/coins/{COINS[s][1]}/"><b>{COINS[s][0]}</b><span>{s} strategies &amp; regime read</span></a>'
-        for s in syms if (s + "USDT") in all24)
-    open(os.path.join(OUT, "coins", "index.html"), "w").write(f"""<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Crypto trading strategies by coin — regime reads &amp; paper trading | zengtrade</title>
-<meta name="description" content="Paper-trade regime-aware strategies on every major coin — live prices, backtests, and a current market-regime read for each. Honest about cost, non-custodial.">
-<link rel="canonical" href="{SITE}/coins/">
-<link rel="icon" type="image/svg+xml" href="/assets/logo.svg">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<style>body{{font-family:'Plus Jakarta Sans',sans-serif;background:#f4f6fa;color:#0f1a2a;margin:0}}@media(prefers-color-scheme:dark){{body{{background:#080d18;color:#e8eefb}}}}.w{{max-width:820px;margin:0 auto;padding:26px}}h1{{font-size:30px}}.g{{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}}.rel{{display:flex;flex-direction:column;background:#fff;border:1px solid #e6eaf1;border-radius:12px;padding:14px;text-decoration:none;color:inherit}}@media(prefers-color-scheme:dark){{.rel{{background:#101a2e;border-color:#1f2c46}}}}.rel b{{font-size:16px}}.rel span{{font-size:12.5px;color:#5c6a7e}}</style></head>
-<body><div class="w"><a href="/" style="color:#5c6a7e;text-decoration:none;font-size:13px">← zengtrade</a>
-<h1>Trading strategies by coin</h1><p style="color:#5c6a7e">Live prices, a market-regime read, and paper-tradeable regime-aware strategies for each coin. Honest about every cost.</p>
-<div class="g">{hub_cards}</div></div></body></html>""")
-    urls.append(f"{SITE}/coins/")
-    # sitemap
-    sm = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    sm += "".join(f"  <url><loc>{u}</loc><changefreq>daily</changefreq></url>\n" for u in urls)
-    sm += "</urlset>\n"
-    open(os.path.join(OUT, "sitemap.xml"), "w").write(sm)
-    print(f"\n✓ generated {len(urls)} pages + sitemap.xml -> seo/out/")
+        out.append((sym, name, slug, cat, tk, [float(k[4]) for k in kl]))
+    return out
 
 
 if __name__ == "__main__":
-    main()
+    print("This module is now a coin-content library. Run the whole site (marketing + coins,")
+    print("all sharing one design system) with:  python3 deploy/landing/build.py")

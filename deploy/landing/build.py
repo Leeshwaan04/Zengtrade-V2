@@ -88,10 +88,10 @@ HOME_MAIN = """<main id="main">
   <section class="lp-hero" aria-labelledby="h-hero">
     <div class="lp-wrap">
       <div class="lp-eyebrow"><span class="dot"></span> paper-first · non-custodial · regime-aware</div>
-      <h1 id="h-hero" class="lp-h1">Trading that reads the market's <span class="hl">mood</span> — and refuses to lose your money.</h1>
-      <p class="lp-sub">zengtrade runs battle-tested, regime-aware strategies on live data, 24/7. It's honest about every cost, allergic to hype, and paper-first — prove an edge before a rupee or a dollar is at risk. Then run it on <b>your own exchange</b>: your keys, your coins.</p>
+      <h1 id="h-hero" class="lp-h1">Trading that reads the market's <span class="hl">mood</span>, and refuses to lose your money.</h1>
+      <p class="lp-sub">zengtrade runs battle-tested, regime-aware strategies on live data, 24/7. It's honest about every cost, allergic to hype, and paper-first: it proves an edge before a rupee or a dollar is at risk. Then run it on <b>your own exchange</b>, with your keys and your coins.</p>
       <div class="lp-cta-row">
-        <a class="lp-cta primary" href="https://zengtrade.in/">Start free — no card</a>
+        <a class="lp-cta primary" href="/login?mode=signup">Start free, no card</a>
         <a class="lp-cta ghost" href="/how-it-works/">See how it works →</a>
       </div>
       <p class="lp-fineprint">Free to start · paper trading only at launch · not investment advice</p>
@@ -100,10 +100,10 @@ HOME_MAIN = """<main id="main">
 
   <section class="lp-sec home-pillars" aria-label="Why zengtrade">
     <div class="lp-wrap lp-grid4">
-      <div class="home-card"><div class="hc-ic">◐</div><b>Regime-aware</b><span>Reads Bull, Neutral &amp; Bear — and runs only the strategies proven to win in the current regime.</span></div>
+      <div class="home-card"><div class="hc-ic">◐</div><b>Regime-aware</b><span>Reads Bull, Neutral &amp; Bear, and runs only the strategies proven to win in the current regime.</span></div>
       <div class="home-card"><div class="hc-ic">◈</div><b>Survival-first</b><span>A Governor, kill-switch and position intelligence sit over every trade. Cash is a deliberate position.</span></div>
-      <div class="home-card"><div class="hc-ic">✓</div><b>Radically honest</b><span>Never fabricates a number. Every backtest is net of fees, slippage &amp; tax — a dash when it can't source one.</span></div>
-      <div class="home-card"><div class="hc-ic">₿</div><b>Two books, one engine</b><span>Crypto (24/7, live Binance) and Indian markets — the same survival-first engine across both.</span></div>
+      <div class="home-card"><div class="hc-ic">✓</div><b>Radically honest</b><span>Never fabricates a number. Every backtest is net of fees, slippage &amp; tax, a dash when it can't source one.</span></div>
+      <div class="home-card"><div class="hc-ic">₿</div><b>Two books, one engine</b><span>Crypto (24/7, live prices) and Indian markets run on the same survival-first engine.</span></div>
     </div>
   </section>
 
@@ -113,7 +113,7 @@ HOME_MAIN = """<main id="main">
       <div>
         <div class="lp-eyebrow"><span class="dot"></span> the core idea</div>
         <h2 class="lp-h2">The market has moods. The engine reads them.</h2>
-        <p class="lp-sub">Bull, Neutral, Bear — no strategy wins in every regime, so the engine deploys the ones proven to fit the tape and stands the rest down to cash. That's how it protects capital first and compounds second.</p>
+        <p class="lp-sub">Bull, Neutral, Bear: no strategy wins in every regime, so the engine deploys the ones proven to fit the tape and stands the rest down to cash. That's how it protects capital first and compounds second.</p>
         <a class="lp-cta ghost" href="/how-it-works/">How the regime engine works →</a>
       </div>
     </div>
@@ -123,56 +123,57 @@ HOME_MAIN = """<main id="main">
     <div class="lp-wrap home-final-in">
       <h2 class="lp-h2">Prove the edge before you risk a thing.</h2>
       <p class="lp-sub">Start free. Paper-trade every strategy on live data. Upgrade only when a strategy earns its place.</p>
-      <div class="lp-cta-row center"><a class="lp-cta primary" href="https://zengtrade.in/">Start free</a><a class="lp-cta ghost" href="/pricing/">See pricing</a></div>
+      <div class="lp-cta-row center"><a class="lp-cta primary" href="/login?mode=signup">Start free</a><a class="lp-cta ghost" href="/pricing/">See pricing</a></div>
     </div>
   </section>
 </main>"""
 
 # ---- NEW PRICING ----------------------------------------------------------------------
-def plan(name, price, per, tag, feats, featured=False, cta="Start free"):
+def plan(name, price, per, tag, feats, featured=False, cta="Start free", pid=""):
     lis = "".join(f"<li>{f}</li>" for f in feats)
+    href = "/login?mode=signup" + (f"&amp;plan={pid}" if pid else "")   # carry chosen plan through signup
     return f"""<div class="pr-plan{' feat' if featured else ''}">{'<div class="pr-ribbon">Most popular</div>' if featured else ''}
       <div class="pr-name">{name}</div><div class="pr-price">{price}<span>{per}</span></div>
       <div class="pr-tag">{tag}</div><ul class="pr-feats">{lis}</ul>
-      <a class="lp-cta {'primary' if featured else 'ghost'} full" href="https://zengtrade.in/">{cta}</a></div>"""
+      <a class="lp-cta {'primary' if featured else 'ghost'} full" href="{href}">{cta}</a></div>"""
 
 PRICING_MAIN = f"""<main id="main">
   <section class="lp-sec pr-head" aria-labelledby="h-pr">
     <div class="lp-wrap center">
       <div class="lp-eyebrow"><span class="dot"></span> simple · honest · cancel anytime</div>
       <h1 id="h-pr" class="lp-h1">Pricing that only charges when it earns its place.</h1>
-      <p class="lp-sub">Start free and paper-trade forever. You pay only when you want unlimited strategies and live execution on your own exchange — never for the data, never for hidden extras.</p>
+      <p class="lp-sub">Start free and paper-trade forever. You pay only when you want unlimited strategies and live execution on your own exchange, never for the data, never for hidden extras.</p>
     </div>
   </section>
   <section class="lp-sec" aria-label="Plans">
     <div class="lp-wrap pr-grid">
-      {plan("Free", "$0", "forever", "Learn &amp; paper-trade — free forever", ["1 paper strategy","Live crypto prices, 24/7","Backtest + Forward Test","Accuracy &amp; Analytics","Honest, cost-accurate P&amp;L"], cta="Get started")}
-      {plan("Pro", "$29", "/mo", "For traders ready to go live", ["Everything in Free","<b>Unlimited</b> paper strategies","Live execution on your own exchange*","Tick-level stops &amp; kill-switch","Email &amp; push alerts"], featured=True)}
-      {plan("Elite", "$79", "/mo", "Maximum firepower", ["Everything in Pro","Perps + options engines","Multiple exchange accounts","Custom risk parameters","Priority support &amp; early access"])}
+      {plan("Free", "$0", "forever", "Learn &amp; paper-trade, free forever", ["1 paper strategy","Live crypto prices, 24/7","Backtest + Forward Test","Accuracy &amp; Analytics","Honest, cost-accurate P&amp;L"], cta="Get started")}
+      {plan("Pro", "$29", "/mo", "For traders ready to go live", ["Everything in Free","<b>Unlimited</b> paper strategies","Live execution on your own exchange*","Tick-level stops &amp; kill-switch","Email &amp; push alerts"], featured=True, cta="Get Pro", pid="pro")}
+      {plan("Elite", "$79", "/mo", "Maximum firepower", ["Everything in Pro","Perps + options engines","Multiple exchange accounts","Custom risk parameters","Priority support &amp; early access"], cta="Get Elite", pid="elite")}
     </div>
-    <p class="pr-iso center">* Live execution unlocks per strategy only after it clears the go-live bar in paper. Non-custodial — your keys, your coins. Not investment advice.</p>
+    <p class="pr-iso center">* Live execution unlocks per strategy only after it clears the go-live bar in paper. Non-custodial, your keys, your coins. Not investment advice.</p>
   </section>
   <section class="lp-sec pr-what" aria-label="What you pay for">
     <div class="lp-wrap">
       <h2 class="lp-h2 center">What you're actually paying for</h2>
       <div class="lp-grid3">
-        <div class="home-card"><div class="hc-ic">∞</div><b>Unlimited strategies</b><span>Free runs one paper strategy. Pro removes the cap — run the whole regime-aware library at once.</span></div>
+        <div class="home-card"><div class="hc-ic">∞</div><b>Unlimited strategies</b><span>Free runs one paper strategy. Pro removes the cap, run the whole regime-aware library at once.</span></div>
         <div class="home-card"><div class="hc-ic">◈</div><b>Live execution</b><span>Route a proven strategy to <b>your own</b> exchange with your own keys. We never custody funds. Two-key safety gate before any real order.</span></div>
         <div class="home-card"><div class="hc-ic">🔔</div><b>Alerts &amp; control</b><span>Tick-level stops, a portfolio kill-switch, and email/push alerts so you're never surprised.</span></div>
       </div>
-      <p class="pr-note center">Data is always free and always live. We charge for <b>capability</b>, not for the numbers — and never hide a cost inside a plan.</p>
+      <p class="pr-note center">Data is always free and always live. We charge for <b>capability</b>, not for the numbers, and never hide a cost inside a plan.</p>
     </div>
   </section>
   <section class="lp-sec pr-faq" aria-label="Pricing FAQ">
     <div class="lp-wrap">
       <h2 class="lp-h2 center">Pricing questions</h2>
-      <details class="faq"><summary>Is there really a free plan?</summary><p>Yes — Free is free forever. One paper strategy, live crypto data, full backtest/forward-test and honest analytics. No card required.</p></details>
-      <details class="faq"><summary>Do you take a cut of my trades or hold my funds?</summary><p>No. zengtrade is non-custodial. Live execution runs on your own exchange with your own API keys — we never touch your coins and take no trading commission.</p></details>
+      <details class="faq"><summary>Is there really a free plan?</summary><p>Yes, Free is free forever. One paper strategy, live crypto data, full backtest/forward-test and honest analytics. No card required.</p></details>
+      <details class="faq"><summary>Do you take a cut of my trades or hold my funds?</summary><p>No. zengtrade is non-custodial. Live execution runs on your own exchange with your own API keys, we never touch your coins and take no trading commission.</p></details>
       <details class="faq"><summary>Can I cancel anytime?</summary><p>Anytime, in one click. You keep Free access after cancelling.</p></details>
-      <details class="faq"><summary>Why is live execution gated?</summary><p>A strategy only unlocks live once it clears the go-live bar in paper — enough closed trades, positive expectancy net of cost, across regimes. We'd rather you prove the edge than pay to lose money.</p></details>
+      <details class="faq"><summary>Why is live execution gated?</summary><p>A strategy only unlocks live once it clears the go-live bar in paper, enough closed trades, positive expectancy net of cost, across regimes. We'd rather you prove the edge than pay to lose money.</p></details>
     </div>
   </section>
-  <section class="lp-sec home-final"><div class="lp-wrap home-final-in"><h2 class="lp-h2">Start free. Upgrade only when it's earned.</h2><div class="lp-cta-row center"><a class="lp-cta primary" href="https://zengtrade.in/">Start free — no card</a></div></div></section>
+  <section class="lp-sec home-final"><div class="lp-wrap home-final-in"><h2 class="lp-h2">Start free. Upgrade only when it's earned.</h2><div class="lp-cta-row center"><a class="lp-cta primary" href="/login?mode=signup">Start free, no card</a></div></div></section>
 </main>"""
 
 HOME_CSS = """
@@ -205,29 +206,90 @@ HOME_CSS = """
 @media(max-width:820px){.lp-grid4{grid-template-columns:repeat(2,1fr)}.lp-grid3,.pr-grid{grid-template-columns:1fr}.home-regime-in{flex-direction:column;text-align:center}}
 """
 
+# ---- coin pSEO content lives in seo/generate.py (now a library that shares THIS shell) --
+coin_css, coins = "", []
+try:
+    import sys
+    sys.path.insert(0, os.path.abspath(os.path.join(HERE, "..", "..", "seo")))
+    import generate as G
+    coin_css = G.COIN_CSS
+    coins = G.fetch_coins()                       # live data; skipped gracefully if offline
+except Exception as ex:
+    print("  ! coin pages skipped (marketing site still builds):", ex)
+
 # ---- write everything -----------------------------------------------------------------
 if os.path.exists(DIST):
     shutil.rmtree(DIST)
 os.makedirs(DIST)
 shutil.copytree(os.path.join(HERE, "assets"), os.path.join(DIST, "assets"))
-open(os.path.join(DIST, "site.css"), "w").write(css + HOME_CSS)
-open(os.path.join(DIST, "_redirects"), "w").write("https://zengtrade.netlify.app/*   https://zengtrade.in/:splat   301!\n")
+open(os.path.join(DIST, "site.css"), "w").write(css + HOME_CSS + coin_css)   # ONE stylesheet for every page
 
-open(os.path.join(DIST, "index.html"), "w").write(shell(
-    "zengtrade — regime-aware crypto trading strategies, paper-first",
+# ---- bundle the Supabase auth app onto the SAME origin (login / dashboard / legal) -----
+# So the header CTAs resolve on zengtrade.in itself: /login, /app, /terms, /privacy, /risk.
+# We deliberately DON'T copy saas/web/index.html (that is the old SaaS landing; the real home
+# is this marketing build). Auth pages keep their own focused css.css + js/ (Supabase glue).
+AUTH_SRC = os.path.abspath(os.path.join(HERE, "..", "..", "saas", "web"))
+auth_ok = []
+for f in ("login.html", "reset.html", "app.html", "terms.html", "privacy.html", "risk.html", "css.css"):
+    src = os.path.join(AUTH_SRC, f)
+    if os.path.exists(src):
+        shutil.copy(src, os.path.join(DIST, f)); auth_ok.append(f)
+for d in ("js", "assets"):                        # js = auth glue; assets merge (logo etc.)
+    sd = os.path.join(AUTH_SRC, d)
+    if os.path.isdir(sd):
+        shutil.copytree(sd, os.path.join(DIST, d), dirs_exist_ok=True)
+
+# _redirects: netlify.app -> apex, plus clean paths for the bundled auth app
+open(os.path.join(DIST, "_redirects"), "w").write(
+    "https://zengtrade.netlify.app/*   https://zengtrade.in/:splat   301!\n"
+    "/login      /login.html    200\n"
+    "/reset      /reset.html    200\n"      # password-recovery landing (set new password)
+    "/dashboard  /app.html      200\n"      # post-auth landing (Supabase redirect target)
+    "/app        /app.html      200\n"      # legacy alias, keep working
+    "/terms    /terms.html    200\n"
+    "/privacy  /privacy.html  200\n"
+    "/risk     /risk.html     200\n")
+
+urls = []
+def emit(path, html_str, canon):
+    d = os.path.join(DIST, path) if path else DIST
+    os.makedirs(d, exist_ok=True)
+    open(os.path.join(d, "index.html"), "w").write(html_str)
+    urls.append(canon)
+
+emit("", shell(
+    "zengtrade, regime-aware crypto trading strategies, paper-first",
     "Regime-aware algorithmic crypto trading strategies you can paper-trade, backtest and forward-test on live data before risking a dollar. Survival-first, honest about every cost, non-custodial. Not investment advice.",
-    "https://zengtrade.in/", HOME_MAIN))
+    "https://zengtrade.in/", HOME_MAIN), "https://zengtrade.in/")
 
-os.makedirs(os.path.join(DIST, "how-it-works"))
-open(os.path.join(DIST, "how-it-works", "index.html"), "w").write(shell(
-    "How zengtrade works — the regime engine, honesty & survival-first risk",
+emit("how-it-works", shell(
+    "How zengtrade works, the regime engine, honesty & survival-first risk",
     "How zengtrade works: it reads Bull/Neutral/Bear regimes, runs only the strategies proven to fit, never fabricates a number, and protects capital first. Paper-first, non-custodial.",
-    "https://zengtrade.in/how-it-works/", main_hiw))
+    "https://zengtrade.in/how-it-works/", main_hiw), "https://zengtrade.in/how-it-works/")
 
-os.makedirs(os.path.join(DIST, "pricing"))
-open(os.path.join(DIST, "pricing", "index.html"), "w").write(shell(
-    "Pricing — free to start, pay only for live execution | zengtrade",
+emit("pricing", shell(
+    "Pricing, free to start, pay only for live execution | zengtrade",
     "zengtrade pricing: Free forever to paper-trade, Pro for unlimited strategies + live execution on your own exchange, Elite for perps/options. Data is always free. Non-custodial. Cancel anytime.",
-    "https://zengtrade.in/pricing/", PRICING_MAIN))
+    "https://zengtrade.in/pricing/", PRICING_MAIN), "https://zengtrade.in/pricing/")
 
-print("built:", ", ".join(sorted(os.listdir(DIST))))
+# ---- coin hub + per-coin pages (identical shell -> full design parity) -----------------
+if coins:
+    present = [c[0] for c in coins]
+    emit("coins", shell(
+        "Crypto trading strategies by coin, live regime reads & paper trading | zengtrade",
+        "Paper-trade regime-aware strategies on every major coin. Live prices, backtests, and a current market-regime read for each. Honest about every cost, non-custodial. Not investment advice.",
+        "https://zengtrade.in/coins/", G.coin_hub_main(present)), "https://zengtrade.in/coins/")
+    for sym, name, slug, cat, tk, closes in coins:
+        title, desc, canon, cmain, extra = G.coin_parts(sym, name, slug, cat, tk, closes)
+        emit(os.path.join("coins", slug), shell(title, desc, canon, cmain, extra_head=extra), canon)
+        print("  ✓ /coins/%s/  ($%s, %s%% 24h)" % (slug, tk["lastPrice"], tk["priceChangePercent"]))
+
+# ---- sitemap + robots ------------------------------------------------------------------
+sm = ('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+      + "".join(f"  <url><loc>{u}</loc><changefreq>daily</changefreq></url>\n" for u in urls)
+      + "</urlset>\n")
+open(os.path.join(DIST, "sitemap.xml"), "w").write(sm)
+open(os.path.join(DIST, "robots.txt"), "w").write(
+    "User-agent: *\nAllow: /\nSitemap: https://zengtrade.in/sitemap.xml\n")
+
+print("built %d pages:" % len(urls), ", ".join(sorted(os.listdir(DIST))))

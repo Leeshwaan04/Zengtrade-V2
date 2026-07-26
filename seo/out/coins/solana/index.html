@@ -1,0 +1,72 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Solana (SOL) trading strategies — paper-trade, backtest &amp; regime read | zengtrade</title>
+<meta name="description" content="Live Solana price $74.61 (+0.91% 24h). Paper-trade regime-aware SOL strategies on live data, backtest the edge, and read Solana&#x27;s current market regime — honest about every cost, non-custodial. Not investment advice.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link rel="canonical" href="https://zengtrade.in/coins/solana/">
+<meta property="og:type" content="website"><meta property="og:title" content="Solana (SOL) trading strategies — paper-trade, backtest &amp; regime read | zengtrade">
+<meta property="og:description" content="Live Solana price $74.61 (+0.91% 24h). Paper-trade regime-aware SOL strategies on live data, backtest the edge, and read Solana&#x27;s current market regime — honest about every cost, non-custodial. Not investment advice."><meta property="og:url" content="https://zengtrade.in/coins/solana/">
+<meta property="og:image" content="https://zengtrade.in/assets/mascot-bull.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="/assets/logo.svg">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://zengtrade.in/"}, {"@type": "ListItem", "position": 2, "name": "Coins", "item": "https://zengtrade.in/coins/"}, {"@type": "ListItem", "position": 3, "name": "Solana", "item": "https://zengtrade.in/coins/solana/"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Can I paper-trade Solana strategies on zengtrade?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. zengtrade runs regime-aware strategies on Solana (SOL) using live Binance data, 24/7, in paper first \u2014 so you prove an edge before any real capital is at risk."}}, {"@type": "Question", "name": "Is Solana trading on zengtrade custodial?", "acceptedAnswer": {"@type": "Answer", "text": "No. zengtrade is non-custodial \u2014 live execution runs on your own exchange with your own keys. It never holds your SOL or funds."}}, {"@type": "Question", "name": "What market regime is Solana in right now?", "acceptedAnswer": {"@type": "Answer", "text": "As of 25 Jul 2026, Solana's 30-day tape reads Neutral/Choppy. Net +4% over 30 days but a choppy path \u2014 a ranging read. The engine favours mean-reversion and waits for a real trend before committing. Regimes change \u2014 the engine re-reads every cycle."}}]}</script>
+<style>
+:root{--bg:#f4f6fa;--surface:#fff;--line:#e6eaf1;--navy:#0f1a2a;--slate:#5c6a7e;--green:#00ab4e;--red:#e0483d;--sans:'Plus Jakarta Sans',system-ui,sans-serif;--mono:'Roboto Mono',ui-monospace,monospace}
+@media(prefers-color-scheme:dark){:root{--bg:#080d18;--surface:#101a2e;--line:#1f2c46;--navy:#e8eefb;--slate:#9aabc9}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--navy);font-family:var(--sans);line-height:1.6}
+.wrap{max-width:820px;margin:0 auto;padding:22px}
+a{color:inherit}.crumb{font-size:12.5px;color:var(--slate)}.crumb a{text-decoration:none}
+.brand{display:flex;align-items:center;gap:9px;font-weight:800;margin-bottom:18px}.brand svg{width:26px;height:26px}
+h1{font-size:31px;letter-spacing:-.02em;margin:14px 0 4px}.sym{color:var(--slate);font-weight:600}
+.price{display:flex;align-items:baseline;gap:12px;margin:8px 0}.price b{font:800 30px/1 var(--mono)}
+.chg{font:700 15px/1 var(--mono)}.up{color:var(--green)}.down{color:var(--red)}
+.spark{width:100%;height:90px;display:block;margin:12px 0;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:8px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:11px;min-width:0}
+.stat span{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--slate);font-weight:700}
+.stat b{display:block;font:700 16px/1.3 var(--mono);margin-top:3px;overflow-wrap:anywhere}
+@media(max-width:600px){.stats{grid-template-columns:repeat(2,1fr)}h1{font-size:25px}.price b{font-size:24px}}
+.regime{display:flex;gap:11px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--green);border-radius:12px;padding:14px;margin:18px 0}
+h2{font-size:20px;margin:26px 0 8px}p{color:var(--slate)}p b,li b{color:var(--navy)}
+.faq{border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin:8px 0;background:var(--surface)}
+.faq summary{font-weight:700;cursor:pointer}.faq p{margin:8px 0 0}
+.rels{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0}
+.rel{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:12px;text-decoration:none}
+.rel b{color:var(--navy)}.rel span{font-size:12.5px;color:var(--slate)}
+.cta{display:block;text-align:center;background:var(--green);color:#04140a;font-weight:800;padding:15px;border-radius:12px;text-decoration:none;margin:22px 0 6px}
+.disc{font-size:11.5px;color:var(--slate);text-align:center}.asof{font-size:11px;color:var(--slate)}
+</style></head><body><div class="wrap">
+<div class="brand"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="var(--green)"/><path d="M24.69 13.67A9 9 0 1 1 20.5 8.21" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M12.5 19.5L17 15L20 17.5L26.5 8.8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>zengtrade</div>
+<nav class="crumb"><a href="/">Home</a> › <a href="/coins/">Coins</a> › Solana</nav>
+<h1>Solana <span class="sym">SOL</span> trading strategies</h1>
+<div class="price"><b data-live-price="SOL">$74.61</b><span class="chg up" data-live-chg="SOL">+0.91% 24h</span></div>
+<svg class="spark" viewBox="0 0 560 90" preserveAspectRatio="none" role="img" aria-label="30-day price trend"><polygon points="0,90 0.0,79.4 19.3,90.0 38.6,83.3 57.9,54.6 77.2,65.9 96.6,37.1 115.9,12.2 135.2,0.0 154.5,4.1 173.8,5.7 193.1,3.0 212.4,13.4 231.7,34.3 251.0,32.7 270.3,32.0 289.7,42.2 309.0,41.2 328.3,55.7 347.6,34.0 366.9,38.4 386.2,53.4 405.5,55.5 424.8,51.8 444.1,45.3 463.4,34.1 482.8,32.1 502.1,33.2 521.4,49.1 540.7,63.7 560.0,58.8 560,90" fill="#00ab4e" opacity="0.08"/><polyline points="0.0,79.4 19.3,90.0 38.6,83.3 57.9,54.6 77.2,65.9 96.6,37.1 115.9,12.2 135.2,0.0 154.5,4.1 173.8,5.7 193.1,3.0 212.4,13.4 231.7,34.3 251.0,32.7 270.3,32.0 289.7,42.2 309.0,41.2 328.3,55.7 347.6,34.0 366.9,38.4 386.2,53.4 405.5,55.5 424.8,51.8 444.1,45.3 463.4,34.1 482.8,32.1 502.1,33.2 521.4,49.1 540.7,63.7 560.0,58.8" fill="none" stroke="#00ab4e" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
+<div class="stats">
+  <div class="stat"><span>24h High</span><b>$74.67</b></div>
+  <div class="stat"><span>24h Low</span><b>$73.44</b></div>
+  <div class="stat"><span>7d</span><b class="down">-1.2%</b></div>
+  <div class="stat"><span>24h Volume</span><b>$61,265,182</b></div>
+</div>
+<p class="asof">Live from Binance · snapshot 25 Jul 2026 (refreshes on load)</p>
+<div class="regime"><div><b>Regime read: Neutral/Choppy</b><br><span style="color:var(--slate)">Net +4% over 30 days but a choppy path — a ranging read. The engine favours mean-reversion and waits for a real trend before committing.</span></div></div>
+<h2>How zengtrade trades Solana</h2>
+<p>Solana is a higher-beta layer-1: it can trend hard in a bull regime and bleed fast in a bear. The engine sizes SOL smaller and leans on the chandelier/trailing exit so a strong run is captured but a reversal is cut early. Every strategy runs <b>paper-first</b> on live SOL data — you prove an edge before a dollar is at risk, then run it on <b>your own exchange</b> (non-custodial, your keys).</p>
+<h2>Honest about the cost</h2>
+<p>zengtrade never hides friction. Fees, slippage and (for Indian users) the 1% TDS are subtracted from every SOL backtest and paper trade, so the edge you see is the edge <b>net of cost</b> — not a gross number that evaporates live.</p>
+<h2>Solana FAQ</h2>
+<details class="faq"><summary>Can I paper-trade Solana strategies on zengtrade?</summary><p>Yes. zengtrade runs regime-aware strategies on Solana (SOL) using live Binance data, 24/7, in paper first — so you prove an edge before any real capital is at risk.</p></details><details class="faq"><summary>Is Solana trading on zengtrade custodial?</summary><p>No. zengtrade is non-custodial — live execution runs on your own exchange with your own keys. It never holds your SOL or funds.</p></details><details class="faq"><summary>What market regime is Solana in right now?</summary><p>As of 25 Jul 2026, Solana&#x27;s 30-day tape reads Neutral/Choppy. Net +4% over 30 days but a choppy path — a ranging read. The engine favours mean-reversion and waits for a real trend before committing. Regimes change — the engine re-reads every cycle.</p></details>
+<h2>Related coins</h2>
+<div class="rels"><a class="rel" href="/coins/bitcoin/"><b>Bitcoin</b><span>BTC strategies &amp; regime</span></a><a class="rel" href="/coins/ethereum/"><b>Ethereum</b><span>ETH strategies &amp; regime</span></a><a class="rel" href="/coins/bnb/"><b>BNB</b><span>BNB strategies &amp; regime</span></a><a class="rel" href="/coins/xrp/"><b>XRP</b><span>XRP strategies &amp; regime</span></a></div>
+<a class="cta" href="/">Start free — paper-trade Solana strategies</a>
+<p class="disc">Live data from Binance. Educational software, not investment advice. Paper-first, non-custodial.</p>
+</div>
+<script>
+/* client-side refresh of the price (keeps the page fresh without a rebuild) */
+fetch("https://data-api.binance.vision/api/v3/ticker/24hr?symbol=SOLUSDT").then(r=>r.json()).then(d=>{
+  var p=document.querySelector('[data-live-price="SOL"]'), c=document.querySelector('[data-live-chg="SOL"]');
+  if(p) p.textContent="$"+(+d.lastPrice).toLocaleString("en-US",{maximumFractionDigits:(+d.lastPrice>=1?2:4)});
+  if(c){var v=+d.priceChangePercent; c.textContent=(v>=0?"+":"")+v.toFixed(2)+"% 24h"; c.className="chg "+(v>=0?"up":"down");}
+}).catch(()=>{});
+</script></body></html>

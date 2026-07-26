@@ -1,15 +1,15 @@
-// zengtrade — billing (Polar). No secret here: checkout links are public; the server-side webhook
-// (polar-webhook) grants Pro. Polar is a merchant-of-record, so it handles global tax. This module
-// = the plan catalog + safe checkout (graceful until the Polar checkout links are set).
+// zengtrade — billing (NOWPayments). NO secret in the browser: the client only asks a server-side
+// Edge Function (nowpayments-create-invoice) to mint a hosted invoice, then redirects to it. The API
+// key + IPN secret live ONLY in Supabase secrets; the IPN webhook (nowpayments-ipn) grants the tier.
 import { sb } from "./auth.js";
-import { POLAR } from "./config.js";
+import { SUPABASE_URL } from "./config.js";
 import { toast } from "./ui.js";
 
 export const FREE_DEPLOY_LIMIT = 1;
 
-// the pricing model — mirrors the products you create in Polar
+// the pricing model (mirrors PRICES in the create-invoice function; the function is authoritative).
 export const PLANS = [
-  { id: "free", name: "Free", monthly: 0, annual: 0, tagline: "Learn & paper-trade — free forever",
+  { id: "free", name: "Free", monthly: 0, annual: 0, tagline: "Learn and paper-trade, free forever",
     features: ["1 paper strategy", "Live crypto prices, 24/7", "Backtest + Forward Test", "Accuracy & Analytics", "Honest cost accounting"] },
   { id: "pro", name: "Pro", monthly: 29, annual: 290, featured: true, tagline: "For traders ready to go live",
     features: ["Everything in Free", "Unlimited paper strategies", "Live execution on your own exchange*", "Tick-level stops & kill-switch", "Email & push alerts"] },
@@ -17,30 +17,32 @@ export const PLANS = [
     features: ["Everything in Pro", "Perps + options engines", "Multiple exchange accounts", "Custom risk parameters", "Priority support & early access"] },
 ];
 
-// Polar Checkout Link URLs, one per plan+cycle (Polar Dashboard -> Products -> product -> Checkout Link).
-const LINKS = {
-  pro:   { month: POLAR.proMonth,   year: POLAR.proYear },
-  elite: { month: POLAR.eliteMonth, year: POLAR.eliteYear },
-};
-const ready = (v) => !!v && /^https?:\/\//.test(v);
-export const checkoutReady = () => ready(POLAR.proMonth);
+// invoices are created server-side on demand, so checkout is always available (no client link to set).
+export const checkoutReady = () => true;
 
 export async function getTier(userId) {
   const { data } = await sb.from("profile").select("tier").eq("id", userId).maybeSingle();
-  return data?.tier === "pro" ? "pro" : "free";
+  const t = data?.tier;
+  return t === "pro" || t === "elite" ? t : "free";
 }
-export const isPro = (t) => t === "pro";
+// "paid" gate: elite inherits everything Pro unlocks.
+export const isPro = (t) => t === "pro" || t === "elite";
 
-export function openCheckout(user, plan = "pro", cycle = "month") {
-  const base = LINKS[plan]?.[cycle] || LINKS[plan]?.month;
-  if (!ready(base)) {
-    toast("Checkout is being finalized — launching very soon.", "info"); return;
+// Ask our Edge Function to mint a NOWPayments hosted invoice for this plan+cycle, then redirect to it.
+export async function openCheckout(user, plan = "pro", cycle = "month") {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { toast("Please sign in first.", "info"); return; }
+    toast("Starting secure checkout…", "info");
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/nowpayments-create-invoice`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ plan, cycle }),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (r.ok && d.invoice_url) { window.location.href = d.invoice_url; return; }
+    toast(d.error || "Could not start checkout. Please try again.", "error");
+  } catch {
+    toast("Could not start checkout. Please try again.", "error");
   }
-  // Pass our Supabase user id so the webhook can map the subscription back to this account —
-  // Polar carries customer_external_id + metadata through to every subscription event.
-  const u = new URL(base);
-  u.searchParams.set("customer_email", user.email || "");
-  u.searchParams.set("customer_external_id", user.id);
-  u.searchParams.set("metadata[user_id]", user.id);
-  window.open(u.toString(), "_blank", "noopener");
 }
