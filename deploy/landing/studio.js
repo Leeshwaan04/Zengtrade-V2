@@ -221,7 +221,7 @@
   ].join(",") + "{display:none !important}";
   function inject() {
     var st = document.createElement("style");
-    st.textContent = css;
+    st.textContent = css + ZTB_CSS;
     document.head.appendChild(st);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", inject);
@@ -255,17 +255,86 @@
     return "custom_" + String(name || "my_strategy").toLowerCase()
       .replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 24);
   }
+
+  var ZTB_CSS =
+    ".ztb{max-width:880px;margin:0 auto;display:flex;flex-direction:column;gap:14px;padding:4px 2px 26px;font-size:13.5px}" +
+    ".ztb-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-s);padding:14px 16px;box-shadow:var(--shadow)}" +
+    ".ztb-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}" +
+    ".ztb-head b{font-size:15.5px;color:var(--navy)}" +
+    ".ztb-head p{margin:2px 0 0;color:var(--slate);font-size:12.5px}" +
+    ".ztb-badge{font-size:10.5px;font-weight:800;letter-spacing:.06em;color:var(--green-d);background:var(--up-flash);border-radius:99px;padding:4px 11px;white-space:nowrap}" +
+    ".ztb-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:16px 26px}" +
+    "@media(max-width:760px){.ztb-grid{grid-template-columns:1fr}}" +
+    ".ztb-lbl{display:block;font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--slate);text-transform:uppercase;margin:0 0 6px}" +
+    ".ztb-inp,.ztb-sel{width:100%;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--navy);font:inherit;font-size:13.5px;padding:8px 11px;transition:.15s;-webkit-appearance:none;appearance:none}" +
+    ".ztb-sel{background-image:url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"6\"><path d=\"M1 1l4 4 4-4\" stroke=\"%2364748b\" stroke-width=\"1.6\" fill=\"none\" stroke-linecap=\"round\"/></svg>');background-repeat:no-repeat;background-position:right 11px center;padding-right:28px}" +
+    ".ztb-inp:focus,.ztb-sel:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px var(--up-flash)}" +
+    ".ztb-chips{display:flex;gap:8px;flex-wrap:wrap}" +
+    ".ztb-chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 14px;font:inherit;font-size:12.5px;font-weight:700;color:var(--slate);cursor:pointer;transition:.15s}" +
+    ".ztb-chip:hover{border-color:var(--slate)}" +
+    ".ztb-chip.on{background:var(--green);border-color:var(--green);color:#fff}" +
+    ".ztb-seg{display:inline-flex;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}" +
+    ".ztb-seg button{border:0;background:transparent;color:var(--slate);font:inherit;font-size:12.5px;font-weight:600;padding:6px 13px;border-radius:7px;cursor:pointer;transition:.15s;white-space:nowrap}" +
+    ".ztb-seg button.on{background:var(--surface);color:var(--green-d);box-shadow:var(--shadow)}" +
+    ".ztb-presets{display:flex;gap:8px;flex-wrap:wrap;align-items:center;color:var(--slate);font-size:12px;font-weight:600}" +
+    ".ztb-rules{display:grid;grid-template-columns:1fr 1fr;gap:14px}" +
+    "@media(max-width:860px){.ztb-rules{grid-template-columns:1fr}}" +
+    ".ztb-rule{border-left:3px solid var(--green)}" +
+    ".ztb-rule[data-side=exit]{border-left-color:var(--amber)}" +
+    ".ztb-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:2px}" +
+    ".ztb-f{flex:1 1 86px;min-width:86px}" +
+    ".ztb-f.sig{flex:2 1 100%}" +
+    ".ztb-sent{margin-top:11px;font-size:12.5px;color:var(--slate);background:var(--bg);border-radius:8px;padding:8px 11px;line-height:1.5}" +
+    ".ztb-sent b{color:var(--navy)}" +
+    ".ztb-note{display:block;font-size:12.5px;color:var(--slate);background:var(--tint-info);border:1px solid var(--line);border-radius:var(--radius-s);padding:11px 14px;line-height:1.6}" +
+    ".ztb-note b{color:var(--navy)}" +
+    ".ztb-deploy{background:var(--green);color:#fff;border:0;border-radius:11px;font:inherit;font-weight:800;font-size:14px;padding:12px 24px;cursor:pointer;box-shadow:var(--shadow);transition:.15s;align-self:flex-start}" +
+    ".ztb-deploy:hover{background:var(--green-d);transform:translateY(-1px)}" +
+    ".ztb-err{color:var(--red-d);background:var(--tint-down);border:1px solid var(--bd-down);border-radius:9px;padding:9px 12px;font-size:12.5px}" +
+    ".ztb-item{display:flex;align-items:center;gap:12px;padding:11px 2px;border-top:1px solid var(--line)}" +
+    ".ztb-item:first-of-type{border-top:0}" +
+    ".ztb-dot{width:8px;height:8px;border-radius:50%;background:#c3ccd9;flex:0 0 auto}" +
+    ".ztb-item.run .ztb-dot{background:var(--green);box-shadow:0 0 0 3px var(--up-flash)}" +
+    ".ztb-item .nm{font-weight:700;color:var(--navy)}" +
+    ".ztb-item .stt{font-size:11px;color:var(--slate)}" +
+    ".ztb-item .pnl{margin-left:auto;font-weight:800;font-variant-numeric:tabular-nums}" +
+    ".ztb-item .pnl.up{color:var(--green-d)}.ztb-item .pnl.dn{color:var(--red-d)}" +
+    ".ztb-ghost{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 12px;font:inherit;font-size:12px;font-weight:600;color:var(--slate);cursor:pointer;transition:.15s}" +
+    ".ztb-ghost:hover{color:var(--navy);border-color:var(--slate)}";
+
+  var PRESETS = {
+    dip:   { name: "RSI dip buyer",      style: "reversion", ivl: "day", coins: ["BTCUSDT", "ETHUSDT"],
+             entry: { ind: "rsi", p1: 14, p2: 50, op: "<", value: 30 },  exit: { ind: "rsi", p1: 14, p2: 50, op: ">", value: 55 } },
+    cross: { name: "Golden cross rider", style: "trend",     ivl: "day", coins: ["BTCUSDT", "ETHUSDT", "SOLUSDT"],
+             entry: { ind: "ema_cross", p1: 12, p2: 26, op: ">", value: 0 }, exit: { ind: "ema_cross", p1: 12, p2: 26, op: "<", value: 0 } },
+    snap:  { name: "Stretch snap-back",  style: "reversion", ivl: "day", coins: ["BTCUSDT", "ETHUSDT"],
+             entry: { ind: "zscore", p1: 20, p2: 50, op: "<", value: -2 }, exit: { ind: "zscore", p1: 20, p2: 50, op: ">", value: 0 } },
+  };
+
+  function describe(c) {
+    var dir = c.op === "<" ? "drops below" : "rises above";
+    var rel = c.op === "<" ? "below" : "above";
+    if (c.ind === "rsi")          return "RSI(" + c.p1 + ") " + dir + " <b>" + c.value + "</b>";
+    if (c.ind === "zscore")       return "Z-score(" + c.p1 + ") " + dir + " <b>" + c.value + "</b>";
+    if (c.ind === "price_vs_sma") return "price is " + rel + " its <b>" + c.p1 + "-bar average</b>";
+    if (c.ind === "sma_cross")    return "SMA(" + c.p1 + ") is " + rel + " <b>SMA(" + c.p2 + ")</b>";
+    return "EMA(" + c.p1 + ") is " + rel + " <b>EMA(" + c.p2 + ")</b>";
+  }
   function condHtml(side, d) {
-    d = d || { ind: "rsi", p1: 14, p2: 50, op: side === "entry" ? "<" : ">", value: side === "entry" ? 30 : 55 };
+    d = d || (side === "entry" ? PRESETS.dip.entry : PRESETS.dip.exit);
     var opts = Object.keys(IND_META).map(function (k) {
       return '<option value="' + k + '"' + (k === d.ind ? " selected" : "") + ">" + IND_META[k].label + "</option>";
     }).join("");
-    return '<div class="flow-rows ztb-cond" data-side="' + side + '">' +
-      '<div><span>Signal</span><select class="sel" data-f="ind">' + opts + "</select></div>" +
-      '<div data-p="p1"><span data-lbl="p1">Period</span><input class="flow-input" data-f="p1" type="number" min="2" max="200" value="' + d.p1 + '"></div>' +
-      '<div data-p="p2" hidden><span data-lbl="p2">Slow</span><input class="flow-input" data-f="p2" type="number" min="3" max="400" value="' + d.p2 + '"></div>' +
-      '<div><span>Condition</span><select class="sel" data-f="op"><option value="<"' + (d.op === "<" ? " selected" : "") + ">below</option><option value=\">\"" + (d.op === ">" ? " selected" : "") + ">above</option></select></div>" +
-      '<div data-p="value"><span>Value</span><input class="flow-input" data-f="value" type="number" step="any" value="' + d.value + '"></div>' +
+    return '<div class="ztb-card ztb-rule ztb-cond" data-side="' + side + '">' +
+      '<span class="ztb-lbl">' + (side === "entry" ? "Enter when" : "Exit when") + "</span>" +
+      '<div class="ztb-row">' +
+      '<span class="ztb-f sig"><span class="ztb-lbl">Signal</span><select class="ztb-sel" data-f="ind">' + opts + "</select></span>" +
+      '<span class="ztb-f" data-p="p1"><span class="ztb-lbl" data-lbl="p1">Period</span><input class="ztb-inp" data-f="p1" type="number" min="2" max="200" value="' + d.p1 + '"></span>' +
+      '<span class="ztb-f" data-p="p2" hidden><span class="ztb-lbl" data-lbl="p2">Slow</span><input class="ztb-inp" data-f="p2" type="number" min="3" max="400" value="' + d.p2 + '"></span>' +
+      '<span class="ztb-f"><span class="ztb-lbl">Condition</span><select class="ztb-sel" data-f="op"><option value="<"' + (d.op === "<" ? " selected" : "") + ">below</option><option value=\">\"" + (d.op === ">" ? " selected" : "") + ">above</option></select></span>" +
+      '<span class="ztb-f" data-p="value"><span class="ztb-lbl">Value</span><input class="ztb-inp" data-f="value" type="number" step="any" value="' + d.value + '"></span>' +
+      "</div>" +
+      '<div class="ztb-sent" data-sent></div>' +
       "</div>";
   }
   function readCond(root, side) {
@@ -279,6 +348,26 @@
     el.querySelector('[data-p="p2"]').hidden = !meta.p2;
     if (meta.p2) el.querySelector('[data-lbl="p2"]').textContent = meta.p2;
     el.querySelector('[data-p="value"]').hidden = !meta.value;
+    var side = el.dataset.side, root = el.closest(".ztb");
+    var s = el.querySelector("[data-sent]");
+    if (s && root) s.innerHTML = (side === "entry" ? "Buy when " : "Sell when ") + describe(readCond(root, side)) +
+      (side === "entry" ? "" : " - or earlier if the engine's stop or target fires.");
+  }
+  function applyPreset(p) {
+    var root = document.querySelector(".ztb"); if (!root) return;
+    document.getElementById("ztbName").value = p.name;
+    root.querySelectorAll(".ztb-chip[data-coin]").forEach(function (c) {
+      c.classList.toggle("on", p.coins.indexOf(c.dataset.coin) >= 0);
+    });
+    ["ztbIvl", "ztbStyle"].forEach(function (id) {
+      var v = id === "ztbIvl" ? p.ivl : p.style;
+      root.querySelectorAll("#" + id + " button").forEach(function (b) { b.classList.toggle("on", b.dataset.v === v); });
+    });
+    ["entry", "exit"].forEach(function (side) {
+      var el = root.querySelector('.ztb-cond[data-side="' + side + '"]');
+      if (el) { el.outerHTML = condHtml(side, p[side]); }
+    });
+    root.querySelectorAll(".ztb-cond").forEach(syncCond);
   }
 
   function myCustoms() {
@@ -294,31 +383,42 @@
     });
   }
   function customList(rows) {
-    if (!rows.length) return '<p class="flow-note"><span>No strategies yet - compose one above and deploy it. It trades on live prices within about five minutes.</span></p>';
+    if (!rows.length) return '<div class="ztb-sent">No strategies yet. Compose one above, hit Deploy, and it starts trading paper on live prices within about five minutes.</div>';
     return rows.map(function (r) {
       var run = r.status === "running";
-      return '<div class="flow-rows ztb-row" data-key="' + r.key + '">' +
-        "<div><span>" + r.name + '</span><b class="num ' + (r.realised >= 0 ? "up" : "sell") + '">$' + r.realised.toFixed(2) + "</b></div>" +
-        '<div><span class="badge ' + (run ? "b-up" : "b-neu") + '">' + (run ? "Running" : "Stopped") + "</span>" +
-        '<button class="btn-ghost" data-zta="' + (run ? "stop" : "resume") + '">' + (run ? "Stop" : "Resume") + "</button>" +
-        '<button class="btn-ghost" data-zta="delete">Delete</button></div></div>';
+      return '<div class="ztb-item' + (run ? " run" : "") + '" data-key="' + r.key + '">' +
+        '<span class="ztb-dot"></span>' +
+        '<span><span class="nm">' + r.name + '</span><br><span class="stt">' + (run ? "Running · paper · live prices" : "Stopped") + "</span></span>" +
+        '<b class="pnl ' + (r.realised >= 0 ? "up" : "dn") + '">' + (r.realised >= 0 ? "+" : "") + "$" + r.realised.toFixed(2) + "</b>" +
+        '<button class="ztb-ghost" data-zta="' + (run ? "stop" : "resume") + '">' + (run ? "Stop" : "Resume") + "</button>" +
+        '<button class="ztb-ghost" data-zta="delete">Delete</button></div>';
     }).join("");
   }
   function builderPane() {
-    return '<div class="av-scroll"><div class="ztb" style="max-width:860px;margin:0 auto;padding:18px 6px">' +
-      '<div class="flow-top"><div><b>Strategy Builder</b><span class="flow-sub">You compose the signals - the engine keeps the rails</span></div><span class="badge b-up">Paper · live prices</span></div>' +
-      '<div class="flow-rows"><div><span>Name</span><input class="flow-input" id="ztbName" maxlength="40" placeholder="My RSI dip buyer" value="My RSI dip buyer"></div>' +
-      '<div><span>Coins</span><span>' + COINS.map(function (c, i) {
-        return '<label class="flow-check" style="margin-right:10px"><input type="checkbox" data-coin="' + c + '"' + (i < 2 ? " checked" : "") + "> " + c.replace("USDT", "") + "</label>";
-      }).join("") + "</span></div>" +
-      '<div><span>Timeframe</span><span class="seg" id="ztbIvl"><button class="on" data-v="day">Daily</button><button data-v="5minute">5-minute</button></span></div>' +
-      '<div><span>Exit style</span><span class="seg" id="ztbStyle"><button data-v="trend">Trend - trail the stop</button><button class="on" data-v="reversion">Reversion - fixed target</button></span></div></div>' +
-      "<h4>Enter when</h4>" + condHtml("entry") +
-      "<h4>Exit when</h4>" + condHtml("exit") +
-      '<p class="flow-note"><span><b>The rails are not optional.</b> Every custom strategy runs through the same engine as the built-ins: ATR stops, a cost-aware entry gate (trades that only feed fees are refused), an anti-churn cooldown, breakeven-after-cost profit lock, and a $1,000 paper notional per position. Global cost model: 35bps round-trip.</span></p>' +
-      '<div class="flow-err" id="ztbErr" hidden></div>' +
-      '<button class="btn-primary" id="ztbDeploy">Deploy in Paper</button>' +
-      '<h4 style="margin-top:26px">My strategies</h4><div id="ztbList">Loading…</div>' +
+    return '<div class="av-scroll"><div class="ztb">' +
+      '<div class="ztb-card ztb-head"><div><b>Strategy Builder</b><p>You compose the signals - the engine keeps the rails.</p></div><span class="ztb-badge">PAPER · LIVE PRICES</span></div>' +
+
+      '<div class="ztb-presets"><span>Start from:</span>' +
+      '<button class="ztb-chip" data-ztpreset="dip">RSI dip buyer</button>' +
+      '<button class="ztb-chip" data-ztpreset="cross">Golden cross rider</button>' +
+      '<button class="ztb-chip" data-ztpreset="snap">Stretch snap-back</button></div>' +
+
+      '<div class="ztb-card"><div class="ztb-grid">' +
+      '<span><span class="ztb-lbl">Name</span><input class="ztb-inp" id="ztbName" maxlength="40" placeholder="My RSI dip buyer" value="My RSI dip buyer"></span>' +
+      '<span><span class="ztb-lbl">Coins</span><span class="ztb-chips">' + COINS.map(function (c, i) {
+        return '<button class="ztb-chip' + (i < 2 ? " on" : "") + '" data-coin="' + c + '">' + c.replace("USDT", "") + "</button>";
+      }).join("") + "</span></span>" +
+      '<span><span class="ztb-lbl">Timeframe</span><span class="ztb-seg" id="ztbIvl"><button class="on" data-v="day">Daily</button><button data-v="5minute">5-minute</button></span></span>' +
+      '<span><span class="ztb-lbl">Exit style</span><span class="ztb-seg" id="ztbStyle"><button data-v="trend">Trend · trail the stop</button><button class="on" data-v="reversion">Reversion · fixed target</button></span></span>' +
+      "</div></div>" +
+
+      '<div class="ztb-rules">' + condHtml("entry") + condHtml("exit") + "</div>" +
+
+      '<span class="ztb-note"><b>The rails are not optional.</b> Every custom strategy runs through the same engine as the built-ins: ATR stops, a cost-aware entry gate that refuses trades which only feed fees, an anti-churn cooldown, a breakeven-after-cost profit lock, and a $1,000 paper notional per position. Global cost model: 35bps round-trip.</span>' +
+      '<div class="ztb-err" id="ztbErr" hidden></div>' +
+      '<button class="ztb-deploy" id="ztbDeploy">Deploy in Paper</button>' +
+
+      '<div class="ztb-card"><span class="ztb-lbl">My strategies</span><div id="ztbList">Loading…</div></div>' +
       "</div></div>";
   }
   function renderBuilder() {
@@ -341,7 +441,7 @@
     var root = document.querySelector(".ztb"); if (!root) return;
     var err = document.getElementById("ztbErr");
     var name = (document.getElementById("ztbName").value || "").trim() || "My strategy";
-    var coins = [].slice.call(root.querySelectorAll("[data-coin]:checked")).map(function (c) { return c.dataset.coin; });
+    var coins = [].slice.call(root.querySelectorAll(".ztb-chip.on[data-coin]")).map(function (c) { return c.dataset.coin; });
     var seg = function (id) { var b = root.querySelector("#" + id + " .on"); return b ? b.dataset.v : null; };
     var spec = { name: name, universe: coins.length ? coins : COINS,
                  interval: seg("ztbIvl") || "day", style: seg("ztbStyle") || "reversion",
@@ -395,13 +495,21 @@
     if (t) { e.preventDefault(); builderOn = true; renderBuilder(); return; }
     if (e.target.closest && e.target.closest("[data-algoview]")) { builderOn = false; }
     if (e.target.id === "ztbDeploy") { deployCustom(); return; }
+    var pre = e.target.closest && e.target.closest("[data-ztpreset]");
+    if (pre) { applyPreset(PRESETS[pre.dataset.ztpreset]); return; }
+    var coin = e.target.closest && e.target.closest(".ztb-chip[data-coin]");
+    if (coin) { coin.classList.toggle("on"); return; }
     var seg = e.target.closest && e.target.closest("#ztbIvl button, #ztbStyle button");
     if (seg) { seg.parentNode.querySelectorAll("button").forEach(function (x) { x.classList.remove("on"); }); seg.classList.add("on"); return; }
     var act = e.target.closest && e.target.closest("[data-zta]");
-    if (act) { customAction(act.closest(".ztb-row").dataset.key, act.dataset.zta); return; }
+    if (act) { customAction(act.closest(".ztb-item").dataset.key, act.dataset.zta); return; }
   });
   document.addEventListener("change", function (e) {
     if (e.target.matches && e.target.matches('.ztb-cond [data-f="ind"]')) syncCond(e.target.closest(".ztb-cond"));
+  });
+  document.addEventListener("input", function (e) {
+    var c = e.target.closest && e.target.closest(".ztb-cond");
+    if (c) syncCond(c);                       // live plain-English sentence as they type
   });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", watch);
   else watch();
