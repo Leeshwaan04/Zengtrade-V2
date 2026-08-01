@@ -242,12 +242,22 @@
    * component classes (.av-tab, .flow-*, .sel, .seg, .btn-primary) so it is
    * visually indistinguishable from a built-in tab. Users compose the SIGNALS;
    * the engine keeps the RAILS (ATR stops, cost gate, cooldown, profit lock). */
+  /* label = dropdown text · p1/p2 = param labels · value:true shows the free value
+   * field (vlbl = its label, def = sensible default applied when switching signal) */
   var IND_META = {
-    rsi:          { label: "RSI (oversold / overbought)",  p1: "Period", value: true },
-    zscore:       { label: "Z-score (stretch from mean)",  p1: "Lookback", value: true },
-    price_vs_sma: { label: "Price vs moving average",      p1: "SMA period" },
-    sma_cross:    { label: "SMA cross (fast vs slow)",     p1: "Fast", p2: "Slow" },
-    ema_cross:    { label: "EMA cross (fast vs slow)",     p1: "Fast", p2: "Slow" },
+    rsi:             { label: "RSI (oversold / overbought)",       p1: "Period",     value: true, vlbl: "Level 0-100", def: 30 },
+    stoch:           { label: "Stochastic %K (turn timing)",       p1: "Period",     value: true, vlbl: "Level 0-100", def: 20 },
+    zscore:          { label: "Z-score (stretch from mean)",       p1: "Lookback",   value: true, vlbl: "Std devs",    def: -2 },
+    dist_sma:        { label: "% distance from average",           p1: "SMA period", value: true, vlbl: "Percent",     def: -5 },
+    roc:             { label: "Momentum % (rate of change)",       p1: "Bars",       value: true, vlbl: "Percent",     def: 5 },
+    price_vs_sma:    { label: "Price vs SMA",                      p1: "SMA period" },
+    price_vs_ema:    { label: "Price vs EMA",                      p1: "EMA period" },
+    sma_cross:       { label: "SMA cross (fast vs slow)",          p1: "Fast", p2: "Slow" },
+    ema_cross:       { label: "EMA cross (fast vs slow)",          p1: "Fast", p2: "Slow" },
+    macd_cross:      { label: "MACD vs signal line",               p1: "Fast", p2: "Slow" },
+    bollinger_touch: { label: "Bollinger band touch",              p1: "Period",     value: true, vlbl: "Std devs",    def: 2 },
+    breakout:        { label: "N-bar breakout (Donchian)",         p1: "Lookback" },
+    vol_spike:       { label: "Volume spike (× average)",          p1: "Avg window", value: true, vlbl: "× average",   def: 2 },
   };
   var COINS = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT"];
 
@@ -314,11 +324,21 @@
   function describe(c) {
     var dir = c.op === "<" ? "drops below" : "rises above";
     var rel = c.op === "<" ? "below" : "above";
-    if (c.ind === "rsi")          return "RSI(" + c.p1 + ") " + dir + " <b>" + c.value + "</b>";
-    if (c.ind === "zscore")       return "Z-score(" + c.p1 + ") " + dir + " <b>" + c.value + "</b>";
-    if (c.ind === "price_vs_sma") return "price is " + rel + " its <b>" + c.p1 + "-bar average</b>";
-    if (c.ind === "sma_cross")    return "SMA(" + c.p1 + ") is " + rel + " <b>SMA(" + c.p2 + ")</b>";
-    return "EMA(" + c.p1 + ") is " + rel + " <b>EMA(" + c.p2 + ")</b>";
+    switch (c.ind) {
+      case "rsi":             return "RSI(" + c.p1 + ") " + dir + " <b>" + c.value + "</b>";
+      case "stoch":           return "Stochastic %K(" + c.p1 + ") " + dir + " <b>" + c.value + "</b>";
+      case "zscore":          return "Z-score(" + c.p1 + ") " + dir + " <b>" + c.value + "</b>";
+      case "dist_sma":        return "price stretches " + (c.op === "<" ? "more than <b>" + Math.abs(c.value) + "% below</b>" : "more than <b>" + c.value + "% above</b>") + " its " + c.p1 + "-bar average";
+      case "roc":             return c.p1 + "-bar momentum " + dir + " <b>" + c.value + "%</b>";
+      case "price_vs_sma":    return "price is " + rel + " its <b>" + c.p1 + "-bar SMA</b>";
+      case "price_vs_ema":    return "price is " + rel + " its <b>" + c.p1 + "-bar EMA</b>";
+      case "sma_cross":       return "SMA(" + c.p1 + ") is " + rel + " <b>SMA(" + c.p2 + ")</b>";
+      case "ema_cross":       return "EMA(" + c.p1 + ") is " + rel + " <b>EMA(" + c.p2 + ")</b>";
+      case "macd_cross":      return "MACD(" + c.p1 + "," + c.p2 + ") is " + rel + " its <b>signal line</b>";
+      case "bollinger_touch": return "price closes " + (c.op === ">" ? "<b>above the upper</b>" : "<b>below the lower</b>") + " Bollinger band (" + c.p1 + ", " + c.value + "σ)";
+      case "breakout":        return "price breaks " + (c.op === ">" ? "<b>above the " + c.p1 + "-bar high</b>" : "<b>below the " + c.p1 + "-bar low</b>");
+      default:                return "volume runs " + rel + " <b>" + c.value + "×</b> its " + c.p1 + "-bar average";
+    }
   }
   function condHtml(side, d) {
     d = d || (side === "entry" ? PRESETS.dip.entry : PRESETS.dip.exit);
@@ -342,12 +362,17 @@
     var g = function (f) { var n = el.querySelector('[data-f="' + f + '"]'); return n ? n.value : null; };
     return { ind: g("ind"), p1: +g("p1") || 14, p2: +g("p2") || 50, op: g("op"), value: +g("value") || 0 };
   }
-  function syncCond(el) {
+  function syncCond(el, applyDefault) {
     var meta = IND_META[el.querySelector('[data-f="ind"]').value] || {};
     el.querySelector('[data-p="p1"] [data-lbl]').textContent = meta.p1 || "Period";
     el.querySelector('[data-p="p2"]').hidden = !meta.p2;
     if (meta.p2) el.querySelector('[data-lbl="p2"]').textContent = meta.p2;
-    el.querySelector('[data-p="value"]').hidden = !meta.value;
+    var vf = el.querySelector('[data-p="value"]');
+    vf.hidden = !meta.value;
+    if (meta.value) {
+      vf.querySelector(".ztb-lbl").textContent = meta.vlbl || "Value";
+      if (applyDefault && meta.def !== undefined) vf.querySelector("[data-f=value]").value = meta.def;
+    }
     var side = el.dataset.side, root = el.closest(".ztb");
     var s = el.querySelector("[data-sent]");
     if (s && root) s.innerHTML = (side === "entry" ? "Buy when " : "Sell when ") + describe(readCond(root, side)) +
@@ -505,7 +530,8 @@
     if (act) { customAction(act.closest(".ztb-item").dataset.key, act.dataset.zta); return; }
   });
   document.addEventListener("change", function (e) {
-    if (e.target.matches && e.target.matches('.ztb-cond [data-f="ind"]')) syncCond(e.target.closest(".ztb-cond"));
+    if (e.target.matches && e.target.matches('.ztb-cond [data-f="ind"]'))
+      syncCond(e.target.closest(".ztb-cond"), true);   // switching signal applies its sane default value
   });
   document.addEventListener("input", function (e) {
     var c = e.target.closest && e.target.closest(".ztb-cond");

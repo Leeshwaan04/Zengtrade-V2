@@ -63,8 +63,13 @@ DEPLOYABLE = sorted(REGISTRY)   # what the Studio may offer customers
 # RAILS (ATR stops, cost gate, cooldown, profit lock) exactly like every built-in.
 # Spec: {name, universe:[...], interval:'day'|'5minute', style:'trend'|'reversion',
 #        entry:{ind,p1,p2?,op:'>'|'<',value}, exit:{ind,p1,p2?,op,value}}
-# inds: rsi | zscore | price_vs_sma | sma_cross | ema_cross
-RULE_INDS = ("rsi", "zscore", "price_vs_sma", "sma_cross", "ema_cross")
+# inds: rsi | zscore | price_vs_sma | price_vs_ema | sma_cross | ema_cross | macd_cross
+#       | bollinger_touch | breakout | roc | stoch | dist_sma | vol_spike
+RULE_INDS = ("rsi", "zscore", "price_vs_sma", "price_vs_ema", "sma_cross", "ema_cross",
+             "macd_cross", "bollinger_touch", "breakout", "roc", "stoch", "dist_sma", "vol_spike")
+# per-indicator sane range for the free "value" field: (lo, hi, default-if-unusable)
+VALUE_CLAMP = {"bollinger_touch": (0.5, 5.0, 2.0), "stoch": (0.0, 100.0, 20.0),
+               "vol_spike": (0.5, 20.0, 2.0), "rsi": (0.0, 100.0, 30.0)}
 
 def _clampi(v, lo, hi, d):
     try: v = int(v)
@@ -81,6 +86,10 @@ def validate_spec(raw):
                "op": c.get("op") if c.get("op") in (">", "<") else ">"}
         try: out["value"] = min(max(float(c.get("value", 0)), -1e6), 1e6)
         except Exception: out["value"] = 0.0
+        if out["ind"] in VALUE_CLAMP:
+            lo, hi, d = VALUE_CLAMP[out["ind"]]
+            out["value"] = min(max(out["value"], lo), hi) if lo <= out["value"] <= hi or out["value"] else d
+            if out["value"] < lo or out["value"] > hi: out["value"] = d
         if out["p2"] <= out["p1"]: out["p2"] = out["p1"] + 1
         return out
     entry, exit_ = cond(raw.get("entry")), cond(raw.get("exit"))
@@ -109,11 +118,30 @@ class RuleStrategy:
         if i == "zscore" and f"z{p1}" not in df:
             m = df["close"].rolling(p1).mean(); s = df["close"].rolling(p1).std()
             df[f"z{p1}"] = (df["close"] - m) / s.replace(0, 1e-12)
-        if i in ("price_vs_sma", "sma_cross") and f"sma{p1}" not in df: df[f"sma{p1}"] = df["close"].rolling(p1).mean()
+        if i in ("price_vs_sma", "sma_cross", "dist_sma") and f"sma{p1}" not in df:
+            df[f"sma{p1}"] = df["close"].rolling(p1).mean()
         if i == "sma_cross" and f"sma{p2}" not in df:  df[f"sma{p2}"] = df["close"].rolling(p2).mean()
-        if i == "ema_cross":
+        if i in ("ema_cross",) or i == "price_vs_ema":
             if f"ema{p1}" not in df: df[f"ema{p1}"] = df["close"].ewm(span=p1, adjust=False).mean()
-            if f"ema{p2}" not in df: df[f"ema{p2}"] = df["close"].ewm(span=p2, adjust=False).mean()
+            if i == "ema_cross" and f"ema{p2}" not in df: df[f"ema{p2}"] = df["close"].ewm(span=p2, adjust=False).mean()
+        if i == "macd_cross" and f"macd{p1}_{p2}" not in df:
+            macd = df["close"].ewm(span=p1, adjust=False).mean() - df["close"].ewm(span=p2, adjust=False).mean()
+            df[f"macd{p1}_{p2}"] = macd
+            df[f"macds{p1}_{p2}"] = macd.ewm(span=9, adjust=False).mean()
+        if i == "bollinger_touch" and f"bbm{p1}" not in df:
+            df[f"bbm{p1}"] = df["close"].rolling(p1).mean()
+            df[f"bbs{p1}"] = df["close"].rolling(p1).std()
+        if i == "breakout" and f"hh{p1}" not in df:
+            df[f"hh{p1}"] = df["high"].rolling(p1).max().shift(1)
+            df[f"ll{p1}"] = df["low"].rolling(p1).min().shift(1)
+        if i == "roc" and f"roc{p1}" not in df:    df[f"roc{p1}"] = df["close"].pct_change(p1) * 100
+        if i == "stoch" and f"stk{p1}" not in df:
+            lo = df["low"].rolling(p1).min(); hi = df["high"].rolling(p1).max()
+            df[f"stk{p1}"] = (df["close"] - lo) / (hi - lo).replace(0, 1e-12) * 100
+        if i == "dist_sma" and f"dsma{p1}" not in df:
+            df[f"dsma{p1}"] = (df["close"] / df["close"].rolling(p1).mean().replace(0, 1e-12) - 1) * 100
+        if i == "vol_spike" and f"rv{p1}" not in df and "volume" in df:
+            df[f"rv{p1}"] = df["volume"] / df["volume"].rolling(p1).mean().replace(0, 1e-12)
     def compute(self, df):
         out = df.copy()
         tr = pd.concat([(out["high"] - out["low"]),
@@ -125,11 +153,21 @@ class RuleStrategy:
     def _test(self, row, c):
         i, p1, p2, op, v = c["ind"], c["p1"], c["p2"], c["op"], c["value"]
         try:
-            if i == "rsi":          lhs, rhs = row[f"rsi{p1}"], v
-            elif i == "zscore":     lhs, rhs = row[f"z{p1}"], v
+            if i == "rsi":            lhs, rhs = row[f"rsi{p1}"], v
+            elif i == "zscore":       lhs, rhs = row[f"z{p1}"], v
             elif i == "price_vs_sma": lhs, rhs = row["close"], row[f"sma{p1}"]
-            elif i == "sma_cross":  lhs, rhs = row[f"sma{p1}"], row[f"sma{p2}"]
-            else:                   lhs, rhs = row[f"ema{p1}"], row[f"ema{p2}"]
+            elif i == "price_vs_ema": lhs, rhs = row["close"], row[f"ema{p1}"]
+            elif i == "sma_cross":    lhs, rhs = row[f"sma{p1}"], row[f"sma{p2}"]
+            elif i == "ema_cross":    lhs, rhs = row[f"ema{p1}"], row[f"ema{p2}"]
+            elif i == "macd_cross":   lhs, rhs = row[f"macd{p1}_{p2}"], row[f"macds{p1}_{p2}"]
+            elif i == "bollinger_touch":
+                lhs = row["close"]
+                rhs = row[f"bbm{p1}"] + v * row[f"bbs{p1}"] if op == ">" else row[f"bbm{p1}"] - v * row[f"bbs{p1}"]
+            elif i == "breakout":     lhs, rhs = row["close"], (row[f"hh{p1}"] if op == ">" else row[f"ll{p1}"])
+            elif i == "roc":          lhs, rhs = row[f"roc{p1}"], v
+            elif i == "stoch":        lhs, rhs = row[f"stk{p1}"], v
+            elif i == "dist_sma":     lhs, rhs = row[f"dsma{p1}"], v
+            else:                     lhs, rhs = row[f"rv{p1}"], v          # vol_spike
             return (lhs > rhs) if op == ">" else (lhs < rhs)
         except Exception:
             return False
