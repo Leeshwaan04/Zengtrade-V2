@@ -56,6 +56,85 @@ REGISTRY = {
     "rsi_intraday": (S.IntradayRSIStrategy,   "5minute", "reversion", False),
 }
 DEPLOYABLE = sorted(REGISTRY)   # what the Studio may offer customers
+
+# ---------------- user-composed strategies (the Builder) ----------------
+# A deployment row with params jsonb carries a rule SPEC the customer composed in the
+# Studio. RuleStrategy interprets it: users pick the SIGNALS; the engine keeps the
+# RAILS (ATR stops, cost gate, cooldown, profit lock) exactly like every built-in.
+# Spec: {name, universe:[...], interval:'day'|'5minute', style:'trend'|'reversion',
+#        entry:{ind,p1,p2?,op:'>'|'<',value}, exit:{ind,p1,p2?,op,value}}
+# inds: rsi | zscore | price_vs_sma | sma_cross | ema_cross
+RULE_INDS = ("rsi", "zscore", "price_vs_sma", "sma_cross", "ema_cross")
+
+def _clampi(v, lo, hi, d):
+    try: v = int(v)
+    except Exception: return d
+    return min(max(v, lo), hi)
+
+def validate_spec(raw):
+    """Whitelist-validate an untrusted spec -> clean dict, or None if hopeless."""
+    if not isinstance(raw, dict): return None
+    def cond(c):
+        if not isinstance(c, dict) or c.get("ind") not in RULE_INDS: return None
+        out = {"ind": c["ind"], "p1": _clampi(c.get("p1"), 2, 200, 14),
+               "p2": _clampi(c.get("p2"), 3, 400, 50),
+               "op": c.get("op") if c.get("op") in (">", "<") else ">"}
+        try: out["value"] = min(max(float(c.get("value", 0)), -1e6), 1e6)
+        except Exception: out["value"] = 0.0
+        if out["p2"] <= out["p1"]: out["p2"] = out["p1"] + 1
+        return out
+    entry, exit_ = cond(raw.get("entry")), cond(raw.get("exit"))
+    if not entry or not exit_: return None
+    uni = [s for s in (raw.get("universe") or []) if isinstance(s, str)]
+    return {
+        "name": str(raw.get("name", "Custom"))[:40],
+        "universe": uni or None,                    # None -> worker UNIVERSE
+        "interval": raw.get("interval") if raw.get("interval") in ("day", "5minute") else "day",
+        "style": raw.get("style") if raw.get("style") in ("trend", "reversion") else "reversion",
+        "entry": entry, "exit": exit_,
+    }
+
+def _rsi(close, n):
+    d = close.diff()
+    up = d.clip(lower=0).rolling(n).mean()
+    dn = (-d.clip(upper=0)).rolling(n).mean()
+    rs = up / dn.replace(0, 1e-12)
+    return 100 - 100 / (1 + rs)
+
+class RuleStrategy:
+    def __init__(self, spec): self.spec = spec
+    def _cols(self, df, c):
+        i, p1, p2 = c["ind"], c["p1"], c["p2"]
+        if i == "rsi" and f"rsi{p1}" not in df:    df[f"rsi{p1}"] = _rsi(df["close"], p1)
+        if i == "zscore" and f"z{p1}" not in df:
+            m = df["close"].rolling(p1).mean(); s = df["close"].rolling(p1).std()
+            df[f"z{p1}"] = (df["close"] - m) / s.replace(0, 1e-12)
+        if i in ("price_vs_sma", "sma_cross") and f"sma{p1}" not in df: df[f"sma{p1}"] = df["close"].rolling(p1).mean()
+        if i == "sma_cross" and f"sma{p2}" not in df:  df[f"sma{p2}"] = df["close"].rolling(p2).mean()
+        if i == "ema_cross":
+            if f"ema{p1}" not in df: df[f"ema{p1}"] = df["close"].ewm(span=p1, adjust=False).mean()
+            if f"ema{p2}" not in df: df[f"ema{p2}"] = df["close"].ewm(span=p2, adjust=False).mean()
+    def compute(self, df):
+        out = df.copy()
+        tr = pd.concat([(out["high"] - out["low"]),
+                        (out["high"] - out["close"].shift()).abs(),
+                        (out["low"] - out["close"].shift()).abs()], axis=1).max(axis=1)
+        out["atr"] = tr.rolling(14).mean()
+        self._cols(out, self.spec["entry"]); self._cols(out, self.spec["exit"])
+        return out.dropna()
+    def _test(self, row, c):
+        i, p1, p2, op, v = c["ind"], c["p1"], c["p2"], c["op"], c["value"]
+        try:
+            if i == "rsi":          lhs, rhs = row[f"rsi{p1}"], v
+            elif i == "zscore":     lhs, rhs = row[f"z{p1}"], v
+            elif i == "price_vs_sma": lhs, rhs = row["close"], row[f"sma{p1}"]
+            elif i == "sma_cross":  lhs, rhs = row[f"sma{p1}"], row[f"sma{p2}"]
+            else:                   lhs, rhs = row[f"ema{p1}"], row[f"ema{p2}"]
+            return (lhs > rhs) if op == ">" else (lhs < rhs)
+        except Exception:
+            return False
+    def _entry_long(self, row): return self._test(row, self.spec["entry"])
+    def _exit_long(self, row):  return self._test(row, self.spec["exit"])
 FEATURED = [k for k,v in REGISTRY.items() if v[3]]
 
 def make(key): return REGISTRY[key][0]()

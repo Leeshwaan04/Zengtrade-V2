@@ -24,7 +24,7 @@ FEED = CryptoDataFeed()
 
 def db(): c=psycopg2.connect(DATABASE_URL); c.autocommit=False; return c
 def active(cur):
-    cur.execute("select user_id, strategy_key from deployment where mode='paper' and status='running'")
+    cur.execute("select user_id, strategy_key, params from deployment where mode='paper' and status='running'")
     return cur.fetchall()
 def load_book(cur, uid, skey):
     cur.execute("select positions, realised from book_state where user_id=%s and strategy_key=%s",(uid,skey))
@@ -41,12 +41,23 @@ def write_trade(cur, uid, skey, t):
         values (%s,%s,%s,'BUY',%s,%s,%s,%s,%s,false,%s,%s)""",
         (uid,skey,t["sym"],t["qty"],t["entry"],t["exit"],t["pnl"],t["cost"],t["opened"],t["closed"]))
 
-def _process(cur, uid, skey, replay_days=None):
-    if skey not in X.REGISTRY: return 0
-    strat=X.make(skey); ivl=X.interval(skey); cfg=X.cfg_for(skey, E.DEFAULTS)
+def _process(cur, uid, skey, params=None, replay_days=None):
+    universe = UNIVERSE
+    if params:                                    # user-composed strategy (Builder spec)
+        spec = X.validate_spec(params if isinstance(params, dict) else json.loads(params))
+        if not spec: return 0
+        strat = X.RuleStrategy(spec); ivl = spec["interval"]
+        base = dict(E.DEFAULTS)
+        cfg = dict(base, target_atr=0.0, stop_atr=3.0, cooldown_bars=12) if spec["style"] == "trend" \
+              else dict(base, target_atr=3.0, stop_atr=2.0)
+        if spec["universe"]: universe = [s for s in UNIVERSE if s in spec["universe"]] or UNIVERSE
+    elif skey in X.REGISTRY:
+        strat=X.make(skey); ivl=X.interval(skey); cfg=X.cfg_for(skey, E.DEFAULTS)
+    else:
+        return 0
     limit = (max(replay_days,4) if "min" in ivl else max(replay_days,250)) if replay_days else (4 if "min" in ivl else 300)
     pos, real = load_book(cur, uid, skey); n=0
-    for sym in UNIVERSE:
+    for sym in universe:
         df=FEED.historical(sym, ivl, limit)
         if df is None or df.empty or len(df)<60: continue
         ind=strat.compute(df)
@@ -58,7 +69,7 @@ def _process(cur, uid, skey, replay_days=None):
 
 def run_cycle(conn, replay_days=None):
     cur=conn.cursor(); deps=active(cur); tot=0
-    for uid,skey in deps: tot+=_process(cur,uid,skey,replay_days)
+    for uid,skey,params in deps: tot+=_process(cur,uid,skey,params,replay_days)
     conn.commit(); return len(deps), tot
 
 def main():
