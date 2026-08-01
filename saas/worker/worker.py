@@ -16,7 +16,19 @@ import psycopg2
 import engine as E
 import strategies as X
 
+# Self-contained env loading: supervisors (launchd/systemd) don't reliably run shell
+# export tricks, and a silent fallback to the dev DB is exactly the failure we never
+# want in production. Load .env beside this file, THEN resolve, and say which DB won.
+if "DATABASE_URL" not in os.environ:
+    _envp = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    if os.path.exists(_envp):
+        for _line in open(_envp):
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _k, _v = _line.split("=", 1)
+                os.environ.setdefault(_k, _v)
 DATABASE_URL = os.environ.get("DATABASE_URL", "dbname=zengtrade_dev")
+print("db:", "supabase" if "supabase.com" in DATABASE_URL else DATABASE_URL, flush=True)
 UNIVERSE = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT"]
 from strategies import BOT  # ensures bot path added
 from bot.crypto_data import CryptoDataFeed
