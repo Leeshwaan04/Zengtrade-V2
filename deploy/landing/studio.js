@@ -52,6 +52,11 @@
     return new Response(JSON.stringify(obj),
       { status: code || 200, headers: { "Content-Type": "application/json" } });
   }
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
 
   /* ---- customers live in the Algo Studio: persona pinned, crypto book pinned ---- */
   try {
@@ -116,21 +121,12 @@
         s.wired = !!DEPLOYABLE[s.id];        // only worker-runnable strategies are deployable
         totalReal += s.realisedPnl; totalOpen += pl.length;
       });
-      /* the user's OWN composed strategies join the monitor as first-class entries */
-      deps.forEach(function (d) {
-        if (d.strategy_key.indexOf("custom_") !== 0) return;
-        var b = book[d.strategy_key], pl = posList(b);
-        var real = b ? Number(b.realised || 0) : 0;
-        out.strategies = out.strategies || [];
-        out.strategies.push({
-          id: d.strategy_key,
-          name: ((d.params && d.params.name) || "Custom") + " · yours",
-          instr: "CUSTOM", realisedPnl: real, openPnl: 0, paperPnl: real,
-          positions: pl, openPositions: pl.length,
-          deployed: d.status === "running", wired: true, custom: true,
-        });
-        totalReal += real; totalOpen += pl.length;
-      });
+      /* NOTE: custom (Builder) strategies are NOT injected into the Monitor here.
+       * The terminal renders Monitor rows from its fixed CRYPTO_STRATEGIES catalog and
+       * ignores unknown ids, so a pushed custom row would never render yet WOULD skew
+       * the header totals. Custom strategies live fully in the Builder tab (deploy,
+       * status, per-strategy P&L). Their realised P&L is intentionally excluded from
+       * the built-in Monitor totals to keep rows and totals consistent. */
       out.totals = { realised: +totalReal.toFixed(4), unreal: 0,
                      pnl: +totalReal.toFixed(4), open: totalOpen };
       /* the customer's "harness" is the cloud worker, and it is ALWAYS running -
@@ -411,9 +407,9 @@
     if (!rows.length) return '<div class="ztb-sent">No strategies yet. Compose one above, hit Deploy, and it starts trading paper on live prices within about five minutes.</div>';
     return rows.map(function (r) {
       var run = r.status === "running";
-      return '<div class="ztb-item' + (run ? " run" : "") + '" data-key="' + r.key + '">' +
+      return '<div class="ztb-item' + (run ? " run" : "") + '" data-key="' + esc(r.key) + '">' +
         '<span class="ztb-dot"></span>' +
-        '<span><span class="nm">' + r.name + '</span><br><span class="stt">' + (run ? "Running · paper · live prices" : "Stopped") + "</span></span>" +
+        '<span><span class="nm">' + esc(r.name) + '</span><br><span class="stt">' + (run ? "Running · paper · live prices" : "Stopped") + "</span></span>" +
         '<b class="pnl ' + (r.realised >= 0 ? "up" : "dn") + '">' + (r.realised >= 0 ? "+" : "") + "$" + r.realised.toFixed(2) + "</b>" +
         '<button class="ztb-ghost" data-zta="' + (run ? "stop" : "resume") + '">' + (run ? "Stop" : "Resume") + "</button>" +
         '<button class="ztb-ghost" data-zta="delete">Delete</button></div>';
