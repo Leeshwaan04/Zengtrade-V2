@@ -1,0 +1,1 @@
+{"real":true,"decisions":[{"bot":"opportunity","action":"EXIT","symbol":"LT","reason":"score-collapse","pnl":-3872.0,"conf":75,"ts":"2026-07-02T10:31:12.456842"},{"bot":"moonshot","action":"EXIT","symbol":"LT","reason":"score-collapse","pnl":-120.2,"equity":4875.9,"conf":75,"consecLosses":1,"ts":"2026-07-02T10:31:03.181416"}],"count":2}

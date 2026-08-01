@@ -231,9 +231,9 @@ open(os.path.join(DIST, "site.css"), "w").write(css + HOME_CSS + coin_css)   # O
 # build). Auth pages keep their focused css.css + js/ (Supabase glue).
 AUTH_SRC = os.path.abspath(os.path.join(HERE, "..", "..", "saas", "web"))
 AUTH_ROUTES = {                                   # source file -> clean route folder
-    "login.html": "login", "app.html": "dashboard", "reset.html": "reset",
+    "login.html": "login", "reset.html": "reset",
     "terms.html": "terms", "privacy.html": "privacy", "risk.html": "risk",
-}
+}   # app.html scrapped 2026-08-01: /dashboard is now the real Algo Studio (below)
 for f, route_dir in AUTH_ROUTES.items():
     src = os.path.join(AUTH_SRC, f)
     if os.path.exists(src):
@@ -244,6 +244,33 @@ for d in ("js", "assets"):                        # js = auth glue; assets merge
     sd = os.path.join(AUTH_SRC, d)
     if os.path.isdir(sd):
         shutil.copytree(sd, os.path.join(DIST, d), dirs_exist_ok=True)
+
+# ---- /dashboard = the REAL Algo Studio terminal (customer edition) ------------------
+# The operator's terminal (root index.html + assets/) IS the product. build copies it
+# verbatim and injects studio.js (auth guard + snapshot-backed data shim + cockpit trim);
+# snapshot.py publishes sanitized engine output into studio_data/ (run it to refresh).
+# The local terminal at :8011 never loads studio.js and is untouched.
+ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
+SD = os.path.join(DIST, "dashboard"); os.makedirs(SD, exist_ok=True)
+term = open(os.path.join(ROOT, "index.html")).read()
+CSP_STUDIO = ("default-src 'self'; script-src 'self'; "
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+              "font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; "
+              "connect-src 'self' https://data-api.binance.vision wss://data-stream.binance.vision "
+              "https://ponvarxeytfcntckczbn.supabase.co; "
+              "object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
+term = re.sub(r'<meta http-equiv="Content-Security-Policy"[^>]*/>',
+              f'<meta http-equiv="Content-Security-Policy" content="{CSP_STUDIO}" />', term, count=1)
+term = term.replace('<script src="assets/chart.js',
+                    '<script src="studio.js?v=1"></script>\n<script src="assets/chart.js')
+assert 'studio.js' in term, "studio.js injection failed - terminal script tags moved?"
+open(os.path.join(SD, "index.html"), "w").write(term)
+shutil.copy(os.path.join(HERE, "studio.js"), os.path.join(SD, "studio.js"))
+shutil.copytree(os.path.join(ROOT, "assets"), os.path.join(SD, "assets"), dirs_exist_ok=True,
+                ignore=shutil.ignore_patterns("app 2.js", "*.py", "*-orig.png", "ft-view.png"))
+STUDIO_DATA = os.path.join(HERE, "studio_data")
+if os.path.isdir(STUDIO_DATA):
+    shutil.copytree(STUDIO_DATA, os.path.join(SD, "data"), dirs_exist_ok=True)
 
 # GitHub Pages custom domain (also harmless on other hosts)
 open(os.path.join(DIST, "CNAME"), "w").write("zengtrade.in\n")
