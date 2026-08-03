@@ -61,6 +61,8 @@
   <div class="card">
     <h1>zengtrade admin</h1>
     <p>Restricted. Sign in with an admin account.</p>
+    <button class="btn" id="google" style="width:100%">Continue with Google</button>
+    <div style="text-align:center;color:var(--slate);font-size:11px;margin:14px 0 2px">or email</div>
     <label for="em">Email</label><input id="em" type="email" autocomplete="username" placeholder="you@email.com">
     <label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" placeholder="••••••••">
     <div class="err" id="gerr"></div>
@@ -100,6 +102,9 @@ $("login").onclick = async () => {
   const { error } = await sb.auth.signInWithPassword({ email:$("em").value.trim(), password:$("pw").value });
   if(error){ $("gerr").textContent = error.message; return; }
   boot();
+};
+$("google").onclick = async () => {
+  await sb.auth.signInWithOAuth({ provider:"google", options:{ redirectTo: location.origin + "/admin" } });
 };
 $("pw").addEventListener("keydown", e => { if(e.key==="Enter") $("login").click(); });
 $("out").onclick = async () => { await sb.auth.signOut(); location.reload(); };
