@@ -1,0 +1,146 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Admin · zengtrade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/assets/logo.svg">
+<link rel="stylesheet" href="/css.css">
+<style>
+  body{background:var(--bg);color:var(--navy);min-height:100vh}
+  .wrap{max-width:1080px;margin:0 auto;padding:22px 20px 80px}
+  .abar{display:flex;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+  .abar .logo{width:30px;height:30px;border-radius:8px;background:var(--green);display:grid;place-items:center;color:#fff;font-weight:800}
+  .abar b{font-size:17px;letter-spacing:-.01em}
+  .abar .tag{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);border:1px solid var(--line);border-radius:99px;padding:3px 9px}
+  .abar .sp{margin-left:auto;display:flex;gap:8px;align-items:center}
+  .btn{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:7px 13px;font:inherit;font-size:13px;font-weight:600;color:var(--slate);cursor:pointer;transition:.15s}
+  .btn:hover{color:var(--navy);border-color:var(--slate)}
+  .btn.primary{background:var(--green);border-color:var(--green);color:#fff}
+  .btn.primary:hover{background:var(--green-d)}
+
+  /* login gate */
+  #gate{max-width:360px;margin:9vh auto;text-align:center}
+  #gate .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px 24px;text-align:left}
+  #gate h1{font-size:20px;margin:0 0 4px}#gate p{color:var(--slate);font-size:13.5px;margin:0 0 18px}
+  #gate label{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--slate);margin:12px 0 5px}
+  #gate input{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font:inherit;font-size:14px}
+  #gate input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px var(--green-soft,rgba(0,171,78,.15))}
+  #gate .err{color:var(--red-d);font-size:12.5px;margin-top:10px;min-height:16px}
+  #gate button{width:100%;margin-top:16px}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:14px}
+  .tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-s);padding:14px 15px;box-shadow:var(--shadow)}
+  .tile .k{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--slate)}
+  .tile .v{font-size:26px;font-weight:800;margin-top:5px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .tile .s{font-size:11.5px;color:var(--slate);margin-top:2px}
+  .tile.good .v{color:var(--green-d)}.tile.warn .v{color:var(--amber)}.tile.bad .v{color:var(--red-d)}
+  .tile.hero{grid-column:span 2;background:linear-gradient(180deg,var(--surface),var(--green-soft,#eafaf1))}
+
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-s);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+  .panel h2{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--slate);margin:0 0 12px}
+  .chart{display:flex;align-items:flex-end;gap:5px;height:120px}
+  .bar{flex:1;background:var(--green);border-radius:4px 4px 0 0;min-height:2px;position:relative;transition:.2s}
+  .bar:hover{background:var(--green-d)}
+  .bar span{position:absolute;top:-17px;left:0;right:0;text-align:center;font-size:10px;font-weight:700;color:var(--navy)}
+  .bar i{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-size:9px;color:var(--slate);font-style:normal}
+  .chart-wrap{padding:20px 2px 22px}
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left}
+  th{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);font-weight:700}
+  td{color:var(--navy)}td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .pill{font-size:10.5px;font-weight:700;border-radius:99px;padding:2px 8px}
+  .pill.free{background:var(--tint-info,#eef2f8);color:var(--slate)}.pill.pro{background:var(--green-soft,#eafaf1);color:var(--green-d)}.pill.elite{background:#f3e9ff;color:#7c3aed}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+  .dot.on{background:var(--green);box-shadow:0 0 0 3px rgba(0,171,78,.18)}.dot.off{background:var(--red)}
+  .muted{color:var(--slate);font-size:12.5px}
+  .empty{text-align:center;color:var(--slate);font-size:13px;padding:26px}
+</style></head><body>
+
+<div id="gate" hidden>
+  <div class="card">
+    <h1>zengtrade admin</h1>
+    <p>Restricted. Sign in with an admin account.</p>
+    <label for="em">Email</label><input id="em" type="email" autocomplete="username" placeholder="you@email.com">
+    <label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" placeholder="••••••••">
+    <div class="err" id="gerr"></div>
+    <button class="btn primary" id="login">Sign in</button>
+  </div>
+</div>
+
+<div id="app" class="wrap" hidden>
+  <div class="abar">
+    <span class="logo">Z</span><b>zengtrade</b><span class="tag">Admin</span>
+    <div class="sp"><span class="muted" id="who"></span><button class="btn" id="refresh">Refresh</button><button class="btn" id="out">Sign out</button></div>
+  </div>
+  <div class="grid" id="tiles"></div>
+  <div class="panel"><h2>Signups · last 30 days</h2><div class="chart-wrap"><div class="chart" id="chart"></div></div></div>
+  <div class="panel"><h2>Users</h2><div id="users"></div></div>
+  <p class="muted" id="asof"></p>
+</div>
+
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const sb = createClient("https://ponvarxeytfcntckczbn.supabase.co", "sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1");
+const $ = id => document.getElementById(id);
+const gate = $("gate"), app = $("app");
+
+async function boot(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session){ show("gate"); return; }
+  const { data: ok } = await sb.rpc("is_admin");
+  if(!ok){ await sb.auth.signOut(); show("gate"); $("gerr").textContent="That account is not an admin."; return; }
+  $("who").textContent = session.user.email;
+  show("app"); load();
+}
+function show(w){ gate.hidden = w!=="gate"; app.hidden = w!=="app"; }
+
+$("login").onclick = async () => {
+  $("gerr").textContent = "";
+  const { error } = await sb.auth.signInWithPassword({ email:$("em").value.trim(), password:$("pw").value });
+  if(error){ $("gerr").textContent = error.message; return; }
+  boot();
+};
+$("pw").addEventListener("keydown", e => { if(e.key==="Enter") $("login").click(); });
+$("out").onclick = async () => { await sb.auth.signOut(); location.reload(); };
+$("refresh").onclick = () => load();
+
+const fmt = n => (n==null?"–":Number(n).toLocaleString("en-US"));
+const money = n => "$"+Number(n||0).toLocaleString("en-US");
+
+async function load(){
+  const [{ data:o }, { data:signups }, { data:users }] = await Promise.all([
+    sb.rpc("admin_overview"), sb.rpc("admin_signups",{ days:30 }), sb.rpc("admin_users")
+  ]);
+  if(!o){ return; }
+  const alive = o.worker_alive;
+  const tiles = [
+    { k:"Monthly recurring", v:money(o.mrr_usd), s:o.paying+" paying", cls:"hero "+(o.mrr_usd>0?"good":"") },
+    { k:"Total users", v:fmt(o.users_total), s:o.users_confirmed+" confirmed" },
+    { k:"Paying", v:fmt(o.paying), s:o.users_pro+" pro · "+o.users_elite+" elite", cls:o.paying>0?"good":"" },
+    { k:"Payment attempts", v:fmt(o.payment_events), s:"ever", cls:o.payment_events>0?"good":"" },
+    { k:"Deployed a strategy", v:fmt(o.deployers), s:o.deployments_running+" running" },
+    { k:"Custom strategies", v:fmt(o.custom_strategies), s:"built in Builder" },
+    { k:"Paper trades", v:fmt(o.trades_total), s:"booked" },
+    { k:"Pageviews 7d", v:fmt(o.pageviews_7d), s:"funnel top" },
+    { k:"Worker", v:alive?"Live":"Down", s:o.worker_last_cycle?("last cycle "+timeAgo(o.worker_last_cycle)):"no cycles yet", cls:alive?"good":"bad" },
+  ];
+  $("tiles").innerHTML = tiles.map(t=>`<div class="tile ${t.cls||""}"><div class="k">${t.k}</div><div class="v">${t.v}</div><div class="s">${t.s}</div></div>`).join("");
+
+  const max = Math.max(1, ...signups.map(d=>d.n));
+  $("chart").innerHTML = signups.map(d=>{
+    const day = d.d.slice(8), showLbl = d.n>0;
+    return `<div class="bar" style="height:${Math.round(d.n/max*100)}%" title="${d.d}: ${d.n}">${showLbl?`<span>${d.n}</span>`:""}<i>${day}</i></div>`;
+  }).join("");
+
+  $("users").innerHTML = users.length ? `<table><thead><tr><th>Email</th><th>Via</th><th>Joined</th><th>Tier</th><th class="num">Deploys</th><th class="num">Trades</th><th class="num">Realised</th></tr></thead><tbody>${
+    users.map(u=>`<tr><td>${esc(u.email)}${u.confirmed?"":' <span class="muted">(unconfirmed)</span>'}</td><td class="muted">${u.provider}</td><td class="muted">${u.created}</td><td><span class="pill ${u.tier}">${u.tier}</span></td><td class="num">${u.deploys}</td><td class="num">${u.trades}</td><td class="num">$${Number(u.realised||0).toFixed(2)}</td></tr>`).join("")
+  }</tbody></table>` : `<div class="empty">No users yet.</div>`;
+
+  $("asof").textContent = "Updated "+new Date().toLocaleString();
+}
+function esc(s){ return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function timeAgo(ts){ const s=(Date.now()-new Date(ts))/1000; if(s<90)return Math.round(s)+"s ago"; if(s<5400)return Math.round(s/60)+"m ago"; return Math.round(s/3600)+"h ago"; }
+
+boot();
+</script></body></html>

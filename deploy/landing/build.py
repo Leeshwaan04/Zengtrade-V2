@@ -58,6 +58,19 @@ FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
          '<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">')
 
 
+# First-party pageview beacon: one tiny insert into the public `event` table (anon policy
+# allows only name='pageview' + short path/ref). No cookies, no third party. Powers the
+# funnel numbers in /admin. Fails silently so it can never break a page.
+BEACON = """<script>
+(function(){try{
+ fetch("https://ponvarxeytfcntckczbn.supabase.co/rest/v1/event",{method:"POST",
+  headers:{apikey:"sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1","Content-Type":"application/json",Prefer:"return=minimal"},
+  body:JSON.stringify({name:"pageview",path:location.pathname.slice(0,290),ref:(document.referrer||"").slice(0,290)}),
+  keepalive:true}).catch(function(){});
+}catch(e){}})();
+</script>"""
+
+
 def shell(title, desc, canon, main, extra_head=""):
     return f"""<!DOCTYPE html><html lang="en" data-regime="bull"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -80,6 +93,7 @@ def shell(title, desc, canon, main, extra_head=""):
 {chrome}
 {main}
 {tail}
+{BEACON}
 </body></html>"""
 
 
@@ -231,9 +245,10 @@ open(os.path.join(DIST, "site.css"), "w").write(css + HOME_CSS + coin_css)   # O
 # build). Auth pages keep their focused css.css + js/ (Supabase glue).
 AUTH_SRC = os.path.abspath(os.path.join(HERE, "..", "..", "saas", "web"))
 AUTH_ROUTES = {                                   # source file -> clean route folder
-    "login.html": "login", "reset.html": "reset",
+    "login.html": "login", "reset.html": "reset", "admin.html": "admin",
     "terms.html": "terms", "privacy.html": "privacy", "risk.html": "risk",
-}   # app.html scrapped 2026-08-01: /dashboard is now the real Algo Studio (below)
+}   # app.html scrapped 2026-08-01: /dashboard is now the real Algo Studio (below).
+    # /admin is gated by admin-only RPCs (harmless to serve; useless without an admin JWT).
 for f, route_dir in AUTH_ROUTES.items():
     src = os.path.join(AUTH_SRC, f)
     if os.path.exists(src):

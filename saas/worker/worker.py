@@ -79,9 +79,18 @@ def _process(cur, uid, skey, params=None, replay_days=None):
             if t: real+=t["pnl"]; n+=1; write_trade(cur,uid,skey,t)
     save_book(cur, uid, skey, pos, round(real,4)); return n
 
+def heartbeat(cur, deps, trades):
+    """Prove the worker is alive EVERY cycle, even with zero deployments — so the admin
+    'Worker: Live' signal reflects the process, not whether any customer has deployed."""
+    cur.execute("""insert into engine_state (key, value, updated_at)
+        values ('_worker_heartbeat', %s::jsonb, now())
+        on conflict (key) do update set value=excluded.value, updated_at=now()""",
+        (json.dumps({"deployments": deps, "trades": trades}),))
+
 def run_cycle(conn, replay_days=None):
     cur=conn.cursor(); deps=active(cur); tot=0
     for uid,skey,params in deps: tot+=_process(cur,uid,skey,params,replay_days)
+    heartbeat(cur, len(deps), tot)
     conn.commit(); return len(deps), tot
 
 def main():
