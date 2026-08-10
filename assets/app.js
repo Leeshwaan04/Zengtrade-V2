@@ -1,8 +1,10 @@
 /* ============================================================
-   zengtrade · Indiabulls Securities — Bull/Bear Terminal
-   Detection engine + AUTO/MANUAL switching + 3-pane reflow
+   zengtrade · Crypto Algo Studio
+   Regime-aware systematic trading on live Binance prices (24/7)
    ============================================================ */
 'use strict';
+
+const CRYPTO_ONLY = !!window.ZENG_CRYPTO_ONLY;
 
 /* ---------- data ---------- */
 // The watchlist is now a UNIVERSAL instrument list — any segment (NSE/BSE equity & indices,
@@ -362,8 +364,14 @@ function tickerItems(){ const uni=new Map(TICKER_UNIVERSE.map(u=>[u.name,u])); r
 // Header market toggle (left of search) — Indian ⇄ Crypto. Always visible; drives the rolling tape + Algo Studio scope.
 function renderHdrMarket(){
   const el=$('hdrMkt'); if(!el) return;
-  if(!state.algo) state.algo={}; if(!state.algo.market) state.algo.market='in';
+  if(!state.algo) state.algo={};
+  if(CRYPTO_ONLY) state.algo.market='crypto';
+  else if(!state.algo.market) state.algo.market='in';
   const crypto=state.algo.market==='crypto';
+  if(CRYPTO_ONLY){
+    el.innerHTML=`<span class="mkt-badge crypto-only" title="Crypto markets · Binance spot · 24/7"><span class="mkt-fl">₿</span> Crypto</span>`;
+    return;
+  }
   el.innerHTML=`<div class="mkt-toggle hdr" role="tablist" aria-label="Market">`
     +`<button class="mkt-tab${!crypto?' on':''}" role="tab" aria-selected="${!crypto}" data-algomkt="in"><span class="mkt-fl">🇮🇳</span> Indian</button>`
     +`<button class="mkt-tab${crypto?' on':''}" role="tab" aria-selected="${crypto}" data-algomkt="crypto"><span class="mkt-fl">₿</span> Crypto</button></div>`;
@@ -372,6 +380,7 @@ function renderHdrMarket(){
 // Single source of truth for the market switch — used by the header toggle (and any other surface).
 function setMarket(m){
   if(!state.algo) state.algo={};
+  if(CRYPTO_ONLY) m='crypto';
   if(state.algo.market===m) return;
   state.algo.market=m; saveState();
   renderHdrMarket();
@@ -1274,10 +1283,10 @@ function renderHdrEngine(){
 const isInvestor=()=>state.persona==='investor';
 const isAlgo=()=>state.persona==='algo';
 const isAI=()=>state.persona==='ai';
-function syncFab(){const p=state.persona||'trader';
+function syncFab(){const p=CRYPTO_ONLY?'algo':(state.persona||'trader');
   let active=null;
   document.querySelectorAll('#modeFab [data-persona]').forEach(b=>{const on=b.dataset.persona===p;b.classList.toggle('on',on);b.setAttribute('aria-selected',on);if(on)active=b;});
-  const fb=$('modeFab'); if(fb) fb.dataset.persona=p;
+  const fb=$('modeFab'); if(fb){ fb.dataset.persona=p; if(CRYPTO_ONLY) fb.style.display='none'; }
   // slide the pill to the active button (works for any count / variable widths)
   const pill=fb&&fb.querySelector('.mf-pill');
   if(pill&&active){ pill.style.left=active.offsetLeft+'px'; pill.style.width=active.offsetWidth+'px'; }}
@@ -1313,6 +1322,7 @@ function openPersonaGate(){const g=$('personaGate'); if(g) g.classList.add('show
 function startOnboarding(){
   onboarding=true;
   const g=$('personaGate'); if(!g) return;
+  if(CRYPTO_ONLY){ applyPersona('algo',{user:true}); obStep(2); g.classList.add('show'); return; }
   obStep(1); g.classList.add('show');
 }
 window.startOnboarding=startOnboarding;   // re-runnable later (e.g. a "redo setup" affordance)
@@ -1333,6 +1343,31 @@ function onboardPick(p){ applyPersona(p,{user:true}); obStep(2); }
 
 function renderOnboardConnect(){
   const el=$('pgStep2'); if(!el) return;
+  if(CRYPTO_ONLY){
+    const botOff=!BOT.loaded||BOT.error;
+    const running=BOT.status&&BOT.status.harnessRunning;
+    const statusCard=botOff
+      ?`<div class="ob-status off">${icon('shield',16)}<div><b>Bot API offline</b><span>Start the crypto API and paper harness, then tap Retry.</span></div></div>`
+      :`<div class="ob-status ok"><span class="live-dot live"></span><div><b>Crypto engine ${running?'running':'ready'}</b>
+      <span>Live Binance spot prices · 24/7 paper book · no exchange keys required.</span></div></div>`;
+    const action=botOff?`<div class="ob-cmd"><span class="ob-cmd-l">Run these</span>
+      <code>cd backend &amp;&amp; python3 crypto_api.py</code>
+      <code>cd backend &amp;&amp; python3 paper_trade_crypto.py</code>
+      <button class="ob-copy" data-obcopy type="button">Copy</button></div>
+      <div class="ob-actions"><button class="tbtn primary" data-obretry type="button">Retry connection</button></div>`:'';
+    const legend=`<div class="ob-legend">
+      <span><span class="ob-tag live">● LIVE</span> real Binance prices</span>
+      <span><span class="ob-tag paper">PAPER</span> simulated fills, honest costs</span>
+      <p>zengtrade never fabricates numbers — prove your edge forward before going live.</p></div>`;
+    el.innerHTML=`
+      <h2 class="pg-title">Welcome to zengtrade Crypto</h2>
+      <p class="pg-sub">Backtest, forward-test, and paper-trade systematic strategies on live crypto prices — 24/7.</p>
+      ${statusCard}${action}${legend}
+      <div class="ob-foot">
+        <button class="tbtn primary ob-start" data-obfinish type="button">Open Algo Studio ▶</button>
+      </div>`;
+    return;
+  }
   const botOff   = !BOT.loaded || BOT.error;
   const connected= BOT.loaded && BOT.connected && BOT.live;
   const running  = (BOT.status&&BOT.status.reloginRunning)||BOT.reconnecting;
@@ -2876,16 +2911,20 @@ const BOT_API=(()=>{
 let BOT={loaded:false,connected:false,status:null,paperMode:true,error:false,chains:{},chainExp:{},futures:null};
 async function loadBotData(){
   try{
-    const [s,st,tr,sp]=await Promise.all([
-      fetch(BOT_API+'/api/strategies').then(r=>r.json()).catch(()=>({strategies:[]})),
-      fetch(BOT_API+'/api/status').then(r=>r.json()).catch(()=>({connected:false})),
-      fetch(BOT_API+'/api/trades').then(r=>r.json()).catch(()=>({trades:[]})),
-      fetch(BOT_API+'/api/stopped').then(r=>r.json()).catch(()=>({stopped:[]}))
-    ]);
+    const reqs=CRYPTO_ONLY
+      ?[Promise.resolve({strategies:[]}),fetch(BOT_API+'/api/status').then(r=>r.json()).catch(()=>({connected:false})),
+        Promise.resolve({trades:[]}),Promise.resolve({stopped:[]})]
+      :[fetch(BOT_API+'/api/strategies').then(r=>r.json()).catch(()=>({strategies:[]})),
+        fetch(BOT_API+'/api/status').then(r=>r.json()).catch(()=>({connected:false})),
+        fetch(BOT_API+'/api/trades').then(r=>r.json()).catch(()=>({trades:[]})),
+        fetch(BOT_API+'/api/stopped').then(r=>r.json()).catch(()=>({stopped:[]}))];
+    const [s,st,tr,sp]=await Promise.all(reqs);
     BOT.trades=tr.trades||[]; BOT.stopped=sp.stopped||[]; BOT.stoppedTotal=sp.totalFlattenPnl||0;
-    BOT.connected=!!st.connected; BOT.status=st; BOT.paperMode=s.paperMode!==false; BOT.updated=s.updated; BOT.error=false;
-    BOT.segments=s.segments||[{id:'cash',label:'Equity Cash',note:''}];
-    if(s.strategies&&s.strategies.length){
+    BOT.connected=CRYPTO_ONLY?!!st.ok||!!st.connected:!!st.connected;
+    BOT.live=CRYPTO_ONLY?BOT.connected:!!st.connected;
+    BOT.status=st; BOT.paperMode=CRYPTO_ONLY?true:(s.paperMode!==false); BOT.updated=s.updated; BOT.error=false;
+    BOT.segments=s.segments||[{id:'crypto',label:'Crypto Spot',note:''}];
+    if(!CRYPTO_ONLY&&s.strategies&&s.strategies.length){
       ALGOS=s.strategies.map(x=>({
         id:x.id,name:x.name,cat:x.cat,segment:x.segment,win:x.win,minCap:x.minCap,risk:x.risk,
         product:x.product,vstatus:x.status,bestRegime:x.bestRegime,regimeFit:x.regimeFit,requires:x.requires,
@@ -6886,7 +6925,7 @@ function init(){
   if(saved&&saved.cards) state.cards=saved.cards;
   if(saved&&saved.ticker) state.ticker=saved.ticker;
   if(saved&&typeof saved.regimeCollapsed==='boolean') state.regimeCollapsed=saved.regimeCollapsed;
-  state.persona=(saved&&saved.persona)||'trader';
+  state.persona=CRYPTO_ONLY?'algo':((saved&&saved.persona)||'trader');
   state.plan=(saved&&TIER_RANK[saved.plan]!=null)?saved.plan:'algopro';   // restore tier (validated)
   state.billing=(saved&&(saved.billing==='mo'||saved.billing==='yr'))?saved.billing:'mo';
   renderPlanChip();
@@ -6932,11 +6971,14 @@ function init(){
   setMode(startMode,true);
   applyRegime(startMode==='manual'&&saved&&saved.regime?saved.regime:'bull');
   recompute({silent:true});
-  renderHdrMarket();                                // header Indian⇄Crypto toggle (left of search)
-  if(state.algo&&state.algo.market==='crypto'){ renderTopIndex(); loadCrypto().then(()=>{ if(state.algo.market==='crypto'){ patchCryptoTape(); applyTickerSpeed(); } }); connectCryptoWS(); }
+  renderHdrMarket();
+  if(CRYPTO_ONLY){ state.algo=state.algo||{}; state.algo.market='crypto'; }
+  if(CRYPTO_ONLY || (state.algo&&state.algo.market==='crypto')){ renderTopIndex(); loadCrypto().then(()=>{ if(state.algo.market==='crypto'){ patchCryptoTape(); applyTickerSpeed(); } }); connectCryptoWS(); }
   tapeLoop();
-  loadMarket(); setInterval(loadMarket, 30000);   // 100% real Kite market data (funds, regime, VIX, breadth)
-  setInterval(()=>{ loadTicks();                  // real-time prices via Kite WebSocket (watchlist + chart)
+  if(!CRYPTO_ONLY){
+    loadMarket(); setInterval(loadMarket, 30000);   // Kite market data (Indian edition only)
+  }
+  if(!CRYPTO_ONLY) setInterval(()=>{ loadTicks();                  // Kite WebSocket (Indian edition only)
     loadTape();                                   // real-time index tape (WS-fed) — patched in place, no scroll reset
     // desk movers/P&L/heatmap are live-data cards but the 30s cascade gate skips them between
     // structural changes → refresh them on the tick ONLY when the desk is the visible center view
