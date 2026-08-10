@@ -11,7 +11,7 @@ const app = $("#view");
 let user = null, tier = "free", billCycle = "month";
 let state = { deployments: [], trades: [], loading: true, error: null };
 
-const ROUTES = ["dashboard", "strategies", "activity", "account"];
+const ROUTES = ["dashboard", "strategies", "forward", "accuracy", "analytics", "activity", "account"];
 const route = () => (location.hash.replace("#", "") || "dashboard");
 
 // ---------------------------------------------------------------- boot
@@ -147,7 +147,9 @@ function render() {
   const r = ROUTES.includes(route()) ? route() : "dashboard";
   document.querySelectorAll("#nav a").forEach(a => a.classList.toggle("on", a.dataset.r === r));
   if (state.error && !state.loading) { app.innerHTML = errorState(); $("#retry").onclick = async () => { render(); await load(); render(); }; return; }
-  ({ dashboard: renderDashboard, strategies: renderStrategies, activity: renderActivity, account: renderAccount }[r])();
+  ({ dashboard: renderDashboard, strategies: renderStrategies, forward: renderForward,
+     accuracy: renderAccuracy, analytics: renderAnalytics,
+     activity: renderActivity, account: renderAccount }[r])();
 }
 
 const errorState = () => `<div class="empty big"><h3>Couldn't load your data</h3>
@@ -196,6 +198,77 @@ const emptyStrategies = () => `<div class="empty">
   <p><b>No strategies deployed yet.</b></p>
   <p class="muted">Deploy one to start paper-trading on live crypto prices, zero money at risk.</p>
   <button class="btn primary" id="firstDeploy">Browse strategies</button></div>`;
+
+// ---- Forward Test (closed-trade evidence) ----
+function renderForward() {
+  if (state.loading) { app.innerHTML = `<div class="card">${skeletonRows(6)}</div>`; return; }
+  const rows = [...state.trades].reverse();
+  const m = metrics();
+  app.innerHTML = `
+    <div class="page-h"><h2>Forward Test</h2><p class="muted">Your out-of-sample paper track record — every closed trade on live crypto prices, net of costs. This is the evidence that earns go-live consideration.</p></div>
+    <div class="grid stats">
+      <div class="stat"><span>Closed trades</span><b>${num(m.n)}</b></div>
+      <div class="stat"><span>Win rate</span><b>${m.n ? pct(m.win) : "—"}</b></div>
+      <div class="stat"><span>Net P&amp;L</span><b class="${tone(m.net)}">${money(m.net)}</b></div>
+      <div class="stat"><span>Profit factor</span><b>${m.n ? (m.pf >= 99 ? "∞" : m.pf.toFixed(2)) : "—"}</b></div>
+    </div>
+    <div class="card table-card">${rows.length ? `
+      <div class="tbl-scroll"><table><thead><tr><th>When</th><th>Strategy</th><th>Symbol</th><th class="r">P&amp;L</th><th class="r">Cost</th></tr></thead>
+      <tbody>${rows.slice(0, 100).map(t => `<tr>
+        <td class="muted">${timeAgo(t.closed_at)}</td><td>${esc(nameOf(t.strategy_key))}</td>
+        <td class="mono">${esc(t.symbol)}</td>
+        <td class="r mono ${tone(t.pnl)}">${money(t.pnl, 2)}</td>
+        <td class="r mono muted">${money(t.cost, 2)}</td></tr>`).join("")}</tbody></table></div>
+      ${rows.length > 100 ? `<div class="tbl-foot">showing latest 100 of ${num(rows.length)}</div>` : ""}
+    ` : `<div class="empty"><p><b>No closed trades yet.</b></p><p class="muted">Deploy a strategy — the worker fills this in as trades close on live prices.</p></div>`}</div>`;
+}
+
+// ---- Accuracy (per-strategy forward stats) ----
+function renderAccuracy() {
+  if (state.loading) { app.innerHTML = `<div class="card">${skeletonRows(4)}</div>`; return; }
+  const ps = perStrategy();
+  app.innerHTML = `
+    <div class="page-h"><h2>Accuracy</h2><p class="muted">Per-strategy forward accuracy from your closed paper trades — win rate, net P&amp;L, and trade count. Backtest figures are not shown here; only your live forward evidence counts.</p></div>
+    <div class="card">${ps.length ? ps.map(s => {
+      const w = s.n ? (100 * s.wins / s.n) : 0;
+      const meta = byKey[s.key] || { name: s.key };
+      return `<div class="srow"><div class="srow-main"><b>${esc(meta.name)}</b><span class="tag">forward</span></div>
+        <div class="srow-metric"><span>${num(s.n)}</span><small>trades</small></div>
+        <div class="srow-metric"><span>${s.n ? pct(w) : "—"}</span><small>win</small></div>
+        <div class="srow-metric"><span class="${tone(s.net)}">${money(s.net)}</span><small>net</small></div></div>`;
+    }).join("") : `<div class="empty"><p><b>No forward data yet.</b></p><p class="muted">Accuracy builds as your deployed strategies close trades.</p></div>`}</div>`;
+}
+
+// ---- Analytics (attribution) ----
+function renderAnalytics() {
+  if (state.loading) { app.innerHTML = `<div class="card">${skeletonRows(4)}</div>`; return; }
+  const m = metrics();
+  const bySym = {};
+  for (const t of state.trades) {
+    const k = t.symbol || "—";
+    const row = bySym[k] || (bySym[k] = { sym: k, n: 0, net: 0, wins: 0 });
+    row.n++; row.net += Number(t.pnl || 0); if (t.pnl > 0) row.wins++;
+  }
+  const symRows = Object.values(bySym).sort((a, b) => b.net - a.net);
+  const byStrat = perStrategy().sort((a, b) => b.net - a.net);
+  app.innerHTML = `
+    <div class="page-h"><h2>Analytics</h2><p class="muted">P&amp;L attribution across your paper book — by strategy and symbol. All figures are net of booked costs from closed trades.</p></div>
+    <div class="grid stats">
+      <div class="stat"><span>Total net</span><b class="${tone(m.net)}">${money(m.net)}</b></div>
+      <div class="stat"><span>Strategies</span><b>${num(byStrat.length)}</b></div>
+      <div class="stat"><span>Symbols traded</span><b>${num(symRows.length)}</b></div>
+      <div class="stat"><span>Expectancy / trade</span><b class="${tone(m.n ? m.net / m.n : 0)}">${m.n ? money(m.net / m.n, 2) : "—"}</b></div>
+    </div>
+    <div class="card"><div class="card-h"><h3>By strategy</h3></div>
+      ${byStrat.length ? byStrat.map(s => `<div class="srow"><div class="srow-main"><b>${esc((byKey[s.key] || {}).name || s.key)}</b></div>
+        <div class="srow-metric"><span class="${tone(s.net)}">${money(s.net)}</span><small>net</small></div></div>`).join("")
+        : `<div class="empty"><p class="muted">Deploy strategies to see attribution.</p></div>`}</div>
+    <div class="card"><div class="card-h"><h3>By symbol</h3></div>
+      ${symRows.length ? symRows.slice(0, 12).map(s => `<div class="srow"><div class="srow-main"><b class="mono">${esc(s.sym)}</b></div>
+        <div class="srow-metric"><span>${num(s.n)}</span><small>trades</small></div>
+        <div class="srow-metric"><span class="${tone(s.net)}">${money(s.net)}</span><small>net</small></div></div>`).join("")
+        : `<div class="empty"><p class="muted">Symbol breakdown appears after your first closed trades.</p></div>`}</div>`;
+}
 
 // ---- Strategies (marketplace) ----
 function renderStrategies() {

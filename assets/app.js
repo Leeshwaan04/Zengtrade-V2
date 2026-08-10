@@ -2054,17 +2054,24 @@ function ipoApply(ipo){
 
 function algoDeploy(a){
   if(!a.wired){ quickToast('Not deployable yet', `${a.name} has no live engine — backtest/validate it first.`); return; }
+  const isCrypto=CRYPTO_ONLY||(state.algo&&state.algo.market==='crypto');
   flowModal({title:'Deploy in Paper — '+a.name, confirm:'Deploy in Paper',
     body:`<div class="flow-top"><div><b>${esc(a.name)}</b><span class="flow-sub">${esc(a.cat)} · ${esc(a.risk)}</span></div><span class="badge ${a.risk==='Aggressive'?'b-warn':a.risk==='Conservative'?'b-up':'b-neu'}">${esc(a.risk)}</span></div>
       <div class="flow-rows">
         <div><span>Best regime</span><b class="num">${esc(a.bestRegime||'—')}</b></div>
         <div><span>Validation</span><b class="num ${a.vstatus==='validated'?'up':''}">${a.vstatus==='validated'?'Validated':'Candidate'}</b></div>
       </div>
-      <p class="flow-note">${icon('shield',13)}<span><b>Risk-free.</b> Paper deploy runs this strategy on <b>live Kite data with simulated fills</b> — no real orders, no money at risk. Your bot harness starts trading it; closed-trade P&amp;L builds toward the Go-Live gate (≥${BOT.nudgeMin||10} profitable trades). You can Pause or Stop anytime.</span></p>`,
+      <p class="flow-note">${icon('shield',13)}<span><b>Risk-free.</b> Paper deploy runs this strategy on <b>${isCrypto?'live Binance data':'live Kite data'} with simulated fills</b> — no real orders, no money at risk. Your bot harness starts trading it; closed-trade P&amp;L builds toward the Go-Live gate (≥${BOT.nudgeMin||10} profitable trades). You can Pause or Stop anytime.</span></p>`,
     onConfirm(){ setStrategyState(a.id,'paper','Deployed — '+a.name); }
   });
 }
-/* POST the lifecycle change, then refresh the studio from the API (source of truth). */
+function cryptoLibDeploy(bid){
+  const a=ALGOS.find(x=>x.id===bid);
+  if(!a){ quickToast('Engine loading','Wait for the strategy catalog to load from the API.'); return; }
+  if(a.sub==='paper') lcStop(a);
+  else if(a.sub==='paused') setStrategyState(a.id,'paper','Resumed — '+a.name);
+  else algoDeploy(a);
+}
 async function setStrategyState(id, stateVal, title){
   try{
     const r=await fetch(BOT_API+'/api/strategy',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -2912,19 +2919,21 @@ let BOT={loaded:false,connected:false,status:null,paperMode:true,error:false,cha
 async function loadBotData(){
   try{
     const reqs=CRYPTO_ONLY
-      ?[Promise.resolve({strategies:[]}),fetch(BOT_API+'/api/status').then(r=>r.json()).catch(()=>({connected:false})),
-        Promise.resolve({trades:[]}),Promise.resolve({stopped:[]})]
+      ?[fetch(BOT_API+'/api/strategies').then(r=>r.json()).catch(()=>({strategies:[]})),
+        fetch(BOT_API+'/api/status').then(r=>r.json()).catch(()=>({connected:false})),
+        fetch(BOT_API+'/api/trades').then(r=>r.json()).catch(()=>({trades:[]})),
+        Promise.resolve({stopped:[]})]
       :[fetch(BOT_API+'/api/strategies').then(r=>r.json()).catch(()=>({strategies:[]})),
         fetch(BOT_API+'/api/status').then(r=>r.json()).catch(()=>({connected:false})),
         fetch(BOT_API+'/api/trades').then(r=>r.json()).catch(()=>({trades:[]})),
         fetch(BOT_API+'/api/stopped').then(r=>r.json()).catch(()=>({stopped:[]}))];
     const [s,st,tr,sp]=await Promise.all(reqs);
     BOT.trades=tr.trades||[]; BOT.stopped=sp.stopped||[]; BOT.stoppedTotal=sp.totalFlattenPnl||0;
-    BOT.connected=CRYPTO_ONLY?!!st.ok||!!st.connected:!!st.connected;
+    BOT.connected=CRYPTO_ONLY?!!(st.ok||st.connected):!!st.connected;
     BOT.live=CRYPTO_ONLY?BOT.connected:!!st.connected;
     BOT.status=st; BOT.paperMode=CRYPTO_ONLY?true:(s.paperMode!==false); BOT.updated=s.updated; BOT.error=false;
     BOT.segments=s.segments||[{id:'crypto',label:'Crypto Spot',note:''}];
-    if(!CRYPTO_ONLY&&s.strategies&&s.strategies.length){
+    if(s.strategies&&s.strategies.length){
       ALGOS=s.strategies.map(x=>({
         id:x.id,name:x.name,cat:x.cat,segment:x.segment,win:x.win,minCap:x.minCap,risk:x.risk,
         product:x.product,vstatus:x.status,bestRegime:x.bestRegime,regimeFit:x.regimeFit,requires:x.requires,
@@ -3710,37 +3719,37 @@ const CRYPTO={loaded:false,live:false,error:false,quotes:{},t:0,busy:false};
 function cryptoSyms(){ return CRYPTO_UNIVERSE.map(c=>c.sym); }
 // Risk-first strategy TEMPLATES (educational, preview/paper) — same survival-first ethos as the Indian library.
 const CRYPTO_STRATEGIES=[
-  {id:'cx_btc_trend',name:'BTC Trend (MA200)',cat:'Trend',risk:'Moderate',pair:'BTCUSDT',
+  {id:'cx_btc_trend',bid:'macross',name:'BTC Trend (MA200)',cat:'Trend',risk:'Moderate',pair:'BTCUSDT',
    what:'Long BTC while it holds above its long-term moving average; flat below.',
    rule:'BUY when price closes above the 200-period MA; exit on a close back below.',
    works:'Strong, sustained bull legs — crypto trends long and hard.',
    fails:'Chop around the MA whipsaws you in and out at small losses repeatedly.',
    guard:'Only long above the MA; ATR-sized stop; one position; stand aside in chop.'},
-  {id:'cx_grid',name:'Range Grid (ETH)',cat:'Mean-Reversion',risk:'Aggressive',pair:'ETHUSDT',
+  {id:'cx_grid',bid:'bollinger',name:'Range Grid (ETH)',cat:'Mean-Reversion',risk:'Aggressive',pair:'ETHUSDT',
    what:'A ladder of staggered buys & sells across a defined band, harvesting oscillation.',
    rule:'Buy each rung down, sell each rung up within a set price band.',
    works:'Sideways, high-volatility ranges — it monetises the wiggle.',
    fails:'A clean breakout leaves you holding the whole ladder against the move.',
    guard:'Hard band-exit if price leaves the range; cap total grid exposure & leverage.'},
-  {id:'cx_funding',name:'Funding-Rate Carry',cat:'Income',risk:'Moderate',pair:'BTC spot vs perp',
+  {id:'cx_funding',bid:'perp_funding',name:'Funding-Rate Carry',cat:'Income',risk:'Moderate',pair:'BTC spot vs perp',
    what:'Delta-neutral: long spot, short perpetual — collect funding each interval.',
    rule:'When funding is positive, hold spot + short perp; pocket the funding payments.',
    works:'Calm, positive-funding regimes — steady market-neutral yield.',
    fails:'Funding flips negative or the basis blows out in a liquidation cascade.',
    guard:'Watch funding + basis; unwind on negative funding; respect exchange limits.'},
-  {id:'cx_rsi2',name:'RSI-2 Dip (Alts)',cat:'Mean-Reversion',risk:'Aggressive',pair:'SOLUSDT',
+  {id:'cx_rsi2',bid:'rsi2',name:'RSI-2 Dip (Alts)',cat:'Mean-Reversion',risk:'Aggressive',pair:'SOLUSDT',
    what:'Buys very short-term oversold dips inside a higher-timeframe uptrend.',
    rule:'In an uptrend, BUY when RSI(2) < 5; exit when RSI(2) > 70 or after N bars.',
    works:'Pullbacks within an established alt uptrend.',
    fails:'Catching a falling knife once the trend has actually broken.',
    guard:'Only above the 200-MA; time-stop + hard stop; small size on alts.'},
-  {id:'cx_breakout',name:'Volatility Breakout',cat:'Breakout',risk:'Aggressive',pair:'BTCUSDT',
+  {id:'cx_breakout',bid:'momentum',name:'Volatility Breakout',cat:'Breakout',risk:'Aggressive',pair:'BTCUSDT',
    what:'Enters as price escapes a tight range on expanding volume.',
    rule:'BUY on a close above the N-day high with above-average volume; trail a stop.',
    works:'The start of a fresh expansion leg after compression.',
    fails:'False breakouts in thin liquidity hours snap straight back.',
    guard:'Require volume confirmation; trade liquid majors; trail, don’t fix a target.'},
-  {id:'cx_pairs',name:'ETH/BTC Ratio Pairs',cat:'Stat-Arb',risk:'Moderate',pair:'ETH vs BTC',
+  {id:'cx_pairs',bid:'pairs',name:'ETH/BTC Ratio Pairs',cat:'Stat-Arb',risk:'Moderate',pair:'ETH vs BTC',
    what:'Trades the ETH/BTC ratio back to its mean — neutral to overall crypto beta.',
    rule:'Short the rich leg, long the cheap leg when the ratio z-score is stretched.',
    works:'When ETH & BTC stay cointegrated and the spread mean-reverts.',
@@ -3752,7 +3761,7 @@ const CRYPTO_STRATEGIES=[
    works:'Long-horizon accumulation through full cycles; removes timing risk.',
    fails:'Prolonged bear markets test conviction; capital sits in drawdown.',
    guard:'Only commit what you can hold for years; size the schedule to your cashflow.'},
-  {id:'cx_momentum',name:'Cross-Sectional Momentum',cat:'Factor / Rotation',risk:'Aggressive',pair:'Top-10 majors',
+  {id:'cx_momentum',bid:'xs_momentum',name:'Cross-Sectional Momentum',cat:'Factor / Rotation',risk:'Aggressive',pair:'Top-10 majors',
    what:'Rotates into the strongest recent performers across a basket of majors.',
    rule:'Each week, hold the top-N by trailing return; drop the laggards.',
    works:'Persistent momentum regimes where winners keep winning.',
@@ -3871,6 +3880,12 @@ function patchCryptoPrices(){
 }
 function cryptoStratCard(s){
   const rk=LIB_RISK_CLASS[s.risk]||'b-neu';
+  const algo=s.bid?ALGOS.find(a=>a.id===s.bid):null;
+  const dep=algo&&algo.sub==='paper', paused=algo&&algo.sub==='paused';
+  let cta;
+  if(!s.bid) cta=`<span class="cx-tag">Learn only</span>`;
+  else if(dep||paused) cta=`<span class="cx-tag live">${paused?'Paused':'Paper · running'}</span><button class="btn-ghost sm" data-cxdep="${esc(s.bid)}">${paused?'Resume':'Stop'}</button>`;
+  else cta=`<button class="btn-primary sm" data-cxdep="${esc(s.bid)}">${icon('bolt',12)} Deploy in Paper</button>`;
   return `<div class="cx-card">
     <div class="cx-card-h"><div><b>${esc(s.name)}</b><span class="cx-cat">${esc(s.cat)} · ${esc(s.pair)}</span></div><span class="badge ${rk}">${esc(s.risk)}</span></div>
     <p class="cx-what">${esc(s.what)}</p>
@@ -3878,7 +3893,7 @@ function cryptoStratCard(s){
     <div class="cx-line cx-works">${icon('check',11)}<span><b>Works.</b> ${esc(s.works)}</span></div>
     <div class="cx-line cx-fails">${icon('alert',11)}<span><b>Fails.</b> ${esc(s.fails)}</span></div>
     <div class="cx-line cx-guard">${icon('shield',11)}<span><b>Survival guard.</b> ${esc(s.guard)}</span></div>
-    <div class="cx-card-f"><span class="cx-tag">Preview · paper</span><button class="btn-ghost sm" disabled title="Crypto paper engine is on the roadmap">Paper-test (soon)</button></div></div>`;
+    <div class="cx-card-f">${cta}</div></div>`;
 }
 function cryptoMarket(){
   // Honest framing: the crypto paper engine IS live 24/7 (not "preview/roadmap") — real Binance prices,
@@ -3898,8 +3913,8 @@ function cryptoMarket(){
   return note+stat+filters+grid;
 }
 function cryptoSoon(label){
-  return secEmpty('cpu',label+' · crypto preview',
-    `${esc(label)} for crypto arrives with the crypto strategy engine. For now, explore the live prices above and the strategy templates under <b>Library</b> / <b>Marketplace</b>. Indian markets have the full ${esc(label.toLowerCase())} today — switch the toggle back to <b>Indian</b>.`);
+  return secEmpty('cpu',label+' · crypto',
+    `${esc(label)} runs on the live 24/7 crypto paper harness. Start the engine from <b>Monitor</b> or deploy a strategy from <b>Library</b>.`);
 }
 // Real 24h movers from the live Binance data — honest momentum snapshot, not a scored signal.
 function cryptoOpportunity(){
@@ -4590,7 +4605,7 @@ function renderAlgo(){
   if(['market','opportunity','leaderboard'].includes(state.algo.view)) state.algo.view='monitor';  // retired tabs → land on Monitor
   if(!state.algo.bt) state.algo.bt={algo:0,period:'1Y'};   // guard: setMarket/studioScope can create state.algo before this default
   if(!state.algo.exec) state.algo.exec='paper';
-  if(!state.algo.market) state.algo.market='in';
+  if(!state.algo.market) state.algo.market=CRYPTO_ONLY?'crypto':'in';
   if(!state.algo.cinstr) state.algo.cinstr='spot';   // crypto instrument scope (Spot/Perps/Options)
   const crypto=state.algo.market==='crypto';
   if(!BOT.loaded){ loadBotData().then(()=>{ if(isAlgo())renderAlgo(); }); }
@@ -4646,6 +4661,7 @@ function renderAlgo(){
   v.querySelectorAll('[data-algogoto]').forEach(b=>b.onclick=()=>{state.algo.view=b.dataset.algogoto;renderAlgo();});
   v.querySelectorAll('[data-algobt]').forEach(b=>b.onclick=()=>{state.algo.bt.algo=+b.dataset.algobt;state.algo.view='backtest';renderAlgo();});
   v.querySelectorAll('[data-algodep]').forEach(b=>b.onclick=()=>algoDeploy(ALGOS[+b.dataset.algodep]));
+  v.querySelectorAll('[data-cxdep]').forEach(b=>b.onclick=()=>cryptoLibDeploy(b.dataset.cxdep));
   v.querySelectorAll('[data-fwgoto]').forEach(b=>b.onclick=()=>algoDeploy(ALGOS[+b.dataset.fwgoto]));
   v.querySelectorAll('[data-algogl]').forEach(b=>b.onclick=()=>{const a=ALGOS[+b.dataset.algogl]; if(b.classList.contains('is-locked')){quickToast('Go-Live locked','Keep paper-trading — unlocks after the forward-test gate (≥'+(BOT.nudgeMin||10)+' profitable closed trades).');return;} goLiveChecklist(a);});
   v.querySelectorAll('[data-lcpause]').forEach(b=>b.onclick=()=>{const a=ALGOS[+b.dataset.lcpause];setStrategyState(a.id,'paused','Paused — '+a.name);});
@@ -4782,7 +4798,7 @@ function toggleHarness(action){
       if(res&&res.ok) quickToast(action==='start'?'Paper testing started':'Paper testing stopped',
         action==='start'?'Forward-testing live strategies at zero risk — give it a few minutes for the first signals.':'The forward paper engine was stopped.');
       else quickToast('Couldn’t '+(action==='start'?'start':'stop')+' paper testing',(res&&res.error)||'Is the bot API running?');
-    }).catch(()=>quickToast('Bot API offline','Run python3 bot_api.py in the bot folder.'))
+    }).catch(()=>quickToast('Bot API offline',CRYPTO_ONLY?'Run python3 crypto_api.py in the backend folder.':'Run python3 bot_api.py in the bot folder.'))
     .then(()=>{ setTimeout(()=>{ BOT.harnessBusy=false; loadBotData().then(()=>{ if(isAlgo())renderAlgo(); }); }, action==='start'?1800:600); });
 }
 /* ===== Regime fit + adaptive risk (Forward Test "mission control") ===== */
@@ -5159,7 +5175,7 @@ function algoLibrary(){
       ${hv?`<p class="lib-fav-warn">${icon('alert',12)}<span>Volatility is elevated — favour <b>defined-risk</b> structures and smaller size. This is when accounts get hurt.</span></p>`:''}
     </div>`;
   } else {
-    favStrip=`<div class="lib-fav offline">${icon('shield',14)}<span><b>Connect Kite to auto-match strategies to the live regime.</b> Run <code>python3 login.py</code> — until then, browse and learn freely; we won’t guess today’s regime.</span></div>`;
+    favStrip=`<div class="lib-fav offline">${icon('shield',14)}<span><b>${CRYPTO_ONLY?'Start the crypto API to auto-match strategies to the live regime.':'Connect Kite to auto-match strategies to the live regime.'}</b> ${CRYPTO_ONLY?'Run <code>python3 crypto_api.py</code> and <code>python3 paper_trade_crypto.py</code>':'Run <code>python3 login.py</code>'} — until then, browse and learn freely; we won’t guess today’s regime.</span></div>`;
   }
 
   // ---- filters (family + risk + search) — instrument & holding handled by the studio scope toggle (chrome) ----
@@ -6973,8 +6989,23 @@ function init(){
   recompute({silent:true});
   renderHdrMarket();
   if(CRYPTO_ONLY){ state.algo=state.algo||{}; state.algo.market='crypto'; }
+  if(CRYPTO_ONLY && !(saved&&saved.watchlist)){
+    SYMS=CRYPTO_UNIVERSE.slice(0,6).map(c=>({sym:c.tk,name:c.name,exch:'CRYPTO',type:'SPOT',key:'CRYPTO:'+c.sym,ltp:0,chg:0,live:false}));
+    state.wlCustom=true;
+  }
+  if(CRYPTO_ONLY){
+    const wlTabs=document.querySelector('.wl-tabs'); if(wlTabs) wlTabs.style.display='none';
+    const invHub=$('investHub'); if(invHub) invHub.style.display='none';
+    const deskView=$('deskView'); if(deskView) deskView.style.display='none';
+    document.documentElement.dataset.persona='algo';
+    state.persona='algo';
+  }
   if(CRYPTO_ONLY || (state.algo&&state.algo.market==='crypto')){ renderTopIndex(); loadCrypto().then(()=>{ if(state.algo.market==='crypto'){ patchCryptoTape(); applyTickerSpeed(); } }); connectCryptoWS(); }
   tapeLoop();
+  if(CRYPTO_ONLY){
+    loadBotData().then(()=>{ if(typeof renderAlgo==='function'&&isAlgo()) renderAlgo(); });
+    setInterval(()=>{ if(document.visibilityState==='visible') loadBotData().then(()=>{ if(isAlgo()) renderAlgo(); }); }, 15000);
+  }
   if(!CRYPTO_ONLY){
     loadMarket(); setInterval(loadMarket, 30000);   // Kite market data (Indian edition only)
   }

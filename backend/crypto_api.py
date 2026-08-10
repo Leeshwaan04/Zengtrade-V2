@@ -3,8 +3,8 @@
 
     python3 crypto_api.py            # serves on http://localhost:8756
 
-Exposes only crypto paper-trading and health endpoints. Use this instead of
-bot_api.py when targeting crypto markets exclusively.
+Exposes crypto paper-trading, strategy deploy, harness control, and analytics.
+Use this instead of bot_api.py when targeting crypto markets exclusively.
 """
 from __future__ import annotations
 
@@ -21,35 +21,33 @@ PORT = int(os.environ.get("PORT", "8756"))
 
 # Reuse battle-tested crypto payloads from bot_api (import does not start Kite threads).
 from bot_api import (  # noqa: E402
+    STRATEGIES,
+    _CRYPTO_KEY_TO_ID,
+    _CRYPTO_NAMES,
     book_readiness_payload,
     crypto_allocation_payload,
     crypto_analytics_payload,
     crypto_backtest_payload,
     crypto_forward_payload,
+    crypto_harness_status,
     crypto_monitor_payload,
+    crypto_recent_trades,
     crypto_risk_payload,
+    crypto_status_payload,
+    crypto_strategies_payload,
     framework_payload,
     regime_fit_payload,
+    start_crypto_harness,
+    stop_crypto_harness,
 )
 from bot.crypto_alloc import set_weight  # noqa: E402
+from bot.subscriptions import set_sub  # noqa: E402
+
+_CRYPTO_IDS = {_CRYPTO_KEY_TO_ID.get(k, k) for k in _CRYPTO_NAMES}
 
 
 def _health():
     return {"ok": True, "product": "crypto"}
-
-
-def _status():
-    mon = crypto_monitor_payload()
-    return {
-        "connected": True,
-        "product": "crypto",
-        "market": "crypto",
-        "running": mon.get("running", False),
-        "regime": mon.get("regime"),
-        "mode": "paper",
-        "liveArmed": False,
-        "harnessRunning": mon.get("running", False),
-    }
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -89,13 +87,18 @@ class Handler(BaseHTTPRequestHandler):
         try:
             routes = {
                 "/api/health": _health,
-                "/api/status": _status,
+                "/api/status": crypto_status_payload,
+                "/api/strategies": crypto_strategies_payload,
                 "/api/framework": lambda: framework_payload((qs.get("regime") or [None])[0]),
                 "/api/crypto/monitor": crypto_monitor_payload,
                 "/api/crypto/risk": crypto_risk_payload,
                 "/api/crypto/forward": crypto_forward_payload,
                 "/api/crypto/analytics": crypto_analytics_payload,
                 "/api/crypto/allocation": crypto_allocation_payload,
+                "/api/trades": crypto_recent_trades,
+                "/api/harness": crypto_harness_status,
+                "/api/analytics": crypto_analytics_payload,
+                "/api/stopped": lambda: {"stopped": [], "count": 0, "totalFlattenPnl": 0},
             }
             if path == "/api/crypto/backtest":
                 return self._send(crypto_backtest_payload(
@@ -115,21 +118,31 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = self.path.split("?")[0]
-        if path != "/api/crypto/allocation":
-            return self._send({"error": "not found"}, 404)
         if self.headers.get("Origin") and self._cors_origin() is None:
             return self._send({"error": "forbidden origin"}, 403)
         try:
             n = int(self.headers.get("Content-Length", 0) or 0)
             body = json.loads(self.rfile.read(n) or b"{}") if n else {}
-            sid = str(body.get("id", ""))
-            if not sid:
-                return self._send({"error": "missing strategy id"}, 400)
-            w = float(body.get("weight", 1.0))
-            alloc = set_weight(sid, w)
-            return self._send({"ok": True, "id": sid, "weight": max(0.0, min(1.0, w)), "allocation": alloc})
+            if path == "/api/crypto/allocation":
+                sid = str(body.get("id", ""))
+                if not sid:
+                    return self._send({"error": "missing strategy id"}, 400)
+                w = float(body.get("weight", 1.0))
+                alloc = set_weight(sid, w)
+                return self._send({"ok": True, "id": sid, "weight": max(0.0, min(1.0, w)), "allocation": alloc})
+            if path == "/api/strategy":
+                sid = body.get("id", "")
+                if sid not in _CRYPTO_IDS:
+                    return self._send({"error": f"unknown strategy {sid!r}"}, 400)
+                return self._send(set_sub(sid, body.get("state", "paper")))
+            if path == "/api/harness":
+                action = body.get("action", "start")
+                if action == "stop":
+                    return self._send(stop_crypto_harness())
+                return self._send(start_crypto_harness())
+            return self._send({"error": "not found", "product": "crypto"}, 404)
         except Exception as e:
-            self._send({"error": str(e)[:120]}, 500)
+            self._send({"error": str(e)[:120], "product": "crypto"}, 500)
 
     def log_message(self, *a):
         pass
@@ -137,7 +150,7 @@ class Handler(BaseHTTPRequestHandler):
 
 def main() -> None:
     print(f"zengtrade crypto API on http://localhost:{PORT}")
-    print("  /api/health  /api/crypto/monitor  /api/crypto/backtest  /api/crypto/forward")
+    print("  /api/health  /api/strategies  /api/crypto/monitor  /api/harness  /api/strategy")
     ThreadingHTTPServer(("127.0.0.1", PORT), Handler).serve_forever()
 
 

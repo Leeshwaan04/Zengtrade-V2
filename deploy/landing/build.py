@@ -117,7 +117,7 @@ HOME_MAIN = """<main id="main">
       <div class="home-card"><div class="hc-ic">◐</div><b>Regime-aware</b><span>Reads Bull, Neutral &amp; Bear, and runs only the strategies proven to win in the current regime.</span></div>
       <div class="home-card"><div class="hc-ic">◈</div><b>Survival-first</b><span>A Governor, kill-switch and position intelligence sit over every trade. Cash is a deliberate position.</span></div>
       <div class="home-card"><div class="hc-ic">✓</div><b>Radically honest</b><span>Never fabricates a number. Every backtest is net of fees, slippage &amp; tax, a dash when it can't source one.</span></div>
-      <div class="home-card"><div class="hc-ic">₿</div><b>Two books, one engine</b><span>Crypto (24/7, live prices) and Indian markets run on the same survival-first engine.</span></div>
+      <div class="home-card"><div class="hc-ic">₿</div><b>Crypto-native, 24/7</b><span>Live Binance prices around the clock — the same survival-first engine, built for crypto from the ground up.</span></div>
     </div>
   </section>
 
