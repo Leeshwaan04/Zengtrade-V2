@@ -82,12 +82,20 @@
 </div>
 
 <script type="module">
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-const sb = createClient("https://ponvarxeytfcntckczbn.supabase.co", "sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1");
+import { sb, establishSession, signInWithGoogle, niceError } from "/js/auth.js";
 const $ = id => document.getElementById(id);
 const gate = $("gate"), app = $("app");
 
 async function boot(){
+  if (/[?&]code=/.test(location.search) || /access_token=/.test(location.hash)) {
+    location.replace("/login" + location.search + location.hash);
+    return;
+  }
+  try { await establishSession(); } catch (e) {
+    $("gerr").textContent = niceError(e);
+    show("gate");
+    return;
+  }
   const { data:{ session } } = await sb.auth.getSession();
   if(!session){ show("gate"); return; }
   const { data: ok } = await sb.rpc("is_admin");
@@ -104,7 +112,8 @@ $("login").onclick = async () => {
   boot();
 };
 $("google").onclick = async () => {
-  await sb.auth.signInWithOAuth({ provider:"google", options:{ redirectTo: location.origin + "/admin" } });
+  $("gerr").textContent = "";
+  try { await signInWithGoogle(); } catch (e) { $("gerr").textContent = niceError(e); }
 };
 $("pw").addEventListener("keydown", e => { if(e.key==="Enter") $("login").click(); });
 $("out").onclick = async () => { await sb.auth.signOut(); location.reload(); };

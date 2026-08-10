@@ -16,6 +16,12 @@
 (function () {
   "use strict";
 
+  /* OAuth callbacks must land on /login so Supabase can exchange ?code= before session checks. */
+  if (/[?&]code=/.test(location.search) || /access_token=/.test(location.hash)) {
+    location.replace("/login" + location.search + location.hash);
+    return;
+  }
+
   var SUPA = "https://ponvarxeytfcntckczbn.supabase.co";
   var ANON = "sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";
   var LS_AUTH = "sb-ponvarxeytfcntckczbn-auth-token";

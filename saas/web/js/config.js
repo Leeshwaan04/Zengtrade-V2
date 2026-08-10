@@ -5,8 +5,15 @@
 export const SUPABASE_URL  = window.__ZT_SUPABASE_URL  || "https://ponvarxeytfcntckczbn.supabase.co";
 export const SUPABASE_ANON = window.__ZT_SUPABASE_ANON || "sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";
 
+// Must match studio.js (deployed /dashboard) so OAuth sessions are visible to the terminal shim.
+export const AUTH_STORAGE_KEY = "sb-ponvarxeytfcntckczbn-auth-token";
+
+const origin = typeof location !== "undefined" ? location.origin : "https://zengtrade.in";
+
 export const SITE = {
   name: "zengtrade",
-  // where users land after completing OAuth / email confirmation
-  redirectTo: (typeof location !== "undefined" ? location.origin : "") + "/dashboard",
+  // OAuth + email-confirm land on /login first so we can exchange ?code= before routing on.
+  redirectTo: origin + "/login",
+  // Post-auth product (Algo Studio customer edition on zengtrade.in).
+  dashboard: origin + "/dashboard",
 };
