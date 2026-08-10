@@ -1,0 +1,24 @@
+{
+  "name": "Zengtrade V2",
+  "install": ".cursor/scripts/install.sh",
+  "terminals": [
+    {
+      "name": "bot-api",
+      "command": "cd backend && python3 bot_api.py"
+    },
+    {
+      "name": "frontend",
+      "command": "python3 serve.py"
+    }
+  ],
+  "ports": [
+    {
+      "name": "Frontend",
+      "port": 8011
+    },
+    {
+      "name": "Bot API",
+      "port": 8756
+    }
+  ]
+}
