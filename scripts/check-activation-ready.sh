@@ -29,6 +29,7 @@ echo "== Activation ready (signup → deploy) — $SITE =="
 echo ""
 
 probe_event signup_complete
+probe_event deploy_click
 probe_event deploy_success
 
 echo ""

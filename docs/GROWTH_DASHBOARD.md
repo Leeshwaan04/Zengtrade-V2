@@ -1097,6 +1097,20 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 20:20Z)
 - worker ❌ · all coin funnel CTAs ✅
 
+### Day 1 (session 101) — full funnel events + credential UX
+
+### CPO
+- **Shipped:** `check-migrations.sh` + `check-activation-ready.sh` probe `deploy_click` (admin funnel).
+- **Shipped:** `check-seo-content.sh` verifies how-it-works signup CTA (`utm_campaign=paper_loop`).
+
+### CTO
+- **Shipped:** `validate-database-credentials.sh` — three unblock paths + parallel work when blocked.
+- **Shipped:** `sync-ops-gates.py` records `funnel_ctas` gate.
+- **Blocked:** Railway Postgres password still invalid.
+
+### Status (`./scripts/check-growth-standup.sh` @ 20:23Z)
+- worker ❌ · full funnel events ✅ · SEO/how-it-works CTA ✅
+
 ---
 
 ### CTO

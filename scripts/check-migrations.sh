@@ -26,6 +26,7 @@ probe_event "signup_view" "0008_admin_portal"
 
 # 0011 — extended funnel events (signup + deploy + checkout attribution)
 probe_event "signup_complete" "0011_funnel_events_v2"
+probe_event "deploy_click" "0008_deploy_click"
 probe_event "deploy_success" "0011_deploy_success"
 probe_event "checkout_click" "0011_checkout_click"
 

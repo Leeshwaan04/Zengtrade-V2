@@ -12,6 +12,7 @@ echo "   (or click Connect on the project home — NOT Connection pooling pool-s
 echo "2. Connection string → URI → Session mode → port 5432"
 echo "3. Copy the FULL URI (starts with postgresql://postgres.ponvarxeytfcntckczbn:...)"
 echo "4. Or add Cloud Agent secret DATABASE_PASSWORD (database password only) — agent builds URI"
+echo "5. Or GitHub repo Secrets: DATABASE_PASSWORD + RAILWAY_API_TOKEN → Apply P0 workflow"
 echo ""
 echo "Verify (after secret is set):"
 echo "  ./scripts/validate-database-credentials.sh"

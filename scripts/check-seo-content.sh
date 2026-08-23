@@ -20,6 +20,7 @@ echo "SEO content probe — $SITE"
 echo ""
 
 check_html "how-it-works paper loop" "/how-it-works/" "paper-loop"
+check_html "how-it-works signup CTA" "/how-it-works/" "utm_campaign=paper_loop"
 check_html "pricing founding offer" "/pricing/" "first 100"
 check_html "coins hub" "/coins/" "coins_hub\\|/coins/"
 check_html "robots.txt" "/robots.txt" "Sitemap:"

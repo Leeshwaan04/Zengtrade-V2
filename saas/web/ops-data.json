@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T20:11:33Z",
+  "updated": "2026-08-23T20:21:41Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -120,7 +120,8 @@
       "Activity tab worker-aware empty copy (session 89)",
       "Strategies tab worker-offline note (session 90)",
       "check-e2e-gates.sh \u2014 CLI probe for /ops/e2e readiness (session 94)",
-      "check-activation-ready.sh \u2014 signup \u2192 deploy UI without worker (session 96)"
+      "check-activation-ready.sh \u2014 signup \u2192 deploy UI without worker (session 96)",
+      "deploy_click in migration + activation probes (session 101)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [
@@ -163,7 +164,7 @@
       "check-pricing-truth.sh covers /app upsell copy (session 82)",
       "post-p0-success.sh runs check-funnel-ctas + check-sitemap (session 84)",
       "check-funnel-ctas.sh covers coins hub + bitcoin pSEO (session 86)",
-      "check-funnel-ctas.sh — all 7 coin pSEO pages (session 100)",
+      "check-funnel-ctas.sh \u2014 all 7 coin pSEO pages (session 100)",
       "check-plan-intent.sh \u2014 ?plan=pro|elite \u2192 /app#pricing (session 86)",
       "check-seo-content.sh in CI + post-p0 (session 89)",
       "check-gsc-ready.sh \u2014 sitemap + SEO + funnel + signup landing (session 94)",
@@ -320,7 +321,8 @@
     "billing": true,
     "billing_ready": true,
     "gsc_ready": true,
-    "activation_ready": false,
+    "activation_ready": true,
+    "funnel_ctas": true,
     "migration_0011": true,
     "worker": false,
     "worker_heartbeat_utc": "2026-08-11T09:57:38",
