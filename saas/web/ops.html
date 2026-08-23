@@ -288,6 +288,7 @@ async function refresh() {
   const billingReadyOk = g.billing_ready ?? billReady;
   const gscReadyOk = g.gsc_ready ?? gscOk;
   const funnelCtAsOk = g.funnel_ctas ?? funnelOk;
+  const parallelOk = g.parallel_growth_ready ?? (activationOk && billingReadyOk && gscReadyOk && !worker.ok);
 
   let workerDetail = worker.ts ? `${worker.ageMin}m ago · ${worker.deps} deps` : "no heartbeat";
   if (!worker.ok && migOk && data.gates?.railway_paper_worker === "FAILED" && data.gates?.database_url_auth_ok === false) {
@@ -305,14 +306,18 @@ async function refresh() {
     gate("Funnel CTAs", funnelCtAsOk, "utm tagged"),
     gate("Billing rail", billOk, "NOWPayments"),
   ].join("");
+  if (!worker.ok && migOk) {
+    document.getElementById("gates").innerHTML += gate("Parallel growth", parallelOk, "excl. worker");
+  }
 
   const parallel = document.getElementById("parallelBox");
   const parallelList = document.getElementById("parallelList");
   if (!worker.ok && migOk && parallel && parallelList) {
     const items = [];
-    if (activationOk) items.push(`<li><b>CPO</b> — <a href="/login?mode=signup">signup</a> → <a href="/dashboard">deploy</a> (trades need worker)</li>`);
+    if (activationOk) items.push(`<li><b>CPO</b> — <a href="/ops/e2e">partial E2E</a> steps 1–2 · <a href="/login?mode=signup">signup</a> → <a href="/dashboard">deploy</a></li>`);
     if (billingReadyOk) items.push(`<li><b>CBO</b> — <a href="/ops/billing">test Pro checkout</a></li>`);
     if (gscReadyOk) items.push(`<li><b>CBO</b> — <a href="/ops/gsc">GSC sitemap submit</a></li>`);
+    if (parallelOk) items.push(`<li><b>CLI</b> — <code>./scripts/check-parallel-growth.sh</code> (all parallel gates green)</li>`);
     if (items.length) {
       parallel.hidden = false;
       parallelList.innerHTML = items.join("");

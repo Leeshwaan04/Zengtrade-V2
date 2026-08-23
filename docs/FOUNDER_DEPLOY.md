@@ -24,6 +24,15 @@ Dashboard → **Authentication → URL configuration**
 
 ## 3. Migration 0011 + paper worker (P0)
 
+**While worker is blocked** (wrong `DATABASE_URL` password), CPO/CBO can still ship:
+
+```bash
+./scripts/check-parallel-growth.sh   # partial activation + billing + GSC
+./scripts/verify-partial-activation.sh
+```
+
+Links: https://zengtrade.in/ops/e2e (steps 1–2) · https://zengtrade.in/ops/gsc · https://zengtrade.in/ops/billing
+
 **Option A — one-shot GitHub Action (recommended):** add `DATABASE_PASSWORD` (password only) or `DATABASE_URL` + `RAILWAY_API_TOKEN` to [repo Secrets](https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions) → run [Apply P0](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml) → type `APPLY`.
 
 **Option B — Cloud Agent:** add `DATABASE_PASSWORD` (password only) or full `DATABASE_URL` to Cursor secrets → `./scripts/validate-database-credentials.sh` then `./scripts/run-p0-if-ready.sh`.

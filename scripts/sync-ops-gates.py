@@ -86,6 +86,17 @@ def main() -> int:
     }
     gates.update(railway_status())
     gates["database_url_auth_ok"] = probe("validate-database-credentials.sh")
+    if gates["worker"]:
+        gates["parallel_growth_ready"] = True
+    else:
+        gates["parallel_growth_ready"] = (
+            subprocess.run(
+                ["./scripts/check-parallel-growth.sh"],
+                cwd=ROOT,
+                capture_output=True,
+            ).returncode
+            == 0
+        )
     gates["all_p0_green"] = all(
         gates[k] for k in ("production", "billing", "migration_0011", "worker")
     )

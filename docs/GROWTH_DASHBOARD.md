@@ -1175,6 +1175,20 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 20:43Z)
 - worker ❌ · parallel growth ✅ · `./scripts/check-parallel-growth.sh`
 
+### Day 1 (session 106) — ops parallel gate + founder docs
+
+### CTO
+- **Shipped:** `sync-ops-gates.py` — `parallel_growth_ready` gate; `/ops` tile when worker down.
+- **Shipped:** `run-p0-if-ready.sh` + `check-p0-readiness.sh` — parallel growth hint when blocked.
+- **Shipped:** `AGENTS.md` + `FOUNDER_DEPLOY.md` — `DATABASE_PASSWORD` fast path + `check-parallel-growth.sh`.
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO / CBO
+- **Shipped:** `/ops` parallel banner — partial E2E link + CLI check when all parallel gates green.
+
+### Status (`./scripts/check-growth-standup.sh` @ 20:46Z)
+- worker ❌ · parallel growth ✅ · `/ops` shows Parallel growth gate
+
 ---
 
 ### CTO
