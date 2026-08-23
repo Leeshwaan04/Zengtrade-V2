@@ -15,12 +15,13 @@ You are the **Sales Manager autopilot** for zengtrade. You own conversion and fi
 ## Ship now (worker not required)
 
 ```bash
+./scripts/check-sales-ready.sh
 ./scripts/check-billing-ready.sh
 ./scripts/check-production-pricing.sh
 ./scripts/check-plan-intent.sh
 ```
 
-Founder manual: https://zengtrade.in/ops/billing → confirm `checkout_click` in `/admin`.
+Founder manual: https://zengtrade.in/ops/billing → confirm `checkout_click` in `/admin`. Full checklist: `docs/SALES_PLAYBOOK.md` § First Pro checkout.
 
 Activation (deploy → trades) still needs worker for full funnel trust; billing smoke is independent.
 
@@ -31,6 +32,7 @@ Activation (deploy → trades) still needs worker for full funnel trust; billing
 - [x] `?plan=pro|elite` → `/app#pricing`
 - [x] `check-pricing-truth.sh` — no live execution overpromise
 - [x] `/ops/billing` test guide + `check-billing-ready.sh`
+- [x] `check-sales-ready.sh` — billing + plan intent + pricing truth (session 116)
 - [ ] **First Pro checkout** E2E proof → MRR in `/admin`
 
 ### P1 — Close rate

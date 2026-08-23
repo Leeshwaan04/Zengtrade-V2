@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T21:17:04Z",
+  "updated": "2026-08-23T21:20:12Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -303,9 +303,10 @@
       "check-plan-intent.sh in CI + post-p0-success (session 86)",
       "check-production-pricing.sh \u2014 founding $19 on prod (session 91)",
       "/ops/billing worker-offline note before checkout test (session 92)",
-      "check-billing-ready.sh \u2014 one-command Pro checkout preflight (session 95)"
+      "check-billing-ready.sh \u2014 one-command Pro checkout preflight (session 95)",
+      "check-sales-ready.sh \u2014 billing + plan intent + pricing truth (session 116)"
     ],
-    "next": "First Pro checkout E2E once P0 green; track MRR in /admin",
+    "next": "Founder: run /ops/billing checkout smoke (no worker required); track MRR in /admin",
     "links": [
       {
         "label": "Billing test",

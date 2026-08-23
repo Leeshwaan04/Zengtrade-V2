@@ -17,6 +17,7 @@ echo ""
 echo ">> Pricing funnel truth (CBO)"
 ./scripts/check-pricing-truth.sh
 ./scripts/check-billing-ready.sh 2>/dev/null || echo "⚠️  Billing-ready probe failed"
+./scripts/check-sales-ready.sh 2>/dev/null || echo "⚠️  Sales-ready probe failed"
 echo ""
 
 echo ">> Funnel CTAs + sitemap + SEO (CBO / GSC)"

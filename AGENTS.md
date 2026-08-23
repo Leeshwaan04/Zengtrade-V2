@@ -63,6 +63,7 @@ Verify with:
 ./scripts/snapshot-growth-metrics.sh  # markdown table for dashboard metrics
 ./scripts/check-growth-gates.sh      # all production growth + P0 probes
 ./scripts/check-billing-ready.sh     # CBO/Sales: Pro checkout preflight
+./scripts/check-sales-ready.sh       # Sales: billing + plan intent + pricing truth
 ./scripts/check-gsc-ready.sh       # CBO: organic/GSC preflight
 ./scripts/check-e2e-gates.sh       # CPO: can /ops/e2e start?
 ./scripts/check-activation-ready.sh  # CPO: signup → deploy UI (no worker)

@@ -30,6 +30,7 @@ Billing and plan-intent can be verified **before** paper trades exist:
 | Check | Command / link |
 |-------|----------------|
 | Billing-ready probe | `./scripts/check-billing-ready.sh` |
+| Sales-ready (full checkout path) | `./scripts/check-sales-ready.sh` |
 | Founding $19 on prod | `./scripts/check-production-pricing.sh` |
 | Manual checkout smoke | https://zengtrade.in/ops/billing |
 | Partial activation (no trades) | `./scripts/verify-partial-activation.sh` |
@@ -54,12 +55,29 @@ Do not claim forward P&L or closed-trade activation until `./scripts/check-worke
 ## Verification
 
 ```bash
+./scripts/check-sales-ready.sh      # billing + plan intent + pricing truth (one command)
 ./scripts/check-billing-ready.sh   # billing + founding $19 + checkout_click
 ./scripts/verify-billing.sh
 ./scripts/check-pricing-truth.sh
 ./scripts/check-production-pricing.sh   # founding $19 on /pricing + billing.js
 ./scripts/check-migrations.sh   # checkout_click requires 0011
 ```
+
+## First Pro checkout (founder manual — worker not required)
+
+Run when `./scripts/check-sales-ready.sh` is green.
+
+| Step | Action | Success signal |
+|------|--------|----------------|
+| 1 | Open https://zengtrade.in/ops/billing | Page shows billing-ready ✓ |
+| 2 | Sign up with Pro intent (`?plan=pro`) | Lands on `/app#pricing` |
+| 3 | Start Pro checkout → complete NOWPayments invoice | Invoice created (test or real) |
+| 4 | Return to `/app?paid=1` | Tier shows Pro within a few minutes |
+| 5 | Open `/admin` | **Paying** count ≥ 1 · **MRR** > $0 · `checkout_clicks_7d` incremented |
+
+**If tier does not flip:** check Supabase edge function logs for `nowpayments-ipn` · confirm IPN URL in NOWPayments dashboard · re-run `./scripts/security-smoke.sh` (unsigned POST must return 401).
+
+**Honest positioning:** Pro is unlimited **paper** today; do not promise live execution in support or posts.
 
 ## Upgrade triggers (in-app)
 
