@@ -936,6 +936,23 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/status-report.sh` @ 19:48Z)
 - worker ❌ · preflight guides founder to `/ops/worker`
 
+### Day 1 (session 91) — production pricing probe + founder docs
+
+### CTO
+- **Shipped:** `status-report.sh` retries `/ops/p0` probe (fewer false CDN misses).
+- **Shipped:** `FOUNDER_DEPLOY.md` documents `DATABASE_PASSWORD` Cloud Agent path.
+- **Blocked:** Railway Postgres password still invalid.
+
+### Sales
+- **Shipped:** `check-production-pricing.sh` — verifies founding \$19 on `/pricing` + `billing.js`; in post-p0-success + `SALES_PLAYBOOK.md`.
+- **Verified:** production pricing probe passes (19:50Z).
+
+### QA&VAPT
+- **Shipped:** `/ops/security` lists plan-intent + SEO content verify scripts.
+
+### Status (`./scripts/status-report.sh` @ 19:50Z)
+- worker ❌ · founding Pro pricing on prod ✅
+
 ---
 
 ### CTO

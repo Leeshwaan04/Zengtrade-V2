@@ -26,6 +26,8 @@ jobs:
         run: ./scripts/check-funnel-ctas.sh
       - name: Plan intent routing (Sales)
         run: ./scripts/check-plan-intent.sh
+      - name: Production founding pricing (Sales)
+        run: ./scripts/check-production-pricing.sh
       - name: SEO content (how-it-works, pricing)
         run: ./scripts/check-seo-content.sh
       - name: Worker Docker image builds

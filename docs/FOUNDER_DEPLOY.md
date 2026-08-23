@@ -26,7 +26,7 @@ Dashboard → **Authentication → URL configuration**
 
 **Option A — one-shot GitHub Action (recommended):** add `DATABASE_URL` + `RAILWAY_API_TOKEN` to [repo Secrets](https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions) → run [Apply P0](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml) → type `APPLY`.
 
-**Option B — Cloud Agent:** add `DATABASE_URL` to Cursor Cloud Agent secrets → agent runs `./scripts/apply-p0-autopilot.sh`.
+**Option B — Cloud Agent:** add `DATABASE_PASSWORD` (password only) or full `DATABASE_URL` to Cursor secrets → `./scripts/validate-database-credentials.sh` then `./scripts/run-p0-if-ready.sh`.
 
 **Option C — migration only (GitHub):** [Apply migration 0011](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-migration-0011.yml) with `DATABASE_URL` secret.
 

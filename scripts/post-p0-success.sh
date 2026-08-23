@@ -16,6 +16,7 @@ echo ""
 
 echo ">> Pricing funnel truth (CBO)"
 ./scripts/check-pricing-truth.sh
+./scripts/check-production-pricing.sh 2>/dev/null || echo "⚠️  Production pricing probe failed"
 echo ""
 
 echo ">> Funnel CTAs + sitemap (CBO / SEO)"

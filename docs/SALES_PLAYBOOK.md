@@ -42,6 +42,7 @@ Founder test: **https://zengtrade.in/ops/billing**
 ```bash
 ./scripts/verify-billing.sh
 ./scripts/check-pricing-truth.sh
+./scripts/check-production-pricing.sh   # founding $19 on /pricing + billing.js
 ./scripts/check-migrations.sh   # checkout_click requires 0011
 ```
 

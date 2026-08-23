@@ -33,7 +33,7 @@ if [[ $prod -eq 1 && $bill -eq 1 && $mig -eq 1 && $work -eq 1 ]]; then
   exit 0
 fi
 echo ""
-if ! curl -sfL "https://zengtrade.in/ops/p0/" 2>/dev/null | grep -q "P0 checklist"; then
+if ! curl -sfL --retry 2 --retry-delay 2 "https://zengtrade.in/ops/p0/" 2>/dev/null | grep -q "P0 checklist"; then
   echo "Also: /ops/p0 not deployed — check GitHub Pages deploy on main."
 fi
 if [[ $mig -eq 1 && $work -eq 0 ]]; then
