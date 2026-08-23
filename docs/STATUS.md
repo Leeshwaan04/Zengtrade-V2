@@ -24,9 +24,9 @@
 
 | PR | Status |
 |----|--------|
-| [#5](https://github.com/Leeshwaan04/Zengtrade-V2/pull/5) autopilot health | Open (CI green) |
+| [#6](https://github.com/Leeshwaan04/Zengtrade-V2/pull/6) QA&VAPT autopilot | **Merged** 2026-08-23 |
+| [#5](https://github.com/Leeshwaan04/Zengtrade-V2/pull/5) autopilot health | **Merged** 2026-08-23 |
 | [#3](https://github.com/Leeshwaan04/Zengtrade-V2/pull/3) autopilot | **Merged** 2026-08-23 |
-| [#2](https://github.com/Leeshwaan04/Zengtrade-V2/pull/2) crypto-only | Merged (superseded by #3) |
 
 > **Note:** Vercel preview deploys a separate Next.js project — **not** the `build.py` landing site. Production is **GitHub Pages** (`pages.yml` on `main`).
 

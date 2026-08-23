@@ -530,6 +530,19 @@
 ### Status (`./scripts/status-report.sh` @ 16:05Z)
 - migration 0011 ❌ | worker ❌
 
+### Day 1 (session 43) — post-merge doc hygiene + P0 probe fixes
+
+### CTO
+- **Shipped:** Removed stale “merge PR #5” copy from `check-production.sh`, `wait-for-p0.sh`, `/ops` deploy banner.
+- **Shipped:** `wait-for-p0.sh` probes `/ops/p0/` content (301 on bare `/ops/p0` was false-negative).
+
+### CPO / CBO / QA&VAPT
+- **No product changes** — P0 still blocked on founder migration + worker.
+
+### Status (`./scripts/status-report.sh` @ 16:09Z)
+- migration 0011 ❌ | worker ❌
+- **Next founder action:** `./scripts/founder-next-action.sh` → Apply migration 0011
+
 ---
 
 ## Daily log template

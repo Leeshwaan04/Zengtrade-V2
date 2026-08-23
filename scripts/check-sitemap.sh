@@ -28,7 +28,7 @@ done
 
 if [[ $fail -ne 0 ]]; then
   echo ""
-  echo "Merge latest main / run build.py — Cardano + Dogecoin ship with PR #5."
+  echo "Run build.py and deploy main — coin pages must appear in sitemap.xml."
   exit 1
 fi
 echo ""

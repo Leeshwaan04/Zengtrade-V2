@@ -8,8 +8,8 @@ INTERVAL="${1:-60}"
 
 echo "Waiting for P0 gates (migration 0011 + worker heartbeat)…"
 echo "Founder checklist: https://zengtrade.in/ops/p0"
-if ! curl -sfI "https://zengtrade.in/ops/p0" 2>/dev/null | head -1 | grep -q "200"; then
-  echo "Note: /ops/p0 not on production yet — merge PR #5 first for the live checklist page."
+if ! curl -sfL "https://zengtrade.in/ops/p0/" 2>/dev/null | grep -q "P0 checklist"; then
+  echo "Note: /ops/p0 not on production yet — push main and wait for GitHub Pages deploy."
 fi
 echo ""
 

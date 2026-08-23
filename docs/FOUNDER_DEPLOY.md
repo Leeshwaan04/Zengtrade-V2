@@ -4,14 +4,14 @@
 
 Autopilot tracks status in `docs/LAUNCH_RUNBOOK.md` and `docs/GROWTH_DASHBOARD.md`.
 
-## 1. Merge autopilot PR (if open)
+## 1. Verify production deploy
 
-Merge **PR #5** (`cursor/autopilot-health-ff74`) → `main` when CI green.  
-GitHub Actions → **Deploy zengtrade to GitHub Pages** runs on push.
+PR #5 and #6 are merged to `main`. After any new push, GitHub Actions → **Deploy zengtrade to GitHub Pages** must succeed.
 
 ```bash
 ./scripts/wait-for-deploy.sh
 SITE=https://zengtrade.in ./scripts/check-production.sh
+./scripts/founder-next-action.sh   # single next founder step
 ```
 
 ## 2. Supabase Auth (5 min)
