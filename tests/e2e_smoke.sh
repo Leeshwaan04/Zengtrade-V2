@@ -53,6 +53,8 @@ test -f scripts/check-gsc-ready.sh
 test -f scripts/check-e2e-gates.sh
 test -f scripts/verify-partial-activation.sh
 test -f scripts/check-parallel-growth.sh
+grep -q 'test-database-url' scripts/resolve-database-url.sh
+grep -q 'post-p0-success' scripts/apply-p0-autopilot.sh
 test -f scripts/log-growth-session.sh
 test -f scripts/append-growth-log.sh
 test -f scripts/check-growth-gates.sh

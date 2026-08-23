@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -21,6 +22,15 @@ def probe(script: str) -> bool:
         env={**os.environ, "SITE": "https://zengtrade.in"},
     )
     return r.returncode == 0
+
+
+def probe_retry(script: str, attempts: int = 3) -> bool:
+    for i in range(attempts):
+        if probe(script):
+            return True
+        if i < attempts - 1:
+            time.sleep(2)
+    return False
 
 
 def worker_heartbeat() -> str | None:
@@ -89,15 +99,7 @@ def main() -> int:
     if gates["worker"]:
         gates["parallel_growth_ready"] = True
     else:
-        gates["parallel_growth_ready"] = (
-            subprocess.run(
-                ["./scripts/check-parallel-growth.sh"],
-                cwd=ROOT,
-                capture_output=True,
-                env={**os.environ, "SITE": "https://zengtrade.in"},
-            ).returncode
-            == 0
-        )
+        gates["parallel_growth_ready"] = probe_retry("check-parallel-growth.sh")
     gates["sales_ready"] = probe("check-sales-ready.sh")
     gates["qa_parallel_ready"] = probe("check-qa-parallel.sh")
     gates["all_p0_green"] = all(

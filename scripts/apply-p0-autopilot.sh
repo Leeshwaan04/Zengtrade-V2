@@ -112,4 +112,4 @@ echo ""
 echo "== P0 status =="
 ./scripts/status-report.sh
 echo ""
-echo "Next: ./scripts/post-p0-success.sh"
+exec ./scripts/post-p0-success.sh

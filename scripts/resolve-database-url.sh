@@ -7,8 +7,11 @@ cd "$ROOT"
 
 url="${DATABASE_URL:-${SUPABASE_DATABASE_URL:-}}"
 if [[ -n "$url" ]]; then
-  ./scripts/sanitize-database-url.sh "$url"
-  exit 0
+  sanitized=$(./scripts/sanitize-database-url.sh "$url")
+  if DATABASE_URL="$sanitized" ./scripts/test-database-url.sh >/dev/null 2>&1; then
+    echo "$sanitized"
+    exit 0
+  fi
 fi
 
 pw="${DATABASE_PASSWORD:-${SUPABASE_DB_PASSWORD:-}}"
