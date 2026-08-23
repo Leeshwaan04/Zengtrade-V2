@@ -29,8 +29,8 @@ if [[ $prod -eq 1 && $bill -eq 1 && $mig -eq 1 && $work -eq 1 ]]; then
   exit 0
 fi
 echo ""
-if ! curl -sfI "https://zengtrade.in/ops/p0" 2>/dev/null | head -1 | grep -q "200"; then
-  echo "Also: merge PR #5 to ship /ops/p0 checklist to production."
+if ! curl -sfL "https://zengtrade.in/ops/p0/" 2>/dev/null | grep -q "P0 checklist"; then
+  echo "Also: /ops/p0 not deployed — check GitHub Pages deploy on main."
 fi
-echo "Next: docs/WORKER_QUICKSTART.md + ./scripts/migrate-0011-only.sh"
+echo "Next: https://zengtrade.in/ops/p0 — migration 0011 + paper worker"
 exit 1

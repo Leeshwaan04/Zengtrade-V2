@@ -461,6 +461,21 @@
 ### Status (`./scripts/status-report.sh` @ 15:47Z)
 - P0 unchanged: migration 0011 ❌ | worker ❌ | PR #5 open
 
+### Day 1 (session 37) — PR #5 merged to main ✅
+
+### CTO
+- **Merged:** [PR #5](https://github.com/Leeshwaan04/Zengtrade-V2/pull/5) → `main` @ `8336d9c` (2026-08-23T15:49:47Z).
+- **Deployed:** GitHub Pages green · `/ops/p0/` live · sitemap has 7 coin pages (Cardano + Dogecoin).
+
+### Founder P0 (remaining — ~15 min)
+1. ~~Merge PR #5~~ ✅
+2. **Migration 0011** → https://zengtrade.in/ops/migrate
+3. **Paper worker** → https://zengtrade.in/ops/worker
+4. `./scripts/wait-for-p0.sh` → E2E at https://zengtrade.in/ops/e2e
+
+### Status (`./scripts/status-report.sh` @ 15:53Z post-deploy)
+- Production + billing ✅ | migration 0011 ❌ | worker ❌
+
 ---
 
 ## Daily log template

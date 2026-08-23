@@ -1,10 +1,8 @@
 # Merge & ship (founder — 5 minutes)
 
-## 1. Merge autopilot PR
+## 1. Merge autopilot PR ✅
 
-**Merge [PR #5](https://github.com/Leeshwaan04/Zengtrade-V2/pull/5)** (`cursor/autopilot-health-ff74`) into `main`.
-
-GitHub Actions will build the landing site (includes `/ops/p0`, `/admin` P0 banner, funnel fixes) and deploy to GitHub Pages, then run `verify-production`.
+**[PR #5](https://github.com/Leeshwaan04/Zengtrade-V2/pull/5)** merged to `main` on 2026-08-23 (`8336d9c`). GitHub Pages deploy succeeded.
 
 ## 2. Verify deploy
 

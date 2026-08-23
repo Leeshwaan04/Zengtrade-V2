@@ -1,15 +1,8 @@
 {
-  "updated": "2026-08-23T15:49:00Z",
+  "updated": "2026-08-23T15:54:00Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
-    {
-      "id": "merge-pr5",
-      "title": "Merge PR #5 (ship /ops/p0 + funnel fixes)",
-      "detail": "CI green \u2014 merges cursor/autopilot-health-ff74 to main",
-      "url": "https://github.com/Leeshwaan04/Zengtrade-V2/pull/5",
-      "urgent": false
-    },
     {
       "id": "migration-0011",
       "title": "Apply migration 0011 (funnel v2 events)",
@@ -45,7 +38,7 @@
       "Migration 0011 verify probes signup_complete + deploy_success + checkout_click (check-migrations, ops-migrate, GitHub Action)",
       "render.yaml + WORKER_QUICKSTART for one-click worker host"
     ],
-    "next": "Merge PR #5 \u2192 founder /ops/p0 (migration + worker); then verify-activation-path",
+    "next": "Founder /ops/p0 — migration 0011 + worker; then verify-activation-path",
     "links": [
       {
         "label": "GitHub Actions",
