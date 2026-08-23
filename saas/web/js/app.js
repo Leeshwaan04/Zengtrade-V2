@@ -325,7 +325,7 @@ function renderAccuracy() {
         <div class="srow-metric"><span>${num(s.n)}</span><small>trades</small></div>
         <div class="srow-metric"><span>${s.n ? pct(w) : "—"}</span><small>win</small></div>
         <div class="srow-metric"><span class="${tone(s.net)}">${money(s.net)}</span><small>net</small></div></div>`;
-    }).join("") : emptyDeployCta("No forward data yet.", "Accuracy builds as your deployed strategies close trades.")}</div>`;
+    }).join("") : emptyDeployCta("No forward data yet.", forwardEmptyBlurb())}</div>`;
   wireEmptyDeploy();
 }
 

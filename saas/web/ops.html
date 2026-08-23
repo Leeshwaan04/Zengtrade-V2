@@ -241,12 +241,22 @@ async function refresh() {
   ]);
   const live = { prod: appOk && authOk, migration: migOk, billing: billOk, worker: worker.ok };
 
+  let data = {};
+  try {
+    data = await fetch("/ops/data.json?" + Date.now(), { cache: "no-store" }).then(r => r.json());
+  } catch { /* static fallback */ }
+
+  let workerDetail = worker.ts ? `${worker.ageMin}m ago · ${worker.deps} deps` : "no heartbeat";
+  if (!worker.ok && migOk && data.gates?.railway_paper_worker === "FAILED" && data.gates?.database_url_auth_ok === false) {
+    workerDetail = "Railway deploy FAILED — wrong DB password · /ops/worker";
+  }
+
   document.getElementById("gates").innerHTML = [
     gate("Production /app", appOk, "billing + evidence"),
     gate("Google OAuth fix", authOk, "establishSession"),
     gate("Billing rail", billOk, "NOWPayments"),
     gate("Migration 0011", migOk, "funnel v2"),
-    gate("Paper worker", worker.ok, worker.ts ? `${worker.ageMin}m ago · ${worker.deps} deps` : "no heartbeat"),
+    gate("Paper worker", worker.ok, workerDetail),
   ].join("");
 
   const allGreen = live.prod && live.billing && live.migration && live.worker;
@@ -262,11 +272,6 @@ async function refresh() {
       if (h.includes("/worker") && live.worker) { a.className = "secondary"; a.style.opacity = "0.5"; a.textContent = "✓ Worker live"; }
     });
   }
-
-  let data = {};
-  try {
-    data = await fetch("/ops/data.json?" + Date.now(), { cache: "no-store" }).then(r => r.json());
-  } catch { /* static fallback */ }
 
   renderApprovals(data.founder_actions || [], live);
   document.getElementById("roles").innerHTML =
