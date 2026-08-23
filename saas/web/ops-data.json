@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T22:51:30Z",
+  "updated": "2026-08-23T22:54:40Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -423,6 +423,7 @@
     "database_url_auth_ok": false,
     "parallel_growth_ready": true,
     "sales_ready": true,
-    "qa_parallel_ready": true
+    "qa_parallel_ready": true,
+    "partial_activation_ready": true
   }
 }

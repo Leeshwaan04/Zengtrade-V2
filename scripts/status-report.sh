@@ -26,6 +26,11 @@ printf "Migrations (0011)   %s\n" "$([[ $mig -eq 1 ]] && echo '✅' || echo '❌
 printf "Paper worker        %s\n" "$([[ $work -eq 1 ]] && echo '✅' || echo '❌')"
 printf "GSC-ready           %s\n" "$([[ $gsc -eq 1 ]] && echo '✅' || echo '❌')"
 printf "Activation UI       %s\n" "$([[ $act -eq 1 ]] && echo '✅' || echo '❌')"
+if [[ $work -eq 0 && $mig -eq 1 ]]; then
+  partial=0
+  ./scripts/verify-activation-path.sh --partial >/dev/null 2>&1 && partial=1
+  printf "Partial activation  %s\n" "$([[ $partial -eq 1 ]] && echo '✅ (signup → deploy)' || echo '❌')"
+fi
 
 hb=$(curl -sfL 'https://ponvarxeytfcntckczbn.supabase.co/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at' \
   -H 'apikey: sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1' 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['updated_at'][:19] if d else 'none')" 2>/dev/null || echo "none")

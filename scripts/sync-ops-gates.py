@@ -102,6 +102,19 @@ def main() -> int:
         gates["parallel_growth_ready"] = probe_retry("check-parallel-growth.sh")
     gates["sales_ready"] = probe("check-sales-ready.sh")
     gates["qa_parallel_ready"] = probe("check-qa-parallel.sh")
+    if gates["worker"]:
+        gates["partial_activation_ready"] = True
+    elif gates["migration_0011"]:
+        gates["partial_activation_ready"] = (
+            subprocess.run(
+                ["./scripts/verify-activation-path.sh", "--partial"],
+                cwd=ROOT,
+                capture_output=True,
+            ).returncode
+            == 0
+        )
+    else:
+        gates["partial_activation_ready"] = False
     gates["all_p0_green"] = all(
         gates[k] for k in ("production", "billing", "migration_0011", "worker")
     )

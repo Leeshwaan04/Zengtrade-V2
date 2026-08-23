@@ -26,6 +26,7 @@ if [[ $mig -eq 0 || $work -eq 0 ]]; then
           echo "NEXT: Railway DATABASE_URL password invalid — reset in Supabase Connect"
           echo "     → copy Session URI (port 5432, no [brackets]) → Railway paper-worker → Deploy"
           echo "     Or add Cloud Agent secret DATABASE_PASSWORD only"
+          echo "     Or GitHub Secrets → health-watch auto-runs every 6h"
           echo "     Guide: https://zengtrade.in/ops/worker · ./scripts/guide-worker-recovery.sh"
           echo ""
           ./scripts/founder-parallel-work.sh 2>/dev/null || true

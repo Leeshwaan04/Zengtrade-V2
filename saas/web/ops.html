@@ -309,6 +309,7 @@ async function refresh() {
   const funnelCtAsOk = g.funnel_ctas ?? funnelOk;
   const salesReadyOk = g.sales_ready ?? (billingReadyOk && migOk);
   const qaParallelOk = g.qa_parallel_ready ?? false;
+  const partialOk = g.partial_activation_ready ?? (activationOk && migOk && !worker.ok);
   const parallelLive = activationOk && billingReadyOk && gscReadyOk && funnelCtAsOk && freeTierOk;
   const parallelOk = worker.ok ? true : (parallelLive || (g.parallel_growth_ready ?? false));
 
@@ -329,6 +330,7 @@ async function refresh() {
     gate("Billing rail", billOk, "NOWPayments"),
   ].join("");
   if (!worker.ok && migOk) {
+    document.getElementById("gates").innerHTML += gate("Partial activation", partialOk, "signup → deploy");
     document.getElementById("gates").innerHTML += gate("Parallel growth", parallelOk, "excl. worker");
     document.getElementById("gates").innerHTML += gate("Sales-ready", salesReadyOk, "Pro checkout path");
     document.getElementById("gates").innerHTML += gate("QA parallel", qaParallelOk, "security + partial");
@@ -338,7 +340,7 @@ async function refresh() {
   const parallelList = document.getElementById("parallelList");
   if (!worker.ok && migOk && parallel && parallelList) {
     const items = [];
-    if (activationOk) items.push(`<li><b>CPO</b> — <a href="/ops/e2e">partial E2E</a> steps 1–2 · <code>./scripts/guide-partial-e2e.sh</code> · <code>./scripts/guide-free-tier-test.sh</code></li>`);
+    if (activationOk) items.push(`<li><b>CPO</b> — <a href="/ops/e2e">partial E2E</a> steps 1–2 · <code>./scripts/verify-activation-path.sh --partial</code></li>`);
     if (billingReadyOk) items.push(`<li><b>CBO / Sales</b> — <a href="/ops/billing">first Pro checkout</a> · <code>./scripts/guide-first-pro-checkout.sh</code></li>`);
     if (gscReadyOk) items.push(`<li><b>CBO / SEO</b> — <a href="/ops/gsc">GSC sitemap</a> · <code>./scripts/guide-gsc-founder.sh</code></li>`);
     if (parallelOk) {
