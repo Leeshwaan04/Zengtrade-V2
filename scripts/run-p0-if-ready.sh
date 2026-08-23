@@ -15,14 +15,18 @@ if [[ $mig -eq 1 && $work -eq 1 ]]; then
 fi
 
 DATABASE_URL="${DATABASE_URL:-${SUPABASE_DATABASE_URL:-}}"
-if [[ -z "${DATABASE_URL:-}" && -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
-  # shellcheck source=/dev/null
-  source "$ROOT/scripts/railway-api.sh" 2>/dev/null || true
-  if resolved=$(railway_resolve_database_url 2>/dev/null); then
+if [[ -z "${DATABASE_URL:-}" ]]; then
+  if resolved=$(./scripts/resolve-database-url.sh 2>/dev/null); then
     DATABASE_URL="$resolved"
     export DATABASE_URL
-    echo "OK   DATABASE_URL resolved from Railway"
+    if [[ -n "${DATABASE_PASSWORD:-${SUPABASE_DB_PASSWORD:-}}" && -z "${SUPABASE_DATABASE_URL:-}" ]]; then
+      echo "OK   DATABASE_URL built from DATABASE_PASSWORD"
+    else
+      echo "OK   DATABASE_URL resolved from Railway"
+    fi
   fi
+elif [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" && -z "${DATABASE_URL:-}" ]]; then
+  :
 fi
 
 if [[ -n "${DATABASE_URL:-}" ]]; then
