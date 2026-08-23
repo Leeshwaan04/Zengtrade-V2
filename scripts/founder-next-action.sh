@@ -16,12 +16,6 @@ if [[ $mig -eq 0 || $work -eq 0 ]]; then
     source "$ROOT/scripts/railway-api.sh" 2>/dev/null || true
     railway_resolve_database_url >/dev/null 2>&1 && rail_db=1
 
-    if command -v gh >/dev/null 2>&1 && ! gh api "repos/Leeshwaan04/Zengtrade-V2/contents/.github/workflows/apply-p0.yml?ref=main" >/dev/null 2>&1; then
-      echo "NEXT: Merge PR #7 to main — enables GitHub Apply P0 workflow"
-      echo "     https://github.com/Leeshwaan04/Zengtrade-V2/pull/7"
-      echo ""
-    fi
-
     if [[ $rail_db -eq 1 ]]; then
       echo "NEXT: DATABASE_URL found on Railway — run ./scripts/apply-p0-autopilot.sh"
       exit 1
@@ -30,7 +24,7 @@ if [[ $mig -eq 0 || $work -eq 0 ]]; then
     echo "NEXT: Add DATABASE_URL (Supabase session pooler :5432)"
     echo "     Cloud Agent secrets → ./scripts/apply-p0-autopilot.sh"
     echo "     OR Railway paper-worker variables (agent auto-resolves)"
-    echo "     OR GitHub repo Secrets → Apply P0 workflow (after PR #7 merge)"
+    echo "     OR GitHub repo Secrets → Apply P0 workflow"
     echo "     Manual: https://zengtrade.in/ops/p0"
     echo "     Supabase URI: https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings"
     exit 1

@@ -75,13 +75,8 @@ if [[ $db_set -eq 1 && $rail_set -eq 0 ]]; then
   echo "  • Add RAILWAY_API_TOKEN — migration can run via psql; worker needs Railway"
 fi
 if [[ -f .github/workflows/apply-p0.yml ]]; then
-  echo "  • apply-p0.yml present on this branch"
-else
-  echo "  • Merge PR #7 to main for apply-p0.yml GitHub workflow"
-fi
-if gh api "repos/Leeshwaan04/Zengtrade-V2/contents/.github/workflows/apply-p0.yml?ref=main" >/dev/null 2>&1; then
   echo "  • apply-p0.yml on main ✅"
 else
-  echo "  • apply-p0.yml on main ❌ — merge PR #7 first"
+  echo "  • apply-p0.yml missing on main — push workflow to main"
 fi
 exit 1

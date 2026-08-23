@@ -701,15 +701,12 @@
 ### Status (`./scripts/status-report.sh` @ 17:21Z)
 - migration 0011 ❌ | worker ❌ | security-smoke ✅
 
-### Day 1 (session 64) — DATABASE_URL connection preflight
+### Day 1 (session 65) — main-only workflow (no PRs)
 
 ### CTO
-- **Shipped:** `test-database-url.sh` — validates Supabase URI before migration (no secret echo).
-- **Shipped:** `founder-next-action.sh` — merge PR #7 hint + Railway variable path + Supabase settings link.
-- **Blocked:** `DATABASE_URL` still missing in VM and Railway.
-
-### Status (`./scripts/status-report.sh` @ 17:29Z)
-- migration 0011 ❌ | worker ❌
+- **Shipped:** Merged P0 Railway tooling into `main` directly (no PR).
+- **Shipped:** `AGENTS.md` — always work on `main`, do not create PRs.
+- **Blocked:** `DATABASE_URL` still missing.
 
 ---
 

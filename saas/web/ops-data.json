@@ -5,9 +5,9 @@
   "founder_actions": [
     {
       "id": "p0-unblock",
-      "title": "Merge PR #7 + add DATABASE_URL",
-      "detail": "1) Merge https://github.com/Leeshwaan04/Zengtrade-V2/pull/7 to main. 2) Add DATABASE_URL to Cloud Agent secrets (Supabase pooler :5432). Agent runs ./scripts/apply-p0-autopilot.sh automatically.",
-      "url": "https://github.com/Leeshwaan04/Zengtrade-V2/pull/7",
+      "title": "Add DATABASE_URL",
+      "detail": "Add DATABASE_URL to Cloud Agent secrets (Supabase pooler :5432) or GitHub repo Secrets. Agent runs ./scripts/apply-p0-autopilot.sh automatically.",
+      "url": "https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings",
       "alt_url": "https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml",
       "urgent": true
     },
@@ -53,7 +53,7 @@
       "railway_resolve_database_url \u2014 apply-p0 can pick up DATABASE_URL from any Railway service",
       "test-database-url.sh \u2014 psql connection preflight before migration 0011"
     ],
-    "next": "Merge PR #7 + add DATABASE_URL secret \u2192 apply-p0-autopilot",
+    "next": "Add DATABASE_URL secret → apply-p0-autopilot",
     "links": [
       {
         "label": "GitHub Actions",

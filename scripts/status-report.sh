@@ -33,11 +33,6 @@ if [[ $prod -eq 1 && $bill -eq 1 && $mig -eq 1 && $work -eq 1 ]]; then
   exit 0
 fi
 echo ""
-if [[ ($mig -eq 0 || $work -eq 0) ]] && command -v gh >/dev/null 2>&1; then
-  if ! gh api "repos/Leeshwaan04/Zengtrade-V2/contents/.github/workflows/apply-p0.yml?ref=main" >/dev/null 2>&1; then
-    echo "Apply P0 on GitHub: merge PR #7 to main first"
-  fi
-fi
 if ! curl -sfL "https://zengtrade.in/ops/p0/" 2>/dev/null | grep -q "P0 checklist"; then
   echo "Also: /ops/p0 not deployed — check GitHub Pages deploy on main."
 fi
