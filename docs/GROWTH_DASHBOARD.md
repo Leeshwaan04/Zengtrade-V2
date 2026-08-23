@@ -629,6 +629,18 @@
 ### Status (`./scripts/status-report.sh` @ 17:08Z)
 - migration 0011 ❌ | worker ❌ | readiness: DATABASE_URL missing
 
+### Day 1 (session 54) — /ops P0 unblock CTA + ops gate sync
+
+### CTO
+- **Shipped:** `/ops` founder approval highlights single P0 unblock (DATABASE_URL + Apply P0).
+- **Shipped:** `sync-ops-gates.py` includes Railway deploy status when token set.
+
+### QA&VAPT
+- **Shipped:** Q9 free-tier deploy limit in checklist (manual post-P0).
+
+### Status (`./scripts/status-report.sh` @ 17:10Z)
+- migration 0011 ❌ | worker ❌ | PR #7 open
+
 ---
 
 ### CTO

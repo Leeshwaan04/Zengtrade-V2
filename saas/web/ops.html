@@ -174,10 +174,16 @@ function roleCard(role, data) {
 
 function renderApprovals(staticActions, live) {
   const items = [];
+  const p0Block = staticActions.find(a => a.id === "p0-unblock");
+  if ((!live.migration || !live.worker) && p0Block) items.push(p0Block);
   if (!live.migration) items.push(staticActions.find(a => a.id === "migration-0011"));
   if (!live.worker) items.push(staticActions.find(a => a.id === "worker"));
   staticActions.filter(a => !a.urgent && a.id === "gsc").forEach(a => items.push(a));
-  const urgent = items.filter(Boolean).filter(a => a.urgent && ((a.id === "migration-0011" && !live.migration) || (a.id === "worker" && !live.worker)));
+  const urgent = items.filter(Boolean).filter(a => a.urgent && (
+    a.id === "p0-unblock" && (!live.migration || !live.worker) ||
+    (a.id === "migration-0011" && !live.migration) ||
+    (a.id === "worker" && !live.worker)
+  ));
   const box = document.getElementById("approvalBox");
   const list = document.getElementById("approvalList");
   const clear = document.getElementById("allClear");

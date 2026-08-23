@@ -1,12 +1,20 @@
 {
-  "updated": "2026-08-23T17:08:00Z",
+  "updated": "2026-08-23T17:11:34Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
     {
+      "id": "p0-unblock",
+      "title": "Unblock P0 \u2014 add DATABASE_URL",
+      "detail": "Merge PR #7, add DATABASE_URL (+ RAILWAY_API_TOKEN for GitHub) to Secrets \u2192 Apply P0 workflow (type APPLY). CLI: ./scripts/check-p0-readiness.sh",
+      "url": "https://zengtrade.in/ops/p0",
+      "alt_url": "https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml",
+      "urgent": true
+    },
+    {
       "id": "migration-0011",
       "title": "Apply migration 0011 (funnel v2 events)",
-      "detail": "One-click GitHub Action or copy SQL on /ops/migrate",
+      "detail": "Included in Apply P0 \u2014 or copy SQL on /ops/migrate",
       "url": "https://zengtrade.in/ops/migrate",
       "alt_url": "https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-migration-0011.yml",
       "urgent": true
@@ -14,7 +22,7 @@
     {
       "id": "worker",
       "title": "Deploy paper worker (Railway or Render)",
-      "detail": "Step-by-step HTML guide with live heartbeat check",
+      "detail": "paper-worker service on Railway \u2014 needs DATABASE_URL (Apply P0 sets vars + redeploys)",
       "url": "https://zengtrade.in/ops/worker",
       "alt_url": "https://railway.app/new",
       "urgent": true
@@ -36,14 +44,14 @@
       "Worker startup heartbeat + DB retry for faster deploy proof",
       "verify-activation-path.sh for post-P0 E2E gate",
       "Migration 0011 verify probes signup_complete + deploy_success + checkout_click (check-migrations, ops-migrate, GitHub Action)",
-      "founder-next-action.sh — single next P0 step in status-report",
-      "PR #5 + #6 merged — /ops/p0 + /ops/security live on production",
-      "apply-p0-autopilot.sh — migration 0011 + Railway worker when secrets set",
-      "check-railway-deploy.sh — paper-worker deploy status via Railway GraphQL",
-      "check-p0-readiness.sh — preflight before apply-p0-autopilot",
-      "apply-p0.yml GitHub Action — one-shot P0 when DATABASE_URL + RAILWAY_API_TOKEN in repo Secrets"
+      "founder-next-action.sh \u2014 single next P0 step in status-report",
+      "PR #5 + #6 merged \u2014 /ops/p0 + /ops/security live on production",
+      "apply-p0-autopilot.sh \u2014 migration 0011 + Railway worker when secrets set",
+      "check-railway-deploy.sh \u2014 paper-worker deploy status via Railway GraphQL",
+      "check-p0-readiness.sh \u2014 preflight before apply-p0-autopilot",
+      "apply-p0.yml GitHub Action \u2014 one-shot P0 when DATABASE_URL + RAILWAY_API_TOKEN in repo Secrets"
     ],
-    "next": "Add DATABASE_URL (Cloud Agent or GitHub Secrets) → Apply P0",
+    "next": "Add DATABASE_URL (Cloud Agent or GitHub Secrets) \u2192 Apply P0",
     "links": [
       {
         "label": "GitHub Actions",
@@ -67,13 +75,13 @@
     "headline": "Signup \u2192 deploy \u2192 trades",
     "shipped": [
       "Activation checklist on /app",
-      "Unified /dashboard vs /app help blurb (Algo Studio deploy → evidence in /app)",
+      "Unified /dashboard vs /app help blurb (Algo Studio deploy \u2192 evidence in /app)",
       "Worker-offline banner links to /how-it-works on /app and /dashboard",
       "Pageview tracking on /dashboard and /app after auth",
       "Activation checklist shows worker-offline hint when deploys exist but no trades",
       "Post-deploy banner in /app links to Forward Test (signup \u2192 deploy \u2192 trades)",
       "Fresh signup deploy nudge on /dashboard in ~800ms (zt_fresh_signup flag)",
-      "Activation checklist: worker-live wait hint (5–15 min to first trade)"
+      "Activation checklist: worker-live wait hint (5\u201315 min to first trade)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [
@@ -110,7 +118,7 @@
       "check-sitemap.sh verifies 7 coin pSEO URLs in production sitemap",
       "Coin + coins hub signup CTAs tagged utm_campaign=coin_* / coins_hub",
       "r/algotrading draft ready (post after P0)",
-      "check-pricing-truth.sh — Pro copy must not promise live execution as shipped",
+      "check-pricing-truth.sh \u2014 Pro copy must not promise live execution as shipped",
       "Paper trading loop section on /how-it-works (#paper-loop)"
     ],
     "next": "GSC sitemap + first proof post after forward trades exist; Pro checkout E2E at /ops/billing",
@@ -141,7 +149,7 @@
     "headline": "QA & VAPT",
     "shipped": [
       "Charter: .cursor/autopilot/qavapt.md + docs/QA_VAPT_CHECKLIST.md",
-      "scripts/security-smoke.sh — client secrets, IPN gate, admin RPC auth",
+      "scripts/security-smoke.sh \u2014 client secrets, IPN gate, admin RPC auth",
       "Founder playbook at /ops/security",
       "security-smoke.sh in CI smoke + health-watch (6h)",
       "RLS anon probes: deployment/trade empty without auth JWT"
@@ -168,8 +176,8 @@
     "migration_0011": false,
     "worker": false,
     "worker_heartbeat_utc": "2026-08-11T09:57:38",
-    "railway_paper_worker": "FAILED",
+    "all_p0_green": false,
     "railway_database_url_set": false,
-    "all_p0_green": false
+    "railway_paper_worker": "FAILED"
   }
 }
