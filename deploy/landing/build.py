@@ -268,7 +268,7 @@ _mig11 = os.path.abspath(os.path.join(HERE, "..", "..", "saas", "db", "migration
 if os.path.exists(_mig11):
     d = os.path.join(DIST, "ops"); os.makedirs(d, exist_ok=True)
     shutil.copy(_mig11, os.path.join(d, "migrate.sql"))
-for _sub, _fname in (("migrate", "ops-migrate.html"), ("worker", "ops-worker.html"), ("gsc", "ops-gsc.html"), ("billing", "ops-billing.html"), ("e2e", "ops-e2e.html")):
+for _sub, _fname in (("migrate", "ops-migrate.html"), ("worker", "ops-worker.html"), ("gsc", "ops-gsc.html"), ("billing", "ops-billing.html"), ("e2e", "ops-e2e.html"), ("p0", "ops-p0.html")):
     _src = os.path.join(AUTH_SRC, _fname)
     if os.path.exists(_src):
         _d = os.path.join(DIST, "ops", _sub); os.makedirs(_d, exist_ok=True)

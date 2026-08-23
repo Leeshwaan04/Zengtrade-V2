@@ -290,6 +290,15 @@
 - **Shipped:** WORKER_QUICKSTART documents `startup heartbeat ok` log line.
 - **Blocked:** P0 unchanged.
 
+### Day 1 (session 22) — founder P0 checklist page
+
+### CTO
+- **Shipped:** `/ops/p0` — focused 15-min founder checklist with live gate probes; LAUNCH_RUNBOOK billing steps marked done.
+- **Blocked:** Migration 0011 + worker deploy still founder-owned.
+
+### CPO / CBO
+- **Next:** E2E + first Pro checkout after P0 green on /ops/p0.
+
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*

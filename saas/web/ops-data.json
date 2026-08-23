@@ -1,6 +1,7 @@
 {
-  "updated": "2026-08-23T15:12:13Z",
+  "updated": "2026-08-23T15:15:29Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
+  "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
     {
       "id": "migration-0011",
@@ -29,7 +30,7 @@
   "cto": {
     "headline": "Production loop",
     "shipped": [
-      "Founder action pages: /ops/migrate + /ops/worker (HTML, copy-verify)",
+      "Founder P0 checklist at /ops/p0 (live gates, ~15 min)",
       "PR #3 merged \u2014 /app, auth.js, verify-production CI green",
       "Health probes: check-worker, check-migrations, health-watch cron (fails \u2192 founder email)",
       "Worker startup heartbeat + DB retry for faster deploy proof",
