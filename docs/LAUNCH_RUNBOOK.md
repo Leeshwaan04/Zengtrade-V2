@@ -2,7 +2,8 @@
 
 Production checklist for `zengtrade.in`. Autopilot CTO agent maintains this file.
 
-**Quick start:** `docs/FOUNDER_DEPLOY.md` (30-minute founder checklist)
+**Quick start:** `docs/FOUNDER_DEPLOY.md` (30-minute founder checklist)  
+**Merge first:** `docs/MERGE_AND_SHIP.md` (5-minute GitHub merge)
 
 ## P0 — Ship the core loop
 

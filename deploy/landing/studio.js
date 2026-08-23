@@ -281,6 +281,24 @@
   else inject();
   nudgeDeployIfCold();
 
+  function injectAppLink() {
+    var spacer = document.querySelector(".topbar .tb-spacer");
+    if (!spacer || document.getElementById("zt-app-link")) return;
+    var a = document.createElement("a");
+    a.id = "zt-app-link";
+    a.href = "/app";
+    a.textContent = "Evidence & billing";
+    a.style.cssText = "font:600 12.5px/1 var(--sans,system-ui);color:var(--slate,#64748b);" +
+      "text-decoration:none;padding:6px 10px;border:1px solid var(--line,#e2e8f0);border-radius:8px;" +
+      "white-space:nowrap;margin-right:8px";
+    a.onmouseover = function () { a.style.color = "var(--navy,#101e36)"; };
+    a.onmouseout = function () { a.style.color = "var(--slate,#64748b)"; };
+    spacer.parentNode.insertBefore(a, spacer);
+  }
+  if (document.readyState === "loading")
+    document.addEventListener("DOMContentLoaded", function () { setTimeout(injectAppLink, 1200); });
+  else setTimeout(injectAppLink, 1200);
+
   /* ---- force the crypto book after boot (full setMarket path: live tape + WS) ---- */
   function forceCrypto(tries) {
     var b = document.querySelector('[data-algomkt="crypto"]');
@@ -532,9 +550,16 @@
       body: JSON.stringify({ user_id: s.uid, strategy_key: slug(name), mode: "paper",
                              status: "running", params: spec }),
     }).then(function (r) {
-      if (r.ok) { err.hidden = true; refreshList(); }
+      if (r.ok) { err.hidden = true; trackEvent("deploy_click"); refreshList(); }
       else r.json().then(function (e) {
-        err.textContent = (e && (e.message || e.hint)) || "Deploy failed - try again.";
+        var msg = (e && (e.message || e.details || e.hint)) || "Deploy failed - try again.";
+        if (/FREE_LIMIT/i.test(msg)) {
+          err.textContent = "Free includes 1 strategy — upgrade at /app#pricing";
+          err.hidden = false;
+          setTimeout(function () { location.href = "/app#pricing"; }, 900);
+          return;
+        }
+        err.textContent = msg;
         err.hidden = false;
       }).catch(function () { err.textContent = "Deploy failed - try again."; err.hidden = false; });
     });
