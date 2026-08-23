@@ -55,4 +55,9 @@ if [[ -f .github/workflows/apply-p0.yml ]]; then
 else
   echo "  • Merge PR #7 to main for apply-p0.yml GitHub workflow"
 fi
+if gh api "repos/Leeshwaan04/Zengtrade-V2/contents/.github/workflows/apply-p0.yml?ref=main" >/dev/null 2>&1; then
+  echo "  • apply-p0.yml on main ✅"
+else
+  echo "  • apply-p0.yml on main ❌ — merge PR #7 first"
+fi
 exit 1

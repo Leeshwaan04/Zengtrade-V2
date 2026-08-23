@@ -692,6 +692,15 @@
 ### Status (`./scripts/status-report.sh` @ 17:19Z)
 - migration 0011 ❌ | worker ❌
 
+### Day 1 (session 60) — still blocked; readiness shows main merge state
+
+### CTO
+- **Blocked:** `DATABASE_URL` not in VM; PR #7 not merged to `main`.
+- **Shipped:** `check-p0-readiness.sh` reports whether `apply-p0.yml` is on `main`.
+
+### Status (`./scripts/status-report.sh` @ 17:21Z)
+- migration 0011 ❌ | worker ❌ | security-smoke ✅
+
 ---
 
 ### CTO
