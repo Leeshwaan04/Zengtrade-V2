@@ -48,9 +48,15 @@ echo ""
 ./scripts/check-p0-readiness.sh || true
 echo ""
 ./scripts/founder-parallel-work.sh 2>/dev/null || true
-if ./scripts/check-parallel-growth.sh >/dev/null 2>&1; then
+if ./scripts/check-founder-parallel-ready.sh >/dev/null 2>&1; then
   echo ""
-  echo "Parallel growth gates green (5/5 excl. worker) — sole blocker is DATABASE_PASSWORD / Railway deploy"
+  echo "Founder parallel probes green — sole blocker is DATABASE_PASSWORD / Railway deploy"
+  echo "Recovery: ./scripts/guide-worker-recovery.sh"
+  echo "Playbooks: ./scripts/guide-founder-parallel.sh · docs/GUIDE_INDEX.md"
+elif ./scripts/check-parallel-growth.sh >/dev/null 2>&1; then
+  echo ""
+  echo "Parallel growth gates green — sole blocker is DATABASE_PASSWORD / Railway deploy"
+  echo "Recovery: ./scripts/guide-worker-recovery.sh"
   echo "Founder playbook: ./scripts/guide-founder-parallel.sh"
 fi
 exit 1

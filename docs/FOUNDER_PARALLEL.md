@@ -10,6 +10,8 @@ One-page index when migration **0011** is live but trades are not running yet.
 
 Runs `check-parallel-growth.sh`, `check-sales-ready.sh`, and prints manual playbooks.
 
+Index: **docs/GUIDE_INDEX.md** · `./scripts/list-founder-guides.sh`
+
 ## By role
 
 | Role | Action | Link / script |

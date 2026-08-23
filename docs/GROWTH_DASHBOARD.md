@@ -1606,6 +1606,60 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 22:12Z)
 - worker ❌ · migration 0011 ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
 
+### Day 1 (session 132) — Worker recovery CLI + dashboard QA parallel row
+
+### CTO
+- **Shipped:** guide-worker-recovery.sh; sync-growth-dashboard-header uses founder-parallel-ready; QA parallel header row
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** —
+
+### CBO
+- **Shipped:** —
+
+### SEO
+- **Shipped:** —
+
+### Marketing
+- **Shipped:** —
+
+### Sales
+- **Shipped:** —
+
+### QA&VAPT
+- **Shipped:** status-report + snapshot-growth-metrics QA parallel probes
+
+### Status (`./scripts/check-growth-standup.sh` @ 22:16Z)
+- worker ❌ · migration 0011 ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
+
+### Day 1 (session 133) — Founder guide index + list-founder-guides CLI
+
+### CTO
+- **Shipped:** docs/GUIDE_INDEX.md; list-founder-guides.sh; run-p0-if-ready founder-parallel-ready hints; check-founder-guides includes guide-mrr-standup
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** —
+
+### CBO
+- **Shipped:** GUIDE_INDEX links all parallel playbooks (GSC, checkout, LinkedIn)
+
+### SEO
+- **Shipped:** —
+
+### Marketing
+- **Shipped:** —
+
+### Sales
+- **Shipped:** —
+
+### QA&VAPT
+- **Shipped:** check-founder-guides now 11/11 guide scripts
+
+### Status (`./scripts/check-growth-standup.sh` @ 22:24Z)
+- worker ❌ · migration 0011 ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
+
 ---
 
 ## Daily log template

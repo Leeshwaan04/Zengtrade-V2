@@ -85,6 +85,8 @@ Verify with:
 ./scripts/check-xss-hygiene.sh       # QA: /app esc() patterns
 ./scripts/guide-founder-parallel.sh  # Founder: all parallel playbooks in one command
 docs/FOUNDER_PARALLEL.md             # one-page parallel work index
+docs/GUIDE_INDEX.md                  # all founder guide scripts + ops links
+./scripts/list-founder-guides.sh     # verify guides + print index path
 ./scripts/check-p0-readiness.sh   # secrets + gates before apply-p0
 ./scripts/check-railway-deploy.sh   # when RAILWAY_API_TOKEN is set
 ```
