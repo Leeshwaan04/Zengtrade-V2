@@ -38,17 +38,17 @@ Founder/CBO can run these **before** paper worker is live (no forward trades yet
 
 **Do not** claim forward P&L or closed trades until `./scripts/check-worker.sh` is green.
 
-Pre-P0 LinkedIn angle (honest):
+Pre-P0 LinkedIn angle (honest — parallel gates green, worker password fix in progress):
 
 ```
 Shipping zengtrade in public — paper trading on live Binance prices.
 
-Today: signup → Algo Studio → deploy is live on staging-grade infra.
-Next: forward paper loop (worker deploy in progress).
+Today on production: signup → Algo Studio → deploy is live (partial E2E steps 1–2).
+Next: forward paper loop once our worker is back (DB credential fix in progress).
 
 Try the deploy path: https://zengtrade.in/login?mode=signup&utm_source=linkedin&utm_medium=social&utm_campaign=build_in_public
 
-Not investment advice. Paper only.
+Not investment advice. Paper only. No live execution.
 ```
 
 Verify parallel gates before posting: `./scripts/check-parallel-growth.sh`

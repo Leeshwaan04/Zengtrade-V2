@@ -26,6 +26,7 @@ Do **not** publish forward P&L or r/algotrading until `./scripts/check-worker.sh
 - [x] Paper loop on `/how-it-works`; home/pricing UTMs
 - [x] `WEEKLY_PROOF.md` + Reddit draft (DRAFT until E2E)
 - [x] Parallel work section in `MARKETING_PLAYBOOK.md`
+- [x] Pre-P0 build-in-public LinkedIn draft (parallel gates green; founder can post)
 - [ ] First build-in-public post (founder) after partial E2E smoke-tested
 
 ### P1 — Launch campaigns

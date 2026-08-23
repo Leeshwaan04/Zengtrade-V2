@@ -72,7 +72,7 @@ Verify with:
 ./scripts/check-railway-deploy.sh   # when RAILWAY_API_TOKEN is set
 ```
 
-Founder checklist: **https://zengtrade.in/ops/p0**
+Founder checklist: **https://zengtrade.in/ops/p0** · Worker recovery: **docs/WORKER_RECOVERY.md**
 
 After P0 green: `./scripts/post-p0-success.sh` then E2E at `/ops/e2e`. QA/VAPT: `./scripts/security-smoke.sh` and **/ops/security**.
 

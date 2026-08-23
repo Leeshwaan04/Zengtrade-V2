@@ -50,6 +50,29 @@ curl -sI https://zengtrade.in/pricing/ | grep -i x-robots
 - `pageviews_7d`
 - Signups with `utm_campaign=coin_*` (via event paths / GSC)
 
+## Monthly GSC review (founder / SEO)
+
+Run on the **first Monday** of each month after property is verified.
+
+| Step | Action |
+|------|--------|
+| 1 | Open [Search Console](https://search.google.com/search-console) → `https://zengtrade.in` |
+| 2 | **Performance** → last 28 days → export top 20 queries + pages |
+| 3 | Note impressions/clicks for `/`, `/pricing/`, `/how-it-works/`, top 3 coin pages |
+| 4 | **Indexing** → confirm sitemap `https://zengtrade.in/sitemap.xml` — 0 critical errors |
+| 5 | **URL inspection** → request indexing for any new coin page or major copy change |
+| 6 | Log findings in `docs/GROWTH_DASHBOARD.md` under **SEO** for that month |
+
+Automated preflight (no GSC API required):
+
+```bash
+./scripts/check-gsc-ready.sh
+./scripts/check-sitemap.sh
+./scripts/check-funnel-ctas.sh
+```
+
+**KPI targets (30d):** 500 organic sessions/week · coin landing CTR from GSC · signups with `utm_campaign=coin_*`.
+
 ## Do not
 
 - Index staging or `/ops/*` (should stay `noindex`)

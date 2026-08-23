@@ -27,7 +27,8 @@ postgresql://postgres.ponvarxeytfcntckczbn:PASSWORD@aws-0-ap-northeast-1.pooler.
 ```
 
 Founder/agent unblock: Cloud Agent `DATABASE_PASSWORD` only → `./scripts/run-p0-if-ready.sh` on repo `main`.  
-Verify: `./scripts/check-worker.sh` (heartbeat < 12 min). Guide: https://zengtrade.in/ops/worker
+Verify: `./scripts/check-worker.sh` (heartbeat < 12 min). Guide: https://zengtrade.in/ops/worker  
+Recovery runbook: `docs/WORKER_RECOVERY.md`
 
 **A) Docker host — Railway / Render / Fly.io (easiest, ~$5/mo):**
 ```

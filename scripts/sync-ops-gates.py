@@ -94,6 +94,7 @@ def main() -> int:
                 ["./scripts/check-parallel-growth.sh"],
                 cwd=ROOT,
                 capture_output=True,
+                env={**os.environ, "SITE": "https://zengtrade.in"},
             ).returncode
             == 0
         )

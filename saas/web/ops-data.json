@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T21:12:29Z",
+  "updated": "2026-08-23T21:17:04Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -91,10 +91,16 @@
       "append-growth-log.sh GROWTH_DASHBOARD auto-append (session 109)",
       "post-p0-success check-growth-gates + dashboard prune (session 110)",
       "cto.md + worker README production Railway path (session 111)",
-      "cpo.md + cbo.md charter refresh (session 112)"
+      "cpo.md + cbo.md charter refresh (session 112)",
+      "docs/WORKER_RECOVERY.md + /ops/worker link (session 115)",
+      "sync-ops-gates passes SITE to parallel growth probe (session 115)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
+      {
+        "label": "Worker recovery runbook",
+        "url": "https://github.com/Leeshwaan04/Zengtrade-V2/blob/main/docs/WORKER_RECOVERY.md"
+      },
       {
         "label": "GitHub Actions",
         "url": "https://github.com/Leeshwaan04/Zengtrade-V2/actions"
@@ -230,7 +236,8 @@
       "check-sitemap.sh \u2014 7 coin URLs in production sitemap (CI)",
       "Coin signup CTAs with utm_campaign=coin_*",
       "Founder GSC playbook at /ops/gsc",
-      "check-seo-content.sh \u2014 paper-loop + founding offer on prod (session 89)"
+      "check-seo-content.sh \u2014 paper-loop + founding offer on prod (session 89)",
+      "Monthly GSC review template in SEO_PLAYBOOK.md (session 115)"
     ],
     "next": "GSC property + sitemap submit after P0; expand pSEO via seo/generate.py",
     "links": [
@@ -261,7 +268,8 @@
       "r/algotrading draft + WEEKLY_PROOF template (post after E2E)",
       "LinkedIn founder launch post template in MARKETING_PLAYBOOK (session 88)",
       "Coin spotlight post template in MARKETING_PLAYBOOK (session 92)",
-      "Parallel work playbook \u2014 GSC + billing + build-in-public (session 103)"
+      "Parallel work playbook \u2014 GSC + billing + build-in-public (session 103)",
+      "Pre-P0 LinkedIn build-in-public draft updated for production partial E2E (session 115)"
     ],
     "next": "First forward-proof post after P0 E2E; coin spotlight series",
     "links": [

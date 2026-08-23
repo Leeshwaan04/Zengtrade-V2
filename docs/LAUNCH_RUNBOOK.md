@@ -48,6 +48,7 @@ Production checklist for `zengtrade.in`. Autopilot CTO agent maintains this file
 - CBO GSC: <https://zengtrade.in/ops/gsc>
 - CBO billing smoke: <https://zengtrade.in/ops/billing>
 - Unblock: Cloud Agent `DATABASE_PASSWORD` or <https://zengtrade.in/ops/worker>
+- Recovery: `docs/WORKER_RECOVERY.md` (diagnose → fix → verify)
 
 ```bash
 cd saas/worker

@@ -37,7 +37,7 @@ Founder: verify GSC property + submit **https://zengtrade.in/sitemap.xml** — h
 
 ### P2 — Compounding
 - [x] Paper loop section on how-it-works
-- [ ] Monthly GSC review template usage in `SEO_PLAYBOOK.md`
+- [x] Monthly GSC review template in `SEO_PLAYBOOK.md`
 
 ## Definition of done (each run)
 

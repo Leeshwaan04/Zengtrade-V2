@@ -1313,6 +1313,21 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 21:12Z)
 - worker ❌ · migration 0011 ✅ · parallel growth ✅
 
+### Day 1 (session 115) — worker recovery runbook + SEO GSC template
+
+### CTO
+- **Shipped:** docs/WORKER_RECOVERY.md; sync-ops-gates SITE fix; /ops/worker link
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** partial activation 5/5 parallel gates green
+
+### CBO
+- **Shipped:** pre-P0 LinkedIn draft updated; billing + GSC green
+
+### Status (`./scripts/check-growth-standup.sh` @ 21:17Z)
+- worker ❌ · migration 0011 ✅ · parallel growth ✅
+
 ---
 
 ## Daily log template

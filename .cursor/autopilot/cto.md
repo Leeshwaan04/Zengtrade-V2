@@ -33,8 +33,8 @@ Preflight (no secrets printed): `./scripts/validate-database-credentials.sh`
 - [x] `tests/e2e_smoke.sh` in CI
 
 ### P2 — Hardening
-- [ ] RLS two-account manual test (`/ops/e2e` step 5)
-- [ ] Document worker recovery runbook
+- [ ] RLS two-account manual test (`/ops/e2e` step 5) — after worker live
+- [x] Document worker recovery runbook (`docs/WORKER_RECOVERY.md`)
 
 ## Parallel work (while worker blocked)
 
