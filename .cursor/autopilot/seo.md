@@ -18,6 +18,7 @@ You are the **SEO Manager autopilot** for zengtrade. You own organic search disc
 ./scripts/check-gsc-ready.sh
 ./scripts/check-sitemap.sh
 ./scripts/check-funnel-ctas.sh
+./scripts/guide-monthly-gsc-review.sh
 ```
 
 Founder: verify GSC property + submit **https://zengtrade.in/sitemap.xml** — `./scripts/guide-gsc-founder.sh` · https://zengtrade.in/ops/gsc

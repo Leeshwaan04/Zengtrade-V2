@@ -75,6 +75,9 @@ if [[ $WORK_OK -eq 0 ]]; then
     PARTIAL_OK=1
   fi
   echo ""
+  echo ">> QA parallel (worker blocked)"
+  ./scripts/check-qa-parallel.sh 2>/dev/null || echo "⚠️  QA parallel — run ./scripts/check-qa-parallel.sh"
+  echo ""
 fi
 
 echo "=== Summary ==="

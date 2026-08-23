@@ -1,6 +1,6 @@
 # zengtrade — live status
 
-**Last autopilot check:** 2026-08-23 (session 120)  
+**Last autopilot check:** 2026-08-23 (session 128)  
 **Production:** https://zengtrade.in
 
 ## Ship gate
@@ -12,8 +12,9 @@
 | `/dashboard` Algo Studio | ✅ |
 | Billing edge functions | ✅ NOWPayments + founding $19 |
 | Migration 0011 (funnel v2) | ✅ `signup_complete`, `deploy_click`, `deploy_success`, `checkout_click` |
-| Parallel growth (excl. worker) | ✅ `./scripts/check-parallel-growth.sh` (5/5) |
+| Parallel growth (excl. worker) | ✅ `./scripts/check-parallel-growth.sh` |
 | Sales-ready (Pro checkout path) | ✅ `./scripts/check-sales-ready.sh` |
+| QA parallel (excl. worker) | ✅ `./scripts/check-qa-parallel.sh` |
 | Paper worker | ❌ **Down** — heartbeat stale (2026-08-11); Railway deploy **FAILED** (wrong `DATABASE_URL` password) |
 
 ## P0 blocker (founder)
@@ -26,30 +27,32 @@ Reset Supabase DB password → update Railway `paper-worker` `DATABASE_URL` → 
 
 ## Parallel work (while worker blocked)
 
-| Role | Action |
+| Role | Guide |
 |------|--------|
 | **All** | `./scripts/guide-founder-parallel.sh` |
-| CPO partial E2E | `./scripts/guide-partial-e2e.sh` · https://zengtrade.in/ops/e2e (steps 1–2) |
-| CBO GSC | https://zengtrade.in/ops/gsc · `docs/GSC_SETUP.md` § Founder completion log |
-| CBO / Sales billing | https://zengtrade.in/ops/billing · `./scripts/check-sales-ready.sh` |
-| Marketing | `docs/content/LINKEDIN_BUILD_IN_PUBLIC.md` (founder-ready post) |
+| CTO | `./scripts/validate-database-credentials.sh` · **https://zengtrade.in/ops/worker** |
+| CPO | `./scripts/guide-partial-e2e.sh` · `./scripts/guide-free-tier-test.sh` |
+| CBO / Sales | `./scripts/guide-gsc-founder.sh` · `./scripts/guide-first-pro-checkout.sh` |
+| Marketing | `./scripts/guide-linkedin-bip.sh` |
+| SEO | `./scripts/guide-monthly-gsc-review.sh` |
+| QA&VAPT | `./scripts/check-qa-parallel.sh` |
+
+Index: **docs/FOUNDER_PARALLEL.md**
 
 ## Founder dashboards
 
 👉 **https://zengtrade.in/ops** — CTO / CPO / CBO live gates  
 👉 **https://zengtrade.in/admin** — signups, MRR, funnel (login required)
 
-## Verify commands
+## After P0 green
 
 ```bash
-./scripts/run-p0-if-ready.sh            # agent entry — auto-apply when credentials set
-./scripts/guide-founder-parallel.sh     # founder playbook while worker down
-./scripts/check-parallel-growth.sh      # parallel gates (5/5 excl. worker)
-./scripts/check-sales-ready.sh          # billing + plan intent + pricing truth
-./scripts/check-growth-standup.sh       # daily standup + metrics table
-./scripts/snapshot-growth-metrics.sh    # markdown table for GROWTH_DASHBOARD
-./scripts/founder-preflight.sh
-./tests/e2e_smoke.sh
+./scripts/post-p0-success.sh
+./scripts/verify-activation-path.sh
 ```
 
-> Production is **GitHub Pages** (`pages.yml` on `main`). Vercel previews are a separate project.
+Full E2E: **https://zengtrade.in/ops/e2e** (signup → deploy → trades)
+
+## Agent log
+
+Daily updates: **docs/GROWTH_DASHBOARD.md** · `./scripts/append-growth-log.sh`

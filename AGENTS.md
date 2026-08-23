@@ -72,7 +72,8 @@ Verify with:
 ./scripts/guide-partial-e2e.sh         # CPO: founder manual partial E2E steps
 ./scripts/guide-gsc-founder.sh         # CBO: founder manual GSC verify + sitemap
 ./scripts/guide-first-pro-checkout.sh  # Sales: founder manual first Pro MRR
-./scripts/guide-linkedin-bip.sh      # Marketing: LinkedIn build-in-public CLI
+./scripts/guide-free-tier-test.sh      # CPO: Q9 manual free-tier deploy cap test
+./scripts/guide-monthly-gsc-review.sh  # SEO: monthly GSC review checklist
 ./scripts/check-free-tier-limit.sh     # CPO: free-tier deploy cap probes
 ./scripts/check-parallel-growth.sh   # CBO/CPO: partial + billing + GSC while worker down
 ./scripts/check-qa-parallel.sh       # QA: security + XSS + partial + sales (worker blocked)

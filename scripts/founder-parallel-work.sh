@@ -15,6 +15,7 @@ any=0
 if SITE="$SITE" ./scripts/check-activation-ready.sh >/dev/null 2>&1; then
   echo "  CPO  Activation UI — signup → deploy: $SITE/login?mode=signup → $SITE/dashboard"
   echo "       Partial verify: ./scripts/guide-partial-e2e.sh · $SITE/ops/e2e (steps 1–2)"
+  echo "       Free-tier Q9: ./scripts/guide-free-tier-test.sh"
   any=1
 fi
 if SITE="$SITE" ./scripts/check-billing-ready.sh >/dev/null 2>&1; then
@@ -22,11 +23,16 @@ if SITE="$SITE" ./scripts/check-billing-ready.sh >/dev/null 2>&1; then
   any=1
 fi
 if ./scripts/check-sales-ready.sh >/dev/null 2>&1; then
-  echo "  Sales Pro checkout path — ./scripts/check-sales-ready.sh · first MRR in $SITE/admin"
+  echo "  Sales First Pro MRR — ./scripts/guide-first-pro-checkout.sh · $SITE/admin"
   any=1
 fi
 if SITE="$SITE" ./scripts/check-gsc-ready.sh >/dev/null 2>&1; then
-  echo "  CBO  GSC-ready — verify domain + submit sitemap: $SITE/ops/gsc"
+  echo "  CBO  GSC-ready — ./scripts/guide-gsc-founder.sh · $SITE/ops/gsc"
+  any=1
+fi
+if ./scripts/check-parallel-growth.sh >/dev/null 2>&1; then
+  echo "  Marketing LinkedIn BIP — ./scripts/guide-linkedin-bip.sh"
+  echo "  QA&VAPT parallel — ./scripts/check-qa-parallel.sh · $SITE/ops/security"
   any=1
 fi
 

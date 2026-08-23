@@ -16,7 +16,7 @@
 | Q7 | E2E smoke | Landing build + worker compile | ☑ | `e2e_smoke.sh` CI |
 | Q8 | Activation | Post-P0 verify script | ☐ | `verify-activation-path.sh` (blocked: P0) |
 | Q8b | Partial activation | Signup → deploy UI without worker | ☑ | `verify-partial-activation.sh` + `guide-partial-e2e.sh` (2026-08-23) |
-| Q9 | Free tier | Second deploy blocked with upgrade CTA | ☐ | `check-free-tier-limit.sh` + manual 2nd deploy on Free (2026-08-23) |
+| Q9 | Free tier | Second deploy blocked with upgrade CTA | ☐ | `check-free-tier-limit.sh` + `./scripts/guide-free-tier-test.sh` manual (2026-08-23) |
 | V1 | XSS | Dynamic HTML uses `esc()` in `/app` | ☑ | `check-xss-hygiene.sh` + `app.js` review (2026-08-23) |
 | V2 | Event abuse | `event` insert policy name whitelist | ☑ | migration `0011` applied prod (2026-08-23) |
 | V3 | Worker | DB creds only server-side | ☑ | no secrets in `saas/web/js` |

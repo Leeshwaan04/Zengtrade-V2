@@ -112,7 +112,8 @@
       "docs/STATUS.md session 120 refresh + founder_actions parallel tasks (session 120)",
       "sync-growth-dashboard-header.sh auto-updates GROWTH_DASHBOARD probes (session 121)",
       "append-growth-log auto-syncs header; status-report Sales-ready (session 122)",
-      "FOUNDER_PARALLEL.md + sync header probe retries (session 123)"
+      "FOUNDER_PARALLEL.md + sync header probe retries (session 123)",
+      "docs/STATUS.md session 128 + /ops parallel role guides (session 128)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -167,7 +168,8 @@
       "/ops/e2e steps 1\u20132 green + deploy_click probe (session 104)",
       "cpo.md charter: partial activation path (session 112)",
       "guide-partial-e2e.sh founder manual partial E2E (session 117)",
-      "check-free-tier-limit.sh \u2014 free deploy cap probes in parallel growth (session 126)"
+      "check-free-tier-limit.sh \u2014 free deploy cap probes in parallel growth (session 126)",
+      "guide-free-tier-test.sh \u2014 Q9 manual free-tier test steps (session 128)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [
@@ -262,7 +264,8 @@
       "Founder GSC playbook at /ops/gsc",
       "check-seo-content.sh \u2014 paper-loop + founding offer on prod (session 89)",
       "Monthly GSC review template in SEO_PLAYBOOK.md (session 115)",
-      "GSC founder completion log in GSC_SETUP.md + /ops/gsc (session 117)"
+      "GSC founder completion log in GSC_SETUP.md + /ops/gsc (session 117)",
+      "guide-monthly-gsc-review.sh \u2014 founder monthly GSC CLI (session 128)"
     ],
     "next": "GSC property + sitemap submit after P0; expand pSEO via seo/generate.py",
     "links": [

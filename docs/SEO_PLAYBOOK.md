@@ -69,6 +69,7 @@ Automated preflight (no GSC API required):
 ./scripts/check-gsc-ready.sh
 ./scripts/check-sitemap.sh
 ./scripts/check-funnel-ctas.sh
+./scripts/guide-monthly-gsc-review.sh   # founder monthly checklist
 ```
 
 **KPI targets (30d):** 500 organic sessions/week · coin landing CTR from GSC · signups with `utm_campaign=coin_*`.
