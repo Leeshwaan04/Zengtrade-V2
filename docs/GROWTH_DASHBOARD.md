@@ -368,8 +368,32 @@
 - Worker: *(pending Railway deploy)*
 - MRR: $0
 
+### Day 1 (session 30) — migration verify deploy_success
 
-## Daily log template
+### CTO
+- **Shipped:** `check-migrations.sh` probes `deploy_success`; `/ops/migrate` verify button tests signup + deploy events.
+- **Blocked:** Migration 0011 + worker unchanged.
+
+### CPO
+- **Shipped:** `verify-activation-path.sh` fails on `deploy_success` 401 (aligned with signup_complete gate).
+
+### Day 1 (session 31) — workflow verify loop + status sweep
+
+### Status (`./scripts/status-report.sh` @ 15:35Z)
+- **Production:** site + OAuth + billing ✅ | migration 0011 ❌ | worker ❌ (heartbeat 2026-08-11)
+- **PR #5:** OPEN, MERGEABLE, CI running — `/ops/p0` still 404 on prod until merge
+- **Event probes:** `deploy_click` 201 | `signup_complete` / `deploy_success` 401
+
+### CTO
+- **Shipped:** `apply-migration-0011.yml` verifies both funnel v2 events post-apply.
+
+### Founder P0 (unchanged)
+1. Merge **PR #5** → https://zengtrade.in/ops/p0
+2. Migration 0011 → https://zengtrade.in/ops/migrate
+3. Paper worker → https://zengtrade.in/ops/worker
+4. `./scripts/wait-for-p0.sh` → `./scripts/verify-activation-path.sh` → https://zengtrade.in/ops/e2e
+
+---
 
 Copy for each new day:
 
