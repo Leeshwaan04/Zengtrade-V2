@@ -6,7 +6,7 @@
     {
       "id": "p0-unblock",
       "title": "Add DATABASE_URL",
-      "detail": "Add DATABASE_URL to Cloud Agent secrets (Supabase pooler :5432) or GitHub repo Secrets. Agent runs ./scripts/run-p0-if-ready.sh on main.",
+      "detail": "Postgres URI from Supabase → Database → Connection string (session pooler :5432). Use the database password — not sb_secret/sb_publishable API keys. Agent runs ./scripts/run-p0-if-ready.sh.",
       "url": "https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings",
       "alt_url": "https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml",
       "urgent": true
@@ -84,7 +84,8 @@
       "Activation checklist shows worker-offline hint when deploys exist but no trades",
       "Post-deploy banner in /app links to Forward Test (signup \u2192 deploy \u2192 trades)",
       "Fresh signup deploy nudge on /dashboard in ~800ms (zt_fresh_signup flag)",
-      "Activation checklist: worker-live wait hint (5\u201315 min to first trade)"
+      "Activation checklist: worker-live wait hint (5\u201315 min to first trade)",
+      "Go-live bar read-only checklist on /app#pricing (docs/GO_LIVE_BAR.md)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [
