@@ -334,6 +334,12 @@
 ### CTO
 - **Blocked:** P0 unchanged — merge PR #5 + founder /ops/p0.
 
+### Day 1 (session 27) — agent runbook + Pages CI P0 log
+
+### CTO
+- **Shipped:** `AGENTS.md` cloud P0 blocker docs; Pages `verify-production` logs P0 snapshot after each deploy.
+- **Blocked:** Migration 0011 + worker; PR #5 open (CI green).
+
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*

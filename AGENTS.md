@@ -21,3 +21,19 @@ Scheduled Cloud Agents should read `.cursor/autopilot/README.md` and their role 
 - Billing/evidence SPA: `/app` (`app.html`)
 - OAuth callback must land on `/login` before `/dashboard`
 - Worker (`saas/worker/`) must run in production for paper trades to populate
+
+### Autopilot P0 blocker (founder-owned)
+
+Agents **cannot** apply migration 0011 or deploy the worker (no `DATABASE_URL` / Railway in the VM). Verify with:
+
+```bash
+./scripts/status-report.sh
+```
+
+Founder checklist: **https://zengtrade.in/ops/p0** (ships after PR #5 merge; `/ops/migrate` + `/ops/worker` work today).
+
+After P0 green: `./scripts/wait-for-p0.sh` then E2E at `/ops/e2e`.
+
+Open autopilot PR: **https://github.com/Leeshwaan04/Zengtrade-V2/pull/5** — merge to `main` when CI green (do not merge unless the user asked).
+
+Do not mark the growth goal complete until migration 0011 + worker + signup→deploy→trades are verified on production.

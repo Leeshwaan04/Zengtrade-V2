@@ -37,7 +37,7 @@
       "verify-activation-path.sh for post-P0 E2E gate",
       "render.yaml + WORKER_QUICKSTART for one-click worker host"
     ],
-    "next": "Worker heartbeat < 12 min; all preflight gates green",
+    "next": "Merge PR #5 → founder /ops/p0 (migration + worker); then verify-activation-path",
     "links": [
       {
         "label": "GitHub Actions",

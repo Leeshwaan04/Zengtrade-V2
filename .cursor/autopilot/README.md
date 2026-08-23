@@ -28,7 +28,10 @@ Commit, push, update open PR if any. Summarize for the founder in 5 bullets.
 
 ## Founder dashboard (bookmark this)
 
-**https://zengtrade.in/ops** — live HTML progress for CTO / CPO / CBO (auto-refresh, approval alerts).
+**https://zengtrade.in/ops/p0** — P0 checklist (~15 min: migration 0011 + worker).  
+**https://zengtrade.in/ops** — full CTO / CPO / CBO dashboard.
+
+Merge **[PR #5](https://github.com/Leeshwaan04/Zengtrade-V2/pull/5)** when CI green to ship `/ops/p0` and funnel fixes to production.
 
 Agents update `saas/web/ops-data.json` on each run (not markdown for the founder).
 
