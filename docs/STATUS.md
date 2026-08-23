@@ -1,21 +1,26 @@
 # zengtrade — live status
 
-**Last autopilot check:** 2026-08-23  
+**Last autopilot check:** 2026-08-23 (post-merge)  
 **Production:** https://zengtrade.in
 
 ## Ship gate
 
-| Check | Production now | After PR #3 merge |
-|-------|----------------|-------------------|
-| `/app` | ❌ 404 | ✅ billing + evidence |
-| Google OAuth (`establishSession`) | ❌ old auth.js | ✅ fixed |
-| `/dashboard` Algo Studio | ✅ 200 | ✅ + studio shim updates |
-| Paper worker | ❓ unknown | needs Railway/Fly |
+| Check | Status |
+|-------|--------|
+| `/app` billing + evidence | ✅ live |
+| Google OAuth (`establishSession`) | ✅ fixed auth.js deployed |
+| `/dashboard` Algo Studio | ✅ + studio shim |
+| Billing edge functions | ✅ NOWPayments deployed |
+| Paper worker | ❌ **Down** — heartbeat stale (2026-08-11) |
+| Migrations 0009–0011 | ❓ apply if funnel events fail |
 
-## Founder action
+## Founder action (remaining P0)
 
-👉 **[MERGE_AND_SHIP.md](MERGE_AND_SHIP.md)** — merge PR #3 (5 min)  
-👉 **[FOUNDER_DEPLOY.md](FOUNDER_DEPLOY.md)** — Supabase + worker (30 min)
+👉 **[FOUNDER_DEPLOY.md](FOUNDER_DEPLOY.md)** — worker on Railway/Fly + migrations (20 min)
+
+```bash
+./scripts/founder-preflight.sh   # should show ✅ production + billing, ❓ worker
+```
 
 ## Autopilot agents
 
@@ -24,17 +29,17 @@ Charters: `.cursor/autopilot/{cto,cpo,cbo}.md`
 
 ## PRs
 
-| PR | Status | Action |
-|----|--------|--------|
-| [#3](https://github.com/Leeshwaan04/Zengtrade-V2/pull/3) autopilot | Open (draft) · **CI smoke ✅** | **Merge to main** |
-| [#2](https://github.com/Leeshwaan04/Zengtrade-V2/pull/2) crypto-only | Open | Close (superseded by #3) |
+| PR | Status |
+|----|--------|
+| [#3](https://github.com/Leeshwaan04/Zengtrade-V2/pull/3) autopilot | **Merged** 2026-08-23 |
+| [#2](https://github.com/Leeshwaan04/Zengtrade-V2/pull/2) crypto-only | Merged (superseded by #3) |
 
-> **Note:** Vercel preview deploys a separate Next.js project — **not** the `build.py` landing site. Production ship path is **GitHub Pages** (`pages.yml` on `main`), which serves `/app`, `/dashboard`, and fixed `auth.js`.
+> **Note:** Vercel preview deploys a separate Next.js project — **not** the `build.py` landing site. Production is **GitHub Pages** (`pages.yml` on `main`).
 
 ## Verify commands
 
 ```bash
 ./tests/e2e_smoke.sh
 SITE=https://zengtrade.in ./scripts/check-production.sh
-./scripts/wait-for-deploy.sh   # after merge, polls until probes pass
+./scripts/founder-preflight.sh
 ```

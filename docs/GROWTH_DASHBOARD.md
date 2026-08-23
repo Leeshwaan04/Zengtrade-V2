@@ -174,6 +174,21 @@
 - **Shipped:** Billing verify script for MRR rail readiness.
 - **Next:** Deploy billing + test checkout after P0.
 
+### Day 1 (session 11) — PR #3 MERGED 🚀
+
+### CTO
+- **Shipped:** PR #3 merged to `main` (founder approved). GitHub Pages deploy + **verify-production CI green**. All `check-production.sh` probes pass (`/app`, `establishSession`).
+- **Blocked:** Worker heartbeat stale (last 2026-08-11) — paper trades won't run until Railway/Fly deploy.
+- **Next:** Founder `FOUNDER_DEPLOY.md` §3–4 (migrations + worker).
+
+### CPO
+- **Shipped:** Production activation UX live (`/app` checklist, `/dashboard` nudge, funnel events in code).
+- **Next:** E2E signup → deploy → trades once worker live; watch `/admin` funnel tiles.
+
+### CBO
+- **Shipped:** Site + billing rail live on zengtrade.in.
+- **Next:** GSC sitemap submit; test Pro checkout → tier flip.
+
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*
