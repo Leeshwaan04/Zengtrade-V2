@@ -150,6 +150,56 @@
       }
     ]
   },
+  "seo": {
+    "headline": "Organic search & pSEO",
+    "shipped": [
+      "Charter: .cursor/autopilot/seo.md + docs/SEO_PLAYBOOK.md",
+      "check-sitemap.sh \u2014 7 coin URLs in production sitemap (CI)",
+      "Coin signup CTAs with utm_campaign=coin_*",
+      "Founder GSC playbook at /ops/gsc"
+    ],
+    "next": "GSC property + sitemap submit after P0; expand pSEO via seo/generate.py",
+    "links": [
+      { "label": "GSC playbook", "url": "https://zengtrade.in/ops/gsc" },
+      { "label": "Sitemap", "url": "https://zengtrade.in/sitemap.xml" },
+      { "label": "Coins hub", "url": "https://zengtrade.in/coins/" },
+      { "label": "SEO playbook (repo)", "url": "https://github.com/Leeshwaan04/Zengtrade-V2/blob/main/docs/SEO_PLAYBOOK.md" }
+    ]
+  },
+  "marketing": {
+    "headline": "Brand, content & campaigns",
+    "shipped": [
+      "Charter: .cursor/autopilot/marketing.md + docs/MARKETING_PLAYBOOK.md",
+      "Paper loop section on /how-it-works (#paper-loop)",
+      "UTM conventions on home + pricing (check-funnel-ctas.sh)",
+      "r/algotrading draft + WEEKLY_PROOF template (post after E2E)"
+    ],
+    "next": "First forward-proof post after P0 E2E; coin spotlight series",
+    "links": [
+      { "label": "How it works", "url": "https://zengtrade.in/how-it-works/" },
+      { "label": "Reddit draft (repo)", "url": "https://github.com/Leeshwaan04/Zengtrade-V2/blob/main/docs/content/REDDIT_ALGOTRADING_DRAFT.md" },
+      { "label": "Weekly proof template", "url": "https://github.com/Leeshwaan04/Zengtrade-V2/blob/main/docs/content/WEEKLY_PROOF.md" },
+      { "label": "Marketing playbook", "url": "https://github.com/Leeshwaan04/Zengtrade-V2/blob/main/docs/MARKETING_PLAYBOOK.md" }
+    ]
+  },
+  "sales": {
+    "headline": "Pro conversion & MRR",
+    "shipped": [
+      "Charter: .cursor/autopilot/sales.md + docs/SALES_PLAYBOOK.md",
+      "Founding $19/mo Pro on /pricing and /app#pricing",
+      "plan_intent + checkout_click funnel events (migration 0011)",
+      "?plan=pro|elite \u2192 /app#pricing after auth",
+      "check-pricing-truth.sh \u2014 no live execution overpromise",
+      "Billing test guide at /ops/billing"
+    ],
+    "next": "First Pro checkout E2E once P0 green; track MRR in /admin",
+    "links": [
+      { "label": "Billing test", "url": "https://zengtrade.in/ops/billing" },
+      { "label": "Pro pricing", "url": "https://zengtrade.in/app#pricing" },
+      { "label": "Admin MRR", "url": "https://zengtrade.in/admin" },
+      { "label": "Sales playbook", "url": "https://github.com/Leeshwaan04/Zengtrade-V2/blob/main/docs/SALES_PLAYBOOK.md" }
+    ]
+  },
   "qavapt": {
     "headline": "QA & VAPT",
     "shipped": [

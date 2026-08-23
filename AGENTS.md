@@ -5,13 +5,19 @@
 - **Always work on `main`.** Commit and push directly to `origin/main`.
 - **Do not create or update pull requests.** The founder does not want PR-based workflow; skip `ManagePullRequest`, draft PRs, and “merge PR #N” unblock hints unless the user explicitly asks for a PR again.
 
-## Autopilot agents (CTO, CPO, CBO, QA&VAPT)
+## Autopilot agents (CTO, CPO, CBO, QA&VAPT, SEO, Marketing, Sales)
 
 Scheduled Cloud Agents should read `.cursor/autopilot/README.md` and their role charter, then:
 
 1. Execute the top unchecked P0/P1 task
 2. Update `saas/web/ops-data.json` (founder-facing HTML at **/ops**) and `docs/GROWTH_DASHBOARD.md` (agent log)
-3. Commit with prefix `cto(autopilot):`, `cpo(autopilot):`, `cbo(autopilot):`, or `qavapt(autopilot):`
+3. Commit with prefix `cto(autopilot):`, `cpo(autopilot):`, `cbo(autopilot):`, `qavapt(autopilot):`, `seo(autopilot):`, `marketing(autopilot):`, or `sales(autopilot):`
+
+| Role | Charter | Playbook |
+|------|---------|----------|
+| SEO Manager | `.cursor/autopilot/seo.md` | `docs/SEO_PLAYBOOK.md` |
+| Marketing Lead | `.cursor/autopilot/marketing.md` | `docs/MARKETING_PLAYBOOK.md` |
+| Sales Manager | `.cursor/autopilot/sales.md` | `docs/SALES_PLAYBOOK.md` |
 
 QA&VAPT charter: `.cursor/autopilot/qavapt.md` · checklist: `docs/QA_VAPT_CHECKLIST.md` · smoke: `./scripts/security-smoke.sh`
 

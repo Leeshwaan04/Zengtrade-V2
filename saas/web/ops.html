@@ -31,9 +31,7 @@
   .gate .k{font:700 10px/1 var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--slate)}
   .gate .v{font:800 22px/1.2 var(--sans);margin-top:6px}
   .gate.ok .v{color:var(--green-d)}.gate.bad .v{color:var(--red-d)}.gate.wait .v{color:var(--amber)}
-  .grid3{display:grid;gap:14px}
-  @media(min-width:700px){.grid3{grid-template-columns:1fr 1fr}}
-  @media(min-width:1050px){.grid3{grid-template-columns:1fr 1fr 1fr 1fr}}
+  .grid3{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
   .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
   .card h3{font:800 13px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;margin:0 0 4px}
   .card .head{font:700 16px/1.3 var(--sans);margin:0 0 12px;color:var(--navy)}
@@ -55,7 +53,7 @@
     <div class="logo" aria-hidden="true">Z</div>
     <div>
       <h1>Founder Ops</h1>
-      <p class="sub">CTO · CPO · CBO · QA&VAPT — live autopilot progress</p>
+      <p class="sub">CTO · CPO · CBO · SEO · Marketing · Sales · QA&VAPT — live autopilot progress</p>
     </div>
     <span class="sp"></span>
     <span id="notifyPill" class="pill warn" hidden>Notifications off</span>
@@ -79,8 +77,8 @@
     <a class="primary" href="/ops/p0">P0 checklist (~15 min)</a>
     <a class="primary" href="/ops/migrate">① Apply migration 0011</a>
     <a class="primary" href="/ops/worker">② Deploy paper worker</a>
-    <a class="secondary" href="/ops/billing">Test Pro checkout</a>
-    <a class="secondary" href="/ops/gsc">GSC / organic</a>
+    <a class="secondary" href="/ops/billing">Sales / billing</a>
+    <a class="secondary" href="/ops/gsc">SEO / GSC</a>
     <a class="secondary" href="/ops/e2e">E2E test (CPO)</a>
     <a class="secondary" href="/ops/security">QA &amp; VAPT</a>
     <a class="secondary" href="/admin">Admin metrics</a>
@@ -272,7 +270,9 @@ async function refresh() {
 
   renderApprovals(data.founder_actions || [], live);
   document.getElementById("roles").innerHTML =
-    roleCard("CTO", data.cto) + roleCard("CPO", data.cpo) + roleCard("CBO", data.cbo) + roleCard("QA&VAPT", data.qavapt);
+    roleCard("CTO", data.cto) + roleCard("CPO", data.cpo) + roleCard("CBO", data.cbo) +
+    roleCard("SEO", data.seo) + roleCard("Marketing", data.marketing) + roleCard("Sales", data.sales) +
+    roleCard("QA&VAPT", data.qavapt);
   document.getElementById("asof").textContent =
     "Live probes: " + new Date().toLocaleString() + (data.updated ? " · Briefing data: " + data.updated.replace("T", " ").replace("Z", " UTC") : "");
 }
