@@ -46,6 +46,6 @@ Verify with:
 
 Founder checklist: **https://zengtrade.in/ops/p0**
 
-After P0 green: `./scripts/wait-for-p0.sh` then E2E at `/ops/e2e`. QA/VAPT: `./scripts/security-smoke.sh` and **/ops/security**.
+After P0 green: `./scripts/post-p0-success.sh` then E2E at `/ops/e2e`. QA/VAPT: `./scripts/security-smoke.sh` and **/ops/security**.
 
 Do not mark the growth goal complete until migration 0011 + worker + signup→deploy→trades are verified on production.
