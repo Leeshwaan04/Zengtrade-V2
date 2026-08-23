@@ -659,6 +659,15 @@
 ### Status (`./scripts/status-report.sh` @ 17:14Z)
 - migration 0011 ❌ | worker ❌ | PR #7 CI ✅
 
+### Day 1 (session 57) — CBO funnel CTA + sitemap probes
+
+### CBO
+- **Shipped:** `check-funnel-ctas.sh` — home/pricing signup CTAs have utm_source + utm_campaign.
+- **Shipped:** `check-sitemap.sh` includes `/how-it-works/` (paper-loop SEO).
+
+### Status (`./scripts/status-report.sh` @ 17:16Z)
+- migration 0011 ❌ | worker ❌ | awaiting DATABASE_URL
+
 ---
 
 ### CTO
