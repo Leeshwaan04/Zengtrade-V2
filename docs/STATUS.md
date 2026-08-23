@@ -23,6 +23,8 @@ Reset Supabase DB password → update Railway `paper-worker` `DATABASE_URL` → 
 
 **Fastest:** Cloud Agent secret `DATABASE_PASSWORD` only → `./scripts/run-p0-if-ready.sh`
 
+**Verify:** `./scripts/validate-database-credentials.sh` (detects invalid Railway password when `RAILWAY_API_TOKEN` is set)
+
 👉 **https://zengtrade.in/ops/worker** · **docs/WORKER_RECOVERY.md** · **https://zengtrade.in/ops/p0**
 
 ## Parallel work (while worker blocked)
