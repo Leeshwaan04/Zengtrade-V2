@@ -791,6 +791,15 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (@ 18:50Z)
 - Railway: DATABASE_URL set · deploy FAILED · worker ❌
 
+### Day 1 (session 80) — readiness reports bad Railway password
+
+### CTO
+- **Shipped:** `check-p0-readiness.sh` tests Railway URI and reports wrong password explicitly.
+- **Blocked:** Postgres auth still fails on Railway `DATABASE_URL`.
+
+### Status (@ 19:10Z)
+- db_connect ❌ · deploy FAILED · worker ❌
+
 ---
 
 ### CTO
