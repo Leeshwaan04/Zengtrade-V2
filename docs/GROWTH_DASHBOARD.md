@@ -831,6 +831,22 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/status-report.sh` @ 19:32Z)
 - worker ❌ · `founder-next-action`: fix DATABASE_URL password
 
+### Day 1 (session 84) — credential preflight + post-P0 growth gates
+
+### CTO
+- **Shipped:** `validate-database-credentials.sh` — tests resolved URI before deploy (no secrets printed); linked from `/ops/worker` + `founder-database-url-help.sh`.
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** `/ops/e2e` blocked state distinguishes wrong-password vs missing worker.
+
+### CBO
+- **Shipped:** `post-p0-success.sh` runs `check-funnel-ctas.sh` + `check-sitemap.sh` after P0 green.
+- **Verified:** production funnel CTAs + 8 coin URLs in sitemap (19:33Z).
+
+### Status (`./scripts/status-report.sh` @ 19:35Z)
+- worker ❌ · funnel CTAs ✅ · sitemap ✅ · security-smoke ✅
+
 ---
 
 ### CTO
