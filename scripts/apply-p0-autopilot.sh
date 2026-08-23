@@ -5,7 +5,8 @@
 #   RAILWAY_TOKEN — Railway API token (for worker deploy)
 # Optional:
 #   RAILWAY_PROJECT_ID — default f5902ffd-5b3f-49ed-b87d-dad21568185b (founder-approved)
-#   WORKER_INTERVAL    — default 300
+#   RAILWAY_SERVICE      — existing Railway service name/id to link (if project has multiple)
+#   WORKER_INTERVAL      — default 300
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -43,20 +44,16 @@ else
   export RAILWAY_TOKEN
   cd "$ROOT/saas/worker"
 
-  railway link "$PROJECT_ID" --environment production 2>/dev/null \
-    || railway link "$PROJECT_ID" 2>/dev/null \
-    || railway link --project "$PROJECT_ID" 2>/dev/null \
-    || true
+  railway link -p "$PROJECT_ID" -y 2>/dev/null || railway link -p "$PROJECT_ID"
 
-  railway variables --set "DATABASE_URL=${DATABASE_URL}" --skip-deploys 2>/dev/null \
-    || railway variables set "DATABASE_URL=${DATABASE_URL}" 2>/dev/null \
-    || railway variables --set "DATABASE_URL=${DATABASE_URL}" 2>/dev/null
+  if [[ -n "${RAILWAY_SERVICE:-}" ]]; then
+    railway service link "$RAILWAY_SERVICE" 2>/dev/null || true
+  fi
 
-  railway variables --set "WORKER_INTERVAL=${WORKER_INTERVAL:-300}" --skip-deploys 2>/dev/null \
-    || railway variables set "WORKER_INTERVAL=${WORKER_INTERVAL:-300}" 2>/dev/null \
-    || true
+  railway variable set "DATABASE_URL=${DATABASE_URL}" --skip-deploys
+  railway variable set "WORKER_INTERVAL=${WORKER_INTERVAL:-300}" --skip-deploys
 
-  railway up --detach 2>/dev/null || railway up -d 2>/dev/null || railway up
+  railway up -d -y
 
   cd "$ROOT"
   echo ">> Waiting for worker heartbeat (up to 6 min)…"

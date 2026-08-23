@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T16:14:00Z",
+  "updated": "2026-08-23T16:18:00Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -38,7 +38,7 @@
       "Migration 0011 verify probes signup_complete + deploy_success + checkout_click (check-migrations, ops-migrate, GitHub Action)",
       "founder-next-action.sh — single next P0 step in status-report",
       "PR #5 + #6 merged — /ops/p0 + /ops/security live on production",
-      "Migration probes aligned: signup_complete + deploy_success + checkout_click"
+      "apply-p0-autopilot.sh — migration 0011 + Railway worker when secrets set"
     ],
     "next": "Founder /ops/p0 \u2014 migration 0011 + worker; then verify-activation-path",
     "links": [

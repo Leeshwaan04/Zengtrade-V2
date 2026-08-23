@@ -543,7 +543,18 @@
 - migration 0011 ❌ | worker ❌
 - **Next founder action:** `./scripts/founder-next-action.sh` → Apply migration 0011
 
-### Day 1 (session 44) — migration probe alignment + CPO wait hint
+### Day 1 (session 45) — P0 blocked on secrets; apply-p0 script hardened
+
+### CTO
+- **Shipped:** `apply-p0-autopilot.sh` uses Railway CLI v5 (`link -p`, `variable set`, `up -d -y`).
+- **Shipped:** `/ops/migrate` documents Cloud Agent secrets path for full P0.
+- **Blocked:** `DATABASE_URL` + `RAILWAY_TOKEN` not in VM — cannot run migration or deploy worker yet.
+- **Founder-approved Railway:** `f5902ffd-5b3f-49ed-b87d-dad21568185b`
+
+### Status (`./scripts/status-report.sh` @ 16:17Z)
+- migration 0011 ❌ | worker ❌
+
+---
 
 ### CTO
 - **Shipped:** `/ops`, `/ops/p0`, `/ops/e2e` probe all three funnel v2 events (matches `check-migrations.sh`).
