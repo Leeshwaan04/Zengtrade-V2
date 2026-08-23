@@ -56,7 +56,7 @@ fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{h
   const el=document.getElementById("p0gate");
   if(age>12){
     el.style.display="block";
-    el.innerHTML="<b>Note:</b> Paper worker is offline — you can still test checkout, but activation E2E (deploy → trades) needs <a href=\"/ops/worker\">worker live</a> first.";
+    el.innerHTML="<b>Note:</b> Paper worker is offline — you can still test checkout. Parallel gates: <code>./scripts/check-parallel-growth.sh</code>. Activation E2E (trades) needs <a href=\"/ops/worker\">worker live</a>.";
   }
 }).catch(()=>{});
 (async function(){

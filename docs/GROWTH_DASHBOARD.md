@@ -1219,6 +1219,21 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 
 ### Day 1 (session 109) — append-growth-log + README refresh
 
+### Day 1 (session 110) — post-P0 runbook + dashboard cleanup
+
+### CTO
+- **Shipped:** post-p0-success runs check-growth-gates; GROWTH_DASHBOARD duplicate entries removed
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** validate-database-credentials DATABASE_PASSWORD-first messaging
+
+### CBO
+- **Shipped:** ops/billing parallel-growth hint; SALES_PLAYBOOK check-parallel-growth
+
+### Status (`./scripts/check-growth-standup.sh` @ 21:00Z)
+- worker ❌ · migration 0011 ✅ · parallel growth ✅
+
 ### CTO
 - **Shipped:** append-growth-log.sh auto-append to GROWTH_DASHBOARD.md; README production launch section
 - **Blocked:** Railway Postgres password still invalid.
@@ -1231,26 +1246,6 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 
 ### Status (`./scripts/check-growth-standup.sh` @ 20:58Z)
 - worker ❌ · migration 0011 ✅ · parallel growth ✅
-
----
-
-### CTO
-- **Shipped:** Railway account token accepted via GraphQL (`RAILWAY_API_TOKEN`).
-- **Found:** `Zengtrade-V2` Railway service was deploying static site, not worker.
-- **Shipped:** New `paper-worker` service (Dockerfile `saas/worker`); `scripts/railway-api.sh`.
-- **Blocked:** `DATABASE_URL` missing — need for migration 0011 + worker env.
-
----
-
-### CTO
-- **Shipped:** `/ops`, `/ops/p0`, `/ops/e2e` probe all three funnel v2 events (matches `check-migrations.sh`).
-- **Shipped:** `founder-preflight.sh` prints `founder-next-action` at end.
-
-### CPO
-- **Shipped:** `/app` activation checklist shows 5–15 min wait when worker is live but no trades yet.
-
-### Status (`./scripts/status-report.sh` @ 16:14Z)
-- migration 0011 ❌ | worker ❌
 
 ---
 

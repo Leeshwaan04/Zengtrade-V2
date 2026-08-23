@@ -117,3 +117,4 @@ if [[ $WORK_OK -eq 0 ]]; then
 fi
 echo ""
 echo "After P0 green: ./scripts/verify-activation-path.sh && ./scripts/security-smoke.sh"
+echo "Log session: ./scripts/append-growth-log.sh N \"title\" --cto \"...\""

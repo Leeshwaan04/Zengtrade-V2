@@ -26,7 +26,8 @@ if [[ -n "$url" ]]; then
   fi
   echo ""
   echo "BLOCKED: DATABASE_URL is set but Postgres auth failed."
-  echo "  → Reset password in Supabase Connect → copy Session URI (5432, no [brackets])"
+  echo "  → Fastest: Cloud Agent secret DATABASE_PASSWORD only (after Supabase reset)"
+  echo "  → Or reset password in Supabase Connect → copy Session URI (5432, no [brackets])"
   echo "  → Update Railway paper-worker or Cloud Agent DATABASE_PASSWORD secret"
   echo "  → Or GitHub Secrets: DATABASE_PASSWORD + RAILWAY_API_TOKEN → Apply P0 workflow"
   echo "  → Deploy on Railway"

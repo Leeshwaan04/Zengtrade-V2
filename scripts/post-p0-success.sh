@@ -24,8 +24,11 @@ echo ">> Funnel CTAs + sitemap + SEO (CBO / GSC)"
 echo ""
 
 echo ">> E2E gate probe (CPO)"
-./scripts/check-e2e-gates.sh || echo "⚠️  E2E blocked until worker live"
-./scripts/check-activation-ready.sh 2>/dev/null || echo "⚠️  Activation UI probe failed"
+./scripts/check-e2e-gates.sh
+echo ""
+
+echo ">> Full growth gates"
+./scripts/check-growth-gates.sh
 echo ""
 
 echo ">> Plan intent routing (Sales)"
@@ -39,3 +42,5 @@ echo "CBO  GSC sitemap:     https://zengtrade.in/ops/gsc"
 echo "QA   RLS 2-account:    /ops/e2e step 5 → docs/QA_VAPT_CHECKLIST.md Q3"
 echo ""
 echo "CBO community post (draft only until E2E proven): docs/content/REDDIT_ALGOTRADING_DRAFT.md"
+echo ""
+echo "Log session: ./scripts/append-growth-log.sh N \"title\" --cto \"...\" --cpo \"...\" --cbo \"...\""
