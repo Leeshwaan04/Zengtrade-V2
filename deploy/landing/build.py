@@ -166,7 +166,7 @@ PRICING_MAIN = f"""<main id="main">
   <section class="lp-sec" aria-label="Plans">
     <div class="lp-wrap pr-grid">
       {plan("Free", "$0", "forever", "Learn &amp; paper-trade, free forever", ["1 paper strategy","Live crypto prices, 24/7","Backtest + Forward Test","Accuracy &amp; Analytics","Honest, cost-accurate P&amp;L"], cta="Get started")}
-      {plan("Pro", "$19", "/mo", "Founding price · unlimited paper", ["Everything in Free","<b>Unlimited</b> paper strategies","Live execution on your own exchange*","Tick-level stops &amp; kill-switch","Email &amp; push alerts"], featured=True, cta="Get Pro", pid="pro")}
+      {plan("Pro", "$19", "/mo", "Founding price · unlimited paper", ["Everything in Free","<b>Unlimited</b> paper strategies","Live execution <em>(coming soon)</em> — per go-live bar*","Tick-level stops &amp; kill-switch <em>(with live)</em>","Email &amp; push alerts"], featured=True, cta="Get Pro", pid="pro")}
       {plan("Elite", "$79", "/mo", "Maximum firepower", ["Everything in Pro","Perps + options engines","Multiple exchange accounts","Custom risk parameters","Priority support &amp; early access"], cta="Get Elite", pid="elite")}
     </div>
     <p class="pr-iso center">* Live execution unlocks per strategy only after it clears the go-live bar in paper. Non-custodial, your keys, your coins. Not investment advice.</p>
@@ -176,7 +176,7 @@ PRICING_MAIN = f"""<main id="main">
       <h2 class="lp-h2 center">What you're actually paying for</h2>
       <div class="lp-grid3">
         <div class="home-card"><div class="hc-ic">∞</div><b>Unlimited strategies</b><span>Free runs one paper strategy. Pro removes the cap, run the whole regime-aware library at once.</span></div>
-        <div class="home-card"><div class="hc-ic">◈</div><b>Live execution</b><span>Route a proven strategy to <b>your own</b> exchange with your own keys. We never custody funds. Two-key safety gate before any real order.</span></div>
+        <div class="home-card"><div class="hc-ic">◈</div><b>Live execution (coming soon)</b><span>When shipped, route a proven strategy to <b>your own</b> exchange with your own keys. We never custody funds. Unlocks only after the paper go-live bar.</span></div>
         <div class="home-card"><div class="hc-ic">🔔</div><b>Alerts &amp; control</b><span>Tick-level stops, a portfolio kill-switch, and email/push alerts so you're never surprised.</span></div>
       </div>
       <p class="pr-note center">Data is always free and always live. We charge for <b>capability</b>, not for the numbers, and never hide a cost inside a plan.</p>
@@ -334,7 +334,7 @@ emit("how-it-works", shell(
 
 emit("pricing", shell(
     "Pricing, free to start, pay only for live execution | zengtrade",
-    "zengtrade pricing: Free forever to paper-trade, Pro for unlimited strategies + live execution on your own exchange, Elite for perps/options. Data is always free. Non-custodial. Cancel anytime.",
+    "zengtrade pricing: Free forever to paper-trade, Pro for unlimited paper strategies (founding $19/mo). Live execution rolls out per go-live bar. Data is always free. Non-custodial. Cancel anytime.",
     "https://zengtrade.in/pricing/", PRICING_MAIN), "https://zengtrade.in/pricing/")
 
 # ---- coin hub + per-coin pages (identical shell -> full design parity) -----------------
