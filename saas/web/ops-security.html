@@ -29,7 +29,7 @@
       <li><code>./scripts/verify-activation-path.sh</code> — after P0 green</li>
       <li><code>./scripts/check-plan-intent.sh</code> · <code>./scripts/check-seo-content.sh</code> — production funnel/SEO</li>
       <li><code>./scripts/verify-activation-path.sh --partial</code> — signup → deploy (no worker)</li>
-      <li><code>./scripts/verify-partial-activation.sh</code> — signup → deploy UI (no worker)</li>
+      <li><code>./scripts/verify-activation-path.sh --partial</code> — signup → deploy (no worker)</li>
       <li><code>./scripts/guide-partial-e2e.sh</code> — founder manual partial E2E steps</li>
       <li><code>./scripts/check-parallel-growth.sh</code> · <code>./scripts/check-sales-ready.sh</code></li>
       <li><code>./scripts/check-qa-parallel.sh</code> — security + XSS + partial activation + sales (worker blocked)</li>
@@ -44,7 +44,7 @@
     <p style="font-size:14px;margin:0 0 8px">Automated QA you can run now (no trades required):</p>
     <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.7">
       <li><code>./scripts/security-smoke.sh</code> — secrets, IPN gate, RLS anon probes</li>
-      <li><code>./scripts/verify-partial-activation.sh</code> — signup → deploy funnel</li>
+      <li><code>./scripts/verify-activation-path.sh --partial</code> — signup → deploy funnel</li>
       <li><code>./scripts/guide-qa-rls-isolation.sh</code> — post-P0 manual RLS isolation (Q3)</li>
       <li><code>./scripts/check-xss-hygiene.sh</code> — /app XSS hygiene</li>
     </ul>

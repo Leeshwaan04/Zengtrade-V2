@@ -50,7 +50,7 @@ if [[ -n "${DATABASE_URL:-}" ]]; then
   if ! DATABASE_URL="$DATABASE_URL" ./scripts/test-database-url.sh >/dev/null 2>&1; then
     echo "BLOCKED: DATABASE_URL resolves but Postgres auth fails — fix password on Railway or set DATABASE_PASSWORD secret"
     echo ""
-    ./scripts/validate-database-credentials.sh 2>/dev/null || ./scripts/check-p0-readiness.sh
+    ./scripts/check-p0-readiness.sh 2>/dev/null || true
     exit 1
   fi
   export DATABASE_URL
@@ -59,7 +59,7 @@ if [[ -n "${DATABASE_URL:-}" ]]; then
 fi
 
 echo ""
-./scripts/check-p0-readiness.sh 2>/dev/null || ./scripts/validate-database-credentials.sh 2>/dev/null || true
+./scripts/check-p0-readiness.sh 2>/dev/null || true
 echo ""
 ./scripts/founder-parallel-work.sh 2>/dev/null || true
 if ./scripts/check-founder-parallel-ready.sh >/dev/null 2>&1; then
