@@ -47,11 +47,12 @@ CPO/CBO can ship GSC, billing smoke, partial E2E — does not replace worker P0.
 ## Definition of done (each run)
 
 1. Run `./scripts/run-p0-if-ready.sh` first.
-2. If still blocked: one improvement to unblock path or parallel gates; update `/ops` if needed.
-3. Run `tests/e2e_smoke.sh` when touching scripts or ops HTML.
-4. Commit: `cto(autopilot): <what>` on `main`.
-5. Log: `./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..."` (syncs GROWTH_DASHBOARD header probes)
-6. Reply: shipped / blocked / next.
+2. Run `./scripts/audit-growth-goal.sh` — log blockers in GROWTH_DASHBOARD if status changed.
+3. If still blocked: one improvement to unblock path or parallel gates; update `/ops` if needed.
+4. Run `tests/e2e_smoke.sh` when touching scripts or ops HTML.
+5. Commit: `cto(autopilot): <what>` on `main`.
+6. Log: `./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..."` (syncs GROWTH_DASHBOARD header probes)
+7. Reply: shipped / blocked / next.
 
 ## Do not
 

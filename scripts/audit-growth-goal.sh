@@ -85,6 +85,8 @@ if [[ $cpo_fail -eq 1 && $work -eq 0 ]]; then
   echo "CPO partial OK — full trades after worker: https://zengtrade.in/ops/e2e"
 fi
 if [[ $cbo_fail -eq 1 ]]; then
-  echo "CBO gates ready — founder: ./scripts/guide-gsc-founder.sh · ./scripts/guide-first-pro-checkout.sh"
+  echo "CBO blocked — fix ./scripts/check-gsc-ready.sh or ./scripts/check-sales-ready.sh"
+elif [[ $gsc -eq 1 && $sales -eq 1 ]]; then
+  echo "CBO founder — GSC: ./scripts/guide-gsc-founder.sh · MRR: ./scripts/guide-first-pro-checkout.sh · /admin"
 fi
 exit 1

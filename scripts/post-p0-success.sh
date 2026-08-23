@@ -52,3 +52,6 @@ echo ""
 echo "CBO community post (draft only until E2E proven): docs/content/REDDIT_ALGOTRADING_DRAFT.md"
 echo ""
 echo "Log session: ./scripts/append-growth-log.sh N \"title\" --cto \"...\" --cpo \"...\" --cbo \"...\""
+echo ""
+echo ">> Growth goal audit"
+./scripts/audit-growth-goal.sh 2>/dev/null || true

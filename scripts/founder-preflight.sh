@@ -125,5 +125,8 @@ if [[ $WORK_OK -eq 0 ]]; then
   ./scripts/founder-parallel-work.sh 2>/dev/null || true
 fi
 echo ""
+./scripts/audit-growth-goal.sh 2>/dev/null || true
+echo ""
 echo "After P0 green: ./scripts/verify-activation-path.sh && ./scripts/security-smoke.sh"
+echo "Goal audit: ./scripts/audit-growth-goal.sh"
 echo "Log session: ./scripts/append-growth-log.sh N \"title\" --cto \"...\""
