@@ -599,6 +599,15 @@
 ### Status (`./scripts/status-report.sh` @ 17:01Z)
 - migration 0011 ❌ | worker ❌ | PR #7 CI ✅
 
+### Day 1 (session 51) — CBO pricing funnel truth
+
+### CBO
+- **Shipped:** Pro plan copy clarifies live execution is **coming soon** (pricing page + `/app#pricing`).
+- **Shipped:** `check-pricing-truth.sh` in CI smoke — blocks regressions on live-execution promises.
+
+### Status (`./scripts/status-report.sh` @ 17:03Z)
+- migration 0011 ❌ | worker ❌ | pricing truth ✅
+
 ---
 
 ### CTO
