@@ -34,7 +34,7 @@
 
   <div class="step" id="step1">
     <h2><span class="num">1</span> Apply migration 0011</h2>
-    <p>Enables funnel events (<code>signup_complete</code>, <code>deploy_success</code>) in <a href="/admin">/admin</a>.<br>
+    <p>Enables funnel v2 events (<code>signup_complete</code>, <code>deploy_success</code>, <code>checkout_click</code>) in <a href="/admin">/admin</a>.<br>
     <b>Fastest:</b> add <code>DATABASE_URL</code> to <a href="https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions" target="_blank" rel="noopener">GitHub Secrets</a> → run Action below → type <code>APPLY</code>.</p>
     <a class="btn" href="/ops/migrate">Open migration guide</a>
     <a class="alt" href="https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-migration-0011.yml" target="_blank" rel="noopener">GitHub Action</a>
@@ -57,16 +57,18 @@
   </div>
 
   <p class="foot">Track progress: <a href="https://github.com/Leeshwaan04/Zengtrade-V2/issues/4" target="_blank" rel="noopener">GitHub issue #4</a> ·
-    CLI: <code>./scripts/status-report.sh</code> · Auto-refresh 30s</p>
+    CLI: <code>./scripts/status-report.sh</code> · Next: <code>./scripts/founder-next-action.sh</code> · Auto-refresh 30s</p>
 </div>
 <script>
 const SUPA="https://ponvarxeytfcntckczbn.supabase.co", ANON="sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";
 async function probeMig(){
   try{
     const h={apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"};
-    const r1=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"signup_complete",path:"/p0-probe"})});
-    const r2=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"deploy_success",path:"/p0-probe"})});
-    return r1.status===201&&r2.status===201;
+    for(const name of ["signup_complete","deploy_success","checkout_click"]){
+      const r=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name,path:"/p0-probe"})});
+      if(r.status!==201) return false;
+    }
+    return true;
   }catch(e){return false;}
 }
 async function probeWorker(){
@@ -80,7 +82,7 @@ async function probeWorker(){
 async function refresh(){
   const mig=await probeMig();
   const w=await probeWorker();
-  document.getElementById("g1").textContent=mig?"✓ Migration 0011 live (signup + deploy events)":"✗ Migration 0011 pending — run step 1";
+  document.getElementById("g1").textContent=mig?"✓ Migration 0011 live (signup + deploy + checkout events)":"✗ Migration 0011 pending — run step 1";
   document.getElementById("g1").className="gate "+(mig?"ok":"bad");
   document.getElementById("g2").textContent=w.ok?"✓ Worker live ("+w.detail+")":"✗ Worker stale ("+w.detail+") — run step 2";
   document.getElementById("g2").className="gate "+(w.ok?"ok":"bad");

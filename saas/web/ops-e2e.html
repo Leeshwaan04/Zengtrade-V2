@@ -50,9 +50,11 @@ async function gates(){
   let mig=false, work=false;
   try{
     const h={apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"};
-    const r1=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"signup_complete",path:"/e2e-probe"})});
-    const r2=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"deploy_success",path:"/e2e-probe"})});
-    mig=r1.status===201&&r2.status===201;
+    for(const name of ["signup_complete","deploy_success","checkout_click"]){
+      const r=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name,path:"/e2e-probe"})});
+      if(r.status!==201){ mig=false; break; }
+      mig=true;
+    }
   }catch(e){}
   try{
     const rows=await fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{headers:{apikey:ANON}}).then(x=>x.json());

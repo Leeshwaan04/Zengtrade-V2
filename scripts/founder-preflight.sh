@@ -66,4 +66,8 @@ else
 fi
 echo ""
 echo "Full checklist: docs/FOUNDER_DEPLOY.md · QA: docs/QA_VAPT_CHECKLIST.md"
+echo ""
+echo "=== Next founder action ==="
+./scripts/founder-next-action.sh 2>/dev/null || true
+echo ""
 echo "After P0 green: ./scripts/verify-activation-path.sh && ./scripts/security-smoke.sh"

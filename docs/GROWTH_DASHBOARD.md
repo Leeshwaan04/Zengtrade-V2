@@ -543,6 +543,18 @@
 - migration 0011 ❌ | worker ❌
 - **Next founder action:** `./scripts/founder-next-action.sh` → Apply migration 0011
 
+### Day 1 (session 44) — migration probe alignment + CPO wait hint
+
+### CTO
+- **Shipped:** `/ops`, `/ops/p0`, `/ops/e2e` probe all three funnel v2 events (matches `check-migrations.sh`).
+- **Shipped:** `founder-preflight.sh` prints `founder-next-action` at end.
+
+### CPO
+- **Shipped:** `/app` activation checklist shows 5–15 min wait when worker is live but no trades yet.
+
+### Status (`./scripts/status-report.sh` @ 16:14Z)
+- migration 0011 ❌ | worker ❌
+
 ---
 
 ## Daily log template

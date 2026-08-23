@@ -120,7 +120,7 @@ async function probeAuthJs() {
 async function probeMigration0011() {
   try {
     const h = { apikey: ANON, "Content-Type": "application/json", Prefer: "return=minimal" };
-    const events = ["signup_complete", "deploy_success"];
+    const events = ["signup_complete", "deploy_success", "checkout_click"];
     for (const name of events) {
       const r = await fetch(SUPA + "/rest/v1/event", {
         method: "POST",

@@ -171,7 +171,9 @@ function activationChecklist() {
   if (deployed && traded) return "";
   const s1 = "done", s2 = deployed ? "done" : "on", s3 = traded ? "done" : (deployed ? "on" : "");
   const workerNote = deployed && !traded && !state.workerAlive
-    ? `<p class="muted" style="margin:8px 0 0;font-size:13px">Paper worker is offline — deploys are saved but trades pause until the worker is running. <a href="/how-it-works/">Learn more</a></p>`
+    ? `<p class="muted" style="margin:8px 0 0;font-size:13px">Paper worker is offline — deploys are saved but trades pause until the worker is running. <a href="/how-it-works/">How paper trading works</a></p>`
+    : deployed && !traded && state.workerAlive
+    ? `<p class="muted" style="margin:8px 0 0;font-size:13px">Worker is running — first closed trade usually within 5–15 min. Open <a href="#forward">Forward Test</a>.</p>`
     : "";
   return `<div class="card" id="activation">
     <div class="card-h"><h3>Activation checklist</h3><span class="muted">signup → deploy → trades</span></div>
