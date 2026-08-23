@@ -299,6 +299,15 @@
 ### CPO / CBO
 - **Next:** E2E + first Pro checkout after P0 green on /ops/p0.
 
+### Day 1 (session 23) — wait-for-p0 + CBO UTMs
+
+### CTO
+- **Shipped:** `scripts/wait-for-p0.sh` polls until P0 green then runs activation verify; founder-alert points to /ops/p0.
+- **Blocked:** Migration 0011 + worker unchanged.
+
+### CBO
+- **Shipped:** Landing + pricing signup CTAs carry `utm_source=site` for organic attribution.
+
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*

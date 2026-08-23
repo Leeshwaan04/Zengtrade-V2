@@ -105,7 +105,7 @@ HOME_MAIN = """<main id="main">
       <h1 id="h-hero" class="lp-h1">Trading that reads the market's <span class="hl">mood</span>, and refuses to lose your money.</h1>
       <p class="lp-sub">zengtrade runs battle-tested, regime-aware strategies on live data, 24/7. It's honest about every cost, allergic to hype, and paper-first: it proves an edge before a rupee or a dollar is at risk. Then run it on <b>your own exchange</b>, with your keys and your coins.</p>
       <div class="lp-cta-row">
-        <a class="lp-cta primary" href="/login?mode=signup">Start free, no card</a>
+        <a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=landing">Start free, no card</a>
         <a class="lp-cta ghost" href="/how-it-works/">See how it works →</a>
       </div>
       <p class="lp-fineprint">Free to start · paper trading only at launch · not investment advice</p>
@@ -137,7 +137,7 @@ HOME_MAIN = """<main id="main">
     <div class="lp-wrap home-final-in">
       <h2 class="lp-h2">Prove the edge before you risk a thing.</h2>
       <p class="lp-sub">Start free. Paper-trade every strategy on live data. Upgrade only when a strategy earns its place.</p>
-      <div class="lp-cta-row center"><a class="lp-cta primary" href="/login?mode=signup">Start free</a><a class="lp-cta ghost" href="/pricing/">See pricing</a></div>
+      <div class="lp-cta-row center"><a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=landing">Start free</a><a class="lp-cta ghost" href="/pricing/">See pricing</a></div>
     </div>
   </section>
 </main>"""
@@ -145,7 +145,7 @@ HOME_MAIN = """<main id="main">
 # ---- NEW PRICING ----------------------------------------------------------------------
 def plan(name, price, per, tag, feats, featured=False, cta="Start free", pid=""):
     lis = "".join(f"<li>{f}</li>" for f in feats)
-    href = "/login?mode=signup" + (f"&amp;plan={pid}" if pid else "")   # carry chosen plan through signup
+    href = "/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=landing" + (f"&amp;plan={pid}" if pid else "")
     return f"""<div class="pr-plan{' feat' if featured else ''}">{'<div class="pr-ribbon">Most popular</div>' if featured else ''}
       <div class="pr-name">{name}</div><div class="pr-price">{price}<span>{per}</span></div>
       <div class="pr-tag">{tag}</div><ul class="pr-feats">{lis}</ul>

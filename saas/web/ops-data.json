@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T15:15:29Z",
+  "updated": "2026-08-23T15:18:25Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -94,6 +94,7 @@
       "Founding $19/mo on /pricing",
       "Coin SEO pages live (e.g. /coins/bitcoin/)",
       "NOWPayments billing edge functions deployed",
+      "Landing signup CTAs tagged with utm_source=site for GSC attribution",
       "r/algotrading draft ready (post after P0)"
     ],
     "next": "GSC sitemap + first proof post after forward trades exist",
