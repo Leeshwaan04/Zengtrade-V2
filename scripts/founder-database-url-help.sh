@@ -11,7 +11,7 @@ echo "1. Open: https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/datab
 echo "   (or click Connect on the project home — NOT Connection pooling pool-size settings)"
 echo "2. Connection string → URI → Session mode → port 5432"
 echo "3. Copy the FULL URI (starts with postgresql://postgres.ponvarxeytfcntckczbn:...)"
-echo "4. Add to Cloud Agent secret DATABASE_URL (not sb_secret API key)"
+echo "4. Or add Cloud Agent secret DATABASE_PASSWORD (database password only) — agent builds URI"
 echo ""
 echo "Verify (after secret is set):"
 echo "  ./scripts/test-database-url.sh"
