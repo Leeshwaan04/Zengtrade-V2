@@ -781,6 +781,16 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 - **Shipped:** `/ops/worker` + `founder-database-url-help.sh` — pool-size screen is not the URI; use Connect / Database → Connection string.
 - **Blocked:** Railway still has no `DATABASE_URL`.
 
+### Day 1 (session 79) — DATABASE_URL on Railway; fix password
+
+### CTO
+- **Progress:** `DATABASE_URL` on Railway; apply-p0 redeployed; auto-strip `[brackets]` from placeholder passwords.
+- **Blocked:** DB password fails auth — reset in Supabase Connect, copy URI with **copy button** (no `[brackets]`), Railway **Deploy**.
+- **Shipped:** `scripts/sanitize-database-url.sh`
+
+### Status (@ 18:50Z)
+- Railway: DATABASE_URL set · deploy FAILED · worker ❌
+
 ---
 
 ### CTO
