@@ -436,6 +436,18 @@
 ### Status (`./scripts/status-report.sh` @ 15:43Z)
 - P0 unchanged: migration 0011 ❌ | worker ❌ | PR #5 open
 
+### Day 1 (session 35) — CBO coin UTMs + ops/worker live probe
+
+### CBO
+- **Shipped:** Coin pSEO + `/coins/` hub signup CTAs carry `utm_campaign=coin_{slug}` / `coins_hub`.
+- **Shipped:** Pricing page bottom CTA uses `utm_campaign=pricing` (was missing UTMs).
+
+### CTO
+- **Shipped:** `/ops/worker` auto-checks heartbeat on load + 30s refresh; links to `/ops/p0`.
+
+### Status (`./scripts/status-report.sh` @ 15:45Z)
+- P0 unchanged
+
 ---
 
 ## Daily log template

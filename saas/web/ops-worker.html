@@ -23,7 +23,7 @@
 <div class="wrap">
   <a class="back" href="/ops">← Founder Ops</a>
   <h1>Deploy paper worker</h1>
-  <p class="sub">Founder approval · ~10 min · Without this, <a href="/dashboard">deploys save</a> but <b>no trades run</b> on live Binance prices.</p>
+  <p class="sub">Founder approval · ~10 min · Without this, <a href="/dashboard">deploys save</a> but <b>no trades run</b> on live Binance prices. See also <a href="/ops/p0">P0 checklist</a>.</p>
 
   <div class="card">
     <h2>Option A — Railway (recommended)</h2>
@@ -64,20 +64,23 @@
       <li><a href="/admin">/admin</a> → Worker tile = <b>Live</b></li>
     </ol>
     <button class="links" type="button" id="check" style="border:0;cursor:pointer"><a style="pointer-events:none">Check heartbeat now</a></button>
-    <p id="hb">Click to check worker heartbeat…</p>
+    <p id="hb">Checking worker heartbeat…</p>
   </div>
 </div>
 <script>
 const SUPA="https://ponvarxeytfcntckczbn.supabase.co", ANON="sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";
-document.getElementById("check").onclick=async()=>{
+async function checkHb(){
   const el=document.getElementById("hb");
   try{
-    const rows=await fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at,value",{headers:{apikey:ANON}}).then(r=>r.json());
+    const rows=await fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at,value",{headers:{apikey:ANON},cache:"no-store"}).then(r=>r.json());
     if(!rows[0]){el.textContent="✗ No heartbeat row — check DATABASE_URL and worker logs";el.className="bad";return;}
     const age=Math.round((Date.now()-new Date(rows[0].updated_at))/60000);
     const deps=rows[0].value?.deployments??0;
     if(age<=12){el.textContent=`✓ Worker live — ${age}m ago · ${deps} active deployments`;el.className="ok";}
     else{el.textContent=`✗ Stale heartbeat — ${age}m ago (last ${rows[0].updated_at}). Worker not running.`;el.className="bad";}
   }catch(e){el.textContent="✗ Could not reach Supabase";el.className="bad";}
-};
+}
+document.getElementById("check").onclick=checkHb;
+checkHb();
+setInterval(checkHb,30000);
 </script></body></html>

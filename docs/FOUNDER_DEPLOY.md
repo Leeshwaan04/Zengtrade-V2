@@ -29,7 +29,7 @@ Dashboard → **Authentication → URL configuration**
 **Option B — manual:** https://zengtrade.in/ops/migrate → copy SQL → Supabase SQL Editor.
 
 ```bash
-./scripts/check-migrations.sh   # signup_complete must return OK
+./scripts/check-migrations.sh   # signup_complete, deploy_success, checkout_click must return OK
 ```
 
 ## 4. Paper worker (10 min)

@@ -191,7 +191,7 @@ PRICING_MAIN = f"""<main id="main">
       <details class="faq"><summary>Why is live execution gated?</summary><p>A strategy only unlocks live once it clears the go-live bar in paper, enough closed trades, positive expectancy net of cost, across regimes. We'd rather you prove the edge than pay to lose money.</p></details>
     </div>
   </section>
-  <section class="lp-sec home-final"><div class="lp-wrap home-final-in"><h2 class="lp-h2">Start free. Upgrade only when it's earned.</h2><div class="lp-cta-row center"><a class="lp-cta primary" href="/login?mode=signup">Start free, no card</a></div></div></section>
+  <section class="lp-sec home-final"><div class="lp-wrap home-final-in"><h2 class="lp-h2">Start free. Upgrade only when it's earned.</h2><div class="lp-cta-row center"><a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=pricing">Start free, no card</a></div></div></section>
 </main>"""
 
 HOME_CSS = """
