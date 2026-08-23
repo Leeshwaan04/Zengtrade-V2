@@ -40,6 +40,7 @@ Verify with:
 
 ```bash
 ./scripts/status-report.sh
+./scripts/check-p0-readiness.sh   # secrets + gates before apply-p0
 ./scripts/check-railway-deploy.sh   # when RAILWAY_API_TOKEN is set
 ```
 

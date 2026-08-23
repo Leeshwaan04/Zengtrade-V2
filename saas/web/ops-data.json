@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T17:05:00Z",
+  "updated": "2026-08-23T17:08:00Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -40,6 +40,7 @@
       "PR #5 + #6 merged — /ops/p0 + /ops/security live on production",
       "apply-p0-autopilot.sh — migration 0011 + Railway worker when secrets set",
       "check-railway-deploy.sh — paper-worker deploy status via Railway GraphQL",
+      "check-p0-readiness.sh — preflight before apply-p0-autopilot",
       "apply-p0.yml GitHub Action — one-shot P0 when DATABASE_URL + RAILWAY_API_TOKEN in repo Secrets"
     ],
     "next": "Add DATABASE_URL (Cloud Agent or GitHub Secrets) → Apply P0",

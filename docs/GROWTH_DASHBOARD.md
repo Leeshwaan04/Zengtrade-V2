@@ -617,6 +617,18 @@
 ### Status (`./scripts/status-report.sh` @ 17:05Z)
 - migration 0011 ❌ | worker ❌ | PR #7 CI ✅
 
+### Day 1 (session 53) — P0 readiness script + E2E unblock hint
+
+### CTO
+- **Shipped:** `check-p0-readiness.sh` — secrets + gate snapshot before `apply-p0-autopilot.sh`.
+- **Shipped:** `health-watch` runs `check-pricing-truth.sh` on schedule.
+
+### CPO
+- **Shipped:** `/ops/e2e` blocked state links to GitHub Apply P0 workflow.
+
+### Status (`./scripts/status-report.sh` @ 17:08Z)
+- migration 0011 ❌ | worker ❌ | readiness: DATABASE_URL missing
+
 ---
 
 ### CTO
