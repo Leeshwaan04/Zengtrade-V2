@@ -1877,6 +1877,33 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 23:02Z)
 - worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
 
+### Day 1 (session 142) — Railway DB credential probe + ops-worker partial CLI
+
+### CTO
+- **Shipped:** validate-database-credentials.sh detects invalid Railway DATABASE_URL; founder-database-url-help health-watch + recovery paths
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** ops-worker parallel box uses verify-activation-path.sh --partial
+
+### CBO
+- **Shipped:** —
+
+### SEO
+- **Shipped:** —
+
+### Marketing
+- **Shipped:** —
+
+### Sales
+- **Shipped:** —
+
+### QA&VAPT
+- **Shipped:** e2e_smoke + build.py passed
+
+### Status (`./scripts/check-growth-standup.sh` @ 23:09Z)
+- worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
+
 ---
 
 ## Daily log template

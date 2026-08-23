@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T23:04:20Z",
+  "updated": "2026-08-23T23:10:52Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -125,7 +125,8 @@
       "health-watch attempt-p0 job + worker check reordered last (session 136)",
       "WORKER_RECOVERY health-watch path; ops/worker option 0b (session 137)",
       "founder-next-action health-watch hint on wrong Railway password (session 139)",
-      "check-p0-readiness DATABASE_PASSWORD + health-watch unblock paths (session 141)"
+      "check-p0-readiness DATABASE_PASSWORD + health-watch unblock paths (session 141)",
+      "validate-database-credentials Railway password probe + founder-database-url-help recovery paths (session 142)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
