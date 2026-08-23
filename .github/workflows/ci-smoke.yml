@@ -20,6 +20,8 @@ jobs:
         run: ./tests/e2e_smoke.sh
       - name: Security smoke (QA&VAPT)
         run: ./scripts/security-smoke.sh
+      - name: XSS hygiene (/app)
+        run: ./scripts/check-xss-hygiene.sh
       - name: Pricing funnel truth (CBO)
         run: ./scripts/check-pricing-truth.sh
       - name: Funnel CTA utm tags (CBO)

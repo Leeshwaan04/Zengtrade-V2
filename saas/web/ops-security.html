@@ -31,6 +31,8 @@
       <li><code>./scripts/verify-partial-activation.sh</code> — signup → deploy UI (no worker)</li>
       <li><code>./scripts/guide-partial-e2e.sh</code> — founder manual partial E2E steps</li>
       <li><code>./scripts/check-parallel-growth.sh</code> · <code>./scripts/check-sales-ready.sh</code></li>
+      <li><code>./scripts/check-qa-parallel.sh</code> — security + XSS + partial activation + sales (worker blocked)</li>
+      <li><code>./scripts/check-xss-hygiene.sh</code> — /app esc() patterns</li>
       <li><code>./scripts/guide-founder-parallel.sh</code> — all parallel playbooks</li>
     </ol>
     <p id="probe">Probing production IPN gate…</p>
@@ -42,7 +44,8 @@
     <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.7">
       <li><code>./scripts/security-smoke.sh</code> — secrets, IPN gate, RLS anon probes</li>
       <li><code>./scripts/verify-partial-activation.sh</code> — signup → deploy funnel</li>
-      <li><code>./scripts/check-sales-ready.sh</code> — billing path integrity</li>
+      <li><code>./scripts/check-qa-parallel.sh</code> — full QA parallel bundle</li>
+      <li><code>./scripts/check-xss-hygiene.sh</code> — /app XSS hygiene</li>
     </ul>
     <p style="font-size:13px;margin:12px 0 0">Index: <code>docs/FOUNDER_PARALLEL.md</code></p>
   </div>

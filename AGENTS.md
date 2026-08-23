@@ -71,6 +71,8 @@ Verify with:
 ./scripts/verify-partial-activation.sh  # CPO: migration + activation combined
 ./scripts/guide-partial-e2e.sh         # CPO: founder manual partial E2E steps
 ./scripts/check-parallel-growth.sh   # CBO/CPO: partial + billing + GSC while worker down
+./scripts/check-qa-parallel.sh       # QA: security + XSS + partial + sales (worker blocked)
+./scripts/check-xss-hygiene.sh       # QA: /app esc() patterns
 ./scripts/guide-founder-parallel.sh  # Founder: all parallel playbooks in one command
 docs/FOUNDER_PARALLEL.md             # one-page parallel work index
 ./scripts/check-p0-readiness.sh   # secrets + gates before apply-p0

@@ -77,6 +77,13 @@ done
 test -f .cursor/autopilot/qavapt.md && ok "qavapt charter present" || bad "missing .cursor/autopilot/qavapt.md"
 test -f docs/QA_VAPT_CHECKLIST.md && ok "QA_VAPT_CHECKLIST.md present" || bad "missing docs/QA_VAPT_CHECKLIST.md"
 
+# --- XSS hygiene (/app SPA) ---
+if ./scripts/check-xss-hygiene.sh >/dev/null 2>&1; then
+  ok "xss-hygiene (/app esc patterns)"
+else
+  bad "xss-hygiene — run ./scripts/check-xss-hygiene.sh"
+fi
+
 echo ""
 if [[ $fail -ne 0 ]]; then
   echo "security-smoke failed — see docs/QA_VAPT_CHECKLIST.md"

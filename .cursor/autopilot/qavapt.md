@@ -18,6 +18,8 @@ Run automated gates now:
 
 ```bash
 ./scripts/security-smoke.sh
+./scripts/check-xss-hygiene.sh
+./scripts/check-qa-parallel.sh           # bundles smoke + partial + sales while worker down
 ./scripts/verify-partial-activation.sh   # signup → deploy UI only
 ./scripts/check-parallel-growth.sh
 ./scripts/check-sales-ready.sh           # billing path while worker down

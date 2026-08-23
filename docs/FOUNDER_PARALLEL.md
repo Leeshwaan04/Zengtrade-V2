@@ -20,12 +20,13 @@ Runs `check-parallel-growth.sh`, `check-sales-ready.sh`, and prints manual playb
 | **CBO** | GSC verify + sitemap | https://zengtrade.in/ops/gsc · `docs/GSC_SETUP.md` |
 | **CBO / Sales** | First Pro checkout | https://zengtrade.in/ops/billing · `./scripts/check-sales-ready.sh` |
 | **Marketing** | LinkedIn build-in-public | `docs/content/LINKEDIN_BUILD_IN_PUBLIC.md` |
-| **QA&VAPT** | Security + partial activation probes | `./scripts/security-smoke.sh` · `./scripts/verify-partial-activation.sh` |
+| **QA&VAPT** | Security + partial activation probes | `./scripts/check-qa-parallel.sh` · `./scripts/security-smoke.sh` |
 
 ## Verify probes
 
 ```bash
 ./scripts/check-parallel-growth.sh   # 5/5 excl. worker
+./scripts/check-qa-parallel.sh       # security + XSS + partial activation + sales
 ./scripts/check-sales-ready.sh
 ./scripts/status-report.sh
 ./scripts/sync-growth-dashboard-header.sh   # refresh GROWTH_DASHBOARD.md header
