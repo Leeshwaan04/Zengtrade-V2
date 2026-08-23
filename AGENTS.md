@@ -43,7 +43,7 @@ Migration **0011** is applied on production (funnel v2 events). Agents **cannot*
 ./scripts/run-p0-if-ready.sh
 ```
 
-That resolves `DATABASE_URL` from Cloud Agent secrets or Railway service variables, then runs `apply-p0-autopilot.sh` and `post-p0-success.sh` when ready.
+That resolves `DATABASE_URL` from Cloud Agent secrets or Railway service variables, preflights with `validate-database-credentials.sh`, then runs `apply-p0-autopilot.sh` and `post-p0-success.sh` when ready. GitHub [Apply P0](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml) and [health-watch](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/health-watch.yml) use the same script.
 
 Preflight credentials (no secrets printed): `./scripts/validate-database-credentials.sh`
 

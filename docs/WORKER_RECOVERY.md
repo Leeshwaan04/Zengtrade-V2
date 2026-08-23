@@ -47,7 +47,7 @@ Expected when healthy: `updated_at` within **12 minutes**, logs show `startup he
 ### B — GitHub Action
 
 1. Add `DATABASE_PASSWORD` or full `DATABASE_URL` + `RAILWAY_API_TOKEN` to [repo Secrets](https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions).
-2. Run workflow [Apply P0](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml) → type `APPLY`.
+2. Run workflow [Apply P0](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml) → type `APPLY` (preflights `validate-database-credentials.sh`, then `run-p0-if-ready.sh`).
 
 ### B2 — GitHub health-watch (scheduled)
 

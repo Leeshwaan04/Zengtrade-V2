@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T23:40:45Z",
+  "updated": "2026-08-23T23:44:23Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -131,7 +131,8 @@
       "run-p0 blocked-path dedupe; ops-e2e/security partial CLI canonical (session 144)",
       "canonical partial activation gate; status-report DATABASE_URL auth (session 145)",
       "health-watch validate preflight; snapshot DB auth; post-P0 trades path (session 146)",
-      "apply-p0.yml unified run-p0-if-ready + validate preflight (session 147)"
+      "apply-p0.yml unified run-p0-if-ready + validate preflight (session 147)",
+      "P0 founder messaging unified to run-p0-if-ready (session 148)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -258,7 +259,8 @@
       "ops founder_actions: sales checkout + LinkedIn BIP (session 120)",
       "guide-gsc-founder.sh \u2014 founder CLI GSC verify + sitemap (session 127)",
       "/admin first-MRR CTA when paying=0 \u2014 parallel checkout while worker blocked (session 135)",
-      "/ops/gsc parallel MRR card; /ops/billing sales-ready probe (session 140)"
+      "/ops/gsc parallel MRR card; /ops/billing sales-ready probe (session 140)",
+      "guide-gsc-founder links parallel Pro MRR checkout (session 148)"
     ],
     "next": "Founder: GSC completion log (docs/GSC_SETUP.md); Pro checkout at /ops/billing",
     "links": [
@@ -422,7 +424,7 @@
   "gates": {
     "production": true,
     "billing": true,
-    "billing_ready": false,
+    "billing_ready": true,
     "gsc_ready": true,
     "activation_ready": true,
     "funnel_ctas": true,

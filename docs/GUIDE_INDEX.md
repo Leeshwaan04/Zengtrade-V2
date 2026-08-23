@@ -13,6 +13,8 @@ One-page map of CLI playbooks while the paper worker is blocked (or after P0 gre
 | `./scripts/check-qa-parallel.sh` | Security smoke, XSS, partial activation, sales |
 | `./scripts/check-sales-ready.sh` | Billing + plan intent + pricing truth |
 | `./scripts/check-founder-guides.sh` | All `guide-*.sh` scripts executable |
+| `./scripts/validate-database-credentials.sh` | CTO: Postgres auth probe (no secrets printed) |
+| `./scripts/run-p0-if-ready.sh` | CTO: unified P0 entry (validate → apply → post-P0) |
 | `./scripts/verify-activation-path.sh --partial` | CPO: signup → deploy path without worker |
 
 ## Role playbooks (manual steps)

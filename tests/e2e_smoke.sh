@@ -60,6 +60,7 @@ test -f scripts/log-growth-session.sh
 test -f scripts/append-growth-log.sh
 test -f scripts/check-growth-gates.sh
 test -f .github/workflows/apply-p0.yml
+grep -q 'run-p0-if-ready' .github/workflows/apply-p0.yml
 test -f docs/QA_VAPT_CHECKLIST.md
 test -f .cursor/autopilot/qavapt.md
 test -f saas/db/migrations/0010_admin_rpc_funnel.sql

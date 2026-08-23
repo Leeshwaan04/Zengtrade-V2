@@ -69,13 +69,13 @@ if [[ $mig -eq 1 && $work -eq 1 ]]; then
 fi
 
 if [[ $db_set -eq 1 && $rail_set -eq 1 ]]; then
-  echo "Ready to run: ./scripts/apply-p0-autopilot.sh"
+  echo "Ready to run: ./scripts/run-p0-if-ready.sh"
   exit 0
 fi
 
 if [[ $db_set -eq 0 && $rail_db -eq 1 && $rail_set -eq 1 ]]; then
   if [[ -n "${rail_resolved:-}" ]] && DATABASE_URL="$rail_resolved" ./scripts/test-database-url.sh >/dev/null 2>&1; then
-    echo "Ready to run: ./scripts/apply-p0-autopilot.sh (DATABASE_URL from Railway)"
+    echo "Ready to run: ./scripts/run-p0-if-ready.sh (DATABASE_URL from Railway)"
     exit 0
   fi
   if [[ -n "${rail_resolved:-}" ]]; then

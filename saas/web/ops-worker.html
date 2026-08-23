@@ -78,7 +78,7 @@
 
   <div class="card" style="background:#eef2ff;border-color:#c7d2fe">
     <h2>Option 2 — Cloud Agent (full URI)</h2>
-    <p style="font-size:14px;line-height:1.55;margin:0">Agent runs <code>./scripts/apply-p0-autopilot.sh</code> → sets vars on Railway <b>paper-worker</b> service (<code>saas/worker</code> Dockerfile) and redeploys. Requires <code>DATABASE_URL</code> + <code>RAILWAY_API_TOKEN</code> in Cloud Agent secrets.</p>
+    <p style="font-size:14px;line-height:1.55;margin:0">Agent runs <code>./scripts/run-p0-if-ready.sh</code> → builds session pooler URI → sets Railway <b>paper-worker</b> vars and redeploys. Works with <code>DATABASE_PASSWORD</code> only + <code>RAILWAY_API_TOKEN</code>.</p>
   </div>
 
   <div class="card" style="background:var(--green-soft);border-color:var(--green-line)">
