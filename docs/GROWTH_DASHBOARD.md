@@ -1203,6 +1203,20 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 20:51Z)
 - worker ❌ · 5/5 parallel gates ✅ · LAUNCH_RUNBOOK step 5 done
 
+### Day 1 (session 108) — STATUS.md refresh + growth session logger
+
+### CTO
+- **Shipped:** `docs/STATUS.md` — current gates (0011 ✅, worker password blocker, parallel growth).
+- **Shipped:** `log-growth-session.sh` — paste-ready GROWTH_DASHBOARD status block from live probes.
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO / CBO
+- **Shipped:** `/admin` P0 banner — partial E2E link in parallel work row.
+- **Shipped:** `founder-next-action.sh` — parallel growth green hint when worker down.
+
+### Status (`./scripts/check-growth-standup.sh` @ 20:54Z)
+- worker ❌ · parallel growth ✅ · `./scripts/log-growth-session.sh 108`
+
 ---
 
 ### CTO

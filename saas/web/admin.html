@@ -144,7 +144,7 @@ async function probeP0(){
       if(ageMin>60){
         el.innerHTML="<b>P0 — paper worker down</b> — Railway likely has wrong <code>DATABASE_URL</code> password (deploy FAILED). "+
           "<a href=\"/ops/worker\">Reset Supabase password</a> · <a href=\"/ops/p0\">checklist</a>. Deploy/trade metrics understated.<br>"+
-          "<span style=\"font-size:12.5px\">Meanwhile: <a href=\"/ops/billing\">test Pro checkout</a> · <a href=\"/ops/gsc\">GSC sitemap</a> · <a href=\"/login?mode=signup\">signup → deploy</a></span>";
+          "<span style=\"font-size:12.5px\">Meanwhile: <a href=\"/ops/e2e\">partial E2E</a> · <a href=\"/ops/billing\">Pro checkout</a> · <a href=\"/ops/gsc\">GSC</a></span>";
       }else{
         el.innerHTML="<b>P0 incomplete</b> — paper worker not live (<a href=\"/ops/worker\">deploy guide</a> · <a href=\"/ops/p0\">checklist</a>).";
       }

@@ -1,6 +1,6 @@
 # zengtrade — live status
 
-**Last autopilot check:** 2026-08-23 (post-merge)  
+**Last autopilot check:** 2026-08-23 (session 108)  
 **Production:** https://zengtrade.in
 
 ## Ship gate
@@ -8,33 +8,44 @@
 | Check | Status |
 |-------|--------|
 | `/app` billing + evidence | ✅ live |
-| Google OAuth (`establishSession`) | ✅ fixed auth.js deployed |
-| `/dashboard` Algo Studio | ✅ + studio shim |
-| Billing edge functions | ✅ NOWPayments deployed |
-| Paper worker | ❌ **Down** — heartbeat stale (2026-08-11) |
-| Migration 0011 | ❌ **Pending** — `signup_complete` events blocked |
-| Migrations 0009–0010 | ✅ applied |
+| Google OAuth (`establishSession`) | ✅ |
+| `/dashboard` Algo Studio | ✅ |
+| Billing edge functions | ✅ NOWPayments + founding $19 |
+| Migration 0011 (funnel v2) | ✅ `signup_complete`, `deploy_click`, `deploy_success`, `checkout_click` |
+| Parallel growth (excl. worker) | ✅ `./scripts/check-parallel-growth.sh` |
+| Paper worker | ❌ **Down** — heartbeat stale (2026-08-11); Railway deploy **FAILED** (wrong `DATABASE_URL` password) |
 
-## Founder dashboard
+## P0 blocker (founder)
 
-👉 **https://zengtrade.in/ops/p0** — P0 checklist (migration + worker, ~15 min)  
-👉 **https://zengtrade.in/ops** — full CTO / CPO / CBO dashboard
+Reset Supabase DB password → update Railway `paper-worker` `DATABASE_URL` → Deploy.
 
-## PRs
+**Fastest:** Cloud Agent secret `DATABASE_PASSWORD` only → `./scripts/run-p0-if-ready.sh`
 
-| PR | Status |
-|----|--------|
-| [#6](https://github.com/Leeshwaan04/Zengtrade-V2/pull/6) QA&VAPT autopilot | **Merged** 2026-08-23 |
-| [#5](https://github.com/Leeshwaan04/Zengtrade-V2/pull/5) autopilot health | **Merged** 2026-08-23 |
-| [#3](https://github.com/Leeshwaan04/Zengtrade-V2/pull/3) autopilot | **Merged** 2026-08-23 |
+👉 **https://zengtrade.in/ops/worker** · **https://zengtrade.in/ops/p0**
 
-> **Note:** Vercel preview deploys a separate Next.js project — **not** the `build.py` landing site. Production is **GitHub Pages** (`pages.yml` on `main`).
+## Parallel work (while worker blocked)
+
+| Role | Link |
+|------|------|
+| CPO partial E2E | https://zengtrade.in/ops/e2e (steps 1–2) |
+| CBO GSC | https://zengtrade.in/ops/gsc |
+| CBO billing | https://zengtrade.in/ops/billing |
+| CLI | `./scripts/check-parallel-growth.sh` |
+
+## Founder dashboards
+
+👉 **https://zengtrade.in/ops** — CTO / CPO / CBO live gates  
+👉 **https://zengtrade.in/admin** — signups, MRR, funnel (login required)
 
 ## Verify commands
 
 ```bash
-./tests/e2e_smoke.sh
-SITE=https://zengtrade.in ./scripts/check-production.sh
+./scripts/run-p0-if-ready.sh           # agent entry — auto-apply when credentials set
+./scripts/check-parallel-growth.sh     # parallel gates while worker down
+./scripts/check-growth-standup.sh      # daily standup + metrics table
+./scripts/log-growth-session.sh 108    # paste block for GROWTH_DASHBOARD.md
 ./scripts/founder-preflight.sh
-./scripts/wait-for-p0.sh          # after founder completes P0 actions
+./tests/e2e_smoke.sh
 ```
+
+> Production is **GitHub Pages** (`pages.yml` on `main`). Vercel previews are a separate project.

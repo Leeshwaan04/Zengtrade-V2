@@ -57,6 +57,10 @@ if [[ $work -eq 0 ]]; then
   echo "NEXT: Deploy paper worker → https://zengtrade.in/ops/worker"
   echo ""
   ./scripts/founder-parallel-work.sh 2>/dev/null || true
+  if ./scripts/check-parallel-growth.sh >/dev/null 2>&1; then
+    echo ""
+    echo "Parallel growth gates green (5/5 excl. worker) — sole blocker is DATABASE_PASSWORD"
+  fi
   exit 1
 fi
 
