@@ -101,6 +101,11 @@ if SITE="$SITE" ./scripts/check-gsc-ready.sh 2>/dev/null; then
 else
   echo "⚠️  GSC readiness — run ./scripts/check-gsc-ready.sh"
 fi
+if ./scripts/check-sales-ready.sh 2>/dev/null; then
+  echo "✅ Sales-ready (Pro checkout path)"
+else
+  echo "⚠️  Sales-ready — run ./scripts/check-sales-ready.sh"
+fi
 if [[ $WORK_OK -eq 0 ]]; then
   echo ""
   echo ">> Database credentials (worker blocker)"

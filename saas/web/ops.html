@@ -207,28 +207,31 @@ function roleCard(role, data) {
 }
 
 function renderApprovals(staticActions, live) {
-  const items = [];
-  const p0Block = staticActions.find(a => a.id === "p0-unblock");
-  if ((!live.migration || !live.worker) && p0Block) items.push(p0Block);
-  if (!live.migration) items.push(staticActions.find(a => a.id === "migration-0011"));
-  if (!live.worker) items.push(staticActions.find(a => a.id === "worker"));
-  staticActions.filter(a => !a.urgent && a.id === "gsc").forEach(a => items.push(a));
-  const urgent = items.filter(Boolean).filter(a => a.urgent && (
-    a.id === "p0-unblock" && (!live.migration || !live.worker) ||
-    (a.id === "migration-0011" && !live.migration) ||
-    (a.id === "worker" && !live.worker)
+  const parallelIds = ["gsc", "sales-checkout", "linkedin-bip"];
+  const urgent = staticActions.filter(Boolean).filter(a => a.urgent && (
+    (a.id === "p0-unblock" || a.id === "worker") && !live.worker ||
+    (a.id === "migration-0011" && !live.migration)
   ));
+  const parallel = !live.worker
+    ? staticActions.filter(a => parallelIds.includes(a.id))
+    : [];
   const box = document.getElementById("approvalBox");
   const list = document.getElementById("approvalList");
   const clear = document.getElementById("allClear");
-  if (urgent.length) {
+  const fmt = a => {
+    let links = `<a href="${a.url}" target="_blank" rel="noopener">${a.title}</a>`;
+    if (a.alt_url) links += ` · <a href="${a.alt_url}" target="_blank" rel="noopener">alt</a>`;
+    return `<li><b>${a.title}</b> — ${a.detail}<br>${links}</li>`;
+  };
+  if (urgent.length || parallel.length) {
     box.hidden = false;
     clear.hidden = true;
-    list.innerHTML = urgent.map(a => {
-      let links = `<a href="${a.url}" target="_blank" rel="noopener">${a.title}</a>`;
-      if (a.alt_url && a.url.indexOf("/ops/") === -1) links += ` · <a href="${a.alt_url}" target="_blank" rel="noopener">alt</a>`;
-      return `<li><b>${a.title}</b> — ${a.detail}<br>${links}</li>`;
-    }).join("");
+    let html = urgent.map(fmt).join("");
+    if (parallel.length) {
+      html += `<li style="list-style:none;margin:12px 0 6px;font-weight:800;font-size:13px">Parallel (while worker blocked)</li>`;
+      html += parallel.map(fmt).join("");
+    }
+    list.innerHTML = html;
     maybeNotify(urgent.length);
   } else if (live.prod && live.billing && live.migration && live.worker) {
     box.hidden = true;

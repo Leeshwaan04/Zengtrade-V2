@@ -27,8 +27,11 @@ Dashboard → **Authentication → URL configuration**
 **While worker is blocked** (wrong `DATABASE_URL` password), CPO/CBO can still ship:
 
 ```bash
+./scripts/guide-founder-parallel.sh  # all parallel playbooks in one command
 ./scripts/check-parallel-growth.sh   # partial activation + billing + GSC
+./scripts/check-sales-ready.sh       # Pro checkout path (no worker)
 ./scripts/verify-partial-activation.sh
+./scripts/guide-partial-e2e.sh       # founder manual partial E2E
 ```
 
 Links: https://zengtrade.in/ops/e2e (steps 1–2) · https://zengtrade.in/ops/gsc · https://zengtrade.in/ops/billing
@@ -48,13 +51,15 @@ Links: https://zengtrade.in/ops/e2e (steps 1–2) · https://zengtrade.in/ops/gs
 
 ## 4. Paper worker
 
-Already deployed by Apply P0 workflow. Manual guide: https://zengtrade.in/ops/worker — Railway root `saas/worker`, `DATABASE_URL` on port **5432** (session pooler).
+Already deployed by Apply P0 workflow. Manual guide: https://zengtrade.in/ops/worker — Railway root `saas/worker`, `DATABASE_URL` on port **5432** (session pooler). Recovery: `docs/WORKER_RECOVERY.md`.
 
 ## 5. Billing (live — test when ready)
 
 Edge functions are deployed (`./scripts/verify-billing.sh` ✅).
 
 Test: https://zengtrade.in/ops/billing → Pro checkout → `/admin` MRR tile.
+
+Preflight: `./scripts/check-sales-ready.sh` (billing + plan intent + pricing truth).
 
 ## 6. Verify full loop
 

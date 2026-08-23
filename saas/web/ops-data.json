@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T21:28:36Z",
+  "updated": "2026-08-23T21:31:43Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -32,6 +32,20 @@
       "title": "Google Search Console \u2014 submit sitemap",
       "detail": "GSC-ready now \u2014 verify domain + submit sitemap.xml (can run while worker is blocked)",
       "url": "https://zengtrade.in/ops/gsc",
+      "urgent": false
+    },
+    {
+      "id": "sales-checkout",
+      "title": "First Pro checkout \u2014 test MRR",
+      "detail": "Sales-ready probes green \u2014 complete checkout at /ops/billing and confirm Paying + MRR in /admin (worker not required)",
+      "url": "https://zengtrade.in/ops/billing",
+      "urgent": false
+    },
+    {
+      "id": "linkedin-bip",
+      "title": "LinkedIn build-in-public post",
+      "detail": "Founder-ready draft in docs/content/LINKEDIN_BUILD_IN_PUBLIC.md \u2014 post after ./scripts/check-parallel-growth.sh green",
+      "url": "https://github.com/Leeshwaan04/Zengtrade-V2/blob/main/docs/content/LINKEDIN_BUILD_IN_PUBLIC.md",
       "urgent": false
     }
   ],
@@ -94,7 +108,8 @@
       "cpo.md + cbo.md charter refresh (session 112)",
       "docs/WORKER_RECOVERY.md + /ops/worker link (session 115)",
       "sync-ops-gates passes SITE to parallel growth probe (session 115)",
-      "guide-founder-parallel.sh founder playbook while worker blocked (session 118)"
+      "guide-founder-parallel.sh founder playbook while worker blocked (session 118)",
+      "docs/STATUS.md session 120 refresh + founder_actions parallel tasks (session 120)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -206,7 +221,8 @@
       "/ops/p0 parallel work callout (session 107)",
       "cbo.md charter: parallel GSC/billing priorities (session 112)",
       "/admin P0 banner partial E2E link (session 108)",
-      "GSC founder completion log \u2014 GSC_SETUP.md + /ops/gsc (session 117)"
+      "GSC founder completion log \u2014 GSC_SETUP.md + /ops/gsc (session 117)",
+      "ops founder_actions: sales checkout + LinkedIn BIP (session 120)"
     ],
     "next": "Founder: GSC completion log (docs/GSC_SETUP.md); Pro checkout at /ops/billing",
     "links": [
