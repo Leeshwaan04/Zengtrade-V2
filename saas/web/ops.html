@@ -334,6 +334,12 @@ async function refresh() {
     document.getElementById("gates").innerHTML += gate("Parallel growth", parallelOk, "excl. worker");
     document.getElementById("gates").innerHTML += gate("Sales-ready", salesReadyOk, "Pro checkout path");
     document.getElementById("gates").innerHTML += gate("QA parallel", qaParallelOk, "security + partial");
+    const dbAuthOk = g.database_url_auth_ok === true;
+    document.getElementById("gates").innerHTML += gate(
+      "DATABASE_URL auth",
+      dbAuthOk,
+      dbAuthOk ? "Postgres OK" : "wrong Railway password · /ops/worker"
+    );
   }
 
   const parallel = document.getElementById("parallelBox");

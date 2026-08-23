@@ -19,6 +19,8 @@ if ! ./scripts/check-worker.sh >/dev/null 2>&1; then
   echo "Founder playbook: ./scripts/guide-founder-parallel.sh"
   echo ""
   echo "Log: ./scripts/append-growth-log.sh N \"title\" --cto \"...\" --cpo \"...\" --cbo \"...\" --seo \"...\" --marketing \"...\" --sales \"...\" --qa \"...\""
+  echo ""
+  ./scripts/audit-growth-goal.sh 2>/dev/null || true
 fi
 if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
   ./scripts/sync-ops-gates.py 2>/dev/null || true

@@ -61,6 +61,12 @@ echo ""
 if [[ $rail_set -eq 1 ]]; then
   ./scripts/check-railway-deploy.sh 2>/dev/null || true
   echo ""
+  if ./scripts/validate-database-credentials.sh >/dev/null 2>&1; then
+    printf "DATABASE_URL auth (probe)        ✅\n"
+  else
+    printf "DATABASE_URL auth (probe)        ❌ wrong password — /ops/worker\n"
+  fi
+  echo ""
 fi
 
 if [[ $mig -eq 1 && $work -eq 1 ]]; then
