@@ -26,12 +26,15 @@ Charters: `.cursor/autopilot/{cto,cpo,cbo}.md`
 
 | PR | Status | Action |
 |----|--------|--------|
-| [#3](https://github.com/Leeshwaan04/Zengtrade-V2/pull/3) autopilot | Open | **Merge to main** |
+| [#3](https://github.com/Leeshwaan04/Zengtrade-V2/pull/3) autopilot | Open (draft) · **CI smoke ✅** | **Merge to main** |
 | [#2](https://github.com/Leeshwaan04/Zengtrade-V2/pull/2) crypto-only | Open | Close (superseded by #3) |
+
+> **Note:** Vercel preview deploys a separate Next.js project — **not** the `build.py` landing site. Production ship path is **GitHub Pages** (`pages.yml` on `main`), which serves `/app`, `/dashboard`, and fixed `auth.js`.
 
 ## Verify commands
 
 ```bash
 ./tests/e2e_smoke.sh
 SITE=https://zengtrade.in ./scripts/check-production.sh
+./scripts/wait-for-deploy.sh   # after merge, polls until probes pass
 ```

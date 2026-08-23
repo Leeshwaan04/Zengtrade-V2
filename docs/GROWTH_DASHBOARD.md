@@ -128,6 +128,22 @@
 - **Shipped:** STATUS.md for founder at-a-glance.
 - **Next:** GSC post-merge.
 
+### Day 1 (session 8) — PR #3 sync, CI green
+
+### CTO
+- **Shipped:** `scripts/wait-for-deploy.sh` (poll until production probes pass); STATUS.md Vercel vs Pages note.
+- **Verified:** PR #3 synchronize → **5/5 CI checks pass** (smoke, CodeRabbit, Vercel); local `e2e_smoke.sh` OK; dist build includes `/app` + `establishSession` in auth.js.
+- **Blocked:** Production still pre-merge (`/app` 404, auth.js stale on zengtrade.in).
+- **Next:** Founder merges PR #3 → `wait-for-deploy.sh` or CI verify-production.
+
+### CPO
+- **Shipped:** (awaiting deploy)
+- **Next:** Signup → `/dashboard` → deploy → evidence tabs E2E after merge.
+
+### CBO
+- **Shipped:** Merge path documented in MERGE_AND_SHIP + wait script.
+- **Next:** GSC + founding Pro checkout test post-deploy.
+
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*

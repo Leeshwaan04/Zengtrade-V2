@@ -19,6 +19,12 @@ CI job **verify-production** must pass. Or run locally:
 SITE=https://zengtrade.in ./scripts/check-production.sh
 ```
 
+If Pages is still propagating, poll until green:
+
+```bash
+./scripts/wait-for-deploy.sh
+```
+
 Expect:
 - `/app` → 200
 - `/js/auth.js` contains `establishSession`
