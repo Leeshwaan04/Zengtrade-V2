@@ -1111,6 +1111,21 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 20:23Z)
 - worker ❌ · full funnel events ✅ · SEO/how-it-works CTA ✅
 
+### Day 1 (session 102) — P0 partial E2E + ops funnel gate
+
+### CPO
+- **Shipped:** `/ops/p0` step 3 unlocked when migration green — E2E guide open for signup/deploy UI test (trades still need worker).
+
+### CTO / CBO
+- **Shipped:** `/ops` dashboard — **Funnel CTAs** gate tile; `snapshot-growth-metrics` includes 7-coin CTAs row.
+- **Shipped:** `wait-for-p0.sh` + founder-alert — `DATABASE_PASSWORD` unblock hints.
+
+### CTO
+- **Blocked:** Railway Postgres password still invalid.
+
+### Status (`./scripts/check-growth-standup.sh` @ 20:26Z)
+- worker ❌ · E2E guide accessible at `/ops/e2e` for partial activation test
+
 ---
 
 ### CTO

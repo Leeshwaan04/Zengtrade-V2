@@ -121,7 +121,8 @@
       "Strategies tab worker-offline note (session 90)",
       "check-e2e-gates.sh \u2014 CLI probe for /ops/e2e readiness (session 94)",
       "check-activation-ready.sh \u2014 signup \u2192 deploy UI without worker (session 96)",
-      "deploy_click in migration + activation probes (session 101)"
+      "deploy_click in migration + activation probes (session 101)",
+      "/ops/p0 partial E2E unlock when migration green (session 102)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [

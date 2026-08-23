@@ -15,4 +15,6 @@ jobs:
     steps:
       - name: Founder action required
         run: |
-          echo "::error::zengtrade P0 health check failed. Open https://zengtrade.in/ops/p0 — issue https://github.com/Leeshwaan04/Zengtrade-V2/issues/4"
+          echo "::error::zengtrade P0 health check failed. Fix DATABASE_URL password: https://zengtrade.in/ops/worker"
+          echo "::error::Add DATABASE_PASSWORD to Cloud Agent or GitHub Secrets → Apply P0 workflow"
+          echo "::error::Dashboard: https://zengtrade.in/ops/p0 — issue https://github.com/Leeshwaan04/Zengtrade-V2/issues/4"

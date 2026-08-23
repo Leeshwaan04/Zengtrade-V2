@@ -183,6 +183,13 @@ async function probeGscReady() {
   } catch { return false; }
 }
 
+async function probeFunnelCtAs() {
+  try {
+    const html = await fetch(SITE + "/", { cache: "no-store" }).then(r => r.text());
+    return html.includes("utm_source=site") && html.includes("utm_campaign=landing");
+  } catch { return false; }
+}
+
 function gate(label, ok, detail) {
   return `<div class="gate ${ok ? "ok" : "bad"}"><div class="k">${label}</div><div class="v">${ok ? "✓" : "✗"}</div><div class="asof">${detail || ""}</div></div>`;
 }
@@ -265,9 +272,9 @@ async function refresh() {
   const shipBanner = document.getElementById("shipBanner");
   if (shipBanner) shipBanner.hidden = p0Live;
 
-  const [appOk, authOk, migOk, billOk, worker, actOk, billReady, gscOk] = await Promise.all([
+  const [appOk, authOk, migOk, billOk, worker, actOk, billReady, gscOk, funnelOk] = await Promise.all([
     probeSite("/app"), probeAuthJs(), probeMigration0011(), probeBilling(), probeWorker(),
-    probeActivationUi(), probeBillingReady(), probeGscReady(),
+    probeActivationUi(), probeBillingReady(), probeGscReady(), probeFunnelCtAs(),
   ]);
   const live = { prod: appOk && authOk, migration: migOk, billing: billOk, worker: worker.ok };
 
@@ -280,6 +287,7 @@ async function refresh() {
   const activationOk = g.activation_ready ?? actOk;
   const billingReadyOk = g.billing_ready ?? billReady;
   const gscReadyOk = g.gsc_ready ?? gscOk;
+  const funnelCtAsOk = g.funnel_ctas ?? funnelOk;
 
   let workerDetail = worker.ts ? `${worker.ageMin}m ago · ${worker.deps} deps` : "no heartbeat";
   if (!worker.ok && migOk && data.gates?.railway_paper_worker === "FAILED" && data.gates?.database_url_auth_ok === false) {
@@ -294,6 +302,7 @@ async function refresh() {
     gate("Activation UI", activationOk, "signup → deploy"),
     gate("Billing-ready", billingReadyOk, "Pro checkout"),
     gate("GSC-ready", gscReadyOk, "organic / sitemap"),
+    gate("Funnel CTAs", funnelCtAsOk, "utm tagged"),
     gate("Billing rail", billOk, "NOWPayments"),
   ].join("");
 

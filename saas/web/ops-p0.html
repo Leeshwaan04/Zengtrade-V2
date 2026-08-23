@@ -110,6 +110,7 @@ async function refresh(){
   if(badPw) badPw.hidden=!likelyBadPw;
   if(workerOnly) workerOnly.hidden=likelyBadPw||!(mig&&!w.ok);
   const all=mig&&w.ok;
+  const partial=mig&&!w.ok;
   const pill=document.getElementById("overall");
   if(likelyBadPw){
     pill.textContent="Step 2 — fix DATABASE_URL password on Railway";
@@ -121,10 +122,10 @@ async function refresh(){
   pill.className="pill "+(all?"ok":"bad");
   const s3=document.getElementById("step3");
   const btn=document.getElementById("e2eBtn");
-  s3.style.opacity=all?"1":"0.5";
-  btn.style.pointerEvents=all?"auto":"none";
-  btn.style.opacity=all?"1":"0.5";
-  s3.querySelector(".gate").textContent=all?"Ready — open E2E guide":"Locked until P0 green";
+  s3.style.opacity=(all||partial)?"1":"0.5";
+  btn.style.pointerEvents=(all||partial)?"auto":"none";
+  btn.style.opacity=(all||partial)?"1":"0.5";
+  s3.querySelector(".gate").textContent=all?"Ready — open E2E guide":(partial?"E2E open — signup/deploy testable; trades need worker":"Locked until migration 0011");
 }
 refresh();
 setInterval(refresh,30000);

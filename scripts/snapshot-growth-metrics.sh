@@ -6,12 +6,13 @@ cd "$ROOT"
 export SITE="${SITE:-https://zengtrade.in}"
 
 ts=$(date -u +%Y-%m-%dT%H:%MZ)
-work=0 mig=0 act=0 bill=0 gsc=0
+work=0 mig=0 act=0 bill=0 gsc=0 funnel=0
 ./scripts/check-worker.sh >/dev/null 2>&1 && work=1
 ./scripts/check-migrations.sh >/dev/null 2>&1 && mig=1
 SITE="$SITE" ./scripts/check-activation-ready.sh >/dev/null 2>&1 && act=1
 SITE="$SITE" ./scripts/check-billing-ready.sh >/dev/null 2>&1 && bill=1
 SITE="$SITE" ./scripts/check-gsc-ready.sh >/dev/null 2>&1 && gsc=1
+SITE="$SITE" ./scripts/check-funnel-ctas.sh >/dev/null 2>&1 && funnel=1
 if [[ $act -eq 0 ]]; then
   sleep 2
   SITE="$SITE" ./scripts/check-activation-ready.sh >/dev/null 2>&1 && act=1
@@ -33,6 +34,7 @@ echo "| Migration 0011 | $([[ $mig -eq 1 ]] && echo '✅' || echo '❌') |"
 echo "| Activation UI | $([[ $act -eq 1 ]] && echo '✅' || echo '❌') |"
 echo "| Billing-ready | $([[ $bill -eq 1 ]] && echo '✅' || echo '❌') |"
 echo "| GSC-ready | $([[ $gsc -eq 1 ]] && echo '✅' || echo '❌') |"
+echo "| Funnel CTAs (7 coins) | $([[ $funnel -eq 1 ]] && echo '✅' || echo '❌') |"
 echo "| Signups / deployers / MRR | /admin (login required) |"
 echo ""
 if [[ $work -eq 0 ]]; then

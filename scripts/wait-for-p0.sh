@@ -11,8 +11,9 @@ echo "Founder checklist: https://zengtrade.in/ops/p0"
 if ! curl -sfL "https://zengtrade.in/ops/p0/" 2>/dev/null | grep -q "P0 checklist"; then
   echo "Note: /ops/p0 not on production yet — push main and wait for GitHub Pages deploy."
 fi
-echo "Tip: set DATABASE_URL on Railway paper-worker — this script auto-runs apply-p0 when credentials work."
+echo "Tip: add DATABASE_PASSWORD (or DATABASE_URL) on Railway / Cloud Agent / GitHub Secrets — auto-runs apply-p0 when credentials work."
 echo "      Preflight: ./scripts/validate-database-credentials.sh"
+echo "      Parallel work while blocked: ./scripts/founder-parallel-work.sh"
 echo ""
 
 while true; do
