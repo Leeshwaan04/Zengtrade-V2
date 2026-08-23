@@ -7,19 +7,21 @@ export SITE="${SITE:-https://zengtrade.in}"
 
 fail=0
 run() {
+  local title="$1"
+  shift
   echo ""
-  echo ">> $1"
-  if "$2"; then
-    echo "OK   $1"
+  echo ">> $title"
+  if "$@"; then
+    echo "OK   $title"
   else
-    echo "FAIL $1"
+    echo "FAIL $title"
     fail=1
   fi
 }
 
 echo "== zengtrade growth gates — $SITE =="
 
-run "Production site" "SITE=$SITE ./scripts/check-production.sh"
+run "Production site" env SITE="$SITE" ./scripts/check-production.sh
 run "Billing functions" "./scripts/verify-billing.sh"
 run "Migration 0011" "./scripts/check-migrations.sh"
 

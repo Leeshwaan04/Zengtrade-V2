@@ -969,6 +969,22 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/status-report.sh` @ 19:52Z)
 - worker ❌ · all other growth probes pass except worker
 
+### Day 1 (session 93) — growth gates production probe fix
+
+### CTO
+- **Shipped:** `check-growth-gates.sh` — fix `run()` so production site probe runs (`env SITE=…`); was falsely failing every standup.
+- **Verified:** production site + billing + migration + funnel/sitemap/SEO/pricing/security all green (19:56Z).
+- **Blocked:** Railway Postgres password still invalid — deploy FAILED.
+
+### CBO
+- **Next:** GSC submit + first Pro checkout E2E after worker live (`/ops/gsc`, `/ops/billing`).
+
+### CPO
+- **Next:** signup → deploy → trades E2E at `/ops/e2e` after worker heartbeat fresh.
+
+### Status (`./scripts/status-report.sh` @ 19:56Z)
+- worker ❌ · growth gates production probe ✅ (fixed)
+
 ---
 
 ### CTO
