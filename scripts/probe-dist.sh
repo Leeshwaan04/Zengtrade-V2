@@ -18,6 +18,8 @@ need() {
   echo "OK   dist/$path"
 }
 
+need "ops/index.html"
+need "ops/data.json"
 need "app/index.html"
 need "login/index.html"
 need "dashboard/index.html"

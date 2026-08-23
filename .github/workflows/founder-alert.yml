@@ -1,0 +1,19 @@
+name: Founder alert on health failure
+
+# Notifies via GitHub (watch this repo → Actions failures email you).
+# Live dashboard: https://zengtrade.in/ops
+on:
+  workflow_run:
+    workflows: ["Production health watch"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  alert:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Founder action required
+        run: |
+          echo "::error::zengtrade P0 health check failed. Open https://zengtrade.in/ops for CTO/CPO/CBO status and approval items."
+          echo "Workflow: ${{ github.event.workflow_run.html_url }}"

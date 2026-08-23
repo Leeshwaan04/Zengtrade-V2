@@ -5,7 +5,7 @@
 Scheduled Cloud Agents should read `.cursor/autopilot/README.md` and their role charter, then:
 
 1. Execute the top unchecked P0/P1 task
-2. Update `docs/GROWTH_DASHBOARD.md` for today
+2. Update `saas/web/ops-data.json` (founder-facing HTML at **/ops**) and `docs/GROWTH_DASHBOARD.md` (agent log)
 3. Commit with prefix `cto(autopilot):`, `cpo(autopilot):`, or `cbo(autopilot):`
 
 ## Development

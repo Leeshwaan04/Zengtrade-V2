@@ -248,6 +248,7 @@ AUTH_SRC = os.path.abspath(os.path.join(HERE, "..", "..", "saas", "web"))
 AUTH_ROUTES = {                                   # source file -> clean route folder
     "login.html": "login", "reset.html": "reset", "admin.html": "admin",
     "app.html": "app",                             # billing, evidence tabs, pricing (#pricing)
+    "ops.html": "ops",                             # founder autopilot dashboard (HTML, not md)
     "terms.html": "terms", "privacy.html": "privacy", "risk.html": "risk",
 }   # /dashboard = Algo Studio terminal (below); /app = SaaS dashboard + checkout return.
 for f, route_dir in AUTH_ROUTES.items():
@@ -255,6 +256,10 @@ for f, route_dir in AUTH_ROUTES.items():
     if os.path.exists(src):
         d = os.path.join(DIST, route_dir); os.makedirs(d, exist_ok=True)
         shutil.copy(src, os.path.join(d, "index.html"))
+_ops_data = os.path.join(AUTH_SRC, "ops-data.json")
+if os.path.exists(_ops_data):
+    d = os.path.join(DIST, "ops"); os.makedirs(d, exist_ok=True)
+    shutil.copy(_ops_data, os.path.join(d, "data.json"))
 shutil.copy(os.path.join(AUTH_SRC, "css.css"), os.path.join(DIST, "css.css"))
 for d in ("js", "assets"):                        # js = auth glue; assets merge (logo etc.)
     sd = os.path.join(AUTH_SRC, d)

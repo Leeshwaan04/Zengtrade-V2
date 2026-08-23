@@ -1,0 +1,73 @@
+{
+  "updated": "2026-08-23T14:48:00Z",
+  "founder_actions": [
+    {
+      "id": "migration-0011",
+      "title": "Apply migration 0011 (funnel v2 events)",
+      "detail": "Enables signup_complete, deploy_success, checkout_click tracking in /admin",
+      "url": "https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/sql/new",
+      "urgent": true
+    },
+    {
+      "id": "worker",
+      "title": "Deploy paper worker (Railway or Render)",
+      "detail": "Without this, deploys save but no trades run on live prices",
+      "url": "https://railway.app/new",
+      "alt_url": "https://dashboard.render.com/blueprint",
+      "urgent": true
+    },
+    {
+      "id": "gsc",
+      "title": "Google Search Console — submit sitemap",
+      "detail": "After worker is live; organic growth Week 1",
+      "url": "https://search.google.com/search-console",
+      "urgent": false
+    }
+  ],
+  "cto": {
+    "headline": "Production loop",
+    "shipped": [
+      "Founder HTML dashboard at /ops (live probes + approval alerts)",
+      "PR #3 merged — /app, auth.js, verify-production CI green",
+      "Health probes: check-worker, check-migrations, health-watch cron",
+      "render.yaml + WORKER_QUICKSTART for one-click worker host"
+    ],
+    "next": "Worker heartbeat < 12 min; all preflight gates green",
+    "links": [
+      {"label": "GitHub Actions", "url": "https://github.com/Leeshwaan04/Zengtrade-V2/actions"},
+      {"label": "Pages deploy", "url": "https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/pages.yml"},
+      {"label": "Supabase project", "url": "https://supabase.com/dashboard/project/ponvarxeytfcntckczbn"},
+      {"label": "Railway new service", "url": "https://railway.app/new"}
+    ]
+  },
+  "cpo": {
+    "headline": "Signup → deploy → trades",
+    "shipped": [
+      "Activation checklist on /app",
+      "Worker-offline banner on /dashboard and /app",
+      "Funnel events + admin tiles (after 0011)"
+    ],
+    "next": "E2E: signup → deploy → trades within 15 min once worker live",
+    "links": [
+      {"label": "Algo Studio", "url": "https://zengtrade.in/dashboard"},
+      {"label": "Evidence app", "url": "https://zengtrade.in/app"},
+      {"label": "Test signup", "url": "https://zengtrade.in/login?mode=signup"},
+      {"label": "Admin funnel", "url": "https://zengtrade.in/admin"}
+    ]
+  },
+  "cbo": {
+    "headline": "Organic + first Pro MRR",
+    "shipped": [
+      "Founding $19/mo on /pricing",
+      "Coin SEO pages live (e.g. /coins/bitcoin/)",
+      "NOWPayments billing edge functions deployed"
+    ],
+    "next": "GSC sitemap + first proof post after forward trades exist",
+    "links": [
+      {"label": "Pricing page", "url": "https://zengtrade.in/pricing/"},
+      {"label": "Pro checkout", "url": "https://zengtrade.in/app#pricing"},
+      {"label": "Sitemap", "url": "https://zengtrade.in/sitemap.xml"},
+      {"label": "Search Console", "url": "https://search.google.com/search-console"}
+    ]
+  }
+}

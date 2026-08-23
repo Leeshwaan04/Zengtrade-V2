@@ -1,0 +1,228 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Founder Ops · zengtrade autopilot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/assets/logo.svg">
+<link rel="stylesheet" href="/css.css">
+<style>
+  body{background:var(--bg);color:var(--navy);min-height:100vh}
+  .wrap{max-width:1100px;margin:0 auto;padding:20px 18px 72px}
+  .top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .top .logo{width:32px;height:32px;border-radius:9px;background:var(--green);display:grid;place-items:center;color:#fff;font-weight:800}
+  .top h1{font:800 20px/1.2 var(--sans);margin:0;letter-spacing:-.02em}
+  .top .sub{font-size:13px;color:var(--slate);margin:2px 0 0}
+  .top .sp{flex:1}
+  .pill{font:700 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border-radius:99px;border:1px solid var(--line)}
+  .pill.ok{background:var(--green-soft);color:var(--green-d);border-color:var(--green-line)}
+  .pill.bad{background:#fff0f0;color:var(--red-d);border-color:#f5c2c2}
+  .pill.warn{background:#fff8e6;color:#7a5a00;border-color:#f0d78a}
+  .alert{border-radius:14px;padding:14px 16px;margin-bottom:16px;border:1px solid}
+  .alert.urgent{background:#fff5f5;border-color:#f0b4b4;color:#7a1a1a}
+  .alert.ok{background:var(--green-soft);border-color:var(--green-line);color:var(--green-d)}
+  .alert h2{font:800 15px/1.3 var(--sans);margin:0 0 8px}
+  .alert ul{margin:0;padding-left:18px;font-size:14px;line-height:1.55}
+  .alert a{color:inherit;font-weight:700}
+  .gates{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+  .gate{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow)}
+  .gate .k{font:700 10px/1 var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--slate)}
+  .gate .v{font:800 22px/1.2 var(--sans);margin-top:6px}
+  .gate.ok .v{color:var(--green-d)}.gate.bad .v{color:var(--red-d)}.gate.wait .v{color:var(--amber)}
+  .grid3{display:grid;gap:14px}
+  @media(min-width:900px){.grid3{grid-template-columns:1fr 1fr 1fr}}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
+  .card h3{font:800 13px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;margin:0 0 4px}
+  .card .head{font:700 16px/1.3 var(--sans);margin:0 0 12px;color:var(--navy)}
+  .card ul{margin:0 0 12px;padding-left:18px;font-size:13.5px;line-height:1.55;color:var(--slate)}
+  .card .next{font-size:13px;padding:10px 12px;background:var(--surface-2);border-radius:10px;border:1px solid var(--line);margin-bottom:12px}
+  .links{display:flex;flex-wrap:wrap;gap:8px}
+  .links a{font:600 12.5px/1 var(--sans);text-decoration:none;padding:7px 11px;border-radius:8px;border:1px solid var(--line);color:var(--navy);background:var(--surface)}
+  .links a:hover{border-color:var(--green);color:var(--green-d)}
+  .foot{margin-top:18px;font-size:12px;color:var(--slate-2);text-align:center}
+  .foot button{border:0;background:transparent;color:var(--blue);font:inherit;cursor:pointer;font-weight:600}
+  .asof{font:600 11px/1 var(--mono);color:var(--slate-2);margin-top:8px}
+</style></head><body>
+<div class="wrap">
+  <div class="top">
+    <div class="logo" aria-hidden="true">Z</div>
+    <div>
+      <h1>Founder Ops</h1>
+      <p class="sub">CTO · CPO · CBO — live autopilot progress</p>
+    </div>
+    <span class="sp"></span>
+    <span id="notifyPill" class="pill warn" hidden>Notifications off</span>
+    <span id="overallPill" class="pill wait">Checking…</span>
+  </div>
+
+  <div id="approvalBox" class="alert urgent" hidden>
+    <h2>⚠️ Your approval / action required</h2>
+    <ul id="approvalList"></ul>
+  </div>
+  <div id="allClear" class="alert ok" hidden>
+    <h2>✓ All P0 gates green</h2>
+    <p style="margin:0;font-size:14px">Run E2E: <a href="https://zengtrade.in/login?mode=signup">signup</a> → <a href="https://zengtrade.in/dashboard">deploy</a> → <a href="https://zengtrade.in/app#forward">trades</a></p>
+  </div>
+
+  <div class="gates" id="gates"></div>
+
+  <div class="grid3" id="roles"></div>
+
+  <p class="asof" id="asof"></p>
+  <p class="foot">Auto-refreshes every 60s · Bookmark <a href="https://zengtrade.in/ops"><b>zengtrade.in/ops</b></a> ·
+    <button type="button" id="enableNotify">Enable approval alerts</button></p>
+</div>
+<script type="module">
+const SUPA = "https://ponvarxeytfcntckczbn.supabase.co";
+const ANON = "sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";
+const SITE = "https://zengtrade.in";
+const MAX_WORKER_MIN = 12;
+
+let lastApprovalCount = -1;
+
+async function probeSite(path) {
+  try {
+    const r = await fetch(SITE + path, { method: "HEAD", cache: "no-store" });
+    return r.ok;
+  } catch { return false; }
+}
+
+async function probeAuthJs() {
+  try {
+    const t = await fetch(SITE + "/js/auth.js", { cache: "no-store" }).then(r => r.text());
+    return t.includes("establishSession");
+  } catch { return false; }
+}
+
+async function probeMigration0011() {
+  try {
+    const r = await fetch(SUPA + "/rest/v1/event", {
+      method: "POST",
+      headers: { apikey: ANON, "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({ name: "signup_complete", path: "/ops-probe" }),
+    });
+    return r.status === 201;
+  } catch { return false; }
+}
+
+async function probeWorker() {
+  try {
+    const rows = await fetch(SUPA + "/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at,value", {
+      headers: { apikey: ANON },
+      cache: "no-store",
+    }).then(r => r.json());
+    if (!rows?.[0]?.updated_at) return { ok: false, ts: null, deps: 0 };
+    const ageMin = (Date.now() - new Date(rows[0].updated_at).getTime()) / 60000;
+    const deps = rows[0].value?.deployments ?? 0;
+    return { ok: ageMin <= MAX_WORKER_MIN, ts: rows[0].updated_at, deps, ageMin: Math.round(ageMin) };
+  } catch { return { ok: false, ts: null, deps: 0 }; }
+}
+
+async function probeBilling() {
+  try {
+    const r = await fetch(SUPA + "/functions/v1/nowpayments-create-invoice", {
+      method: "OPTIONS",
+      headers: { Origin: SITE, "Access-Control-Request-Method": "POST" },
+    });
+    return r.ok;
+  } catch { return false; }
+}
+
+function gate(label, ok, detail) {
+  return `<div class="gate ${ok ? "ok" : "bad"}"><div class="k">${label}</div><div class="v">${ok ? "✓" : "✗"}</div><div class="asof">${detail || ""}</div></div>`;
+}
+
+function renderLinks(links) {
+  return `<div class="links">${(links || []).map(l => `<a href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>`;
+}
+
+function roleCard(role, data) {
+  if (!data) return "";
+  return `<div class="card"><h3>${role}</h3><p class="head">${data.headline || ""}</p>
+    <ul>${(data.shipped || []).map(s => `<li>${s}</li>`).join("")}</ul>
+    <div class="next"><b>Next:</b> ${data.next || "—"}</div>
+    ${renderLinks(data.links)}</div>`;
+}
+
+function renderApprovals(staticActions, live) {
+  const items = [];
+  if (!live.migration) items.push(staticActions.find(a => a.id === "migration-0011"));
+  if (!live.worker) items.push(staticActions.find(a => a.id === "worker"));
+  staticActions.filter(a => !a.urgent && a.id === "gsc").forEach(a => items.push(a));
+  const urgent = items.filter(Boolean).filter(a => a.urgent && ((a.id === "migration-0011" && !live.migration) || (a.id === "worker" && !live.worker)));
+  const box = document.getElementById("approvalBox");
+  const list = document.getElementById("approvalList");
+  const clear = document.getElementById("allClear");
+  if (urgent.length) {
+    box.hidden = false;
+    clear.hidden = true;
+    list.innerHTML = urgent.map(a => {
+      let links = `<a href="${a.url}" target="_blank" rel="noopener">${a.title}</a>`;
+      if (a.alt_url) links += ` · <a href="${a.alt_url}" target="_blank" rel="noopener">Render blueprint</a>`;
+      return `<li><b>${a.title}</b> — ${a.detail}<br>${links}</li>`;
+    }).join("");
+    maybeNotify(urgent.length);
+  } else if (live.prod && live.billing && live.migration && live.worker) {
+    box.hidden = true;
+    clear.hidden = false;
+    maybeNotify(0);
+  } else {
+    box.hidden = false;
+    clear.hidden = true;
+    list.innerHTML = "<li>Finish remaining gates below.</li>";
+  }
+}
+
+function maybeNotify(count) {
+  if (count === lastApprovalCount) return;
+  lastApprovalCount = count;
+  if (count > 0 && Notification.permission === "granted") {
+    new Notification("zengtrade — action required", {
+      body: `${count} founder approval(s) pending. Open zengtrade.in/ops`,
+      icon: "/assets/logo.svg",
+    });
+  }
+}
+
+document.getElementById("enableNotify").onclick = async () => {
+  const p = await Notification.requestPermission();
+  const pill = document.getElementById("notifyPill");
+  pill.hidden = false;
+  pill.textContent = p === "granted" ? "Alerts on" : "Alerts blocked";
+  pill.className = "pill " + (p === "granted" ? "ok" : "bad");
+};
+
+async function refresh() {
+  const [appOk, authOk, migOk, billOk, worker] = await Promise.all([
+    probeSite("/app"), probeAuthJs(), probeMigration0011(), probeBilling(), probeWorker(),
+  ]);
+  const live = { prod: appOk && authOk, migration: migOk, billing: billOk, worker: worker.ok };
+
+  document.getElementById("gates").innerHTML = [
+    gate("Production /app", appOk, "billing + evidence"),
+    gate("Google OAuth fix", authOk, "establishSession"),
+    gate("Billing rail", billOk, "NOWPayments"),
+    gate("Migration 0011", migOk, "funnel v2"),
+    gate("Paper worker", worker.ok, worker.ts ? `${worker.ageMin}m ago · ${worker.deps} deps` : "no heartbeat"),
+  ].join("");
+
+  const allGreen = live.prod && live.billing && live.migration && live.worker;
+  const pill = document.getElementById("overallPill");
+  pill.textContent = allGreen ? "All P0 green" : "Action needed";
+  pill.className = "pill " + (allGreen ? "ok" : "bad");
+
+  let data = {};
+  try {
+    data = await fetch("/ops/data.json?" + Date.now(), { cache: "no-store" }).then(r => r.json());
+  } catch { /* static fallback */ }
+
+  renderApprovals(data.founder_actions || [], live);
+  document.getElementById("roles").innerHTML =
+    roleCard("CTO", data.cto) + roleCard("CPO", data.cpo) + roleCard("CBO", data.cbo);
+  document.getElementById("asof").textContent =
+    "Live probes: " + new Date().toLocaleString() + (data.updated ? " · Briefing data: " + data.updated.replace("T", " ").replace("Z", " UTC") : "");
+}
+
+refresh();
+setInterval(refresh, 60000);
+</script></body></html>

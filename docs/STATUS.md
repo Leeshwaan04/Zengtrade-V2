@@ -15,16 +15,11 @@
 | Migration 0011 | ❌ **Pending** — `signup_complete` events blocked |
 | Migrations 0009–0010 | ✅ applied |
 
-## Founder action (remaining P0)
+## Founder dashboard
 
-👉 **[WORKER_QUICKSTART.md](WORKER_QUICKSTART.md)** — deploy worker (10 min)  
-👉 **[FOUNDER_DEPLOY.md](FOUNDER_DEPLOY.md)** — full backend checklist
+👉 **https://zengtrade.in/ops** — live CTO / CPO / CBO progress, approval alerts, auto-refresh (bookmark this).
 
-```bash
-./scripts/founder-preflight.sh   # production + billing + migrations + worker
-./scripts/check-migrations.sh    # probe 0008–0011
-./scripts/check-worker.sh        # heartbeat freshness
-```
+Internal agent log: `docs/GROWTH_DASHBOARD.md`
 
 ## Autopilot agents
 

@@ -26,9 +26,15 @@ Update docs/GROWTH_DASHBOARD.md with today's date section.
 Commit, push, update open PR if any. Summarize for the founder in 5 bullets.
 ```
 
-## Daily digest (this repo)
+## Founder dashboard (bookmark this)
 
-`docs/GROWTH_DASHBOARD.md` is the **single source of truth** for day-over-day progress. Every autopilot run must append or update the current day block.
+**https://zengtrade.in/ops** — live HTML progress for CTO / CPO / CBO (auto-refresh, approval alerts).
+
+Agents update `saas/web/ops-data.json` on each run (not markdown for the founder).
+
+## Daily digest (agents)
+
+`docs/GROWTH_DASHBOARD.md` — internal agent log. Founders use **/ops** instead.
 
 ## Metrics sources
 
