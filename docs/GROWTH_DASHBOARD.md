@@ -650,6 +650,15 @@
 ### Status (`./scripts/status-report.sh` @ 17:12Z)
 - migration 0011 ❌ | worker ❌ | awaiting DATABASE_URL
 
+### Day 1 (session 56) — post-P0 success runbook
+
+### CTO
+- **Shipped:** `post-p0-success.sh` — activation + security + pricing truth + CPO/CBO/QA next URLs.
+- **Wired:** `apply-p0-autopilot.sh`, `wait-for-p0.sh`, `apply-p0.yml` call post-P0 runbook.
+
+### Status (`./scripts/status-report.sh` @ 17:14Z)
+- migration 0011 ❌ | worker ❌ | PR #7 CI ✅
+
 ---
 
 ### CTO

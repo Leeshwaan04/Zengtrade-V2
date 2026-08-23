@@ -36,5 +36,5 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
         run: ./scripts/apply-p0-autopilot.sh
-      - name: Verify activation path
-        run: ./scripts/verify-activation-path.sh
+      - name: Post-P0 success runbook
+        run: ./scripts/post-p0-success.sh

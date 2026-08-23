@@ -75,4 +75,4 @@ echo ""
 echo "== P0 status =="
 ./scripts/status-report.sh
 echo ""
-echo "Next: ./scripts/verify-activation-path.sh && E2E https://zengtrade.in/ops/e2e"
+echo "Next: ./scripts/post-p0-success.sh"

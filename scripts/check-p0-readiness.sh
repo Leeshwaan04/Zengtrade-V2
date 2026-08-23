@@ -27,7 +27,7 @@ if [[ $rail_set -eq 1 ]]; then
 fi
 
 if [[ $mig -eq 1 && $work -eq 1 ]]; then
-  echo "P0 already green — run ./scripts/verify-activation-path.sh"
+  echo "P0 already green — run ./scripts/post-p0-success.sh"
   exit 0
 fi
 
