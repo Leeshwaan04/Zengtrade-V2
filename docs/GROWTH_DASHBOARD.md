@@ -268,6 +268,18 @@
 ### CBO
 - **Ready:** /ops/billing + /ops/gsc after forward trades exist.
 
+### Day 1 (session 20) — worker deploy hardening + CBO draft
+
+### CTO
+- **Shipped:** Worker startup heartbeat + DB connect retry (faster Railway health proof); ops/worker troubleshooting (session pooler 5432); health-watch auto-commits ops-data gates on main.
+- **Blocked:** Migration 0011 + worker deploy still founder-owned.
+
+### CPO
+- **Shipped:** Worker-offline banner links to /how-it-works on /app.
+
+### CBO
+- **Shipped:** `docs/content/REDDIT_ALGOTRADING_DRAFT.md` (do not post until P0 green).
+
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*

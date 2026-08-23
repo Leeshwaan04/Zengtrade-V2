@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T15:03:57Z",
+  "updated": "2026-08-23T15:08:14Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "founder_actions": [
     {
@@ -31,7 +31,8 @@
     "shipped": [
       "Founder action pages: /ops/migrate + /ops/worker (HTML, copy-verify)",
       "PR #3 merged \u2014 /app, auth.js, verify-production CI green",
-      "Health probes: check-worker, check-migrations, health-watch cron (fails → founder email)",
+      "Health probes: check-worker, check-migrations, health-watch cron (fails \u2192 founder email)",
+      "Worker startup heartbeat + DB retry for faster deploy proof",
       "verify-activation-path.sh for post-P0 E2E gate",
       "render.yaml + WORKER_QUICKSTART for one-click worker host"
     ],
@@ -59,7 +60,7 @@
     "headline": "Signup \u2192 deploy \u2192 trades",
     "shipped": [
       "Activation checklist on /app",
-      "Worker-offline banner on /dashboard and /app",
+      "Worker-offline banner links to /how-it-works on /app and /dashboard",
       "Funnel events + admin tiles (after 0011)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
@@ -91,7 +92,8 @@
     "shipped": [
       "Founding $19/mo on /pricing",
       "Coin SEO pages live (e.g. /coins/bitcoin/)",
-      "NOWPayments billing edge functions deployed"
+      "NOWPayments billing edge functions deployed",
+      "r/algotrading draft ready (post after P0)"
     ],
     "next": "GSC sitemap + first proof post after forward trades exist",
     "links": [

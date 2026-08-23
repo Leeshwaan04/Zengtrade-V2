@@ -21,3 +21,25 @@ jobs:
         run: ./scripts/check-worker.sh
       - name: Sync ops gate snapshot
         run: python3 scripts/sync-ops-gates.py || true
+
+  sync-ops-data:
+    needs: health
+    if: github.ref == 'refs/heads/main' && always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refresh ops-data.json gates
+        run: python3 scripts/sync-ops-gates.py || true
+      - name: Commit gate snapshot if changed
+        run: |
+          if git diff --quiet saas/web/ops-data.json; then
+            echo "ops-data.json unchanged"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add saas/web/ops-data.json
+          git commit -m "chore(ops): auto-sync gate snapshot from health-watch"
+          git push
