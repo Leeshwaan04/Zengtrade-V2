@@ -25,6 +25,11 @@
   <h1>Deploy paper worker</h1>
   <p class="sub">Founder approval · ~10 min · Without this, <a href="/dashboard">deploys save</a> but <b>no trades run</b> on live Binance prices. See also <a href="/ops/p0">P0 checklist</a>.</p>
 
+  <div class="card" style="background:#eef2ff;border-color:#c7d2fe">
+    <h2>Option 0 — Cloud Agent (if DATABASE_URL secret set)</h2>
+    <p style="font-size:14px;line-height:1.55;margin:0">Agent runs <code>./scripts/apply-p0-autopilot.sh</code> → sets vars on Railway <b>paper-worker</b> service (<code>saas/worker</code> Dockerfile) and redeploys. Requires <code>DATABASE_URL</code> + <code>RAILWAY_API_TOKEN</code> in Cloud Agent secrets.</p>
+  </div>
+
   <div class="card">
     <h2>Option A — Railway (recommended)</h2>
     <ol>

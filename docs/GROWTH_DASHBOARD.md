@@ -554,7 +554,17 @@
 ### Status (`./scripts/status-report.sh` @ 16:17Z)
 - migration 0011 ❌ | worker ❌
 
-### Day 1 (session 46) — Railway token + paper-worker service
+### Day 1 (session 47) — waiting on DATABASE_URL only
+
+### CTO
+- **Ready:** `RAILWAY_API_TOKEN` set; `paper-worker` service configured (`saas/worker` Dockerfile).
+- **Blocked:** `DATABASE_URL` not in VM — migration 0011 + worker env still pending.
+- **Shipped:** `/ops/p0` + `/ops/worker` document Cloud Agent one-shot path.
+
+### Status (`./scripts/status-report.sh` @ 16:36Z)
+- migration 0011 ❌ | worker ❌ | Railway token ✅
+
+---
 
 ### CTO
 - **Shipped:** Railway account token accepted via GraphQL (`RAILWAY_API_TOKEN`).

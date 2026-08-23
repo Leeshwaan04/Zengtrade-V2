@@ -21,6 +21,9 @@ MIG_SQL="$ROOT/saas/db/migrations/0011_funnel_events_v2.sql"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 
+# Accept common secret aliases from Cloud Agent / CI
+DATABASE_URL="${DATABASE_URL:-${SUPABASE_DATABASE_URL:-}}"
+
 echo "== zengtrade P0 autopilot =="
 echo ""
 
