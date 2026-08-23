@@ -65,7 +65,8 @@ fi
 
 echo "Unblock paths:"
 if [[ $db_set -eq 0 ]]; then
-  echo "  • Cloud Agent: add DATABASE_URL (Supabase session pooler :5432)"
+  echo "  • Cloud Agent: add DATABASE_URL (see ./scripts/founder-database-url-help.sh)"
+  echo "  • Pooler host: aws-0-ap-northeast-1.pooler.supabase.com (session :5432)"
   echo "  • Railway: set DATABASE_URL on paper-worker (apply-p0 auto-resolves)"
   echo "  • GitHub: add DATABASE_URL + RAILWAY_API_TOKEN to repo Secrets → Apply P0 workflow"
   echo "  • Supabase URI: https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings"

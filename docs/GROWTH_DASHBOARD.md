@@ -701,12 +701,15 @@
 ### Status (`./scripts/status-report.sh` @ 17:21Z)
 - migration 0011 ❌ | worker ❌ | security-smoke ✅
 
-### Day 1 (session 71) — remediate wrong pooler host
+### Day 1 (session 72) — DATABASE_URL secret empty
 
 ### CTO
-- **Blocked:** `DATABASE_URL` secret still has wrong host (us-east-1) + invalid DB password.
-- **Shipped:** `remediate-database-url.sh` — auto-fixes Supavisor host when password is valid.
-- **Need:** Founder resets Supabase DB password → paste full URI into `DATABASE_URL` secret.
+- **Blocked:** `DATABASE_URL` Cloud Agent secret is empty; migration 0011 + worker unchanged.
+- **Shipped:** `founder-database-url-help.sh`; `/ops/migrate` shows ap-northeast-1 pooler host.
+- **Manual path:** Founder can apply SQL at /ops/migrate via Supabase SQL Editor (login required).
+
+### Status (@ 17:58Z)
+- migration 0011 ❌ | worker ❌
 
 ---
 

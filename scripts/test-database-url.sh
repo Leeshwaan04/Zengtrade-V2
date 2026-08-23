@@ -3,7 +3,8 @@
 set -euo pipefail
 
 DATABASE_URL="${DATABASE_URL:-${SUPABASE_DATABASE_URL:-}}"
-[[ -n "$DATABASE_URL" ]] || { echo "ERROR: DATABASE_URL not set" >&2; exit 1; }
+DATABASE_URL="${DATABASE_URL//[[:space:]]/}"
+[[ -n "$DATABASE_URL" ]] || { echo "ERROR: DATABASE_URL not set (Cloud Agent secret empty?)" >&2; echo "Run: ./scripts/founder-database-url-help.sh" >&2; exit 1; }
 command -v psql >/dev/null || { echo "ERROR: psql not installed" >&2; exit 1; }
 
 if python3 -c 'import os,sys; from urllib.parse import urlparse

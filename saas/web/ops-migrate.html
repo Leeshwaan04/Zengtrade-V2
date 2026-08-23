@@ -31,7 +31,8 @@
     then <a href="https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml" target="_blank" rel="noopener">Run workflow “Apply P0”</a> → type <code>APPLY</code> (migration + paper-worker in one step).
   </div>
   <div class="card" style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:14px;margin-bottom:12px">
-    <b>Cloud Agent option:</b> Add <code>DATABASE_URL</code> to Cursor Cloud Agent secrets (<code>RAILWAY_API_TOKEN</code> already set) → agent runs <code>./scripts/apply-p0-autopilot.sh</code>.
+    <b>Cloud Agent:</b> Add full <code>DATABASE_URL</code> Postgres URI to Cursor secrets → <code>./scripts/run-p0-if-ready.sh</code>.
+    Pooler host for this project: <code>aws-0-ap-northeast-1.pooler.supabase.com</code> (not us-east-1). Use database password — not <code>sb_secret</code> API keys.
   </div>
   <div class="card" style="background:var(--green-soft);border:1px solid var(--green-line);border-radius:12px;padding:14px;margin-bottom:16px">
     <b>GitHub Action option:</b> Add <code>DATABASE_URL</code> to <a href="https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions" target="_blank" rel="noopener">GitHub repo Secrets</a>,
