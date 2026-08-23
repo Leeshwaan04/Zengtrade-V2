@@ -46,4 +46,6 @@ fi
 
 echo ""
 ./scripts/check-p0-readiness.sh
+echo ""
+./scripts/founder-parallel-work.sh 2>/dev/null || true
 exit 1

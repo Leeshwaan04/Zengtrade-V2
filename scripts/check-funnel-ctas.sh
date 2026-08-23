@@ -22,7 +22,9 @@ echo ""
 check_page "home" "/" "landing"
 check_page "pricing" "/pricing/" "pricing"
 check_page "coins hub" "/coins/" "coins_hub"
-check_page "coin bitcoin" "/coins/bitcoin/" "coin_bitcoin"
+for slug in bitcoin ethereum solana bnb xrp cardano dogecoin; do
+  check_page "coin $slug" "/coins/${slug}/" "coin_${slug}"
+done
 
 if [[ $fail -ne 0 ]]; then
   echo ""

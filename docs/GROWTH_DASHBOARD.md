@@ -1080,6 +1080,23 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Metrics snapshot (`./scripts/snapshot-growth-metrics.sh` @ 20:18Z)
 - Worker: Offline (last heartbeat 2026-08-11) · migration 0011 ✅ · activation/billing/GSC ✅ (probes)
 
+### Day 1 (session 100) — all-coin funnel CTAs + Railway auth hint
+
+### CBO / SEO
+- **Shipped:** `check-funnel-ctas.sh` — all 7 coin pSEO pages (BTC, ETH, SOL, BNB, XRP, ADA, DOGE).
+- **Verified:** funnel CTAs on production (20:20Z).
+
+### CTO
+- **Shipped:** `check-railway-deploy.sh` — tests DATABASE_URL auth when Railway token set.
+- **Shipped:** `run-p0-if-ready.sh` prints parallel CBO/CPO work when blocked.
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** `/admin` P0 banner — parallel work links (billing, GSC, signup) while worker down.
+
+### Status (`./scripts/check-growth-standup.sh` @ 20:20Z)
+- worker ❌ · all coin funnel CTAs ✅
+
 ---
 
 ### CTO

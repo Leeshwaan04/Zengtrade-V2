@@ -26,6 +26,15 @@ print(d.get('status','UNKNOWN'), (d.get('createdAt') or '')[:19])
 
 if [[ "$has_db" == "yes" ]]; then
   echo "Railway paper-worker: DATABASE_URL set · latest deploy $dep_status ($dep_at UTC)"
+  resolved=$(railway_resolve_database_url 2>/dev/null || true)
+  if [[ -n "${resolved:-}" ]]; then
+    resolved=$(./scripts/sanitize-database-url.sh "$resolved" 2>/dev/null || echo "$resolved")
+    if DATABASE_URL="$resolved" ./scripts/test-database-url.sh >/dev/null 2>&1; then
+      echo "OK   Railway DATABASE_URL auth"
+    else
+      echo "HINT: DATABASE_URL password invalid — reset Supabase password or set DATABASE_PASSWORD secret"
+    fi
+  fi
   if [[ "$dep_status" == "FAILED" || "$dep_status" == "CRASHED" ]]; then
     echo "HINT: deploy failed — often wrong Postgres password in DATABASE_URL (see /ops/worker)"
   fi

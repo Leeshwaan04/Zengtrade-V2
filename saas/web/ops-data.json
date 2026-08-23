@@ -75,7 +75,8 @@
       "status-report + sync-ops-gates: billing/GSC/activation UI gates (session 96)",
       "founder-parallel-work.sh + /ops growth gates banner (session 97)",
       "apply-p0.yml accepts DATABASE_PASSWORD GitHub secret (session 98)",
-      "snapshot-growth-metrics.sh for GROWTH_DASHBOARD probe table (session 99)"
+      "snapshot-growth-metrics.sh for GROWTH_DASHBOARD probe table (session 99)",
+      "check-railway-deploy.sh tests DATABASE_URL auth (session 100)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -162,6 +163,7 @@
       "check-pricing-truth.sh covers /app upsell copy (session 82)",
       "post-p0-success.sh runs check-funnel-ctas + check-sitemap (session 84)",
       "check-funnel-ctas.sh covers coins hub + bitcoin pSEO (session 86)",
+      "check-funnel-ctas.sh — all 7 coin pSEO pages (session 100)",
       "check-plan-intent.sh \u2014 ?plan=pro|elite \u2192 /app#pricing (session 86)",
       "check-seo-content.sh in CI + post-p0 (session 89)",
       "check-gsc-ready.sh \u2014 sitemap + SEO + funnel + signup landing (session 94)",
