@@ -36,6 +36,8 @@ echo "| Billing-ready | $([[ $bill -eq 1 ]] && echo '✅' || echo '❌') |"
 echo "| GSC-ready | $([[ $gsc -eq 1 ]] && echo '✅' || echo '❌') |"
 echo "| Funnel CTAs (7 coins) | $([[ $funnel -eq 1 ]] && echo '✅' || echo '❌') |"
 echo "| Signups / deployers / MRR | /admin (login required) |"
+gates=$((work + mig + act + bill + gsc + funnel))
+echo "| Growth gates (excl. worker) | $gates/6 |"
 echo ""
 if [[ $work -eq 0 ]]; then
   ./scripts/founder-next-action.sh 2>/dev/null | sed 's/^/  /' || true

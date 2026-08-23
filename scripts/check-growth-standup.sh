@@ -9,3 +9,6 @@ echo ""
 ./scripts/status-report.sh || true
 echo ""
 ./scripts/snapshot-growth-metrics.sh 2>/dev/null || true
+if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
+  ./scripts/sync-ops-gates.py 2>/dev/null || true
+fi

@@ -21,7 +21,16 @@ if [[ $mig -eq 1 && $work -eq 1 ]]; then
 fi
 
 if [[ $mig -eq 1 && $work -eq 0 ]]; then
-  echo "Migration live — worker blocked:"
+  echo "Partial E2E — test signup → deploy UI (trades need worker):"
+  echo "  https://zengtrade.in/ops/e2e"
+  echo ""
+  if SITE=https://zengtrade.in ./scripts/check-activation-ready.sh >/dev/null 2>&1; then
+    echo "Activation UI ✅ — signup → deploy path ready for manual test"
+  else
+    echo "Activation UI ❌ — run ./scripts/check-activation-ready.sh"
+  fi
+  echo ""
+  echo "Worker blocked:"
   ./scripts/founder-next-action.sh 2>/dev/null || true
   exit 1
 fi

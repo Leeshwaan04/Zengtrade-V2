@@ -26,6 +26,31 @@ Pro intent:
 https://zengtrade.in/login?mode=signup&plan=pro&utm_source=...
 ```
 
+## Parallel work (worker blocked — GSC + activation)
+
+Founder/CBO can run these **before** paper worker is live (no forward trades yet):
+
+| Task | Link | Proof |
+|------|------|-------|
+| GSC verify + sitemap | https://zengtrade.in/ops/gsc | Search Console screenshot |
+| Pro checkout smoke | https://zengtrade.in/ops/billing | Invoice created (test mode OK) |
+| Signup → deploy UI | https://zengtrade.in/ops/e2e | Partial E2E when migration ✅ |
+
+**Do not** claim forward P&L or closed trades until `./scripts/check-worker.sh` is green.
+
+Pre-P0 LinkedIn angle (honest):
+
+```
+Shipping zengtrade in public — paper trading on live Binance prices.
+
+Today: signup → Algo Studio → deploy is live on staging-grade infra.
+Next: forward paper loop (worker deploy in progress).
+
+Try the deploy path: https://zengtrade.in/login?mode=signup&utm_source=linkedin&utm_medium=social&utm_campaign=build_in_public
+
+Not investment advice. Paper only.
+```
+
 ## Content calendar (post-P0)
 
 | Week | Asset | Channel |

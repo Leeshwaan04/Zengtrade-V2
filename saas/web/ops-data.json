@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T20:21:41Z",
+  "updated": "2026-08-23T20:30:25Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -76,7 +76,10 @@
       "founder-parallel-work.sh + /ops growth gates banner (session 97)",
       "apply-p0.yml accepts DATABASE_PASSWORD GitHub secret (session 98)",
       "snapshot-growth-metrics.sh for GROWTH_DASHBOARD probe table (session 99)",
-      "check-railway-deploy.sh tests DATABASE_URL auth (session 100)"
+      "check-railway-deploy.sh tests DATABASE_URL auth (session 100)",
+      "check-e2e-gates.sh partial E2E when migration green (session 103)",
+      "status-report ops/p0 via check-production (session 103)",
+      "check-growth-standup auto sync-ops-gates (session 103)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -122,7 +125,8 @@
       "check-e2e-gates.sh \u2014 CLI probe for /ops/e2e readiness (session 94)",
       "check-activation-ready.sh \u2014 signup \u2192 deploy UI without worker (session 96)",
       "deploy_click in migration + activation probes (session 101)",
-      "/ops/p0 partial E2E unlock when migration green (session 102)"
+      "/ops/p0 partial E2E unlock when migration green (session 102)",
+      "check-e2e-gates.sh partial signup\u2192deploy path when worker down (session 103)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [
@@ -172,7 +176,9 @@
       "/ops/gsc live GSC-ready probe (session 94)",
       "check-billing-ready.sh \u2014 Pro checkout + founding $19 + checkout_click (session 95)",
       "/ops/billing live billing-ready probe (session 95)",
-      "founder-parallel-work.sh \u2014 parallel CBO tasks while worker down (session 97)"
+      "founder-parallel-work.sh \u2014 parallel CBO tasks while worker down (session 97)",
+      "MARKETING_PLAYBOOK parallel work while worker blocked (session 103)",
+      "snapshot-growth-metrics gates score 6/6 excl worker (session 103)"
     ],
     "next": "GSC sitemap + first proof post after forward trades exist; Pro checkout E2E at /ops/billing",
     "links": [
@@ -235,7 +241,8 @@
       "UTM conventions on home + pricing (check-funnel-ctas.sh)",
       "r/algotrading draft + WEEKLY_PROOF template (post after E2E)",
       "LinkedIn founder launch post template in MARKETING_PLAYBOOK (session 88)",
-      "Coin spotlight post template in MARKETING_PLAYBOOK (session 92)"
+      "Coin spotlight post template in MARKETING_PLAYBOOK (session 92)",
+      "Parallel work playbook \u2014 GSC + billing + build-in-public (session 103)"
     ],
     "next": "First forward-proof post after P0 E2E; coin spotlight series",
     "links": [

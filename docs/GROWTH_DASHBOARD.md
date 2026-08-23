@@ -1126,6 +1126,23 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 20:26Z)
 - worker ❌ · E2E guide accessible at `/ops/e2e` for partial activation test
 
+### Day 1 (session 103) — partial E2E gates + parallel marketing
+
+### CPO
+- **Shipped:** `check-e2e-gates.sh` — partial E2E path when migration ✅ (signup → deploy UI at `/ops/e2e`; trades need worker).
+
+### CBO / Marketing
+- **Shipped:** `MARKETING_PLAYBOOK.md` — parallel work while worker blocked (GSC, billing smoke, build-in-public LinkedIn draft).
+- **Shipped:** `snapshot-growth-metrics.sh` — growth gates score (6/6 excl. worker).
+
+### CTO
+- **Shipped:** `status-report.sh` — ops/p0 probe via `check-production.sh` (fewer false alarms).
+- **Shipped:** `check-growth-standup.sh` — auto `sync-ops-gates.py` when Railway token set.
+- **Blocked:** Railway Postgres password still invalid.
+
+### Status (`./scripts/check-growth-standup.sh` @ 20:30Z)
+- worker ❌ · 6/6 growth gates (excl. worker) ✅ · partial E2E at `/ops/e2e`
+
 ---
 
 ### CTO

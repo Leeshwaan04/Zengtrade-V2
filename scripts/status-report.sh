@@ -37,7 +37,7 @@ if [[ $prod -eq 1 && $bill -eq 1 && $mig -eq 1 && $work -eq 1 ]]; then
   exit 0
 fi
 echo ""
-if ! curl -sfL --retry 3 --retry-delay 2 --retry-all-errors "https://zengtrade.in/ops/p0/" 2>/dev/null | grep -qE 'P0 checklist|Deploy paper worker'; then
+if ! SITE=https://zengtrade.in ./scripts/check-production.sh 2>/dev/null | grep -q 'OK   ops-p0'; then
   echo "Also: /ops/p0 not deployed — check GitHub Pages deploy on main."
 fi
 if [[ $mig -eq 1 && $work -eq 0 ]]; then
