@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T14:54:00Z",
+  "updated": "2026-08-23T14:55:00Z",
   "founder_actions": [
     {
       "id": "migration-0011",
@@ -49,6 +49,7 @@
     ],
     "next": "E2E: signup → deploy → trades within 15 min once worker live",
     "links": [
+      {"label": "E2E test guide", "url": "https://zengtrade.in/ops/e2e"},
       {"label": "Algo Studio", "url": "https://zengtrade.in/dashboard"},
       {"label": "Evidence app", "url": "https://zengtrade.in/app"},
       {"label": "Test signup", "url": "https://zengtrade.in/login?mode=signup"},

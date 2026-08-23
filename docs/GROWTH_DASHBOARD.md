@@ -234,20 +234,19 @@
 - **Shipped:** `docs/CBO_WEEK1.md` organic playbook; live coin pSEO confirmed on zengtrade.in.
 - **Next:** GSC verify + sitemap submit.
 
-### Day 1 (session 15) — founder HTML action pages
+### Day 1 (session 16) — E2E HTML guide + smart action bar
 
 ### CTO
-- **Shipped:** `/ops/migrate` (copy SQL + verify) and `/ops/worker` (deploy guide + heartbeat check).
-- **Blocked:** Worker + 0011 still pending founder.
-- **Next:** Founder completes linked pages from /ops.
+- **Shipped:** `/ops/e2e` live P0 gate check + 6-step activation test; action bar dims completed gates.
+- **Blocked:** Worker + 0011 — founder must use /ops/migrate and /ops/worker.
 
 ### CPO
-- **Shipped:** One-click verify buttons on action pages.
-- **Next:** E2E after worker.
+- **Shipped:** Post-P0 E2E playbook as HTML with heartbeat probe on step 3.
+- **Next:** Run /ops/e2e after founder completes P0.
 
 ### CBO
-- **Shipped:** /ops links to pricing, admin, GSC from approval flow.
-- **Next:** GSC after P0.
+- **Shipped:** (awaiting P0)
+- **Next:** /ops/billing after worker live.
 
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
