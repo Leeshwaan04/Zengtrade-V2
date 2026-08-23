@@ -101,6 +101,7 @@
       "Go-live bar read-only checklist on /app#pricing (docs/GO_LIVE_BAR.md)",
       "/ops/e2e worker-only blocked state with Railway link (session 76)",
       "/app upsell copy: live execution coming soon (session 82)",
+      "Post-activation Pro upsell when user has closed trades (session 85)",
       "Deploy nudge on /dashboard honest when worker offline (studio.js session 83)",
       "/ops/e2e wrong-password blocked state when heartbeat stale (session 84)",
       "Forward Test empty state: worker-offline vs waiting copy (session 87)",
@@ -180,7 +181,8 @@
       "Charter: .cursor/autopilot/seo.md + docs/SEO_PLAYBOOK.md",
       "check-sitemap.sh \u2014 7 coin URLs in production sitemap (CI)",
       "Coin signup CTAs with utm_campaign=coin_*",
-      "Founder GSC playbook at /ops/gsc"
+      "Founder GSC playbook at /ops/gsc",
+      "check-seo-content.sh \u2014 paper-loop + founding offer on prod (session 89)"
     ],
     "next": "GSC property + sitemap submit after P0; expand pSEO via seo/generate.py",
     "links": [
