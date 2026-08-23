@@ -577,6 +577,16 @@
 ### Status (`./scripts/status-report.sh` @ 16:56Z)
 - migration 0011 ❌ | worker ❌ | Railway `paper-worker` FAILED (no DATABASE_URL on service)
 
+### Day 1 (session 49) — GitHub Apply P0 workflow (founder unblock path)
+
+### CTO
+- **Shipped:** `.github/workflows/apply-p0.yml` — one-shot migration 0011 + Railway paper-worker when `DATABASE_URL` + `RAILWAY_API_TOKEN` in GitHub Secrets.
+- **Shipped:** `/ops/p0`, `/ops/migrate`, `/ops/worker` + `FOUNDER_DEPLOY.md` document GitHub Action path.
+- **Blocked:** `DATABASE_URL` not in Cloud Agent VM — P0 still pending.
+
+### Status (`./scripts/status-report.sh` @ 16:58Z)
+- migration 0011 ❌ | worker ❌
+
 ---
 
 ### CTO

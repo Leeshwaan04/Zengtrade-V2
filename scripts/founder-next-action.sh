@@ -11,7 +11,9 @@ mig=0 work=0
 # Single-secret path: Railway token without DB blocks full autopilot
 if [[ $mig -eq 0 || $work -eq 0 ]]; then
   if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" && -z "${DATABASE_URL:-${SUPABASE_DATABASE_URL:-}}" ]]; then
-    echo "NEXT: Add DATABASE_URL to Cloud Agent secrets (Supabase session pooler :5432) → agent runs ./scripts/apply-p0-autopilot.sh"
+    echo "NEXT: Add DATABASE_URL to Cloud Agent secrets OR GitHub repo Secrets → run Apply P0 workflow"
+    echo "     Cloud Agent: ./scripts/apply-p0-autopilot.sh"
+    echo "     GitHub: https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml (type APPLY)"
     echo "     Manual: https://zengtrade.in/ops/p0"
     exit 1
   fi
