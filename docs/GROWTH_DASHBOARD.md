@@ -1373,6 +1373,21 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 21:25Z)
 - worker ❌ · migration 0011 ✅ · parallel growth ✅
 
+### Day 1 (session 119) — LinkedIn build-in-public draft + sales metrics
+
+### CTO
+- **Shipped:** founder-parallel-work Sales label fix; health-watch check-sales-ready
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** partial gates green
+
+### CBO
+- **Shipped:** LINKEDIN_BUILD_IN_PUBLIC.md ready for founder post
+
+### Status (`./scripts/check-growth-standup.sh` @ 21:28Z)
+- worker ❌ · migration 0011 ✅ · parallel growth ✅
+
 ---
 
 ## Daily log template

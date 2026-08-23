@@ -35,10 +35,13 @@ Founder/CBO can run these **before** paper worker is live (no forward trades yet
 | GSC verify + sitemap | https://zengtrade.in/ops/gsc | Search Console screenshot |
 | Pro checkout smoke | https://zengtrade.in/ops/billing | Invoice created (test mode OK) |
 | Signup → deploy UI | https://zengtrade.in/ops/e2e | Partial E2E when migration ✅ |
+| Founder playbook (all parallel) | `./scripts/guide-founder-parallel.sh` | CLI summary |
 
 **Do not** claim forward P&L or closed trades until `./scripts/check-worker.sh` is green.
 
 Pre-P0 LinkedIn angle (honest — parallel gates green, worker password fix in progress):
+
+**Founder-ready draft:** `docs/content/LINKEDIN_BUILD_IN_PUBLIC.md`
 
 ```
 Shipping zengtrade in public — paper trading on live Binance prices.

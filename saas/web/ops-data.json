@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T21:26:13Z",
+  "updated": "2026-08-23T21:28:36Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -273,9 +273,10 @@
       "LinkedIn founder launch post template in MARKETING_PLAYBOOK (session 88)",
       "Coin spotlight post template in MARKETING_PLAYBOOK (session 92)",
       "Parallel work playbook \u2014 GSC + billing + build-in-public (session 103)",
-      "Pre-P0 LinkedIn build-in-public draft updated for production partial E2E (session 115)"
+      "Pre-P0 LinkedIn build-in-public draft updated for production partial E2E (session 115)",
+      "LINKEDIN_BUILD_IN_PUBLIC.md founder-ready post (session 119)"
     ],
-    "next": "First forward-proof post after P0 E2E; coin spotlight series",
+    "next": "Founder: publish LinkedIn build-in-public post; forward-proof after P0",
     "links": [
       {
         "label": "How it works",

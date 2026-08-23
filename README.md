@@ -57,6 +57,7 @@ NSE/Kite/Zerodha integration has been archived to `archive/indian/`. This reposi
 ```bash
 ./scripts/run-p0-if-ready.sh              # agent: auto-apply when DATABASE_PASSWORD set
 ./scripts/check-parallel-growth.sh        # while worker blocked
+./scripts/guide-founder-parallel.sh       # founder playbook (parallel + sales + manuals)
 ./tests/e2e_smoke.sh
 SITE=https://zengtrade.in ./scripts/check-production.sh
 ```

@@ -22,7 +22,7 @@ if SITE="$SITE" ./scripts/check-billing-ready.sh >/dev/null 2>&1; then
   any=1
 fi
 if ./scripts/check-sales-ready.sh >/dev/null 2>&1; then
-  echo "  Sales Sales-ready — ./scripts/check-sales-ready.sh · first Pro MRR in $SITE/admin"
+  echo "  Sales Pro checkout path — ./scripts/check-sales-ready.sh · first MRR in $SITE/admin"
   any=1
 fi
 if SITE="$SITE" ./scripts/check-gsc-ready.sh >/dev/null 2>&1; then

@@ -35,6 +35,8 @@ jobs:
         run: ./scripts/check-billing-ready.sh || echo "::warning::Billing-ready check failed"
       - name: Activation UI (CPO)
         run: ./scripts/check-activation-ready.sh || echo "::warning::Activation UI check failed"
+      - name: Sales ready (Sales)
+        run: ./scripts/check-sales-ready.sh || echo "::warning::Sales-ready check failed"
       - name: Parallel growth (worker blocked)
         run: ./scripts/check-parallel-growth.sh || echo "::warning::Parallel growth gates failed — see /ops"
       - name: Sync ops gate snapshot
