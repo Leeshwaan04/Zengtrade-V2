@@ -113,6 +113,21 @@
 - **Shipped:** Merge doc for founder (single PR path).
 - **Next:** GSC after `/app` live.
 
+### Day 1 (session 7) — status board + PR watch
+
+### CTO
+- **Shipped:** `docs/STATUS.md` live gate; `fly.toml` worker config; README launch section; subscribed to PR #3 merge events.
+- **Blocked:** PR #3 still open — production `/app` 404, auth.js stale.
+- **Next:** Autopilot resumes verification when PR merges.
+
+### CPO
+- **Shipped:** (no code — awaiting deploy)
+- **Next:** Post-merge funnel test.
+
+### CBO
+- **Shipped:** STATUS.md for founder at-a-glance.
+- **Next:** GSC post-merge.
+
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*

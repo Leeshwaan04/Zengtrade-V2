@@ -23,8 +23,8 @@ Copy `.env.example` -> `.env`, set `DATABASE_URL` to your Supabase Postgres URI 
 **A) Docker host — Railway / Render / Fly.io (easiest, ~$5/mo):**
 ```
 # from saas/worker/
-# Railway:  railway up            (set DATABASE_URL in the dashboard)
-# Fly.io:   fly launch && fly secrets set DATABASE_URL=...  && fly deploy
+# Railway:  railway up            (see railway.toml; set DATABASE_URL in dashboard)
+# Fly.io:   fly launch && fly secrets set DATABASE_URL=... && fly deploy  (see fly.toml)
 # Render:   new Background Worker, Docker, env DATABASE_URL
 ```
 The Dockerfile runs continuous mode automatically.
