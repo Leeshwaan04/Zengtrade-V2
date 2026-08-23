@@ -119,7 +119,8 @@
       "check-founder-parallel-ready.sh + sync-ops qa_parallel_ready (session 130)",
       "log-growth-session probe retries; /ops sales+QA gates (session 131)",
       "guide-worker-recovery.sh + GROWTH_DASHBOARD QA parallel row (session 132)",
-      "docs/GUIDE_INDEX.md + list-founder-guides.sh; run-p0 recovery hints (session 133)"
+      "docs/GUIDE_INDEX.md + list-founder-guides.sh; run-p0 recovery hints (session 133)",
+      "resolve-database-url auth validation; apply-p0 chains post-p0-success; sync-ops parallel retry (session 134)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [

@@ -1,6 +1,7 @@
 name: Apply P0 (migration + paper worker)
 
 # Founder: add DATABASE_URL or DATABASE_PASSWORD + RAILWAY_API_TOKEN to repo Secrets first.
+# apply-p0-autopilot.sh execs post-p0-success.sh when worker heartbeat is fresh.
 # Then: Actions → Apply P0 → Run workflow → type APPLY
 on:
   workflow_dispatch:
@@ -37,11 +38,4 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
           RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
-        run: |
-          if [ -z "${DATABASE_URL:-}" ]; then
-            export DATABASE_URL
-            DATABASE_URL="$(./scripts/resolve-database-url.sh)"
-          fi
-          ./scripts/apply-p0-autopilot.sh
-      - name: Post-P0 success runbook
-        run: ./scripts/post-p0-success.sh
+        run: ./scripts/apply-p0-autopilot.sh

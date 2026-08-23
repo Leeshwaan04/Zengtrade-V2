@@ -1687,6 +1687,33 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 22:33Z)
 - worker ❌ · migration 0011 ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
 
+### Day 1 (session 135) — Admin first-MRR CTA + P0 step-3 post-P0 guidance
+
+### CTO
+- **Shipped:** apply-p0.yml drops duplicate post-p0 step (apply-p0 execs it)
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** /ops/p0 step 3 links post-p0-success + partial billing path
+
+### CBO
+- **Shipped:** /admin MRR banner when paying=0 (parallel checkout while worker blocked)
+
+### SEO
+- **Shipped:** —
+
+### Marketing
+- **Shipped:** —
+
+### Sales
+- **Shipped:** —
+
+### QA&VAPT
+- **Shipped:** —
+
+### Status (`./scripts/check-growth-standup.sh` @ 22:37Z)
+- worker ❌ · migration 0011 ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
+
 ---
 
 ## Daily log template

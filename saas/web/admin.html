@@ -78,6 +78,7 @@
     <div class="sp"><a class="btn" href="/ops" style="text-decoration:none">Founder Ops</a><span class="muted" id="who"></span><button class="btn" id="refresh">Refresh</button><button class="btn" id="out">Sign out</button></div>
   </div>
   <div id="p0alert" class="p0alert" hidden></div>
+  <div id="mrralert" class="p0alert" style="background:#eef2ff;border-color:#c7d2fe;color:#1e3a5f" hidden></div>
   <div class="grid" id="tiles"></div>
   <div class="panel"><h2>Signups · last 30 days</h2><div class="chart-wrap"><div class="chart" id="chart"></div></div></div>
   <div class="panel"><h2>Users</h2><div id="users"></div></div>
@@ -124,6 +125,7 @@ $("refresh").onclick = () => load();
 
 const fmt = n => (n==null?"–":Number(n).toLocaleString("en-US"));
 const money = n => "$"+Number(n||0).toLocaleString("en-US");
+let p0State = { mig: false, work: false };
 
 async function probeP0(){
   let mig=false, work=false;
@@ -139,6 +141,7 @@ async function probeP0(){
     const ts=rows[0]?.updated_at;
     const ageMin=ts?Math.round((Date.now()-new Date(ts).getTime())/60000):99999;
     work=ts&&ageMin<=12;
+    p0State = { mig, work };
     if(mig&&!work){
       const el=$("p0alert");
       if(ageMin>60){
@@ -152,6 +155,7 @@ async function probeP0(){
       return;
     }
   }catch(e){}
+  p0State = { mig, work };
   const el=$("p0alert");
   if(mig&&work){el.hidden=true;return;}
   const parts=[];
@@ -163,12 +167,27 @@ async function probeP0(){
   el.hidden=false;
 }
 
+function showMrrAlert(o){
+  const el=$("mrralert");
+  if(!el||!o) return;
+  if(o.paying>0||!p0State.mig){ el.hidden=true; return; }
+  const parallel=!p0State.work;
+  el.innerHTML=parallel
+    ? "<b>CBO — first Pro MRR (parallel)</b> — Billing probes green while worker is down. "+
+      "<a href=\"/ops/billing\">Test Pro checkout</a> → confirm <b>Paying ≥ 1</b> and <b>MRR &gt; $0</b> here. "+
+      "Guide: <code>./scripts/guide-first-pro-checkout.sh</code>"
+    : "<b>CBO — first Pro MRR</b> — Worker is live but no paying customers yet. "+
+      "<a href=\"/ops/billing\">Run checkout test</a> → targets: Paying ≥ 1 · MRR &gt; $0 · checkout_clicks_7d rising.";
+  el.hidden=false;
+}
+
 async function load(){
   await probeP0();
   const [{ data:o }, { data:signups }, { data:users }] = await Promise.all([
     sb.rpc("admin_overview"), sb.rpc("admin_signups",{ days:30 }), sb.rpc("admin_users")
   ]);
   if(!o){ return; }
+  showMrrAlert(o);
   const alive = o.worker_alive;
   const tiles = [
     { k:"Monthly recurring", v:money(o.mrr_usd), s:o.paying+" paying", cls:"hero "+(o.mrr_usd>0?"good":"") },

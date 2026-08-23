@@ -77,9 +77,9 @@
 
   <div class="step" id="step3" style="opacity:.5">
     <h2><span class="num">3</span> Verify activation (after 1 + 2)</h2>
-    <p>Run E2E: signup → deploy → trades within ~15 min. Then <a href="/ops/security">QA&VAPT smoke</a>.</p>
+    <p>Run E2E: signup → deploy → trades within ~15 min. Agent/CI runs <code>post-p0-success.sh</code> (activation verify + security smoke). Then <a href="/ops/security">QA&VAPT</a> · <a href="/ops/billing">first Pro MRR</a>.</p>
     <a class="btn" href="/ops/e2e" id="e2eBtn" style="pointer-events:none;opacity:.5">E2E test guide</a>
-    <p class="gate">Locked until P0 green</p>
+    <p class="gate" id="g3">Locked until P0 green</p>
   </div>
 
   <p class="foot">Track progress: <a href="https://github.com/Leeshwaan04/Zengtrade-V2/issues/4" target="_blank" rel="noopener">GitHub issue #4</a> ·
@@ -138,7 +138,11 @@ async function refresh(){
   s3.style.opacity=(all||partial)?"1":"0.5";
   btn.style.pointerEvents=(all||partial)?"auto":"none";
   btn.style.opacity=(all||partial)?"1":"0.5";
-  s3.querySelector(".gate").textContent=all?"Ready — open E2E guide":(partial?"E2E open — signup/deploy testable; trades need worker":"Locked until migration 0011");
+  const g3=document.getElementById("g3");
+  if(g3){
+    g3.textContent=all?"Ready — run E2E + post-p0-success.sh":(partial?"Partial E2E (steps 1–2) + parallel Pro checkout at /ops/billing":"Locked until migration 0011");
+    g3.className="gate "+(all?"ok":(partial?"ok":"bad"));
+  }
 }
 refresh();
 setInterval(refresh,30000);
