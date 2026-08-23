@@ -1279,6 +1279,21 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 
 ### Day 1 (session 113) — full squad charter refresh
 
+### Day 1 (session 114) — security-smoke IPN retry + ops/security cleanup
+
+### CTO
+- **Shipped:** P0 still blocked (wrong Railway DB password)
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** partial activation 5/5 parallel gates green
+
+### CBO
+- **Shipped:** billing + GSC gates green
+
+### Status (`./scripts/check-growth-standup.sh` @ 21:12Z)
+- worker ❌ · migration 0011 ✅ · parallel growth ✅
+
 ### CTO
 - **Shipped:** qavapt/seo/marketing/sales charters aligned to parallel growth; ops-data synced
 - **Blocked:** Railway Postgres password still invalid.

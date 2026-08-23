@@ -28,14 +28,22 @@ fi
 test -f saas/web/js/auth.js && grep -q 'establishSession' saas/web/js/auth.js && ok "auth.js establishSession" || bad "auth.js missing establishSession"
 
 # --- billing webhook gate (production) ---
-code=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
-  'https://ponvarxeytfcntckczbn.supabase.co/functions/v1/nowpayments-ipn' \
-  -H 'Content-Type: application/json' \
-  -d '{"test":true}' 2>/dev/null || echo "000")
-if [[ "$code" == "401" || "$code" == "403" ]]; then
-  ok "ipn-webhook rejects unsigned POST (HTTP $code)"
+ipn_code="000"
+for attempt in 1 2 3; do
+  ipn_code=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+    'https://ponvarxeytfcntckczbn.supabase.co/functions/v1/nowpayments-ipn' \
+    -H 'Content-Type: application/json' \
+    -d '{"test":true}' 2>/dev/null || echo "000")
+  if [[ "$ipn_code" == "401" || "$ipn_code" == "403" ]]; then
+    break
+  fi
+  [[ "$ipn_code" == "502" || "$ipn_code" == "503" || "$ipn_code" == "000" ]] || break
+  sleep 2
+done
+if [[ "$ipn_code" == "401" || "$ipn_code" == "403" ]]; then
+  ok "ipn-webhook rejects unsigned POST (HTTP $ipn_code)"
 else
-  bad "ipn-webhook expected 401/403 without signature (HTTP $code)"
+  bad "ipn-webhook expected 401/403 without signature (HTTP $ipn_code)"
 fi
 
 # --- admin RPC not open to anon ---

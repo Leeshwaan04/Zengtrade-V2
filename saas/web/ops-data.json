@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T21:09:43Z",
+  "updated": "2026-08-23T21:12:29Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -325,7 +325,8 @@
       "Founder playbook at /ops/security",
       "security-smoke.sh in CI smoke + health-watch (6h)",
       "RLS anon probes: deployment/trade empty without auth JWT",
-      "QA_VAPT_CHECKLIST V2 event whitelist marked done (session 87)"
+      "QA_VAPT_CHECKLIST V2 event whitelist marked done (session 87)",
+      "security-smoke IPN probe retries on transient 502/503 (session 114)"
     ],
     "next": "Run security-smoke + E2E after P0; manual RLS isolation (2 accounts)",
     "links": [

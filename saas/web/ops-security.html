@@ -30,7 +30,6 @@
       <li><code>./scripts/check-plan-intent.sh</code> · <code>./scripts/check-seo-content.sh</code> — production funnel/SEO</li>
       <li><code>./scripts/verify-partial-activation.sh</code> — signup → deploy UI (no worker)</li>
       <li><code>./scripts/check-parallel-growth.sh</code> — parallel gates while worker blocked</li>
-      <li><code>./scripts/security-smoke.sh</code> — run locally or in CI (health-watch)</li>
     </ol>
     <p id="probe">Probing production IPN gate…</p>
   </div>
@@ -50,7 +49,8 @@ fetch("https://ponvarxeytfcntckczbn.supabase.co/functions/v1/nowpayments-ipn",{
   method:"POST",headers:{"Content-Type":"application/json"},body:'{"probe":true}'
 }).then(r=>{
   const el=document.getElementById("probe");
-  if(r.status===401||r.status===403){el.textContent="✓ IPN webhook rejects unsigned requests (HTTP "+r.status+")";el.className="ok";}
-  else{el.textContent="✗ IPN gate unexpected HTTP "+r.status+" — review edge function";el.className="bad";}
+  const ok=r.status===401||r.status===403;
+  if(ok){el.textContent="✓ IPN webhook rejects unsigned requests (HTTP "+r.status+")";el.className="ok";}
+  else{el.textContent="✗ IPN gate unexpected HTTP "+r.status+" — retry or review edge function";el.className="bad";}
 }).catch(()=>{document.getElementById("probe").textContent="✗ Could not reach IPN function";document.getElementById("probe").className="bad";});
 </script></body></html>
