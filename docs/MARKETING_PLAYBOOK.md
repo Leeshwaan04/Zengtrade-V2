@@ -51,6 +51,8 @@ Try the deploy path: https://zengtrade.in/login?mode=signup&utm_source=linkedin&
 Not investment advice. Paper only.
 ```
 
+Verify parallel gates before posting: `./scripts/check-parallel-growth.sh`
+
 ## Content calendar (post-P0)
 
 | Week | Asset | Channel |

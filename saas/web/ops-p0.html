@@ -44,6 +44,14 @@
     Or add Cloud Agent secret <code>DATABASE_PASSWORD</code>. <a href="/ops/worker">Full guide</a>
   </div>
 
+  <div id="parallelBox" class="callout" style="background:#eef2ff;border-color:#c7d2fe" hidden>
+    <b>Meanwhile — parallel work (no worker):</b>
+    <a href="/ops/e2e">Partial E2E</a> steps 1–2 ·
+    <a href="/ops/gsc">GSC sitemap</a> ·
+    <a href="/ops/billing">Pro checkout</a> ·
+    CLI <code>./scripts/check-parallel-growth.sh</code>
+  </div>
+
   <div class="step" id="step1">
     <h2><span class="num">1</span> Apply migration 0011</h2>
     <p>Enables funnel v2 events (<code>signup_complete</code>, <code>deploy_success</code>, <code>checkout_click</code>) in <a href="/admin">/admin</a>.<br>
@@ -79,7 +87,7 @@ const SUPA="https://ponvarxeytfcntckczbn.supabase.co", ANON="sb_publishable_w-pQ
 async function probeMig(){
   try{
     const h={apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"};
-    for(const name of ["signup_complete","deploy_success","checkout_click"]){
+    for(const name of ["signup_complete","deploy_click","deploy_success","checkout_click"]){
       const r=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name,path:"/p0-probe"})});
       if(r.status!==201) return false;
     }
@@ -109,6 +117,8 @@ async function refresh(){
   const likelyBadPw=mig&&!w.ok&&(w.detail==="no heartbeat"||(!isNaN(ageMin)&&ageMin>60));
   if(badPw) badPw.hidden=!likelyBadPw;
   if(workerOnly) workerOnly.hidden=likelyBadPw||!(mig&&!w.ok);
+  const parallelBox=document.getElementById("parallelBox");
+  if(parallelBox) parallelBox.hidden=!(mig&&!w.ok);
   const all=mig&&w.ok;
   const partial=mig&&!w.ok;
   const pill=document.getElementById("overall");

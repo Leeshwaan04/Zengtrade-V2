@@ -13,7 +13,7 @@ if ! curl -sfL "https://zengtrade.in/ops/p0/" 2>/dev/null | grep -q "P0 checklis
 fi
 echo "Tip: add DATABASE_PASSWORD (or DATABASE_URL) on Railway / Cloud Agent / GitHub Secrets — auto-runs apply-p0 when credentials work."
 echo "      Preflight: ./scripts/validate-database-credentials.sh"
-echo "      Parallel work while blocked: ./scripts/founder-parallel-work.sh"
+echo "      Parallel work while blocked: ./scripts/check-parallel-growth.sh"
 echo ""
 
 while true; do

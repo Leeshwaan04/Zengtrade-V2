@@ -13,9 +13,9 @@ Production checklist for `zengtrade.in`. Autopilot CTO agent maintains this file
 | 2 | GitHub Pages deploy + `verify-production` CI green (or `./scripts/wait-for-deploy.sh`) | CTO | ☑ |
 | 3 | Supabase Auth → URL config: `https://zengtrade.in/login`, `https://zengtrade.in/reset` | CEO | ☐ |
 | 4 | Enable Google provider + OAuth client | CEO | ☐ |
-| 5 | SQL: run migrations `0009` + `0010` + **`0011`** (or `./scripts/check-migrations.sh`) | CTO | ☐ (0011 pending) |
-| 6 | Host `saas/worker` (see `saas/worker/README.md`) with prod `DATABASE_URL` | CTO | ☐ |
-| 7 | E2E manual: signup → `/dashboard` → deploy → trades in ≤15 min | CPO | ☐ |
+| 5 | SQL: run migrations `0009` + `0010` + **`0011`** (or `./scripts/check-migrations.sh`) | CTO | ☑ (0011 live on production) |
+| 6 | Host `saas/worker` (see `saas/worker/README.md`) with prod `DATABASE_URL` | CTO | ☐ (Railway deploy FAILED — wrong password) |
+| 7 | E2E manual: signup → `/dashboard` → deploy → trades in ≤15 min | CPO | ☐ (partial: steps 1–2 at `/ops/e2e` while worker blocked) |
 | 8 | Run `./tests/e2e_smoke.sh` | CTO | ☑ (also runs on PR via `.github/workflows/ci-smoke.yml`) |
 
 ## P1 — Revenue rail
@@ -37,6 +37,17 @@ Production checklist for `zengtrade.in`. Autopilot CTO agent maintains this file
 
 **Founder P0 (blocking activation):** <https://zengtrade.in/ops/p0>  
 **Full ops dashboard:** <https://zengtrade.in/ops>
+
+**While step 6 is blocked** (wrong Railway `DATABASE_URL` password), CPO/CBO parallel work:
+
+```bash
+./scripts/check-parallel-growth.sh   # partial activation + billing + GSC
+```
+
+- CPO partial E2E: <https://zengtrade.in/ops/e2e> (steps 1–2)
+- CBO GSC: <https://zengtrade.in/ops/gsc>
+- CBO billing smoke: <https://zengtrade.in/ops/billing>
+- Unblock: Cloud Agent `DATABASE_PASSWORD` or <https://zengtrade.in/ops/worker>
 
 ```bash
 cd saas/worker

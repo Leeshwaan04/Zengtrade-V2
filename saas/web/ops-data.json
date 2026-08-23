@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T20:46:09Z",
+  "updated": "2026-08-23T20:52:32Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -83,7 +83,9 @@
       "verify-partial-activation.sh CLI gate (session 104)",
       "snapshot-growth-metrics 5/5 gates score fix (session 104)",
       "check-parallel-growth.sh one-command parallel gates (session 105)",
-      "sync-ops-gates parallel_growth_ready + /ops tile (session 106)"
+      "sync-ops-gates parallel_growth_ready + /ops tile (session 106)",
+      "LAUNCH_RUNBOOK 0011 done + parallel section (session 107)",
+      "health-watch check-parallel-growth step (session 107)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -185,7 +187,8 @@
       "MARKETING_PLAYBOOK parallel work while worker blocked (session 103)",
       "snapshot-growth-metrics gates score 6/6 excl worker (session 103)",
       "SALES_PLAYBOOK parallel billing while worker blocked (session 104)",
-      "check-parallel-growth.sh partial+billing+GSC (session 105)"
+      "check-parallel-growth.sh partial+billing+GSC (session 105)",
+      "/ops/p0 parallel work callout (session 107)"
     ],
     "next": "GSC sitemap + first proof post after forward trades exist; Pro checkout E2E at /ops/billing",
     "links": [
