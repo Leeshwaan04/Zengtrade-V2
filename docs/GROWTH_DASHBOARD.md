@@ -891,6 +891,21 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/status-report.sh` @ 19:42Z)
 - worker ❌ · `database_url_auth_ok` false
 
+### Day 1 (session 88) — /ops gate detail + marketing template
+
+### CTO
+- **Shipped:** `/ops` worker gate shows **wrong DB password** when `ops-data.json` gates report Railway FAILED.
+- **Blocked:** Postgres password on Railway still invalid.
+
+### CPO
+- **Shipped:** `/app#accuracy` empty state uses same worker-aware copy as Forward Test.
+
+### Marketing
+- **Shipped:** LinkedIn founder launch post template in `docs/MARKETING_PLAYBOOK.md` (post after P0 E2E).
+
+### Status (`./scripts/status-report.sh` @ 19:44Z)
+- worker ❌ · gates synced: `railway_paper_worker: FAILED`
+
 ---
 
 ### CTO

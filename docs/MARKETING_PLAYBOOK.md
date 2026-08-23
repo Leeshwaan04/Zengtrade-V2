@@ -44,6 +44,19 @@ https://zengtrade.in/login?mode=signup&plan=pro&utm_source=...
 - [ ] Screenshot pack: Forward Test tab (real data only)
 - [ ] Founder bio + risk disclaimer linked from posts
 
+## LinkedIn founder post (template — post after P0 E2E)
+
+```
+Most crypto "algos" sell backtests. We ship paper trading on live Binance prices first.
+
+zengtrade runs regime-aware strategies 24/7 in paper — full cost model (~35 bps round-trip on spot), forward book only, no live execution promises.
+
+If you're systematic and tired of fantasy equity curves:
+→ Start free (paper): https://zengtrade.in/login?mode=signup&utm_source=linkedin&utm_medium=social&utm_campaign=founder_launch
+
+Not investment advice. Paper-first by design.
+```
+
 ## Assets (repo)
 
 - `docs/content/REDDIT_ALGOTRADING_DRAFT.md`

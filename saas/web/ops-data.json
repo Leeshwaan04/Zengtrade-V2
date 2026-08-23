@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T19:42:06Z",
+  "updated": "2026-08-23T19:44:00Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -63,7 +63,9 @@
       "founder-next-action.sh detects invalid Railway DATABASE_URL password (session 83)",
       "validate-database-credentials.sh \u2014 preflight before run-p0-if-ready (session 84)",
       "worker.py + check-railway-deploy.sh hint on Postgres auth failure (session 85)",
-      "/admin P0 banner: wrong-password callout when migration green (session 86)"
+      "/admin P0 banner: wrong-password callout when migration green (session 86)",
+      "sync-ops-gates.py: database_url_auth_ok + Railway FAILED status (session 87)",
+      "/ops worker gate shows wrong-password when Railway deploy FAILED (session 88)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -101,7 +103,8 @@
       "/app upsell copy: live execution coming soon (session 82)",
       "Deploy nudge on /dashboard honest when worker offline (studio.js session 83)",
       "/ops/e2e wrong-password blocked state when heartbeat stale (session 84)",
-      "Post-activation Pro upsell when user has closed trades (session 85)"
+      "Forward Test empty state: worker-offline vs waiting copy (session 87)",
+      "Accuracy tab reuses worker-aware empty copy (session 88)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [
@@ -204,7 +207,8 @@
       "Charter: .cursor/autopilot/marketing.md + docs/MARKETING_PLAYBOOK.md",
       "Paper loop section on /how-it-works (#paper-loop)",
       "UTM conventions on home + pricing (check-funnel-ctas.sh)",
-      "r/algotrading draft + WEEKLY_PROOF template (post after E2E)"
+      "r/algotrading draft + WEEKLY_PROOF template (post after E2E)",
+      "LinkedIn founder launch post template in MARKETING_PLAYBOOK (session 88)"
     ],
     "next": "First forward-proof post after P0 E2E; coin spotlight series",
     "links": [
@@ -264,7 +268,8 @@
       "scripts/security-smoke.sh \u2014 client secrets, IPN gate, admin RPC auth",
       "Founder playbook at /ops/security",
       "security-smoke.sh in CI smoke + health-watch (6h)",
-      "RLS anon probes: deployment/trade empty without auth JWT"
+      "RLS anon probes: deployment/trade empty without auth JWT",
+      "QA_VAPT_CHECKLIST V2 event whitelist marked done (session 87)"
     ],
     "next": "Run security-smoke + E2E after P0; manual RLS isolation (2 accounts)",
     "links": [
