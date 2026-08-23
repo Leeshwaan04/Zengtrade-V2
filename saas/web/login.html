@@ -84,13 +84,34 @@ import { SITE } from "/js/config.js";
 const $=id=>document.getElementById(id), msg=$("msg");
 const show=(t,ok)=>{msg.className="msg "+(ok?"ok":"err");msg.textContent=t;};
 const busy=(b,on,txt)=>{b.disabled=on;if(txt)b.textContent=txt;};
-function goAfterAuth(){
+const PENDING_SIGNUP_KEY="zt_pending_signup_complete";
+const PENDING_SIGNUP_MS=7*24*60*60*1000;
+
+function shouldTrackSignupComplete(user){
+  if(!user) return false;
+  try{
+    const pending=localStorage.getItem(PENDING_SIGNUP_KEY);
+    if(pending){
+      const ts=Number(pending);
+      localStorage.removeItem(PENDING_SIGNUP_KEY);
+      if(!Number.isNaN(ts)&&Date.now()-ts<PENDING_SIGNUP_MS) return true;
+    }
+  }catch(e){}
+  const created=new Date(user.created_at).getTime();
+  return Date.now()-created<180000;
+}
+
+function trackSignupComplete(){
   try{
     fetch("https://ponvarxeytfcntckczbn.supabase.co/rest/v1/event",{method:"POST",
       headers:{apikey:"sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1","Content-Type":"application/json",Prefer:"return=minimal"},
       body:JSON.stringify({name:"signup_complete",path:location.pathname.slice(0,290)}),
       keepalive:true}).catch(()=>{});
   }catch(e){}
+}
+
+function goAfterAuth(user){
+  if(shouldTrackSignupComplete(user)) trackSignupComplete();
   const pl=localStorage.getItem("zt_intent_plan");
   if(pl==="pro"||pl==="elite"){
     try{ localStorage.removeItem("zt_intent_plan"); }catch(e){}
@@ -108,7 +129,7 @@ function goAfterAuth(){
   try{
     await establishSession();
     const u=await currentUser();
-    if(u) goAfterAuth();
+    if(u) goAfterAuth(u);
   }catch(e){ show(niceError(e)); history.replaceState({}, "", location.pathname); }
 })();
 
@@ -127,11 +148,12 @@ $("t-up").onclick=()=>{$("t-up").ariaSelected="true";$("t-in").ariaSelected="fal
   } }
 
 $("f-in").onsubmit=async e=>{e.preventDefault();const b=e.target.querySelector("button");busy(b,true,"Signing in…");
-  try{ await signIn($("i-email").value.trim(), $("i-pw").value); goAfterAuth(); }
+  try{ const data=await signIn($("i-email").value.trim(), $("i-pw").value); goAfterAuth(data.user); }
   catch(err){ show(niceError(err)); busy(b,false,"Sign in"); }};
 
 $("f-up").onsubmit=async e=>{e.preventDefault();const b=e.target.querySelector("button");busy(b,true,"Creating…");
   try{ await signUp($("u-email").value.trim(), $("u-pw").value);
+       try{ localStorage.setItem(PENDING_SIGNUP_KEY,String(Date.now())); }catch(e){}
        show("Account created, check your email to confirm, then sign in.",true); busy(b,false,"Create free account"); }
   catch(err){ show(niceError(err)); busy(b,false,"Create free account"); }};
 

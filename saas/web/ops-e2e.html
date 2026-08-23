@@ -60,10 +60,22 @@ async function gates(){
       work=age<=12;
     }else el.textContent="none";
   }catch(e){document.getElementById("hb").textContent="error";}
-  if(mig&&work){pre.textContent="✓ P0 ready — run the steps below";pre.className="gatebox ok";}
-  else{pre.textContent="✗ Complete /ops/migrate and /ops/worker first";pre.className="gatebox bad";}
+  const ready=mig&&work;
+  if(ready){
+    pre.innerHTML="✓ P0 ready — run the steps below";
+    pre.className="gatebox ok";
+  }else{
+    const parts=[];
+    if(!mig) parts.push('<a href="/ops/migrate">migration 0011</a>');
+    if(!work) parts.push('<a href="/ops/worker">paper worker</a>');
+    pre.innerHTML="✗ Complete "+parts.join(" + ")+" first";
+    pre.className="gatebox bad";
+  }
+  document.getElementById("s1").classList.toggle("bad",!ready);
+  document.getElementById("s2").classList.toggle("bad",!ready);
   document.getElementById("s3").classList.toggle("ok",work);
   document.getElementById("s3").classList.toggle("bad",!work);
+  document.getElementById("s4").classList.toggle("bad",!work);
 }
 gates();
 document.getElementById("recheck").onclick=gates;

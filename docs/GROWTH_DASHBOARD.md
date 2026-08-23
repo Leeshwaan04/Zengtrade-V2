@@ -280,6 +280,16 @@
 ### CBO
 - **Shipped:** `docs/content/REDDIT_ALGOTRADING_DRAFT.md` (do not post until P0 green).
 
+### Day 1 (session 21) — CPO funnel accuracy + E2E UX
+
+### CPO
+- **Shipped:** `signup_complete` only on real signups (not every sign-in); email signup sets pending flag for post-confirm tracking; /ops/e2e shows which P0 gate is blocking.
+- **Blocked:** Funnel v2 events still need migration 0011 in prod.
+
+### CTO
+- **Shipped:** WORKER_QUICKSTART documents `startup heartbeat ok` log line.
+- **Blocked:** P0 unchanged.
+
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*

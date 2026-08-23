@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T15:08:14Z",
+  "updated": "2026-08-23T15:12:13Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "founder_actions": [
     {
@@ -61,7 +61,7 @@
     "shipped": [
       "Activation checklist on /app",
       "Worker-offline banner links to /how-it-works on /app and /dashboard",
-      "Funnel events + admin tiles (after 0011)"
+      "signup_complete only on real signups (not sign-in repeats)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [
