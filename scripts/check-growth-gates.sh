@@ -24,6 +24,7 @@ echo "== zengtrade growth gates — $SITE =="
 run "Production site" env SITE="$SITE" ./scripts/check-production.sh
 run "Billing ready (MRR)" env SITE="$SITE" ./scripts/check-billing-ready.sh
 run "Migration 0011" "./scripts/check-migrations.sh"
+run "Activation UI (CPO)" env SITE="$SITE" ./scripts/check-activation-ready.sh
 
 echo ""
 echo ">> Paper worker"

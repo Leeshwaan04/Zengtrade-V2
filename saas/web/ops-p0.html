@@ -48,7 +48,7 @@
     <h2><span class="num">1</span> Apply migration 0011</h2>
     <p>Enables funnel v2 events (<code>signup_complete</code>, <code>deploy_success</code>, <code>checkout_click</code>) in <a href="/admin">/admin</a>.<br>
     <b>One-shot (recommended):</b> add <code>DATABASE_URL</code> + <code>RAILWAY_API_TOKEN</code> to <a href="https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions" target="_blank" rel="noopener">GitHub Secrets</a> → <a href="https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml" target="_blank" rel="noopener">Run “Apply P0”</a> → type <code>APPLY</code> (migration + worker).<br>
-    <b>Cloud Agent:</b> add <code>DATABASE_URL</code> to Cursor secrets → agent runs <code>./scripts/run-p0-if-ready.sh</code> on <code>main</code>.<br>
+    <b>Cloud Agent:</b> add secret <code>DATABASE_PASSWORD</code> (after Supabase reset) or full <code>DATABASE_URL</code> → agent runs <code>./scripts/run-p0-if-ready.sh</code> on <code>main</code>.<br>
     <b>Railway:</b> set <code>DATABASE_URL</code> on <code>paper-worker</code> — agent auto-resolves from Railway.<br>
     <b>URI:</b> <a href="https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings" target="_blank" rel="noopener">Supabase → Database → Connection string</a> (session pooler, port <code>5432</code>).</p>
     <a class="btn" href="/ops/migrate">Open migration guide</a>

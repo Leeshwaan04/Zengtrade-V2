@@ -39,6 +39,7 @@ test -f scripts/check-p0-readiness.sh
 test -f scripts/post-p0-success.sh
 test -f scripts/check-pricing-truth.sh
 test -f scripts/check-funnel-ctas.sh
+test -f scripts/check-activation-ready.sh
 test -f scripts/check-billing-ready.sh
 test -f scripts/check-gsc-ready.sh
 test -f scripts/check-e2e-gates.sh

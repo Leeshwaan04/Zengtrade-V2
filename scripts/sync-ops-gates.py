@@ -75,6 +75,9 @@ def main() -> int:
     gates = {
         "production": probe("check-production.sh"),
         "billing": probe("verify-billing.sh"),
+        "billing_ready": probe("check-billing-ready.sh"),
+        "gsc_ready": probe("check-gsc-ready.sh"),
+        "activation_ready": probe("check-activation-ready.sh"),
         "migration_0011": probe("check-migrations.sh"),
         "worker": probe("check-worker.sh"),
         "worker_heartbeat_utc": worker_heartbeat(),

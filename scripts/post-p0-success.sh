@@ -25,6 +25,7 @@ echo ""
 
 echo ">> E2E gate probe (CPO)"
 ./scripts/check-e2e-gates.sh || echo "⚠️  E2E blocked until worker live"
+./scripts/check-activation-ready.sh 2>/dev/null || echo "⚠️  Activation UI probe failed"
 echo ""
 
 echo ">> Plan intent routing (Sales)"

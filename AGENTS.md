@@ -59,6 +59,7 @@ Verify with:
 ./scripts/check-billing-ready.sh     # CBO/Sales: Pro checkout preflight
 ./scripts/check-gsc-ready.sh       # CBO: organic/GSC preflight
 ./scripts/check-e2e-gates.sh       # CPO: can /ops/e2e start?
+./scripts/check-activation-ready.sh  # CPO: signup → deploy UI (no worker)
 ./scripts/check-p0-readiness.sh   # secrets + gates before apply-p0
 ./scripts/check-railway-deploy.sh   # when RAILWAY_API_TOKEN is set
 ```

@@ -1021,6 +1021,22 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/status-report.sh` @ 20:03Z)
 - worker ❌ · billing-ready ✅ · GSC-ready ✅
 
+### Day 1 (session 96) — activation UI probe + status dashboard
+
+### CPO
+- **Shipped:** `check-activation-ready.sh` — signup/deploy events + studio deploy + plan intent (worker not required).
+- **Shipped:** `/ops/e2e` callout when migration green: activation UI ready, worker blocked.
+- **Verified:** activation UI ready on production (20:08Z).
+
+### CTO
+- **Shipped:** `status-report.sh` shows billing-ready, GSC-ready, activation UI lines.
+- **Shipped:** `sync-ops-gates.py` records `billing_ready`, `gsc_ready`, `activation_ready`.
+- **Shipped:** `/ops/p0` Cloud Agent copy — `DATABASE_PASSWORD` secret path.
+- **Blocked:** Railway Postgres password still invalid.
+
+### Status (`./scripts/status-report.sh` @ 20:08Z)
+- worker ❌ · activation UI ✅ · billing-ready ✅ · GSC-ready ✅
+
 ---
 
 ### CTO
