@@ -1494,6 +1494,21 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 21:51Z)
 - worker ❌ · migration 0011 ✅ · parallel growth ❌ · sales-ready ✅
 
+### Day 1 (session 127) — GSC + LinkedIn founder guides; free-tier probe retries
+
+### CTO
+- **Shipped:** check-free-tier-limit.sh retries prod studio.js fetch (fixes parallel growth flake)
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** —
+
+### CBO
+- **Shipped:** guide-gsc-founder.sh — Search Console verify + sitemap CLI
+
+### Status (`./scripts/check-growth-standup.sh` @ 21:57Z)
+- worker ❌ · migration 0011 ✅ · parallel growth ✅ · sales-ready ✅
+
 ---
 
 ## Daily log template

@@ -22,11 +22,19 @@ grep -q 'enforce_deploy_limit' saas/db/migrations/0005_grant_paid_and_deploy_lim
 grep -q 'FREE_DEPLOY_LIMIT' saas/web/js/billing.js && ok "billing.js FREE_DEPLOY_LIMIT" || \
   bad "billing.js missing FREE_DEPLOY_LIMIT"
 
-studio=$(curl -sfL "$SITE/dashboard/studio.js" 2>/dev/null || echo "")
-if [[ -n "$studio" ]] && echo "$studio" | grep -q 'FREE_LIMIT'; then
+prod_ok=0
+for attempt in 1 2 3; do
+  studio=$(curl -sfL "$SITE/dashboard/studio.js" 2>/dev/null || echo "")
+  if [[ -n "$studio" ]] && echo "$studio" | grep -q 'FREE_LIMIT'; then
+    prod_ok=1
+    break
+  fi
+  [[ $attempt -lt 3 ]] && sleep 2
+done
+if [[ $prod_ok -eq 1 ]]; then
   ok "production studio.js FREE_LIMIT handler"
 else
-  bad "production studio.js missing FREE_LIMIT"
+  bad "production studio.js missing FREE_LIMIT (after 3 attempts)"
 fi
 
 echo ""

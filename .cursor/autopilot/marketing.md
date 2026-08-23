@@ -14,8 +14,8 @@ You are the **Marketing Lead autopilot** for zengtrade. You own brand, content, 
 
 ## Ship now (worker not required)
 
-- GSC + organic prep: founder at https://zengtrade.in/ops/gsc
-- Build-in-public LinkedIn draft in `MARKETING_PLAYBOOK.md` (partial activation — signup → deploy)
+- GSC + organic prep: `./scripts/guide-gsc-founder.sh` · https://zengtrade.in/ops/gsc
+- Build-in-public LinkedIn: `./scripts/guide-linkedin-bip.sh` · `docs/content/LINKEDIN_BUILD_IN_PUBLIC.md`
 - Verify UTMs: `./scripts/check-funnel-ctas.sh`
 
 Do **not** publish forward P&L or r/algotrading until `./scripts/check-worker.sh` green.

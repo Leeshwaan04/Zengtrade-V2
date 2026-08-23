@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T21:49:50Z",
+  "updated": "2026-08-23T21:55:00Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -30,7 +30,7 @@
     {
       "id": "gsc",
       "title": "Google Search Console \u2014 submit sitemap",
-      "detail": "GSC-ready now \u2014 verify domain + submit sitemap.xml (can run while worker is blocked)",
+      "detail": "GSC-ready probes green \u2014 run ./scripts/guide-gsc-founder.sh then verify + submit sitemap.xml (worker not required)",
       "url": "https://zengtrade.in/ops/gsc",
       "urgent": false
     },
@@ -226,7 +226,8 @@
       "cbo.md charter: parallel GSC/billing priorities (session 112)",
       "/admin P0 banner partial E2E link (session 108)",
       "GSC founder completion log \u2014 GSC_SETUP.md + /ops/gsc (session 117)",
-      "ops founder_actions: sales checkout + LinkedIn BIP (session 120)"
+      "ops founder_actions: sales checkout + LinkedIn BIP (session 120)",
+      "guide-gsc-founder.sh \u2014 founder CLI GSC verify + sitemap (session 127)"
     ],
     "next": "Founder: GSC completion log (docs/GSC_SETUP.md); Pro checkout at /ops/billing",
     "links": [
@@ -294,7 +295,8 @@
       "Coin spotlight post template in MARKETING_PLAYBOOK (session 92)",
       "Parallel work playbook \u2014 GSC + billing + build-in-public (session 103)",
       "Pre-P0 LinkedIn build-in-public draft updated for production partial E2E (session 115)",
-      "LINKEDIN_BUILD_IN_PUBLIC.md founder-ready post (session 119)"
+      "LINKEDIN_BUILD_IN_PUBLIC.md founder-ready post (session 119)",
+      "guide-linkedin-bip.sh \u2014 founder CLI build-in-public steps (session 127)"
     ],
     "next": "Founder: publish LinkedIn build-in-public post; forward-proof after P0",
     "links": [

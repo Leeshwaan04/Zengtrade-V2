@@ -57,7 +57,7 @@ Tick when done — log date in `docs/GROWTH_DASHBOARD.md` under **CBO**:
 - [ ] **Priority URLs requested** — home, pricing, how-it-works, top 3 coin pages, signup
 - [ ] **Baseline screenshot** — Performance tab (28d) saved for week-over-week compare
 
-Preflight (automated): `./scripts/check-gsc-ready.sh` · Founder page: https://zengtrade.in/ops/gsc
+Preflight (automated): `./scripts/check-gsc-ready.sh` · Founder guide: `./scripts/guide-gsc-founder.sh` · https://zengtrade.in/ops/gsc
 
 Do **not** publish forward P&L proof posts until `./scripts/check-worker.sh` is green.
 

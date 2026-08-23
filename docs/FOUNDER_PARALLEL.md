@@ -17,9 +17,9 @@ Runs `check-parallel-growth.sh`, `check-sales-ready.sh`, and prints manual playb
 | **CTO** | Fix worker password | https://zengtrade.in/ops/worker · `docs/WORKER_RECOVERY.md` |
 | **CTO** | Cloud Agent unblock | Secret `DATABASE_PASSWORD` → `./scripts/run-p0-if-ready.sh` |
 | **CPO** | Partial E2E (signup → deploy) | `./scripts/guide-partial-e2e.sh` · https://zengtrade.in/ops/e2e · `./scripts/check-free-tier-limit.sh` |
-| **CBO** | GSC verify + sitemap | https://zengtrade.in/ops/gsc · `docs/GSC_SETUP.md` |
+| **CBO** | GSC verify + sitemap | `./scripts/guide-gsc-founder.sh` · https://zengtrade.in/ops/gsc · `docs/GSC_SETUP.md` |
 | **CBO / Sales** | First Pro checkout | `./scripts/guide-first-pro-checkout.sh` · https://zengtrade.in/ops/billing |
-| **Marketing** | LinkedIn build-in-public | `docs/content/LINKEDIN_BUILD_IN_PUBLIC.md` |
+| **Marketing** | LinkedIn build-in-public | `./scripts/guide-linkedin-bip.sh` · `docs/content/LINKEDIN_BUILD_IN_PUBLIC.md` |
 | **QA&VAPT** | Security + partial activation probes | `./scripts/check-qa-parallel.sh` · `./scripts/security-smoke.sh` |
 
 ## Verify probes

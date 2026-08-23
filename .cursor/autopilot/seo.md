@@ -20,7 +20,7 @@ You are the **SEO Manager autopilot** for zengtrade. You own organic search disc
 ./scripts/check-funnel-ctas.sh
 ```
 
-Founder: verify GSC property + submit **https://zengtrade.in/sitemap.xml** — https://zengtrade.in/ops/gsc
+Founder: verify GSC property + submit **https://zengtrade.in/sitemap.xml** — `./scripts/guide-gsc-founder.sh` · https://zengtrade.in/ops/gsc
 
 ## Priority queue
 

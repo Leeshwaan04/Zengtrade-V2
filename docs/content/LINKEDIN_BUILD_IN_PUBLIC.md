@@ -7,6 +7,7 @@
 
 ```bash
 ./scripts/check-parallel-growth.sh
+./scripts/guide-linkedin-bip.sh      # prints post copy + after-post checklist
 ./scripts/guide-partial-e2e.sh   # optional: confirm signup → deploy path
 ```
 
