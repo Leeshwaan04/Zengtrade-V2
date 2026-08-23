@@ -1,12 +1,14 @@
 # zengtrade — agent instructions
 
-## Autopilot agents (CTO, CPO, CBO)
+## Autopilot agents (CTO, CPO, CBO, QA&VAPT)
 
 Scheduled Cloud Agents should read `.cursor/autopilot/README.md` and their role charter, then:
 
 1. Execute the top unchecked P0/P1 task
 2. Update `saas/web/ops-data.json` (founder-facing HTML at **/ops**) and `docs/GROWTH_DASHBOARD.md` (agent log)
-3. Commit with prefix `cto(autopilot):`, `cpo(autopilot):`, or `cbo(autopilot):`
+3. Commit with prefix `cto(autopilot):`, `cpo(autopilot):`, `cbo(autopilot):`, or `qavapt(autopilot):`
+
+QA&VAPT charter: `.cursor/autopilot/qavapt.md` · checklist: `docs/QA_VAPT_CHECKLIST.md` · smoke: `./scripts/security-smoke.sh`
 
 ## Development
 
@@ -30,10 +32,8 @@ Agents **cannot** apply migration 0011 or deploy the worker (no `DATABASE_URL` /
 ./scripts/status-report.sh
 ```
 
-Founder checklist: **https://zengtrade.in/ops/p0** (ships after PR #5 merge; `/ops/migrate` + `/ops/worker` work today).
+Founder checklist: **https://zengtrade.in/ops/p0**
 
-After P0 green: `./scripts/wait-for-p0.sh` then E2E at `/ops/e2e`.
-
-Open autopilot PR: **https://github.com/Leeshwaan04/Zengtrade-V2/pull/5** — merge to `main` when CI green (do not merge unless the user asked).
+After P0 green: `./scripts/wait-for-p0.sh` then E2E at `/ops/e2e`. QA/VAPT: `./scripts/security-smoke.sh` and **/ops/security**.
 
 Do not mark the growth goal complete until migration 0011 + worker + signup→deploy→trades are verified on production.

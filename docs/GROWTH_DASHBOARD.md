@@ -1,6 +1,6 @@
 # zengtrade Growth Dashboard
 
-**Updated by autopilot agents (CTO, CPO, CBO).** Founder: check this file + `/admin` for day-over-day progress.
+**Updated by autopilot agents (CTO, CPO, CBO, QA&VAPT).** Founder: check this file + `/admin` for day-over-day progress.
 
 | Metric | Baseline (Day 0) | Today | Target (30d) |
 |--------|------------------|-------|----------------|
@@ -476,6 +476,15 @@
 ### Status (`./scripts/status-report.sh` @ 15:53Z post-deploy)
 - Production + billing ✅ | migration 0011 ❌ | worker ❌
 
+### Day 1 (session 38) — QA&VAPT autopilot agent added
+
+### QA&VAPT
+- **Shipped:** `.cursor/autopilot/qavapt.md` charter · `docs/QA_VAPT_CHECKLIST.md` · `scripts/security-smoke.sh`
+- **Shipped:** `/ops/security` founder playbook · ops dashboard 4th role card
+
+### CTO / CPO / CBO
+- **Next:** unchanged — founder P0 migration + worker
+
 ---
 
 ## Daily log template
@@ -496,6 +505,11 @@ Copy for each new day:
 - Next:
 
 ### CBO
+- Shipped:
+- Blocked:
+- Next:
+
+### QA&VAPT
 - Shipped:
 - Blocked:
 - Next:
