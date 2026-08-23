@@ -84,6 +84,11 @@ if SITE="$SITE" ./scripts/check-seo-content.sh 2>/dev/null; then
 else
   echo "⚠️  SEO content check failed — rebuild landing and redeploy"
 fi
+if SITE="$SITE" ./scripts/check-gsc-ready.sh 2>/dev/null; then
+  echo "✅ GSC-ready (sitemap + robots + signup landing)"
+else
+  echo "⚠️  GSC readiness — run ./scripts/check-gsc-ready.sh"
+fi
 if [[ $WORK_OK -eq 0 ]]; then
   echo ""
   echo ">> Database credentials (worker blocker)"

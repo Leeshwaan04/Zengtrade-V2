@@ -34,9 +34,7 @@ else
   fail=1
 fi
 
-run "Funnel CTAs" "./scripts/check-funnel-ctas.sh"
-run "Sitemap" "./scripts/check-sitemap.sh"
-run "SEO content" "./scripts/check-seo-content.sh"
+run "GSC readiness" env SITE="$SITE" ./scripts/check-gsc-ready.sh
 run "Plan intent" "./scripts/check-plan-intent.sh"
 run "Founding pricing" "./scripts/check-production-pricing.sh"
 run "Pricing truth (repo)" "./scripts/check-pricing-truth.sh"

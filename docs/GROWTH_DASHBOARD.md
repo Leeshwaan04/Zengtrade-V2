@@ -985,6 +985,24 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/status-report.sh` @ 19:56Z)
 - worker ❌ · growth gates production probe ✅ (fixed)
 
+### Day 1 (session 94) — GSC readiness + E2E gate probes
+
+### CBO / SEO
+- **Shipped:** `check-gsc-ready.sh` — sitemap + SEO content + funnel CTAs + signup landing (GSC preflight).
+- **Shipped:** `/ops/gsc` live GSC-ready status probe.
+- **Verified:** GSC-ready on production (19:59Z) — founder can submit sitemap once worker live.
+
+### CPO
+- **Shipped:** `check-e2e-gates.sh` — CLI mirror of `/ops/e2e` P0 gates for agents.
+- **Blocked:** signup → deploy → trades E2E until worker heartbeat fresh.
+
+### CTO
+- **Blocked:** Railway Postgres password still invalid — deploy FAILED.
+- **Shipped:** `check-growth-gates.sh` uses `check-gsc-ready.sh`; `post-p0-success.sh` runs GSC + E2E probes.
+
+### Status (`./scripts/status-report.sh` @ 19:59Z)
+- worker ❌ · GSC-ready ✅ · E2E blocked on worker
+
 ---
 
 ### CTO

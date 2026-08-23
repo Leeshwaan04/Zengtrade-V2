@@ -19,10 +19,12 @@ echo ">> Pricing funnel truth (CBO)"
 ./scripts/check-production-pricing.sh 2>/dev/null || echo "⚠️  Production pricing probe failed"
 echo ""
 
-echo ">> Funnel CTAs + sitemap (CBO / SEO)"
-./scripts/check-funnel-ctas.sh
-./scripts/check-sitemap.sh
-./scripts/check-seo-content.sh
+echo ">> Funnel CTAs + sitemap + SEO (CBO / GSC)"
+./scripts/check-gsc-ready.sh
+echo ""
+
+echo ">> E2E gate probe (CPO)"
+./scripts/check-e2e-gates.sh || echo "⚠️  E2E blocked until worker live"
 echo ""
 
 echo ">> Plan intent routing (Sales)"

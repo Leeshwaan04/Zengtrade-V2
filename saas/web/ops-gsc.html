@@ -18,11 +18,12 @@
   <a class="back" href="/ops">← Founder Ops</a>
   <h1>Google Search Console & organic (CBO)</h1>
   <p>Run after worker is live and you have forward paper trades to show.</p>
+  <p id="gscStatus" class="card" style="font:600 13px var(--mono);padding:12px 14px">Checking GSC readiness…</p>
   <div class="card">
     <h2 style="font-size:16px;margin:0 0 8px">Week 1 checklist</h2>
     <ol>
       <li><a href="https://search.google.com/search-console" target="_blank" rel="noopener">Add property</a> → <code>https://zengtrade.in</code></li>
-      <li>Submit sitemap: <a href="/sitemap.xml">zengtrade.in/sitemap.xml</a> · verify: <code>./scripts/check-sitemap.sh</code></li>
+      <li>Submit sitemap: <a href="/sitemap.xml">zengtrade.in/sitemap.xml</a> · verify: <code>./scripts/check-gsc-ready.sh</code></li>
       <li>Request indexing: <a href="/">home</a>, <a href="/pricing/">pricing</a>,
         <a href="/coins/bitcoin/">bitcoin</a>, <a href="/coins/ethereum/">ethereum</a>,
         <a href="/coins/solana/">solana</a>, <a href="/coins/cardano/">cardano</a>,
@@ -32,4 +33,24 @@
     <a class="btn" href="https://search.google.com/search-console" target="_blank" rel="noopener">Open Search Console</a>
   </div>
   <p>Track weekly in <a href="/admin">/admin</a> → pageviews, signups, MRR.</p>
-</div></body></html>
+</div>
+<script>
+(async function(){
+  const el=document.getElementById("gscStatus");
+  const SITE=location.origin;
+  let ok=true;
+  const checks=[];
+  try{
+    const sm=await fetch(SITE+"/sitemap.xml").then(r=>r.ok?r.text():"");
+    checks.push(["sitemap.xml", sm.includes("<urlset")]);
+    const robots=await fetch(SITE+"/robots.txt").then(r=>r.ok?r.text():"");
+    checks.push(["robots.txt", robots.includes("Sitemap:")]);
+    const login=await fetch(SITE+"/login?mode=signup").then(r=>r.ok?r.text():"");
+    checks.push(["signup landing", /signup|create account/i.test(login)]);
+  }catch(e){ok=false;}
+  checks.forEach(([n,p])=>{if(!p)ok=false;});
+  el.textContent=ok?"✓ GSC-ready — submit "+SITE+"/sitemap.xml in Search Console":"✗ Run ./scripts/check-gsc-ready.sh on main (sitemap/robots/signup)";
+  el.style.background=ok?"var(--green-soft)":"#fff5f5";
+  el.style.borderColor=ok?"var(--green-line)":"#f0b4b4";
+})();
+</script></body></html>

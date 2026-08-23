@@ -6,7 +6,7 @@ Owner: **SEO Manager autopilot** (`.cursor/autopilot/seo.md`)
 
 | Day | Task |
 |-----|------|
-| Mon | Run `./scripts/check-sitemap.sh` + `check-funnel-ctas.sh` + `check-seo-content.sh` on production |
+| Mon | Run `./scripts/check-gsc-ready.sh` (sitemap + SEO + funnel CTAs + signup) on production |
 | Wed | GSC: impressions/clicks for top 5 URLs (manual until API wired) |
 | Fri | One pSEO or on-page improvement; rebuild landing if needed |
 
