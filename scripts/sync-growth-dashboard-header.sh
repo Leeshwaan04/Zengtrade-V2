@@ -5,9 +5,16 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 GROWTH="$ROOT/docs/GROWTH_DASHBOARD.md"
 
-work=0 parallel=0 sales=0 qa=0 mig=0 partial=0
+work=0 parallel=0 sales=0 qa=0 mig=0 partial=0 db_auth="—"
 ./scripts/check-migrations.sh >/dev/null 2>&1 && mig=1
 ./scripts/check-worker.sh >/dev/null 2>&1 && work=1
+if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
+  if ./scripts/validate-database-credentials.sh >/dev/null 2>&1; then
+    db_auth="✅"
+  else
+    db_auth="❌ /ops/worker"
+  fi
+fi
 for _ in 1 2 3; do
   [[ $parallel -eq 1 && $sales -eq 1 ]] && break
   [[ $parallel -eq 0 ]] && ./scripts/check-founder-parallel-ready.sh >/dev/null 2>&1 && parallel=1
@@ -34,7 +41,7 @@ partial_today=$([[ $partial -eq 1 ]] && echo "✅ verify-activation-path --parti
 sales_today=$([[ $sales -eq 1 ]] && echo "✅ check-sales-ready.sh" || echo "❌")
 qa_today=$([[ $qa -eq 1 ]] && echo "✅ check-qa-parallel.sh" || echo "❌")
 
-export WORKER_TODAY="$worker_today" PARALLEL_TODAY="$parallel_today" PARTIAL_TODAY="$partial_today" SALES_TODAY="$sales_today" QA_TODAY="$qa_today" MIG_TODAY=$([[ $mig -eq 1 ]] && echo "✅" || echo "❌")
+export WORKER_TODAY="$worker_today" PARALLEL_TODAY="$parallel_today" PARTIAL_TODAY="$partial_today" SALES_TODAY="$sales_today" QA_TODAY="$qa_today" DB_AUTH_TODAY="$db_auth" MIG_TODAY=$([[ $mig -eq 1 ]] && echo "✅" || echo "❌")
 python3 <<'PY'
 import os
 import re
@@ -52,6 +59,16 @@ def sub_row(label: str, today: str) -> None:
         text = new
 
 sub_row("Worker status", os.environ["WORKER_TODAY"])
+if "| DATABASE_URL auth |" in text:
+    sub_row("DATABASE_URL auth", os.environ.get("DB_AUTH_TODAY", "—"))
+else:
+    needle = "| Worker status |"
+    insert = f"| DATABASE_URL auth | — | {os.environ.get('DB_AUTH_TODAY', '—')} | — |\n"
+    idx = text.find(needle)
+    if idx >= 0:
+        line_end = text.find("\n", idx)
+        text = text[: line_end + 1] + insert + text[line_end + 1 :]
+
 if "| Partial activation (signup→deploy) |" in text:
     sub_row("Partial activation (signup→deploy)", os.environ["PARTIAL_TODAY"])
 else:

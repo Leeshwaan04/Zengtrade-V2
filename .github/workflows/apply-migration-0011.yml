@@ -27,6 +27,11 @@ jobs:
           fi
       - name: Install psql client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Preflight database credentials
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+        run: ./scripts/validate-database-credentials.sh
       - name: Apply 0011_funnel_events_v2.sql
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

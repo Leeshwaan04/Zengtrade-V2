@@ -34,7 +34,7 @@ Index: **docs/GUIDE_INDEX.md** · `./scripts/list-founder-guides.sh`
 ```bash
 ./scripts/check-founder-parallel-ready.sh   # parallel + partial activation + QA + guides
 ./scripts/verify-activation-path.sh --partial   # CPO: signup → deploy (no worker)
-./scripts/check-parallel-growth.sh   # 5/5 excl. worker
+./scripts/check-parallel-growth.sh   # partial + billing + GSC + sales (excl. worker)
 ./scripts/check-qa-parallel.sh       # security + XSS + partial + sales
 ./scripts/check-sales-ready.sh
 ./scripts/status-report.sh

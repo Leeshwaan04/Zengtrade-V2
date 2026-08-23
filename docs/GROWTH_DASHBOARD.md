@@ -11,6 +11,7 @@
 | Paying Pro/Elite | — | — | 10 |
 | MRR (USD) | $0 | $0 | $290 |
 | Worker status | Unknown | Offline (last heartbeat 2026-08-11T09:57:38 UTC · wrong Railway DB password) | Live 99% |
+| DATABASE_URL auth | — | ❌ /ops/worker | — |
 | Partial activation (signup→deploy) | — | ✅ verify-activation-path --partial | — |
 | Parallel growth (excl. worker) | — | ✅ founder-parallel-ready | — |
 | Sales-ready | — | ✅ check-sales-ready.sh | — |
@@ -2065,6 +2066,34 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 
 ### Status (`./scripts/check-growth-standup.sh` @ 23:43Z)
 - worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
+
+### Day 1 (session 149) — parallel growth + sales-ready + dashboard DB auth
+
+### CTO
+- **Shipped:** apply-migration-0011 validate preflight; log-growth-session DATABASE_URL auth row
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** —
+
+### CBO
+- **Shipped:** check-parallel-growth includes sales-ready; GROWTH_DASHBOARD DATABASE_URL auth row
+
+### SEO
+- **Shipped:** —
+
+### Marketing
+- **Shipped:** —
+
+### Sales
+- **Shipped:** —
+
+### QA&VAPT
+- **Shipped:** check-parallel-growth + e2e_smoke passed
+
+### Status (`./scripts/check-growth-standup.sh` @ 23:47Z)
+- worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
+- DATABASE_URL auth ❌ (Railway password — /ops/worker)
 
 ---
 

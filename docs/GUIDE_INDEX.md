@@ -9,7 +9,7 @@ One-page map of CLI playbooks while the paper worker is blocked (or after P0 gre
 | Script | What it checks |
 |--------|----------------|
 | `./scripts/check-founder-parallel-ready.sh` | Parallel growth + QA parallel + all guides exist |
-| `./scripts/check-parallel-growth.sh` | CPO/CBO partial activation, billing, GSC, free-tier |
+| `./scripts/check-parallel-growth.sh` | CPO/CBO partial activation, billing, GSC, sales (excl. worker) |
 | `./scripts/check-qa-parallel.sh` | Security smoke, XSS, partial activation, sales |
 | `./scripts/check-sales-ready.sh` | Billing + plan intent + pricing truth |
 | `./scripts/check-founder-guides.sh` | All `guide-*.sh` scripts executable |

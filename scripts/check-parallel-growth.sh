@@ -31,6 +31,7 @@ run "Partial activation (CPO)" ./scripts/verify-activation-path.sh --partial
 run "Free-tier deploy cap (CPO)" ./scripts/check-free-tier-limit.sh
 run "Billing-ready (CBO)" env SITE="$SITE" ./scripts/check-billing-ready.sh
 run "GSC-ready (CBO)" env SITE="$SITE" ./scripts/check-gsc-ready.sh
+run "Sales-ready (CBO / MRR)" ./scripts/check-sales-ready.sh
 
 if [[ $fail -eq 0 ]]; then
   echo "All parallel gates green — worker is sole P0 blocker: https://zengtrade.in/ops/worker"

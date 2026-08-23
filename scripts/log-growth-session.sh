@@ -37,6 +37,13 @@ fi
 echo "### Status (\`./scripts/check-growth-standup.sh\` @ ${tshort})"
 if [[ $work -eq 0 && $mig -eq 1 ]]; then
   echo "- worker ${worker_txt} · migration 0011 $([[ $mig -eq 1 ]] && echo '✅' || echo '❌') · partial activation ${partial} · parallel growth ${parallel} · sales-ready ${sales}${qa:+ · qa parallel ${qa}}"
+  if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
+    if ./scripts/validate-database-credentials.sh >/dev/null 2>&1; then
+      echo "- DATABASE_URL auth ✅"
+    else
+      echo "- DATABASE_URL auth ❌ (Railway password — /ops/worker)"
+    fi
+  fi
 else
   echo "- worker ${worker_txt} · migration 0011 $([[ $mig -eq 1 ]] && echo '✅' || echo '❌') · parallel growth ${parallel} · sales-ready ${sales}${qa:+ · qa parallel ${qa}}"
 fi
