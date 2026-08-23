@@ -65,6 +65,10 @@
     <h2>⚠️ Your approval / action required</h2>
     <ul id="approvalList"></ul>
   </div>
+  <div id="shipBanner" class="alert urgent" hidden style="background:#eef2ff;border-color:#c7d2fe;color:#1e3a5f">
+    <h2>Ship autopilot updates to production</h2>
+    <p style="margin:0;font-size:14px">Merge <a href="https://github.com/Leeshwaan04/Zengtrade-V2/pull/5" target="_blank" rel="noopener"><b>PR #5</b></a> to enable <a href="/ops/p0">/ops/p0</a> and latest funnel fixes on zengtrade.in.</p>
+  </div>
   <div id="allClear" class="alert ok" hidden>
     <h2>✓ All P0 gates green</h2>
     <p style="margin:0;font-size:14px">Run E2E: <a href="https://zengtrade.in/login?mode=signup">signup</a> → <a href="https://zengtrade.in/dashboard">deploy</a> → <a href="https://zengtrade.in/app#forward">trades</a></p>
@@ -210,6 +214,10 @@ document.getElementById("enableNotify").onclick = async () => {
 };
 
 async function refresh() {
+  const p0Live = await probeSite("/ops/p0");
+  const shipBanner = document.getElementById("shipBanner");
+  if (shipBanner) shipBanner.hidden = p0Live;
+
   const [appOk, authOk, migOk, billOk, worker] = await Promise.all([
     probeSite("/app"), probeAuthJs(), probeMigration0011(), probeBilling(), probeWorker(),
   ]);

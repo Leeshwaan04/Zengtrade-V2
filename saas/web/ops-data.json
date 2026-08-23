@@ -1,8 +1,15 @@
 {
-  "updated": "2026-08-23T15:23:51Z",
+  "updated": "2026-08-23T15:32:28Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
+    {
+      "id": "merge-pr5",
+      "title": "Merge PR #5 (ship /ops/p0 + funnel fixes)",
+      "detail": "CI green \u2014 merges cursor/autopilot-health-ff74 to main",
+      "url": "https://github.com/Leeshwaan04/Zengtrade-V2/pull/5",
+      "urgent": false
+    },
     {
       "id": "migration-0011",
       "title": "Apply migration 0011 (funnel v2 events)",
@@ -37,7 +44,7 @@
       "verify-activation-path.sh for post-P0 E2E gate",
       "render.yaml + WORKER_QUICKSTART for one-click worker host"
     ],
-    "next": "Merge PR #5 → founder /ops/p0 (migration + worker); then verify-activation-path",
+    "next": "Merge PR #5 \u2192 founder /ops/p0 (migration + worker); then verify-activation-path",
     "links": [
       {
         "label": "GitHub Actions",
@@ -63,7 +70,7 @@
       "Activation checklist on /app",
       "Worker-offline banner links to /how-it-works on /app and /dashboard",
       "Pageview tracking on /dashboard and /app after auth",
-      "Activation checklist shows worker-offline hint when deploys exist but no trades",
+      "Activation checklist shows worker-offline hint when deploys exist but no trades"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [

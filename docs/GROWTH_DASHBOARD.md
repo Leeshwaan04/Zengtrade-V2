@@ -346,6 +346,22 @@
 - **Shipped:** `/app` activation checklist explains worker-offline when deployed but no trades yet.
 - **Blocked:** Full funnel v2 + trades until P0 green.
 
+### Day 1 (session 29) — completion audit + merge nudge
+
+### Goal audit (not complete)
+
+| Requirement | Evidence | Status |
+|-------------|----------|--------|
+| Production loop (auth) | `check-production.sh` ✅ | Done |
+| Worker live | heartbeat stale 2026-08-11 | **Blocked** |
+| Migration 0011 | `signup_complete` HTTP 401 | **Blocked** |
+| Signup→deploy→trades E2E | not run (P0) | **Blocked** |
+| First Pro MRR | $0, no checkout proof | **Blocked** |
+| PR #5 shipped to main | `main` at a5fe630, PR open | **Blocked** |
+
+### CTO
+- **Shipped:** `/ops` shows merge PR #5 banner when `/ops/p0` not yet on production.
+
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*
