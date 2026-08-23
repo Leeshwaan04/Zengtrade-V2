@@ -1223,6 +1223,21 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 
 ### Day 1 (session 111) — CTO charter + worker README refresh
 
+### Day 1 (session 112) — CPO/CBO charter refresh
+
+### CTO
+- **Shipped:** status-report parallel growth line when worker down
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** cpo.md partial activation + current P0 queue
+
+### CBO
+- **Shipped:** cbo.md parallel work table + GSC/billing priorities
+
+### Status (`./scripts/check-growth-standup.sh` @ 21:05Z)
+- worker ❌ · migration 0011 ✅ · parallel growth ✅
+
 ### CTO
 - **Shipped:** cto.md current P0 queue; worker README Railway production URI
 - **Blocked:** Railway Postgres password still invalid.

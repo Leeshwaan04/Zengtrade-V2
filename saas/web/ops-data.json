@@ -90,7 +90,8 @@
       "docs/STATUS.md refresh (session 108)",
       "append-growth-log.sh GROWTH_DASHBOARD auto-append (session 109)",
       "post-p0-success check-growth-gates + dashboard prune (session 110)",
-      "cto.md + worker README production Railway path (session 111)"
+      "cto.md + worker README production Railway path (session 111)",
+      "cpo.md + cbo.md charter refresh (session 112)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -138,7 +139,8 @@
       "deploy_click in migration + activation probes (session 101)",
       "/ops/p0 partial E2E unlock when migration green (session 102)",
       "check-e2e-gates.sh partial signup\u2192deploy path when worker down (session 103)",
-      "/ops/e2e steps 1\u20132 green + deploy_click probe (session 104)"
+      "/ops/e2e steps 1\u20132 green + deploy_click probe (session 104)",
+      "cpo.md charter: partial activation path (session 112)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [

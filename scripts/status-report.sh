@@ -43,6 +43,9 @@ if [[ $ops_p0 -eq 0 ]]; then
 fi
 if [[ $mig -eq 1 && $work -eq 0 ]]; then
   echo "Next: https://zengtrade.in/ops/worker — paper worker only (add DATABASE_URL on Railway)"
+  if ./scripts/check-parallel-growth.sh >/dev/null 2>&1; then
+    echo "Parallel growth: 5/5 gates green (excl. worker) — ./scripts/check-parallel-growth.sh"
+  fi
 elif [[ $mig -eq 0 ]]; then
   echo "Next: https://zengtrade.in/ops/p0 — migration 0011 + paper worker"
 else
