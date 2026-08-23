@@ -24,5 +24,7 @@ jobs:
         run: ./scripts/check-pricing-truth.sh
       - name: Funnel CTA utm tags (CBO)
         run: ./scripts/check-funnel-ctas.sh
+      - name: Plan intent routing (Sales)
+        run: ./scripts/check-plan-intent.sh
       - name: Worker Docker image builds
         run: docker build -t zengtrade-worker:ci saas/worker

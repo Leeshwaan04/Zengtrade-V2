@@ -21,6 +21,8 @@ echo ""
 
 check_page "home" "/" "landing"
 check_page "pricing" "/pricing/" "pricing"
+check_page "coins hub" "/coins/" "coins_hub"
+check_page "coin bitcoin" "/coins/bitcoin/" "coin_bitcoin"
 
 if [[ $fail -ne 0 ]]; then
   echo ""

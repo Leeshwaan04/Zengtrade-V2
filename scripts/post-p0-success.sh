@@ -23,6 +23,10 @@ echo ">> Funnel CTAs + sitemap (CBO / SEO)"
 ./scripts/check-sitemap.sh
 echo ""
 
+echo ">> Plan intent routing (Sales)"
+./scripts/check-plan-intent.sh
+echo ""
+
 echo "== Manual next steps =="
 echo "CPO  E2E activation:  https://zengtrade.in/ops/e2e"
 echo "CBO  Pro checkout:    https://zengtrade.in/ops/billing"
