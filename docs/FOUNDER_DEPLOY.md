@@ -1,13 +1,17 @@
-# Founder deploy — 30-minute production loop
+# Founder deploy — production loop
 
-Complete these in order. Autopilot CTO tracks status in `docs/LAUNCH_RUNBOOK.md`.
+**Fast path:** bookmark **https://zengtrade.in/ops/p0** (~15 min, live gate checks).
 
-## 1. Merge & ship site (10 min)
+Autopilot tracks status in `docs/LAUNCH_RUNBOOK.md` and `docs/GROWTH_DASHBOARD.md`.
+
+## 1. Merge autopilot PR (if open)
+
+Merge **PR #5** (`cursor/autopilot-health-ff74`) → `main` when CI green.  
+GitHub Actions → **Deploy zengtrade to GitHub Pages** runs on push.
 
 ```bash
-# On GitHub: merge PR #3 (cursor/autopilot-ff74) into main — supersedes PR #2
-# GitHub Actions → Deploy zengtrade to GitHub Pages runs on push to main
-# Poll until live: ./scripts/wait-for-deploy.sh
+./scripts/wait-for-deploy.sh
+SITE=https://zengtrade.in ./scripts/check-production.sh
 ```
 
 ## 2. Supabase Auth (5 min)
@@ -15,85 +19,47 @@ Complete these in order. Autopilot CTO tracks status in `docs/LAUNCH_RUNBOOK.md`
 Dashboard → **Authentication → URL configuration**
 
 - Site URL: `https://zengtrade.in`
-- Redirect URLs:
-  - `https://zengtrade.in/login`
-  - `https://zengtrade.in/reset`
+- Redirect URLs: `https://zengtrade.in/login`, `https://zengtrade.in/reset`
+- **Google provider:** enabled with OAuth client
 
-**Authentication → Providers → Google:** enable, paste OAuth client ID/secret.
+## 3. Migration 0011 (2 min)
 
-## 3. Database migration (3 min)
+**Option A — GitHub Action:** add `DATABASE_URL` to repo Secrets → run [Apply migration 0011](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-migration-0011.yml) with `APPLY`.
 
-SQL Editor → run:
-
-```sql
--- paste contents of saas/db/migrations/0009_engine_state.sql
--- paste contents of saas/db/migrations/0010_admin_rpc_funnel.sql
--- paste contents of saas/db/migrations/0011_funnel_events_v2.sql
-```
-
-Or generate full bundle:
+**Option B — manual:** https://zengtrade.in/ops/migrate → copy SQL → Supabase SQL Editor.
 
 ```bash
-chmod +x scripts/apply-migrations.sh
-./scripts/apply-migrations.sh > /tmp/zengtrade-migrations.sql
-# paste /tmp/zengtrade-migrations.sql into SQL Editor
+./scripts/check-migrations.sh   # signup_complete must return OK
 ```
 
-Also confirm `0005_grant_paid_and_deploy_limit.sql` is applied (free-tier deploy cap).
+## 4. Paper worker (10 min)
 
-Quick apply **only 0011** (if 0009/0010 already done):
+https://zengtrade.in/ops/worker — Railway root `saas/worker`, `DATABASE_URL` on port **5432** (session pooler).
 
 ```bash
-./scripts/migrate-0011-only.sh
-# paste output into Supabase SQL Editor → Run
-./scripts/check-migrations.sh
+./scripts/check-worker.sh       # heartbeat < 12 min
 ```
 
-## 4. Paper worker on Railway (10 min)
+## 5. Billing (live — test when ready)
 
-See **`docs/WORKER_QUICKSTART.md`** for step-by-step.
+Edge functions are deployed (`./scripts/verify-billing.sh` ✅).
 
-1. [railway.app](https://railway.app) → New Project → Deploy from GitHub repo
-2. Set **root directory** to `saas/worker`
-3. Variables:
-   - `DATABASE_URL` = Supabase → Project Settings → Database → URI (use **pooler** or direct; service role not needed for worker — uses postgres connection string with password)
-   - `WORKER_INTERVAL` = `300` (optional)
-4. Deploy → check logs: `zengtrade worker · … featured strategies`
-5. Supabase SQL: `select * from engine_state where key='_worker_heartbeat';` — should update every ~5 min
+Test: https://zengtrade.in/ops/billing → Pro checkout → `/admin` MRR tile.
 
-## 5. Billing (optional, when ready for MRR)
+## 6. Verify full loop
 
 ```bash
-supabase login
-supabase link --project-ref ponvarxeytfcntckczbn
-supabase secrets set NOWPAYMENTS_API_KEY=...
-supabase secrets set NOWPAYMENTS_IPN_SECRET=...
-./scripts/deploy-billing.sh
-./scripts/verify-billing.sh
-```
-
-Test: `/app#pricing` → Pro → pay → tier flips to `pro`.
-
-## 6. Smoke test (5 min)
-
-```bash
+./scripts/wait-for-p0.sh        # polls until P0 green, then activation verify
+# or manually:
 ./scripts/founder-preflight.sh
-# or individually:
-chmod +x scripts/check-production.sh scripts/verify-billing.sh
-SITE=https://zengtrade.in ./scripts/check-production.sh
-./scripts/verify-billing.sh
 ```
 
-1. Incognito → `https://zengtrade.in/login?mode=signup`
-2. Google or email signup → lands on `/dashboard`
-3. Library → Deploy **Trend Follower** (paper)
-4. Wait 10 min → `/app#forward` or Monitor shows activity
-5. Second account in incognito → must **not** see first account's trades
+E2E: https://zengtrade.in/ops/e2e — signup → deploy → trades within ~15 min.
 
 ## 7. Organic (CBO)
 
-Follow `docs/GSC_SETUP.md` — verify domain, submit sitemap.
+https://zengtrade.in/ops/gsc — GSC + sitemap after forward trades exist.
 
 ---
 
-**Done when:** Admin → Worker = **Live**, deployers > 0, trades increasing.
+**Done when:** `/admin` → Worker **Live**, deployers > 0, trades increasing, funnel tiles moving.

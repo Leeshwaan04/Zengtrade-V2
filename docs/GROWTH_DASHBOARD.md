@@ -308,6 +308,15 @@
 ### CBO
 - **Shipped:** Landing + pricing signup CTAs carry `utm_source=site` for organic attribution.
 
+### Day 1 (session 24) — admin P0 alert + attribution
+
+### CTO
+- **Shipped:** `FOUNDER_DEPLOY.md` rewritten around /ops/p0; `/admin` P0 incomplete banner with fix links.
+- **Blocked:** Migration 0011 + worker unchanged.
+
+### CBO
+- **Shipped:** Pageview beacon + login signup_view capture UTM query params.
+
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*

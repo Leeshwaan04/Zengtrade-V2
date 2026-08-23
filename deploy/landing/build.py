@@ -63,9 +63,12 @@ FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
 # funnel numbers in /admin. Fails silently so it can never break a page.
 BEACON = """<script>
 (function(){try{
+ var u=new URLSearchParams(location.search),bits=[];
+ ["utm_source","utm_medium","utm_campaign"].forEach(function(k){var v=u.get(k);if(v)bits.push(k+"="+v);});
+ var path=location.pathname.slice(0,220)+(bits.length?"?"+bits.join("&"):"");
  fetch("https://ponvarxeytfcntckczbn.supabase.co/rest/v1/event",{method:"POST",
   headers:{apikey:"sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1","Content-Type":"application/json",Prefer:"return=minimal"},
-  body:JSON.stringify({name:"pageview",path:location.pathname.slice(0,290),ref:(document.referrer||"").slice(0,290)}),
+  body:JSON.stringify({name:"pageview",path:path.slice(0,290),ref:(document.referrer||"").slice(0,290)}),
   keepalive:true}).catch(function(){});
 }catch(e){}})();
 </script>"""
