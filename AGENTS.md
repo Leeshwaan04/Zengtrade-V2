@@ -26,7 +26,15 @@ QA&VAPT charter: `.cursor/autopilot/qavapt.md` · checklist: `docs/QA_VAPT_CHECK
 
 ### Autopilot P0 blocker (founder-owned)
 
-Agents **cannot** apply migration 0011 or deploy the worker (no `DATABASE_URL` / Railway in the VM). Verify with:
+Agents **cannot** apply migration 0011 or deploy the worker without secrets in the VM. When `DATABASE_URL` + `RAILWAY_TOKEN` are provided (Cloud Agent secrets), run:
+
+```bash
+./scripts/apply-p0-autopilot.sh
+```
+
+Founder-approved Railway project: `f5902ffd-5b3f-49ed-b87d-dad21568185b` (override with `RAILWAY_PROJECT_ID`).
+
+Verify with:
 
 ```bash
 ./scripts/status-report.sh
