@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T22:54:40Z",
+  "updated": "2026-08-23T22:56:19Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -123,7 +123,8 @@
       "resolve-database-url auth validation; apply-p0 chains post-p0-success; sync-ops parallel retry (session 134)",
       "apply-p0.yml drops duplicate post-p0; /ops/p0 step-3 post-P0 guidance (session 135)",
       "health-watch attempt-p0 job + worker check reordered last (session 136)",
-      "WORKER_RECOVERY health-watch path; ops/worker option 0b (session 137)"
+      "WORKER_RECOVERY health-watch path; ops/worker option 0b (session 137)",
+      "founder-next-action health-watch hint on wrong Railway password (session 139)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -185,7 +186,8 @@
       "check-free-tier-limit.sh \u2014 free deploy cap probes in parallel growth (session 126)",
       "guide-free-tier-test.sh \u2014 Q9 manual free-tier test steps (session 128)",
       "verify-activation-path.sh --partial CLI gate (session 137)",
-      "partial activation row in GROWTH_DASHBOARD + snapshot-growth-metrics (session 138)"
+      "partial activation row in GROWTH_DASHBOARD + snapshot-growth-metrics (session 138)",
+      "ops Partial activation gate; status-report partial row; sync-ops partial_activation_ready (session 139)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [
