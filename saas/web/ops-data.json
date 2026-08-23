@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T21:03:30Z",
+  "updated": "2026-08-23T21:09:43Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -196,6 +196,7 @@
       "SALES_PLAYBOOK parallel billing while worker blocked (session 104)",
       "check-parallel-growth.sh partial+billing+GSC (session 105)",
       "/ops/p0 parallel work callout (session 107)",
+      "cbo.md charter: parallel GSC/billing priorities (session 112)",
       "/admin P0 banner partial E2E link (session 108)"
     ],
     "next": "GSC sitemap + first proof post after forward trades exist; Pro checkout E2E at /ops/billing",

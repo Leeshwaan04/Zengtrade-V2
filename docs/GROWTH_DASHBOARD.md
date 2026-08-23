@@ -1219,9 +1219,48 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 
 ### Day 1 (session 109) — append-growth-log + README refresh
 
+### CTO
+- **Shipped:** `append-growth-log.sh` auto-append to GROWTH_DASHBOARD.md; README production launch section
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** founder-database-url-help parallel work links
+
+### CBO
+- **Shipped:** —
+
+### Status (`./scripts/check-growth-standup.sh` @ 20:58Z)
+- worker ❌ · migration 0011 ✅ · parallel growth ✅
+
 ### Day 1 (session 110) — post-P0 runbook + dashboard cleanup
 
+### CTO
+- **Shipped:** post-p0-success runs check-growth-gates; GROWTH_DASHBOARD duplicate entries removed
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** validate-database-credentials DATABASE_PASSWORD-first messaging
+
+### CBO
+- **Shipped:** ops/billing parallel-growth hint; SALES_PLAYBOOK check-parallel-growth
+
+### Status (`./scripts/check-growth-standup.sh` @ 21:00Z)
+- worker ❌ · migration 0011 ✅ · parallel growth ✅
+
 ### Day 1 (session 111) — CTO charter + worker README refresh
+
+### CTO
+- **Shipped:** cto.md current P0 queue; worker README Railway production URI
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** ops/security partial E2E + parallel growth scripts
+
+### CBO
+- **Shipped:** autopilot README append-growth-log + DATABASE_PASSWORD hints
+
+### Status (`./scripts/check-growth-standup.sh` @ 21:02Z)
+- worker ❌ · migration 0011 ✅ · parallel growth ✅
 
 ### Day 1 (session 112) — CPO/CBO charter refresh
 
@@ -1238,43 +1277,22 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 21:05Z)
 - worker ❌ · migration 0011 ✅ · parallel growth ✅
 
+### Day 1 (session 113) — full squad charter refresh
+
 ### CTO
-- **Shipped:** cto.md current P0 queue; worker README Railway production URI
+- **Shipped:** qavapt/seo/marketing/sales charters aligned to parallel growth; ops-data synced
 - **Blocked:** Railway Postgres password still invalid.
 
 ### CPO
-- **Shipped:** ops/security partial E2E + parallel growth scripts
+- **Shipped:** partial activation path verified (`verify-partial-activation.sh`); `/ops/e2e` steps 1–2 green
 
 ### CBO
-- **Shipped:** autopilot README append-growth-log + DATABASE_PASSWORD hints
+- **Shipped:** billing + GSC gates green; parallel growth 5/5
 
-### Status (`./scripts/check-growth-standup.sh` @ 21:02Z)
-- worker ❌ · migration 0011 ✅ · parallel growth ✅
+### QA&VAPT / SEO / Marketing / Sales
+- **Shipped:** refreshed charters (`.cursor/autopilot/qavapt.md`, `seo.md`, `marketing.md`, `sales.md`)
 
-### CTO
-- **Shipped:** post-p0-success runs check-growth-gates; GROWTH_DASHBOARD duplicate entries removed
-- **Blocked:** Railway Postgres password still invalid.
-
-### CPO
-- **Shipped:** validate-database-credentials DATABASE_PASSWORD-first messaging
-
-### CBO
-- **Shipped:** ops/billing parallel-growth hint; SALES_PLAYBOOK check-parallel-growth
-
-### Status (`./scripts/check-growth-standup.sh` @ 21:00Z)
-- worker ❌ · migration 0011 ✅ · parallel growth ✅
-
-### CTO
-- **Shipped:** append-growth-log.sh auto-append to GROWTH_DASHBOARD.md; README production launch section
-- **Blocked:** Railway Postgres password still invalid.
-
-### CPO
-- **Shipped:** founder-database-url-help parallel work links
-
-### CBO
-- **Shipped:** —
-
-### Status (`./scripts/check-growth-standup.sh` @ 20:58Z)
+### Status (`./scripts/check-growth-standup.sh` @ 21:10Z)
 - worker ❌ · migration 0011 ✅ · parallel growth ✅
 
 ---

@@ -39,6 +39,7 @@ Update docs/GROWTH_DASHBOARD.md with today's date section.
 Use ./scripts/append-growth-log.sh for each session log block.
 Update saas/web/ops-data.json for any role that shipped work.
 Commit and push to main. Summarize for the founder in 5 bullets.
+Use ./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..." each run.
 ```
 
 ### Growth squad (who owns what)
