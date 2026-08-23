@@ -37,7 +37,7 @@ QA&VAPT charter: `.cursor/autopilot/qavapt.md` · checklist: `docs/QA_VAPT_CHECK
 
 ### Autopilot P0 blocker (founder-owned)
 
-Agents **cannot** apply migration 0011 or deploy the worker without `DATABASE_URL`. **First action each autopilot turn on `main`:**
+Migration **0011** is applied on production (funnel v2 events). Agents **cannot** deploy the paper worker without `DATABASE_URL`. **First action each autopilot turn on `main`:**
 
 ```bash
 ./scripts/run-p0-if-ready.sh

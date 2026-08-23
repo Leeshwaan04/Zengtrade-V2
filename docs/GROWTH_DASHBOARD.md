@@ -711,6 +711,27 @@
 ### Status (@ 17:58Z)
 - migration 0011 ❌ | worker ❌
 
+### Day 1 (session 73) — migration 0011 green; worker blocked on DATABASE_URL
+
+### CTO
+- **Shipped:** `sync-ops-gates.py` refresh; migration 0011 probes green on production; `check-p0-readiness.sh` notes worker-only blocker when migration done.
+- **Blocked:** `DATABASE_URL` still unset in Cloud Agent + Railway paper-worker — worker heartbeat stale since 2026-08-11.
+- **Next:** Founder adds full Postgres session URI (ap-northeast-1 pooler :5432) → `./scripts/run-p0-if-ready.sh`.
+
+### CPO
+- **Ready:** Funnel v2 events (`signup_complete`, `deploy_success`, `checkout_click`) accepted; activation path blocked only on worker.
+- **Next:** E2E signup → deploy → trades within 15 min once worker live.
+
+### CBO
+- **Verified:** Funnel CTAs + 7 coin sitemap URLs on production; security-smoke green.
+- **Next:** GSC + first proof post after forward trades exist.
+
+### QA&VAPT
+- **Verified:** `security-smoke.sh` passed (RLS anon empty, IPN gate, no client secrets).
+
+### Status (`./scripts/status-report.sh` @ 18:12Z)
+- production ✅ | billing ✅ | migration 0011 ✅ | worker ❌ | security-smoke ✅
+
 ---
 
 ### CTO

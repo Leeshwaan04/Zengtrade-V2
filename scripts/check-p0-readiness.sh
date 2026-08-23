@@ -41,6 +41,10 @@ mig=0 work=0
 ./scripts/check-worker.sh >/dev/null 2>&1 && work=1
 printf "Migration 0011 (production)     %s\n" "$([[ $mig -eq 1 ]] && echo '✅' || echo '❌')"
 printf "Paper worker heartbeat          %s\n" "$([[ $work -eq 1 ]] && echo '✅' || echo '❌')"
+if [[ $mig -eq 1 && $work -eq 0 ]]; then
+  echo ""
+  echo "Migration 0011 done — sole P0 blocker is paper worker (needs DATABASE_URL on Railway)."
+fi
 echo ""
 
 if [[ $rail_set -eq 1 ]]; then
