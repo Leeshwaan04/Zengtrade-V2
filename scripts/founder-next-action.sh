@@ -22,6 +22,9 @@ if [[ $mig -eq 0 || $work -eq 0 ]]; then
     fi
 
     echo "NEXT: Add DATABASE_URL (Supabase session pooler :5432)"
+    if [[ $mig -eq 1 ]]; then
+      echo "     Migration 0011 ✅ — worker only: https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b"
+    fi
     echo "     Cloud Agent secrets → ./scripts/run-p0-if-ready.sh"
     echo "     OR Railway paper-worker variables (agent auto-resolves)"
     echo "     OR GitHub repo Secrets → Apply P0 workflow"

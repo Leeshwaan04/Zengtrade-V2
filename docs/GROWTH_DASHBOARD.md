@@ -745,6 +745,15 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/status-report.sh` @ 18:15Z)
 - migration 0011 ✅ | worker ❌ (sole P0 blocker)
 
+### Day 1 (session 75) — status-report worker-only messaging
+
+### CTO
+- **Shipped:** `status-report.sh` + `founder-next-action.sh` worker-only next steps when migration green; ops worker action links Railway project directly.
+- **Blocked:** `DATABASE_URL` still unset — Railway deploy FAILED (2026-08-23T16:28Z).
+
+### Status (`./scripts/status-report.sh` @ 18:17Z)
+- production ✅ | billing ✅ | migration 0011 ✅ | worker ❌
+
 ---
 
 ### CTO

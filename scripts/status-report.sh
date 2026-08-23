@@ -36,6 +36,12 @@ echo ""
 if ! curl -sfL "https://zengtrade.in/ops/p0/" 2>/dev/null | grep -q "P0 checklist"; then
   echo "Also: /ops/p0 not deployed — check GitHub Pages deploy on main."
 fi
-echo "Next: https://zengtrade.in/ops/p0 — migration 0011 + paper worker"
+if [[ $mig -eq 1 && $work -eq 0 ]]; then
+  echo "Next: https://zengtrade.in/ops/worker — paper worker only (add DATABASE_URL on Railway)"
+elif [[ $mig -eq 0 ]]; then
+  echo "Next: https://zengtrade.in/ops/p0 — migration 0011 + paper worker"
+else
+  echo "Next: https://zengtrade.in/ops/p0"
+fi
 ./scripts/founder-next-action.sh 2>/dev/null || true
 exit 1

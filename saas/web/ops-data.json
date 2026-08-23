@@ -21,10 +21,10 @@
     },
     {
       "id": "worker",
-      "title": "Deploy paper worker (Railway or Render)",
-      "detail": "paper-worker service on Railway \u2014 needs DATABASE_URL (Apply P0 sets vars + redeploys)",
-      "url": "https://zengtrade.in/ops/worker",
-      "alt_url": "https://railway.app/new",
+      "title": "Deploy paper worker — add DATABASE_URL",
+      "detail": "Railway paper-worker latest deploy FAILED (no DATABASE_URL). Set variable + redeploy \u2192 heartbeat <12m.",
+      "url": "https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b",
+      "alt_url": "https://zengtrade.in/ops/worker",
       "urgent": true
     },
     {
