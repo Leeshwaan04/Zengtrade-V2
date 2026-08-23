@@ -1,0 +1,10 @@
+# Deploy from repo root: set Railway service root directory to `saas/worker`
+# or link this directory as a standalone service.
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

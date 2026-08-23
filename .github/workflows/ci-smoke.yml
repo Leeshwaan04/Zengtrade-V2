@@ -1,0 +1,20 @@
+name: CI smoke
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, 'cursor/**']
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install build deps
+        run: pip install requests
+      - name: E2E smoke
+        run: ./tests/e2e_smoke.sh

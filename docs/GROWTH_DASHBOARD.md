@@ -33,10 +33,32 @@
 
 ### Founder actions required
 1. Supabase redirect URLs + Google OAuth (15 min)
-2. Approve merge of autopilot PR when ready
-3. Railway/Fly: deploy worker with `DATABASE_URL`
+2. Approve merge of PR #2 + PR #3 when ready
+3. Railway/Fly: deploy worker with `DATABASE_URL` (see `saas/worker/railway.toml`)
 
 ---
+
+## Day 1 (continued) — 2026-08-23 evening
+
+### CTO
+- **Shipped:** GitHub Actions `ci-smoke.yml` on PRs; `saas/worker/railway.toml` for one-click worker deploy.
+- **Blocked:** Production merge + Railway `DATABASE_URL` still founder-owned.
+- **Next:** Merge PR #2 → #3; deploy worker; apply migration `0009`.
+
+### CPO
+- **Shipped:** Free-tier deploy errors → upgrade CTA (`studio.js` + `app.js`); first-deploy nudge banner on `/dashboard`; `deploy_click` funnel events.
+- **Next:** Verify nudge + deploy flow on live site after deploy.
+
+### CBO
+- **Shipped:** Founding Pro $19/mo on pricing page; `docs/GSC_SETUP.md` step-by-step.
+- **Next:** Founder completes GSC verification + sitemap submit.
+
+### Metrics snapshot
+- Pageviews 7d: *(fill from /admin)*
+- Users / deployers / trades: *(fill from /admin)*
+- Worker: *(pending Railway deploy)*
+- MRR: $0
+
 
 ## Daily log template
 

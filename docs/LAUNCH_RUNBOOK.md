@@ -13,7 +13,7 @@ Production checklist for `zengtrade.in`. Autopilot CTO agent maintains this file
 | 5 | SQL: run `saas/db/migrations/0009_engine_state.sql` | CTO | ☐ |
 | 6 | Host `saas/worker` (see `saas/worker/README.md`) with prod `DATABASE_URL` | CTO | ☐ |
 | 7 | E2E manual: signup → `/dashboard` → deploy → trades in ≤15 min | CPO | ☐ |
-| 8 | Run `./tests/e2e_smoke.sh` | CTO | ☐ |
+| 8 | Run `./tests/e2e_smoke.sh` | CTO | ☑ (also runs on PR via `.github/workflows/ci-smoke.yml`) |
 
 ## P1 — Revenue rail
 
@@ -29,8 +29,8 @@ Production checklist for `zengtrade.in`. Autopilot CTO agent maintains this file
 | Step | Action | Done |
 |------|--------|------|
 | 13 | Google Search Console verify + submit sitemap | CBO |
-| 14 | Integrate `seo/out` coin pages into landing build | CBO |
-| 15 | Founding Pro offer live on `/pricing/` | CBO |
+| 14 | Integrate `seo/out` coin pages into landing build | CBO | ☑ (`build.py` fetches live coin pages + sitemap) |
+| 15 | Founding Pro offer live on `/pricing/` | CBO | ☑ ($19/mo founding copy in build) |
 
 ## Worker quick start (Railway)
 

@@ -352,6 +352,7 @@ async function deploy(key) {
     { user_id: user.id, strategy_key: key, mode: "paper", status: "running" },
     { onConflict: "user_id,strategy_key" });
   if (error) return toast(niceError(error), "error");
+  try { await sb.from("event").insert({ name: "deploy_click", path: (location.pathname + location.hash).slice(0, 290) }); } catch { /* funnel */ }
   toast(`${nameOf(key)} deployed to paper.`, "success");
   await load(); render();
 }
