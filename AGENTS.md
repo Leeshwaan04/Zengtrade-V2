@@ -1,5 +1,10 @@
 # zengtrade — agent instructions
 
+## Git workflow
+
+- **Always work on `main`.** Commit and push directly to `origin/main`.
+- **Do not create or update pull requests.** The founder does not want PR-based workflow; skip `ManagePullRequest`, draft PRs, and “merge PR #N” unblock hints unless the user explicitly asks for a PR again.
+
 ## Autopilot agents (CTO, CPO, CBO, QA&VAPT)
 
 Scheduled Cloud Agents should read `.cursor/autopilot/README.md` and their role charter, then:
