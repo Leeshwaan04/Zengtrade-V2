@@ -496,6 +496,16 @@
 2. Paper worker → https://zengtrade.in/ops/worker
 3. `./scripts/wait-for-p0.sh` → E2E → `./scripts/security-smoke.sh`
 
+### Day 1 (session 40) — qavapt(autopilot): CI + checklist baseline
+
+### QA&VAPT
+- **Shipped:** `security-smoke.sh` added to `ci-smoke.yml` + `health-watch.yml`.
+- **Shipped:** `founder-preflight.sh` runs security smoke; checklist Q1/Q2/Q4–Q7/V3 marked verified.
+- **Blocked:** Q3 RLS manual test, Q8 activation verify — need P0 green.
+
+### Status (`./scripts/status-report.sh` @ 16:01Z)
+- migration 0011 ❌ | worker ❌
+
 ---
 
 ## Daily log template

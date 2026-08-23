@@ -133,7 +133,8 @@
     "shipped": [
       "Charter: .cursor/autopilot/qavapt.md + docs/QA_VAPT_CHECKLIST.md",
       "scripts/security-smoke.sh — client secrets, IPN gate, admin RPC auth",
-      "Founder playbook at /ops/security"
+      "Founder playbook at /ops/security",
+      "security-smoke.sh in CI smoke + health-watch (6h)"
     ],
     "next": "Run security-smoke + E2E after P0; manual RLS isolation (2 accounts)",
     "links": [

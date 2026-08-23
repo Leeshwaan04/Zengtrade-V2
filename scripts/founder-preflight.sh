@@ -12,6 +12,14 @@ echo ">> Local build + dist probes"
 ./tests/e2e_smoke.sh
 echo ""
 
+echo ">> Security smoke (QA&VAPT)"
+if ./scripts/security-smoke.sh 2>/dev/null; then
+  SEC_OK=1
+else
+  SEC_OK=0
+fi
+echo ""
+
 echo ">> Production probe ($SITE)"
 if SITE="$SITE" ./scripts/check-production.sh; then
   PROD_OK=1
@@ -49,12 +57,13 @@ echo "=== Summary ==="
 [[ $BILL_OK -eq 1 ]] && echo "✅ Billing functions deployed" || echo "❌ Billing — run scripts/deploy-billing.sh + secrets"
 [[ $MIG_OK -eq 1 ]] && echo "✅ Migrations applied" || echo "❌ Migrations — apply 0009–0011 (see apply-migrations.sh)"
 [[ $WORK_OK -eq 1 ]] && echo "✅ Worker heartbeat fresh" || echo "❌ Worker — deploy saas/worker (FOUNDER_DEPLOY.md §4)"
+[[ $SEC_OK -eq 1 ]] && echo "✅ Security smoke passed" || echo "❌ Security — run ./scripts/security-smoke.sh"
 echo ""
 if SITE="$SITE" ./scripts/check-sitemap.sh 2>/dev/null; then
   echo "✅ Sitemap includes all coin pSEO pages"
 else
-  echo "⚠️  Sitemap — merge PR #5 for Cardano + Dogecoin coin pages"
+  echo "⚠️  Sitemap incomplete — run python3 deploy/landing/build.py and redeploy"
 fi
 echo ""
-echo "Full checklist: docs/FOUNDER_DEPLOY.md"
-echo "After P0 green: ./scripts/verify-activation-path.sh"
+echo "Full checklist: docs/FOUNDER_DEPLOY.md · QA: docs/QA_VAPT_CHECKLIST.md"
+echo "After P0 green: ./scripts/verify-activation-path.sh && ./scripts/security-smoke.sh"

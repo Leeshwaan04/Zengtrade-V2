@@ -19,6 +19,8 @@ jobs:
         run: ./scripts/check-migrations.sh
       - name: Paper worker heartbeat
         run: ./scripts/check-worker.sh
+      - name: Security smoke (QA&VAPT)
+        run: ./scripts/security-smoke.sh
       - name: Sitemap coin pages (CBO)
         run: ./scripts/check-sitemap.sh || echo "::warning::Sitemap missing coin URLs — merge latest main / rebuild landing"
       - name: Sync ops gate snapshot
