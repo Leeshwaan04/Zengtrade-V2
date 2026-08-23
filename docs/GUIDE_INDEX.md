@@ -13,6 +13,7 @@ One-page map of CLI playbooks while the paper worker is blocked (or after P0 gre
 | `./scripts/check-qa-parallel.sh` | Security smoke, XSS, partial activation, sales |
 | `./scripts/check-sales-ready.sh` | Billing + plan intent + pricing truth |
 | `./scripts/check-founder-guides.sh` | All `guide-*.sh` scripts executable |
+| `./scripts/verify-activation-path.sh --partial` | CPO: signup → deploy path without worker |
 
 ## Role playbooks (manual steps)
 
@@ -47,6 +48,13 @@ One-page map of CLI playbooks while the paper worker is blocked (or after P0 gre
 ./scripts/post-p0-success.sh
 ./scripts/verify-activation-path.sh
 ./scripts/guide-qa-rls-isolation.sh   # Q3 RLS
+```
+
+While worker blocked:
+
+```bash
+./scripts/verify-activation-path.sh --partial
+./scripts/guide-partial-e2e.sh
 ```
 
 Full E2E: https://zengtrade.in/ops/e2e

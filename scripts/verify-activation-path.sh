@@ -1,9 +1,31 @@
 #!/usr/bin/env bash
 # Post-P0 activation checks — run after migration 0011 + worker are live.
+# Partial (worker blocked): ./scripts/verify-activation-path.sh --partial
 # Exit 0 only when production loop is ready for signup → deploy → trades E2E.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+
+if [[ "${1:-}" == "--partial" ]]; then
+  echo "== Partial activation path (signup → deploy, no trades) =="
+  ./scripts/check-migrations.sh
+  ./scripts/verify-partial-activation.sh
+  code=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+    'https://ponvarxeytfcntckczbn.supabase.co/rest/v1/event' \
+    -H 'apikey: sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1' \
+    -H 'Content-Type: application/json' \
+    -H 'Prefer: return=minimal' \
+    -d '{"name":"deploy_success","path":"/activation-verify-partial"}')
+  if [[ "$code" != "201" ]]; then
+    echo "FAIL deploy_success event blocked (HTTP $code)"
+    exit 1
+  fi
+  echo "OK   deploy_success event accepted"
+  echo ""
+  echo "Partial activation green — manual E2E steps 1–2: https://zengtrade.in/ops/e2e"
+  echo "Trades (steps 3–4) blocked until worker: https://zengtrade.in/ops/worker"
+  exit 0
+fi
 
 echo "== P0 gates =="
 SITE=https://zengtrade.in ./scripts/check-production.sh

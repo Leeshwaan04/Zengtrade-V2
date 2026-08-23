@@ -6,9 +6,9 @@
     {
       "id": "p0-unblock",
       "title": "Fix DATABASE_URL password",
-      "detail": "Railway has DATABASE_URL but Postgres auth fails. Reset in Supabase Connect \u2192 copy Session URI (port 5432). Or add Cloud Agent secret DATABASE_PASSWORD only \u2014 agent auto-fixes Railway.",
+      "detail": "Railway has DATABASE_URL but Postgres auth fails. Reset in Supabase Connect \u2192 copy Session URI (port 5432). Or add Cloud Agent secret DATABASE_PASSWORD only \u2014 agent auto-fixes Railway. GitHub Secrets also trigger health-watch every 6h.",
       "url": "https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings",
-      "alt_url": "https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml",
+      "alt_url": "https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/health-watch.yml",
       "urgent": true
     },
     {

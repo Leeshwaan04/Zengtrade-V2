@@ -1741,6 +1741,33 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 22:41Z)
 - worker ❌ · migration 0011 ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
 
+### Day 1 (session 137) — Partial activation verify + health-watch recovery docs
+
+### CTO
+- **Shipped:** WORKER_RECOVERY + guide-worker-recovery + /ops/worker health-watch path
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** verify-activation-path.sh --partial for signup→deploy without worker
+
+### CBO
+- **Shipped:** ops-data p0-unblock alt → health-watch scheduled auto-apply
+
+### SEO
+- **Shipped:** —
+
+### Marketing
+- **Shipped:** —
+
+### Sales
+- **Shipped:** —
+
+### QA&VAPT
+- **Shipped:** —
+
+### Status (`./scripts/check-growth-standup.sh` @ 22:45Z)
+- worker ❌ · migration 0011 ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
+
 ---
 
 ## Daily log template

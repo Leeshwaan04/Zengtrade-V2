@@ -15,6 +15,8 @@ if ! ./scripts/verify-partial-activation.sh; then
 fi
 
 echo ""
+echo "Automated gate: ./scripts/verify-activation-path.sh --partial"
+echo ""
 echo "== Manual steps (incognito) =="
 echo ""
 echo "1. Signup"
