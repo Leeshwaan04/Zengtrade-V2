@@ -65,7 +65,7 @@ Verify parallel gates before posting: `./scripts/check-parallel-growth.sh`
 | 3 | r/algotrading value post | Reddit (draft: `docs/content/REDDIT_ALGOTRADING_DRAFT.md`) |
 | 4 | Coin spotlight #1 | Blog section on coin page |
 
-**Coin spotlight template (week N):**
+**Coin spotlight template (week N):** run `./scripts/guide-coin-spotlight.sh [slug]` for founder-ready copy.
 
 ```
 Coin of the week: [BTC/ETH/SOL] — regime read + paper-first angle
@@ -77,7 +77,7 @@ Coin of the week: [BTC/ETH/SOL] — regime read + paper-first angle
 Not investment advice. Paper trading on live Binance prices.
 ```
 
-**Gate:** Do not publish until `./scripts/verify-activation-path.sh` passes.
+**Gate:** LinkedIn/coin spotlight (partial activation): `./scripts/check-parallel-growth.sh` green. Forward-proof posts: `./scripts/verify-activation-path.sh` passes.
 
 ## Launch checklist (marketing)
 

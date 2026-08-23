@@ -291,7 +291,9 @@ async function refresh() {
   const billingReadyOk = g.billing_ready ?? billReady;
   const gscReadyOk = g.gsc_ready ?? gscOk;
   const funnelCtAsOk = g.funnel_ctas ?? funnelOk;
-  const parallelOk = g.parallel_growth_ready ?? (activationOk && billingReadyOk && gscReadyOk && !worker.ok);
+  const salesReadyOk = g.sales_ready ?? (billingReadyOk && migOk);
+  const qaParallelOk = g.qa_parallel_ready ?? false;
+  const parallelOk = g.parallel_growth_ready ?? (activationOk && billingReadyOk && gscReadyOk && funnelCtAsOk && !worker.ok);
 
   let workerDetail = worker.ts ? `${worker.ageMin}m ago · ${worker.deps} deps` : "no heartbeat";
   if (!worker.ok && migOk && data.gates?.railway_paper_worker === "FAILED" && data.gates?.database_url_auth_ok === false) {
@@ -311,6 +313,8 @@ async function refresh() {
   ].join("");
   if (!worker.ok && migOk) {
     document.getElementById("gates").innerHTML += gate("Parallel growth", parallelOk, "excl. worker");
+    document.getElementById("gates").innerHTML += gate("Sales-ready", salesReadyOk, "Pro checkout path");
+    document.getElementById("gates").innerHTML += gate("QA parallel", qaParallelOk, "security + partial");
   }
 
   const parallel = document.getElementById("parallelBox");
@@ -321,7 +325,7 @@ async function refresh() {
     if (billingReadyOk) items.push(`<li><b>CBO / Sales</b> — <a href="/ops/billing">first Pro checkout</a> · <code>./scripts/guide-first-pro-checkout.sh</code></li>`);
     if (gscReadyOk) items.push(`<li><b>CBO / SEO</b> — <a href="/ops/gsc">GSC sitemap</a> · <code>./scripts/guide-gsc-founder.sh</code></li>`);
     if (parallelOk) {
-      items.push(`<li><b>Marketing</b> — <code>./scripts/guide-linkedin-bip.sh</code> · LinkedIn build-in-public</li>`);
+      items.push(`<li><b>Marketing</b> — <code>./scripts/guide-linkedin-bip.sh</code> · <code>./scripts/guide-coin-spotlight.sh</code></li>`);
       items.push(`<li><b>QA&VAPT</b> — <a href="/ops/security">security</a> · <code>./scripts/check-qa-parallel.sh</code></li>`);
       items.push(`<li><b>CLI</b> — <code>./scripts/guide-founder-parallel.sh</code> · <code>./scripts/check-parallel-growth.sh</code></li>`);
     }

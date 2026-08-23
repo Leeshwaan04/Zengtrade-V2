@@ -10,11 +10,15 @@ echo ""
 echo ""
 ./scripts/snapshot-growth-metrics.sh 2>/dev/null || true
 if ! ./scripts/check-worker.sh >/dev/null 2>&1; then
-  ./scripts/check-parallel-growth.sh 2>/dev/null | tail -8 || true
+  if ./scripts/check-founder-parallel-ready.sh 2>/dev/null | tail -3; then
+    :
+  else
+    ./scripts/check-parallel-growth.sh 2>/dev/null | tail -8 || true
+  fi
   echo ""
   echo "Founder playbook: ./scripts/guide-founder-parallel.sh"
   echo ""
-  echo "Log this session: ./scripts/append-growth-log.sh N \"title\" --cto \"...\" --cpo \"...\" --cbo \"...\""
+  echo "Log: ./scripts/append-growth-log.sh N \"title\" --cto \"...\" --cpo \"...\" --cbo \"...\" --seo \"...\" --marketing \"...\" --sales \"...\" --qa \"...\""
 fi
 if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
   ./scripts/sync-ops-gates.py 2>/dev/null || true

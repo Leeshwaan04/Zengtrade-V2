@@ -20,6 +20,7 @@ guides=(
   guide-linkedin-bip.sh
   guide-monthly-gsc-review.sh
   guide-qa-rls-isolation.sh
+  guide-coin-spotlight.sh
 )
 
 for g in "${guides[@]}"; do

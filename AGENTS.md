@@ -73,6 +73,7 @@ Verify with:
 ./scripts/guide-gsc-founder.sh         # CBO: founder manual GSC verify + sitemap
 ./scripts/guide-first-pro-checkout.sh  # Sales: founder manual first Pro MRR
 ./scripts/guide-linkedin-bip.sh        # Marketing: LinkedIn build-in-public CLI
+./scripts/guide-coin-spotlight.sh      # Marketing: coin spotlight post template
 ./scripts/guide-monthly-gsc-review.sh  # SEO: monthly GSC review checklist
 ./scripts/guide-free-tier-test.sh      # CPO: Q9 manual free-tier deploy cap test
 ./scripts/guide-mrr-standup.sh        # Sales: weekly /admin MRR checklist

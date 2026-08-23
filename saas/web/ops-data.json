@@ -116,7 +116,8 @@
       "docs/STATUS.md session 128 + /ops parallel role guides (session 128)",
       "append-growth-log --seo/--marketing/--sales/--qa flags (session 129)",
       "check-founder-guides.sh + sync-ops-gates sales_ready (session 129)",
-      "check-founder-parallel-ready.sh + sync-ops qa_parallel_ready (session 130)"
+      "check-founder-parallel-ready.sh + sync-ops qa_parallel_ready (session 130)",
+      "log-growth-session probe retries; /ops sales+QA gates (session 131)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -302,7 +303,8 @@
       "Parallel work playbook \u2014 GSC + billing + build-in-public (session 103)",
       "Pre-P0 LinkedIn build-in-public draft updated for production partial E2E (session 115)",
       "LINKEDIN_BUILD_IN_PUBLIC.md founder-ready post (session 119)",
-      "guide-linkedin-bip.sh \u2014 founder CLI build-in-public steps (session 127)"
+      "guide-linkedin-bip.sh \u2014 founder CLI build-in-public steps (session 127)",
+      "guide-coin-spotlight.sh \u2014 coin spotlight post template (session 131)"
     ],
     "next": "Founder: publish LinkedIn build-in-public post; forward-proof after P0",
     "links": [

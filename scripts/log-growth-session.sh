@@ -17,21 +17,22 @@ worker_txt=$([[ $work -eq 1 ]] && echo "✅" || echo "❌")
 
 parallel="—"
 sales="—"
+qa="—"
 if [[ $work -eq 0 ]]; then
-  if ./scripts/check-parallel-growth.sh >/dev/null 2>&1; then
-    parallel="✅"
-  else
-    parallel="❌"
-  fi
-  if ./scripts/check-sales-ready.sh >/dev/null 2>&1; then
-    sales="✅"
-  else
-    sales="❌"
-  fi
+  parallel="❌"
+  sales="❌"
+  qa="❌"
+  for _ in 1 2 3; do
+    [[ "$parallel" == "❌" ]] && ./scripts/check-parallel-growth.sh >/dev/null 2>&1 && parallel="✅"
+    [[ "$sales" == "❌" ]] && ./scripts/check-sales-ready.sh >/dev/null 2>&1 && sales="✅"
+    [[ "$qa" == "❌" ]] && ./scripts/check-qa-parallel.sh >/dev/null 2>&1 && qa="✅"
+    [[ "$parallel" == "✅" && "$sales" == "✅" ]] && break
+    sleep 2
+  done
 fi
 
 echo "### Status (\`./scripts/check-growth-standup.sh\` @ ${tshort})"
-echo "- worker ${worker_txt} · migration 0011 $([[ $mig -eq 1 ]] && echo '✅' || echo '❌') · parallel growth ${parallel} · sales-ready ${sales}"
+echo "- worker ${worker_txt} · migration 0011 $([[ $mig -eq 1 ]] && echo '✅' || echo '❌') · parallel growth ${parallel} · sales-ready ${sales}${qa:+ · qa parallel ${qa}}"
 if [[ -n "$shipped" ]]; then
   echo "- ${shipped}"
 fi

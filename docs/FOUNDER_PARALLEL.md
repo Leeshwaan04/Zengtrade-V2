@@ -22,6 +22,7 @@ Runs `check-parallel-growth.sh`, `check-sales-ready.sh`, and prints manual playb
 | **CBO / Sales** | First Pro checkout | `./scripts/guide-first-pro-checkout.sh` · https://zengtrade.in/ops/billing |
 | **Sales** | Weekly MRR standup | `./scripts/guide-mrr-standup.sh` · https://zengtrade.in/admin |
 | **Marketing** | LinkedIn build-in-public | `./scripts/guide-linkedin-bip.sh` · `docs/content/LINKEDIN_BUILD_IN_PUBLIC.md` |
+| **Marketing** | Coin spotlight post | `./scripts/guide-coin-spotlight.sh [slug]` · `docs/MARKETING_PLAYBOOK.md` |
 | **QA&VAPT** | Security + partial activation probes | `./scripts/check-qa-parallel.sh` · `./scripts/guide-qa-rls-isolation.sh` (post-P0) |
 
 ## Verify probes
