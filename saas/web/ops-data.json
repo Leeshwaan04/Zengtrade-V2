@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T21:20:12Z",
+  "updated": "2026-08-23T21:23:32Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -146,7 +146,8 @@
       "/ops/p0 partial E2E unlock when migration green (session 102)",
       "check-e2e-gates.sh partial signup\u2192deploy path when worker down (session 103)",
       "/ops/e2e steps 1\u20132 green + deploy_click probe (session 104)",
-      "cpo.md charter: partial activation path (session 112)"
+      "cpo.md charter: partial activation path (session 112)",
+      "guide-partial-e2e.sh founder manual partial E2E (session 117)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [
@@ -203,9 +204,10 @@
       "check-parallel-growth.sh partial+billing+GSC (session 105)",
       "/ops/p0 parallel work callout (session 107)",
       "cbo.md charter: parallel GSC/billing priorities (session 112)",
-      "/admin P0 banner partial E2E link (session 108)"
+      "/admin P0 banner partial E2E link (session 108)",
+      "GSC founder completion log \u2014 GSC_SETUP.md + /ops/gsc (session 117)"
     ],
-    "next": "GSC sitemap + first proof post after forward trades exist; Pro checkout E2E at /ops/billing",
+    "next": "Founder: GSC completion log (docs/GSC_SETUP.md); Pro checkout at /ops/billing",
     "links": [
       {
         "label": "Test checkout guide",
@@ -237,7 +239,8 @@
       "Coin signup CTAs with utm_campaign=coin_*",
       "Founder GSC playbook at /ops/gsc",
       "check-seo-content.sh \u2014 paper-loop + founding offer on prod (session 89)",
-      "Monthly GSC review template in SEO_PLAYBOOK.md (session 115)"
+      "Monthly GSC review template in SEO_PLAYBOOK.md (session 115)",
+      "GSC founder completion log in GSC_SETUP.md + /ops/gsc (session 117)"
     ],
     "next": "GSC property + sitemap submit after P0; expand pSEO via seo/generate.py",
     "links": [

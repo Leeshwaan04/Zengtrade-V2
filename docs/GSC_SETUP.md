@@ -46,7 +46,22 @@ Verify after deploy: `./scripts/check-gsc-ready.sh` (or `./scripts/check-sitemap
 | Pages | Fix any "Crawled - not indexed" |
 | Core Web Vitals | Keep landing static (already fast) |
 
-## 5. Coin SEO scale
+Monthly deep review: `docs/SEO_PLAYBOOK.md` § Monthly GSC review.
+
+## 5. Founder completion log (manual)
+
+Tick when done — log date in `docs/GROWTH_DASHBOARD.md` under **CBO**:
+
+- [ ] **Property verified** — `https://zengtrade.in` in [Search Console](https://search.google.com/search-console)
+- [ ] **Sitemap submitted** — `https://zengtrade.in/sitemap.xml` (Indexing → Sitemaps)
+- [ ] **Priority URLs requested** — home, pricing, how-it-works, top 3 coin pages, signup
+- [ ] **Baseline screenshot** — Performance tab (28d) saved for week-over-week compare
+
+Preflight (automated): `./scripts/check-gsc-ready.sh` · Founder page: https://zengtrade.in/ops/gsc
+
+Do **not** publish forward P&L proof posts until `./scripts/check-worker.sh` is green.
+
+## 6. Coin SEO scale
 
 ```bash
 pip install requests

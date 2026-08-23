@@ -68,6 +68,7 @@ Verify with:
 ./scripts/check-e2e-gates.sh       # CPO: can /ops/e2e start?
 ./scripts/check-activation-ready.sh  # CPO: signup → deploy UI (no worker)
 ./scripts/verify-partial-activation.sh  # CPO: migration + activation combined
+./scripts/guide-partial-e2e.sh         # CPO: founder manual partial E2E steps
 ./scripts/check-parallel-growth.sh   # CBO/CPO: partial + billing + GSC while worker down
 ./scripts/check-p0-readiness.sh   # secrets + gates before apply-p0
 ./scripts/check-railway-deploy.sh   # when RAILWAY_API_TOKEN is set

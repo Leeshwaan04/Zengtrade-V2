@@ -28,7 +28,7 @@ Founder: verify GSC property + submit **https://zengtrade.in/sitemap.xml** — h
 - [x] `sitemap.xml` — home, pricing, how-it-works, login, app, 7 coins
 - [x] `check-sitemap.sh` + `check-gsc-ready.sh` green on production
 - [x] `/ops/gsc` playbook live
-- [ ] **Founder:** GSC property verified + sitemap submitted (manual)
+- [ ] **Founder:** GSC property verified + sitemap submitted (manual) — `docs/GSC_SETUP.md` § Founder completion log
 
 ### P1 — pSEO
 - [x] 7 coin pages live with `utm_campaign=coin_*`

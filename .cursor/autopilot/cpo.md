@@ -19,6 +19,7 @@ Migration **0011** is live. You can verify signup → deploy **without trades**:
 ```bash
 ./scripts/verify-partial-activation.sh
 ./scripts/check-e2e-gates.sh
+./scripts/guide-partial-e2e.sh   # founder manual steps (signup → deploy)
 ```
 
 Manual: https://zengtrade.in/ops/e2e (steps 1–2). Steps 3–4 need `./scripts/check-worker.sh` green.

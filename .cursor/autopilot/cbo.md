@@ -38,7 +38,7 @@ Do **not** post forward P&L or r/algotrading until `./scripts/check-worker.sh` g
 - [x] Pricing promises only what ships (`check-pricing-truth.sh`)
 - [x] Funnel CTAs utm-tagged on all 7 coin pages
 - [x] Founding Pro $19 on `/pricing` (`check-billing-ready.sh`)
-- [ ] GSC property verified + sitemap submitted (founder manual)
+- [ ] GSC property verified + sitemap submitted (founder manual) — `docs/GSC_SETUP.md` § Founder completion log
 - [ ] First Pro checkout E2E proof in `/admin` MRR tile
 
 ### P1 — Organic

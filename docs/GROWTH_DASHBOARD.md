@@ -1328,6 +1328,36 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 21:17Z)
 - worker ❌ · migration 0011 ✅ · parallel growth ✅
 
+### Day 1 (session 116) — check-sales-ready + first Pro checkout playbook
+
+### CTO
+- **Shipped:** P0 still blocked (wrong Railway DB password)
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** partial activation 5/5 parallel gates green
+
+### CBO
+- **Shipped:** check-sales-ready.sh green; /ops/billing admin verify card
+
+### Status (`./scripts/check-growth-standup.sh` @ 21:20Z)
+- worker ❌ · migration 0011 ✅ · parallel growth ✅
+
+### Day 1 (session 117) — partial E2E guide + GSC founder checklist
+
+### CTO
+- **Shipped:** P0 still blocked (wrong Railway DB password)
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** guide-partial-e2e.sh + /ops/e2e CLI hints
+
+### CBO
+- **Shipped:** GSC founder completion log on /ops/gsc
+
+### Status (`./scripts/check-growth-standup.sh` @ 21:23Z)
+- worker ❌ · migration 0011 ✅ · parallel growth ✅
+
 ---
 
 ## Daily log template
