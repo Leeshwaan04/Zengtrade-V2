@@ -1,19 +1,19 @@
 {
-  "updated": "2026-08-23T14:48:00Z",
+  "updated": "2026-08-23T14:52:00Z",
   "founder_actions": [
     {
       "id": "migration-0011",
       "title": "Apply migration 0011 (funnel v2 events)",
-      "detail": "Enables signup_complete, deploy_success, checkout_click tracking in /admin",
-      "url": "https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/sql/new",
+      "detail": "Copy SQL → Supabase → verify in one page",
+      "url": "https://zengtrade.in/ops/migrate",
       "urgent": true
     },
     {
       "id": "worker",
       "title": "Deploy paper worker (Railway or Render)",
-      "detail": "Without this, deploys save but no trades run on live prices",
-      "url": "https://railway.app/new",
-      "alt_url": "https://dashboard.render.com/blueprint",
+      "detail": "Step-by-step HTML guide with live heartbeat check",
+      "url": "https://zengtrade.in/ops/worker",
+      "alt_url": "https://railway.app/new",
       "urgent": true
     },
     {
@@ -27,7 +27,7 @@
   "cto": {
     "headline": "Production loop",
     "shipped": [
-      "Founder HTML dashboard at /ops (live probes + approval alerts)",
+      "Founder action pages: /ops/migrate + /ops/worker (HTML, copy-verify)",
       "PR #3 merged — /app, auth.js, verify-production CI green",
       "Health probes: check-worker, check-migrations, health-watch cron",
       "render.yaml + WORKER_QUICKSTART for one-click worker host"

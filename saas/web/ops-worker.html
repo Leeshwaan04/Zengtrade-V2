@@ -1,0 +1,73 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Deploy paper worker · zengtrade ops</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css.css">
+<style>
+  body{background:var(--bg);color:var(--navy);min-height:100vh;margin:0;font-family:var(--sans)}
+  .wrap{max-width:820px;margin:0 auto;padding:24px 18px 64px}
+  h1{font:800 22px/1.2 var(--sans);margin:0 0 6px}
+  .sub{color:var(--slate);font-size:14px;margin:0 0 20px;line-height:1.55}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+  .card h2{font:800 15px/1.3 var(--sans);margin:0 0 10px}
+  .card ol{margin:0;padding-left:20px;font-size:14px;line-height:1.6}
+  .card a{color:var(--blue);font-weight:700}
+  .links{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .links a{display:inline-block;padding:10px 14px;border-radius:10px;background:var(--green);color:#04140a;font:700 13px/1;text-decoration:none}
+  .links a.alt{background:var(--surface);border:1px solid var(--line);color:var(--navy)}
+  .back{font-size:13px;margin-bottom:16px;display:inline-block;color:var(--blue);text-decoration:none;font-weight:600}
+  #hb{font:600 13px var(--mono);margin-top:16px;padding:12px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line)}
+  #hb.ok{color:var(--green-d)}#hb.bad{color:var(--red-d)}
+</style></head><body>
+<div class="wrap">
+  <a class="back" href="/ops">← Founder Ops</a>
+  <h1>Deploy paper worker</h1>
+  <p class="sub">Founder approval · ~10 min · Without this, <a href="/dashboard">deploys save</a> but <b>no trades run</b> on live Binance prices.</p>
+
+  <div class="card">
+    <h2>Option A — Railway (recommended)</h2>
+    <ol>
+      <li><a href="https://railway.app/new" target="_blank" rel="noopener">Create Railway project</a> → Deploy from GitHub → <code>Leeshwaan04/Zengtrade-V2</code></li>
+      <li>Settings → <b>Root directory</b>: <code>saas/worker</code></li>
+      <li>Variables → <code>DATABASE_URL</code> = <a href="https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/settings/database" target="_blank" rel="noopener">Supabase Database URI</a> (pooler, port 5432)</li>
+      <li>Deploy → logs: <code>zengtrade worker · … featured strategies</code></li>
+    </ol>
+    <div class="links"><a href="https://railway.app/new" target="_blank" rel="noopener">Open Railway</a></div>
+  </div>
+
+  <div class="card">
+    <h2>Option B — Render Blueprint</h2>
+    <ol>
+      <li><a href="https://dashboard.render.com/blueprint" target="_blank" rel="noopener">New Blueprint</a> → connect this repo (uses <code>render.yaml</code>)</li>
+      <li>Set <code>DATABASE_URL</code> when prompted</li>
+    </ol>
+    <div class="links"><a class="alt" href="https://dashboard.render.com/blueprint" target="_blank" rel="noopener">Open Render</a></div>
+  </div>
+
+  <div class="card">
+    <h2>After deploy — verify</h2>
+    <ol>
+      <li>Heartbeat below should show <b>&lt; 12 minutes</b></li>
+      <li><a href="/ops">/ops</a> → Paper worker gate = ✓</li>
+      <li>Test: <a href="/login?mode=signup">signup</a> → <a href="/dashboard">deploy</a> → wait ~5 min → <a href="/app#forward">trades</a></li>
+      <li><a href="/admin">/admin</a> → Worker tile = <b>Live</b></li>
+    </ol>
+    <button class="links" type="button" id="check" style="border:0;cursor:pointer"><a style="pointer-events:none">Check heartbeat now</a></button>
+    <p id="hb">Click to check worker heartbeat…</p>
+  </div>
+</div>
+<script>
+const SUPA="https://ponvarxeytfcntckczbn.supabase.co", ANON="sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";
+document.getElementById("check").onclick=async()=>{
+  const el=document.getElementById("hb");
+  try{
+    const rows=await fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at,value",{headers:{apikey:ANON}}).then(r=>r.json());
+    if(!rows[0]){el.textContent="✗ No heartbeat row — check DATABASE_URL and worker logs";el.className="bad";return;}
+    const age=Math.round((Date.now()-new Date(rows[0].updated_at))/60000);
+    const deps=rows[0].value?.deployments??0;
+    if(age<=12){el.textContent=`✓ Worker live — ${age}m ago · ${deps} active deployments`;el.className="ok";}
+    else{el.textContent=`✗ Stale heartbeat — ${age}m ago (last ${rows[0].updated_at}). Worker not running.`;el.className="bad";}
+  }catch(e){el.textContent="✗ Could not reach Supabase";el.className="bad";}
+};
+</script></body></html>

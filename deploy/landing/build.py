@@ -260,6 +260,15 @@ _ops_data = os.path.join(AUTH_SRC, "ops-data.json")
 if os.path.exists(_ops_data):
     d = os.path.join(DIST, "ops"); os.makedirs(d, exist_ok=True)
     shutil.copy(_ops_data, os.path.join(d, "data.json"))
+_mig11 = os.path.abspath(os.path.join(HERE, "..", "..", "saas", "db", "migrations", "0011_funnel_events_v2.sql"))
+if os.path.exists(_mig11):
+    d = os.path.join(DIST, "ops"); os.makedirs(d, exist_ok=True)
+    shutil.copy(_mig11, os.path.join(d, "migrate.sql"))
+for _sub, _fname in (("migrate", "ops-migrate.html"), ("worker", "ops-worker.html")):
+    _src = os.path.join(AUTH_SRC, _fname)
+    if os.path.exists(_src):
+        _d = os.path.join(DIST, "ops", _sub); os.makedirs(_d, exist_ok=True)
+        shutil.copy(_src, os.path.join(_d, "index.html"))
 shutil.copy(os.path.join(AUTH_SRC, "css.css"), os.path.join(DIST, "css.css"))
 for d in ("js", "assets"):                        # js = auth glue; assets merge (logo etc.)
     sd = os.path.join(AUTH_SRC, d)

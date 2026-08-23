@@ -234,6 +234,21 @@
 - **Shipped:** `docs/CBO_WEEK1.md` organic playbook; live coin pSEO confirmed on zengtrade.in.
 - **Next:** GSC verify + sitemap submit.
 
+### Day 1 (session 15) — founder HTML action pages
+
+### CTO
+- **Shipped:** `/ops/migrate` (copy SQL + verify) and `/ops/worker` (deploy guide + heartbeat check).
+- **Blocked:** Worker + 0011 still pending founder.
+- **Next:** Founder completes linked pages from /ops.
+
+### CPO
+- **Shipped:** One-click verify buttons on action pages.
+- **Next:** E2E after worker.
+
+### CBO
+- **Shipped:** /ops links to pricing, admin, GSC from approval flow.
+- **Next:** GSC after P0.
+
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*

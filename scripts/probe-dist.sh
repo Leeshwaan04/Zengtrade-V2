@@ -20,6 +20,9 @@ need() {
 
 need "ops/index.html"
 need "ops/data.json"
+need "ops/migrate/index.html"
+need "ops/migrate.sql"
+need "ops/worker/index.html"
 need "app/index.html"
 need "login/index.html"
 need "dashboard/index.html"

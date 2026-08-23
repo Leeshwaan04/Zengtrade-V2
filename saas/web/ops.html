@@ -158,7 +158,7 @@ function renderApprovals(staticActions, live) {
     clear.hidden = true;
     list.innerHTML = urgent.map(a => {
       let links = `<a href="${a.url}" target="_blank" rel="noopener">${a.title}</a>`;
-      if (a.alt_url) links += ` · <a href="${a.alt_url}" target="_blank" rel="noopener">Render blueprint</a>`;
+      if (a.alt_url && a.url.indexOf("/ops/") === -1) links += ` · <a href="${a.alt_url}" target="_blank" rel="noopener">alt</a>`;
       return `<li><b>${a.title}</b> — ${a.detail}<br>${links}</li>`;
     }).join("");
     maybeNotify(urgent.length);
