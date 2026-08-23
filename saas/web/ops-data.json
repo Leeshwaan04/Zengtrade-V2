@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T16:58:00Z",
+  "updated": "2026-08-23T17:01:00Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -66,6 +66,7 @@
     "headline": "Signup \u2192 deploy \u2192 trades",
     "shipped": [
       "Activation checklist on /app",
+      "Unified /dashboard vs /app help blurb (Algo Studio deploy → evidence in /app)",
       "Worker-offline banner links to /how-it-works on /app and /dashboard",
       "Pageview tracking on /dashboard and /app after auth",
       "Activation checklist shows worker-offline hint when deploys exist but no trades",

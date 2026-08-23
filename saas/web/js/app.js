@@ -196,6 +196,10 @@ function renderDashboard() {
   const upsell = !isPro(tier) && state.deployments.length >= FREE_DEPLOY_LIMIT
     ? `<div class="upsell"><div><b>You're on Free, ${FREE_DEPLOY_LIMIT} strategy.</b><span>Upgrade to Pro for unlimited strategies and live execution when a strategy clears the bar.</span></div><button class="btn primary" id="up2">Upgrade, $19/mo founding</button></div>` : "";
   app.innerHTML = `
+    <div class="page-h">
+      <h2>Evidence &amp; billing</h2>
+      <p>Deploy strategies in <a href="/dashboard">Algo Studio</a> — this page tracks your forward paper results, accuracy, and Pro plan.</p>
+    </div>
     ${activationChecklist()}
     ${upsell}
     <div class="grid stats">

@@ -355,6 +355,7 @@
     var a = document.createElement("a");
     a.id = "zt-app-link";
     a.href = "/app";
+    a.title = "Forward test, accuracy, activity, and Pro billing";
     a.textContent = "Evidence & billing";
     a.style.cssText = "font:600 12.5px/1 var(--sans,system-ui);color:var(--slate,#64748b);" +
       "text-decoration:none;padding:6px 10px;border:1px solid var(--line,#e2e8f0);border-radius:8px;" +
@@ -363,9 +364,22 @@
     a.onmouseout = function () { a.style.color = "var(--slate,#64748b)"; };
     spacer.parentNode.insertBefore(a, spacer);
   }
+  function injectStudioBlurb() {
+    if (document.getElementById("zt-studio-blurb")) return;
+    var bar = document.querySelector(".topbar");
+    if (!bar) return;
+    var p = document.createElement("p");
+    p.id = "zt-studio-blurb";
+    p.textContent = "Algo Studio — deploy paper strategies here. Evidence & billing live in /app.";
+    p.style.cssText = "margin:0;padding:8px 16px 10px;font:500 12.5px/1.45 var(--sans,system-ui);" +
+      "color:var(--slate,#64748b);background:var(--bg,#f8fafc);border-bottom:1px solid var(--line,#e2e8f0)";
+    bar.parentNode.insertBefore(p, bar.nextSibling);
+  }
   if (document.readyState === "loading")
-    document.addEventListener("DOMContentLoaded", function () { setTimeout(injectAppLink, 1200); });
-  else setTimeout(injectAppLink, 1200);
+    document.addEventListener("DOMContentLoaded", function () {
+      setTimeout(function () { injectAppLink(); injectStudioBlurb(); }, 1200);
+    });
+  else setTimeout(function () { injectAppLink(); injectStudioBlurb(); }, 1200);
 
   /* ---- force the crypto book after boot (full setMarket path: live tape + WS) ---- */
   function forceCrypto(tries) {

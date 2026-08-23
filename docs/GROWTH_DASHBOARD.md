@@ -587,6 +587,18 @@
 ### Status (`./scripts/status-report.sh` @ 16:58Z)
 - migration 0011 ❌ | worker ❌
 
+### Day 1 (session 50) — CPO dashboard vs app help blurb
+
+### CPO
+- **Shipped:** Unified `/dashboard` (Algo Studio) vs `/app` (evidence & billing) copy in `studio.js` + `app.js`.
+- **Blocked:** E2E activation until P0 green.
+
+### CTO
+- **Note:** PR #7 green — merge to `main` to ship `apply-p0.yml` GitHub workflow + Railway deploy probe on production `/ops`.
+
+### Status (`./scripts/status-report.sh` @ 17:01Z)
+- migration 0011 ❌ | worker ❌ | PR #7 CI ✅
+
 ---
 
 ### CTO
