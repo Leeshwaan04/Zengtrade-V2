@@ -340,6 +340,12 @@
 - **Shipped:** `AGENTS.md` cloud P0 blocker docs; Pages `verify-production` logs P0 snapshot after each deploy.
 - **Blocked:** Migration 0011 + worker; PR #5 open (CI green).
 
+### Day 1 (session 28) — activation checklist worker hint
+
+### CPO
+- **Shipped:** `/app` activation checklist explains worker-offline when deployed but no trades yet.
+- **Blocked:** Full funnel v2 + trades until P0 green.
+
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*

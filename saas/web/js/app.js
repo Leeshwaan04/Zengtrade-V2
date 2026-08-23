@@ -2,7 +2,7 @@
 // Dashboard · Strategies · Activity · Account, plus first-run onboarding. Every render is defensive
 // (loading / empty / error states), every action gives feedback, all user data is escaped.
 import { requireAuth, signOut, sb, niceError } from "./auth.js";
-import { maybeWorkerBanner } from "./worker-status.js";
+import { maybeWorkerBanner, isWorkerAlive } from "./worker-status.js";
 import { getTier, isPro, openCheckout, checkoutReady, PLANS, FREE_DEPLOY_LIMIT } from "./billing.js";
 import { STRATEGIES, byKey, nameOf } from "./strategies.js";
 import { esc, money, pct, num, timeAgo, tone, toast, skeletonRows, equityCurve } from "./ui.js";
@@ -10,7 +10,7 @@ import { esc, money, pct, num, timeAgo, tone, toast, skeletonRows, equityCurve }
 const $ = s => document.querySelector(s);
 const app = $("#view");
 let user = null, tier = "free", billCycle = "month";
-let state = { deployments: [], trades: [], loading: true, error: null };
+let state = { deployments: [], trades: [], loading: true, error: null, workerAlive: true };
 
 const ROUTES = ["dashboard", "strategies", "forward", "accuracy", "analytics", "activity", "account"];
 const route = () => (location.hash.replace("#", "") || "dashboard");
@@ -117,6 +117,7 @@ async function load() {
     state.deployments = dep.data || [];
     state.trades = tr.data || [];
     tier = isPro(prof.data?.tier) ? prof.data.tier : "free";   // keep the real tier (pro OR elite)
+    state.workerAlive = await isWorkerAlive();
   } catch (e) {
     state.error = niceError(e);
     toast(state.error, "error");
@@ -169,12 +170,15 @@ function activationChecklist() {
   const traded = metrics().n > 0;
   if (deployed && traded) return "";
   const s1 = "done", s2 = deployed ? "done" : "on", s3 = traded ? "done" : (deployed ? "on" : "");
+  const workerNote = deployed && !traded && !state.workerAlive
+    ? `<p class="muted" style="margin:8px 0 0;font-size:13px">Paper worker is offline — deploys are saved but trades pause until the worker is running. <a href="/how-it-works/">Learn more</a></p>`
+    : "";
   return `<div class="card" id="activation">
     <div class="card-h"><h3>Activation checklist</h3><span class="muted">signup → deploy → trades</span></div>
     <ol class="act-steps">
       <li class="${s1}"><span class="dot"></span><span><b>Account created</b><br><span class="muted">You're signed in as ${esc(user.email)}</span></span></li>
       <li class="${s2}"><span class="dot"></span><span><b>Deploy a paper strategy</b><br><span class="muted">Use Algo Studio or Strategies tab — live Binance prices, zero risk.</span></span></li>
-      <li class="${s3}"><span class="dot"></span><span><b>First closed trade</b><br><span class="muted">Worker runs every ~5 min; check Forward Test for evidence.</span></span></li>
+      <li class="${s3}"><span class="dot"></span><span><b>First closed trade</b><br><span class="muted">Worker runs every ~5 min; check Forward Test for evidence.</span>${workerNote}</span></li>
     </ol>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
       <a class="btn primary sm" href="/dashboard">Open Algo Studio</a>
