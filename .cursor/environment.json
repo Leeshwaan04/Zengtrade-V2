@@ -1,10 +1,14 @@
 {
-  "name": "Zengtrade V2",
+  "name": "zengtrade Crypto",
   "install": ".cursor/scripts/install.sh",
   "terminals": [
     {
-      "name": "bot-api",
-      "command": "cd backend && python3 bot_api.py"
+      "name": "crypto-api",
+      "command": "cd backend && python3 crypto_api.py"
+    },
+    {
+      "name": "crypto-harness",
+      "command": "cd backend && python3 paper_trade_crypto.py"
     },
     {
       "name": "frontend",
@@ -17,7 +21,7 @@
       "port": 8011
     },
     {
-      "name": "Bot API",
+      "name": "Crypto API",
       "port": 8756
     }
   ]

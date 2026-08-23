@@ -717,6 +717,213 @@ def stop_harness() -> dict:
         return {"ok": False, "error": str(e)[:160]}
 
 
+# ---------------------------------------------------- crypto paper-harness launcher (24/7 Binance book)
+_CRYPTO_HARNESS_SCRIPT = os.path.join(HERE, "paper_trade_crypto.py")
+_CRYPTO_HARNESS_PID = os.path.join(HERE, "crypto_harness.pid")
+_CRYPTO_STATE_FILE = os.path.join(HERE, "crypto_state.json")
+_CRYPTO_LOG_FILE = os.path.join(HERE, "crypto_trades.log")
+_crypto_harness = {"startedAt": 0.0, "lastErr": None}
+# engine state-file key → catalog strategy id (only where they differ)
+_CRYPTO_KEY_TO_ID = {"mean-rev": "meanrev"}
+
+
+def _crypto_harness_pid() -> int:
+    try:
+        pid = int(open(_CRYPTO_HARNESS_PID).read().strip())
+        return pid if _pid_alive(pid) else 0
+    except Exception:
+        return 0
+
+
+def crypto_harness_running() -> bool:
+    return _crypto_harness_pid() > 0
+
+
+def crypto_harness_status() -> dict:
+    pid = _crypto_harness_pid()
+    fresh = False
+    try:
+        if os.path.exists(_CRYPTO_STATE_FILE):
+            fresh = (time.time() - os.path.getmtime(_CRYPTO_STATE_FILE)) < 180
+    except Exception:
+        pass
+    return {"running": pid > 0 or fresh, "pid": pid or None,
+            "startedAt": _crypto_harness["startedAt"] or None, "error": _crypto_harness["lastErr"],
+            "scriptPresent": os.path.exists(_CRYPTO_HARNESS_SCRIPT), "market": "crypto"}
+
+
+def start_crypto_harness() -> dict:
+    if crypto_harness_running():
+        return {"ok": True, "running": True, "note": "Crypto paper harness already running."}
+    if not os.path.exists(_CRYPTO_HARNESS_SCRIPT):
+        return {"ok": False, "error": "paper_trade_crypto.py not found"}
+    try:
+        logf = open(_CRYPTO_LOG_FILE, "a", buffering=1)
+        proc = subprocess.Popen(
+            [sys.executable, _CRYPTO_HARNESS_SCRIPT],
+            cwd=HERE, stdout=logf, stderr=subprocess.STDOUT,
+            stdin=subprocess.DEVNULL, start_new_session=True)
+        with open(_CRYPTO_HARNESS_PID, "w") as f:
+            f.write(str(proc.pid))
+        _crypto_harness["startedAt"] = time.time()
+        _crypto_harness["lastErr"] = None
+        return {"ok": True, "running": True, "pid": proc.pid, "market": "crypto"}
+    except Exception as e:
+        _crypto_harness["lastErr"] = str(e)[:160]
+        return {"ok": False, "error": _crypto_harness["lastErr"]}
+
+
+def stop_crypto_harness() -> dict:
+    pid = _crypto_harness_pid()
+    if not pid:
+        return {"ok": True, "running": False, "note": "Crypto harness was not running."}
+    try:
+        os.kill(pid, 15)
+        for _ in range(10):
+            if not _pid_alive(pid):
+                break
+            time.sleep(0.3)
+        if _pid_alive(pid):
+            os.kill(pid, 9)
+        try:
+            os.remove(_CRYPTO_HARNESS_PID)
+        except Exception:
+            pass
+        return {"ok": True, "running": False, "market": "crypto"}
+    except Exception as e:
+        return {"ok": False, "error": str(e)[:160]}
+
+
+def _crypto_forward_closed(key: str) -> int:
+    if not key or not os.path.exists(_CRYPTO_LOG_FILE):
+        return 0
+    tag = f"[{key}] EXIT"
+    try:
+        with open(_CRYPTO_LOG_FILE) as f:
+            return sum(1 for ln in f if tag in ln)
+    except Exception:
+        return 0
+
+
+def _crypto_forward_stats(key: str) -> dict:
+    out = {"closed": 0, "wins": 0, "losses": 0, "winPct": None,
+           "profitFactor": None, "avgWin": None, "avgLoss": None, "expectancy": None}
+    if not key or not os.path.exists(_CRYPTO_LOG_FILE):
+        return out
+    tag = f"[{key}] EXIT"
+    pnls = []
+    try:
+        with open(_CRYPTO_LOG_FILE) as f:
+            for ln in f:
+                if tag not in ln or "pnl=" not in ln:
+                    continue
+                tok = ln.split("pnl=", 1)[1].split()[0].rstrip(")")
+                try:
+                    pnls.append(float(tok))
+                except ValueError:
+                    pass
+    except Exception:
+        return out
+    out["closed"] = len(pnls)
+    if not pnls:
+        return out
+    wins = [p for p in pnls if p > 0]
+    losses = [p for p in pnls if p <= 0]
+    out["wins"] = len(wins)
+    out["losses"] = len(losses)
+    out["winPct"] = round(100 * len(wins) / len(pnls), 1)
+    gw = sum(wins)
+    gl = abs(sum(losses))
+    out["profitFactor"] = round(gw / gl, 2) if gl else (99.0 if gw else None)
+    out["avgWin"] = round(gw / len(wins), 2) if wins else None
+    out["avgLoss"] = round(sum(losses) / len(losses), 2) if losses else None
+    out["expectancy"] = round(sum(pnls) / len(pnls), 2)
+    return out
+
+
+CRYPTO_SEGMENTS = [{"id": "crypto", "label": "Crypto Spot", "note": "Binance USDT · 24/7"},
+                   {"id": "perps", "label": "Perpetuals", "note": "USDT-M margin"},
+                   {"id": "options", "label": "Options", "note": "USDT-settled premium"}]
+
+
+def crypto_strategies_payload() -> dict:
+    """Crypto-only strategy catalog — wired to the 24/7 Binance paper harness."""
+    state = {}
+    if os.path.exists(_CRYPTO_STATE_FILE):
+        try:
+            state = json.load(open(_CRYPTO_STATE_FILE))
+        except Exception:
+            pass
+    instr = state.get("instr", {})
+    cat = {s["id"]: s for s in STRATEGIES}
+    mon = crypto_monitor_payload()
+    mon_by_id = {r["id"]: r for r in (mon.get("strategies") or [])}
+    out = []
+    for key, name in _CRYPTO_NAMES.items():
+        sid = _CRYPTO_KEY_TO_ID.get(key, key)
+        base = cat.get(sid)
+        if base:
+            s = enrich_strategy(dict(base))
+        else:
+            s = {"id": sid, "name": name, "cat": "Crypto", "risk": "Moderate", "minCap": 25000,
+                 "segment": "crypto", "status": "candidate", "dd": 5.0, "desc": name}
+            s = enrich_strategy(s)
+        s["id"] = sid
+        s["segment"] = instr.get(key, "spot") if key in instr else (
+            "perps" if key.startswith("perp_") else ("options" if key.startswith("cx_") else "crypto"))
+        s["wired"] = True
+        s["sub"] = sub_state(sid)
+        s["deployed"] = s["sub"] in ("paper", "paused", "live")
+        s["live"] = s["sub"] in ("paper", "live")
+        st = state.get(key, {}) if isinstance(state.get(key), dict) else {}
+        mrow = mon_by_id.get(key, {})
+        realised = round(st.get("realised", mrow.get("realisedPnl", 0.0)), 2)
+        unreal = round(mrow.get("openPnl", st.get("openMark", 0.0)), 2)
+        s["realisedPnl"] = realised
+        s["openPnl"] = unreal
+        s["paperPnl"] = round(realised + unreal, 2)
+        s["openPositions"] = mrow.get("openPositions", len(st.get("positions", {})))
+        s["positions"] = mrow.get("positions", [])
+        fs = _crypto_forward_stats(key)
+        s["fwdTrades"] = fs["closed"]
+        s["fwdWinPct"] = fs["winPct"]
+        s["fwdProfitFactor"] = fs["profitFactor"]
+        s["fwdExpectancy"] = fs["expectancy"]
+        s["nudge"] = False
+        if s["live"] and fs["closed"] >= MIN_FWD_TRADES and realised > 0:
+            s["nudge"] = True
+            s["nudgeMsg"] = (f"{s['name']} has held up in forward crypto paper "
+                             f"({fs['closed']} closed trades, ${realised:+,.0f}). "
+                             f"Review the go-live checklist before arming live execution.")
+        out.append(s)
+    return {"strategies": out, "segments": CRYPTO_SEGMENTS,
+            "updated": state.get("updated"), "paperMode": True, "liveArmed": False,
+            "nudgeMinTrades": MIN_FWD_TRADES, "market": "crypto",
+            "harnessRunning": crypto_harness_status()["running"]}
+
+
+def crypto_recent_trades(n: int = 40) -> dict:
+    lines = []
+    if os.path.exists(_CRYPTO_LOG_FILE):
+        try:
+            with open(_CRYPTO_LOG_FILE) as f:
+                lines = [ln.rstrip() for ln in f.readlines() if "ENTER" in ln or "EXIT" in ln]
+        except Exception:
+            pass
+    return {"trades": lines[-n:][::-1], "market": "crypto"}
+
+
+def crypto_status_payload() -> dict:
+    mon = crypto_monitor_payload()
+    hs = crypto_harness_status()
+    return {
+        "ok": True, "connected": True, "product": "crypto", "market": "crypto",
+        "running": mon.get("running", False), "regime": mon.get("regime"),
+        "mode": "paper", "liveArmed": False, "harnessRunning": hs["running"],
+        "updated": mon.get("updated"),
+    }
+
+
 # ---------------------------------------------------- live market data (100% real, from Kite)
 # Nifty-50 constituents — used only to COMPUTE real market breadth from live quotes.
 # (This is the index definition, not displayed data.)

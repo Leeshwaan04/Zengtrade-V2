@@ -117,7 +117,7 @@ HOME_MAIN = """<main id="main">
       <div class="home-card"><div class="hc-ic">◐</div><b>Regime-aware</b><span>Reads Bull, Neutral &amp; Bear, and runs only the strategies proven to win in the current regime.</span></div>
       <div class="home-card"><div class="hc-ic">◈</div><b>Survival-first</b><span>A Governor, kill-switch and position intelligence sit over every trade. Cash is a deliberate position.</span></div>
       <div class="home-card"><div class="hc-ic">✓</div><b>Radically honest</b><span>Never fabricates a number. Every backtest is net of fees, slippage &amp; tax, a dash when it can't source one.</span></div>
-      <div class="home-card"><div class="hc-ic">₿</div><b>Two books, one engine</b><span>Crypto (24/7, live prices) and Indian markets run on the same survival-first engine.</span></div>
+      <div class="home-card"><div class="hc-ic">₿</div><b>Crypto-native, 24/7</b><span>Live Binance prices around the clock — the same survival-first engine, built for crypto from the ground up.</span></div>
     </div>
   </section>
 
@@ -157,12 +157,13 @@ PRICING_MAIN = f"""<main id="main">
       <div class="lp-eyebrow"><span class="dot"></span> simple · honest · cancel anytime</div>
       <h1 id="h-pr" class="lp-h1">Pricing that only charges when it earns its place.</h1>
       <p class="lp-sub">Start free and paper-trade forever. You pay only when you want unlimited strategies and live execution on your own exchange, never for the data, never for hidden extras.</p>
+      <p class="lp-sub" style="margin-top:12px"><b>Founding offer:</b> first 100 Pro members lock in <b>$19/mo</b> (normally $29) — unlimited paper while live execution rolls out.</p>
     </div>
   </section>
   <section class="lp-sec" aria-label="Plans">
     <div class="lp-wrap pr-grid">
       {plan("Free", "$0", "forever", "Learn &amp; paper-trade, free forever", ["1 paper strategy","Live crypto prices, 24/7","Backtest + Forward Test","Accuracy &amp; Analytics","Honest, cost-accurate P&amp;L"], cta="Get started")}
-      {plan("Pro", "$29", "/mo", "For traders ready to go live", ["Everything in Free","<b>Unlimited</b> paper strategies","Live execution on your own exchange*","Tick-level stops &amp; kill-switch","Email &amp; push alerts"], featured=True, cta="Get Pro", pid="pro")}
+      {plan("Pro", "$19", "/mo", "Founding price · unlimited paper", ["Everything in Free","<b>Unlimited</b> paper strategies","Live execution on your own exchange*","Tick-level stops &amp; kill-switch","Email &amp; push alerts"], featured=True, cta="Get Pro", pid="pro")}
       {plan("Elite", "$79", "/mo", "Maximum firepower", ["Everything in Pro","Perps + options engines","Multiple exchange accounts","Custom risk parameters","Priority support &amp; early access"], cta="Get Elite", pid="elite")}
     </div>
     <p class="pr-iso center">* Live execution unlocks per strategy only after it clears the go-live bar in paper. Non-custodial, your keys, your coins. Not investment advice.</p>
@@ -246,9 +247,9 @@ open(os.path.join(DIST, "site.css"), "w").write(css + HOME_CSS + coin_css)   # O
 AUTH_SRC = os.path.abspath(os.path.join(HERE, "..", "..", "saas", "web"))
 AUTH_ROUTES = {                                   # source file -> clean route folder
     "login.html": "login", "reset.html": "reset", "admin.html": "admin",
+    "app.html": "app",                             # billing, evidence tabs, pricing (#pricing)
     "terms.html": "terms", "privacy.html": "privacy", "risk.html": "risk",
-}   # app.html scrapped 2026-08-01: /dashboard is now the real Algo Studio (below).
-    # /admin is gated by admin-only RPCs (harmless to serve; useless without an admin JWT).
+}   # /dashboard = Algo Studio terminal (below); /app = SaaS dashboard + checkout return.
 for f, route_dir in AUTH_ROUTES.items():
     src = os.path.join(AUTH_SRC, f)
     if os.path.exists(src):
@@ -326,6 +327,12 @@ if coins:
         title, desc, canon, cmain, extra = G.coin_parts(sym, name, slug, cat, tk, closes)
         emit(os.path.join("coins", slug), shell(title, desc, canon, cmain, extra_head=extra), canon)
         print("  ✓ /coins/%s/  ($%s, %s%% 24h)" % (slug, tk["lastPrice"], tk["priceChangePercent"]))
+
+# Product routes (auth-gated but indexable landing/signup entry points for GSC)
+urls.extend([
+    "https://zengtrade.in/login",
+    "https://zengtrade.in/app",
+])
 
 # ---- sitemap + robots ------------------------------------------------------------------
 sm = ('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'

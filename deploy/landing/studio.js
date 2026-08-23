@@ -16,6 +16,12 @@
 (function () {
   "use strict";
 
+  /* OAuth callbacks must land on /login so Supabase can exchange ?code= before session checks. */
+  if (/[?&]code=/.test(location.search) || /access_token=/.test(location.hash)) {
+    location.replace("/login" + location.search + location.hash);
+    return;
+  }
+
   var SUPA = "https://ponvarxeytfcntckczbn.supabase.co";
   var ANON = "sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";
   var LS_AUTH = "sb-ponvarxeytfcntckczbn-auth-token";
@@ -57,6 +63,39 @@
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
+
+  function trackEvent(name) {
+    try {
+      ORIG(SUPA + "/rest/v1/event", {
+        method: "POST",
+        headers: sbHeaders({ Prefer: "return=minimal" }),
+        body: JSON.stringify({ name: name, path: location.pathname.slice(0, 290) }),
+        keepalive: true,
+      }).catch(function () {});
+    } catch (e) {}
+  }
+
+  function showForwardHint() {
+    try {
+      if (localStorage.getItem("zt_seen_forward")) return;
+      localStorage.setItem("zt_seen_forward", "1");
+    } catch (e) { return; }
+    setTimeout(function () {
+      if (document.querySelector(".zt-forward-hint")) return;
+      var el = document.createElement("div");
+      el.className = "zt-deploy-nudge zt-forward-hint";
+      el.setAttribute("role", "status");
+      el.innerHTML = "<div><b>Strategy deployed</b><br><span style=\"color:var(--slate,#64748b)\">" +
+        "Trades appear in Evidence as the worker runs on live prices (usually within 15 min).</span></div>" +
+        "<a href=\"/app#forward\">View evidence</a>" +
+        "<button type=\"button\" style=\"border:0;background:transparent;color:var(--slate);cursor:pointer\" " +
+        "aria-label=\"Dismiss\">✕</button>";
+      el.querySelector("button").onclick = function () { el.remove(); };
+      document.body.appendChild(el);
+    }, 800);
+  }
+
+  var FREE_DEPLOY_LIMIT = 1;
 
   /* ---- customers live in the Algo Studio: persona pinned, crypto book pinned ---- */
   try {
@@ -152,9 +191,20 @@
         headers: sbHeaders({ Prefer: "resolution=merge-duplicates,return=minimal" }),
         body: JSON.stringify({ user_id: s.uid, strategy_key: id, mode: "paper", status: "running" }),
       }).then(function (r) {
-        if (r.ok) return jresp({ ok: true, id: id, state: "paper" });
+        if (r.ok) {
+          trackEvent("deploy_click");
+          trackEvent("deploy_success");
+          showForwardHint();
+          return jresp({ ok: true, id: id, state: "paper" });
+        }
         return r.json().then(function (e) {
-          return jresp({ error: (e && (e.message || e.hint)) || "Deploy failed - try again." });
+          var msg = (e && (e.message || e.details || e.hint)) || "Deploy failed - try again.";
+          if (/FREE_LIMIT/i.test(msg))
+            return jresp({
+              error: "Free includes " + FREE_DEPLOY_LIMIT + " paper strategy. Upgrade to Pro for unlimited.",
+              upgrade: "/app#pricing",
+            });
+          return jresp({ error: msg });
         }).catch(function () { return jresp({ error: "Deploy failed - try again." }); });
       });
     }
@@ -215,13 +265,64 @@
     ".mkt-live", ".mkt-dot", ".he-stat.off", ".tix-offline",
     "#modeFab", "#personaGate"               // persona switcher removed: the Studio IS the product
   ].join(",") + "{display:none !important}";
+  var NUDGE_CSS =
+    ".zt-deploy-nudge{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:90;" +
+    "max-width:min(520px,92vw);background:var(--surface,#fff);border:1px solid var(--green,#00ab4e);" +
+    "border-radius:12px;padding:12px 16px;box-shadow:0 8px 28px rgba(16,30,54,.14);font-size:13px;" +
+    "display:flex;gap:12px;align-items:center;flex-wrap:wrap}" +
+    ".zt-deploy-nudge b{color:var(--navy,#101e36)}" +
+    ".zt-deploy-nudge a{color:#fff;background:var(--green,#00ab4e);padding:8px 14px;border-radius:9px;" +
+    "font-weight:700;text-decoration:none;white-space:nowrap}";
+  function nudgeDeployIfCold() {
+    setTimeout(function () {
+      mine("deployment?select=strategy_key&status=eq.running&limit=1").then(function (rows) {
+        if (rows && rows.length) return;
+        if (document.querySelector(".zt-deploy-nudge")) return;
+        var el = document.createElement("div");
+        el.className = "zt-deploy-nudge";
+        el.setAttribute("role", "status");
+        el.innerHTML = "<div><b>Deploy your first strategy</b><br><span style=\"color:var(--slate,#64748b)\">" +
+          "Paper-trade on live Binance prices — open Library and tap Deploy.</span></div>" +
+          "<a href=\"#\" data-zt-lib>Open Library</a>" +
+          "<button type=\"button\" style=\"border:0;background:transparent;color:var(--slate);cursor:pointer\" " +
+          "aria-label=\"Dismiss\">✕</button>";
+        el.querySelector("[data-zt-lib]").onclick = function (e) {
+          e.preventDefault();
+          var lib = document.querySelector('[data-algoview="library"]');
+          if (lib) lib.click();
+          el.remove();
+        };
+        el.querySelector("button").onclick = function () { el.remove(); };
+        document.body.appendChild(el);
+      });
+    }, 5000);
+  }
   function inject() {
     var st = document.createElement("style");
-    st.textContent = css + ZTB_CSS;
+    st.textContent = css + NUDGE_CSS + ZTB_CSS;
     document.head.appendChild(st);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", inject);
   else inject();
+  nudgeDeployIfCold();
+
+  function injectAppLink() {
+    var spacer = document.querySelector(".topbar .tb-spacer");
+    if (!spacer || document.getElementById("zt-app-link")) return;
+    var a = document.createElement("a");
+    a.id = "zt-app-link";
+    a.href = "/app";
+    a.textContent = "Evidence & billing";
+    a.style.cssText = "font:600 12.5px/1 var(--sans,system-ui);color:var(--slate,#64748b);" +
+      "text-decoration:none;padding:6px 10px;border:1px solid var(--line,#e2e8f0);border-radius:8px;" +
+      "white-space:nowrap;margin-right:8px";
+    a.onmouseover = function () { a.style.color = "var(--navy,#101e36)"; };
+    a.onmouseout = function () { a.style.color = "var(--slate,#64748b)"; };
+    spacer.parentNode.insertBefore(a, spacer);
+  }
+  if (document.readyState === "loading")
+    document.addEventListener("DOMContentLoaded", function () { setTimeout(injectAppLink, 1200); });
+  else setTimeout(injectAppLink, 1200);
 
   /* ---- force the crypto book after boot (full setMarket path: live tape + WS) ---- */
   function forceCrypto(tries) {
@@ -474,9 +575,16 @@
       body: JSON.stringify({ user_id: s.uid, strategy_key: slug(name), mode: "paper",
                              status: "running", params: spec }),
     }).then(function (r) {
-      if (r.ok) { err.hidden = true; refreshList(); }
+      if (r.ok) { err.hidden = true; trackEvent("deploy_click"); trackEvent("deploy_success"); showForwardHint(); refreshList(); }
       else r.json().then(function (e) {
-        err.textContent = (e && (e.message || e.hint)) || "Deploy failed - try again.";
+        var msg = (e && (e.message || e.details || e.hint)) || "Deploy failed - try again.";
+        if (/FREE_LIMIT/i.test(msg)) {
+          err.textContent = "Free includes 1 strategy — upgrade at /app#pricing";
+          err.hidden = false;
+          setTimeout(function () { location.href = "/app#pricing"; }, 900);
+          return;
+        }
+        err.textContent = msg;
         err.hidden = false;
       }).catch(function () { err.textContent = "Deploy failed - try again."; err.hidden = false; });
     });

@@ -3,9 +3,66 @@
 // verification, OAuth and magic links are all handled by a vetted provider. This file is only
 // the thin glue + the route guard.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { SUPABASE_URL, SUPABASE_ANON, SITE } from "./config.js";
+import { SUPABASE_URL, SUPABASE_ANON, AUTH_STORAGE_KEY, SITE } from "./config.js";
 
-export const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+export const sb = createClient(SUPABASE_URL, SUPABASE_ANON, {
+  auth: {
+    detectSessionInUrl: true,
+    flowType: "pkce",
+    persistSession: true,
+    storageKey: AUTH_STORAGE_KEY,
+  },
+});
+
+/* ---------------- OAuth / email-link callback ---------------- */
+
+function authParamsInUrl() {
+  const q = new URLSearchParams(location.search);
+  const hash = location.hash || "";
+  return {
+    hasCode: q.has("code"),
+    hasHash: /access_token=|refresh_token=|type=/.test(hash),
+    hasError: q.has("error") || q.has("error_description"),
+    error: q.get("error_description") || q.get("error"),
+    code: q.get("code"),
+  };
+}
+
+/** Finish an OAuth or email-link redirect (?code= or #access_token=). Cleans the URL. */
+export async function completeAuthCallback() {
+  const p = authParamsInUrl();
+  if (p.hasError) {
+    const clean = location.pathname;
+    history.replaceState({}, "", clean);
+    throw new Error(decodeURIComponent(String(p.error || "sign-in failed").replace(/\+/g, " ")));
+  }
+  if (!p.hasCode && !p.hasHash) return null;
+
+  if (p.hasCode) {
+    const { data, error } = await sb.auth.exchangeCodeForSession(p.code);
+    if (error) throw error;
+    history.replaceState({}, "", location.pathname);
+    return data.session;
+  }
+
+  // Implicit / hash flow — detectSessionInUrl handles this on getSession().
+  const { data: { session }, error } = await sb.auth.getSession();
+  if (error) throw error;
+  if (session) history.replaceState({}, "", location.pathname);
+  return session;
+}
+
+/** Await any in-flight OAuth callback, then return the active session (if any). */
+export async function establishSession() {
+  try {
+    await completeAuthCallback();
+  } catch (e) {
+    // Surface to caller — login page shows the message.
+    throw e;
+  }
+  const { data: { session } } = await sb.auth.getSession();
+  return session;
+}
 
 /* ---------------- sign up / in ---------------- */
 
@@ -33,14 +90,16 @@ export async function signInWithMagicLink(email) {
 
 export async function signInWithGoogle() {
   const { error } = await sb.auth.signInWithOAuth({
-    provider: "google", options: { redirectTo: SITE.redirectTo },
+    provider: "google",
+    options: {
+      redirectTo: SITE.redirectTo,
+      queryParams: { prompt: "select_account" },
+    },
   });
   if (error) throw error;
 }
 
 export async function resetPassword(email) {
-  // land on the dedicated set-new-password page (not the dashboard) so the user can actually
-  // choose a new password from the recovery link.
   const redirectTo = (typeof location !== "undefined" ? location.origin : "https://zengtrade.in") + "/reset";
   const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
   if (error) throw error;
@@ -54,13 +113,21 @@ export async function signOut() {
 /* ---------------- session ---------------- */
 
 export async function currentUser() {
+  await establishSession().catch(() => null);
   const { data } = await sb.auth.getUser();
   return data?.user || null;
 }
 
 /** Route guard: call at the top of any protected page. Redirects out if not signed in. */
 export async function requireAuth() {
-  const user = await currentUser();
+  try {
+    await establishSession();
+  } catch (e) {
+    location.replace("/login?error=" + encodeURIComponent(niceError(e)));
+    return null;
+  }
+  const { data } = await sb.auth.getUser();
+  const user = data?.user || null;
   if (!user) { location.replace("/login"); return null; }
   await ensureProfile(user);
   return user;
@@ -84,7 +151,9 @@ export function niceError(e) {
   if (m.includes("invalid login")) return "That email or password doesn't match.";
   if (m.includes("already registered")) return "That email already has an account. Try signing in.";
   if (m.includes("email not confirmed")) return "Please confirm your email first. Check your inbox for the link.";
-  if (m.includes("provider") || m.includes("oauth")) return "Google sign-in isn't available yet. Please use email and password.";
+  if (m.includes("provider is not enabled")) return "Google sign-in isn't enabled yet. Use email and password, or contact support.";
+  if (m.includes("redirect") && m.includes("url")) return "Google sign-in redirect isn't configured. Add " + SITE.redirectTo + " in Supabase → Auth → URL configuration.";
+  if (m.includes("oauth") || m.includes("provider")) return e?.message || "Google sign-in failed. Try again or use email and password.";
   if (m.includes("password")) return "Password must be at least 8 characters.";
   if (m.includes("rate limit")) return "Too many attempts. Please wait a minute.";
   return e?.message || "Something went wrong. Please try again.";

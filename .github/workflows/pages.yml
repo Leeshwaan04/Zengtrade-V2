@@ -41,3 +41,13 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  verify-production:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for CDN propagation
+        run: sleep 45
+      - name: Production smoke probe
+        run: chmod +x scripts/check-production.sh && SITE=https://zengtrade.in ./scripts/check-production.sh
