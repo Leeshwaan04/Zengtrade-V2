@@ -4,13 +4,23 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-db_set=0 rail_set=0
+db_set=0 rail_set=0 rail_db=0
 [[ -n "${DATABASE_URL:-${SUPABASE_DATABASE_URL:-}}" ]] && db_set=1
 [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]] && rail_set=1
+if [[ $db_set -eq 0 && $rail_set -eq 1 ]]; then
+  # shellcheck source=/dev/null
+  source "$ROOT/scripts/railway-api.sh" 2>/dev/null || true
+  if railway_resolve_database_url >/dev/null 2>&1; then
+    rail_db=1
+  fi
+fi
 
 echo "== P0 readiness =="
 echo ""
 printf "DATABASE_URL in environment     %s\n" "$([[ $db_set -eq 1 ]] && echo '✅ set' || echo '❌ missing')"
+if [[ $db_set -eq 0 && $rail_db -eq 1 ]]; then
+  echo "DATABASE_URL on Railway project  ✅ found (apply-p0 will auto-resolve)"
+fi
 printf "RAILWAY_API_TOKEN in environment %s\n" "$([[ $rail_set -eq 1 ]] && echo '✅ set' || echo '❌ missing')"
 if command -v psql >/dev/null 2>&1; then
   printf "psql client                      ✅ %s\n" "$(psql --version | head -1)"
@@ -38,6 +48,11 @@ fi
 
 if [[ $db_set -eq 1 && $rail_set -eq 1 ]]; then
   echo "Ready to run: ./scripts/apply-p0-autopilot.sh"
+  exit 0
+fi
+
+if [[ $db_set -eq 0 && $rail_db -eq 1 && $rail_set -eq 1 ]]; then
+  echo "Ready to run: ./scripts/apply-p0-autopilot.sh (DATABASE_URL from Railway)"
   exit 0
 fi
 

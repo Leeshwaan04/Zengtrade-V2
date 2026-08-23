@@ -23,6 +23,14 @@ die() { echo "ERROR: $*" >&2; exit 1; }
 
 # Accept common secret aliases from Cloud Agent / CI
 DATABASE_URL="${DATABASE_URL:-${SUPABASE_DATABASE_URL:-}}"
+if [[ -z "${DATABASE_URL:-}" && -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
+  # shellcheck source=/dev/null
+  source "$ROOT/scripts/railway-api.sh"
+  if resolved=$(railway_resolve_database_url 2>/dev/null); then
+    DATABASE_URL="$resolved"
+    echo "OK   DATABASE_URL resolved from Railway project variables"
+  fi
+fi
 
 echo "== zengtrade P0 autopilot =="
 echo ""

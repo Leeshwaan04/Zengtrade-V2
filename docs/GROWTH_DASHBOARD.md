@@ -701,6 +701,16 @@
 ### Status (`./scripts/status-report.sh` @ 17:21Z)
 - migration 0011 ❌ | worker ❌ | security-smoke ✅
 
+### Day 1 (session 63) — Railway DATABASE_URL auto-resolve
+
+### CTO
+- **Shipped:** `railway_resolve_database_url` scans all Railway services when `DATABASE_URL` not in env.
+- **Shipped:** `apply-p0-autopilot.sh` auto-resolves DB URI from Railway if founder set it on any service.
+- **Blocked:** No `DATABASE_URL` on Railway or VM — merge PR #7 + add secret to unblock P0.
+
+### Status (`./scripts/status-report.sh` @ 17:27Z)
+- migration 0011 ❌ | worker ❌ | security-smoke ✅ | funnel CTAs ✅
+
 ---
 
 ### CTO
