@@ -1,0 +1,42 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Test Pro checkout · zengtrade ops</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css.css">
+<style>
+  body{background:var(--bg);color:var(--navy);font-family:var(--sans);margin:0}
+  .wrap{max-width:720px;margin:0 auto;padding:24px 18px 48px}
+  h1{font:800 22px/1.2;margin:0 0 8px}
+  p,li{font-size:14px;line-height:1.6;color:var(--slate)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin:14px 0}
+  a{color:var(--blue);font-weight:700}
+  .back{display:inline-block;margin-bottom:14px;font-size:13px;font-weight:600;color:var(--blue);text-decoration:none}
+  .btn{display:inline-block;margin-top:10px;padding:10px 16px;background:var(--green);color:#04140a;border-radius:10px;font:700 13px;text-decoration:none}
+  #bill.ok{color:var(--green-d);font-weight:700}#bill.bad{color:var(--red-d);font-weight:700}
+</style></head><body>
+<div class="wrap">
+  <a class="back" href="/ops">← Founder Ops</a>
+  <h1>Test Pro checkout (CBO / MRR)</h1>
+  <p>Founding Pro <b>$19/mo</b> via NOWPayments. Billing edge functions must be live (check <a href="/ops">/ops</a>).</p>
+  <div class="card">
+    <h2 style="font-size:16px;margin:0 0 8px">Steps</h2>
+    <ol>
+      <li><a href="/login?mode=signup&plan=pro">Sign up with Pro intent</a> → lands on pricing after auth</li>
+      <li>Choose <b>Pro</b> → complete NOWPayments invoice (test or real)</li>
+      <li>Return to <a href="/app?paid=1">/app?paid=1</a> — tier should flip within minutes</li>
+      <li>Confirm in <a href="/admin">/admin</a> → Paying / MRR tiles</li>
+    </ol>
+    <a class="btn" href="/app#pricing">Open Pro checkout</a>
+    <p id="bill" style="margin-top:14px">Checking billing rail…</p>
+  </div>
+</div>
+<script>
+fetch("https://ponvarxeytfcntckczbn.supabase.co/functions/v1/nowpayments-create-invoice",{
+  method:"OPTIONS",headers:{Origin:location.origin,"Access-Control-Request-Method":"POST"}
+}).then(r=>{
+  const el=document.getElementById("bill");
+  if(r.ok){el.textContent="✓ Billing edge function reachable — safe to test checkout";el.className="ok";}
+  else{el.textContent="✗ Billing not reachable (HTTP "+r.status+")";el.className="bad";}
+}).catch(()=>{document.getElementById("bill").textContent="✗ Could not reach billing function";document.getElementById("bill").className="bad";});
+</script></body></html>

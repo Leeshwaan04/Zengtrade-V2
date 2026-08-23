@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T14:52:00Z",
+  "updated": "2026-08-23T14:54:00Z",
   "founder_actions": [
     {
       "id": "migration-0011",
@@ -20,7 +20,7 @@
       "id": "gsc",
       "title": "Google Search Console — submit sitemap",
       "detail": "After worker is live; organic growth Week 1",
-      "url": "https://search.google.com/search-console",
+      "url": "https://zengtrade.in/ops/gsc",
       "urgent": false
     }
   ],
@@ -64,10 +64,11 @@
     ],
     "next": "GSC sitemap + first proof post after forward trades exist",
     "links": [
+      {"label": "Test checkout guide", "url": "https://zengtrade.in/ops/billing"},
+      {"label": "GSC playbook", "url": "https://zengtrade.in/ops/gsc"},
       {"label": "Pricing page", "url": "https://zengtrade.in/pricing/"},
       {"label": "Pro checkout", "url": "https://zengtrade.in/app#pricing"},
-      {"label": "Sitemap", "url": "https://zengtrade.in/sitemap.xml"},
-      {"label": "Search Console", "url": "https://search.google.com/search-console"}
+      {"label": "Sitemap", "url": "https://zengtrade.in/sitemap.xml"}
     ]
   }
 }
