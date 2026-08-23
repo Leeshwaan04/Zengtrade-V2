@@ -189,6 +189,21 @@
 - **Shipped:** Site + billing rail live on zengtrade.in.
 - **Next:** GSC sitemap submit; test Pro checkout → tier flip.
 
+### Day 1 (session 12) — health probes post-merge
+
+### CTO
+- **Shipped:** `check-worker.sh`, `check-migrations.sh`, `health-watch.yml` (6h cron); preflight now gates migrations + worker.
+- **Verified:** Production ✅ · Billing ✅ · 0009/0010 ✅ · **0011 pending** · Worker down.
+- **Next:** Founder apply `0011_funnel_events_v2.sql` + deploy worker.
+
+### CPO
+- **Shipped:** Migration probe confirms funnel v1 live; v2 blocked until 0011.
+- **Next:** Full activation E2E after worker.
+
+### CBO
+- **Shipped:** Production sitemap includes `/login` + `/app`.
+- **Next:** GSC + checkout test.
+
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*

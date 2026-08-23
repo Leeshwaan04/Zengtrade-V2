@@ -1,0 +1,23 @@
+name: Production health watch
+
+# Autopilot CTO: probe zengtrade.in + worker + migrations on main.
+on:
+  schedule:
+    - cron: '0 */6 * * *'   # every 6 hours UTC
+  workflow_dispatch:
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Production site
+        run: SITE=https://zengtrade.in ./scripts/check-production.sh
+      - name: Billing functions
+        run: ./scripts/verify-billing.sh
+      - name: Database migrations
+        run: ./scripts/check-migrations.sh
+        continue-on-error: true
+      - name: Paper worker heartbeat
+        run: ./scripts/check-worker.sh
+        continue-on-error: true

@@ -12,14 +12,17 @@
 | `/dashboard` Algo Studio | ✅ + studio shim |
 | Billing edge functions | ✅ NOWPayments deployed |
 | Paper worker | ❌ **Down** — heartbeat stale (2026-08-11) |
-| Migrations 0009–0011 | ❓ apply if funnel events fail |
+| Migration 0011 | ❌ **Pending** — `signup_complete` events blocked |
+| Migrations 0009–0010 | ✅ applied |
 
 ## Founder action (remaining P0)
 
 👉 **[FOUNDER_DEPLOY.md](FOUNDER_DEPLOY.md)** — worker on Railway/Fly + migrations (20 min)
 
 ```bash
-./scripts/founder-preflight.sh   # should show ✅ production + billing, ❓ worker
+./scripts/founder-preflight.sh   # production + billing + migrations + worker
+./scripts/check-migrations.sh    # probe 0008–0011
+./scripts/check-worker.sh        # heartbeat freshness
 ```
 
 ## Autopilot agents

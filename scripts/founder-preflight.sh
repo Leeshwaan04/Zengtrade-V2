@@ -28,10 +28,26 @@ else
 fi
 echo ""
 
+echo ">> Database migrations"
+if ./scripts/check-migrations.sh 2>/dev/null; then
+  MIG_OK=1
+else
+  MIG_OK=0
+fi
+echo ""
+
+echo ">> Paper worker"
+if ./scripts/check-worker.sh 2>/dev/null; then
+  WORK_OK=1
+else
+  WORK_OK=0
+fi
+echo ""
+
 echo "=== Summary ==="
-[[ $PROD_OK -eq 1 ]] && echo "✅ Production site probes passed" || echo "❌ Production — merge PR #3 + wait-for-deploy.sh"
+[[ $PROD_OK -eq 1 ]] && echo "✅ Production site probes passed" || echo "❌ Production — check Pages deploy"
 [[ $BILL_OK -eq 1 ]] && echo "✅ Billing functions deployed" || echo "❌ Billing — run scripts/deploy-billing.sh + secrets"
-echo "❓ Worker — deploy saas/worker on Railway/Fly (see FOUNDER_DEPLOY.md §4)"
-echo "❓ Migrations — apply 0009–0011 via scripts/apply-migrations.sh"
+[[ $MIG_OK -eq 1 ]] && echo "✅ Migrations applied" || echo "❌ Migrations — apply 0009–0011 (see apply-migrations.sh)"
+[[ $WORK_OK -eq 1 ]] && echo "✅ Worker heartbeat fresh" || echo "❌ Worker — deploy saas/worker (FOUNDER_DEPLOY.md §4)"
 echo ""
 echo "Full checklist: docs/FOUNDER_DEPLOY.md"

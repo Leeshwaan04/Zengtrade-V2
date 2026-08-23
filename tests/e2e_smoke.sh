@@ -27,6 +27,8 @@ test -f scripts/check-production.sh
 test -f scripts/wait-for-deploy.sh
 test -f scripts/founder-preflight.sh
 test -f scripts/verify-billing.sh
+test -f scripts/check-worker.sh
+test -f scripts/check-migrations.sh
 test -f saas/db/migrations/0010_admin_rpc_funnel.sql
 test -f saas/db/migrations/0011_funnel_events_v2.sql
 

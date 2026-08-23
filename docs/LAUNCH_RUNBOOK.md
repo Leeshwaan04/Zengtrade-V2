@@ -13,7 +13,7 @@ Production checklist for `zengtrade.in`. Autopilot CTO agent maintains this file
 | 2 | GitHub Pages deploy + `verify-production` CI green (or `./scripts/wait-for-deploy.sh`) | CTO | ☑ |
 | 3 | Supabase Auth → URL config: `https://zengtrade.in/login`, `https://zengtrade.in/reset` | CEO | ☐ |
 | 4 | Enable Google provider + OAuth client | CEO | ☐ |
-| 5 | SQL: run migrations `0009` + `0010` (or `./scripts/apply-migrations.sh`) | CTO | ☐ |
+| 5 | SQL: run migrations `0009` + `0010` + **`0011`** (or `./scripts/check-migrations.sh`) | CTO | ☐ (0011 pending) |
 | 6 | Host `saas/worker` (see `saas/worker/README.md`) with prod `DATABASE_URL` | CTO | ☐ |
 | 7 | E2E manual: signup → `/dashboard` → deploy → trades in ≤15 min | CPO | ☐ |
 | 8 | Run `./tests/e2e_smoke.sh` | CTO | ☑ (also runs on PR via `.github/workflows/ci-smoke.yml`) |
