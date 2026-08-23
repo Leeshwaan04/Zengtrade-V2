@@ -22,6 +22,13 @@ if [[ $db_set -eq 0 && $rail_db -eq 1 ]]; then
   echo "DATABASE_URL on Railway project  ✅ found (apply-p0 will auto-resolve)"
 fi
 printf "RAILWAY_API_TOKEN in environment %s\n" "$([[ $rail_set -eq 1 ]] && echo '✅ set' || echo '❌ missing')"
+if [[ $db_set -eq 1 ]]; then
+  if DATABASE_URL="${DATABASE_URL:-${SUPABASE_DATABASE_URL:-}}" ./scripts/test-database-url.sh >/dev/null 2>&1; then
+    printf "DATABASE_URL connection test    ✅\n"
+  else
+    printf "DATABASE_URL connection test    ❌ (bad URI or network)\n"
+  fi
+fi
 if command -v psql >/dev/null 2>&1; then
   printf "psql client                      ✅ %s\n" "$(psql --version | head -1)"
 else
@@ -59,7 +66,9 @@ fi
 echo "Unblock paths:"
 if [[ $db_set -eq 0 ]]; then
   echo "  • Cloud Agent: add DATABASE_URL (Supabase session pooler :5432)"
+  echo "  • Railway: set DATABASE_URL on paper-worker (apply-p0 auto-resolves)"
   echo "  • GitHub: add DATABASE_URL + RAILWAY_API_TOKEN to repo Secrets → Apply P0 workflow"
+  echo "  • Supabase URI: https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings"
   echo "  • Manual: https://zengtrade.in/ops/p0"
 fi
 if [[ $db_set -eq 1 && $rail_set -eq 0 ]]; then
