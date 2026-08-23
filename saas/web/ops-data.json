@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T19:40:00Z",
+  "updated": "2026-08-23T19:42:06Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -21,8 +21,8 @@
     },
     {
       "id": "worker",
-      "title": "Deploy paper worker — add DATABASE_URL",
-      "detail": "Railway DATABASE_URL password invalid (deploy FAILED). Supabase Connect → Reset password → copy Session URI (no [brackets]) → Railway Deploy. Or add Cloud Agent secret DATABASE_PASSWORD.",
+      "title": "Deploy paper worker \u2014 add DATABASE_URL",
+      "detail": "Railway DATABASE_URL password invalid (deploy FAILED). Supabase Connect \u2192 Reset password \u2192 copy Session URI (no [brackets]) \u2192 Railway Deploy. Or add Cloud Agent secret DATABASE_PASSWORD.",
       "url": "https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b",
       "alt_url": "https://zengtrade.in/ops/worker",
       "urgent": true
@@ -58,10 +58,10 @@
       "/ops/p0 worker-only callout + /ops/worker links existing Railway paper-worker (session 74)",
       "wait-for-p0.sh polls run-p0-if-ready when Railway gets DATABASE_URL (session 76)",
       "resolve-database-url.sh validates Railway URI before apply-p0 (session 82)",
-      "run-p0-if-ready.sh fails fast on bad Postgres password — no 6min heartbeat wait (session 82)",
+      "run-p0-if-ready.sh fails fast on bad Postgres password \u2014 no 6min heartbeat wait (session 82)",
       "/ops/worker + /ops/p0 wrong-password callout when migration green + heartbeat stale (session 83)",
       "founder-next-action.sh detects invalid Railway DATABASE_URL password (session 83)",
-      "validate-database-credentials.sh — preflight before run-p0-if-ready (session 84)",
+      "validate-database-credentials.sh \u2014 preflight before run-p0-if-ready (session 84)",
       "worker.py + check-railway-deploy.sh hint on Postgres auth failure (session 85)",
       "/admin P0 banner: wrong-password callout when migration green (session 86)"
     ],
@@ -144,7 +144,7 @@
       "check-pricing-truth.sh covers /app upsell copy (session 82)",
       "post-p0-success.sh runs check-funnel-ctas + check-sitemap (session 84)",
       "check-funnel-ctas.sh covers coins hub + bitcoin pSEO (session 86)",
-      "check-plan-intent.sh — ?plan=pro|elite → /app#pricing (session 86)"
+      "check-plan-intent.sh \u2014 ?plan=pro|elite \u2192 /app#pricing (session 86)"
     ],
     "next": "GSC sitemap + first proof post after forward trades exist; Pro checkout E2E at /ops/billing",
     "links": [
@@ -288,6 +288,9 @@
     "migration_0011": true,
     "worker": false,
     "worker_heartbeat_utc": "2026-08-11T09:57:38",
-    "all_p0_green": false
+    "all_p0_green": false,
+    "railway_database_url_set": true,
+    "railway_paper_worker": "FAILED",
+    "database_url_auth_ok": false
   }
 }

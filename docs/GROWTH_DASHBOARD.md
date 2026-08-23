@@ -875,6 +875,22 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/status-report.sh` @ 19:40Z)
 - worker ❌ · funnel CTAs ✅ · plan-intent ✅ · e2e_smoke ✅
 
+### Day 1 (session 87) — ops gate sync + Forward Test worker copy
+
+### CTO
+- **Shipped:** `sync-ops-gates.py` records `database_url_auth_ok` + Railway deploy status in `ops-data.json` gates.
+- **Shipped:** `health-watch` runs `check-plan-intent.sh` every 6h.
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** `/app#forward` empty state explains worker-offline vs waiting-for-first-trade.
+
+### QA&VAPT
+- **Shipped:** `QA_VAPT_CHECKLIST.md` V2 marked done (migration 0011 on prod).
+
+### Status (`./scripts/status-report.sh` @ 19:42Z)
+- worker ❌ · `database_url_auth_ok` false
+
 ---
 
 ### CTO

@@ -276,6 +276,17 @@ function showPostDeployHint() {
   document.body.appendChild(el);
 }
 
+function forwardEmptyBlurb() {
+  const deployed = state.deployments.some(d => d.status === "running");
+  if (deployed && !state.workerAlive) {
+    return "Deploy saved — paper worker is offline. Trades appear when the worker is back (~every 5 min when live).";
+  }
+  if (deployed && state.workerAlive) {
+    return "Worker is running — first closed trade usually within 5–15 min on live Binance prices.";
+  }
+  return "Deploy a strategy — the worker fills this in as trades close on live prices.";
+}
+
 // ---- Forward Test (closed-trade evidence) ----
 function renderForward() {
   if (state.loading) { app.innerHTML = `<div class="card">${skeletonRows(6)}</div>`; return; }
@@ -297,7 +308,7 @@ function renderForward() {
         <td class="r mono ${tone(t.pnl)}">${money(t.pnl, 2)}</td>
         <td class="r mono muted">${money(t.cost, 2)}</td></tr>`).join("")}</tbody></table></div>
       ${rows.length > 100 ? `<div class="tbl-foot">showing latest 100 of ${num(rows.length)}</div>` : ""}
-    ` : emptyDeployCta("No closed trades yet.", "Deploy a strategy — the worker fills this in as trades close on live prices.")}</div>`;
+    ` : emptyDeployCta("No closed trades yet.", forwardEmptyBlurb())}</div>`;
   wireEmptyDeploy();
 }
 

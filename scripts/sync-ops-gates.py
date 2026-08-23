@@ -55,7 +55,10 @@ def railway_status() -> dict:
         text=True,
         env={**os.environ, "RAILWAY_API_TOKEN": token},
     )
-    line = (r.stdout or "").strip().split("\n")[-1] if r.stdout else ""
+    text = (r.stdout or "").strip()
+    line = next((ln for ln in text.split("\n") if "DATABASE_URL" in ln or "paper-worker" in ln), "")
+    if not line and text:
+        line = text.split("\n")[0]
     out: dict = {}
     if "DATABASE_URL missing" in line:
         out["railway_database_url_set"] = False
@@ -78,6 +81,7 @@ def main() -> int:
         "all_p0_green": False,
     }
     gates.update(railway_status())
+    gates["database_url_auth_ok"] = probe("validate-database-credentials.sh")
     gates["all_p0_green"] = all(
         gates[k] for k in ("production", "billing", "migration_0011", "worker")
     )

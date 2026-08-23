@@ -15,7 +15,7 @@
 | Q8 | Activation | Post-P0 verify script | ☐ | `verify-activation-path.sh` (blocked: P0) |
 | Q9 | Free tier | Second deploy blocked with upgrade CTA | ☐ | Manual: deploy 2 strategies on Free `/dashboard` + `/app` |
 | V1 | XSS | Dynamic HTML uses `esc()` in `/app` | ☐ | Code review `app.js` |
-| V2 | Event abuse | `event` insert policy name whitelist | ☐ | migration `0011` (not applied prod) |
+| V2 | Event abuse | `event` insert policy name whitelist | ☑ | migration `0011` applied prod (2026-08-23) |
 | V3 | Worker | DB creds only server-side | ☑ | no secrets in `saas/web/js` |
 
 ## Manual RLS isolation (required before scale)
