@@ -17,6 +17,8 @@ fi
 
 ./scripts/check-parallel-growth.sh || true
 echo ""
+echo "One-shot probes: ./scripts/check-founder-parallel-ready.sh"
+echo ""
 
 if ./scripts/check-sales-ready.sh 2>/dev/null; then
   echo ""

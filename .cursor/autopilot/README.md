@@ -24,9 +24,9 @@ Seven role-based Cloud Agent charters run on a schedule (or on demand). Each age
 
 **P0 blocker (founder):** Railway `paper-worker` has wrong Postgres password — Cloud Agent secret `DATABASE_PASSWORD` or https://zengtrade.in/ops/worker
 
-**Daily log:** `./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..."` (auto-syncs header probes via `sync-growth-dashboard-header.sh`)
+**Daily log:** `./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..." --seo "..." --marketing "..." --sales "..." --qa "..."` (auto-syncs header probes)
 
-**While worker down:** `./scripts/guide-founder-parallel.sh` · `docs/FOUNDER_PARALLEL.md`
+**While worker down:** `./scripts/check-founder-parallel-ready.sh` · `./scripts/guide-founder-parallel.sh` · `docs/FOUNDER_PARALLEL.md`
 
 ### Single orchestrator (recommended)
 
@@ -39,7 +39,7 @@ Update docs/GROWTH_DASHBOARD.md with today's date section.
 Use ./scripts/append-growth-log.sh for each session log block.
 Update saas/web/ops-data.json for any role that shipped work.
 Commit and push to main. Summarize for the founder in 5 bullets.
-Use ./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..." each run.
+Use ./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..." --seo "..." --marketing "..." --sales "..." --qa "..." each run.
 ```
 
 ### Growth squad (who owns what)

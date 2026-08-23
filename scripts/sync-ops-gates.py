@@ -99,6 +99,7 @@ def main() -> int:
             == 0
         )
     gates["sales_ready"] = probe("check-sales-ready.sh")
+    gates["qa_parallel_ready"] = probe("check-qa-parallel.sh")
     gates["all_p0_green"] = all(
         gates[k] for k in ("production", "billing", "migration_0011", "worker")
     )

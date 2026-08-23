@@ -21,9 +21,10 @@ Run automated gates now:
 ./scripts/check-xss-hygiene.sh
 ./scripts/check-qa-parallel.sh           # bundles smoke + partial + sales while worker down
 ./scripts/verify-partial-activation.sh   # signup → deploy UI only
-./scripts/check-parallel-growth.sh
-./scripts/check-sales-ready.sh           # billing path while worker down
+./scripts/check-sales-ready.sh
 ```
+
+After worker live: `./scripts/guide-qa-rls-isolation.sh` (manual Q3 RLS test)
 
 Full `./scripts/verify-activation-path.sh` and `/ops/e2e` trades path need `./scripts/check-worker.sh` green.
 
