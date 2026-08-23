@@ -50,7 +50,6 @@ export BLOCK SESSION
 SESSION="$SESSION"
 python3 <<'PY'
 import os
-import re
 from pathlib import Path
 
 growth = Path("docs/GROWTH_DASHBOARD.md")
@@ -58,25 +57,14 @@ text = growth.read_text(encoding="utf-8")
 block = os.environ["BLOCK"]
 session = os.environ.get("SESSION", "")
 
-nums = [int(m) for m in re.findall(r"session (\d+)\)", text)]
-if nums:
-    n = max(nums)
-    anchor = f"log-growth-session.sh {n}"
-    if anchor not in text:
-        anchor = f"(session {n})"
-    idx = text.find(anchor)
-    if idx >= 0:
-        line_end = text.find("\n", idx)
-        insert_at = line_end + 1 if line_end >= 0 else len(text)
-        text = text[:insert_at] + "\n" + block + text[insert_at:]
-        growth.write_text(text, encoding="utf-8")
-        print(f"Appended session {os.environ['SESSION']} after session {n}")
-        raise SystemExit(0)
-
-marker = "## Daily log template"
+# Always append before the daily template separator (avoids mid-block inserts).
+marker = "\n---\n\n## Daily log template"
 if marker not in text:
-    raise SystemExit("Could not find insert point in GROWTH_DASHBOARD.md")
-text = text.replace(marker, block + marker, 1)
+    marker = "## Daily log template"
+    if marker not in text:
+        raise SystemExit("Could not find insert point in GROWTH_DASHBOARD.md")
+
+text = text.replace(marker, "\n" + block + marker, 1)
 growth.write_text(text, encoding="utf-8")
-print(f"Appended session {os.environ['SESSION']} before daily template")
+print(f"Appended session {session} before daily template")
 PY

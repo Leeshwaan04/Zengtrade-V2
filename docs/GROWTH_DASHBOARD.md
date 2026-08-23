@@ -1279,21 +1279,6 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 
 ### Day 1 (session 113) — full squad charter refresh
 
-### Day 1 (session 114) — security-smoke IPN retry + ops/security cleanup
-
-### CTO
-- **Shipped:** P0 still blocked (wrong Railway DB password)
-- **Blocked:** Railway Postgres password still invalid.
-
-### CPO
-- **Shipped:** partial activation 5/5 parallel gates green
-
-### CBO
-- **Shipped:** billing + GSC gates green
-
-### Status (`./scripts/check-growth-standup.sh` @ 21:12Z)
-- worker ❌ · migration 0011 ✅ · parallel growth ✅
-
 ### CTO
 - **Shipped:** qavapt/seo/marketing/sales charters aligned to parallel growth; ops-data synced
 - **Blocked:** Railway Postgres password still invalid.
@@ -1308,6 +1293,24 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 - **Shipped:** refreshed charters (`.cursor/autopilot/qavapt.md`, `seo.md`, `marketing.md`, `sales.md`)
 
 ### Status (`./scripts/check-growth-standup.sh` @ 21:10Z)
+- worker ❌ · migration 0011 ✅ · parallel growth ✅
+
+### Day 1 (session 114) — security-smoke IPN retry + ops/security cleanup
+
+### CTO
+- **Shipped:** P0 still blocked (wrong Railway DB password)
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** partial activation 5/5 parallel gates green
+
+### CBO
+- **Shipped:** billing + GSC gates green
+
+### QA&VAPT
+- **Shipped:** `security-smoke.sh` IPN probe retries on transient 502/503; `/ops/security` dedupe
+
+### Status (`./scripts/check-growth-standup.sh` @ 21:12Z)
 - worker ❌ · migration 0011 ✅ · parallel growth ✅
 
 ---
