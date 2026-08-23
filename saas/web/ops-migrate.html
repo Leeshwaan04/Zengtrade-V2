@@ -55,8 +55,10 @@ document.getElementById("copy").onclick=()=>{
 };
 document.getElementById("verify").onclick=async()=>{
   const st=document.getElementById("status");
-  const r=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({name:"signup_complete",path:"/ops-verify"})});
-  if(r.status===201){st.textContent="✓ Migration 0011 is live.";st.className="ok";}
-  else{st.textContent="✗ Still blocked (HTTP "+r.status+"). Run the SQL in Supabase first.";st.className="bad";}
+  const h={apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"};
+  const r1=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"signup_complete",path:"/ops-verify"})});
+  const r2=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"deploy_success",path:"/ops-verify"})});
+  if(r1.status===201&&r2.status===201){st.textContent="✓ Migration 0011 is live (signup + deploy events).";st.className="ok";}
+  else{st.textContent="✗ Still blocked (signup "+r1.status+", deploy "+r2.status+"). Run the SQL in Supabase first.";st.className="bad";}
 };
 </script></body></html>

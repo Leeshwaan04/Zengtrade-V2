@@ -24,8 +24,9 @@ probe_event() {
 # 0008 — base funnel events
 probe_event "signup_view" "0008_admin_portal"
 
-# 0011 — extended funnel events
+# 0011 — extended funnel events (signup + deploy attribution)
 probe_event "signup_complete" "0011_funnel_events_v2"
+probe_event "deploy_success" "0011_deploy_success"
 
 # 0009 — engine_state readable
 if curl -sfL "$SUPABASE_URL/rest/v1/engine_state?key=eq._worker_heartbeat&select=key" \
