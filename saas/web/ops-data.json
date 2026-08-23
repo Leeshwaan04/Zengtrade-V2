@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T22:46:48Z",
+  "updated": "2026-08-23T22:51:30Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -184,7 +184,8 @@
       "guide-partial-e2e.sh founder manual partial E2E (session 117)",
       "check-free-tier-limit.sh \u2014 free deploy cap probes in parallel growth (session 126)",
       "guide-free-tier-test.sh \u2014 Q9 manual free-tier test steps (session 128)",
-      "verify-activation-path.sh --partial CLI gate (session 137)"
+      "verify-activation-path.sh --partial CLI gate (session 137)",
+      "partial activation row in GROWTH_DASHBOARD + snapshot-growth-metrics (session 138)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [
