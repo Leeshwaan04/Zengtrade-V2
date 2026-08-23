@@ -21,6 +21,10 @@ jobs:
         run: ./scripts/check-worker.sh
       - name: Security smoke (QA&VAPT)
         run: ./scripts/security-smoke.sh
+      - name: Pricing funnel truth (CBO)
+        run: ./scripts/check-pricing-truth.sh
+      - name: Funnel CTA utm tags (CBO)
+        run: ./scripts/check-funnel-ctas.sh || echo "::warning::Funnel CTA check failed — merge latest main"
       - name: Sitemap coin pages (CBO)
         run: ./scripts/check-sitemap.sh || echo "::warning::Sitemap missing coin URLs — merge latest main / rebuild landing"
       - name: Sync ops gate snapshot

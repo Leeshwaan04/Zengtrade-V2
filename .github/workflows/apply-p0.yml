@@ -1,0 +1,40 @@
+name: Apply P0 (migration + paper worker)
+
+# Founder: add DATABASE_URL + RAILWAY_API_TOKEN to repo Secrets first.
+# Then: Actions → Apply P0 → Run workflow → type APPLY
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type APPLY to apply migration 0011 and deploy paper-worker on Railway'
+        required: true
+        type: string
+
+jobs:
+  p0:
+    if: github.event.inputs.confirm == 'APPLY'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require secrets
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Add DATABASE_URL to repo Secrets (Supabase → Database → URI, port 5432)"
+            exit 1
+          fi
+          if [ -z "$RAILWAY_API_TOKEN" ]; then
+            echo "::error::Add RAILWAY_API_TOKEN to repo Secrets (railway.com/account/tokens)"
+            exit 1
+          fi
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Apply migration 0011 + deploy paper-worker
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+        run: ./scripts/apply-p0-autopilot.sh
+      - name: Post-P0 success runbook
+        run: ./scripts/post-p0-success.sh

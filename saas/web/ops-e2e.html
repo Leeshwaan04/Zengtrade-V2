@@ -74,7 +74,7 @@ async function gates(){
     const parts=[];
     if(!mig) parts.push('<a href="/ops/p0">migration 0011</a>');
     if(!work) parts.push('<a href="/ops/worker">paper worker</a>');
-    pre.innerHTML="✗ Complete "+parts.join(" + ")+" first";
+    pre.innerHTML="✗ Complete "+parts.join(" + ")+" first — or run <a href=\"https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml\" target=\"_blank\" rel=\"noopener\">Apply P0</a> (GitHub Secrets + APPLY)";
     pre.className="gatebox bad";
   }
   document.getElementById("s1").classList.toggle("bad",!ready);

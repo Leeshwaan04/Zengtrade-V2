@@ -18,6 +18,7 @@ echo "Sitemap probe — $SITE/sitemap.xml"
 echo ""
 
 need_url "home" "/"
+need_url "how-it-works" "/how-it-works/"
 need_url "pricing" "/pricing/"
 need_url "login" "/login"
 need_url "app" "/app"

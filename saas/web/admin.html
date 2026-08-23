@@ -144,8 +144,9 @@ async function probeP0(){
   const parts=[];
   if(!mig) parts.push("<a href=\"/ops/migrate\">migration 0011</a>");
   if(!work) parts.push("<a href=\"/ops/worker\">paper worker</a>");
-  el.innerHTML="<b>P0 incomplete</b> — funnel v2 and/or worker down. Complete "+parts.join(" + ")+
-    " via <a href=\"/ops/p0\">/ops/p0</a>. Signup/deploy metrics may be understated until fixed.";
+  el.innerHTML="<b>P0 incomplete</b> — add DATABASE_URL then run Apply P0 ("+
+    "<a href=\"/ops/p0\">checklist</a>). Missing: "+parts.join(" + ")+
+    ". Signup/deploy metrics may be understated until fixed.";
   el.hidden=false;
 }
 

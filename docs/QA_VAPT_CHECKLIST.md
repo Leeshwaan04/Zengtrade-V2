@@ -13,6 +13,7 @@
 | Q6 | Funnel | `signup_complete` not on sign-in only | ☑ | `login.html` PENDING_SIGNUP_KEY (code review) |
 | Q7 | E2E smoke | Landing build + worker compile | ☑ | `e2e_smoke.sh` CI |
 | Q8 | Activation | Post-P0 verify script | ☐ | `verify-activation-path.sh` (blocked: P0) |
+| Q9 | Free tier | Second deploy blocked with upgrade CTA | ☐ | Manual: deploy 2 strategies on Free `/dashboard` + `/app` |
 | V1 | XSS | Dynamic HTML uses `esc()` in `/app` | ☐ | Code review `app.js` |
 | V2 | Event abuse | `event` insert policy name whitelist | ☐ | migration `0011` (not applied prod) |
 | V3 | Worker | DB creds only server-side | ☑ | no secrets in `saas/web/js` |

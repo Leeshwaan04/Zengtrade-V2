@@ -44,6 +44,30 @@ def worker_heartbeat() -> str | None:
         return None
 
 
+def railway_status() -> dict:
+    token = os.environ.get("RAILWAY_API_TOKEN") or os.environ.get("RAILWAY_TOKEN")
+    if not token:
+        return {}
+    r = subprocess.run(
+        ["./scripts/check-railway-deploy.sh"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        env={**os.environ, "RAILWAY_API_TOKEN": token},
+    )
+    line = (r.stdout or "").strip().split("\n")[-1] if r.stdout else ""
+    out: dict = {}
+    if "DATABASE_URL missing" in line:
+        out["railway_database_url_set"] = False
+    elif "DATABASE_URL set" in line:
+        out["railway_database_url_set"] = True
+    if "FAILED" in line:
+        out["railway_paper_worker"] = "FAILED"
+    elif "SUCCESS" in line:
+        out["railway_paper_worker"] = "SUCCESS"
+    return out
+
+
 def main() -> int:
     gates = {
         "production": probe("check-production.sh"),
@@ -53,6 +77,7 @@ def main() -> int:
         "worker_heartbeat_utc": worker_heartbeat(),
         "all_p0_green": False,
     }
+    gates.update(railway_status())
     gates["all_p0_green"] = all(
         gates[k] for k in ("production", "billing", "migration_0011", "worker")
     )

@@ -28,4 +28,4 @@ while true; do
 done
 
 echo ""
-exec ./scripts/verify-activation-path.sh
+exec ./scripts/post-p0-success.sh

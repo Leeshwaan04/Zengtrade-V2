@@ -20,5 +20,9 @@ jobs:
         run: ./tests/e2e_smoke.sh
       - name: Security smoke (QA&VAPT)
         run: ./scripts/security-smoke.sh
+      - name: Pricing funnel truth (CBO)
+        run: ./scripts/check-pricing-truth.sh
+      - name: Funnel CTA utm tags (CBO)
+        run: ./scripts/check-funnel-ctas.sh
       - name: Worker Docker image builds
         run: docker build -t zengtrade-worker:ci saas/worker

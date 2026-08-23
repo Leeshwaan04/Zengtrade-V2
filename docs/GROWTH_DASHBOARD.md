@@ -564,6 +564,153 @@
 ### Status (`./scripts/status-report.sh` @ 16:36Z)
 - migration 0011 ❌ | worker ❌ | Railway token ✅
 
+### Day 1 (session 48) — Railway deploy probe + DATABASE_URL-only blocker
+
+### CTO
+- **Shipped:** `check-railway-deploy.sh` — confirms `paper-worker` has no `DATABASE_URL` on Railway (latest deploy FAILED).
+- **Shipped:** `founder-next-action.sh` + `status-report.sh` surface single-secret blocker when `RAILWAY_API_TOKEN` set but `DATABASE_URL` missing.
+- **Blocked:** `DATABASE_URL` not in VM — migration 0011 + worker env still pending.
+
+### QA&VAPT
+- **Verified:** `security-smoke.sh` 9/9 pass @ 16:54Z
+
+### Status (`./scripts/status-report.sh` @ 16:56Z)
+- migration 0011 ❌ | worker ❌ | Railway `paper-worker` FAILED (no DATABASE_URL on service)
+
+### Day 1 (session 49) — GitHub Apply P0 workflow (founder unblock path)
+
+### CTO
+- **Shipped:** `.github/workflows/apply-p0.yml` — one-shot migration 0011 + Railway paper-worker when `DATABASE_URL` + `RAILWAY_API_TOKEN` in GitHub Secrets.
+- **Shipped:** `/ops/p0`, `/ops/migrate`, `/ops/worker` + `FOUNDER_DEPLOY.md` document GitHub Action path.
+- **Blocked:** `DATABASE_URL` not in Cloud Agent VM — P0 still pending.
+
+### Status (`./scripts/status-report.sh` @ 16:58Z)
+- migration 0011 ❌ | worker ❌
+
+### Day 1 (session 50) — CPO dashboard vs app help blurb
+
+### CPO
+- **Shipped:** Unified `/dashboard` (Algo Studio) vs `/app` (evidence & billing) copy in `studio.js` + `app.js`.
+- **Blocked:** E2E activation until P0 green.
+
+### CTO
+- **Note:** PR #7 green — merge to `main` to ship `apply-p0.yml` GitHub workflow + Railway deploy probe on production `/ops`.
+
+### Status (`./scripts/status-report.sh` @ 17:01Z)
+- migration 0011 ❌ | worker ❌ | PR #7 CI ✅
+
+### Day 1 (session 51) — CBO pricing funnel truth
+
+### CBO
+- **Shipped:** Pro plan copy clarifies live execution is **coming soon** (pricing page + `/app#pricing`).
+- **Shipped:** `check-pricing-truth.sh` in CI smoke — blocks regressions on live-execution promises.
+
+### Status (`./scripts/status-report.sh` @ 17:03Z)
+- migration 0011 ❌ | worker ❌ | pricing truth ✅
+
+### Day 1 (session 52) — CBO paper loop on /how-it-works
+
+### CBO
+- **Shipped:** `#paper-loop` section on `/how-it-works` — deploy → worker → evidence story + UTM CTA.
+- **Shipped:** `founder-preflight.sh` runs pricing truth + Railway deploy probe when token set.
+
+### Status (`./scripts/status-report.sh` @ 17:05Z)
+- migration 0011 ❌ | worker ❌ | PR #7 CI ✅
+
+### Day 1 (session 53) — P0 readiness script + E2E unblock hint
+
+### CTO
+- **Shipped:** `check-p0-readiness.sh` — secrets + gate snapshot before `apply-p0-autopilot.sh`.
+- **Shipped:** `health-watch` runs `check-pricing-truth.sh` on schedule.
+
+### CPO
+- **Shipped:** `/ops/e2e` blocked state links to GitHub Apply P0 workflow.
+
+### Status (`./scripts/status-report.sh` @ 17:08Z)
+- migration 0011 ❌ | worker ❌ | readiness: DATABASE_URL missing
+
+### Day 1 (session 54) — /ops P0 unblock CTA + ops gate sync
+
+### CTO
+- **Shipped:** `/ops` founder approval highlights single P0 unblock (DATABASE_URL + Apply P0).
+- **Shipped:** `sync-ops-gates.py` includes Railway deploy status when token set.
+
+### QA&VAPT
+- **Shipped:** Q9 free-tier deploy limit in checklist (manual post-P0).
+
+### Status (`./scripts/status-report.sh` @ 17:10Z)
+- migration 0011 ❌ | worker ❌ | PR #7 open
+
+### Day 1 (session 55) — Railway single-deploy fix
+
+### CTO
+- **Shipped:** `apply-p0-autopilot.sh` — one Railway redeploy after vars (removed double deployV2+redeploy).
+- **Shipped:** `/admin` P0 banner points to DATABASE_URL + `/ops/p0`.
+
+### Status (`./scripts/status-report.sh` @ 17:12Z)
+- migration 0011 ❌ | worker ❌ | awaiting DATABASE_URL
+
+### Day 1 (session 56) — post-P0 success runbook
+
+### CTO
+- **Shipped:** `post-p0-success.sh` — activation + security + pricing truth + CPO/CBO/QA next URLs.
+- **Wired:** `apply-p0-autopilot.sh`, `wait-for-p0.sh`, `apply-p0.yml` call post-P0 runbook.
+
+### Status (`./scripts/status-report.sh` @ 17:14Z)
+- migration 0011 ❌ | worker ❌ | PR #7 CI ✅
+
+### Day 1 (session 57) — CBO funnel CTA + sitemap probes
+
+### CBO
+- **Shipped:** `check-funnel-ctas.sh` — home/pricing signup CTAs have utm_source + utm_campaign.
+- **Shipped:** `check-sitemap.sh` includes `/how-it-works/` (paper-loop SEO).
+
+### Status (`./scripts/status-report.sh` @ 17:16Z)
+- migration 0011 ❌ | worker ❌ | awaiting DATABASE_URL
+
+### Day 1 (session 58) — pricing SEO title + e2e smoke P0 scripts
+
+### CBO
+- **Shipped:** Pricing page `<title>` + subcopy aligned to paper-first / live coming soon.
+
+### CTO
+- **Shipped:** `e2e_smoke.sh` asserts P0 helper scripts + `apply-p0.yml` exist.
+
+### Status (`./scripts/status-report.sh` @ 17:18Z)
+- migration 0011 ❌ | worker ❌ | PR #7 draft (merge to ship)
+
+### Day 1 (session 59) — founder blocker unchanged
+
+### CTO
+- **Blocked:** `DATABASE_URL` still not in Cloud Agent VM — cannot run `apply-p0-autopilot.sh`.
+- **Ready:** `psql` + `RAILWAY_API_TOKEN` on VM; PR #7 CI green (draft, not merged to main).
+
+### Founder (required)
+1. **Merge [PR #7](https://github.com/Leeshwaan04/Zengtrade-V2/pull/7)** to `main`
+2. **Add `DATABASE_URL`** to Cloud Agent secrets (Supabase → Database → URI, session pooler port **5432**)
+
+### Status (`./scripts/status-report.sh` @ 17:19Z)
+- migration 0011 ❌ | worker ❌
+
+### Day 1 (session 60) — still blocked; readiness shows main merge state
+
+### CTO
+- **Blocked:** `DATABASE_URL` not in VM; PR #7 not merged to `main`.
+- **Shipped:** `check-p0-readiness.sh` reports whether `apply-p0.yml` is on `main`.
+
+### Status (`./scripts/status-report.sh` @ 17:21Z)
+- migration 0011 ❌ | worker ❌ | security-smoke ✅
+
+### Day 1 (session 64) — DATABASE_URL connection preflight
+
+### CTO
+- **Shipped:** `test-database-url.sh` — validates Supabase URI before migration (no secret echo).
+- **Shipped:** `founder-next-action.sh` — merge PR #7 hint + Railway variable path + Supabase settings link.
+- **Blocked:** `DATABASE_URL` still missing in VM and Railway.
+
+### Status (`./scripts/status-report.sh` @ 17:29Z)
+- migration 0011 ❌ | worker ❌
+
 ---
 
 ### CTO

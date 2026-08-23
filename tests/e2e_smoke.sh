@@ -35,6 +35,11 @@ test -f scripts/wait-for-p0.sh
 test -f scripts/sync-ops-gates.py
 test -f scripts/security-smoke.sh
 test -f scripts/founder-next-action.sh
+test -f scripts/check-p0-readiness.sh
+test -f scripts/post-p0-success.sh
+test -f scripts/check-pricing-truth.sh
+test -f scripts/check-funnel-ctas.sh
+test -f .github/workflows/apply-p0.yml
 test -f docs/QA_VAPT_CHECKLIST.md
 test -f .cursor/autopilot/qavapt.md
 test -f saas/db/migrations/0010_admin_rpc_funnel.sql

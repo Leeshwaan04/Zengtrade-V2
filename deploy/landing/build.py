@@ -159,14 +159,14 @@ PRICING_MAIN = f"""<main id="main">
     <div class="lp-wrap center">
       <div class="lp-eyebrow"><span class="dot"></span> simple · honest · cancel anytime</div>
       <h1 id="h-pr" class="lp-h1">Pricing that only charges when it earns its place.</h1>
-      <p class="lp-sub">Start free and paper-trade forever. You pay only when you want unlimited strategies and live execution on your own exchange, never for the data, never for hidden extras.</p>
+      <p class="lp-sub">Start free and paper-trade forever. Pro unlocks unlimited paper strategies; live execution on your own exchange rolls out per the go-live bar — never charge for data or hidden extras.</p>
       <p class="lp-sub" style="margin-top:12px"><b>Founding offer:</b> first 100 Pro members lock in <b>$19/mo</b> (normally $29) — unlimited paper while live execution rolls out.</p>
     </div>
   </section>
   <section class="lp-sec" aria-label="Plans">
     <div class="lp-wrap pr-grid">
       {plan("Free", "$0", "forever", "Learn &amp; paper-trade, free forever", ["1 paper strategy","Live crypto prices, 24/7","Backtest + Forward Test","Accuracy &amp; Analytics","Honest, cost-accurate P&amp;L"], cta="Get started")}
-      {plan("Pro", "$19", "/mo", "Founding price · unlimited paper", ["Everything in Free","<b>Unlimited</b> paper strategies","Live execution on your own exchange*","Tick-level stops &amp; kill-switch","Email &amp; push alerts"], featured=True, cta="Get Pro", pid="pro")}
+      {plan("Pro", "$19", "/mo", "Founding price · unlimited paper", ["Everything in Free","<b>Unlimited</b> paper strategies","Live execution <em>(coming soon)</em> — per go-live bar*","Tick-level stops &amp; kill-switch <em>(with live)</em>","Email &amp; push alerts"], featured=True, cta="Get Pro", pid="pro")}
       {plan("Elite", "$79", "/mo", "Maximum firepower", ["Everything in Pro","Perps + options engines","Multiple exchange accounts","Custom risk parameters","Priority support &amp; early access"], cta="Get Elite", pid="elite")}
     </div>
     <p class="pr-iso center">* Live execution unlocks per strategy only after it clears the go-live bar in paper. Non-custodial, your keys, your coins. Not investment advice.</p>
@@ -176,7 +176,7 @@ PRICING_MAIN = f"""<main id="main">
       <h2 class="lp-h2 center">What you're actually paying for</h2>
       <div class="lp-grid3">
         <div class="home-card"><div class="hc-ic">∞</div><b>Unlimited strategies</b><span>Free runs one paper strategy. Pro removes the cap, run the whole regime-aware library at once.</span></div>
-        <div class="home-card"><div class="hc-ic">◈</div><b>Live execution</b><span>Route a proven strategy to <b>your own</b> exchange with your own keys. We never custody funds. Two-key safety gate before any real order.</span></div>
+        <div class="home-card"><div class="hc-ic">◈</div><b>Live execution (coming soon)</b><span>When shipped, route a proven strategy to <b>your own</b> exchange with your own keys. We never custody funds. Unlocks only after the paper go-live bar.</span></div>
         <div class="home-card"><div class="hc-ic">🔔</div><b>Alerts &amp; control</b><span>Tick-level stops, a portfolio kill-switch, and email/push alerts so you're never surprised.</span></div>
       </div>
       <p class="pr-note center">Data is always free and always live. We charge for <b>capability</b>, not for the numbers, and never hide a cost inside a plan.</p>
@@ -193,6 +193,27 @@ PRICING_MAIN = f"""<main id="main">
   </section>
   <section class="lp-sec home-final"><div class="lp-wrap home-final-in"><h2 class="lp-h2">Start free. Upgrade only when it's earned.</h2><div class="lp-cta-row center"><a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=pricing">Start free, no card</a></div></div></section>
 </main>"""
+
+# CBO: blog-quality paper loop section (how-it-works only — compounds SEO + activation clarity)
+PAPER_LOOP_SEC = """
+  <section class="lp-sec" id="paper-loop" aria-labelledby="h-paper">
+    <div class="lp-wrap">
+      <div class="lp-eyebrow"><span class="dot"></span> activation loop</div>
+      <h2 id="h-paper" class="lp-h2">Paper trading that mirrors what would run live</h2>
+      <p class="lp-sub">No simulated prices. The worker reads the same Binance tape the backtest used and writes every fill to your isolated book. What you see in Forward Test is what the engine would have done — costs included.</p>
+      <div class="lp-grid3">
+        <div class="home-card"><div class="hc-ic">1</div><b>Deploy in Algo Studio</b><span>Pick a strategy from the library or build your own. One click deploys paper mode — your capital stays untouched.</span></div>
+        <div class="home-card"><div class="hc-ic">2</div><b>Worker runs every ~5 min</b><span>Live spot prices, full cost model (~35 bps round-trip baked in). Stands down in regimes where the book has no edge.</span></div>
+        <div class="home-card"><div class="hc-ic">3</div><b>Evidence in /app</b><span>Forward Test, accuracy, and activity tabs build an honest track record before you ever connect an exchange.</span></div>
+      </div>
+      <div class="lp-cta-row center" style="margin-top:18px">
+        <a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=paper_loop">Start paper trading free</a>
+        <a class="lp-cta ghost" href="/dashboard">Open Algo Studio</a>
+      </div>
+    </div>
+  </section>
+"""
+main_hiw_paper = main_hiw + PAPER_LOOP_SEC
 
 HOME_CSS = """
 /* ===== home + pricing (shared components, same tokens) ===== */
@@ -330,11 +351,11 @@ emit("", shell(
 emit("how-it-works", shell(
     "How zengtrade works, the regime engine, honesty & survival-first risk",
     "How zengtrade works: it reads Bull/Neutral/Bear regimes, runs only the strategies proven to fit, never fabricates a number, and protects capital first. Paper-first, non-custodial.",
-    "https://zengtrade.in/how-it-works/", main_hiw), "https://zengtrade.in/how-it-works/")
+    "https://zengtrade.in/how-it-works/", main_hiw_paper), "https://zengtrade.in/how-it-works/")
 
 emit("pricing", shell(
-    "Pricing, free to start, pay only for live execution | zengtrade",
-    "zengtrade pricing: Free forever to paper-trade, Pro for unlimited strategies + live execution on your own exchange, Elite for perps/options. Data is always free. Non-custodial. Cancel anytime.",
+    "Pricing — free paper trading, Pro from $19/mo | zengtrade",
+    "zengtrade pricing: Free forever to paper-trade, Pro for unlimited paper strategies (founding $19/mo). Live execution rolls out per go-live bar. Data is always free. Non-custodial. Cancel anytime.",
     "https://zengtrade.in/pricing/", PRICING_MAIN), "https://zengtrade.in/pricing/")
 
 # ---- coin hub + per-coin pages (identical shell -> full design parity) -----------------

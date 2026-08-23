@@ -35,10 +35,10 @@
   <div class="step" id="step1">
     <h2><span class="num">1</span> Apply migration 0011</h2>
     <p>Enables funnel v2 events (<code>signup_complete</code>, <code>deploy_success</code>, <code>checkout_click</code>) in <a href="/admin">/admin</a>.<br>
-    <b>Autopilot (fastest):</b> add <code>DATABASE_URL</code> to Cursor Cloud Agent secrets → agent runs <code>./scripts/apply-p0-autopilot.sh</code> (migration + worker).<br>
-    <b>Or GitHub Action:</b> add <code>DATABASE_URL</code> to <a href="https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions" target="_blank" rel="noopener">GitHub Secrets</a> → run Action → type <code>APPLY</code>.</p>
+    <b>One-shot (recommended):</b> add <code>DATABASE_URL</code> + <code>RAILWAY_API_TOKEN</code> to <a href="https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions" target="_blank" rel="noopener">GitHub Secrets</a> → <a href="https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml" target="_blank" rel="noopener">Run “Apply P0”</a> → type <code>APPLY</code> (migration + worker).<br>
+    <b>Cloud Agent:</b> add <code>DATABASE_URL</code> to Cursor secrets → <code>./scripts/apply-p0-autopilot.sh</code>.</p>
     <a class="btn" href="/ops/migrate">Open migration guide</a>
-    <a class="alt" href="https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-migration-0011.yml" target="_blank" rel="noopener">GitHub Action</a>
+    <a class="alt" href="https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml" target="_blank" rel="noopener">Apply P0 (GitHub)</a>
     <p id="g1" class="gate">Checking…</p>
   </div>
 
@@ -58,7 +58,7 @@
   </div>
 
   <p class="foot">Track progress: <a href="https://github.com/Leeshwaan04/Zengtrade-V2/issues/4" target="_blank" rel="noopener">GitHub issue #4</a> ·
-    CLI: <code>./scripts/status-report.sh</code> · Next: <code>./scripts/founder-next-action.sh</code> · Auto-refresh 30s</p>
+    CLI: <code>./scripts/check-p0-readiness.sh</code> · <code>./scripts/status-report.sh</code> · Auto-refresh 30s</p>
 </div>
 <script>
 const SUPA="https://ponvarxeytfcntckczbn.supabase.co", ANON="sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";

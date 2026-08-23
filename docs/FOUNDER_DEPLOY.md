@@ -22,23 +22,24 @@ Dashboard → **Authentication → URL configuration**
 - Redirect URLs: `https://zengtrade.in/login`, `https://zengtrade.in/reset`
 - **Google provider:** enabled with OAuth client
 
-## 3. Migration 0011 (2 min)
+## 3. Migration 0011 + paper worker (P0)
 
-**Option A — GitHub Action:** add `DATABASE_URL` to repo Secrets → run [Apply migration 0011](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-migration-0011.yml) with `APPLY`.
+**Option A — one-shot GitHub Action (recommended):** add `DATABASE_URL` + `RAILWAY_API_TOKEN` to [repo Secrets](https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions) → run [Apply P0](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml) → type `APPLY`.
 
-**Option B — manual:** https://zengtrade.in/ops/migrate → copy SQL → Supabase SQL Editor.
+**Option B — Cloud Agent:** add `DATABASE_URL` to Cursor Cloud Agent secrets → agent runs `./scripts/apply-p0-autopilot.sh`.
+
+**Option C — migration only (GitHub):** [Apply migration 0011](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-migration-0011.yml) with `DATABASE_URL` secret.
+
+**Option D — manual:** https://zengtrade.in/ops/migrate → copy SQL → Supabase SQL Editor; worker at https://zengtrade.in/ops/worker.
 
 ```bash
 ./scripts/check-migrations.sh   # signup_complete, deploy_success, checkout_click must return OK
-```
-
-## 4. Paper worker (10 min)
-
-https://zengtrade.in/ops/worker — Railway root `saas/worker`, `DATABASE_URL` on port **5432** (session pooler).
-
-```bash
 ./scripts/check-worker.sh       # heartbeat < 12 min
 ```
+
+## 4. Paper worker
+
+Already deployed by Apply P0 workflow. Manual guide: https://zengtrade.in/ops/worker — Railway root `saas/worker`, `DATABASE_URL` on port **5432** (session pooler).
 
 ## 5. Billing (live — test when ready)
 

@@ -23,6 +23,14 @@ die() { echo "ERROR: $*" >&2; exit 1; }
 
 # Accept common secret aliases from Cloud Agent / CI
 DATABASE_URL="${DATABASE_URL:-${SUPABASE_DATABASE_URL:-}}"
+if [[ -z "${DATABASE_URL:-}" && -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
+  # shellcheck source=/dev/null
+  source "$ROOT/scripts/railway-api.sh"
+  if resolved=$(railway_resolve_database_url 2>/dev/null); then
+    DATABASE_URL="$resolved"
+    echo "OK   DATABASE_URL resolved from Railway project variables"
+  fi
+fi
 
 echo "== zengtrade P0 autopilot =="
 echo ""
@@ -33,6 +41,7 @@ if ./scripts/check-migrations.sh >/dev/null 2>&1; then
 else
   [[ -n "${DATABASE_URL:-}" ]] || die "DATABASE_URL not set — cannot apply migration 0011"
   command -v psql >/dev/null || die "psql not installed"
+  DATABASE_URL="$DATABASE_URL" ./scripts/test-database-url.sh
   echo ">> Applying migration 0011 via psql…"
   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$MIG_SQL"
   ./scripts/check-migrations.sh
@@ -56,7 +65,8 @@ else
     "DATABASE_URL=${DATABASE_URL}" \
     "WORKER_INTERVAL=${WORKER_INTERVAL:-300}"
 
-  railway_ensure_worker_service >/dev/null
+  railway_configure_worker_service >/dev/null
+  echo ">> Redeploying paper-worker (single deploy after vars set)…"
   railway_redeploy "$ENV_ID" "$SERVICE_ID"
 
   echo ">> Waiting for worker heartbeat (up to 6 min)…"
@@ -74,4 +84,4 @@ echo ""
 echo "== P0 status =="
 ./scripts/status-report.sh
 echo ""
-echo "Next: ./scripts/verify-activation-path.sh && E2E https://zengtrade.in/ops/e2e"
+echo "Next: ./scripts/post-p0-success.sh"
