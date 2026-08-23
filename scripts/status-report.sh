@@ -25,7 +25,7 @@ echo "Worker heartbeat last: $hb UTC"
 
 if [[ $prod -eq 1 && $bill -eq 1 && $mig -eq 1 && $work -eq 1 ]]; then
   echo ""
-  echo "All P0 gates green — run E2E signup → deploy → trades."
+  echo "All P0 gates green — run ./scripts/verify-activation-path.sh then E2E signup → deploy → trades."
   exit 0
 fi
 echo ""

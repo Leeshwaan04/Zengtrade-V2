@@ -17,7 +17,7 @@ jobs:
         run: ./scripts/verify-billing.sh
       - name: Database migrations
         run: ./scripts/check-migrations.sh
-        continue-on-error: true
       - name: Paper worker heartbeat
         run: ./scripts/check-worker.sh
-        continue-on-error: true
+      - name: Sync ops gate snapshot
+        run: python3 scripts/sync-ops-gates.py || true

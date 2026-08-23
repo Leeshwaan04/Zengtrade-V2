@@ -246,6 +246,28 @@
 ### CBO
 - **Next:** /ops/billing after P0.
 
+### Day 1 (session 18) — one-click migration workflow
+
+### CTO
+- **Shipped:** GitHub Actions `apply-migration-0011.yml` (workflow_dispatch + DATABASE_URL secret); ops/migrate updated.
+- **Blocked:** Worker deploy still founder-owned.
+
+### CPO / CBO
+- **Next:** After migration + worker green on /ops.
+
+### Day 1 (session 19) — health-watch + activation verify
+
+### CTO
+- **Shipped:** `health-watch` now fails on migration/worker (triggers founder email via `founder-alert`); `scripts/sync-ops-gates.py` + `scripts/verify-activation-path.sh`.
+- **Blocked:** P0 unchanged — migration 0011 + worker heartbeat stale since 2026-08-11.
+- **Next:** Founder runs /ops/migrate + /ops/worker → `./scripts/verify-activation-path.sh`.
+
+### CPO
+- **Ready:** E2E guide at /ops/e2e; activation checklist on /app once worker live.
+
+### CBO
+- **Ready:** /ops/billing + /ops/gsc after forward trades exist.
+
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*
