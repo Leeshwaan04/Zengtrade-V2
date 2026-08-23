@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T18:17:00Z",
+  "updated": "2026-08-23T19:28:00Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -22,7 +22,7 @@
     {
       "id": "worker",
       "title": "Deploy paper worker — add DATABASE_URL",
-      "detail": "Railway paper-worker latest deploy FAILED (no DATABASE_URL). Set variable + redeploy \u2192 heartbeat <12m.",
+      "detail": "Railway DATABASE_URL password invalid (deploy FAILED). Supabase Connect → Reset password → copy Session URI (no [brackets]) → Railway Deploy. Or add Cloud Agent secret DATABASE_PASSWORD.",
       "url": "https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b",
       "alt_url": "https://zengtrade.in/ops/worker",
       "urgent": true
@@ -56,9 +56,11 @@
       "discover-supabase-pooler.sh \u2014 find Supavisor host (e.g. aws-0-ap-northeast-1)",
       "Migration 0011 green on production (session 73) \u2014 funnel v2 events live",
       "/ops/p0 worker-only callout + /ops/worker links existing Railway paper-worker (session 74)",
-      "wait-for-p0.sh polls run-p0-if-ready when Railway gets DATABASE_URL (session 76)"
+      "wait-for-p0.sh polls run-p0-if-ready when Railway gets DATABASE_URL (session 76)",
+      "resolve-database-url.sh validates Railway URI before apply-p0 (session 82)",
+      "run-p0-if-ready.sh fails fast on bad Postgres password — no 6min heartbeat wait (session 82)"
     ],
-    "next": "Add DATABASE_URL \u2192 run-p0-if-ready.sh deploys paper-worker on Railway",
+    "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
       {
         "label": "GitHub Actions",
@@ -90,7 +92,8 @@
       "Fresh signup deploy nudge on /dashboard in ~800ms (zt_fresh_signup flag)",
       "Activation checklist: worker-live wait hint (5\u201315 min to first trade)",
       "Go-live bar read-only checklist on /app#pricing (docs/GO_LIVE_BAR.md)",
-      "/ops/e2e worker-only blocked state with Railway link (session 76)"
+      "/ops/e2e worker-only blocked state with Railway link (session 76)",
+      "/app upsell copy: live execution coming soon (session 82)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [
@@ -129,7 +132,8 @@
       "r/algotrading draft ready (post after P0)",
       "check-pricing-truth.sh \u2014 Pro copy must not promise live execution as shipped",
       "Paper trading loop section on /how-it-works (#paper-loop)",
-      "check-funnel-ctas.sh \u2014 home/pricing signup utm tags in CI"
+      "check-funnel-ctas.sh \u2014 home/pricing signup utm tags in CI",
+      "check-pricing-truth.sh covers /app upsell copy (session 82)"
     ],
     "next": "GSC sitemap + first proof post after forward trades exist; Pro checkout E2E at /ops/billing",
     "links": [

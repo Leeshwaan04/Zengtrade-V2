@@ -194,7 +194,7 @@ function renderDashboard() {
   if (state.loading) { app.innerHTML = `<div class="grid stats">${skeletonRows(4)}</div><div class="card" style="height:220px;margin-top:16px">${skeletonRows(1)}</div>`; return; }
   const m = metrics(), ps = perStrategy();
   const upsell = !isPro(tier) && state.deployments.length >= FREE_DEPLOY_LIMIT
-    ? `<div class="upsell"><div><b>You're on Free, ${FREE_DEPLOY_LIMIT} strategy.</b><span>Upgrade to Pro for unlimited strategies and live execution when a strategy clears the bar.</span></div><button class="btn primary" id="up2">Upgrade, $19/mo founding</button></div>` : "";
+    ? `<div class="upsell"><div><b>You're on Free, ${FREE_DEPLOY_LIMIT} strategy.</b><span>Upgrade to Pro for unlimited paper strategies; live execution unlocks per go-live bar (coming soon).</span></div><button class="btn primary" id="up2">Upgrade, $19/mo founding</button></div>` : "";
   app.innerHTML = `
     <div class="page-h">
       <h2>Evidence &amp; billing</h2>

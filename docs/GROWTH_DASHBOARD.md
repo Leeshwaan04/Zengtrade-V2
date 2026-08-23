@@ -800,6 +800,25 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (@ 19:10Z)
 - db_connect ❌ · deploy FAILED · worker ❌
 
+### Day 1 (session 82) — fail-fast P0 + pricing truth on /app
+
+### CTO
+- **Shipped:** `resolve-database-url.sh` + `apply-p0-autopilot.sh` + `run-p0-if-ready.sh` — validate Postgres auth before redeploy (no 6min wait on bad password).
+- **Blocked:** Railway `DATABASE_URL` password still invalid — founder must reset in Supabase Connect, update Railway, **Deploy**.
+
+### CPO
+- **Shipped:** `/app` Free-tier upsell — live execution labeled **coming soon** (matches pricing truth).
+
+### CBO
+- **Shipped:** `check-pricing-truth.sh` now covers `/app` upsell copy.
+
+### QA&VAPT
+- **Verified:** `security-smoke.sh` passed (2026-08-23T19:28Z).
+
+### Status (`./scripts/status-report.sh` @ 19:28Z)
+- production ✅ | billing ✅ | migration 0011 ✅ | worker ❌
+- Railway: DATABASE_URL set · wrong password · deploy FAILED
+
 ---
 
 ### CTO

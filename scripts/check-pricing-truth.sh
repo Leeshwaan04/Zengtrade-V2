@@ -6,13 +6,16 @@ cd "$ROOT"
 
 fail=0
 
-# App billing copy
-if grep -q 'Live execution on your own exchange' saas/web/js/billing.js 2>/dev/null; then
-  echo "FAIL billing.js — Pro still promises live execution without coming-soon qualifier"
-  fail=1
-else
-  echo "OK   billing.js Pro copy"
-fi
+# App billing + evidence upsell copy
+for f in saas/web/js/billing.js saas/web/js/app.js; do
+  if grep -qE 'live execution (on your own exchange|when a strategy clears)' "$f" 2>/dev/null \
+     && ! grep -q 'coming soon' "$f" 2>/dev/null; then
+    echo "FAIL $f — Pro/upsell promises live execution without coming-soon qualifier"
+    fail=1
+  else
+    echo "OK   $f Pro/upsell copy"
+  fi
+done
 
 # Landing pricing build source
 if grep -q 'Live execution on your own exchange' deploy/landing/build.py 2>/dev/null; then
