@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T19:46:00Z",
+  "updated": "2026-08-23T19:48:00Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -65,7 +65,8 @@
       "worker.py + check-railway-deploy.sh hint on Postgres auth failure (session 85)",
       "/admin P0 banner: wrong-password callout when migration green (session 86)",
       "sync-ops-gates.py: database_url_auth_ok + Railway FAILED status (session 87)",
-      "/ops worker gate shows wrong-password when Railway deploy FAILED (session 88)"
+      "/ops worker gate shows wrong-password when Railway deploy FAILED (session 88)",
+      "founder-preflight.sh: SEO content + credential check when worker down (session 90)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -106,7 +107,8 @@
       "/ops/e2e wrong-password blocked state when heartbeat stale (session 84)",
       "Forward Test empty state: worker-offline vs waiting copy (session 87)",
       "Accuracy tab reuses worker-aware empty copy (session 88)",
-      "Activity tab worker-aware empty copy (session 89)"
+      "Activity tab worker-aware empty copy (session 89)",
+      "Strategies tab worker-offline note (session 90)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [
@@ -149,7 +151,8 @@
       "check-pricing-truth.sh covers /app upsell copy (session 82)",
       "post-p0-success.sh runs check-funnel-ctas + check-sitemap (session 84)",
       "check-funnel-ctas.sh covers coins hub + bitcoin pSEO (session 86)",
-      "check-plan-intent.sh \u2014 ?plan=pro|elite \u2192 /app#pricing (session 86)"
+      "check-plan-intent.sh \u2014 ?plan=pro|elite \u2192 /app#pricing (session 86)",
+      "check-seo-content.sh in CI + post-p0 (session 89)"
     ],
     "next": "GSC sitemap + first proof post after forward trades exist; Pro checkout E2E at /ops/billing",
     "links": [

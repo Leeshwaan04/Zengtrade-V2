@@ -906,6 +906,36 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/status-report.sh` @ 19:44Z)
 - worker ❌ · gates synced: `railway_paper_worker: FAILED`
 
+### Day 1 (session 89) — SEO content probe + Activity tab copy
+
+### CTO
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** `/app#activity` empty state uses worker-aware copy (matches Forward Test).
+
+### SEO / CBO
+- **Shipped:** `check-seo-content.sh` — verifies paper-loop, founding offer, coins hub, robots on production; in CI + health-watch + post-p0-success.
+- **Verified:** all checks pass on zengtrade.in (19:46Z).
+
+### Status (`./scripts/status-report.sh` @ 19:46Z)
+- worker ❌ · SEO content ✅ · sitemap ✅
+
+### Day 1 (session 90) — Strategies worker note + founder preflight
+
+### CPO
+- **Shipped:** `/app#strategies` shows worker-offline note when paper worker is down.
+
+### CTO
+- **Shipped:** `founder-preflight.sh` runs SEO content + credential validation when worker down.
+- **Blocked:** Railway Postgres password still invalid.
+
+### SEO
+- **Shipped:** `SEO_PLAYBOOK.md` documents `check-seo-content.sh` in weekly rhythm.
+
+### Status (`./scripts/status-report.sh` @ 19:48Z)
+- worker ❌ · preflight guides founder to `/ops/worker`
+
 ---
 
 ### CTO

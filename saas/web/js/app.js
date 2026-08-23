@@ -365,8 +365,11 @@ function renderAnalytics() {
 function renderStrategies() {
   if (state.loading) { app.innerHTML = `<div class="grid cards">${skeletonRows(3)}</div>`; return; }
   const deployed = new Set(state.deployments.map(d => d.strategy_key));
+  const workerNote = !state.workerAlive
+    ? `<p class="muted" style="margin-top:8px;font-size:13px">Paper worker is offline — deploys are saved but trades pause until it restarts. <a href="/how-it-works/">How paper trading works</a></p>`
+    : "";
   app.innerHTML = `
-    <div class="page-h"><h2>Strategies</h2><p class="muted">Deploy to paper-trade free. Backtest figures are ~2 years of real data, net of fees, <b>backtest, not forward-proven.</b> Watch each earn its track record in your own book before it ever runs live.</p></div>
+    <div class="page-h"><h2>Strategies</h2><p class="muted">Deploy to paper-trade free. Backtest figures are ~2 years of real data, net of fees, <b>backtest, not forward-proven.</b> Watch each earn its track record in your own book before it ever runs live.</p>${workerNote}</div>
     <div class="grid cards">${STRATEGIES.map(s => stratCard(s, deployed.has(s.key))).join("")}</div>`;
   STRATEGIES.forEach(s => {
     const b = document.getElementById(`act-${s.key}`);

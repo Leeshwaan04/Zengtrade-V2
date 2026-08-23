@@ -79,6 +79,16 @@ if SITE="$SITE" ./scripts/check-sitemap.sh 2>/dev/null; then
 else
   echo "⚠️  Sitemap incomplete — run python3 deploy/landing/build.py and redeploy"
 fi
+if SITE="$SITE" ./scripts/check-seo-content.sh 2>/dev/null; then
+  echo "✅ SEO content pages (paper-loop, founding offer)"
+else
+  echo "⚠️  SEO content check failed — rebuild landing and redeploy"
+fi
+if [[ $WORK_OK -eq 0 ]]; then
+  echo ""
+  echo ">> Database credentials (worker blocker)"
+  ./scripts/validate-database-credentials.sh 2>/dev/null || true
+fi
 echo ""
 echo "Full checklist: docs/FOUNDER_DEPLOY.md · QA: docs/QA_VAPT_CHECKLIST.md"
 echo ""

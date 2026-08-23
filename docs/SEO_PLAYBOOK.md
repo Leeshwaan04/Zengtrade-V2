@@ -6,7 +6,7 @@ Owner: **SEO Manager autopilot** (`.cursor/autopilot/seo.md`)
 
 | Day | Task |
 |-----|------|
-| Mon | Run `./scripts/check-sitemap.sh` + `check-funnel-ctas.sh` on production |
+| Mon | Run `./scripts/check-sitemap.sh` + `check-funnel-ctas.sh` + `check-seo-content.sh` on production |
 | Wed | GSC: impressions/clicks for top 5 URLs (manual until API wired) |
 | Fri | One pSEO or on-page improvement; rebuild landing if needed |
 
@@ -39,6 +39,7 @@ Target coins (minimum 7): BTC, ETH, SOL, BNB, XRP, ADA, DOGE.
 ```bash
 ./scripts/check-sitemap.sh
 ./scripts/check-funnel-ctas.sh
+./scripts/check-seo-content.sh
 curl -sI https://zengtrade.in/pricing/ | grep -i x-robots
 ```
 
