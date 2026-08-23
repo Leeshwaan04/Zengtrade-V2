@@ -193,8 +193,16 @@ function activationChecklist() {
 function renderDashboard() {
   if (state.loading) { app.innerHTML = `<div class="grid stats">${skeletonRows(4)}</div><div class="card" style="height:220px;margin-top:16px">${skeletonRows(1)}</div>`; return; }
   const m = metrics(), ps = perStrategy();
-  const upsell = !isPro(tier) && state.deployments.length >= FREE_DEPLOY_LIMIT
-    ? `<div class="upsell"><div><b>You're on Free, ${FREE_DEPLOY_LIMIT} strategy.</b><span>Upgrade to Pro for unlimited paper strategies; live execution unlocks per go-live bar (coming soon).</span></div><button class="btn primary" id="up2">Upgrade, $19/mo founding</button></div>` : "";
+  const deployed = state.deployments.some(d => d.status === "running");
+  const traded = m.n > 0;
+  let upsell = "";
+  if (!isPro(tier)) {
+    if (state.deployments.length >= FREE_DEPLOY_LIMIT) {
+      upsell = `<div class="upsell"><div><b>You're on Free, ${FREE_DEPLOY_LIMIT} strategy.</b><span>Upgrade to Pro for unlimited paper strategies; live execution unlocks per go-live bar (coming soon).</span></div><button class="btn primary" id="up2">Upgrade, $19/mo founding</button></div>`;
+    } else if (deployed && traded) {
+      upsell = `<div class="upsell"><div><b>Forward evidence is building.</b><span>Pro unlocks unlimited paper strategies — founding $19/mo while live execution rolls out per go-live bar.</span></div><button class="btn primary" id="up2">Go Pro, $19/mo</button></div>`;
+    }
+  }
   app.innerHTML = `
     <div class="page-h">
       <h2>Evidence &amp; billing</h2>

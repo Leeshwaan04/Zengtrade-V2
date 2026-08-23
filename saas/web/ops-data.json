@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T19:35:00Z",
+  "updated": "2026-08-23T19:38:00Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -61,7 +61,8 @@
       "run-p0-if-ready.sh fails fast on bad Postgres password — no 6min heartbeat wait (session 82)",
       "/ops/worker + /ops/p0 wrong-password callout when migration green + heartbeat stale (session 83)",
       "founder-next-action.sh detects invalid Railway DATABASE_URL password (session 83)",
-      "validate-database-credentials.sh — preflight before run-p0-if-ready (session 84)"
+      "validate-database-credentials.sh — preflight before run-p0-if-ready (session 84)",
+      "worker.py + check-railway-deploy.sh hint on Postgres auth failure (session 85)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -98,7 +99,8 @@
       "/ops/e2e worker-only blocked state with Railway link (session 76)",
       "/app upsell copy: live execution coming soon (session 82)",
       "Deploy nudge on /dashboard honest when worker offline (studio.js session 83)",
-      "/ops/e2e wrong-password blocked state when heartbeat stale (session 84)"
+      "/ops/e2e wrong-password blocked state when heartbeat stale (session 84)",
+      "Post-activation Pro upsell when user has closed trades (session 85)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [
@@ -139,7 +141,8 @@
       "Paper trading loop section on /how-it-works (#paper-loop)",
       "check-funnel-ctas.sh \u2014 home/pricing signup utm tags in CI",
       "check-pricing-truth.sh covers /app upsell copy (session 82)",
-      "post-p0-success.sh runs check-funnel-ctas + check-sitemap (session 84)"
+      "post-p0-success.sh runs check-funnel-ctas + check-sitemap (session 84)",
+      "Activation upsell on /app after first closed trade (session 85)"
     ],
     "next": "GSC sitemap + first proof post after forward trades exist; Pro checkout E2E at /ops/billing",
     "links": [

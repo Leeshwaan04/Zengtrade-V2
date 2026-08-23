@@ -847,6 +847,18 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/status-report.sh` @ 19:35Z)
 - worker ❌ · funnel CTAs ✅ · sitemap ✅ · security-smoke ✅
 
+### Day 1 (session 85) — worker log hints + activation Pro upsell
+
+### CTO
+- **Shipped:** `worker.py` prints actionable hint when Postgres password auth fails (Railway logs); `check-railway-deploy.sh` notes password failure on FAILED deploy.
+- **Blocked:** Railway `DATABASE_URL` password still invalid.
+
+### CPO / Sales
+- **Shipped:** `/app` soft Pro upsell when user has deployed + closed trades (founding $19/mo) — conversion after activation proof.
+
+### Status (`./scripts/status-report.sh` @ 19:38Z)
+- worker ❌ · billing ✅ · migration 0011 ✅
+
 ---
 
 ### CTO
