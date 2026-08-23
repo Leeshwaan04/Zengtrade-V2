@@ -47,7 +47,7 @@ That resolves `DATABASE_URL` from Cloud Agent secrets or Railway service variabl
 
 Preflight credentials (no secrets printed): `./scripts/validate-database-credentials.sh`
 
-**Founder alternative (no Cloud Agent):** add `DATABASE_PASSWORD` (password only) or `DATABASE_URL` + `RAILWAY_API_TOKEN` to [GitHub repo Secrets](https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions) → run workflow [Apply P0](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml) → type `APPLY`.
+**Founder alternative (no Cloud Agent):** add `DATABASE_PASSWORD` (password only) or `DATABASE_URL` + `RAILWAY_API_TOKEN` to [GitHub repo Secrets](https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions) → run workflow [Apply P0](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml) → type `APPLY`. **Or** wait for [health-watch](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/health-watch.yml) (every 6h) — it auto-runs `run-p0-if-ready.sh` when those secrets are set.
 
 **Fastest Cloud Agent unblock:** secret `DATABASE_PASSWORD` only (Supabase DB password after reset) — agent builds session pooler URI and redeploys Railway `paper-worker`.
 
