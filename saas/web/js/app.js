@@ -2,6 +2,7 @@
 // Dashboard · Strategies · Activity · Account, plus first-run onboarding. Every render is defensive
 // (loading / empty / error states), every action gives feedback, all user data is escaped.
 import { requireAuth, signOut, sb, niceError } from "./auth.js";
+import { maybeWorkerBanner } from "./worker-status.js";
 import { getTier, isPro, openCheckout, checkoutReady, PLANS, FREE_DEPLOY_LIMIT } from "./billing.js";
 import { STRATEGIES, byKey, nameOf } from "./strategies.js";
 import { esc, money, pct, num, timeAgo, tone, toast, skeletonRows, equityCurve } from "./ui.js";
@@ -27,6 +28,7 @@ const route = () => (location.hash.replace("#", "") || "dashboard");
   render();                                   // paint shell immediately (loading state)
   await load();                               // then hydrate
   await maybeOnboard();
+  await maybeWorkerBanner();
   render();
   if (new URLSearchParams(location.search).get("paid") === "1") maybePaidReturn();
   else maybeIntentUpgrade();                   // a "Get Pro/Elite" signup lands on the plan chooser

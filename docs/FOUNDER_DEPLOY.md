@@ -41,7 +41,17 @@ chmod +x scripts/apply-migrations.sh
 
 Also confirm `0005_grant_paid_and_deploy_limit.sql` is applied (free-tier deploy cap).
 
+Quick apply **only 0011** (if 0009/0010 already done):
+
+```bash
+./scripts/migrate-0011-only.sh
+# paste output into Supabase SQL Editor → Run
+./scripts/check-migrations.sh
+```
+
 ## 4. Paper worker on Railway (10 min)
+
+See **`docs/WORKER_QUICKSTART.md`** for step-by-step.
 
 1. [railway.app](https://railway.app) → New Project → Deploy from GitHub repo
 2. Set **root directory** to `saas/worker`

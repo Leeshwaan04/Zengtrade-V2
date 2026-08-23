@@ -17,7 +17,8 @@
 
 ## Founder action (remaining P0)
 
-👉 **[FOUNDER_DEPLOY.md](FOUNDER_DEPLOY.md)** — worker on Railway/Fly + migrations (20 min)
+👉 **[WORKER_QUICKSTART.md](WORKER_QUICKSTART.md)** — deploy worker (10 min)  
+👉 **[FOUNDER_DEPLOY.md](FOUNDER_DEPLOY.md)** — full backend checklist
 
 ```bash
 ./scripts/founder-preflight.sh   # production + billing + migrations + worker

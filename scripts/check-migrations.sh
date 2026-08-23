@@ -48,9 +48,8 @@ fi
 
 if [[ $fail -ne 0 ]]; then
   echo ""
-  echo "Apply pending migrations:"
-  echo "  ./scripts/apply-migrations.sh > /tmp/zengtrade-migrations.sql"
-  echo "  # paste into Supabase SQL Editor"
+  echo "Apply pending migrations (likely 0011 only):"
+  echo "  ./scripts/migrate-0011-only.sh"
   exit 1
 fi
 echo "All migration probes passed."

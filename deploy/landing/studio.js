@@ -97,6 +97,30 @@
 
   var FREE_DEPLOY_LIMIT = 1;
 
+  function maybeWorkerBanner() {
+    ORIG(SUPA + "/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at", {
+      headers: sbHeaders(),
+    }).then(function (r) { return r.json(); }).then(function (rows) {
+      var ts = rows && rows[0] && rows[0].updated_at;
+      if (!ts) return showWorkerDown();
+      var age = Date.now() - new Date(ts).getTime();
+      if (age > 12 * 60 * 1000) showWorkerDown();
+    }).catch(function () {});
+  }
+  function showWorkerDown() {
+    if (document.getElementById("ztWorkerDown")) return;
+    var el = document.createElement("div");
+    el.id = "ztWorkerDown";
+    el.setAttribute("role", "status");
+    el.style.cssText =
+      "position:fixed;top:0;left:0;right:0;z-index:95;padding:8px 14px;text-align:center;" +
+      "font:600 12.5px/1.4 var(--sans,system-ui);background:#fff8e6;color:#7a5a00;" +
+      "border-bottom:1px solid #f0d78a";
+    el.textContent = "Paper worker offline — deploys save, but trades pause until the worker restarts.";
+    document.body.appendChild(el);
+  }
+  maybeWorkerBanner();
+
   /* ---- customers live in the Algo Studio: persona pinned, crypto book pinned ---- */
   try {
     var K = "tradepro.terminal.v1";
