@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T21:23:32Z",
+  "updated": "2026-08-23T21:26:13Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -93,7 +93,8 @@
       "cto.md + worker README production Railway path (session 111)",
       "cpo.md + cbo.md charter refresh (session 112)",
       "docs/WORKER_RECOVERY.md + /ops/worker link (session 115)",
-      "sync-ops-gates passes SITE to parallel growth probe (session 115)"
+      "sync-ops-gates passes SITE to parallel growth probe (session 115)",
+      "guide-founder-parallel.sh founder playbook while worker blocked (session 118)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -338,7 +339,8 @@
       "security-smoke.sh in CI smoke + health-watch (6h)",
       "RLS anon probes: deployment/trade empty without auth JWT",
       "QA_VAPT_CHECKLIST V2 event whitelist marked done (session 87)",
-      "security-smoke IPN probe retries on transient 502/503 (session 114)"
+      "security-smoke IPN probe retries on transient 502/503 (session 114)",
+      "Q8b partial activation probe in QA_VAPT_CHECKLIST (session 118)"
     ],
     "next": "Run security-smoke + E2E after P0; manual RLS isolation (2 accounts)",
     "links": [

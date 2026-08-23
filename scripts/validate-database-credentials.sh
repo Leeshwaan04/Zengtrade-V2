@@ -31,7 +31,7 @@ if [[ -n "$url" ]]; then
   echo "  → Update Railway paper-worker or Cloud Agent DATABASE_PASSWORD secret"
   echo "  → Or GitHub Secrets: DATABASE_PASSWORD + RAILWAY_API_TOKEN → Apply P0 workflow"
   echo "  → Deploy on Railway"
-  echo "  Guide: https://zengtrade.in/ops/worker"
+  echo "  → Guide: https://zengtrade.in/ops/worker · docs/WORKER_RECOVERY.md"
   echo ""
   ./scripts/founder-parallel-work.sh 2>/dev/null || true
   exit 1

@@ -314,10 +314,10 @@ async function refresh() {
   const parallelList = document.getElementById("parallelList");
   if (!worker.ok && migOk && parallel && parallelList) {
     const items = [];
-    if (activationOk) items.push(`<li><b>CPO</b> — <a href="/ops/e2e">partial E2E</a> steps 1–2 · <a href="/login?mode=signup">signup</a> → <a href="/dashboard">deploy</a></li>`);
-    if (billingReadyOk) items.push(`<li><b>CBO</b> — <a href="/ops/billing">test Pro checkout</a></li>`);
+    if (activationOk) items.push(`<li><b>CPO</b> — <a href="/ops/e2e">partial E2E</a> steps 1–2 · <code>./scripts/guide-partial-e2e.sh</code></li>`);
+    if (billingReadyOk) items.push(`<li><b>CBO / Sales</b> — <a href="/ops/billing">first Pro checkout</a> · <code>./scripts/check-sales-ready.sh</code></li>`);
     if (gscReadyOk) items.push(`<li><b>CBO</b> — <a href="/ops/gsc">GSC sitemap submit</a></li>`);
-    if (parallelOk) items.push(`<li><b>CLI</b> — <code>./scripts/check-parallel-growth.sh</code> (all parallel gates green)</li>`);
+    if (parallelOk) items.push(`<li><b>CLI</b> — <code>./scripts/guide-founder-parallel.sh</code> · <code>./scripts/check-parallel-growth.sh</code></li>`);
     if (items.length) {
       parallel.hidden = false;
       parallelList.innerHTML = items.join("");
