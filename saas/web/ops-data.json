@@ -249,7 +249,7 @@
       "GSC founder completion log \u2014 GSC_SETUP.md + /ops/gsc (session 117)",
       "ops founder_actions: sales checkout + LinkedIn BIP (session 120)",
       "guide-gsc-founder.sh \u2014 founder CLI GSC verify + sitemap (session 127)",
-      "/admin first-MRR CTA when paying=0 \u2014 parallel checkout while worker blocked (session 135)"
+      "/ops/gsc parallel MRR card; /ops/billing sales-ready probe (session 140)"
     ],
     "next": "Founder: GSC completion log (docs/GSC_SETUP.md); Pro checkout at /ops/billing",
     "links": [
