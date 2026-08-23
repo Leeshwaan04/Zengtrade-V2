@@ -12,6 +12,7 @@ The paper worker (`saas/worker/`) connects to Supabase Postgres and runs strateg
 | `/ops` Paper worker gate red | Same — check `engine_state._worker_heartbeat` |
 | Railway deploy **FAILED** | Often wrong `DATABASE_URL` password (auth error at startup) |
 | `validate-database-credentials.sh` → wrong password | Railway URI set but Postgres rejects auth |
+| Stale `DATABASE_URL` secret + fresh `DATABASE_PASSWORD` | `run-p0-if-ready.sh` drops bad env URI and rebuilds from password (session 143) |
 | Logs: `db connect retry` | Bad URI, wrong pooler port, or DNS lag on first deploy |
 
 ## Diagnose (no secrets printed)

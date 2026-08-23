@@ -15,11 +15,25 @@ if [[ $mig -eq 1 && $work -eq 1 ]]; then
 fi
 
 DATABASE_URL="${DATABASE_URL:-${SUPABASE_DATABASE_URL:-}}"
+if [[ -n "${DATABASE_URL:-}" ]]; then
+  sanitized=$(./scripts/sanitize-database-url.sh "$DATABASE_URL")
+  if [[ "$sanitized" != "$DATABASE_URL" ]]; then
+    echo "WARN  DATABASE_URL had [brackets] around password — auto-stripping"
+    DATABASE_URL="$sanitized"
+    export DATABASE_URL
+  fi
+  if ! DATABASE_URL="$DATABASE_URL" ./scripts/test-database-url.sh >/dev/null 2>&1; then
+    echo "WARN  DATABASE_URL in env failed auth — trying DATABASE_PASSWORD / Railway"
+    DATABASE_URL=""
+    unset DATABASE_URL 2>/dev/null || true
+  fi
+fi
+
 if [[ -z "${DATABASE_URL:-}" ]]; then
   if resolved=$(./scripts/resolve-database-url.sh 2>/dev/null); then
     DATABASE_URL="$resolved"
     export DATABASE_URL
-    echo "OK   DATABASE_URL resolved (env password or Railway)"
+    echo "OK   DATABASE_URL resolved (password secret or Railway)"
   fi
 fi
 
@@ -36,7 +50,7 @@ if [[ -n "${DATABASE_URL:-}" ]]; then
   if ! DATABASE_URL="$DATABASE_URL" ./scripts/test-database-url.sh >/dev/null 2>&1; then
     echo "BLOCKED: DATABASE_URL resolves but Postgres auth fails — fix password on Railway or set DATABASE_PASSWORD secret"
     echo ""
-    ./scripts/check-p0-readiness.sh
+    ./scripts/validate-database-credentials.sh 2>/dev/null || ./scripts/check-p0-readiness.sh
     exit 1
   fi
   export DATABASE_URL
@@ -45,7 +59,7 @@ if [[ -n "${DATABASE_URL:-}" ]]; then
 fi
 
 echo ""
-./scripts/check-p0-readiness.sh || true
+./scripts/check-p0-readiness.sh 2>/dev/null || ./scripts/validate-database-credentials.sh 2>/dev/null || true
 echo ""
 ./scripts/founder-parallel-work.sh 2>/dev/null || true
 if ./scripts/check-founder-parallel-ready.sh >/dev/null 2>&1; then
