@@ -84,6 +84,13 @@ import { SITE } from "/js/config.js";
 const $=id=>document.getElementById(id), msg=$("msg");
 const show=(t,ok)=>{msg.className="msg "+(ok?"ok":"err");msg.textContent=t;};
 const busy=(b,on,txt)=>{b.disabled=on;if(txt)b.textContent=txt;};
+function goAfterAuth(){
+  const pl=localStorage.getItem("zt_intent_plan");
+  if(pl==="pro"||pl==="elite"){
+    try{ localStorage.removeItem("zt_intent_plan"); }catch(e){}
+    location.href=SITE.app+"#pricing";
+  }else location.href=SITE.dashboard;
+}
 
 (async function boot(){
   const q=new URLSearchParams(location.search);
@@ -91,7 +98,7 @@ const busy=(b,on,txt)=>{b.disabled=on;if(txt)b.textContent=txt;};
   try{
     await establishSession();
     const u=await currentUser();
-    if(u) location.replace(SITE.dashboard);
+    if(u) goAfterAuth();
   }catch(e){ show(niceError(e)); history.replaceState({}, "", location.pathname); }
 })();
 
@@ -104,7 +111,7 @@ $("t-up").onclick=()=>{$("t-up").ariaSelected="true";$("t-in").ariaSelected="fal
   const _pl=_q.get("plan"); if(_pl==="pro"||_pl==="elite") localStorage.setItem("zt_intent_plan",_pl); }
 
 $("f-in").onsubmit=async e=>{e.preventDefault();const b=e.target.querySelector("button");busy(b,true,"Signing in…");
-  try{ await signIn($("i-email").value.trim(), $("i-pw").value); location.href=SITE.dashboard; }
+  try{ await signIn($("i-email").value.trim(), $("i-pw").value); goAfterAuth(); }
   catch(err){ show(niceError(err)); busy(b,false,"Sign in"); }};
 
 $("f-up").onsubmit=async e=>{e.preventDefault();const b=e.target.querySelector("button");busy(b,true,"Creating…");

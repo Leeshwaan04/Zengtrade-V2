@@ -16,4 +16,6 @@ export const SITE = {
   redirectTo: origin + "/login",
   // Post-auth product (Algo Studio customer edition on zengtrade.in).
   dashboard: origin + "/dashboard",
+  // SaaS SPA: billing, evidence tabs, pricing hash route.
+  app: origin + "/app",
 };
