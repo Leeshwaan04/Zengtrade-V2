@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T19:38:00Z",
+  "updated": "2026-08-23T19:40:00Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -62,7 +62,8 @@
       "/ops/worker + /ops/p0 wrong-password callout when migration green + heartbeat stale (session 83)",
       "founder-next-action.sh detects invalid Railway DATABASE_URL password (session 83)",
       "validate-database-credentials.sh — preflight before run-p0-if-ready (session 84)",
-      "worker.py + check-railway-deploy.sh hint on Postgres auth failure (session 85)"
+      "worker.py + check-railway-deploy.sh hint on Postgres auth failure (session 85)",
+      "/admin P0 banner: wrong-password callout when migration green (session 86)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -142,7 +143,8 @@
       "check-funnel-ctas.sh \u2014 home/pricing signup utm tags in CI",
       "check-pricing-truth.sh covers /app upsell copy (session 82)",
       "post-p0-success.sh runs check-funnel-ctas + check-sitemap (session 84)",
-      "Activation upsell on /app after first closed trade (session 85)"
+      "check-funnel-ctas.sh covers coins hub + bitcoin pSEO (session 86)",
+      "check-plan-intent.sh — ?plan=pro|elite → /app#pricing (session 86)"
     ],
     "next": "GSC sitemap + first proof post after forward trades exist; Pro checkout E2E at /ops/billing",
     "links": [
@@ -232,7 +234,8 @@
       "plan_intent + checkout_click funnel events (migration 0011)",
       "?plan=pro|elite \u2192 /app#pricing after auth",
       "check-pricing-truth.sh \u2014 no live execution overpromise",
-      "Billing test guide at /ops/billing"
+      "Billing test guide at /ops/billing",
+      "check-plan-intent.sh in CI + post-p0-success (session 86)"
     ],
     "next": "First Pro checkout E2E once P0 green; track MRR in /admin",
     "links": [

@@ -859,6 +859,22 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/status-report.sh` @ 19:38Z)
 - worker ❌ · billing ✅ · migration 0011 ✅
 
+### Day 1 (session 86) — funnel probes + admin P0 banner
+
+### CTO
+- **Shipped:** `/admin` P0 banner shows wrong-password guidance when migration green + heartbeat stale >60m.
+- **Blocked:** Railway Postgres password still invalid.
+
+### CBO
+- **Shipped:** `check-funnel-ctas.sh` now verifies coins hub + bitcoin pSEO UTMs.
+- **Verified:** all 4 CTA pages tagged on production.
+
+### Sales
+- **Shipped:** `check-plan-intent.sh` — verifies `?plan=pro|elite` → `/app#pricing` on production login; added to CI + post-p0-success.
+
+### Status (`./scripts/status-report.sh` @ 19:40Z)
+- worker ❌ · funnel CTAs ✅ · plan-intent ✅ · e2e_smoke ✅
+
 ---
 
 ### CTO
