@@ -27,6 +27,9 @@ if [[ $mig -eq 1 && $work -eq 0 ]]; then
   if ./scripts/verify-partial-activation.sh >/dev/null 2>&1; then
     echo "Partial activation ✅ — run manual steps 1–2 at /ops/e2e"
     echo "  CLI guide: ./scripts/guide-partial-e2e.sh"
+    if ./scripts/verify-activation-path.sh --partial >/dev/null 2>&1; then
+      echo "  Full partial gate: ./scripts/verify-activation-path.sh --partial"
+    fi
   elif SITE=https://zengtrade.in ./scripts/check-activation-ready.sh >/dev/null 2>&1; then
     echo "Activation UI ✅ — signup → deploy path ready for manual test"
   else

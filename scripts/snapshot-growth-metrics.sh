@@ -35,6 +35,13 @@ echo "| Metric | Today (probes) |"
 echo "|--------|----------------|"
 echo "| Worker status | $worker_txt |"
 echo "| Migration 0011 | $([[ $mig -eq 1 ]] && echo '✅' || echo '❌') |"
+partial=0
+if [[ $work -eq 0 && $mig -eq 1 ]]; then
+  ./scripts/verify-activation-path.sh --partial >/dev/null 2>&1 && partial=1
+fi
+if [[ $work -eq 0 ]]; then
+  echo "| Partial activation (signup→deploy) | $([[ $partial -eq 1 ]] && echo '✅' || echo '❌') verify-activation-path --partial |"
+fi
 echo "| Activation UI | $([[ $act -eq 1 ]] && echo '✅' || echo '❌') |"
 echo "| Billing-ready | $([[ $bill -eq 1 ]] && echo '✅' || echo '❌') |"
 sales=0 qa=0

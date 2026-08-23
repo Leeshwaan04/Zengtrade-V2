@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 GROWTH="$ROOT/docs/GROWTH_DASHBOARD.md"
 
-work=0 parallel=0 sales=0 qa=0 mig=0
+work=0 parallel=0 sales=0 qa=0 mig=0 partial=0
 ./scripts/check-migrations.sh >/dev/null 2>&1 && mig=1
 ./scripts/check-worker.sh >/dev/null 2>&1 && work=1
 for _ in 1 2 3; do
@@ -13,6 +13,7 @@ for _ in 1 2 3; do
   [[ $parallel -eq 0 ]] && ./scripts/check-founder-parallel-ready.sh >/dev/null 2>&1 && parallel=1
   [[ $sales -eq 0 ]] && ./scripts/check-sales-ready.sh >/dev/null 2>&1 && sales=1
   [[ $qa -eq 0 ]] && ./scripts/check-qa-parallel.sh >/dev/null 2>&1 && qa=1
+  [[ $partial -eq 0 && $work -eq 0 && $mig -eq 1 ]] && ./scripts/verify-activation-path.sh --partial >/dev/null 2>&1 && partial=1
   sleep 2
 done
 
@@ -29,10 +30,11 @@ else
 fi
 
 parallel_today=$([[ $parallel -eq 1 ]] && echo "✅ founder-parallel-ready" || echo "❌ run ./scripts/check-founder-parallel-ready.sh")
+partial_today=$([[ $partial -eq 1 ]] && echo "✅ verify-activation-path --partial" || echo "❌")
 sales_today=$([[ $sales -eq 1 ]] && echo "✅ check-sales-ready.sh" || echo "❌")
 qa_today=$([[ $qa -eq 1 ]] && echo "✅ check-qa-parallel.sh" || echo "❌")
 
-export WORKER_TODAY="$worker_today" PARALLEL_TODAY="$parallel_today" SALES_TODAY="$sales_today" QA_TODAY="$qa_today" MIG_TODAY=$([[ $mig -eq 1 ]] && echo "✅" || echo "❌")
+export WORKER_TODAY="$worker_today" PARALLEL_TODAY="$parallel_today" PARTIAL_TODAY="$partial_today" SALES_TODAY="$sales_today" QA_TODAY="$qa_today" MIG_TODAY=$([[ $mig -eq 1 ]] && echo "✅" || echo "❌")
 python3 <<'PY'
 import os
 import re
@@ -50,6 +52,16 @@ def sub_row(label: str, today: str) -> None:
         text = new
 
 sub_row("Worker status", os.environ["WORKER_TODAY"])
+if "| Partial activation (signup→deploy) |" in text:
+    sub_row("Partial activation (signup→deploy)", os.environ["PARTIAL_TODAY"])
+else:
+    needle = "| Worker status |"
+    insert = f"| Partial activation (signup→deploy) | — | {os.environ['PARTIAL_TODAY']} | — |\n"
+    idx = text.find(needle)
+    if idx >= 0:
+        line_end = text.find("\n", idx)
+        text = text[: line_end + 1] + insert + text[line_end + 1 :]
+
 sub_row("Parallel growth (excl. worker)", os.environ["PARALLEL_TODAY"])
 
 if "| QA parallel |" in text:

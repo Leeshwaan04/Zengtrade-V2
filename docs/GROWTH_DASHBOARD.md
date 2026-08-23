@@ -11,6 +11,7 @@
 | Paying Pro/Elite | — | — | 10 |
 | MRR (USD) | $0 | $0 | $290 |
 | Worker status | Unknown | Offline (last heartbeat 2026-08-11T09:57:38 UTC · wrong Railway DB password) | Live 99% |
+| Partial activation (signup→deploy) | — | ✅ verify-activation-path --partial | — |
 | Parallel growth (excl. worker) | — | ✅ founder-parallel-ready | — |
 | Sales-ready | — | ✅ check-sales-ready.sh | — |
 | QA parallel | — | ✅ check-qa-parallel.sh | — |
@@ -1767,6 +1768,33 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 
 ### Status (`./scripts/check-growth-standup.sh` @ 22:45Z)
 - worker ❌ · migration 0011 ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
+
+### Day 1 (session 138) — Partial activation in growth metrics + dashboard header
+
+### CTO
+- **Shipped:** founder-parallel-work + check-e2e-gates surface verify-activation-path --partial
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** snapshot-growth-metrics + log-growth-session + GROWTH_DASHBOARD partial activation row
+
+### CBO
+- **Shipped:** —
+
+### SEO
+- **Shipped:** —
+
+### Marketing
+- **Shipped:** —
+
+### Sales
+- **Shipped:** —
+
+### QA&VAPT
+- **Shipped:** —
+
+### Status (`./scripts/check-growth-standup.sh` @ 22:50Z)
+- worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
 
 ---
 
