@@ -194,6 +194,27 @@ PRICING_MAIN = f"""<main id="main">
   <section class="lp-sec home-final"><div class="lp-wrap home-final-in"><h2 class="lp-h2">Start free. Upgrade only when it's earned.</h2><div class="lp-cta-row center"><a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=pricing">Start free, no card</a></div></div></section>
 </main>"""
 
+# CBO: blog-quality paper loop section (how-it-works only — compounds SEO + activation clarity)
+PAPER_LOOP_SEC = """
+  <section class="lp-sec" id="paper-loop" aria-labelledby="h-paper">
+    <div class="lp-wrap">
+      <div class="lp-eyebrow"><span class="dot"></span> activation loop</div>
+      <h2 id="h-paper" class="lp-h2">Paper trading that mirrors what would run live</h2>
+      <p class="lp-sub">No simulated prices. The worker reads the same Binance tape the backtest used and writes every fill to your isolated book. What you see in Forward Test is what the engine would have done — costs included.</p>
+      <div class="lp-grid3">
+        <div class="home-card"><div class="hc-ic">1</div><b>Deploy in Algo Studio</b><span>Pick a strategy from the library or build your own. One click deploys paper mode — your capital stays untouched.</span></div>
+        <div class="home-card"><div class="hc-ic">2</div><b>Worker runs every ~5 min</b><span>Live spot prices, full cost model (~35 bps round-trip baked in). Stands down in regimes where the book has no edge.</span></div>
+        <div class="home-card"><div class="hc-ic">3</div><b>Evidence in /app</b><span>Forward Test, accuracy, and activity tabs build an honest track record before you ever connect an exchange.</span></div>
+      </div>
+      <div class="lp-cta-row center" style="margin-top:18px">
+        <a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=paper_loop">Start paper trading free</a>
+        <a class="lp-cta ghost" href="/dashboard">Open Algo Studio</a>
+      </div>
+    </div>
+  </section>
+"""
+main_hiw_paper = main_hiw + PAPER_LOOP_SEC
+
 HOME_CSS = """
 /* ===== home + pricing (shared components, same tokens) ===== */
 .lp-cta-row{display:flex;gap:12px;flex-wrap:wrap;margin:22px 0 10px}.lp-cta-row.center{justify-content:center}
@@ -330,7 +351,7 @@ emit("", shell(
 emit("how-it-works", shell(
     "How zengtrade works, the regime engine, honesty & survival-first risk",
     "How zengtrade works: it reads Bull/Neutral/Bear regimes, runs only the strategies proven to fit, never fabricates a number, and protects capital first. Paper-first, non-custodial.",
-    "https://zengtrade.in/how-it-works/", main_hiw), "https://zengtrade.in/how-it-works/")
+    "https://zengtrade.in/how-it-works/", main_hiw_paper), "https://zengtrade.in/how-it-works/")
 
 emit("pricing", shell(
     "Pricing, free to start, pay only for live execution | zengtrade",

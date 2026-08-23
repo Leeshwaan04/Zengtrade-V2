@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T17:03:00Z",
+  "updated": "2026-08-23T17:05:00Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -109,7 +109,8 @@
       "check-sitemap.sh verifies 7 coin pSEO URLs in production sitemap",
       "Coin + coins hub signup CTAs tagged utm_campaign=coin_* / coins_hub",
       "r/algotrading draft ready (post after P0)",
-      "check-pricing-truth.sh — Pro copy must not promise live execution as shipped"
+      "check-pricing-truth.sh — Pro copy must not promise live execution as shipped",
+      "Paper trading loop section on /how-it-works (#paper-loop)"
     ],
     "next": "GSC sitemap + first proof post after forward trades exist; Pro checkout E2E at /ops/billing",
     "links": [

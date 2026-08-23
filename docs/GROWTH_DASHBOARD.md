@@ -608,6 +608,15 @@
 ### Status (`./scripts/status-report.sh` @ 17:03Z)
 - migration 0011 ❌ | worker ❌ | pricing truth ✅
 
+### Day 1 (session 52) — CBO paper loop on /how-it-works
+
+### CBO
+- **Shipped:** `#paper-loop` section on `/how-it-works` — deploy → worker → evidence story + UTM CTA.
+- **Shipped:** `founder-preflight.sh` runs pricing truth + Railway deploy probe when token set.
+
+### Status (`./scripts/status-report.sh` @ 17:05Z)
+- migration 0011 ❌ | worker ❌ | PR #7 CI ✅
+
 ---
 
 ### CTO

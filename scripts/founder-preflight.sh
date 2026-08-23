@@ -20,6 +20,20 @@ else
 fi
 echo ""
 
+echo ">> Pricing funnel truth (CBO)"
+if ./scripts/check-pricing-truth.sh 2>/dev/null; then
+  PRICE_OK=1
+else
+  PRICE_OK=0
+fi
+echo ""
+
+if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
+  echo ">> Railway paper-worker deploy"
+  ./scripts/check-railway-deploy.sh 2>/dev/null || true
+  echo ""
+fi
+
 echo ">> Production probe ($SITE)"
 if SITE="$SITE" ./scripts/check-production.sh; then
   PROD_OK=1
@@ -55,9 +69,10 @@ echo ""
 echo "=== Summary ==="
 [[ $PROD_OK -eq 1 ]] && echo "✅ Production site probes passed" || echo "❌ Production — check Pages deploy"
 [[ $BILL_OK -eq 1 ]] && echo "✅ Billing functions deployed" || echo "❌ Billing — run scripts/deploy-billing.sh + secrets"
-[[ $MIG_OK -eq 1 ]] && echo "✅ Migrations applied" || echo "❌ Migrations — apply 0009–0011 (see apply-migrations.sh)"
+[[ $MIG_OK -eq 1 ]] && echo "✅ Migrations applied" || echo "❌ Migrations — apply 0011 (see /ops/migrate or apply-p0.yml)"
 [[ $WORK_OK -eq 1 ]] && echo "✅ Worker heartbeat fresh" || echo "❌ Worker — deploy saas/worker (FOUNDER_DEPLOY.md §4)"
 [[ $SEC_OK -eq 1 ]] && echo "✅ Security smoke passed" || echo "❌ Security — run ./scripts/security-smoke.sh"
+[[ ${PRICE_OK:-0} -eq 1 ]] && echo "✅ Pricing funnel truth" || echo "❌ Pricing — run ./scripts/check-pricing-truth.sh"
 echo ""
 if SITE="$SITE" ./scripts/check-sitemap.sh 2>/dev/null; then
   echo "✅ Sitemap includes all coin pSEO pages"
