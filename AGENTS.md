@@ -26,13 +26,13 @@ QA&VAPT charter: `.cursor/autopilot/qavapt.md` · checklist: `docs/QA_VAPT_CHECK
 
 ### Autopilot P0 blocker (founder-owned)
 
-Agents **cannot** apply migration 0011 or deploy the worker without secrets in the VM. When `DATABASE_URL` + `RAILWAY_TOKEN` are provided (Cloud Agent secrets), run:
+Agents **cannot** apply migration 0011 or deploy the worker without secrets in the VM. When `DATABASE_URL` + `RAILWAY_API_TOKEN` are provided (Cloud Agent secrets), run:
 
 ```bash
 ./scripts/apply-p0-autopilot.sh
 ```
 
-Founder-approved Railway project: `f5902ffd-5b3f-49ed-b87d-dad21568185b` (override with `RAILWAY_PROJECT_ID`).
+**Note:** Account tokens from railway.com/account/tokens use `RAILWAY_API_TOKEN` (not `RAILWAY_TOKEN`). The `paper-worker` service (`0decae25-fab5-44f1-aefa-af6fcd5f070a`) is configured for `saas/worker` Dockerfile — the older `Zengtrade-V2` service was deploying the static site by mistake.
 
 Verify with:
 

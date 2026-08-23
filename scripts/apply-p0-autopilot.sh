@@ -1,17 +1,22 @@
 #!/usr/bin/env bash
 # Apply migration 0011 + deploy paper worker when secrets are available in the environment.
-# Required env:
-#   DATABASE_URL  — Supabase Postgres URI (session pooler :5432)
-#   RAILWAY_TOKEN — Railway API token (for worker deploy)
+#
+# Required:
+#   DATABASE_URL       — Supabase Postgres URI (session pooler :5432)
+#   RAILWAY_API_TOKEN  — Account token from railway.com/account/tokens
+#
 # Optional:
-#   RAILWAY_PROJECT_ID — default f5902ffd-5b3f-49ed-b87d-dad21568185b (founder-approved)
-#   RAILWAY_SERVICE      — existing Railway service name/id to link (if project has multiple)
-#   WORKER_INTERVAL      — default 300
+#   RAILWAY_PROJECT_ID — default f5902ffd-5b3f-49ed-b87d-dad21568185b
+#   RAILWAY_ENV_ID     — default production env in that project
+#   RAILWAY_SERVICE_ID — default paper-worker service (0decae25-…)
+#   WORKER_INTERVAL    — default 300
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 PROJECT_ID="${RAILWAY_PROJECT_ID:-f5902ffd-5b3f-49ed-b87d-dad21568185b}"
+ENV_ID="${RAILWAY_ENV_ID:-354b0010-b9a7-48ef-a809-c239f9469fa9}"
+SERVICE_ID="${RAILWAY_SERVICE_ID:-0decae25-fab5-44f1-aefa-af6fcd5f070a}"
 MIG_SQL="$ROOT/saas/db/migrations/0011_funnel_events_v2.sql"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
@@ -32,39 +37,34 @@ fi
 
 echo ""
 
-# --- Paper worker (Railway) ---
+# --- Paper worker (Railway GraphQL API) ---
 if ./scripts/check-worker.sh >/dev/null 2>&1; then
   echo "OK   paper worker heartbeat fresh"
 else
   [[ -n "${DATABASE_URL:-}" ]] || die "DATABASE_URL not set — worker needs DB"
-  [[ -n "${RAILWAY_TOKEN:-}" ]] || die "RAILWAY_TOKEN not set — cannot deploy to Railway"
-  command -v railway >/dev/null || die "railway CLI not installed"
+  [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]] || die "RAILWAY_API_TOKEN not set — cannot deploy to Railway"
 
-  echo ">> Deploying worker to Railway project $PROJECT_ID…"
-  export RAILWAY_TOKEN
-  cd "$ROOT/saas/worker"
+  echo ">> Configuring paper-worker on Railway ($PROJECT_ID)…"
+  # shellcheck source=/dev/null
+  source "$ROOT/scripts/railway-api.sh"
+  export RAILWAY_PROJECT_ID="$PROJECT_ID" RAILWAY_ENV_ID="$ENV_ID" RAILWAY_SERVICE_ID="$SERVICE_ID"
 
-  railway link -p "$PROJECT_ID" -y 2>/dev/null || railway link -p "$PROJECT_ID"
+  railway_set_vars "$PROJECT_ID" "$ENV_ID" "$SERVICE_ID" \
+    "DATABASE_URL=${DATABASE_URL}" \
+    "WORKER_INTERVAL=${WORKER_INTERVAL:-300}"
 
-  if [[ -n "${RAILWAY_SERVICE:-}" ]]; then
-    railway service link "$RAILWAY_SERVICE" 2>/dev/null || true
-  fi
+  railway_ensure_worker_service >/dev/null
+  railway_redeploy "$ENV_ID" "$SERVICE_ID"
 
-  railway variable set "DATABASE_URL=${DATABASE_URL}" --skip-deploys
-  railway variable set "WORKER_INTERVAL=${WORKER_INTERVAL:-300}" --skip-deploys
-
-  railway up -d -y
-
-  cd "$ROOT"
   echo ">> Waiting for worker heartbeat (up to 6 min)…"
-  for i in $(seq 1 24); do
+  for _ in $(seq 1 24); do
     if ./scripts/check-worker.sh >/dev/null 2>&1; then
       echo "OK   worker heartbeat fresh"
       break
     fi
     sleep 15
   done
-  ./scripts/check-worker.sh || die "Worker still stale after deploy — check Railway logs"
+  ./scripts/check-worker.sh || die "Worker still stale — check Railway paper-worker logs"
 fi
 
 echo ""

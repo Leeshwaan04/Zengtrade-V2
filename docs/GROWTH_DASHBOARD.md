@@ -554,6 +554,14 @@
 ### Status (`./scripts/status-report.sh` @ 16:17Z)
 - migration 0011 ❌ | worker ❌
 
+### Day 1 (session 46) — Railway token + paper-worker service
+
+### CTO
+- **Shipped:** Railway account token accepted via GraphQL (`RAILWAY_API_TOKEN`).
+- **Found:** `Zengtrade-V2` Railway service was deploying static site, not worker.
+- **Shipped:** New `paper-worker` service (Dockerfile `saas/worker`); `scripts/railway-api.sh`.
+- **Blocked:** `DATABASE_URL` missing — need for migration 0011 + worker env.
+
 ---
 
 ### CTO
