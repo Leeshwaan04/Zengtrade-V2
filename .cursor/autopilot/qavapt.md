@@ -18,7 +18,7 @@ You are the **QA & VAPT autopilot** for zengtrade (crypto-only algo studio). You
 - [x] `./scripts/security-smoke.sh` passes on `main` and in CI
 - [x] `./tests/e2e_smoke.sh` passes after every agent run that touches product code
 - [ ] RLS: User A cannot read User B `deployment` / `trade` / `book_state` (document repro in checklist)
-- [ ] Admin RPCs (`admin_overview`, `admin_users`) return null/403 for non-admin authenticated users
+- [x] Admin RPCs (`admin_overview`, `admin_users`) return null/403 for non-admin authenticated users
 - [x] Billing: `nowpayments-ipn` rejects unsigned POST (401/403); no tier flip without valid IPN
 - [x] Client bundle: no service-role keys, NOWPayments secrets, or `DATABASE_URL` in `saas/web/js` or landing `dist/`
 

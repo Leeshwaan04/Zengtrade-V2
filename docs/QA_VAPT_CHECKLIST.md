@@ -8,7 +8,7 @@
 | Q1 | Client secrets | No service_role / API keys in browser JS | ☑ | `security-smoke.sh` (2026-08-23) |
 | Q2 | Auth | `establishSession` on `/js/auth.js` | ☑ | `security-smoke.sh` + prod |
 | Q3 | RLS | User A ≠ User B trades/deployments | ☐ | Manual 2-account `/ops/e2e` step 5 |
-| Q4 | Admin | Non-admin cannot read `admin_overview` metrics | ☑ | `security-smoke.sh` admin_users 401 |
+| Q4 | Admin | Non-admin cannot read `admin_overview` metrics | ☑ | `security-smoke.sh` admin_users 401 + RLS empty anon |
 | Q5 | Billing IPN | Unsigned webhook rejected | ☑ | `security-smoke.sh` + `verify-billing.sh` |
 | Q6 | Funnel | `signup_complete` not on sign-in only | ☑ | `login.html` PENDING_SIGNUP_KEY (code review) |
 | Q7 | E2E smoke | Landing build + worker compile | ☑ | `e2e_smoke.sh` CI |

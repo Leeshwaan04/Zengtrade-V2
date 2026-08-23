@@ -519,6 +519,17 @@
 1. Migration 0011 → https://zengtrade.in/ops/migrate
 2. Paper worker → https://zengtrade.in/ops/worker
 
+### Day 1 (session 42) — qavapt RLS anon probes + P0 migrate CTA
+
+### QA&VAPT
+- **Shipped:** `security-smoke.sh` probes anon `deployment`/`trade` reads return empty (RLS baseline).
+
+### CTO
+- **Shipped:** `/ops/p0` step 1 highlights GitHub Secrets + `APPLY` for one-click migration.
+
+### Status (`./scripts/status-report.sh` @ 16:05Z)
+- migration 0011 ❌ | worker ❌
+
 ---
 
 ## Daily log template

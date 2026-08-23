@@ -50,6 +50,21 @@ else
   bad "admin_users RPC should require auth (HTTP $rpc_code)"
 fi
 
+# --- RLS: anon cannot enumerate user rows (empty set, not open read) ---
+SUPA="${SUPABASE_URL:-https://ponvarxeytfcntckczbn.supabase.co}"
+ANON="${ANON_KEY:-sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1}"
+for table in deployment trade; do
+  body=$(curl -sfL "$SUPA/rest/v1/${table}?select=user_id&limit=5" \
+    -H "apikey: $ANON" 2>/dev/null || echo "ERR")
+  if [[ "$body" == "[]" ]]; then
+    ok "RLS $table — anon read returns empty"
+  elif [[ "$body" == "ERR" ]]; then
+    bad "RLS $table — could not probe"
+  else
+    bad "RLS $table — anon may have read rows (review)"
+  fi
+done
+
 # --- charter + checklist exist ---
 test -f .cursor/autopilot/qavapt.md && ok "qavapt charter present" || bad "missing .cursor/autopilot/qavapt.md"
 test -f docs/QA_VAPT_CHECKLIST.md && ok "QA_VAPT_CHECKLIST.md present" || bad "missing docs/QA_VAPT_CHECKLIST.md"
