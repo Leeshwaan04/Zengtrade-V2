@@ -77,6 +77,7 @@ if [[ $db_set -eq 0 && $rail_db -eq 1 && $rail_set -eq 1 ]]; then
   fi
   if [[ -n "${rail_resolved:-}" ]]; then
     echo "BLOCKED: Railway DATABASE_URL password invalid — reset in Supabase, update Railway, Deploy"
+    echo "  Test after fix: ./scripts/validate-database-credentials.sh"
     exit 1
   fi
 fi

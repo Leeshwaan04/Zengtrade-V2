@@ -14,7 +14,7 @@ echo "3. Copy the FULL URI (starts with postgresql://postgres.ponvarxeytfcntckcz
 echo "4. Or add Cloud Agent secret DATABASE_PASSWORD (database password only) — agent builds URI"
 echo ""
 echo "Verify (after secret is set):"
-echo "  ./scripts/test-database-url.sh"
+echo "  ./scripts/validate-database-credentials.sh"
 echo "  ./scripts/run-p0-if-ready.sh"
 echo ""
 echo "Manual migration (no DATABASE_URL): https://zengtrade.in/ops/migrate"

@@ -71,7 +71,15 @@ async function gates(){
     pre.innerHTML="✓ P0 ready — run the steps below";
     pre.className="gatebox ok";
   }else if(mig&&!work){
-    pre.innerHTML='✗ Migration 0011 live — add <a href="https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b" target="_blank" rel="noopener">DATABASE_URL on Railway paper-worker</a> and redeploy, or <a href="/ops/worker">worker guide</a>. Then <code>./scripts/wait-for-p0.sh</code> auto-deploys.';
+    const hbEl=document.getElementById("hb");
+    const ageTxt=hbEl?.textContent||"";
+    const ageMin=parseInt(ageTxt,10);
+    const likelyBadPw=ageTxt==="none"||(!isNaN(ageMin)&&ageMin>60);
+    if(likelyBadPw){
+      pre.innerHTML='✗ Migration 0011 live — <b>Railway DATABASE_URL password is wrong</b> (deploy FAILED). <a href="/ops/worker">Reset Supabase password</a> → copy Session URI → Railway Deploy. Or Cloud Agent secret <code>DATABASE_PASSWORD</code>.';
+    }else{
+      pre.innerHTML='✗ Migration 0011 live — <a href="https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b" target="_blank" rel="noopener">deploy paper-worker</a> or <a href="/ops/worker">worker guide</a>. <code>./scripts/wait-for-p0.sh</code> auto-deploys when credentials work.';
+    }
     pre.className="gatebox bad";
   }else{
     const parts=[];

@@ -18,6 +18,11 @@ echo ">> Pricing funnel truth (CBO)"
 ./scripts/check-pricing-truth.sh
 echo ""
 
+echo ">> Funnel CTAs + sitemap (CBO / SEO)"
+./scripts/check-funnel-ctas.sh
+./scripts/check-sitemap.sh
+echo ""
+
 echo "== Manual next steps =="
 echo "CPO  E2E activation:  https://zengtrade.in/ops/e2e"
 echo "CBO  Pro checkout:    https://zengtrade.in/ops/billing"
