@@ -7,8 +7,9 @@ cd "$ROOT"
 echo "zengtrade status — $(date -u +%Y-%m-%dT%H:%MZ)"
 echo ""
 
-prod=0 mig=0 work=0 bill=0 gsc=0 act=0
-SITE=https://zengtrade.in ./scripts/check-production.sh >/dev/null 2>&1 && prod=1
+prod=0 mig=0 work=0 bill=0 gsc=0 act=0 ops_p0=0
+prod_out=$(SITE=https://zengtrade.in ./scripts/check-production.sh 2>&1) && prod=1 || true
+echo "$prod_out" | grep -q 'OK   ops-p0' && ops_p0=1
 ./scripts/check-migrations.sh >/dev/null 2>&1 && mig=1
 ./scripts/check-worker.sh >/dev/null 2>&1 && work=1
 ./scripts/check-billing-ready.sh >/dev/null 2>&1 && bill=1
@@ -37,7 +38,7 @@ if [[ $prod -eq 1 && $bill -eq 1 && $mig -eq 1 && $work -eq 1 ]]; then
   exit 0
 fi
 echo ""
-if ! SITE=https://zengtrade.in ./scripts/check-production.sh 2>/dev/null | grep -q 'OK   ops-p0'; then
+if [[ $ops_p0 -eq 0 ]]; then
   echo "Also: /ops/p0 not deployed — check GitHub Pages deploy on main."
 fi
 if [[ $mig -eq 1 && $work -eq 0 ]]; then
