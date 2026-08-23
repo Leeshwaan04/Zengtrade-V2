@@ -398,7 +398,7 @@ function renderActivity() {
       <div class="tbl-scroll"><table><thead><tr><th>When</th><th>Strategy</th><th>Symbol</th><th class="r">Entry</th><th class="r">Exit</th><th class="r">Cost</th><th class="r">P&amp;L</th></tr></thead>
       <tbody>${rows.slice(0, 200).map(tradeRow).join("")}</tbody></table></div>
       ${rows.length > 200 ? `<div class="tbl-foot">showing latest 200 of ${num(rows.length)}</div>` : ""}
-    ` : emptyDeployCta("No trades yet.", "Deploy a strategy and the worker will start filling this in.")}</div>`;
+    ` : emptyDeployCta("No trades yet.", forwardEmptyBlurb())}</div>`;
   wireEmptyDeploy();
 }
 function tradeRow(t) {

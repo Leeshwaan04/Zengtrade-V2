@@ -19,6 +19,8 @@ https://zengtrade.in/sitemap.xml
 
 Built automatically by `python3 deploy/landing/build.py` (home, how-it-works, pricing, coins/*).
 
+Verify after deploy: `./scripts/check-sitemap.sh` and `./scripts/check-seo-content.sh`
+
 ## 3. Request indexing (priority URLs)
 
 - `https://zengtrade.in/`

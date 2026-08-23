@@ -21,6 +21,7 @@ echo ""
 echo ">> Funnel CTAs + sitemap (CBO / SEO)"
 ./scripts/check-funnel-ctas.sh
 ./scripts/check-sitemap.sh
+./scripts/check-seo-content.sh
 echo ""
 
 echo ">> Plan intent routing (Sales)"
