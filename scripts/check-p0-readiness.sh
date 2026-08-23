@@ -5,7 +5,9 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 db_set=0 rail_set=0 rail_db=0 rail_resolved=""
+pw_set=0
 [[ -n "${DATABASE_URL:-${SUPABASE_DATABASE_URL:-}}" ]] && db_set=1
+[[ -n "${DATABASE_PASSWORD:-${SUPABASE_DB_PASSWORD:-}}" ]] && pw_set=1
 [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]] && rail_set=1
 if [[ $db_set -eq 0 && $rail_set -eq 1 ]]; then
   # shellcheck source=/dev/null
@@ -19,6 +21,7 @@ fi
 echo "== P0 readiness =="
 echo ""
 printf "DATABASE_URL in environment     %s\n" "$([[ $db_set -eq 1 ]] && echo '✅ set' || echo '❌ missing')"
+printf "DATABASE_PASSWORD in environment %s\n" "$([[ $pw_set -eq 1 ]] && echo '✅ set (agent can auto-fix Railway)' || echo '❌ missing — optional after Supabase reset')"
 if [[ $db_set -eq 0 && $rail_db -eq 1 ]]; then
   echo "DATABASE_URL on Railway project  ✅ found (apply-p0 will auto-resolve)"
   if [[ -n "${rail_resolved:-}" ]]; then

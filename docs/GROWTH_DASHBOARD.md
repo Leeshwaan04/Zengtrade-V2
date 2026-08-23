@@ -1003,6 +1003,24 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/status-report.sh` @ 19:59Z)
 - worker ❌ · GSC-ready ✅ · E2E blocked on worker
 
+### Day 1 (session 95) — billing-ready probe + DATABASE_PASSWORD path
+
+### CBO / Sales
+- **Shipped:** `check-billing-ready.sh` — NOWPayments + founding $19 + `checkout_click` funnel.
+- **Shipped:** `/ops/billing` live billing-ready status probe.
+- **Verified:** billing-ready on production (20:03Z) — founder can test Pro checkout now (worker optional).
+
+### CTO
+- **Shipped:** `apply-p0-autopilot.sh` uses `resolve-database-url.sh` when env/Railway URI fails auth — `DATABASE_PASSWORD` secret auto-fixes Railway on next run.
+- **Shipped:** `check-p0-readiness.sh` shows `DATABASE_PASSWORD` secret status.
+- **Blocked:** Railway Postgres password still invalid; add `DATABASE_PASSWORD` after Supabase reset.
+
+### CPO
+- **Blocked:** signup → deploy → trades E2E until worker heartbeat fresh.
+
+### Status (`./scripts/status-report.sh` @ 20:03Z)
+- worker ❌ · billing-ready ✅ · GSC-ready ✅
+
 ---
 
 ### CTO

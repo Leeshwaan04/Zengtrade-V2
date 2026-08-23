@@ -21,14 +21,24 @@ MIG_SQL="$ROOT/saas/db/migrations/0011_funnel_events_v2.sql"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 
-# Accept common secret aliases from Cloud Agent / CI
+# Resolve working DATABASE_URL (env, DATABASE_PASSWORD secret, or validated Railway)
 DATABASE_URL="${DATABASE_URL:-${SUPABASE_DATABASE_URL:-}}"
-if [[ -z "${DATABASE_URL:-}" && -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
-  # shellcheck source=/dev/null
-  source "$ROOT/scripts/railway-api.sh"
-  if resolved=$(railway_resolve_database_url 2>/dev/null); then
+if [[ -n "${DATABASE_URL:-}" ]]; then
+  sanitized=$(./scripts/sanitize-database-url.sh "$DATABASE_URL")
+  if [[ "$sanitized" != "$DATABASE_URL" ]]; then
+    echo "WARN  DATABASE_URL had [brackets] around password — auto-stripping (use Supabase copy button)"
+    DATABASE_URL="$sanitized"
+  fi
+  if ! DATABASE_URL="$DATABASE_URL" ./scripts/test-database-url.sh >/dev/null 2>&1; then
+    echo "WARN  DATABASE_URL in env failed auth — trying DATABASE_PASSWORD / Railway"
+    DATABASE_URL=""
+  fi
+fi
+if [[ -z "${DATABASE_URL:-}" ]]; then
+  if resolved=$(./scripts/resolve-database-url.sh 2>/dev/null); then
     DATABASE_URL="$resolved"
-    echo "OK   DATABASE_URL resolved from Railway project variables"
+    export DATABASE_URL
+    echo "OK   DATABASE_URL resolved (password secret or Railway)"
   fi
 fi
 

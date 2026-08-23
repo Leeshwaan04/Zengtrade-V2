@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T20:00:26Z",
+  "updated": "2026-08-23T20:04:40Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -69,7 +69,9 @@
       "founder-preflight.sh: SEO content + credential check when worker down (session 90)",
       "status-report.sh curl retry for /ops/p0 probe (session 91)",
       "check-growth-gates.sh \u2014 one-command production growth standup (session 92)",
-      "check-growth-gates.sh run() fix \u2014 production probe no longer false FAIL (session 93)"
+      "check-growth-gates.sh run() fix \u2014 production probe no longer false FAIL (session 93)",
+      "apply-p0 uses resolve-database-url when Railway password wrong (session 95)",
+      "check-p0-readiness shows DATABASE_PASSWORD secret status (session 95)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -158,7 +160,9 @@
       "check-plan-intent.sh \u2014 ?plan=pro|elite \u2192 /app#pricing (session 86)",
       "check-seo-content.sh in CI + post-p0 (session 89)",
       "check-gsc-ready.sh \u2014 sitemap + SEO + funnel + signup landing (session 94)",
-      "/ops/gsc live GSC-ready probe (session 94)"
+      "/ops/gsc live GSC-ready probe (session 94)",
+      "check-billing-ready.sh \u2014 Pro checkout + founding $19 + checkout_click (session 95)",
+      "/ops/billing live billing-ready probe (session 95)"
     ],
     "next": "GSC sitemap + first proof post after forward trades exist; Pro checkout E2E at /ops/billing",
     "links": [
@@ -254,7 +258,8 @@
       "Billing test guide at /ops/billing",
       "check-plan-intent.sh in CI + post-p0-success (session 86)",
       "check-production-pricing.sh \u2014 founding $19 on prod (session 91)",
-      "/ops/billing worker-offline note before checkout test (session 92)"
+      "/ops/billing worker-offline note before checkout test (session 92)",
+      "check-billing-ready.sh \u2014 one-command Pro checkout preflight (session 95)"
     ],
     "next": "First Pro checkout E2E once P0 green; track MRR in /admin",
     "links": [

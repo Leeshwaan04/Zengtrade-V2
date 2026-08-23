@@ -22,7 +22,7 @@ run() {
 echo "== zengtrade growth gates — $SITE =="
 
 run "Production site" env SITE="$SITE" ./scripts/check-production.sh
-run "Billing functions" "./scripts/verify-billing.sh"
+run "Billing ready (MRR)" env SITE="$SITE" ./scripts/check-billing-ready.sh
 run "Migration 0011" "./scripts/check-migrations.sh"
 
 echo ""
@@ -36,7 +36,6 @@ fi
 
 run "GSC readiness" env SITE="$SITE" ./scripts/check-gsc-ready.sh
 run "Plan intent" "./scripts/check-plan-intent.sh"
-run "Founding pricing" "./scripts/check-production-pricing.sh"
 run "Pricing truth (repo)" "./scripts/check-pricing-truth.sh"
 run "Security smoke" "./scripts/security-smoke.sh"
 

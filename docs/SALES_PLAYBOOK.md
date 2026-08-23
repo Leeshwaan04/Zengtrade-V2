@@ -40,6 +40,7 @@ Founder test: **https://zengtrade.in/ops/billing**
 ## Verification
 
 ```bash
+./scripts/check-billing-ready.sh   # billing + founding $19 + checkout_click
 ./scripts/verify-billing.sh
 ./scripts/check-pricing-truth.sh
 ./scripts/check-production-pricing.sh   # founding $19 on /pricing + billing.js
