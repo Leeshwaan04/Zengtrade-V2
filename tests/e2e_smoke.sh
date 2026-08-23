@@ -33,6 +33,7 @@ test -f scripts/status-report.sh
 test -f scripts/verify-activation-path.sh
 test -f scripts/wait-for-p0.sh
 test -f scripts/sync-ops-gates.py
+test -f scripts/check-sitemap.sh
 test -f saas/db/migrations/0010_admin_rpc_funnel.sql
 test -f saas/db/migrations/0011_funnel_events_v2.sql
 

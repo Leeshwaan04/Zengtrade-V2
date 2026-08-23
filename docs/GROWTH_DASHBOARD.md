@@ -393,7 +393,37 @@
 3. Paper worker → https://zengtrade.in/ops/worker
 4. `./scripts/wait-for-p0.sh` → `./scripts/verify-activation-path.sh` → https://zengtrade.in/ops/e2e
 
+### Day 1 (session 32) — funnel probe alignment + CBO checkout gate
+
+### CTO
+- **Shipped:** `check-migrations.sh` + `verify-activation-path.sh` probe `checkout_click`; ops pages verify full funnel v2 set (`/ops`, `/ops/p0`, `/ops/e2e`, `/ops/migrate`, `/ops/billing`).
+- **Shipped:** `status-report.sh` + `wait-for-p0.sh` remind founder to merge PR #5 when `/ops/p0` not deployed.
+
+### CPO
+- **Shipped:** `/ops/e2e` step 7 links Pro checkout test; P0 gate checks signup + deploy events.
+
+### CBO
+- **Shipped:** `/ops/billing` live-probes `checkout_click` (MRR intent funnel) alongside billing edge function.
+
+### Status (`./scripts/status-report.sh` @ 15:39Z)
+- P0 unchanged: migration 0011 ❌ | worker ❌ | PR #5 open, CI green
+
+### Day 1 (session 33) — CBO sitemap verify + pricing UTMs
+
+### CBO
+- **Shipped:** `scripts/check-sitemap.sh` verifies hub + 7 coin pages in production sitemap.
+- **Shipped:** Pricing page CTAs use `utm_campaign=pricing` (distinct from landing).
+- **Shipped:** `/ops/gsc` lists all coin URLs + `check-sitemap.sh` verify step.
+
+### CTO
+- **Shipped:** `probe-dist.sh` asserts Cardano + Dogecoin in build sitemap; `founder-preflight.sh` runs sitemap check.
+
+### Status (`./scripts/check-sitemap.sh` @ 15:41Z)
+- Production sitemap missing **cardano** + **dogecoin** until PR #5 merges to main
+
 ---
+
+## Daily log template
 
 Copy for each new day:
 

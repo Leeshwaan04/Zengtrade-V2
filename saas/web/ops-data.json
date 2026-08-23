@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T15:42:00Z",
+  "updated": "2026-08-23T15:43:00Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -104,6 +104,8 @@
       "Coin SEO: 7 pages (BTC, ETH, SOL, BNB, XRP, ADA, DOGE) after build",
       "NOWPayments billing edge functions deployed",
       "Landing signup CTAs tagged with utm_source=site for GSC attribution",
+      "Pricing CTAs use utm_campaign=pricing for plan-intent attribution",
+      "check-sitemap.sh verifies 7 coin pSEO URLs in production sitemap",
       "r/algotrading draft ready (post after P0)"
     ],
     "next": "GSC sitemap + first proof post after forward trades exist; Pro checkout E2E at /ops/billing",

@@ -38,7 +38,10 @@ echo "OK   auth.js establishSession"
 grep -q 'https://zengtrade.in/app' "$DIST/sitemap.xml" || { echo "FAIL sitemap missing /app"; exit 1; }
 grep -q 'https://zengtrade.in/login' "$DIST/sitemap.xml" || { echo "FAIL sitemap missing /login"; exit 1; }
 grep -q '/coins/bitcoin/' "$DIST/sitemap.xml" || { echo "FAIL sitemap missing coin pages"; exit 1; }
-echo "OK   sitemap key URLs"
+for slug in cardano dogecoin; do
+  grep -q "/coins/${slug}/" "$DIST/sitemap.xml" || { echo "FAIL sitemap missing /coins/${slug}/"; exit 1; }
+done
+echo "OK   sitemap key URLs (7 coins)"
 
 grep -q 'OAuth callbacks must land' "$DIST/dashboard/studio.js" || { echo "FAIL studio.js OAuth guard"; exit 1; }
 echo "OK   studio.js OAuth guard"
