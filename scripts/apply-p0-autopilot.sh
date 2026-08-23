@@ -41,6 +41,13 @@ if ./scripts/check-migrations.sh >/dev/null 2>&1; then
 else
   [[ -n "${DATABASE_URL:-}" ]] || die "DATABASE_URL not set — cannot apply migration 0011"
   command -v psql >/dev/null || die "psql not installed"
+  if ! DATABASE_URL="$DATABASE_URL" ./scripts/test-database-url.sh >/dev/null 2>&1; then
+    if fixed=$(./scripts/remediate-database-url.sh "$DATABASE_URL" 2>/dev/null); then
+      DATABASE_URL="$fixed"
+      export DATABASE_URL
+      echo "OK   DATABASE_URL remediated (Supavisor host corrected)"
+    fi
+  fi
   DATABASE_URL="$DATABASE_URL" ./scripts/test-database-url.sh
   echo ">> Applying migration 0011 via psql…"
   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$MIG_SQL"

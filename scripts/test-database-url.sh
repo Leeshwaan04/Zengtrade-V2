@@ -23,6 +23,10 @@ else
 fi
 
 if ! psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -qAt -c 'SELECT 1' >/dev/null 2>&1; then
+  host=$(python3 -c "from urllib.parse import urlparse; import os; print(urlparse(os.environ.get('DATABASE_URL') or os.environ.get('SUPABASE_DATABASE_URL') or '').hostname or '')")
+  if [[ "$host" == *us-east-1* ]]; then
+    echo "HINT: this project may use aws-0-ap-northeast-1.pooler.supabase.com — copy URI from Supabase Dashboard" >&2
+  fi
   echo "ERROR: DATABASE_URL connection failed — use Supabase session pooler on port 5432" >&2
   echo "       Supabase → Database → Connection string (not the sb_secret / sb_publishable API keys)" >&2
   exit 1

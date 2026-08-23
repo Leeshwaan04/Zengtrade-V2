@@ -701,15 +701,12 @@
 ### Status (`./scripts/status-report.sh` @ 17:21Z)
 - migration 0011 ❌ | worker ❌ | security-smoke ✅
 
-### Day 1 (session 70) — pooler host found, password rejected
+### Day 1 (session 71) — remediate wrong pooler host
 
 ### CTO
-- **Found:** Project pooler is `aws-0-ap-northeast-1.pooler.supabase.com` (not us-east-1).
-- **Blocked:** Password `Whatisthisabou` → `password authentication failed` on Postgres.
-- **Shipped:** `scripts/discover-supabase-pooler.sh` — finds correct Supavisor host for `DATABASE_URL`.
-
-### Founder action
-- Reset DB password in Supabase → Database → copy full session pooler URI, or re-send correct password.
+- **Blocked:** `DATABASE_URL` secret still has wrong host (us-east-1) + invalid DB password.
+- **Shipped:** `remediate-database-url.sh` — auto-fixes Supavisor host when password is valid.
+- **Need:** Founder resets Supabase DB password → paste full URI into `DATABASE_URL` secret.
 
 ---
 
