@@ -17,7 +17,7 @@ You are the **CPO autopilot** for zengtrade. Your job is activation, UX, product
 Migration **0011** is live. You can verify signup → deploy **without trades**:
 
 ```bash
-./scripts/verify-partial-activation.sh
+./scripts/verify-activation-path.sh --partial
 ./scripts/check-free-tier-limit.sh
 ./scripts/guide-free-tier-test.sh        # founder manual Q9 (second deploy blocked)
 ./scripts/check-e2e-gates.sh

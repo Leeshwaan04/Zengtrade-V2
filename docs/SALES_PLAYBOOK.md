@@ -33,7 +33,7 @@ Billing and plan-intent can be verified **before** paper trades exist:
 | Sales-ready (full checkout path) | `./scripts/check-sales-ready.sh` |
 | Founding $19 on prod | `./scripts/check-production-pricing.sh` |
 | Manual checkout smoke | https://zengtrade.in/ops/billing |
-| Partial activation (no trades) | `./scripts/verify-partial-activation.sh` |
+| Partial activation (no trades) | `./scripts/verify-activation-path.sh --partial` |
 | All parallel gates | `./scripts/check-parallel-growth.sh` |
 
 Do not claim forward P&L or closed-trade activation until `./scripts/check-worker.sh` is green.

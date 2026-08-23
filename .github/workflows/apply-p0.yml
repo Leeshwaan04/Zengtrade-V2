@@ -1,7 +1,7 @@
 name: Apply P0 (migration + paper worker)
 
 # Founder: add DATABASE_URL or DATABASE_PASSWORD + RAILWAY_API_TOKEN to repo Secrets first.
-# apply-p0-autopilot.sh execs post-p0-success.sh when worker heartbeat is fresh.
+# run-p0-if-ready.sh applies migration + worker when credentials work, then post-p0-success.sh.
 # Then: Actions → Apply P0 → Run workflow → type APPLY
 on:
   workflow_dispatch:
@@ -33,9 +33,15 @@ jobs:
           fi
       - name: Install psql client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
-      - name: Apply migration 0011 + deploy paper-worker
+      - name: Preflight database credentials
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
           RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
-        run: ./scripts/apply-p0-autopilot.sh
+        run: ./scripts/validate-database-credentials.sh
+      - name: Apply P0 (migration + paper worker + post-P0 runbook)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+        run: ./scripts/run-p0-if-ready.sh

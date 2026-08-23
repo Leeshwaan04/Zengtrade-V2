@@ -30,7 +30,7 @@ Dashboard → **Authentication → URL configuration**
 ./scripts/guide-founder-parallel.sh  # all parallel playbooks in one command
 ./scripts/check-parallel-growth.sh   # partial activation + billing + GSC
 ./scripts/check-sales-ready.sh       # Pro checkout path (no worker)
-./scripts/verify-partial-activation.sh
+./scripts/verify-activation-path.sh --partial
 ./scripts/guide-partial-e2e.sh       # founder manual partial E2E
 ```
 
