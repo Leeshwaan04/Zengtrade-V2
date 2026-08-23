@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T15:54:00Z",
+  "updated": "2026-08-23T15:54:45Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -38,7 +38,7 @@
       "Migration 0011 verify probes signup_complete + deploy_success + checkout_click (check-migrations, ops-migrate, GitHub Action)",
       "render.yaml + WORKER_QUICKSTART for one-click worker host"
     ],
-    "next": "Founder /ops/p0 — migration 0011 + worker; then verify-activation-path",
+    "next": "Founder /ops/p0 \u2014 migration 0011 + worker; then verify-activation-path",
     "links": [
       {
         "label": "GitHub Actions",
@@ -65,7 +65,7 @@
       "Worker-offline banner links to /how-it-works on /app and /dashboard",
       "Pageview tracking on /dashboard and /app after auth",
       "Activation checklist shows worker-offline hint when deploys exist but no trades",
-      "Post-deploy banner in /app links to Forward Test (signup → deploy → trades)",
+      "Post-deploy banner in /app links to Forward Test (signup \u2192 deploy \u2192 trades)",
       "Fresh signup deploy nudge on /dashboard in ~800ms (zt_fresh_signup flag)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
@@ -101,7 +101,7 @@
       "Landing signup CTAs tagged with utm_source=site for GSC attribution",
       "Pricing CTAs use utm_campaign=pricing for plan-intent attribution",
       "check-sitemap.sh verifies 7 coin pSEO URLs in production sitemap",
-      "Coin + coins hub signup CTAs tagged utm_campaign=coin_* / coins_hub"
+      "Coin + coins hub signup CTAs tagged utm_campaign=coin_* / coins_hub",
       "r/algotrading draft ready (post after P0)"
     ],
     "next": "GSC sitemap + first proof post after forward trades exist; Pro checkout E2E at /ops/billing",
