@@ -766,6 +766,15 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/status-report.sh` @ 18:19Z)
 - migration 0011 ✅ | worker ❌
 
+### Day 1 (session 77) — Railway Variables paste guide
+
+### CTO
+- **Shipped:** `/ops/worker` top card — exact `DATABASE_URL` name/value table + Raw Editor template for Railway Variables UI.
+- **Blocked:** Railway API still shows no `DATABASE_URL` on paper-worker (founder must click Add or Raw Editor Save + redeploy).
+
+### Status (`./scripts/status-report.sh` @ 18:22Z)
+- worker ❌ — awaiting founder `DATABASE_URL` on Railway
+
 ---
 
 ### CTO

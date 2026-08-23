@@ -19,11 +19,32 @@
   .back{font-size:13px;margin-bottom:16px;display:inline-block;color:var(--blue);text-decoration:none;font-weight:600}
   #hb{font:600 13px var(--mono);margin-top:16px;padding:12px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line)}
   #hb.ok{color:var(--green-d)}#hb.bad{color:var(--red-d)}
+  pre.tpl{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:12px;font:12px/1.5 var(--mono);overflow:auto;margin:10px 0}
+  .btn-copy{border:0;border-radius:8px;padding:8px 12px;font:700 12px var(--sans);cursor:pointer;background:var(--green);color:#04140a}
 </style></head><body>
 <div class="wrap">
   <a class="back" href="/ops">← Founder Ops</a>
   <h1>Deploy paper worker</h1>
   <p class="sub">Founder approval · ~10 min · Without this, <a href="/dashboard">deploys save</a> but <b>no trades run</b> on live Binance prices. See also <a href="/ops/p0">P0 checklist</a>.</p>
+
+  <div class="card" style="background:var(--green-soft);border:2px solid var(--green-line)">
+    <h2>Railway Variables — what to add (you are here)</h2>
+    <p style="font-size:14px;line-height:1.55;margin:0 0 8px"><b>One variable required</b> on service <code>paper-worker</code>:</p>
+    <table style="font-size:14px;border-collapse:collapse;width:100%;margin:8px 0 12px">
+      <tr><td style="padding:6px 10px;border:1px solid var(--line);font-weight:700">VARIABLE_NAME</td><td style="padding:6px 10px;border:1px solid var(--line)"><code>DATABASE_URL</code></td></tr>
+      <tr><td style="padding:6px 10px;border:1px solid var(--line);font-weight:700">VALUE</td><td style="padding:6px 10px;border:1px solid var(--line)">Full Postgres URI from <a href="https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings" target="_blank" rel="noopener">Supabase</a> (Session · port 5432)</td></tr>
+    </table>
+    <p style="font-size:13px;margin:0 0 6px;color:var(--slate)">Template — replace <code>YOUR_PASSWORD</code> with your database password, then paste in <b>Raw Editor</b> or the VALUE field:</p>
+    <pre class="tpl" id="tpl">DATABASE_URL=postgresql://postgres.ponvarxeytfcntckczbn:YOUR_PASSWORD@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres</pre>
+    <button type="button" class="btn-copy" id="copyTpl">Copy template</button>
+    <span id="copyMsg" style="font-size:12px;margin-left:8px;color:var(--slate)"></span>
+    <ol style="margin-top:12px">
+      <li><a href="https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b" target="_blank" rel="noopener">Open paper-worker</a> → <b>Variables</b></li>
+      <li>Either: type name + value and click <b>Add</b> — or <b>Raw Editor</b> → paste line above → Save</li>
+      <li><b>Deployments</b> → Redeploy · logs must show <code>db: supabase</code></li>
+    </ol>
+    <p style="font-size:13px;margin:12px 0 0;color:var(--red-d)"><b>Not</b> <code>sb_secret_</code> or <code>sb_publishable_</code> API keys.</p>
+  </div>
 
   <div class="card" style="background:#eef2ff;border-color:#c7d2fe">
     <h2>Option 0 — GitHub Action (recommended)</h2>
@@ -103,6 +124,11 @@ async function checkHb(){
   }catch(e){el.textContent="✗ Could not reach Supabase";el.className="bad";}
 }
 document.getElementById("check").onclick=checkHb;
+document.getElementById("copyTpl").onclick=()=>{
+  navigator.clipboard.writeText(document.getElementById("tpl").textContent).then(()=>{
+    document.getElementById("copyMsg").textContent="Copied — replace YOUR_PASSWORD, then Add or Raw Editor";
+  });
+};
 checkHb();
 setInterval(checkHb,30000);
 </script></body></html>
