@@ -159,6 +159,21 @@
 - **Shipped:** `checkout_click` tracking on Pro/Elite; sitemap includes signup + app entry points for GSC.
 - **Next:** GSC verify + submit sitemap after merge.
 
+### Day 1 (session 10) — ship preflight + activation UX
+
+### CTO
+- **Shipped:** CI builds worker Docker image; `scripts/founder-preflight.sh`; `scripts/verify-billing.sh`.
+- **Blocked:** Production `/app` 404; billing functions need deploy; worker not hosted.
+- **Next:** Founder runs `founder-preflight.sh` after merge until all green.
+
+### CPO
+- **Shipped:** Activation checklist on `/app` dashboard (account → deploy → first trade) with Algo Studio link.
+- **Next:** Track checklist completion via deploy_success + trades in admin.
+
+### CBO
+- **Shipped:** Billing verify script for MRR rail readiness.
+- **Next:** Deploy billing + test checkout after P0.
+
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*

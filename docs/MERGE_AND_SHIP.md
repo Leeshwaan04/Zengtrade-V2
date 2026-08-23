@@ -25,6 +25,12 @@ If Pages is still propagating, poll until green:
 ./scripts/wait-for-deploy.sh
 ```
 
+Full gate (site + billing + checklist):
+
+```bash
+./scripts/founder-preflight.sh
+```
+
 Expect:
 - `/app` → 200
 - `/js/auth.js` contains `establishSession`

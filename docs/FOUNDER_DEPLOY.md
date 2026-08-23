@@ -58,8 +58,8 @@ supabase login
 supabase link --project-ref ponvarxeytfcntckczbn
 supabase secrets set NOWPAYMENTS_API_KEY=...
 supabase secrets set NOWPAYMENTS_IPN_SECRET=...
-supabase functions deploy nowpayments-create-invoice --no-verify-jwt
-supabase functions deploy nowpayments-ipn --no-verify-jwt
+./scripts/deploy-billing.sh
+./scripts/verify-billing.sh
 ```
 
 Test: `/app#pricing` → Pro → pay → tier flips to `pro`.
@@ -67,8 +67,11 @@ Test: `/app#pricing` → Pro → pay → tier flips to `pro`.
 ## 6. Smoke test (5 min)
 
 ```bash
-chmod +x scripts/check-production.sh
+./scripts/founder-preflight.sh
+# or individually:
+chmod +x scripts/check-production.sh scripts/verify-billing.sh
 SITE=https://zengtrade.in ./scripts/check-production.sh
+./scripts/verify-billing.sh
 ```
 
 1. Incognito → `https://zengtrade.in/login?mode=signup`

@@ -155,6 +155,25 @@ function render() {
 const errorState = () => `<div class="empty big"><h3>Couldn't load your data</h3>
   <p>${esc(state.error)}</p><button class="btn primary" id="retry">Try again</button></div>`;
 
+function activationChecklist() {
+  const deployed = state.deployments.some(d => d.status === "running");
+  const traded = metrics().n > 0;
+  if (deployed && traded) return "";
+  const s1 = "done", s2 = deployed ? "done" : "on", s3 = traded ? "done" : (deployed ? "on" : "");
+  return `<div class="card" id="activation">
+    <div class="card-h"><h3>Activation checklist</h3><span class="muted">signup → deploy → trades</span></div>
+    <ol class="act-steps">
+      <li class="${s1}"><span class="dot"></span><span><b>Account created</b><br><span class="muted">You're signed in as ${esc(user.email)}</span></span></li>
+      <li class="${s2}"><span class="dot"></span><span><b>Deploy a paper strategy</b><br><span class="muted">Use Algo Studio or Strategies tab — live Binance prices, zero risk.</span></span></li>
+      <li class="${s3}"><span class="dot"></span><span><b>First closed trade</b><br><span class="muted">Worker runs every ~5 min; check Forward Test for evidence.</span></span></li>
+    </ol>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+      <a class="btn primary sm" href="/dashboard">Open Algo Studio</a>
+      <button class="btn ghost sm" id="act-strat" type="button">Deploy here</button>
+    </div>
+  </div>`;
+}
+
 // ---- Dashboard ----
 function renderDashboard() {
   if (state.loading) { app.innerHTML = `<div class="grid stats">${skeletonRows(4)}</div><div class="card" style="height:220px;margin-top:16px">${skeletonRows(1)}</div>`; return; }
@@ -162,6 +181,7 @@ function renderDashboard() {
   const upsell = !isPro(tier) && state.deployments.length >= FREE_DEPLOY_LIMIT
     ? `<div class="upsell"><div><b>You're on Free, ${FREE_DEPLOY_LIMIT} strategy.</b><span>Upgrade to Pro for unlimited strategies and live execution when a strategy clears the bar.</span></div><button class="btn primary" id="up2">Upgrade, $19/mo founding</button></div>` : "";
   app.innerHTML = `
+    ${activationChecklist()}
     ${upsell}
     <div class="grid stats">
       <div class="stat"><span>Net P&amp;L · after costs</span><b class="${tone(m.net)}">${money(m.net)}</b></div>
@@ -182,6 +202,7 @@ function renderDashboard() {
   $("#goStrat") && ($("#goStrat").onclick = () => location.hash = "strategies");
   $("#up2") && ($("#up2").onclick = () => location.hash = "pricing");
   $("#firstDeploy") && ($("#firstDeploy").onclick = () => location.hash = "strategies");
+  $("#act-strat") && ($("#act-strat").onclick = () => location.hash = "strategies");
 }
 function drawCurve() { const m = metrics(); equityCurve($("#curve"), m.curve); }
 function stratRow(s) {

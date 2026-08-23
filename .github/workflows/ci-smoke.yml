@@ -18,3 +18,5 @@ jobs:
         run: pip install requests
       - name: E2E smoke
         run: ./tests/e2e_smoke.sh
+      - name: Worker Docker image builds
+        run: docker build -t zengtrade-worker:ci saas/worker
