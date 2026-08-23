@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T22:39:29Z",
+  "updated": "2026-08-23T22:43:06Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -121,7 +121,8 @@
       "guide-worker-recovery.sh + GROWTH_DASHBOARD QA parallel row (session 132)",
       "docs/GUIDE_INDEX.md + list-founder-guides.sh; run-p0 recovery hints (session 133)",
       "resolve-database-url auth validation; apply-p0 chains post-p0-success; sync-ops parallel retry (session 134)",
-      "apply-p0.yml drops duplicate post-p0; /ops/p0 step-3 post-P0 guidance (session 135)"
+      "apply-p0.yml drops duplicate post-p0; /ops/p0 step-3 post-P0 guidance (session 135)",
+      "health-watch attempt-p0 job + worker check reordered last (session 136)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
