@@ -953,6 +953,22 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/status-report.sh` @ 19:50Z)
 - worker ❌ · founding Pro pricing on prod ✅
 
+### Day 1 (session 92) — growth gates one-liner + billing ops note
+
+### CTO
+- **Shipped:** `check-growth-gates.sh` — single script for all production growth/P0 probes; documented in `AGENTS.md`.
+- **Shipped:** `status-report.sh` more resilient `/ops/p0` probe.
+- **Blocked:** Railway Postgres password still invalid.
+
+### Sales / CBO
+- **Shipped:** `/ops/billing` warns when worker offline (checkout testable, activation E2E needs worker).
+
+### Marketing
+- **Shipped:** Coin spotlight post template in `MARKETING_PLAYBOOK.md`.
+
+### Status (`./scripts/status-report.sh` @ 19:52Z)
+- worker ❌ · all other growth probes pass except worker
+
 ---
 
 ### CTO

@@ -35,6 +35,18 @@ https://zengtrade.in/login?mode=signup&plan=pro&utm_source=...
 | 3 | r/algotrading value post | Reddit (draft: `docs/content/REDDIT_ALGOTRADING_DRAFT.md`) |
 | 4 | Coin spotlight #1 | Blog section on coin page |
 
+**Coin spotlight template (week N):**
+
+```
+Coin of the week: [BTC/ETH/SOL] — regime read + paper-first angle
+
+- What the 30-day tape looks like (honest, no hype)
+- Which strategy style fits (trend vs mean-reversion) — paper only
+- CTA: https://zengtrade.in/login?mode=signup&utm_source=site&utm_medium=organic&utm_campaign=coin_spotlight_[slug]
+
+Not investment advice. Paper trading on live Binance prices.
+```
+
 **Gate:** Do not publish until `./scripts/verify-activation-path.sh` passes.
 
 ## Launch checklist (marketing)

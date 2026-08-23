@@ -55,6 +55,7 @@ Verify with:
 
 ```bash
 ./scripts/status-report.sh
+./scripts/check-growth-gates.sh      # all production growth + P0 probes
 ./scripts/check-p0-readiness.sh   # secrets + gates before apply-p0
 ./scripts/check-railway-deploy.sh   # when RAILWAY_API_TOKEN is set
 ```

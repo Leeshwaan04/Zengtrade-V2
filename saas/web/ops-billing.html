@@ -19,6 +19,7 @@
   <a class="back" href="/ops">← Founder Ops</a>
   <h1>Test Pro checkout (CBO / MRR)</h1>
   <p>Founding Pro <b>$19/mo</b> via NOWPayments. Billing edge functions must be live (check <a href="/ops">/ops</a>).</p>
+  <p id="p0gate" class="card" style="display:none;background:#fff8e6;border-color:#f0d78a;font-size:14px;margin-bottom:14px"></p>
   <div class="card">
     <h2 style="font-size:16px;margin:0 0 8px">Steps</h2>
     <ol>
@@ -47,4 +48,14 @@ fetch(SUPA+"/rest/v1/event",{method:"POST",headers:{apikey:ANON,"Content-Type":"
   if(r.status===201){el.innerHTML="✓ <code>checkout_click</code> funnel live — clicks will appear in <a href=\"/admin\">/admin</a>";}
   else{el.innerHTML="⚠ <code>checkout_click</code> blocked (HTTP "+r.status+") — apply <a href=\"/ops/migrate\">migration 0011</a> first";}
 });
+fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{headers:{apikey:ANON}})
+.then(r=>r.json()).then(rows=>{
+  const ts=rows[0]?.updated_at;
+  const age=ts?Math.round((Date.now()-new Date(ts))/60000):99999;
+  const el=document.getElementById("p0gate");
+  if(age>12){
+    el.style.display="block";
+    el.innerHTML="<b>Note:</b> Paper worker is offline — you can still test checkout, but activation E2E (deploy → trades) needs <a href=\"/ops/worker\">worker live</a> first.";
+  }
+}).catch(()=>{});
 </script></body></html>

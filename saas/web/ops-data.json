@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T19:50:00Z",
+  "updated": "2026-08-23T19:52:00Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -67,7 +67,8 @@
       "sync-ops-gates.py: database_url_auth_ok + Railway FAILED status (session 87)",
       "/ops worker gate shows wrong-password when Railway deploy FAILED (session 88)",
       "founder-preflight.sh: SEO content + credential check when worker down (session 90)",
-      "status-report.sh curl retry for /ops/p0 probe (session 91)"
+      "status-report.sh curl retry for /ops/p0 probe (session 91)",
+      "check-growth-gates.sh — one-command production growth standup (session 92)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -215,7 +216,8 @@
       "Paper loop section on /how-it-works (#paper-loop)",
       "UTM conventions on home + pricing (check-funnel-ctas.sh)",
       "r/algotrading draft + WEEKLY_PROOF template (post after E2E)",
-      "LinkedIn founder launch post template in MARKETING_PLAYBOOK (session 88)"
+      "LinkedIn founder launch post template in MARKETING_PLAYBOOK (session 88)",
+      "Coin spotlight post template in MARKETING_PLAYBOOK (session 92)"
     ],
     "next": "First forward-proof post after P0 E2E; coin spotlight series",
     "links": [
@@ -247,7 +249,8 @@
       "check-pricing-truth.sh \u2014 no live execution overpromise",
       "Billing test guide at /ops/billing",
       "check-plan-intent.sh in CI + post-p0-success (session 86)",
-      "check-production-pricing.sh — founding \$19 on prod (session 91)"
+      "check-production-pricing.sh — founding \$19 on prod (session 91)",
+      "/ops/billing worker-offline note before checkout test (session 92)"
     ],
     "next": "First Pro checkout E2E once P0 green; track MRR in /admin",
     "links": [
