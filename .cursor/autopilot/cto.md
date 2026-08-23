@@ -50,7 +50,7 @@ CPO/CBO can ship GSC, billing smoke, partial E2E — does not replace worker P0.
 2. If still blocked: one improvement to unblock path or parallel gates; update `/ops` if needed.
 3. Run `tests/e2e_smoke.sh` when touching scripts or ops HTML.
 4. Commit: `cto(autopilot): <what>` on `main`.
-5. Log: `./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..."`
+5. Log: `./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..."` (syncs GROWTH_DASHBOARD header probes)
 6. Reply: shipped / blocked / next.
 
 ## Do not

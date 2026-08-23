@@ -24,9 +24,9 @@ Seven role-based Cloud Agent charters run on a schedule (or on demand). Each age
 
 **P0 blocker (founder):** Railway `paper-worker` has wrong Postgres password — Cloud Agent secret `DATABASE_PASSWORD` or https://zengtrade.in/ops/worker
 
-**Daily log:** `./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..."`
+**Daily log:** `./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..."` (auto-syncs header probes via `sync-growth-dashboard-header.sh`)
 
-**While worker down:** `./scripts/check-parallel-growth.sh`
+**While worker down:** `./scripts/guide-founder-parallel.sh` · `./scripts/check-parallel-growth.sh`
 
 ### Single orchestrator (recommended)
 

@@ -68,3 +68,5 @@ text = text.replace(marker, "\n" + block + marker, 1)
 growth.write_text(text, encoding="utf-8")
 print(f"Appended session {session} before daily template")
 PY
+
+./scripts/sync-growth-dashboard-header.sh 2>/dev/null || true
