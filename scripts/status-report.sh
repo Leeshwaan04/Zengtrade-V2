@@ -33,4 +33,5 @@ if ! curl -sfL "https://zengtrade.in/ops/p0/" 2>/dev/null | grep -q "P0 checklis
   echo "Also: /ops/p0 not deployed — check GitHub Pages deploy on main."
 fi
 echo "Next: https://zengtrade.in/ops/p0 — migration 0011 + paper worker"
+./scripts/founder-next-action.sh 2>/dev/null || true
 exit 1

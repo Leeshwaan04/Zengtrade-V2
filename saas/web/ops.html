@@ -220,8 +220,15 @@ document.getElementById("enableNotify").onclick = async () => {
   pill.className = "pill " + (p === "granted" ? "ok" : "bad");
 };
 
+async function probeP0Page() {
+  try {
+    const t = await fetch(SITE + "/ops/p0/", { cache: "no-store" }).then(r => r.text());
+    return t.includes("P0 checklist");
+  } catch { return false; }
+}
+
 async function refresh() {
-  const p0Live = await probeSite("/ops/p0");
+  const p0Live = await probeP0Page();
   const shipBanner = document.getElementById("shipBanner");
   if (shipBanner) shipBanner.hidden = p0Live;
 

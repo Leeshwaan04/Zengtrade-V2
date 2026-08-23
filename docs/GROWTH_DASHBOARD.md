@@ -506,6 +506,19 @@
 ### Status (`./scripts/status-report.sh` @ 16:01Z)
 - migration 0011 ❌ | worker ❌
 
+### Day 1 (session 41) — founder next-action + /ops P0 probe fix
+
+### CTO
+- **Shipped:** `scripts/founder-next-action.sh` — prints single next founder step; wired into `status-report.sh`.
+- **Shipped:** `/ops` fixes stale “merge PR #5” banner (probes `/ops/p0/` content).
+
+### CPO / QA&VAPT
+- **Shipped:** `/ops/e2e` step 5 RLS isolation marked required (Q3 checklist).
+
+### Founder P0 (unchanged)
+1. Migration 0011 → https://zengtrade.in/ops/migrate
+2. Paper worker → https://zengtrade.in/ops/worker
+
 ---
 
 ## Daily log template

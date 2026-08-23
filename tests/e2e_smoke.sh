@@ -34,6 +34,7 @@ test -f scripts/verify-activation-path.sh
 test -f scripts/wait-for-p0.sh
 test -f scripts/sync-ops-gates.py
 test -f scripts/security-smoke.sh
+test -f scripts/founder-next-action.sh
 test -f docs/QA_VAPT_CHECKLIST.md
 test -f .cursor/autopilot/qavapt.md
 test -f saas/db/migrations/0010_admin_rpc_funnel.sql

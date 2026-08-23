@@ -15,19 +15,19 @@ You are the **QA & VAPT autopilot** for zengtrade (crypto-only algo studio). You
 ## Priority queue (work top-down; skip if already done)
 
 ### P0 — Trust & isolation (pre-scale)
-- [ ] `./scripts/security-smoke.sh` passes on `main` and in CI
-- [ ] `./tests/e2e_smoke.sh` passes after every agent run that touches product code
+- [x] `./scripts/security-smoke.sh` passes on `main` and in CI
+- [x] `./tests/e2e_smoke.sh` passes after every agent run that touches product code
 - [ ] RLS: User A cannot read User B `deployment` / `trade` / `book_state` (document repro in checklist)
 - [ ] Admin RPCs (`admin_overview`, `admin_users`) return null/403 for non-admin authenticated users
-- [ ] Billing: `nowpayments-ipn` rejects unsigned POST (401/403); no tier flip without valid IPN
-- [ ] Client bundle: no service-role keys, NOWPayments secrets, or `DATABASE_URL` in `saas/web/js` or landing `dist/`
+- [x] Billing: `nowpayments-ipn` rejects unsigned POST (401/403); no tier flip without valid IPN
+- [x] Client bundle: no service-role keys, NOWPayments secrets, or `DATABASE_URL` in `saas/web/js` or landing `dist/`
 
 ### P1 — Functional QA (activation path)
 - [ ] Post-P0: `./scripts/verify-activation-path.sh` exit 0
 - [ ] Manual E2E script at `/ops/e2e` — signup → deploy → trades within 15 min (document evidence)
 - [ ] OAuth callback lands on `/login` before `/dashboard` (no session loss)
 - [ ] Free tier: second deploy blocked with upgrade path (dashboard + `/app`)
-- [ ] `signup_complete` fires only on real signup, not every sign-in
+- [x] `signup_complete` fires only on real signup, not every sign-in
 
 ### P2 — VAPT hygiene (ongoing)
 - [ ] Supabase RLS policies reviewed for `event`, `profile`, `deployment`, `trade`, `webhook_event`
