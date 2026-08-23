@@ -19,6 +19,13 @@ const route = () => (location.hash.replace("#", "") || "dashboard");
 (async function boot() {
   user = await requireAuth();                 // redirects to /login if signed out
   if (!user) return;
+  try {
+    await sb.from("event").insert({
+      name: "pageview",
+      path: ("/app" + location.hash).slice(0, 290),
+      ref: (document.referrer || "").slice(0, 290),
+    });
+  } catch { /* funnel */ }
   $("#userEmail").textContent = user.email;
   $("#signout").onclick = () => signOut();
   $("#upgradeBtn").onclick = () => location.hash = "pricing";

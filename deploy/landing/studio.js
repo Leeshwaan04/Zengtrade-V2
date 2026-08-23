@@ -24,6 +24,21 @@
 
   var SUPA = "https://ponvarxeytfcntckczbn.supabase.co";
   var ANON = "sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";
+
+  function trackPageview() {
+    try {
+      fetch(SUPA + "/rest/v1/event", {
+        method: "POST",
+        headers: { apikey: ANON, "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({
+          name: "pageview",
+          path: ("/dashboard" + location.hash).slice(0, 290),
+          ref: (document.referrer || "").slice(0, 290),
+        }),
+        keepalive: true,
+      }).catch(function () {});
+    } catch (e) {}
+  }
   var LS_AUTH = "sb-ponvarxeytfcntckczbn-auth-token";
 
   /* strategy_keys the cloud worker can actually run (mirror of worker REGISTRY).
@@ -47,6 +62,7 @@
   }
   var sess = session();
   if (!sess) { location.replace("/login"); return; }
+  trackPageview();
 
   function sbHeaders(extra) {
     var h = { apikey: ANON, Authorization: "Bearer " + (session() || {}).tok,

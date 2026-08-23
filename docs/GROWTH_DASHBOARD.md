@@ -326,6 +326,14 @@
 ### CBO
 - **Shipped:** Coin SEO expanded (+Cardano, +Dogecoin) in `seo/generate.py` — 7 coin pages after next build.
 
+### Day 1 (session 26) — product pageview funnel
+
+### CPO / CBO
+- **Shipped:** `/dashboard` (studio.js) and `/app` (app.js) emit `pageview` events for admin funnel top-of-funnel after auth.
+
+### CTO
+- **Blocked:** P0 unchanged — merge PR #5 + founder /ops/p0.
+
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*
