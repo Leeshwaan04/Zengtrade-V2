@@ -47,6 +47,11 @@ def db_with_retry(attempts=5, delay=4):
             return c
         except Exception as e:
             last = e
+            err = str(e).lower()
+            if "password authentication failed" in err or "invalid authorization specification" in err:
+                print("  HINT: DATABASE_URL password is wrong — reset in Supabase Connect, update Railway, redeploy", flush=True)
+            elif "does not exist" in err and "postgres" in err:
+                print("  HINT: use session pooler URI (port 5432) from Supabase Connect — not API keys", flush=True)
             if i < attempts - 1:
                 print(f"  db connect retry {i + 1}/{attempts}: {e}", flush=True)
                 time.sleep(delay)

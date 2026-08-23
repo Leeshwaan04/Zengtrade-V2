@@ -45,6 +45,8 @@ Migration **0011** is applied on production (funnel v2 events). Agents **cannot*
 
 That resolves `DATABASE_URL` from Cloud Agent secrets or Railway service variables, then runs `apply-p0-autopilot.sh` and `post-p0-success.sh` when ready.
 
+Preflight credentials (no secrets printed): `./scripts/validate-database-credentials.sh`
+
 **Founder alternative (no Cloud Agent):** add `DATABASE_URL` + `RAILWAY_API_TOKEN` to [GitHub repo Secrets](https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions) → run workflow [Apply P0](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml) → type `APPLY`.
 
 **Note:** Account tokens from railway.com/account/tokens use `RAILWAY_API_TOKEN` (not `RAILWAY_TOKEN`). The `paper-worker` service (`0decae25-fab5-44f1-aefa-af6fcd5f070a`) is configured for `saas/worker` Dockerfile — the older `Zengtrade-V2` service was deploying the static site by mistake.

@@ -26,6 +26,9 @@ print(d.get('status','UNKNOWN'), (d.get('createdAt') or '')[:19])
 
 if [[ "$has_db" == "yes" ]]; then
   echo "Railway paper-worker: DATABASE_URL set · latest deploy $dep_status ($dep_at UTC)"
+  if [[ "$dep_status" == "FAILED" || "$dep_status" == "CRASHED" ]]; then
+    echo "HINT: deploy failed — often wrong Postgres password in DATABASE_URL (see /ops/worker)"
+  fi
 else
   echo "Railway paper-worker: DATABASE_URL missing · latest deploy $dep_status ($dep_at UTC)"
 fi
