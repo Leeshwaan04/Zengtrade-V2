@@ -11,6 +11,7 @@
 | Paying Pro/Elite | — | — | 10 |
 | MRR (USD) | $0 | $0 | $290 |
 | Worker status | Unknown | Offline (P0 — wrong Railway DB password) | Live 99% |
+| Parallel growth (excl. worker) | — | 5/5 gates ✅ | — |
 
 *Fill "Today" from [zengtrade.in/admin](https://zengtrade.in/admin) after login.*
 
@@ -1158,6 +1159,21 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 
 ### Status (`./scripts/check-growth-standup.sh` @ 20:38Z)
 - worker ❌ · partial activation ✅ · `./scripts/verify-partial-activation.sh`
+
+### Day 1 (session 105) — parallel growth gates + GSC ops UX
+
+### CBO / SEO
+- **Shipped:** `check-parallel-growth.sh` — one command for partial activation + billing + GSC while worker down.
+- **Shipped:** `/ops/gsc` — GSC can run before worker; proof posts wait for trades.
+- **Shipped:** `GSC_SETUP.md` + `SEO_PLAYBOOK.md` — parallel indexing section.
+
+### CPO / CTO
+- **Shipped:** `/ops/worker` — parallel work card (E2E, GSC, billing links).
+- **Shipped:** `check-growth-gates.sh` + standup wire partial activation on worker fail.
+- **Blocked:** Railway Postgres password still invalid.
+
+### Status (`./scripts/check-growth-standup.sh` @ 20:43Z)
+- worker ❌ · parallel growth ✅ · `./scripts/check-parallel-growth.sh`
 
 ---
 

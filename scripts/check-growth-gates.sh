@@ -33,6 +33,13 @@ if ./scripts/check-worker.sh; then
 else
   echo "FAIL Paper worker (P0 blocker — /ops/worker)"
   fail=1
+  echo ""
+  echo ">> Partial activation (worker blocked)"
+  if ./scripts/verify-partial-activation.sh >/dev/null 2>&1; then
+    echo "OK   Partial activation — signup → deploy at /ops/e2e (steps 1–2)"
+  else
+    echo "WARN Partial activation — run ./scripts/verify-partial-activation.sh"
+  fi
 fi
 
 run "GSC readiness" env SITE="$SITE" ./scripts/check-gsc-ready.sh

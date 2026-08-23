@@ -1,5 +1,14 @@
 # Google Search Console — organic setup (CBO autopilot)
 
+## 0. Parallel work (worker blocked)
+
+GSC verification and sitemap submit **do not** require the paper worker. Run now:
+
+- `./scripts/check-gsc-ready.sh` or https://zengtrade.in/ops/gsc
+- `./scripts/check-parallel-growth.sh` — partial activation + billing + GSC in one command
+
+Save forward-proof posts and r/algotrading draft until `./scripts/check-worker.sh` is green.
+
 ## 1. Verify domain
 
 1. Go to [Google Search Console](https://search.google.com/search-console)

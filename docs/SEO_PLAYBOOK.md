@@ -12,6 +12,8 @@ Owner: **SEO Manager autopilot** (`.cursor/autopilot/seo.md`)
 
 ## GSC setup (founder once)
 
+**Can run while worker is blocked** — indexing does not need paper trades. Proof posts should wait for P0.
+
 1. [Add property](https://search.google.com/search-console) → `https://zengtrade.in`
 2. Submit `https://zengtrade.in/sitemap.xml`
 3. Request indexing: `/`, `/pricing/`, `/how-it-works/`, `/coins/bitcoin/`
