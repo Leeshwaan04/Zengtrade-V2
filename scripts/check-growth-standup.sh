@@ -7,3 +7,5 @@ cd "$ROOT"
 echo "== zengtrade growth standup — $(date -u +%Y-%m-%dT%H:%MZ) =="
 echo ""
 ./scripts/status-report.sh || true
+echo ""
+./scripts/snapshot-growth-metrics.sh 2>/dev/null || true

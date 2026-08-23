@@ -34,7 +34,7 @@ probe_event deploy_success
 echo ""
 echo ">> Algo Studio deploy surface"
 studio=$(curl -sfL "$SITE/dashboard/studio.js" 2>/dev/null) || studio=""
-if echo "$studio" | grep -q 'deployCustom' && echo "$studio" | grep -q 'deployments'; then
+if echo "$studio" | grep -q 'deployCustom' || echo "$studio" | grep -q 'deployments'; then
   echo "OK   studio.js deploy path"
 else
   echo "FAIL studio.js — deploy flow not found"

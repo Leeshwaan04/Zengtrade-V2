@@ -41,6 +41,7 @@ test -f scripts/check-pricing-truth.sh
 test -f scripts/check-funnel-ctas.sh
 test -f scripts/founder-parallel-work.sh
 test -f scripts/check-growth-standup.sh
+test -f scripts/snapshot-growth-metrics.sh
 test -f scripts/check-activation-ready.sh
 test -f scripts/check-billing-ready.sh
 test -f scripts/check-gsc-ready.sh

@@ -56,6 +56,7 @@ Verify with:
 ```bash
 ./scripts/status-report.sh
 ./scripts/check-growth-standup.sh   # daily log helper (status + parallel work)
+./scripts/snapshot-growth-metrics.sh  # markdown table for dashboard metrics
 ./scripts/check-growth-gates.sh      # all production growth + P0 probes
 ./scripts/check-billing-ready.sh     # CBO/Sales: Pro checkout preflight
 ./scripts/check-gsc-ready.sh       # CBO: organic/GSC preflight

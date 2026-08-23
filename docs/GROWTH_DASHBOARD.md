@@ -10,7 +10,7 @@
 | Users with ≥1 closed trade | — | — | 15 |
 | Paying Pro/Elite | — | — | 10 |
 | MRR (USD) | $0 | $0 | $290 |
-| Worker status | Unknown | Unknown | Live 99% |
+| Worker status | Unknown | Offline (P0 — wrong Railway DB password) | Live 99% |
 
 *Fill "Today" from [zengtrade.in/admin](https://zengtrade.in/admin) after login.*
 
@@ -1063,6 +1063,22 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 
 ### Status (`./scripts/check-growth-standup.sh` @ 20:15Z)
 - worker ❌ · billing-ready ✅ · GSC-ready ✅ · activation UI ✅
+
+### Day 1 (session 99) — growth metrics snapshot
+
+### CBO / CTO
+- **Shipped:** `snapshot-growth-metrics.sh` — probe-based metrics table for `GROWTH_DASHBOARD` (signups/MRR still from `/admin`).
+- **Shipped:** `check-growth-standup.sh` runs metrics snapshot after status report.
+- **Updated:** dashboard top table — Worker **Offline** (P0 blocker).
+
+### QA&VAPT
+- **Shipped:** `/ops/security` lists activation, billing-ready, GSC probe scripts.
+
+### CTO
+- **Blocked:** Railway Postgres password still invalid.
+
+### Metrics snapshot (`./scripts/snapshot-growth-metrics.sh` @ 20:18Z)
+- Worker: Offline (last heartbeat 2026-08-11) · migration 0011 ✅ · activation/billing/GSC ✅ (probes)
 
 ---
 
