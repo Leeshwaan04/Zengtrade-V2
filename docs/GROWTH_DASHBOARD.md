@@ -1479,6 +1479,21 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 21:47Z)
 - worker ❌ · migration 0011 ✅ · parallel growth ✅ · sales-ready ✅
 
+### Day 1 (session 126) — Sales first-checkout guide + free-tier cap probe
+
+### CTO
+- **Shipped:** health-watch check-qa-parallel step; parallel growth includes check-free-tier-limit
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** check-free-tier-limit.sh — studio + migration 0005 + prod FREE_LIMIT probes
+
+### CBO
+- **Shipped:** guide-first-pro-checkout.sh — founder CLI first Pro MRR steps
+
+### Status (`./scripts/check-growth-standup.sh` @ 21:51Z)
+- worker ❌ · migration 0011 ✅ · parallel growth ❌ · sales-ready ✅
+
 ---
 
 ## Daily log template

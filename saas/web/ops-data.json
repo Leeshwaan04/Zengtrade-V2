@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T21:44:52Z",
+  "updated": "2026-08-23T21:49:50Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -37,7 +37,7 @@
     {
       "id": "sales-checkout",
       "title": "First Pro checkout \u2014 test MRR",
-      "detail": "Sales-ready probes green \u2014 complete checkout at /ops/billing and confirm Paying + MRR in /admin (worker not required)",
+      "detail": "Sales-ready probes green \u2014 run ./scripts/guide-first-pro-checkout.sh then confirm Paying + MRR in /admin (worker not required)",
       "url": "https://zengtrade.in/ops/billing",
       "urgent": false
     },
@@ -166,7 +166,8 @@
       "check-e2e-gates.sh partial signup\u2192deploy path when worker down (session 103)",
       "/ops/e2e steps 1\u20132 green + deploy_click probe (session 104)",
       "cpo.md charter: partial activation path (session 112)",
-      "guide-partial-e2e.sh founder manual partial E2E (session 117)"
+      "guide-partial-e2e.sh founder manual partial E2E (session 117)",
+      "check-free-tier-limit.sh \u2014 free deploy cap probes in parallel growth (session 126)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [
@@ -328,7 +329,8 @@
       "check-production-pricing.sh \u2014 founding $19 on prod (session 91)",
       "/ops/billing worker-offline note before checkout test (session 92)",
       "check-billing-ready.sh \u2014 one-command Pro checkout preflight (session 95)",
-      "check-sales-ready.sh \u2014 billing + plan intent + pricing truth (session 116)"
+      "check-sales-ready.sh \u2014 billing + plan intent + pricing truth (session 116)",
+      "guide-first-pro-checkout.sh \u2014 founder CLI first MRR steps (session 126)"
     ],
     "next": "Founder: run /ops/billing checkout smoke (no worker required); track MRR in /admin",
     "links": [

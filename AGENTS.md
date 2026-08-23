@@ -69,7 +69,8 @@ Verify with:
 ./scripts/check-e2e-gates.sh       # CPO: can /ops/e2e start?
 ./scripts/check-activation-ready.sh  # CPO: signup → deploy UI (no worker)
 ./scripts/verify-partial-activation.sh  # CPO: migration + activation combined
-./scripts/guide-partial-e2e.sh         # CPO: founder manual partial E2E steps
+./scripts/guide-first-pro-checkout.sh  # Sales: founder manual first Pro MRR
+./scripts/check-free-tier-limit.sh     # CPO: free-tier deploy cap probes
 ./scripts/check-parallel-growth.sh   # CBO/CPO: partial + billing + GSC while worker down
 ./scripts/check-qa-parallel.sh       # QA: security + XSS + partial + sales (worker blocked)
 ./scripts/check-xss-hygiene.sh       # QA: /app esc() patterns

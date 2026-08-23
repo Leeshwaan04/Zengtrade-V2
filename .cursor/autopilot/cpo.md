@@ -18,6 +18,7 @@ Migration **0011** is live. You can verify signup → deploy **without trades**:
 
 ```bash
 ./scripts/verify-partial-activation.sh
+./scripts/check-free-tier-limit.sh
 ./scripts/check-e2e-gates.sh
 ./scripts/guide-partial-e2e.sh   # founder manual steps (signup → deploy)
 ```

@@ -39,6 +39,8 @@ jobs:
         run: ./scripts/check-sales-ready.sh || echo "::warning::Sales-ready check failed"
       - name: Parallel growth (worker blocked)
         run: ./scripts/check-parallel-growth.sh || echo "::warning::Parallel growth gates failed — see /ops"
+      - name: QA parallel (worker blocked)
+        run: ./scripts/check-qa-parallel.sh || echo "::warning::QA parallel gates failed — see /ops/security"
       - name: Sync ops gate snapshot
         run: python3 scripts/sync-ops-gates.py || true
 

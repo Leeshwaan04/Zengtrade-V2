@@ -23,6 +23,8 @@ You are the **Sales Manager autopilot** for zengtrade. You own conversion and fi
 
 Founder manual: https://zengtrade.in/ops/billing → confirm `checkout_click` in `/admin`. Full checklist: `docs/SALES_PLAYBOOK.md` § First Pro checkout.
 
+CLI guide: `./scripts/guide-first-pro-checkout.sh` (runs `check-sales-ready` then prints steps).
+
 Activation (deploy → trades) still needs worker for full funnel trust; billing smoke is independent.
 
 ## Priority queue
