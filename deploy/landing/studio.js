@@ -96,19 +96,31 @@
       if (localStorage.getItem("zt_seen_forward")) return;
       localStorage.setItem("zt_seen_forward", "1");
     } catch (e) { return; }
-    setTimeout(function () {
-      if (document.querySelector(".zt-forward-hint")) return;
-      var el = document.createElement("div");
-      el.className = "zt-deploy-nudge zt-forward-hint";
-      el.setAttribute("role", "status");
-      el.innerHTML = "<div><b>Strategy deployed</b><br><span style=\"color:var(--slate,#64748b)\">" +
-        "Trades appear in Evidence as the worker runs on live prices (usually within 15 min).</span></div>" +
-        "<a href=\"/app#forward\">View evidence</a>" +
-        "<button type=\"button\" style=\"border:0;background:transparent;color:var(--slate);cursor:pointer\" " +
-        "aria-label=\"Dismiss\">✕</button>";
-      el.querySelector("button").onclick = function () { el.remove(); };
-      document.body.appendChild(el);
-    }, 800);
+    function renderHint(workerUp) {
+      setTimeout(function () {
+        if (document.querySelector(".zt-forward-hint")) return;
+        var el = document.createElement("div");
+        el.className = "zt-deploy-nudge zt-forward-hint";
+        el.setAttribute("role", "status");
+        var sub = workerUp
+          ? "Trades appear in Evidence as the worker runs on live prices (usually within 15 min)."
+          : "Deploy saved. Trades will run when the paper worker is back online — check the banner above.";
+        el.innerHTML = "<div><b>Strategy deployed</b><br><span style=\"color:var(--slate,#64748b)\">" +
+          sub + "</span></div>" +
+          "<a href=\"/app#forward\">View evidence</a>" +
+          "<button type=\"button\" style=\"border:0;background:transparent;color:var(--slate);cursor:pointer\" " +
+          "aria-label=\"Dismiss\">✕</button>";
+        el.querySelector("button").onclick = function () { el.remove(); };
+        document.body.appendChild(el);
+      }, 800);
+    }
+    ORIG(SUPA + "/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at", {
+      headers: sbHeaders(),
+    }).then(function (r) { return r.json(); }).then(function (rows) {
+      var ts = rows && rows[0] && rows[0].updated_at;
+      var up = ts && (Date.now() - new Date(ts).getTime() <= 12 * 60 * 1000);
+      renderHint(!!up);
+    }).catch(function () { renderHint(false); });
   }
 
   var FREE_DEPLOY_LIMIT = 1;

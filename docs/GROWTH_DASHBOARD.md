@@ -819,6 +819,18 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 - production ✅ | billing ✅ | migration 0011 ✅ | worker ❌
 - Railway: DATABASE_URL set · wrong password · deploy FAILED
 
+### Day 1 (session 83) — wrong-password founder UX + honest deploy nudge
+
+### CTO
+- **Shipped:** `/ops/worker` + `/ops/p0` callout when DATABASE_URL is set but password fails; `founder-next-action.sh` points to password reset (not generic “add DATABASE_URL”).
+- **Blocked:** Railway Postgres auth still invalid — founder must reset Supabase password and Deploy.
+
+### CPO
+- **Shipped:** Post-deploy nudge on `/dashboard` no longer promises “15 min” when paper worker is offline.
+
+### Status (`./scripts/status-report.sh` @ 19:32Z)
+- worker ❌ · `founder-next-action`: fix DATABASE_URL password
+
 ---
 
 ### CTO

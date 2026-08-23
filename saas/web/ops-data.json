@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T19:28:00Z",
+  "updated": "2026-08-23T19:32:00Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -58,7 +58,9 @@
       "/ops/p0 worker-only callout + /ops/worker links existing Railway paper-worker (session 74)",
       "wait-for-p0.sh polls run-p0-if-ready when Railway gets DATABASE_URL (session 76)",
       "resolve-database-url.sh validates Railway URI before apply-p0 (session 82)",
-      "run-p0-if-ready.sh fails fast on bad Postgres password — no 6min heartbeat wait (session 82)"
+      "run-p0-if-ready.sh fails fast on bad Postgres password — no 6min heartbeat wait (session 82)",
+      "/ops/worker + /ops/p0 wrong-password callout when migration green + heartbeat stale (session 83)",
+      "founder-next-action.sh detects invalid Railway DATABASE_URL password (session 83)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -93,7 +95,8 @@
       "Activation checklist: worker-live wait hint (5\u201315 min to first trade)",
       "Go-live bar read-only checklist on /app#pricing (docs/GO_LIVE_BAR.md)",
       "/ops/e2e worker-only blocked state with Railway link (session 76)",
-      "/app upsell copy: live execution coming soon (session 82)"
+      "/app upsell copy: live execution coming soon (session 82)",
+      "Deploy nudge on /dashboard honest when worker offline (studio.js session 83)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [
