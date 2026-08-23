@@ -1,0 +1,45 @@
+name: Apply migration 0011
+
+# Founder: add DATABASE_URL to repo Secrets first (Supabase → Database → URI).
+# Then: Actions → Apply migration 0011 → Run workflow → type APPLY
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type APPLY to run 0011_funnel_events_v2.sql'
+        required: true
+        type: string
+
+jobs:
+  migrate:
+    if: github.event.inputs.confirm == 'APPLY'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require DATABASE_URL secret
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Add DATABASE_URL to repo Secrets (Settings → Secrets → Actions)"
+            exit 1
+          fi
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Apply 0011_funnel_events_v2.sql
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f saas/db/migrations/0011_funnel_events_v2.sql
+      - name: Verify funnel event (signup_complete)
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+            'https://ponvarxeytfcntckczbn.supabase.co/rest/v1/event' \
+            -H 'apikey: sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1' \
+            -H 'Content-Type: application/json' \
+            -H 'Prefer: return=minimal' \
+            -d '{"name":"signup_complete","path":"/ci-verify"}')
+          if [ "$code" != "201" ]; then
+            echo "::error::signup_complete still blocked (HTTP $code)"
+            exit 1
+          fi
+          echo "Migration 0011 verified — signup_complete returns 201"
