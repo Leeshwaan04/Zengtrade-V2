@@ -11,6 +11,7 @@ echo "Founder checklist: https://zengtrade.in/ops/p0"
 if ! curl -sfL "https://zengtrade.in/ops/p0/" 2>/dev/null | grep -q "P0 checklist"; then
   echo "Note: /ops/p0 not on production yet — push main and wait for GitHub Pages deploy."
 fi
+echo "Tip: set DATABASE_URL on Railway paper-worker — this script auto-runs apply-p0 when detected."
 echo ""
 
 while true; do
@@ -21,6 +22,10 @@ while true; do
     echo ""
     echo "P0 gates green at $(date -u +%Y-%m-%dT%H:%MZ)"
     break
+  fi
+  # Picks up DATABASE_URL from Cloud Agent env or Railway service variables
+  if ./scripts/run-p0-if-ready.sh 2>/dev/null; then
+    exit 0
   fi
   ./scripts/status-report.sh 2>/dev/null || true
   echo "Retry in ${INTERVAL}s…"

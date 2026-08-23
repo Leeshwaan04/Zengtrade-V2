@@ -23,7 +23,7 @@
 <div class="wrap">
   <a class="back" href="/ops">← Founder Ops</a>
   <h1>E2E activation test (CPO)</h1>
-  <p class="sub">Run after <a href="/ops/p0">P0 checklist</a> shows migration 0011 + worker green.</p>
+  <p class="sub">Run after <a href="/ops/p0">P0 checklist</a> shows worker green. Migration 0011 is already live on production.</p>
   <p id="pre" class="gatebox">Checking P0 gates…</p>
 
   <div class="step" id="s1"><h2><span class="dot"></span>1 · Signup</h2>
@@ -70,9 +70,12 @@ async function gates(){
   if(ready){
     pre.innerHTML="✓ P0 ready — run the steps below";
     pre.className="gatebox ok";
+  }else if(mig&&!work){
+    pre.innerHTML='✗ Migration 0011 live — add <a href="https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b" target="_blank" rel="noopener">DATABASE_URL on Railway paper-worker</a> and redeploy, or <a href="/ops/worker">worker guide</a>. Then <code>./scripts/wait-for-p0.sh</code> auto-deploys.';
+    pre.className="gatebox bad";
   }else{
     const parts=[];
-    if(!mig) parts.push('<a href="/ops/p0">migration 0011</a>');
+    if(!mig) parts.push('<a href="/ops/migrate">migration 0011</a>');
     if(!work) parts.push('<a href="/ops/worker">paper worker</a>');
     pre.innerHTML="✗ Complete "+parts.join(" + ")+" first — or run <a href=\"https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml\" target=\"_blank\" rel=\"noopener\">Apply P0</a> (GitHub Secrets + APPLY)";
     pre.className="gatebox bad";

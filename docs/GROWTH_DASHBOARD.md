@@ -754,6 +754,18 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/status-report.sh` @ 18:17Z)
 - production ✅ | billing ✅ | migration 0011 ✅ | worker ❌
 
+### Day 1 (session 76) — wait-for-p0 auto-deploy + E2E worker-only UX
+
+### CTO
+- **Shipped:** `wait-for-p0.sh` calls `run-p0-if-ready.sh` each poll — auto-deploys when founder sets `DATABASE_URL` on Railway.
+- **Blocked:** `DATABASE_URL` still missing in Cloud Agent + Railway.
+
+### CPO
+- **Shipped:** `/ops/e2e` worker-only blocked state with direct Railway link (migration already green).
+
+### Status (`./scripts/status-report.sh` @ 18:19Z)
+- migration 0011 ✅ | worker ❌
+
 ---
 
 ### CTO
