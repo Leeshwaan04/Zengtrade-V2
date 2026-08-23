@@ -42,16 +42,17 @@ railway_redeploy() {
   railway_gql 'mutation($e: String!, $s: String!) { serviceInstanceRedeploy(environmentId: $e, serviceId: $s) }' "$variables" >/dev/null
 }
 
-railway_ensure_worker_service() {
+railway_configure_worker_service() {
   local env_id="${RAILWAY_ENV_ID:-354b0010-b9a7-48ef-a809-c239f9469fa9}"
   local service_id="${RAILWAY_SERVICE_ID:-0decae25-fab5-44f1-aefa-af6fcd5f070a}"
   local variables
 
   variables=$(python3 -c "import json; print(json.dumps({'serviceId': '$service_id', 'environmentId': '$env_id', 'input': {'rootDirectory': 'saas/worker', 'dockerfilePath': 'Dockerfile', 'railwayConfigFile': 'railway.toml', 'startCommand': 'python worker.py --interval 300'}}))")
   railway_gql 'mutation($input: ServiceInstanceUpdateInput!, $serviceId: String!, $environmentId: String) { serviceInstanceUpdate(input: $input, serviceId: $serviceId, environmentId: $environmentId) }' "$variables" >/dev/null
-
-  variables=$(python3 -c "import json; print(json.dumps({'e': '$env_id', 's': '$service_id'}))")
-  railway_gql 'mutation($e: String!, $s: String!) { serviceInstanceDeployV2(environmentId: $e, serviceId: $s) }' "$variables" >/dev/null
-
   echo "$service_id"
+}
+
+# Back-compat alias — configure only (deploy separately to avoid double deploy).
+railway_ensure_worker_service() {
+  railway_configure_worker_service
 }

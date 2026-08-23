@@ -56,7 +56,8 @@ else
     "DATABASE_URL=${DATABASE_URL}" \
     "WORKER_INTERVAL=${WORKER_INTERVAL:-300}"
 
-  railway_ensure_worker_service >/dev/null
+  railway_configure_worker_service >/dev/null
+  echo ">> Redeploying paper-worker (single deploy after vars set)…"
   railway_redeploy "$ENV_ID" "$SERVICE_ID"
 
   echo ">> Waiting for worker heartbeat (up to 6 min)…"

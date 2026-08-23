@@ -641,6 +641,15 @@
 ### Status (`./scripts/status-report.sh` @ 17:10Z)
 - migration 0011 ❌ | worker ❌ | PR #7 open
 
+### Day 1 (session 55) — Railway single-deploy fix
+
+### CTO
+- **Shipped:** `apply-p0-autopilot.sh` — one Railway redeploy after vars (removed double deployV2+redeploy).
+- **Shipped:** `/admin` P0 banner points to DATABASE_URL + `/ops/p0`.
+
+### Status (`./scripts/status-report.sh` @ 17:12Z)
+- migration 0011 ❌ | worker ❌ | awaiting DATABASE_URL
+
 ---
 
 ### CTO
