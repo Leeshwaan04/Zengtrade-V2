@@ -328,6 +328,12 @@ if coins:
         emit(os.path.join("coins", slug), shell(title, desc, canon, cmain, extra_head=extra), canon)
         print("  ✓ /coins/%s/  ($%s, %s%% 24h)" % (slug, tk["lastPrice"], tk["priceChangePercent"]))
 
+# Product routes (auth-gated but indexable landing/signup entry points for GSC)
+urls.extend([
+    "https://zengtrade.in/login",
+    "https://zengtrade.in/app",
+])
+
 # ---- sitemap + robots ------------------------------------------------------------------
 sm = ('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
       + "".join(f"  <url><loc>{u}</loc><changefreq>daily</changefreq></url>\n" for u in urls)

@@ -85,6 +85,12 @@ const $=id=>document.getElementById(id), msg=$("msg");
 const show=(t,ok)=>{msg.className="msg "+(ok?"ok":"err");msg.textContent=t;};
 const busy=(b,on,txt)=>{b.disabled=on;if(txt)b.textContent=txt;};
 function goAfterAuth(){
+  try{
+    fetch("https://ponvarxeytfcntckczbn.supabase.co/rest/v1/event",{method:"POST",
+      headers:{apikey:"sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1","Content-Type":"application/json",Prefer:"return=minimal"},
+      body:JSON.stringify({name:"signup_complete",path:location.pathname.slice(0,290)}),
+      keepalive:true}).catch(()=>{});
+  }catch(e){}
   const pl=localStorage.getItem("zt_intent_plan");
   if(pl==="pro"||pl==="elite"){
     try{ localStorage.removeItem("zt_intent_plan"); }catch(e){}
@@ -112,7 +118,13 @@ $("t-up").onclick=()=>{$("t-up").ariaSelected="true";$("t-in").ariaSelected="fal
 // and ?plan=pro|elite is remembered so the dashboard can route them to that upgrade after signup.
 { const _q=new URLSearchParams(location.search);
   if(_q.get("mode")==="signup"){$("t-up").click();}
-  const _pl=_q.get("plan"); if(_pl==="pro"||_pl==="elite") localStorage.setItem("zt_intent_plan",_pl); }
+  const _pl=_q.get("plan"); if(_pl==="pro"||_pl==="elite"){
+    localStorage.setItem("zt_intent_plan",_pl);
+    try{ fetch("https://ponvarxeytfcntckczbn.supabase.co/rest/v1/event",{method:"POST",
+      headers:{apikey:"sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1","Content-Type":"application/json",Prefer:"return=minimal"},
+      body:JSON.stringify({name:"plan_intent",path:("/login?plan="+_pl).slice(0,290),ref:(document.referrer||"").slice(0,290)}),
+      keepalive:true}).catch(()=>{}); }catch(e){}
+  } }
 
 $("f-in").onsubmit=async e=>{e.preventDefault();const b=e.target.querySelector("button");busy(b,true,"Signing in…");
   try{ await signIn($("i-email").value.trim(), $("i-pw").value); goAfterAuth(); }

@@ -75,6 +75,26 @@
     } catch (e) {}
   }
 
+  function showForwardHint() {
+    try {
+      if (localStorage.getItem("zt_seen_forward")) return;
+      localStorage.setItem("zt_seen_forward", "1");
+    } catch (e) { return; }
+    setTimeout(function () {
+      if (document.querySelector(".zt-forward-hint")) return;
+      var el = document.createElement("div");
+      el.className = "zt-deploy-nudge zt-forward-hint";
+      el.setAttribute("role", "status");
+      el.innerHTML = "<div><b>Strategy deployed</b><br><span style=\"color:var(--slate,#64748b)\">" +
+        "Trades appear in Evidence as the worker runs on live prices (usually within 15 min).</span></div>" +
+        "<a href=\"/app#forward\">View evidence</a>" +
+        "<button type=\"button\" style=\"border:0;background:transparent;color:var(--slate);cursor:pointer\" " +
+        "aria-label=\"Dismiss\">✕</button>";
+      el.querySelector("button").onclick = function () { el.remove(); };
+      document.body.appendChild(el);
+    }, 800);
+  }
+
   var FREE_DEPLOY_LIMIT = 1;
 
   /* ---- customers live in the Algo Studio: persona pinned, crypto book pinned ---- */
@@ -171,7 +191,12 @@
         headers: sbHeaders({ Prefer: "resolution=merge-duplicates,return=minimal" }),
         body: JSON.stringify({ user_id: s.uid, strategy_key: id, mode: "paper", status: "running" }),
       }).then(function (r) {
-        if (r.ok) { trackEvent("deploy_click"); return jresp({ ok: true, id: id, state: "paper" }); }
+        if (r.ok) {
+          trackEvent("deploy_click");
+          trackEvent("deploy_success");
+          showForwardHint();
+          return jresp({ ok: true, id: id, state: "paper" });
+        }
         return r.json().then(function (e) {
           var msg = (e && (e.message || e.details || e.hint)) || "Deploy failed - try again.";
           if (/FREE_LIMIT/i.test(msg))
@@ -550,7 +575,7 @@
       body: JSON.stringify({ user_id: s.uid, strategy_key: slug(name), mode: "paper",
                              status: "running", params: spec }),
     }).then(function (r) {
-      if (r.ok) { err.hidden = true; trackEvent("deploy_click"); refreshList(); }
+      if (r.ok) { err.hidden = true; trackEvent("deploy_click"); trackEvent("deploy_success"); showForwardHint(); refreshList(); }
       else r.json().then(function (e) {
         var msg = (e && (e.message || e.details || e.hint)) || "Deploy failed - try again.";
         if (/FREE_LIMIT/i.test(msg)) {

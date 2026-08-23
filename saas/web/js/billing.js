@@ -33,6 +33,12 @@ export async function openCheckout(user, plan = "pro", cycle = "month") {
   try {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) { toast("Please sign in first.", "info"); return; }
+    try {
+      await sb.from("event").insert({
+        name: "checkout_click",
+        path: (`/app#pricing:${plan}:${cycle}`).slice(0, 290),
+      });
+    } catch { /* funnel */ }
     toast("Starting secure checkout…", "info");
     const r = await fetch(`${SUPABASE_URL}/functions/v1/nowpayments-create-invoice`, {
       method: "POST",

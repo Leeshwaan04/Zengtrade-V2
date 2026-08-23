@@ -372,7 +372,10 @@ async function deploy(key) {
     }
     return toast(m, "error");
   }
-  try { await sb.from("event").insert({ name: "deploy_click", path: (location.pathname + location.hash).slice(0, 290) }); } catch { /* funnel */ }
+  try {
+    await sb.from("event").insert({ name: "deploy_click", path: (location.pathname + location.hash).slice(0, 290) });
+    await sb.from("event").insert({ name: "deploy_success", path: (location.pathname + location.hash).slice(0, 290) });
+  } catch { /* funnel */ }
   toast(`${nameOf(key)} deployed to paper.`, "success");
   await load(); render();
 }

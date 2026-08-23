@@ -144,6 +144,21 @@
 - **Shipped:** Merge path documented in MERGE_AND_SHIP + wait script.
 - **Next:** GSC + founding Pro checkout test post-deploy.
 
+### Day 1 (session 9) — funnel v2 + dist probes
+
+### CTO
+- **Shipped:** `scripts/probe-dist.sh`; worker `py_compile` in smoke; `/login` + `/app` in sitemap; LAUNCH_RUNBOOK/FOUNDER_DEPLOY aligned to PR #3 only.
+- **Blocked:** Production merge + Supabase migration `0011` + worker host.
+- **Next:** Post-merge `check-production.sh` green; apply migrations bundle.
+
+### CPO
+- **Shipped:** Funnel events `signup_complete`, `plan_intent`, `deploy_success`; post-deploy “View evidence” nudge on `/dashboard`; admin tiles for full funnel.
+- **Next:** Measure signup→deploy→trades conversion in `/admin` after deploy.
+
+### CBO
+- **Shipped:** `checkout_click` tracking on Pro/Elite; sitemap includes signup + app entry points for GSC.
+- **Next:** GSC verify + submit sitemap after merge.
+
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*

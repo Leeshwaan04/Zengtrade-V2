@@ -5,9 +5,9 @@ Complete these in order. Autopilot CTO tracks status in `docs/LAUNCH_RUNBOOK.md`
 ## 1. Merge & ship site (10 min)
 
 ```bash
-# On GitHub: merge PR #2 (crypto + Google auth), then PR #3 (autopilot)
+# On GitHub: merge PR #3 (cursor/autopilot-ff74) into main — supersedes PR #2
 # GitHub Actions → Deploy zengtrade to GitHub Pages runs on push to main
-# Confirm https://zengtrade.in loads the new login + dashboard
+# Poll until live: ./scripts/wait-for-deploy.sh
 ```
 
 ## 2. Supabase Auth (5 min)
@@ -28,6 +28,7 @@ SQL Editor → run:
 ```sql
 -- paste contents of saas/db/migrations/0009_engine_state.sql
 -- paste contents of saas/db/migrations/0010_admin_rpc_funnel.sql
+-- paste contents of saas/db/migrations/0011_funnel_events_v2.sql
 ```
 
 Or generate full bundle:

@@ -138,7 +138,11 @@ async function load(){
     { k:"Paper trades", v:fmt(o.trades_total), s:"booked" },
     { k:"Pageviews 7d", v:fmt(o.pageviews_7d), s:"funnel top" },
     { k:"Signup views 7d", v:fmt(o.signup_views_7d), s:"/login visits" },
+    { k:"Signups 7d", v:fmt(o.signup_complete_7d), s:"auth completed" },
+    { k:"Plan intents 7d", v:fmt(o.plan_intents_7d), s:"?plan=pro|elite" },
     { k:"Deploy clicks 7d", v:fmt(o.deploy_clicks_7d), s:"activation" },
+    { k:"Deploy success 7d", v:fmt(o.deploy_success_7d), s:"paper live" },
+    { k:"Checkout clicks 7d", v:fmt(o.checkout_clicks_7d), s:"revenue intent" },
     { k:"Worker", v:alive?"Live":"Down", s:o.worker_last_cycle?("last cycle "+timeAgo(o.worker_last_cycle)):"no cycles yet", cls:alive?"good":"bad" },
   ];
   $("tiles").innerHTML = tiles.map(t=>`<div class="tile ${t.cls||""}"><div class="k">${t.k}</div><div class="v">${t.v}</div><div class="s">${t.s}</div></div>`).join("");

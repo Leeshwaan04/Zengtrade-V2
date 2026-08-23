@@ -9,8 +9,8 @@ Production checklist for `zengtrade.in`. Autopilot CTO agent maintains this file
 
 | Step | Action | Owner | Done |
 |------|--------|-------|------|
-| 1 | Merge PR #2 (`cursor/crypto-only-ff74`) → `main` | CEO/CTO | ☐ |
-| 2 | Deploy `deploy/landing/dist` to hosting (Pages/Hostinger) — includes `/app`, `/dashboard`, `/login` | CTO | ☐ |
+| 1 | Merge PR #3 (`cursor/autopilot-ff74`) → `main` (close PR #2) | CEO/CTO | ☐ |
+| 2 | GitHub Pages deploy + `verify-production` CI green (or `./scripts/wait-for-deploy.sh`) | CTO | ☐ |
 | 3 | Supabase Auth → URL config: `https://zengtrade.in/login`, `https://zengtrade.in/reset` | CEO | ☐ |
 | 4 | Enable Google provider + OAuth client | CEO | ☐ |
 | 5 | SQL: run migrations `0009` + `0010` (or `./scripts/apply-migrations.sh`) | CTO | ☐ |
