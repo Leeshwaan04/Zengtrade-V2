@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T22:56:19Z",
+  "updated": "2026-08-23T23:04:20Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -124,7 +124,8 @@
       "apply-p0.yml drops duplicate post-p0; /ops/p0 step-3 post-P0 guidance (session 135)",
       "health-watch attempt-p0 job + worker check reordered last (session 136)",
       "WORKER_RECOVERY health-watch path; ops/worker option 0b (session 137)",
-      "founder-next-action health-watch hint on wrong Railway password (session 139)"
+      "founder-next-action health-watch hint on wrong Railway password (session 139)",
+      "check-p0-readiness DATABASE_PASSWORD + health-watch unblock paths (session 141)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -249,6 +250,7 @@
       "GSC founder completion log \u2014 GSC_SETUP.md + /ops/gsc (session 117)",
       "ops founder_actions: sales checkout + LinkedIn BIP (session 120)",
       "guide-gsc-founder.sh \u2014 founder CLI GSC verify + sitemap (session 127)",
+      "/admin first-MRR CTA when paying=0 \u2014 parallel checkout while worker blocked (session 135)",
       "/ops/gsc parallel MRR card; /ops/billing sales-ready probe (session 140)"
     ],
     "next": "Founder: GSC completion log (docs/GSC_SETUP.md); Pro checkout at /ops/billing",

@@ -80,8 +80,10 @@ if [[ $db_set -eq 0 && $rail_db -eq 1 && $rail_set -eq 1 ]]; then
   fi
   if [[ -n "${rail_resolved:-}" ]]; then
     echo "BLOCKED: Railway DATABASE_URL password invalid — reset in Supabase, update Railway, Deploy"
+    echo "  Fastest: Cloud Agent secret DATABASE_PASSWORD only → ./scripts/run-p0-if-ready.sh"
+    echo "  GitHub: Secrets + Apply P0 workflow OR health-watch auto-runs every 6h"
     echo "  Test after fix: ./scripts/validate-database-credentials.sh"
-    echo "  Recovery: docs/WORKER_RECOVERY.md"
+    echo "  Recovery: ./scripts/guide-worker-recovery.sh · docs/WORKER_RECOVERY.md"
     echo "  Parallel work: ./scripts/guide-founder-parallel.sh"
     exit 1
   fi
@@ -89,12 +91,14 @@ fi
 
 echo "Unblock paths:"
 if [[ $db_set -eq 0 ]]; then
-  echo "  • Cloud Agent: add DATABASE_URL (see ./scripts/founder-database-url-help.sh)"
+  echo "  • Fastest: Cloud Agent secret DATABASE_PASSWORD only (after Supabase reset)"
+  echo "  • Cloud Agent: full DATABASE_URL + RAILWAY_API_TOKEN"
+  echo "  • GitHub Secrets: DATABASE_PASSWORD or DATABASE_URL + RAILWAY_API_TOKEN"
+  echo "    → Apply P0 workflow (manual APPLY) OR health-watch (every 6h auto)"
   echo "  • Pooler host: aws-0-ap-northeast-1.pooler.supabase.com (session :5432)"
-  echo "  • Railway: set DATABASE_URL on paper-worker (apply-p0 auto-resolves)"
-  echo "  • GitHub: add DATABASE_URL + RAILWAY_API_TOKEN to repo Secrets → Apply P0 workflow"
+  echo "  • Railway: fix DATABASE_URL on paper-worker"
   echo "  • Supabase URI: https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings"
-  echo "  • Manual: https://zengtrade.in/ops/p0"
+  echo "  • Manual: https://zengtrade.in/ops/worker · ./scripts/guide-worker-recovery.sh"
 fi
 if [[ $db_set -eq 1 && $rail_set -eq 0 ]]; then
   echo "  • Add RAILWAY_API_TOKEN — migration can run via psql; worker needs Railway"
