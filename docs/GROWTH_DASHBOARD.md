@@ -421,6 +421,21 @@
 ### Status (`./scripts/check-sitemap.sh` @ 15:41Z)
 - Production sitemap missing **cardano** + **dogecoin** until PR #5 merges to main
 
+### Day 1 (session 34) — CPO post-deploy hint + health-watch sitemap
+
+### CPO
+- **Shipped:** `/app` shows post-deploy banner → **Forward Test** after paper deploy (worker-aware copy).
+- **Impact:** Closes signup → deploy → **trades evidence** loop in Evidence app (mirrors Algo Studio hint).
+
+### CTO
+- **Shipped:** `health-watch.yml` runs `check-sitemap.sh` (warn-only); `MERGE_AND_SHIP.md` includes sitemap verify.
+
+### CBO
+- **Shipped:** `WEEKLY_PROOF.md` fee copy fixed (35 bps) + UTM on signup link.
+
+### Status (`./scripts/status-report.sh` @ 15:43Z)
+- P0 unchanged: migration 0011 ❌ | worker ❌ | PR #5 open
+
 ---
 
 ## Daily log template

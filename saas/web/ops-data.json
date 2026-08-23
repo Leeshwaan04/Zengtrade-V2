@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T15:43:00Z",
+  "updated": "2026-08-23T15:45:00Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -71,7 +71,8 @@
       "Activation checklist on /app",
       "Worker-offline banner links to /how-it-works on /app and /dashboard",
       "Pageview tracking on /dashboard and /app after auth",
-      "Activation checklist shows worker-offline hint when deploys exist but no trades"
+      "Activation checklist shows worker-offline hint when deploys exist but no trades",
+      "Post-deploy banner in /app links to Forward Test (signup → deploy → trades)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [

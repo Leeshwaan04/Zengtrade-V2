@@ -241,6 +241,27 @@ function wireEmptyDeploy() {
   if (b) b.onclick = () => { location.hash = "strategies"; };
 }
 
+function showPostDeployHint() {
+  if (document.getElementById("ztPostDeployHint")) return;
+  const workerNote = state.workerAlive
+    ? "Trades appear in Forward Test as the worker runs (~15 min)."
+    : "Worker is offline — deploy saved; trades start when the worker is live.";
+  const el = document.createElement("div");
+  el.id = "ztPostDeployHint";
+  el.setAttribute("role", "status");
+  el.style.cssText =
+    "position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:90;" +
+    "max-width:min(480px,calc(100% - 24px));padding:14px 16px;border-radius:14px;" +
+    "background:var(--surface,#fff);border:1px solid var(--line,#e2e8f0);box-shadow:0 8px 24px rgba(0,0,0,.12);" +
+    "font:600 13px/1.45 var(--sans,system-ui);display:flex;gap:12px;align-items:center;flex-wrap:wrap";
+  el.innerHTML =
+    `<div style="flex:1"><b>Strategy deployed</b><br><span style="font-weight:500;color:var(--slate,#64748b)">${workerNote}</span></div>` +
+    `<a href="#forward" style="padding:8px 14px;border-radius:9px;background:var(--green,#00ab4e);color:#04140a;text-decoration:none;font-weight:700">Forward Test</a>` +
+    `<button type="button" style="border:0;background:transparent;cursor:pointer;color:var(--slate,#64748b)" aria-label="Dismiss">✕</button>`;
+  el.querySelector("button").onclick = () => el.remove();
+  document.body.appendChild(el);
+}
+
 // ---- Forward Test (closed-trade evidence) ----
 function renderForward() {
   if (state.loading) { app.innerHTML = `<div class="card">${skeletonRows(6)}</div>`; return; }
@@ -411,6 +432,7 @@ async function deploy(key) {
     await sb.from("event").insert({ name: "deploy_success", path: (location.pathname + location.hash).slice(0, 290) });
   } catch { /* funnel */ }
   toast(`${nameOf(key)} deployed to paper.`, "success");
+  showPostDeployHint();
   await load(); render();
 }
 async function stop(key) {

@@ -10,6 +10,7 @@ GitHub Actions will build the landing site (includes `/ops/p0`, `/admin` P0 bann
 
 ```bash
 SITE=https://zengtrade.in ./scripts/check-production.sh
+./scripts/check-sitemap.sh          # 7 coin pSEO URLs after merge
 ./scripts/wait-for-deploy.sh    # if CDN still propagating
 ```
 
