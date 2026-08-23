@@ -775,6 +775,12 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/status-report.sh` @ 18:22Z)
 - worker ❌ — awaiting founder `DATABASE_URL` on Railway
 
+### Day 1 (session 78) — Supabase navigation clarify
+
+### CTO
+- **Shipped:** `/ops/worker` + `founder-database-url-help.sh` — pool-size screen is not the URI; use Connect / Database → Connection string.
+- **Blocked:** Railway still has no `DATABASE_URL`.
+
 ---
 
 ### CTO
