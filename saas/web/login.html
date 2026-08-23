@@ -111,7 +111,11 @@ function trackSignupComplete(){
 }
 
 function goAfterAuth(user){
-  if(shouldTrackSignupComplete(user)) trackSignupComplete();
+  const freshSignup=shouldTrackSignupComplete(user);
+  if(freshSignup){
+    trackSignupComplete();
+    try{ localStorage.setItem("zt_fresh_signup","1"); }catch(e){}
+  }
   const pl=localStorage.getItem("zt_intent_plan");
   if(pl==="pro"||pl==="elite"){
     try{ localStorage.removeItem("zt_intent_plan"); }catch(e){}

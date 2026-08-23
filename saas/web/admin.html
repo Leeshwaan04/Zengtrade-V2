@@ -128,10 +128,10 @@ const money = n => "$"+Number(n||0).toLocaleString("en-US");
 async function probeP0(){
   let mig=false, work=false;
   try{
-    const r=await fetch("https://ponvarxeytfcntckczbn.supabase.co/rest/v1/event",{method:"POST",
-      headers:{apikey:"sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1","Content-Type":"application/json",Prefer:"return=minimal"},
-      body:JSON.stringify({name:"signup_complete",path:"/admin-probe"})});
-    mig=r.status===201;
+    const h={apikey:"sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1","Content-Type":"application/json",Prefer:"return=minimal"};
+    const r1=await fetch("https://ponvarxeytfcntckczbn.supabase.co/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"signup_complete",path:"/admin-probe"})});
+    const r2=await fetch("https://ponvarxeytfcntckczbn.supabase.co/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"deploy_success",path:"/admin-probe"})});
+    mig=r1.status===201&&r2.status===201;
   }catch(e){}
   try{
     const rows=await fetch("https://ponvarxeytfcntckczbn.supabase.co/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",

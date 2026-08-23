@@ -448,6 +448,19 @@
 ### Status (`./scripts/status-report.sh` @ 15:45Z)
 - P0 unchanged
 
+### Day 1 (session 36) — CPO fresh-signup nudge + ops migrate auto-verify
+
+### CPO
+- **Shipped:** New signups set `zt_fresh_signup` → Algo Studio deploy nudge in ~800ms (was 5s).
+- **Impact:** Faster signup → deploy path on `/dashboard`.
+
+### CTO
+- **Shipped:** `/ops/migrate` auto-verifies funnel v2 events on load + 30s refresh.
+- **Shipped:** `/admin` P0 probe checks signup + deploy events (full 0011 gate).
+
+### Status (`./scripts/status-report.sh` @ 15:47Z)
+- P0 unchanged: migration 0011 ❌ | worker ❌ | PR #5 open
+
 ---
 
 ## Daily log template

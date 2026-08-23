@@ -315,6 +315,8 @@
     ".zt-deploy-nudge a{color:#fff;background:var(--green,#00ab4e);padding:8px 14px;border-radius:9px;" +
     "font-weight:700;text-decoration:none;white-space:nowrap}";
   function nudgeDeployIfCold() {
+    var delay = 5000;
+    try { if (localStorage.getItem("zt_fresh_signup")) { delay = 800; localStorage.removeItem("zt_fresh_signup"); } } catch (e) {}
     setTimeout(function () {
       mine("deployment?select=strategy_key&status=eq.running&limit=1").then(function (rows) {
         if (rows && rows.length) return;
@@ -336,7 +338,7 @@
         el.querySelector("button").onclick = function () { el.remove(); };
         document.body.appendChild(el);
       });
-    }, 5000);
+    }, delay);
   }
   function inject() {
     var st = document.createElement("style");
