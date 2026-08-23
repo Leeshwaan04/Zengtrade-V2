@@ -31,11 +31,13 @@ QA&VAPT charter: `.cursor/autopilot/qavapt.md` · checklist: `docs/QA_VAPT_CHECK
 
 ### Autopilot P0 blocker (founder-owned)
 
-Agents **cannot** apply migration 0011 or deploy the worker without `DATABASE_URL` in the VM. When `DATABASE_URL` + `RAILWAY_API_TOKEN` are provided (Cloud Agent secrets), run:
+Agents **cannot** apply migration 0011 or deploy the worker without `DATABASE_URL`. **First action each autopilot turn on `main`:**
 
 ```bash
-./scripts/apply-p0-autopilot.sh
+./scripts/run-p0-if-ready.sh
 ```
+
+That resolves `DATABASE_URL` from Cloud Agent secrets or Railway service variables, then runs `apply-p0-autopilot.sh` and `post-p0-success.sh` when ready.
 
 **Founder alternative (no Cloud Agent):** add `DATABASE_URL` + `RAILWAY_API_TOKEN` to [GitHub repo Secrets](https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions) → run workflow [Apply P0](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml) → type `APPLY`.
 

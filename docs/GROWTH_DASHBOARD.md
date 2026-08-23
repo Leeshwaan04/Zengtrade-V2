@@ -701,12 +701,15 @@
 ### Status (`./scripts/status-report.sh` @ 17:21Z)
 - migration 0011 ❌ | worker ❌ | security-smoke ✅
 
-### Day 1 (session 65) — main-only workflow (no PRs)
+### Day 1 (session 66) — agent P0 entry point on main
 
 ### CTO
-- **Shipped:** Merged P0 Railway tooling into `main` directly (no PR).
-- **Shipped:** `AGENTS.md` — always work on `main`, do not create PRs.
+- **Shipped:** `run-p0-if-ready.sh` — single turn entry (env or Railway `DATABASE_URL` → apply + post-P0).
+- **Shipped:** `/ops/p0` — Supabase URI link + Railway variable path.
 - **Blocked:** `DATABASE_URL` still missing.
+
+### Status (`./scripts/status-report.sh` @ 17:33Z)
+- migration 0011 ❌ | worker ❌ | security-smoke ✅
 
 ---
 
