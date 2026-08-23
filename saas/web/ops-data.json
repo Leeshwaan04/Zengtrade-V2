@@ -187,7 +187,8 @@
       "guide-free-tier-test.sh \u2014 Q9 manual free-tier test steps (session 128)",
       "verify-activation-path.sh --partial CLI gate (session 137)",
       "partial activation row in GROWTH_DASHBOARD + snapshot-growth-metrics (session 138)",
-      "ops Partial activation gate; status-report partial row; sync-ops partial_activation_ready (session 139)"
+      "ops Partial activation gate; status-report partial row; sync-ops partial_activation_ready (session 139)",
+      "check-founder-parallel-ready includes verify-activation-path --partial (session 140)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [

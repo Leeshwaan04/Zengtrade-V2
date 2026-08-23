@@ -19,6 +19,7 @@
   <a class="back" href="/ops">← Founder Ops</a>
   <h1>Test Pro checkout (CBO / MRR)</h1>
   <p>Founding Pro <b>$19/mo</b> via NOWPayments. Billing edge functions must be live (check <a href="/ops">/ops</a>).</p>
+  <p id="salesStatus" class="card" style="font:600 13px var(--mono);padding:12px 14px">Checking sales-ready…</p>
   <p id="p0gate" class="card" style="display:none;background:#fff8e6;border-color:#f0d78a;font-size:14px;margin-bottom:14px"></p>
   <p id="billReady" class="card" style="font:600 13px var(--mono);padding:12px 14px">Checking billing readiness…</p>
   <div class="card">
@@ -71,6 +72,24 @@ fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{h
     el.innerHTML="<b>Note:</b> Paper worker is offline — you can still test checkout. Parallel gates: <code>./scripts/check-parallel-growth.sh</code>. Activation E2E (trades) needs <a href=\"/ops/worker\">worker live</a>.";
   }
 }).catch(()=>{});
+(async function(){
+  const el=document.getElementById("salesStatus");
+  const SITE=location.origin;
+  let ok=true;
+  try{
+    const pr=await fetch(SITE+"/pricing/").then(r=>r.ok?r.text():"");
+    ok=ok&&/\$19|19\/mo/i.test(pr);
+    const r=await fetch("https://ponvarxeytfcntckczbn.supabase.co/functions/v1/nowpayments-create-invoice",{
+      method:"OPTIONS",headers:{Origin:location.origin,"Access-Control-Request-Method":"POST"}
+    });
+    ok=ok&&r.ok;
+    const ev=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({name:"checkout_click",path:"/ops-billing-sales"})});
+    ok=ok&&ev.status===201;
+  }catch(e){ok=false;}
+  el.textContent=ok?"✓ Sales-ready — founding $19 + NOWPayments + checkout_click · targets: Paying ≥ 1, MRR > $0 in /admin":"✗ Run ./scripts/check-sales-ready.sh";
+  el.style.background=ok?"var(--green-soft)":"#fff5f5";
+  el.style.borderColor=ok?"var(--green-line)":"#f0b4b4";
+})();
 (async function(){
   const el=document.getElementById("billReady");
   const SITE=location.origin;

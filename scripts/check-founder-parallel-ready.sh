@@ -28,6 +28,7 @@ run() {
 }
 
 run "Parallel growth (CPO/CBO)" ./scripts/check-parallel-growth.sh
+run "Partial activation (CPO)" ./scripts/verify-activation-path.sh --partial
 run "QA parallel (QA&VAPT)" ./scripts/check-qa-parallel.sh
 run "Founder guides" ./scripts/check-founder-guides.sh
 
