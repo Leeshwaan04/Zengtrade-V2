@@ -68,6 +68,7 @@
 - **Shipped:** App billing PLANS aligned to $19 founding; checkout return lands on `/app` for tier polling.
 - **Next:** GSC + first weekly proof post after worker live.
 
+### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*
 - Worker: *(pending Railway deploy)*

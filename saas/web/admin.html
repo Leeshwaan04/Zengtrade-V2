@@ -137,6 +137,8 @@ async function load(){
     { k:"Custom strategies", v:fmt(o.custom_strategies), s:"built in Builder" },
     { k:"Paper trades", v:fmt(o.trades_total), s:"booked" },
     { k:"Pageviews 7d", v:fmt(o.pageviews_7d), s:"funnel top" },
+    { k:"Signup views 7d", v:fmt(o.signup_views_7d), s:"/login visits" },
+    { k:"Deploy clicks 7d", v:fmt(o.deploy_clicks_7d), s:"activation" },
     { k:"Worker", v:alive?"Live":"Down", s:o.worker_last_cycle?("last cycle "+timeAgo(o.worker_last_cycle)):"no cycles yet", cls:alive?"good":"bad" },
   ];
   $("tiles").innerHTML = tiles.map(t=>`<div class="tile ${t.cls||""}"><div class="k">${t.k}</div><div class="v">${t.v}</div><div class="s">${t.s}</div></div>`).join("");

@@ -27,6 +27,15 @@ SQL Editor → run:
 
 ```sql
 -- paste contents of saas/db/migrations/0009_engine_state.sql
+-- paste contents of saas/db/migrations/0010_admin_rpc_funnel.sql
+```
+
+Or generate full bundle:
+
+```bash
+chmod +x scripts/apply-migrations.sh
+./scripts/apply-migrations.sh > /tmp/zengtrade-migrations.sql
+# paste /tmp/zengtrade-migrations.sql into SQL Editor
 ```
 
 Also confirm `0005_grant_paid_and_deploy_limit.sql` is applied (free-tier deploy cap).
@@ -55,6 +64,11 @@ supabase functions deploy nowpayments-ipn --no-verify-jwt
 Test: `/app#pricing` → Pro → pay → tier flips to `pro`.
 
 ## 6. Smoke test (5 min)
+
+```bash
+chmod +x scripts/check-production.sh
+SITE=https://zengtrade.in ./scripts/check-production.sh
+```
 
 1. Incognito → `https://zengtrade.in/login?mode=signup`
 2. Google or email signup → lands on `/dashboard`
