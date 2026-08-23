@@ -58,7 +58,8 @@ document.getElementById("verify").onclick=async()=>{
   const h={apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"};
   const r1=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"signup_complete",path:"/ops-verify"})});
   const r2=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"deploy_success",path:"/ops-verify"})});
-  if(r1.status===201&&r2.status===201){st.textContent="✓ Migration 0011 is live (signup + deploy events).";st.className="ok";}
-  else{st.textContent="✗ Still blocked (signup "+r1.status+", deploy "+r2.status+"). Run the SQL in Supabase first.";st.className="bad";}
+  const r3=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"checkout_click",path:"/ops-verify"})});
+  if(r1.status===201&&r2.status===201&&r3.status===201){st.textContent="✓ Migration 0011 is live (signup, deploy, checkout events).";st.className="ok";}
+  else{st.textContent="✗ Still blocked (signup "+r1.status+", deploy "+r2.status+", checkout "+r3.status+"). Run the SQL in Supabase first.";st.className="bad";}
 };
 </script></body></html>

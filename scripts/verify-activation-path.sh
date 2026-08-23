@@ -25,6 +25,18 @@ if [[ "$code" != "201" ]]; then
 fi
 echo "OK   deploy_success event accepted"
 
+code=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+  'https://ponvarxeytfcntckczbn.supabase.co/rest/v1/event' \
+  -H 'apikey: sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1' \
+  -H 'Content-Type: application/json' \
+  -H 'Prefer: return=minimal' \
+  -d '{"name":"checkout_click","path":"/activation-verify"}')
+if [[ "$code" != "201" ]]; then
+  echo "FAIL checkout_click event blocked (HTTP $code)"
+  exit 1
+fi
+echo "OK   checkout_click event accepted (CBO MRR funnel)"
+
 echo ""
 echo "== worker heartbeat detail =="
 hb=$(curl -sfL 'https://ponvarxeytfcntckczbn.supabase.co/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at,value' \

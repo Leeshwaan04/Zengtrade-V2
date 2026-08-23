@@ -62,8 +62,10 @@
 const SUPA="https://ponvarxeytfcntckczbn.supabase.co", ANON="sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";
 async function probeMig(){
   try{
-    const r=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({name:"signup_complete",path:"/p0-probe"})});
-    return r.status===201;
+    const h={apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"};
+    const r1=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"signup_complete",path:"/p0-probe"})});
+    const r2=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"deploy_success",path:"/p0-probe"})});
+    return r1.status===201&&r2.status===201;
   }catch(e){return false;}
 }
 async function probeWorker(){
@@ -77,7 +79,7 @@ async function probeWorker(){
 async function refresh(){
   const mig=await probeMig();
   const w=await probeWorker();
-  document.getElementById("g1").textContent=mig?"✓ Migration 0011 live":"✗ Migration 0011 pending — run step 1";
+  document.getElementById("g1").textContent=mig?"✓ Migration 0011 live (signup + deploy events)":"✗ Migration 0011 pending — run step 1";
   document.getElementById("g1").className="gate "+(mig?"ok":"bad");
   document.getElementById("g2").textContent=w.ok?"✓ Worker live ("+w.detail+")":"✗ Worker stale ("+w.detail+") — run step 2";
   document.getElementById("g2").className="gate "+(w.ok?"ok":"bad");

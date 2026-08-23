@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T15:38:00Z",
+  "updated": "2026-08-23T15:42:00Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -42,7 +42,7 @@
       "Health probes: check-worker, check-migrations, health-watch cron (fails \u2192 founder email)",
       "Worker startup heartbeat + DB retry for faster deploy proof",
       "verify-activation-path.sh for post-P0 E2E gate",
-      "Migration 0011 verify probes signup_complete + deploy_success (check-migrations, ops-migrate, GitHub Action)",
+      "Migration 0011 verify probes signup_complete + deploy_success + checkout_click (check-migrations, ops-migrate, GitHub Action)",
       "render.yaml + WORKER_QUICKSTART for one-click worker host"
     ],
     "next": "Merge PR #5 \u2192 founder /ops/p0 (migration + worker); then verify-activation-path",
@@ -106,7 +106,7 @@
       "Landing signup CTAs tagged with utm_source=site for GSC attribution",
       "r/algotrading draft ready (post after P0)"
     ],
-    "next": "GSC sitemap + first proof post after forward trades exist",
+    "next": "GSC sitemap + first proof post after forward trades exist; Pro checkout E2E at /ops/billing",
     "links": [
       {
         "label": "Test checkout guide",

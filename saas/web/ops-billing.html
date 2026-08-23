@@ -29,9 +29,11 @@
     </ol>
     <a class="btn" href="/app#pricing">Open Pro checkout</a>
     <p id="bill" style="margin-top:14px">Checking billing rail…</p>
+    <p id="funnel" style="margin-top:8px;font-size:13px;color:var(--slate)">Checking checkout_click funnel…</p>
   </div>
 </div>
 <script>
+const SUPA="https://ponvarxeytfcntckczbn.supabase.co", ANON="sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";
 fetch("https://ponvarxeytfcntckczbn.supabase.co/functions/v1/nowpayments-create-invoice",{
   method:"OPTIONS",headers:{Origin:location.origin,"Access-Control-Request-Method":"POST"}
 }).then(r=>{
@@ -39,4 +41,10 @@ fetch("https://ponvarxeytfcntckczbn.supabase.co/functions/v1/nowpayments-create-
   if(r.ok){el.textContent="✓ Billing edge function reachable — safe to test checkout";el.className="ok";}
   else{el.textContent="✗ Billing not reachable (HTTP "+r.status+")";el.className="bad";}
 }).catch(()=>{document.getElementById("bill").textContent="✗ Could not reach billing function";document.getElementById("bill").className="bad";});
+fetch(SUPA+"/rest/v1/event",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({name:"checkout_click",path:"/ops-billing-probe"})})
+.then(r=>{
+  const el=document.getElementById("funnel");
+  if(r.status===201){el.innerHTML="✓ <code>checkout_click</code> funnel live — clicks will appear in <a href=\"/admin\">/admin</a>";}
+  else{el.innerHTML="⚠ <code>checkout_click</code> blocked (HTTP "+r.status+") — apply <a href=\"/ops/migrate\">migration 0011</a> first";}
+});
 </script></body></html>

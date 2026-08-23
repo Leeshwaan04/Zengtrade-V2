@@ -117,12 +117,17 @@ async function probeAuthJs() {
 
 async function probeMigration0011() {
   try {
-    const r = await fetch(SUPA + "/rest/v1/event", {
-      method: "POST",
-      headers: { apikey: ANON, "Content-Type": "application/json", Prefer: "return=minimal" },
-      body: JSON.stringify({ name: "signup_complete", path: "/ops-probe" }),
-    });
-    return r.status === 201;
+    const h = { apikey: ANON, "Content-Type": "application/json", Prefer: "return=minimal" };
+    const events = ["signup_complete", "deploy_success"];
+    for (const name of events) {
+      const r = await fetch(SUPA + "/rest/v1/event", {
+        method: "POST",
+        headers: h,
+        body: JSON.stringify({ name, path: "/ops-probe" }),
+      });
+      if (r.status !== 201) return false;
+    }
+    return true;
   } catch { return false; }
 }
 

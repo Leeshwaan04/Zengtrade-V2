@@ -30,9 +30,9 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f saas/db/migrations/0011_funnel_events_v2.sql
-      - name: Verify funnel v2 events (signup_complete + deploy_success)
+      - name: Verify funnel v2 events (signup_complete + deploy_success + checkout_click)
         run: |
-          for ev in signup_complete deploy_success; do
+          for ev in signup_complete deploy_success checkout_click; do
             code=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
               'https://ponvarxeytfcntckczbn.supabase.co/rest/v1/event' \
               -H 'apikey: sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1' \
