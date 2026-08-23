@@ -23,6 +23,10 @@ hb=$(curl -sfL 'https://ponvarxeytfcntckczbn.supabase.co/rest/v1/engine_state?ke
 echo ""
 echo "Worker heartbeat last: $hb UTC"
 
+if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
+  ./scripts/check-railway-deploy.sh 2>/dev/null || true
+fi
+
 if [[ $prod -eq 1 && $bill -eq 1 && $mig -eq 1 && $work -eq 1 ]]; then
   echo ""
   echo "All P0 gates green — run ./scripts/verify-activation-path.sh then E2E signup → deploy → trades."

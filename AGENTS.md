@@ -38,6 +38,7 @@ Verify with:
 
 ```bash
 ./scripts/status-report.sh
+./scripts/check-railway-deploy.sh   # when RAILWAY_API_TOKEN is set
 ```
 
 Founder checklist: **https://zengtrade.in/ops/p0**

@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T16:37:00Z",
+  "updated": "2026-08-23T16:56:00Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -162,6 +162,8 @@
     "migration_0011": false,
     "worker": false,
     "worker_heartbeat_utc": "2026-08-11T09:57:38",
+    "railway_paper_worker": "FAILED",
+    "railway_database_url_set": false,
     "all_p0_green": false
   }
 }

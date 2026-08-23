@@ -8,6 +8,15 @@ mig=0 work=0
 ./scripts/check-migrations.sh >/dev/null 2>&1 && mig=1
 ./scripts/check-worker.sh >/dev/null 2>&1 && work=1
 
+# Single-secret path: Railway token without DB blocks full autopilot
+if [[ $mig -eq 0 || $work -eq 0 ]]; then
+  if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" && -z "${DATABASE_URL:-${SUPABASE_DATABASE_URL:-}}" ]]; then
+    echo "NEXT: Add DATABASE_URL to Cloud Agent secrets (Supabase session pooler :5432) → agent runs ./scripts/apply-p0-autopilot.sh"
+    echo "     Manual: https://zengtrade.in/ops/p0"
+    exit 1
+  fi
+fi
+
 if [[ $mig -eq 0 ]]; then
   echo "NEXT: Apply migration 0011 → https://zengtrade.in/ops/migrate"
   exit 1

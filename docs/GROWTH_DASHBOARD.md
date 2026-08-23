@@ -564,6 +564,19 @@
 ### Status (`./scripts/status-report.sh` @ 16:36Z)
 - migration 0011 ❌ | worker ❌ | Railway token ✅
 
+### Day 1 (session 48) — Railway deploy probe + DATABASE_URL-only blocker
+
+### CTO
+- **Shipped:** `check-railway-deploy.sh` — confirms `paper-worker` has no `DATABASE_URL` on Railway (latest deploy FAILED).
+- **Shipped:** `founder-next-action.sh` + `status-report.sh` surface single-secret blocker when `RAILWAY_API_TOKEN` set but `DATABASE_URL` missing.
+- **Blocked:** `DATABASE_URL` not in VM — migration 0011 + worker env still pending.
+
+### QA&VAPT
+- **Verified:** `security-smoke.sh` 9/9 pass @ 16:54Z
+
+### Status (`./scripts/status-report.sh` @ 16:56Z)
+- migration 0011 ❌ | worker ❌ | Railway `paper-worker` FAILED (no DATABASE_URL on service)
+
 ---
 
 ### CTO
