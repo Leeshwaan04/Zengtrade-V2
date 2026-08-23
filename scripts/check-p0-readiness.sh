@@ -4,14 +4,15 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-db_set=0 rail_set=0 rail_db=0
+db_set=0 rail_set=0 rail_db=0 rail_resolved=""
 [[ -n "${DATABASE_URL:-${SUPABASE_DATABASE_URL:-}}" ]] && db_set=1
 [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]] && rail_set=1
 if [[ $db_set -eq 0 && $rail_set -eq 1 ]]; then
   # shellcheck source=/dev/null
   source "$ROOT/scripts/railway-api.sh" 2>/dev/null || true
-  if railway_resolve_database_url >/dev/null 2>&1; then
+  if rail_resolved=$(railway_resolve_database_url 2>/dev/null); then
     rail_db=1
+    rail_resolved=$(./scripts/sanitize-database-url.sh "$rail_resolved" 2>/dev/null || echo "$rail_resolved")
   fi
 fi
 
@@ -20,6 +21,13 @@ echo ""
 printf "DATABASE_URL in environment     %s\n" "$([[ $db_set -eq 1 ]] && echo '✅ set' || echo '❌ missing')"
 if [[ $db_set -eq 0 && $rail_db -eq 1 ]]; then
   echo "DATABASE_URL on Railway project  ✅ found (apply-p0 will auto-resolve)"
+  if [[ -n "${rail_resolved:-}" ]]; then
+    if DATABASE_URL="$rail_resolved" ./scripts/test-database-url.sh >/dev/null 2>&1; then
+      printf "Railway DATABASE_URL connection   ✅\n"
+    else
+      printf "Railway DATABASE_URL connection   ❌ wrong password — Supabase Connect → Reset password → copy URI → Railway Deploy\n"
+    fi
+  fi
 fi
 printf "RAILWAY_API_TOKEN in environment %s\n" "$([[ $rail_set -eq 1 ]] && echo '✅ set' || echo '❌ missing')"
 if [[ $db_set -eq 1 ]]; then
@@ -63,8 +71,14 @@ if [[ $db_set -eq 1 && $rail_set -eq 1 ]]; then
 fi
 
 if [[ $db_set -eq 0 && $rail_db -eq 1 && $rail_set -eq 1 ]]; then
-  echo "Ready to run: ./scripts/apply-p0-autopilot.sh (DATABASE_URL from Railway)"
-  exit 0
+  if [[ -n "${rail_resolved:-}" ]] && DATABASE_URL="$rail_resolved" ./scripts/test-database-url.sh >/dev/null 2>&1; then
+    echo "Ready to run: ./scripts/apply-p0-autopilot.sh (DATABASE_URL from Railway)"
+    exit 0
+  fi
+  if [[ -n "${rail_resolved:-}" ]]; then
+    echo "BLOCKED: Railway DATABASE_URL password invalid — reset in Supabase, update Railway, Deploy"
+    exit 1
+  fi
 fi
 
 echo "Unblock paths:"
