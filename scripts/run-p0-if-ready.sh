@@ -19,14 +19,8 @@ if [[ -z "${DATABASE_URL:-}" ]]; then
   if resolved=$(./scripts/resolve-database-url.sh 2>/dev/null); then
     DATABASE_URL="$resolved"
     export DATABASE_URL
-    if [[ -n "${DATABASE_PASSWORD:-${SUPABASE_DB_PASSWORD:-}}" && -z "${SUPABASE_DATABASE_URL:-}" ]]; then
-      echo "OK   DATABASE_URL built from DATABASE_PASSWORD"
-    else
-      echo "OK   DATABASE_URL resolved from Railway"
-    fi
+    echo "OK   DATABASE_URL resolved (env password or Railway)"
   fi
-elif [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" && -z "${DATABASE_URL:-}" ]]; then
-  :
 fi
 
 if [[ -n "${DATABASE_URL:-}" ]]; then
@@ -39,6 +33,12 @@ if [[ -n "${DATABASE_URL:-}" ]]; then
 fi
 
 if [[ -n "${DATABASE_URL:-}" ]]; then
+  if ! DATABASE_URL="$DATABASE_URL" ./scripts/test-database-url.sh >/dev/null 2>&1; then
+    echo "BLOCKED: DATABASE_URL resolves but Postgres auth fails — fix password on Railway or set DATABASE_PASSWORD secret"
+    echo ""
+    ./scripts/check-p0-readiness.sh
+    exit 1
+  fi
   export DATABASE_URL
   ./scripts/apply-p0-autopilot.sh
   exec ./scripts/post-p0-success.sh

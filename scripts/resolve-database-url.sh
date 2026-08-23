@@ -25,8 +25,11 @@ if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
   # shellcheck source=/dev/null
   source "$ROOT/scripts/railway-api.sh" 2>/dev/null || true
   if resolved=$(railway_resolve_database_url 2>/dev/null); then
-    ./scripts/sanitize-database-url.sh "$resolved"
-    exit 0
+    resolved=$(./scripts/sanitize-database-url.sh "$resolved")
+    if DATABASE_URL="$resolved" ./scripts/test-database-url.sh >/dev/null 2>&1; then
+      echo "$resolved"
+      exit 0
+    fi
   fi
 fi
 

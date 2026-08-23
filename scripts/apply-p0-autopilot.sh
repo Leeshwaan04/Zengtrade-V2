@@ -69,6 +69,9 @@ if ./scripts/check-worker.sh >/dev/null 2>&1; then
   echo "OK   paper worker heartbeat fresh"
 else
   [[ -n "${DATABASE_URL:-}" ]] || die "DATABASE_URL not set — worker needs DB"
+  if ! DATABASE_URL="$DATABASE_URL" ./scripts/test-database-url.sh >/dev/null 2>&1; then
+    die "DATABASE_URL password invalid — reset in Supabase Connect, update Railway, Deploy (see /ops/worker)"
+  fi
   [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]] || die "RAILWAY_API_TOKEN not set — cannot deploy to Railway"
 
   echo ">> Configuring paper-worker on Railway ($PROJECT_ID)…"
