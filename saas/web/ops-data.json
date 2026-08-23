@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T23:26:05Z",
+  "updated": "2026-08-23T23:35:58Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -129,7 +129,8 @@
       "validate-database-credentials Railway password probe + founder-database-url-help recovery paths (session 142)",
       "run-p0-if-ready DATABASE_PASSWORD fallback when env DATABASE_URL auth fails (session 143)",
       "run-p0 blocked-path dedupe; ops-e2e/security partial CLI canonical (session 144)",
-      "canonical partial activation gate; status-report DATABASE_URL auth (session 145)"
+      "canonical partial activation gate; status-report DATABASE_URL auth (session 145)",
+      "health-watch validate preflight; snapshot DB auth; post-P0 trades path (session 146)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -193,7 +194,8 @@
       "verify-activation-path.sh --partial CLI gate (session 137)",
       "partial activation row in GROWTH_DASHBOARD + snapshot-growth-metrics (session 138)",
       "ops Partial activation gate; status-report partial row; sync-ops partial_activation_ready (session 139)",
-      "check-founder-parallel-ready includes verify-activation-path --partial (session 140)"
+      "check-founder-parallel-ready includes verify-activation-path --partial (session 140)",
+      "verify-partial-activation aliases --partial; parallel/QA gates unified (session 145)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [

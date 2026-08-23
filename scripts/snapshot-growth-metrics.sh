@@ -56,6 +56,13 @@ echo "| QA parallel | $([[ $qa -eq 1 ]] && echo '✅' || echo '❌') |"
 echo "| GSC-ready | $([[ $gsc -eq 1 ]] && echo '✅' || echo '❌') |"
 echo "| Funnel CTAs (7 coins) | $([[ $funnel -eq 1 ]] && echo '✅' || echo '❌') |"
 echo "| Signups / deployers / MRR | /admin (login required) |"
+if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
+  if ./scripts/validate-database-credentials.sh >/dev/null 2>&1; then
+    echo "| DATABASE_URL auth | ✅ |"
+  else
+    echo "| DATABASE_URL auth | ❌ Railway password — /ops/worker |"
+  fi
+fi
 gates=$((mig + act + bill + gsc + funnel))
 echo "| Growth gates (excl. worker) | $gates/5 |"
 echo ""

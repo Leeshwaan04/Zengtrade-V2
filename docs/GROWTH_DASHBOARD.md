@@ -1985,6 +1985,33 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 23:29Z)
 - worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
 
+### Day 1 (session 146) — growth snapshot DB auth + post-P0 trades path
+
+### CTO
+- **Shipped:** health-watch attempt-p0 preflights validate-database-credentials; snapshot-growth-metrics DATABASE_URL auth row
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** post-p0-success trades activation steps; ops-p0 partial CLI; founder-preflight --partial
+
+### CBO
+- **Shipped:** —
+
+### SEO
+- **Shipped:** —
+
+### Marketing
+- **Shipped:** —
+
+### Sales
+- **Shipped:** —
+
+### QA&VAPT
+- **Shipped:** e2e_smoke passed
+
+### Status (`./scripts/check-growth-standup.sh` @ 23:34Z)
+- worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
+
 ---
 
 ## Daily log template

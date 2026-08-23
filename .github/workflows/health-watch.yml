@@ -49,6 +49,21 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install psql client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Preflight database credentials
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+        run: |
+          if [ -z "${RAILWAY_API_TOKEN:-}" ]; then
+            echo "SKIP: RAILWAY_API_TOKEN not in repo Secrets"
+            exit 0
+          fi
+          if [ -z "${DATABASE_URL:-}" ] && [ -z "${DATABASE_PASSWORD:-}" ]; then
+            echo "SKIP: DATABASE_URL and DATABASE_PASSWORD not configured"
+            exit 0
+          fi
+          ./scripts/validate-database-credentials.sh || echo "::warning::DATABASE_URL auth failed — P0 auto-apply will retry on schedule"
       - name: Auto-apply P0 when repo Secrets configured
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
