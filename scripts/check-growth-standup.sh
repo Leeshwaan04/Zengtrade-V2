@@ -19,3 +19,4 @@ fi
 if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
   ./scripts/sync-ops-gates.py 2>/dev/null || true
 fi
+./scripts/sync-growth-dashboard-header.sh 2>/dev/null || true

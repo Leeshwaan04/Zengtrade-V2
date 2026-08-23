@@ -47,6 +47,7 @@ test -f scripts/check-billing-ready.sh
 test -f scripts/check-sales-ready.sh
 test -f scripts/guide-partial-e2e.sh
 test -f scripts/guide-founder-parallel.sh
+test -f scripts/sync-growth-dashboard-header.sh
 test -f scripts/check-gsc-ready.sh
 test -f scripts/check-e2e-gates.sh
 test -f scripts/verify-partial-activation.sh

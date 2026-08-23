@@ -10,8 +10,9 @@
 | Users with ≥1 closed trade | — | — | 15 |
 | Paying Pro/Elite | — | — | 10 |
 | MRR (USD) | $0 | $0 | $290 |
-| Worker status | Unknown | Offline (P0 — wrong Railway DB password) | Live 99% |
+| Worker status | Unknown | Offline (last heartbeat 2026-08-11T09:57:38 UTC · wrong Railway DB password) | Live 99% |
 | Parallel growth (excl. worker) | — | 5/5 gates ✅ | — |
+| Sales-ready | — | ✅ check-sales-ready.sh | — |
 
 *Fill "Today" from [zengtrade.in/admin](https://zengtrade.in/admin) after login.*
 
@@ -1401,6 +1402,21 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 - **Shipped:** sales + LinkedIn tasks on /ops
 
 ### Status (`./scripts/check-growth-standup.sh` @ 21:31Z)
+- worker ❌ · migration 0011 ✅ · parallel growth ✅
+
+### Day 1 (session 121) — sync-growth-dashboard-header + ops/p0 parallel UX
+
+### CTO
+- **Shipped:** sync-growth-dashboard-header.sh; check-p0-readiness WORKER_RECOVERY hints
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** ops/p0 parallel box + LAUNCH_RUNBOOK scripts
+
+### CBO
+- **Shipped:** GROWTH_DASHBOARD Sales-ready probe row
+
+### Status (`./scripts/check-growth-standup.sh` @ 21:34Z)
 - worker ❌ · migration 0011 ✅ · parallel growth ✅
 
 ---

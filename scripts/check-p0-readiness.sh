@@ -81,7 +81,8 @@ if [[ $db_set -eq 0 && $rail_db -eq 1 && $rail_set -eq 1 ]]; then
   if [[ -n "${rail_resolved:-}" ]]; then
     echo "BLOCKED: Railway DATABASE_URL password invalid — reset in Supabase, update Railway, Deploy"
     echo "  Test after fix: ./scripts/validate-database-credentials.sh"
-    echo "  Parallel work now: ./scripts/check-parallel-growth.sh"
+    echo "  Recovery: docs/WORKER_RECOVERY.md"
+    echo "  Parallel work: ./scripts/guide-founder-parallel.sh"
     exit 1
   fi
 fi

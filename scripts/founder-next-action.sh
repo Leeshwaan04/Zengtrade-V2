@@ -60,6 +60,7 @@ if [[ $work -eq 0 ]]; then
   if ./scripts/check-parallel-growth.sh >/dev/null 2>&1; then
     echo ""
     echo "Parallel growth gates green (5/5 excl. worker) — sole blocker is DATABASE_PASSWORD"
+    echo "Founder playbook: ./scripts/guide-founder-parallel.sh"
   fi
   exit 1
 fi

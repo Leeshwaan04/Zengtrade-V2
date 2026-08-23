@@ -24,7 +24,7 @@ Production checklist for `zengtrade.in`. Autopilot CTO agent maintains this file
 |------|--------|------|
 | 9 | `supabase secrets set NOWPAYMENTS_API_KEY=...` | ☑ (edge functions live — `./scripts/verify-billing.sh`) |
 | 10 | Deploy `nowpayments-create-invoice` + `nowpayments-ipn` | ☑ |
-| 11 | Test checkout → `profile.tier` = pro | ☐ (founder: <https://zengtrade.in/ops/billing>) |
+| 11 | Test checkout → `profile.tier` = pro | ☐ (founder: <https://zengtrade.in/ops/billing> · `./scripts/check-sales-ready.sh`) |
 | 12 | Remove "Opening soon" on paid plans when #11 passes | ☑ (`checkoutReady()` live) |
 
 ## P2 — Growth
@@ -41,12 +41,15 @@ Production checklist for `zengtrade.in`. Autopilot CTO agent maintains this file
 **While step 6 is blocked** (wrong Railway `DATABASE_URL` password), CPO/CBO parallel work:
 
 ```bash
-./scripts/check-parallel-growth.sh   # partial activation + billing + GSC
+./scripts/guide-founder-parallel.sh   # all parallel playbooks
+./scripts/check-parallel-growth.sh    # partial activation + billing + GSC
+./scripts/check-sales-ready.sh        # Pro checkout path
 ```
 
-- CPO partial E2E: <https://zengtrade.in/ops/e2e> (steps 1–2)
-- CBO GSC: <https://zengtrade.in/ops/gsc>
-- CBO billing smoke: <https://zengtrade.in/ops/billing>
+- CPO partial E2E: `./scripts/guide-partial-e2e.sh` · <https://zengtrade.in/ops/e2e> (steps 1–2)
+- CBO GSC: <https://zengtrade.in/ops/gsc> · `docs/GSC_SETUP.md` § Founder completion log
+- CBO / Sales billing: <https://zengtrade.in/ops/billing> · `./scripts/check-sales-ready.sh`
+- Marketing: `docs/content/LINKEDIN_BUILD_IN_PUBLIC.md` (founder-ready post)
 - Unblock: Cloud Agent `DATABASE_PASSWORD` or <https://zengtrade.in/ops/worker>
 - Recovery: `docs/WORKER_RECOVERY.md` (diagnose → fix → verify)
 
