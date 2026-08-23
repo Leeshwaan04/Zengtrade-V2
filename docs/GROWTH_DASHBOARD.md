@@ -68,6 +68,21 @@
 - **Shipped:** App billing PLANS aligned to $19 founding; checkout return lands on `/app` for tier polling.
 - **Next:** GSC + first weekly proof post after worker live.
 
+### Day 1 (session 4) — admin funnel + ops scripts
+
+### CTO
+- **Shipped:** `0010_admin_rpc_funnel.sql` (admin RPCs + worker heartbeat); `scripts/apply-migrations.sh`; `scripts/check-production.sh`.
+- **Blocked:** Migrations + edge functions need Supabase apply/redeploy.
+- **Next:** Founder runs migration bundle + Railway worker.
+
+### CPO
+- **Shipped:** Admin shows signup views + deploy clicks (7d) for activation tracking.
+- **Next:** Watch funnel after production deploy.
+
+### CBO
+- **Shipped:** Funnel metrics in `/admin` for daily growth review.
+- **Next:** GSC verification.
+
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*

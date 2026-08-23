@@ -247,9 +247,9 @@ open(os.path.join(DIST, "site.css"), "w").write(css + HOME_CSS + coin_css)   # O
 AUTH_SRC = os.path.abspath(os.path.join(HERE, "..", "..", "saas", "web"))
 AUTH_ROUTES = {                                   # source file -> clean route folder
     "login.html": "login", "reset.html": "reset", "admin.html": "admin",
+    "app.html": "app",                             # billing, evidence tabs, pricing (#pricing)
     "terms.html": "terms", "privacy.html": "privacy", "risk.html": "risk",
-}   # app.html scrapped 2026-08-01: /dashboard is now the real Algo Studio (below).
-    # /admin is gated by admin-only RPCs (harmless to serve; useless without an admin JWT).
+}   # /dashboard = Algo Studio terminal (below); /app = SaaS dashboard + checkout return.
 for f, route_dir in AUTH_ROUTES.items():
     src = os.path.join(AUTH_SRC, f)
     if os.path.exists(src):

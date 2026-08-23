@@ -19,6 +19,7 @@ check() {
 }
 check "home" "$SITE/"
 check "login" "$SITE/login"
+check "app" "$SITE/app" "zengtrade"
 check "pricing" "$SITE/pricing/"
 check "sitemap" "$SITE/sitemap.xml" "<urlset"
 check "dashboard" "$SITE/dashboard/" "zengtrade"

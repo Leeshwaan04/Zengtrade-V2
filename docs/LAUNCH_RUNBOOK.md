@@ -9,10 +9,10 @@ Production checklist for `zengtrade.in`. Autopilot CTO agent maintains this file
 | Step | Action | Owner | Done |
 |------|--------|-------|------|
 | 1 | Merge PR #2 (`cursor/crypto-only-ff74`) → `main` | CEO/CTO | ☐ |
-| 2 | Deploy `deploy/landing/dist` to hosting (Pages/Hostinger) | CTO | ☐ |
+| 2 | Deploy `deploy/landing/dist` to hosting (Pages/Hostinger) — includes `/app`, `/dashboard`, `/login` | CTO | ☐ |
 | 3 | Supabase Auth → URL config: `https://zengtrade.in/login`, `https://zengtrade.in/reset` | CEO | ☐ |
 | 4 | Enable Google provider + OAuth client | CEO | ☐ |
-| 5 | SQL: run `saas/db/migrations/0009_engine_state.sql` | CTO | ☐ |
+| 5 | SQL: run migrations `0009` + `0010` (or `./scripts/apply-migrations.sh`) | CTO | ☐ |
 | 6 | Host `saas/worker` (see `saas/worker/README.md`) with prod `DATABASE_URL` | CTO | ☐ |
 | 7 | E2E manual: signup → `/dashboard` → deploy → trades in ≤15 min | CPO | ☐ |
 | 8 | Run `./tests/e2e_smoke.sh` | CTO | ☑ (also runs on PR via `.github/workflows/ci-smoke.yml`) |
