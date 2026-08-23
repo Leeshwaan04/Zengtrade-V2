@@ -485,6 +485,17 @@
 ### CTO / CPO / CBO
 - **Next:** unchanged — founder P0 migration + worker
 
+### Day 1 (session 39) — PR #6 merged (QA&VAPT agent) ✅
+
+### QA&VAPT
+- **Merged:** [PR #6](https://github.com/Leeshwaan04/Zengtrade-V2/pull/6) → `main` @ `4035e98` (2026-08-23T15:59:58Z).
+- **Deployed:** `/ops/security/` live · `scripts/security-smoke.sh` ✅ on main.
+
+### Founder P0 (unchanged)
+1. Migration 0011 → https://zengtrade.in/ops/migrate
+2. Paper worker → https://zengtrade.in/ops/worker
+3. `./scripts/wait-for-p0.sh` → E2E → `./scripts/security-smoke.sh`
+
 ---
 
 ## Daily log template
