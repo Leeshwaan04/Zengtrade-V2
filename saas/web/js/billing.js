@@ -11,7 +11,7 @@ export const FREE_DEPLOY_LIMIT = 1;
 export const PLANS = [
   { id: "free", name: "Free", monthly: 0, annual: 0, tagline: "Learn and paper-trade, free forever",
     features: ["1 paper strategy", "Live crypto prices, 24/7", "Backtest + Forward Test", "Accuracy & Analytics", "Honest cost accounting"] },
-  { id: "pro", name: "Pro", monthly: 29, annual: 290, featured: true, tagline: "For traders ready to go live",
+  { id: "pro", name: "Pro", monthly: 19, annual: 190, featured: true, tagline: "Founding price · unlimited paper",
     features: ["Everything in Free", "Unlimited paper strategies", "Live execution on your own exchange*", "Tick-level stops & kill-switch", "Email & push alerts"] },
   { id: "elite", name: "Elite", monthly: 79, annual: 790, tagline: "Maximum firepower",
     features: ["Everything in Pro", "Perps + options engines", "Multiple exchange accounts", "Custom risk parameters", "Priority support & early access"] },

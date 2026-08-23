@@ -10,7 +10,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // server-side price catalog — the ONLY source of truth for what a plan costs.
 const PRICES: Record<string, Record<string, number>> = {
-  pro:   { month: 29, year: 290 },
+  pro:   { month: 19, year: 190 },   // founding rate (marketing); raise to 29/290 when cap hit
   elite: { month: 79, year: 790 },
 };
 const SITE = "https://zengtrade.in";
@@ -52,8 +52,8 @@ Deno.serve(async (req) => {
         order_id,
         order_description: `zengtrade ${plan} plan (${cycle})`,
         ipn_callback_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/nowpayments-ipn`,
-        success_url: `${SITE}/dashboard?paid=1`,
-        cancel_url: `${SITE}/pricing/`,
+        success_url: `${SITE}/app?paid=1`,
+        cancel_url: `${SITE}/app#pricing`,
       }),
     });
     const data = await resp.json().catch(() => ({}));

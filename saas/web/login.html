@@ -95,6 +95,10 @@ function goAfterAuth(){
 (async function boot(){
   const q=new URLSearchParams(location.search);
   if(q.get("error")) show(decodeURIComponent(q.get("error")), false);
+  try{ fetch("https://ponvarxeytfcntckczbn.supabase.co/rest/v1/event",{method:"POST",
+    headers:{apikey:"sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1","Content-Type":"application/json",Prefer:"return=minimal"},
+    body:JSON.stringify({name:"signup_view",path:location.pathname.slice(0,290),ref:(document.referrer||"").slice(0,290)}),
+    keepalive:true}).catch(()=>{}); }catch(e){}
   try{
     await establishSession();
     const u=await currentUser();

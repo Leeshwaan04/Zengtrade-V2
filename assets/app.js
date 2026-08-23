@@ -2076,7 +2076,10 @@ async function setStrategyState(id, stateVal, title){
   try{
     const r=await fetch(BOT_API+'/api/strategy',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({id,state:stateVal})}).then(x=>x.json());
-    if(r&&r.error){ quickToast('Action failed', r.error); return r; }
+    if(r&&r.error){
+      if(r.upgrade){ quickToast('Upgrade to Pro', r.error); setTimeout(function(){ location.href=r.upgrade; }, 700); return r; }
+      quickToast('Action failed', r.error); return r;
+    }
     if(r&&r.locked){ quickToast('Live locked '+'🔒', r.reason||'Arm ALLOW_LIVE on the bot machine to go live.'); }
     else { quickToast(title||'Updated', lcMsg(stateVal)); }
     await loadBotData(); if(typeof renderAlgo==='function') renderAlgo();

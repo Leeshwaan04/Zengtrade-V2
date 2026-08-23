@@ -160,7 +160,7 @@ function renderDashboard() {
   if (state.loading) { app.innerHTML = `<div class="grid stats">${skeletonRows(4)}</div><div class="card" style="height:220px;margin-top:16px">${skeletonRows(1)}</div>`; return; }
   const m = metrics(), ps = perStrategy();
   const upsell = !isPro(tier) && state.deployments.length >= FREE_DEPLOY_LIMIT
-    ? `<div class="upsell"><div><b>You're on Free, ${FREE_DEPLOY_LIMIT} strategy.</b><span>Upgrade to Pro for unlimited strategies and live execution when a strategy clears the bar.</span></div><button class="btn primary" id="up2">Upgrade, $29/mo</button></div>` : "";
+    ? `<div class="upsell"><div><b>You're on Free, ${FREE_DEPLOY_LIMIT} strategy.</b><span>Upgrade to Pro for unlimited strategies and live execution when a strategy clears the bar.</span></div><button class="btn primary" id="up2">Upgrade, $19/mo founding</button></div>` : "";
   app.innerHTML = `
     ${upsell}
     <div class="grid stats">
@@ -199,6 +199,14 @@ const emptyStrategies = () => `<div class="empty">
   <p class="muted">Deploy one to start paper-trading on live crypto prices, zero money at risk.</p>
   <button class="btn primary" id="firstDeploy">Browse strategies</button></div>`;
 
+const emptyDeployCta = (title, blurb) => `<div class="empty"><p><b>${title}</b></p><p class="muted">${blurb}</p>
+  <button class="btn primary" id="ev-deploy">Deploy a strategy</button>
+  <a class="btn ghost" href="/dashboard" style="margin-left:8px">Open Algo Studio</a></div>`;
+function wireEmptyDeploy() {
+  const b = $("#ev-deploy");
+  if (b) b.onclick = () => { location.hash = "strategies"; };
+}
+
 // ---- Forward Test (closed-trade evidence) ----
 function renderForward() {
   if (state.loading) { app.innerHTML = `<div class="card">${skeletonRows(6)}</div>`; return; }
@@ -220,7 +228,8 @@ function renderForward() {
         <td class="r mono ${tone(t.pnl)}">${money(t.pnl, 2)}</td>
         <td class="r mono muted">${money(t.cost, 2)}</td></tr>`).join("")}</tbody></table></div>
       ${rows.length > 100 ? `<div class="tbl-foot">showing latest 100 of ${num(rows.length)}</div>` : ""}
-    ` : `<div class="empty"><p><b>No closed trades yet.</b></p><p class="muted">Deploy a strategy — the worker fills this in as trades close on live prices.</p></div>`}</div>`;
+    ` : emptyDeployCta("No closed trades yet.", "Deploy a strategy — the worker fills this in as trades close on live prices.")}</div>`;
+  wireEmptyDeploy();
 }
 
 // ---- Accuracy (per-strategy forward stats) ----
@@ -236,7 +245,8 @@ function renderAccuracy() {
         <div class="srow-metric"><span>${num(s.n)}</span><small>trades</small></div>
         <div class="srow-metric"><span>${s.n ? pct(w) : "—"}</span><small>win</small></div>
         <div class="srow-metric"><span class="${tone(s.net)}">${money(s.net)}</span><small>net</small></div></div>`;
-    }).join("") : `<div class="empty"><p><b>No forward data yet.</b></p><p class="muted">Accuracy builds as your deployed strategies close trades.</p></div>`}</div>`;
+    }).join("") : emptyDeployCta("No forward data yet.", "Accuracy builds as your deployed strategies close trades.")}</div>`;
+  wireEmptyDeploy();
 }
 
 // ---- Analytics (attribution) ----
@@ -262,12 +272,13 @@ function renderAnalytics() {
     <div class="card"><div class="card-h"><h3>By strategy</h3></div>
       ${byStrat.length ? byStrat.map(s => `<div class="srow"><div class="srow-main"><b>${esc((byKey[s.key] || {}).name || s.key)}</b></div>
         <div class="srow-metric"><span class="${tone(s.net)}">${money(s.net)}</span><small>net</small></div></div>`).join("")
-        : `<div class="empty"><p class="muted">Deploy strategies to see attribution.</p></div>`}</div>
+        : `<div class="empty"><p class="muted">Deploy strategies to see attribution.</p><button class="btn primary sm" id="ev-deploy">Deploy</button></div>`}</div>
     <div class="card"><div class="card-h"><h3>By symbol</h3></div>
       ${symRows.length ? symRows.slice(0, 12).map(s => `<div class="srow"><div class="srow-main"><b class="mono">${esc(s.sym)}</b></div>
         <div class="srow-metric"><span>${num(s.n)}</span><small>trades</small></div>
         <div class="srow-metric"><span class="${tone(s.net)}">${money(s.net)}</span><small>net</small></div></div>`).join("")
         : `<div class="empty"><p class="muted">Symbol breakdown appears after your first closed trades.</p></div>`}</div>`;
+  wireEmptyDeploy();
 }
 
 // ---- Strategies (marketplace) ----
@@ -307,7 +318,8 @@ function renderActivity() {
       <div class="tbl-scroll"><table><thead><tr><th>When</th><th>Strategy</th><th>Symbol</th><th class="r">Entry</th><th class="r">Exit</th><th class="r">Cost</th><th class="r">P&amp;L</th></tr></thead>
       <tbody>${rows.slice(0, 200).map(tradeRow).join("")}</tbody></table></div>
       ${rows.length > 200 ? `<div class="tbl-foot">showing latest 200 of ${num(rows.length)}</div>` : ""}
-    ` : `<div class="empty"><p><b>No trades yet.</b></p><p class="muted">Deploy a strategy and the worker will start filling this in.</p></div>`}</div>`;
+    ` : emptyDeployCta("No trades yet.", "Deploy a strategy and the worker will start filling this in.")}</div>`;
+  wireEmptyDeploy();
 }
 function tradeRow(t) {
   return `<tr>
@@ -351,7 +363,15 @@ async function deploy(key) {
   const { error } = await sb.from("deployment").upsert(
     { user_id: user.id, strategy_key: key, mode: "paper", status: "running" },
     { onConflict: "user_id,strategy_key" });
-  if (error) return toast(niceError(error), "error");
+  if (error) {
+    const m = niceError(error);
+    if (/free_limit|more than one strategy/i.test(m)) {
+      toast(`Free includes ${FREE_DEPLOY_LIMIT} strategy — upgrade to Pro for unlimited.`, "info");
+      setTimeout(() => { location.hash = "pricing"; }, 500);
+      return;
+    }
+    return toast(m, "error");
+  }
   try { await sb.from("event").insert({ name: "deploy_click", path: (location.pathname + location.hash).slice(0, 290) }); } catch { /* funnel */ }
   toast(`${nameOf(key)} deployed to paper.`, "success");
   await load(); render();

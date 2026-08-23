@@ -50,10 +50,24 @@
 - **Next:** Verify nudge + deploy flow on live site after deploy.
 
 ### CBO
-- **Shipped:** Founding Pro $19/mo on pricing page; `docs/GSC_SETUP.md` step-by-step.
+- **Shipped:** Founding Pro $19/mo on pricing; `docs/GSC_SETUP.md` step-by-step.
 - **Next:** Founder completes GSC verification + sitemap submit.
 
-### Metrics snapshot
+### Day 1 (session 3) — billing + evidence UX
+
+### CTO
+- **Shipped:** `docs/FOUNDER_DEPLOY.md` (30-min checklist); NOWPayments success → `/app?paid=1`; founding Pro $19 in edge function.
+- **Blocked:** Edge functions must be redeployed on Supabase for billing changes to take effect.
+- **Next:** Founder runs FOUNDER_DEPLOY steps 1–6.
+
+### CPO
+- **Shipped:** Evidence tab empty states → Deploy + Algo Studio link; `signup_view` funnel on login; studio deploy upgrade redirect in terminal.
+- **Next:** E2E on production after deploy.
+
+### CBO
+- **Shipped:** App billing PLANS aligned to $19 founding; checkout return lands on `/app` for tier polling.
+- **Next:** GSC + first weekly proof post after worker live.
+
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*
 - Worker: *(pending Railway deploy)*
