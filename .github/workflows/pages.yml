@@ -51,3 +51,7 @@ jobs:
         run: sleep 45
       - name: Production smoke probe
         run: chmod +x scripts/check-production.sh && SITE=https://zengtrade.in ./scripts/check-production.sh
+      - name: P0 gate snapshot (informational)
+        run: |
+          chmod +x scripts/check-migrations.sh scripts/check-worker.sh scripts/status-report.sh
+          ./scripts/status-report.sh || true

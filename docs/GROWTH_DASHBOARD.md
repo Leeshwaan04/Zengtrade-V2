@@ -246,12 +246,222 @@
 ### CBO
 - **Next:** /ops/billing after P0.
 
+### Day 1 (session 18) — one-click migration workflow
+
+### CTO
+- **Shipped:** GitHub Actions `apply-migration-0011.yml` (workflow_dispatch + DATABASE_URL secret); ops/migrate updated.
+- **Blocked:** Worker deploy still founder-owned.
+
+### CPO / CBO
+- **Next:** After migration + worker green on /ops.
+
+### Day 1 (session 19) — health-watch + activation verify
+
+### CTO
+- **Shipped:** `health-watch` now fails on migration/worker (triggers founder email via `founder-alert`); `scripts/sync-ops-gates.py` + `scripts/verify-activation-path.sh`.
+- **Blocked:** P0 unchanged — migration 0011 + worker heartbeat stale since 2026-08-11.
+- **Next:** Founder runs /ops/migrate + /ops/worker → `./scripts/verify-activation-path.sh`.
+
+### CPO
+- **Ready:** E2E guide at /ops/e2e; activation checklist on /app once worker live.
+
+### CBO
+- **Ready:** /ops/billing + /ops/gsc after forward trades exist.
+
+### Day 1 (session 20) — worker deploy hardening + CBO draft
+
+### CTO
+- **Shipped:** Worker startup heartbeat + DB connect retry (faster Railway health proof); ops/worker troubleshooting (session pooler 5432); health-watch auto-commits ops-data gates on main.
+- **Blocked:** Migration 0011 + worker deploy still founder-owned.
+
+### CPO
+- **Shipped:** Worker-offline banner links to /how-it-works on /app.
+
+### CBO
+- **Shipped:** `docs/content/REDDIT_ALGOTRADING_DRAFT.md` (do not post until P0 green).
+
+### Day 1 (session 21) — CPO funnel accuracy + E2E UX
+
+### CPO
+- **Shipped:** `signup_complete` only on real signups (not every sign-in); email signup sets pending flag for post-confirm tracking; /ops/e2e shows which P0 gate is blocking.
+- **Blocked:** Funnel v2 events still need migration 0011 in prod.
+
+### CTO
+- **Shipped:** WORKER_QUICKSTART documents `startup heartbeat ok` log line.
+- **Blocked:** P0 unchanged.
+
+### Day 1 (session 22) — founder P0 checklist page
+
+### CTO
+- **Shipped:** `/ops/p0` — focused 15-min founder checklist with live gate probes; LAUNCH_RUNBOOK billing steps marked done.
+- **Blocked:** Migration 0011 + worker deploy still founder-owned.
+
+### CPO / CBO
+- **Next:** E2E + first Pro checkout after P0 green on /ops/p0.
+
+### Day 1 (session 23) — wait-for-p0 + CBO UTMs
+
+### CTO
+- **Shipped:** `scripts/wait-for-p0.sh` polls until P0 green then runs activation verify; founder-alert points to /ops/p0.
+- **Blocked:** Migration 0011 + worker unchanged.
+
+### CBO
+- **Shipped:** Landing + pricing signup CTAs carry `utm_source=site` for organic attribution.
+
+### Day 1 (session 24) — admin P0 alert + attribution
+
+### CTO
+- **Shipped:** `FOUNDER_DEPLOY.md` rewritten around /ops/p0; `/admin` P0 incomplete banner with fix links.
+- **Blocked:** Migration 0011 + worker unchanged.
+
+### CBO
+- **Shipped:** Pageview beacon + login signup_view capture UTM query params.
+
+### Day 1 (session 25) — merge prep + coin SEO expand
+
+### CTO
+- **Shipped:** `MERGE_AND_SHIP.md` updated for PR #5; `check-production.sh` probes `/ops` + soft-check `/ops/p0`.
+- **Blocked:** P0 unchanged — merge PR #5 then founder completes /ops/p0.
+
+### CBO
+- **Shipped:** Coin SEO expanded (+Cardano, +Dogecoin) in `seo/generate.py` — 7 coin pages after next build.
+
+### Day 1 (session 26) — product pageview funnel
+
+### CPO / CBO
+- **Shipped:** `/dashboard` (studio.js) and `/app` (app.js) emit `pageview` events for admin funnel top-of-funnel after auth.
+
+### CTO
+- **Blocked:** P0 unchanged — merge PR #5 + founder /ops/p0.
+
+### Day 1 (session 27) — agent runbook + Pages CI P0 log
+
+### CTO
+- **Shipped:** `AGENTS.md` cloud P0 blocker docs; Pages `verify-production` logs P0 snapshot after each deploy.
+- **Blocked:** Migration 0011 + worker; PR #5 open (CI green).
+
+### Day 1 (session 28) — activation checklist worker hint
+
+### CPO
+- **Shipped:** `/app` activation checklist explains worker-offline when deployed but no trades yet.
+- **Blocked:** Full funnel v2 + trades until P0 green.
+
+### Day 1 (session 29) — completion audit + merge nudge
+
+### Goal audit (not complete)
+
+| Requirement | Evidence | Status |
+|-------------|----------|--------|
+| Production loop (auth) | `check-production.sh` ✅ | Done |
+| Worker live | heartbeat stale 2026-08-11 | **Blocked** |
+| Migration 0011 | `signup_complete` HTTP 401 | **Blocked** |
+| Signup→deploy→trades E2E | not run (P0) | **Blocked** |
+| First Pro MRR | $0, no checkout proof | **Blocked** |
+| PR #5 shipped to main | `main` at a5fe630, PR open | **Blocked** |
+
+### CTO
+- **Shipped:** `/ops` shows merge PR #5 banner when `/ops/p0` not yet on production.
+
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*
 - Worker: *(pending Railway deploy)*
 - MRR: $0
 
+### Day 1 (session 30) — migration verify deploy_success
+
+### CTO
+- **Shipped:** `check-migrations.sh` probes `deploy_success`; `/ops/migrate` verify button tests signup + deploy events.
+- **Blocked:** Migration 0011 + worker unchanged.
+
+### CPO
+- **Shipped:** `verify-activation-path.sh` fails on `deploy_success` 401 (aligned with signup_complete gate).
+
+### Day 1 (session 31) — workflow verify loop + status sweep
+
+### Status (`./scripts/status-report.sh` @ 15:35Z)
+- **Production:** site + OAuth + billing ✅ | migration 0011 ❌ | worker ❌ (heartbeat 2026-08-11)
+- **PR #5:** OPEN, MERGEABLE, CI running — `/ops/p0` still 404 on prod until merge
+- **Event probes:** `deploy_click` 201 | `signup_complete` / `deploy_success` 401
+
+### CTO
+- **Shipped:** `apply-migration-0011.yml` verifies both funnel v2 events post-apply.
+
+### Founder P0 (unchanged)
+1. Merge **PR #5** → https://zengtrade.in/ops/p0
+2. Migration 0011 → https://zengtrade.in/ops/migrate
+3. Paper worker → https://zengtrade.in/ops/worker
+4. `./scripts/wait-for-p0.sh` → `./scripts/verify-activation-path.sh` → https://zengtrade.in/ops/e2e
+
+### Day 1 (session 32) — funnel probe alignment + CBO checkout gate
+
+### CTO
+- **Shipped:** `check-migrations.sh` + `verify-activation-path.sh` probe `checkout_click`; ops pages verify full funnel v2 set (`/ops`, `/ops/p0`, `/ops/e2e`, `/ops/migrate`, `/ops/billing`).
+- **Shipped:** `status-report.sh` + `wait-for-p0.sh` remind founder to merge PR #5 when `/ops/p0` not deployed.
+
+### CPO
+- **Shipped:** `/ops/e2e` step 7 links Pro checkout test; P0 gate checks signup + deploy events.
+
+### CBO
+- **Shipped:** `/ops/billing` live-probes `checkout_click` (MRR intent funnel) alongside billing edge function.
+
+### Status (`./scripts/status-report.sh` @ 15:39Z)
+- P0 unchanged: migration 0011 ❌ | worker ❌ | PR #5 open, CI green
+
+### Day 1 (session 33) — CBO sitemap verify + pricing UTMs
+
+### CBO
+- **Shipped:** `scripts/check-sitemap.sh` verifies hub + 7 coin pages in production sitemap.
+- **Shipped:** Pricing page CTAs use `utm_campaign=pricing` (distinct from landing).
+- **Shipped:** `/ops/gsc` lists all coin URLs + `check-sitemap.sh` verify step.
+
+### CTO
+- **Shipped:** `probe-dist.sh` asserts Cardano + Dogecoin in build sitemap; `founder-preflight.sh` runs sitemap check.
+
+### Status (`./scripts/check-sitemap.sh` @ 15:41Z)
+- Production sitemap missing **cardano** + **dogecoin** until PR #5 merges to main
+
+### Day 1 (session 34) — CPO post-deploy hint + health-watch sitemap
+
+### CPO
+- **Shipped:** `/app` shows post-deploy banner → **Forward Test** after paper deploy (worker-aware copy).
+- **Impact:** Closes signup → deploy → **trades evidence** loop in Evidence app (mirrors Algo Studio hint).
+
+### CTO
+- **Shipped:** `health-watch.yml` runs `check-sitemap.sh` (warn-only); `MERGE_AND_SHIP.md` includes sitemap verify.
+
+### CBO
+- **Shipped:** `WEEKLY_PROOF.md` fee copy fixed (35 bps) + UTM on signup link.
+
+### Status (`./scripts/status-report.sh` @ 15:43Z)
+- P0 unchanged: migration 0011 ❌ | worker ❌ | PR #5 open
+
+### Day 1 (session 35) — CBO coin UTMs + ops/worker live probe
+
+### CBO
+- **Shipped:** Coin pSEO + `/coins/` hub signup CTAs carry `utm_campaign=coin_{slug}` / `coins_hub`.
+- **Shipped:** Pricing page bottom CTA uses `utm_campaign=pricing` (was missing UTMs).
+
+### CTO
+- **Shipped:** `/ops/worker` auto-checks heartbeat on load + 30s refresh; links to `/ops/p0`.
+
+### Status (`./scripts/status-report.sh` @ 15:45Z)
+- P0 unchanged
+
+### Day 1 (session 36) — CPO fresh-signup nudge + ops migrate auto-verify
+
+### CPO
+- **Shipped:** New signups set `zt_fresh_signup` → Algo Studio deploy nudge in ~800ms (was 5s).
+- **Impact:** Faster signup → deploy path on `/dashboard`.
+
+### CTO
+- **Shipped:** `/ops/migrate` auto-verifies funnel v2 events on load + 30s refresh.
+- **Shipped:** `/admin` P0 probe checks signup + deploy events (full 0011 gate).
+
+### Status (`./scripts/status-report.sh` @ 15:47Z)
+- P0 unchanged: migration 0011 ❌ | worker ❌ | PR #5 open
+
+---
 
 ## Daily log template
 

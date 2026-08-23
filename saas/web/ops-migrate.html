@@ -26,6 +26,11 @@
   <a class="back" href="/ops">← Founder Ops</a>
   <h1>Apply migration 0011</h1>
   <p class="sub">Founder approval · ~2 min · Enables funnel v2 events in <a href="/admin">/admin</a> (signup_complete, deploy_success, checkout_click).</p>
+  <div class="card" style="background:var(--green-soft);border:1px solid var(--green-line);border-radius:12px;padding:14px;margin-bottom:16px">
+    <b>One-click option:</b> Add <code>DATABASE_URL</code> to <a href="https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions" target="_blank" rel="noopener">GitHub repo Secrets</a>,
+    then <a href="https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-migration-0011.yml" target="_blank" rel="noopener">Run workflow “Apply migration 0011”</a> → type <code>APPLY</code>.
+  </div>
+  <p style="font-size:13px;color:var(--slate);margin:0 0 12px"><b>Or manual:</b></p>
   <ol class="steps">
     <li>Open <a href="https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/sql/new" target="_blank" rel="noopener">Supabase SQL Editor</a></li>
     <li>Click <b>Copy SQL</b> below → paste → <b>Run</b></li>
@@ -48,10 +53,16 @@ document.getElementById("copy").onclick=()=>{
     document.getElementById("status").className="";
   });
 };
-document.getElementById("verify").onclick=async()=>{
+async function verifyMigration(){
   const st=document.getElementById("status");
-  const r=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({name:"signup_complete",path:"/ops-verify"})});
-  if(r.status===201){st.textContent="✓ Migration 0011 is live.";st.className="ok";}
-  else{st.textContent="✗ Still blocked (HTTP "+r.status+"). Run the SQL in Supabase first.";st.className="bad";}
-};
+  const h={apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"};
+  const r1=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"signup_complete",path:"/ops-verify"})});
+  const r2=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"deploy_success",path:"/ops-verify"})});
+  const r3=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"checkout_click",path:"/ops-verify"})});
+  if(r1.status===201&&r2.status===201&&r3.status===201){st.textContent="✓ Migration 0011 is live (signup, deploy, checkout events).";st.className="ok";}
+  else{st.textContent="✗ Still blocked (signup "+r1.status+", deploy "+r2.status+", checkout "+r3.status+"). Run the SQL in Supabase first.";st.className="bad";}
+}
+document.getElementById("verify").onclick=verifyMigration;
+verifyMigration();
+setInterval(verifyMigration,30000);
 </script></body></html>

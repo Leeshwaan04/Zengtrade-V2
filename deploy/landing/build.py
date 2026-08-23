@@ -63,9 +63,12 @@ FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
 # funnel numbers in /admin. Fails silently so it can never break a page.
 BEACON = """<script>
 (function(){try{
+ var u=new URLSearchParams(location.search),bits=[];
+ ["utm_source","utm_medium","utm_campaign"].forEach(function(k){var v=u.get(k);if(v)bits.push(k+"="+v);});
+ var path=location.pathname.slice(0,220)+(bits.length?"?"+bits.join("&"):"");
  fetch("https://ponvarxeytfcntckczbn.supabase.co/rest/v1/event",{method:"POST",
   headers:{apikey:"sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1","Content-Type":"application/json",Prefer:"return=minimal"},
-  body:JSON.stringify({name:"pageview",path:location.pathname.slice(0,290),ref:(document.referrer||"").slice(0,290)}),
+  body:JSON.stringify({name:"pageview",path:path.slice(0,290),ref:(document.referrer||"").slice(0,290)}),
   keepalive:true}).catch(function(){});
 }catch(e){}})();
 </script>"""
@@ -105,7 +108,7 @@ HOME_MAIN = """<main id="main">
       <h1 id="h-hero" class="lp-h1">Trading that reads the market's <span class="hl">mood</span>, and refuses to lose your money.</h1>
       <p class="lp-sub">zengtrade runs battle-tested, regime-aware strategies on live data, 24/7. It's honest about every cost, allergic to hype, and paper-first: it proves an edge before a rupee or a dollar is at risk. Then run it on <b>your own exchange</b>, with your keys and your coins.</p>
       <div class="lp-cta-row">
-        <a class="lp-cta primary" href="/login?mode=signup">Start free, no card</a>
+        <a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=landing">Start free, no card</a>
         <a class="lp-cta ghost" href="/how-it-works/">See how it works →</a>
       </div>
       <p class="lp-fineprint">Free to start · paper trading only at launch · not investment advice</p>
@@ -137,7 +140,7 @@ HOME_MAIN = """<main id="main">
     <div class="lp-wrap home-final-in">
       <h2 class="lp-h2">Prove the edge before you risk a thing.</h2>
       <p class="lp-sub">Start free. Paper-trade every strategy on live data. Upgrade only when a strategy earns its place.</p>
-      <div class="lp-cta-row center"><a class="lp-cta primary" href="/login?mode=signup">Start free</a><a class="lp-cta ghost" href="/pricing/">See pricing</a></div>
+      <div class="lp-cta-row center"><a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=landing">Start free</a><a class="lp-cta ghost" href="/pricing/">See pricing</a></div>
     </div>
   </section>
 </main>"""
@@ -145,7 +148,7 @@ HOME_MAIN = """<main id="main">
 # ---- NEW PRICING ----------------------------------------------------------------------
 def plan(name, price, per, tag, feats, featured=False, cta="Start free", pid=""):
     lis = "".join(f"<li>{f}</li>" for f in feats)
-    href = "/login?mode=signup" + (f"&amp;plan={pid}" if pid else "")   # carry chosen plan through signup
+    href = "/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=pricing" + (f"&amp;plan={pid}" if pid else "")
     return f"""<div class="pr-plan{' feat' if featured else ''}">{'<div class="pr-ribbon">Most popular</div>' if featured else ''}
       <div class="pr-name">{name}</div><div class="pr-price">{price}<span>{per}</span></div>
       <div class="pr-tag">{tag}</div><ul class="pr-feats">{lis}</ul>
@@ -188,7 +191,7 @@ PRICING_MAIN = f"""<main id="main">
       <details class="faq"><summary>Why is live execution gated?</summary><p>A strategy only unlocks live once it clears the go-live bar in paper, enough closed trades, positive expectancy net of cost, across regimes. We'd rather you prove the edge than pay to lose money.</p></details>
     </div>
   </section>
-  <section class="lp-sec home-final"><div class="lp-wrap home-final-in"><h2 class="lp-h2">Start free. Upgrade only when it's earned.</h2><div class="lp-cta-row center"><a class="lp-cta primary" href="/login?mode=signup">Start free, no card</a></div></div></section>
+  <section class="lp-sec home-final"><div class="lp-wrap home-final-in"><h2 class="lp-h2">Start free. Upgrade only when it's earned.</h2><div class="lp-cta-row center"><a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=pricing">Start free, no card</a></div></div></section>
 </main>"""
 
 HOME_CSS = """
@@ -268,7 +271,7 @@ _mig11 = os.path.abspath(os.path.join(HERE, "..", "..", "saas", "db", "migration
 if os.path.exists(_mig11):
     d = os.path.join(DIST, "ops"); os.makedirs(d, exist_ok=True)
     shutil.copy(_mig11, os.path.join(d, "migrate.sql"))
-for _sub, _fname in (("migrate", "ops-migrate.html"), ("worker", "ops-worker.html"), ("gsc", "ops-gsc.html"), ("billing", "ops-billing.html"), ("e2e", "ops-e2e.html")):
+for _sub, _fname in (("migrate", "ops-migrate.html"), ("worker", "ops-worker.html"), ("gsc", "ops-gsc.html"), ("billing", "ops-billing.html"), ("e2e", "ops-e2e.html"), ("p0", "ops-p0.html")):
     _src = os.path.join(AUTH_SRC, _fname)
     if os.path.exists(_src):
         _d = os.path.join(DIST, "ops", _sub); os.makedirs(_d, exist_ok=True)

@@ -15,4 +15,4 @@ jobs:
     steps:
       - name: Founder action required
         run: |
-          echo "::error::zengtrade P0 health check failed. Open https://zengtrade.in/ops — GitHub issue https://github.com/Leeshwaan04/Zengtrade-V2/issues/4"
+          echo "::error::zengtrade P0 health check failed. Open https://zengtrade.in/ops/p0 — issue https://github.com/Leeshwaan04/Zengtrade-V2/issues/4"

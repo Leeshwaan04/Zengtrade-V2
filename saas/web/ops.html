@@ -65,12 +65,17 @@
     <h2>⚠️ Your approval / action required</h2>
     <ul id="approvalList"></ul>
   </div>
+  <div id="shipBanner" class="alert urgent" hidden style="background:#eef2ff;border-color:#c7d2fe;color:#1e3a5f">
+    <h2>Ship autopilot updates to production</h2>
+    <p style="margin:0;font-size:14px">Merge <a href="https://github.com/Leeshwaan04/Zengtrade-V2/pull/5" target="_blank" rel="noopener"><b>PR #5</b></a> to enable <a href="/ops/p0">/ops/p0</a> and latest funnel fixes on zengtrade.in.</p>
+  </div>
   <div id="allClear" class="alert ok" hidden>
     <h2>✓ All P0 gates green</h2>
     <p style="margin:0;font-size:14px">Run E2E: <a href="https://zengtrade.in/login?mode=signup">signup</a> → <a href="https://zengtrade.in/dashboard">deploy</a> → <a href="https://zengtrade.in/app#forward">trades</a></p>
   </div>
 
   <div class="actions" id="actionBar">
+    <a class="primary" href="/ops/p0">P0 checklist (~15 min)</a>
     <a class="primary" href="/ops/migrate">① Apply migration 0011</a>
     <a class="primary" href="/ops/worker">② Deploy paper worker</a>
     <a class="secondary" href="/ops/billing">Test Pro checkout</a>
@@ -112,12 +117,17 @@ async function probeAuthJs() {
 
 async function probeMigration0011() {
   try {
-    const r = await fetch(SUPA + "/rest/v1/event", {
-      method: "POST",
-      headers: { apikey: ANON, "Content-Type": "application/json", Prefer: "return=minimal" },
-      body: JSON.stringify({ name: "signup_complete", path: "/ops-probe" }),
-    });
-    return r.status === 201;
+    const h = { apikey: ANON, "Content-Type": "application/json", Prefer: "return=minimal" };
+    const events = ["signup_complete", "deploy_success"];
+    for (const name of events) {
+      const r = await fetch(SUPA + "/rest/v1/event", {
+        method: "POST",
+        headers: h,
+        body: JSON.stringify({ name, path: "/ops-probe" }),
+      });
+      if (r.status !== 201) return false;
+    }
+    return true;
   } catch { return false; }
 }
 
@@ -209,6 +219,10 @@ document.getElementById("enableNotify").onclick = async () => {
 };
 
 async function refresh() {
+  const p0Live = await probeSite("/ops/p0");
+  const shipBanner = document.getElementById("shipBanner");
+  if (shipBanner) shipBanner.hidden = p0Live;
+
   const [appOk, authOk, migOk, billOk, worker] = await Promise.all([
     probeSite("/app"), probeAuthJs(), probeMigration0011(), probeBilling(), probeWorker(),
   ]);

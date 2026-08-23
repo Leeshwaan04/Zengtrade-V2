@@ -55,6 +55,8 @@
   .dot.on{background:var(--green);box-shadow:0 0 0 3px rgba(0,171,78,.18)}.dot.off{background:var(--red)}
   .muted{color:var(--slate);font-size:12.5px}
   .empty{text-align:center;color:var(--slate);font-size:13px;padding:26px}
+  .p0alert{background:#fff8e6;border:1px solid #f0d78a;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:13.5px;line-height:1.5;color:#7a5a00}
+  .p0alert a{color:inherit;font-weight:700}
 </style></head><body>
 
 <div id="gate" hidden>
@@ -75,6 +77,7 @@
     <span class="logo">Z</span><b>zengtrade</b><span class="tag">Admin</span>
     <div class="sp"><a class="btn" href="/ops" style="text-decoration:none">Founder Ops</a><span class="muted" id="who"></span><button class="btn" id="refresh">Refresh</button><button class="btn" id="out">Sign out</button></div>
   </div>
+  <div id="p0alert" class="p0alert" hidden></div>
   <div class="grid" id="tiles"></div>
   <div class="panel"><h2>Signups · last 30 days</h2><div class="chart-wrap"><div class="chart" id="chart"></div></div></div>
   <div class="panel"><h2>Users</h2><div id="users"></div></div>
@@ -122,7 +125,32 @@ $("refresh").onclick = () => load();
 const fmt = n => (n==null?"–":Number(n).toLocaleString("en-US"));
 const money = n => "$"+Number(n||0).toLocaleString("en-US");
 
+async function probeP0(){
+  let mig=false, work=false;
+  try{
+    const h={apikey:"sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1","Content-Type":"application/json",Prefer:"return=minimal"};
+    const r1=await fetch("https://ponvarxeytfcntckczbn.supabase.co/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"signup_complete",path:"/admin-probe"})});
+    const r2=await fetch("https://ponvarxeytfcntckczbn.supabase.co/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"deploy_success",path:"/admin-probe"})});
+    mig=r1.status===201&&r2.status===201;
+  }catch(e){}
+  try{
+    const rows=await fetch("https://ponvarxeytfcntckczbn.supabase.co/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",
+      {headers:{apikey:"sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1"}}).then(x=>x.json());
+    const ts=rows[0]?.updated_at;
+    work=ts&&(Date.now()-new Date(ts).getTime())<=12*60*1000;
+  }catch(e){}
+  const el=$("p0alert");
+  if(mig&&work){el.hidden=true;return;}
+  const parts=[];
+  if(!mig) parts.push("<a href=\"/ops/migrate\">migration 0011</a>");
+  if(!work) parts.push("<a href=\"/ops/worker\">paper worker</a>");
+  el.innerHTML="<b>P0 incomplete</b> — funnel v2 and/or worker down. Complete "+parts.join(" + ")+
+    " via <a href=\"/ops/p0\">/ops/p0</a>. Signup/deploy metrics may be understated until fixed.";
+  el.hidden=false;
+}
+
 async function load(){
+  await probeP0();
   const [{ data:o }, { data:signups }, { data:users }] = await Promise.all([
     sb.rpc("admin_overview"), sb.rpc("admin_signups",{ days:30 }), sb.rpc("admin_users")
   ]);

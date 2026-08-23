@@ -1,49 +1,31 @@
 # Merge & ship (founder — 5 minutes)
 
-## 1. Merge one PR
+## 1. Merge autopilot PR
 
-**Merge [PR #3](https://github.com/Leeshwaan04/Zengtrade-V2/pull/3)** (`cursor/autopilot-ff74`) into `main`.
+**Merge [PR #5](https://github.com/Leeshwaan04/Zengtrade-V2/pull/5)** (`cursor/autopilot-health-ff74`) into `main`.
 
-Close PR #2 as superseded (same changes included).
+GitHub Actions will build the landing site (includes `/ops/p0`, `/admin` P0 banner, funnel fixes) and deploy to GitHub Pages, then run `verify-production`.
 
-GitHub Actions will:
-- Build landing site (includes `/app`, `/dashboard`, `/login`)
-- Deploy to GitHub Pages
-- Run `check-production.sh` against `zengtrade.in`
-
-## 2. Verify deploy (automatic + manual)
-
-CI job **verify-production** must pass. Or run locally:
+## 2. Verify deploy
 
 ```bash
 SITE=https://zengtrade.in ./scripts/check-production.sh
+./scripts/check-sitemap.sh          # 7 coin pSEO URLs after merge
+./scripts/wait-for-deploy.sh    # if CDN still propagating
 ```
 
-If Pages is still propagating, poll until green:
+## 3. Complete P0 (founder — ~15 min)
+
+**https://zengtrade.in/ops/p0** — migration 0011 + paper worker (blocks trades + full funnel).
 
 ```bash
-./scripts/wait-for-deploy.sh
+./scripts/wait-for-p0.sh        # polls until green, then activation verify
 ```
 
-Full gate (site + billing + checklist):
-
-```bash
-./scripts/founder-preflight.sh
-```
-
-Expect:
-- `/app` → 200
-- `/js/auth.js` contains `establishSession`
-
-## 3. Backend (30 min — still required)
-
-Code deploy alone does **not** start paper trading. Complete **`docs/FOUNDER_DEPLOY.md`** steps 2–5:
-
-- Supabase auth URLs + Google
-- Migrations (`./scripts/apply-migrations.sh`)
-- Railway worker
+See **`docs/FOUNDER_DEPLOY.md`** for detail.
 
 ## 4. Track growth
 
-- `docs/GROWTH_DASHBOARD.md` — agent daily log
-- https://zengtrade.in/admin — live metrics
+- **https://zengtrade.in/ops** — CTO / CPO / CBO dashboard
+- **https://zengtrade.in/admin** — metrics + funnel tiles
+- `docs/GROWTH_DASHBOARD.md` — agent log

@@ -23,7 +23,7 @@
 <div class="wrap">
   <a class="back" href="/ops">← Founder Ops</a>
   <h1>E2E activation test (CPO)</h1>
-  <p class="sub">Run after <a href="/ops/migrate">migration 0011</a> and <a href="/ops/worker">worker</a> are green on <a href="/ops">/ops</a>.</p>
+  <p class="sub">Run after <a href="/ops/p0">P0 checklist</a> shows migration 0011 + worker green.</p>
   <p id="pre" class="gatebox">Checking P0 gates…</p>
 
   <div class="step" id="s1"><h2><span class="dot"></span>1 · Signup</h2>
@@ -38,6 +38,8 @@
     <p>Second incognito account must <b>not</b> see first account's trades in <a href="/app">/app</a>.</p></div>
   <div class="step" id="s6"><h2><span class="dot"></span>6 · Admin funnel</h2>
     <p><a href="/admin">/admin</a> → deployers ↑, worker <b>Live</b>, funnel tiles moving.</p></div>
+  <div class="step" id="s7"><h2><span class="dot"></span>7 · Pro checkout (CBO)</h2>
+    <p>Optional MRR proof: <a href="/ops/billing">Test Pro checkout</a> → confirm <code>checkout_click</code> in /admin after migration 0011.</p></div>
 
   <button type="button" id="recheck">Re-check P0 gates</button>
 </div>
@@ -47,8 +49,10 @@ async function gates(){
   const pre=document.getElementById("pre");
   let mig=false, work=false;
   try{
-    const r=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({name:"signup_complete",path:"/e2e-probe"})});
-    mig=r.status===201;
+    const h={apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"};
+    const r1=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"signup_complete",path:"/e2e-probe"})});
+    const r2=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"deploy_success",path:"/e2e-probe"})});
+    mig=r1.status===201&&r2.status===201;
   }catch(e){}
   try{
     const rows=await fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{headers:{apikey:ANON}}).then(x=>x.json());
@@ -60,10 +64,22 @@ async function gates(){
       work=age<=12;
     }else el.textContent="none";
   }catch(e){document.getElementById("hb").textContent="error";}
-  if(mig&&work){pre.textContent="✓ P0 ready — run the steps below";pre.className="gatebox ok";}
-  else{pre.textContent="✗ Complete /ops/migrate and /ops/worker first";pre.className="gatebox bad";}
+  const ready=mig&&work;
+  if(ready){
+    pre.innerHTML="✓ P0 ready — run the steps below";
+    pre.className="gatebox ok";
+  }else{
+    const parts=[];
+    if(!mig) parts.push('<a href="/ops/p0">migration 0011</a>');
+    if(!work) parts.push('<a href="/ops/worker">paper worker</a>');
+    pre.innerHTML="✗ Complete "+parts.join(" + ")+" first";
+    pre.className="gatebox bad";
+  }
+  document.getElementById("s1").classList.toggle("bad",!ready);
+  document.getElementById("s2").classList.toggle("bad",!ready);
   document.getElementById("s3").classList.toggle("ok",work);
   document.getElementById("s3").classList.toggle("bad",!work);
+  document.getElementById("s4").classList.toggle("bad",!work);
 }
 gates();
 document.getElementById("recheck").onclick=gates;

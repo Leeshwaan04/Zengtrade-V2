@@ -50,4 +50,11 @@ echo "=== Summary ==="
 [[ $MIG_OK -eq 1 ]] && echo "✅ Migrations applied" || echo "❌ Migrations — apply 0009–0011 (see apply-migrations.sh)"
 [[ $WORK_OK -eq 1 ]] && echo "✅ Worker heartbeat fresh" || echo "❌ Worker — deploy saas/worker (FOUNDER_DEPLOY.md §4)"
 echo ""
+if SITE="$SITE" ./scripts/check-sitemap.sh 2>/dev/null; then
+  echo "✅ Sitemap includes all coin pSEO pages"
+else
+  echo "⚠️  Sitemap — merge PR #5 for Cardano + Dogecoin coin pages"
+fi
+echo ""
 echo "Full checklist: docs/FOUNDER_DEPLOY.md"
+echo "After P0 green: ./scripts/verify-activation-path.sh"

@@ -1,12 +1,21 @@
 {
-  "updated": "2026-08-23T14:57:00Z",
+  "updated": "2026-08-23T15:49:00Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
+  "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
+    {
+      "id": "merge-pr5",
+      "title": "Merge PR #5 (ship /ops/p0 + funnel fixes)",
+      "detail": "CI green \u2014 merges cursor/autopilot-health-ff74 to main",
+      "url": "https://github.com/Leeshwaan04/Zengtrade-V2/pull/5",
+      "urgent": false
+    },
     {
       "id": "migration-0011",
       "title": "Apply migration 0011 (funnel v2 events)",
-      "detail": "Copy SQL → Supabase → verify in one page",
+      "detail": "One-click GitHub Action or copy SQL on /ops/migrate",
       "url": "https://zengtrade.in/ops/migrate",
+      "alt_url": "https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-migration-0011.yml",
       "urgent": true
     },
     {
@@ -19,7 +28,7 @@
     },
     {
       "id": "gsc",
-      "title": "Google Search Console — submit sitemap",
+      "title": "Google Search Console \u2014 submit sitemap",
       "detail": "After worker is live; organic growth Week 1",
       "url": "https://zengtrade.in/ops/gsc",
       "urgent": false
@@ -28,49 +37,110 @@
   "cto": {
     "headline": "Production loop",
     "shipped": [
-      "Founder action pages: /ops/migrate + /ops/worker (HTML, copy-verify)",
-      "PR #3 merged — /app, auth.js, verify-production CI green",
-      "Health probes: check-worker, check-migrations, health-watch cron",
+      "/admin P0 incomplete banner \u2192 /ops/p0 when migration or worker down",
+      "PR #3 merged \u2014 /app, auth.js, verify-production CI green",
+      "Health probes: check-worker, check-migrations, health-watch cron (fails \u2192 founder email)",
+      "Worker startup heartbeat + DB retry for faster deploy proof",
+      "verify-activation-path.sh for post-P0 E2E gate",
+      "Migration 0011 verify probes signup_complete + deploy_success + checkout_click (check-migrations, ops-migrate, GitHub Action)",
       "render.yaml + WORKER_QUICKSTART for one-click worker host"
     ],
-    "next": "Worker heartbeat < 12 min; all preflight gates green",
+    "next": "Merge PR #5 \u2192 founder /ops/p0 (migration + worker); then verify-activation-path",
     "links": [
-      {"label": "GitHub Actions", "url": "https://github.com/Leeshwaan04/Zengtrade-V2/actions"},
-      {"label": "Pages deploy", "url": "https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/pages.yml"},
-      {"label": "Supabase project", "url": "https://supabase.com/dashboard/project/ponvarxeytfcntckczbn"},
-      {"label": "Railway new service", "url": "https://railway.app/new"}
+      {
+        "label": "GitHub Actions",
+        "url": "https://github.com/Leeshwaan04/Zengtrade-V2/actions"
+      },
+      {
+        "label": "Pages deploy",
+        "url": "https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/pages.yml"
+      },
+      {
+        "label": "Supabase project",
+        "url": "https://supabase.com/dashboard/project/ponvarxeytfcntckczbn"
+      },
+      {
+        "label": "Railway new service",
+        "url": "https://railway.app/new"
+      }
     ]
   },
   "cpo": {
-    "headline": "Signup → deploy → trades",
+    "headline": "Signup \u2192 deploy \u2192 trades",
     "shipped": [
       "Activation checklist on /app",
-      "Worker-offline banner on /dashboard and /app",
-      "Funnel events + admin tiles (after 0011)"
+      "Worker-offline banner links to /how-it-works on /app and /dashboard",
+      "Pageview tracking on /dashboard and /app after auth",
+      "Activation checklist shows worker-offline hint when deploys exist but no trades",
+      "Post-deploy banner in /app links to Forward Test (signup → deploy → trades)",
+      "Fresh signup deploy nudge on /dashboard in ~800ms (zt_fresh_signup flag)"
     ],
-    "next": "E2E: signup → deploy → trades within 15 min once worker live",
+    "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [
-      {"label": "E2E test guide", "url": "https://zengtrade.in/ops/e2e"},
-      {"label": "Algo Studio", "url": "https://zengtrade.in/dashboard"},
-      {"label": "Evidence app", "url": "https://zengtrade.in/app"},
-      {"label": "Test signup", "url": "https://zengtrade.in/login?mode=signup"},
-      {"label": "Admin funnel", "url": "https://zengtrade.in/admin"}
+      {
+        "label": "E2E test guide",
+        "url": "https://zengtrade.in/ops/e2e"
+      },
+      {
+        "label": "Algo Studio",
+        "url": "https://zengtrade.in/dashboard"
+      },
+      {
+        "label": "Evidence app",
+        "url": "https://zengtrade.in/app"
+      },
+      {
+        "label": "Test signup",
+        "url": "https://zengtrade.in/login?mode=signup"
+      },
+      {
+        "label": "Admin funnel",
+        "url": "https://zengtrade.in/admin"
+      }
     ]
   },
   "cbo": {
     "headline": "Organic + first Pro MRR",
     "shipped": [
       "Founding $19/mo on /pricing",
-      "Coin SEO pages live (e.g. /coins/bitcoin/)",
-      "NOWPayments billing edge functions deployed"
+      "Coin SEO: 7 pages (BTC, ETH, SOL, BNB, XRP, ADA, DOGE) after build",
+      "NOWPayments billing edge functions deployed",
+      "Landing signup CTAs tagged with utm_source=site for GSC attribution",
+      "Pricing CTAs use utm_campaign=pricing for plan-intent attribution",
+      "check-sitemap.sh verifies 7 coin pSEO URLs in production sitemap",
+      "Coin + coins hub signup CTAs tagged utm_campaign=coin_* / coins_hub"
+      "r/algotrading draft ready (post after P0)"
     ],
-    "next": "GSC sitemap + first proof post after forward trades exist",
+    "next": "GSC sitemap + first proof post after forward trades exist; Pro checkout E2E at /ops/billing",
     "links": [
-      {"label": "Test checkout guide", "url": "https://zengtrade.in/ops/billing"},
-      {"label": "GSC playbook", "url": "https://zengtrade.in/ops/gsc"},
-      {"label": "Pricing page", "url": "https://zengtrade.in/pricing/"},
-      {"label": "Pro checkout", "url": "https://zengtrade.in/app#pricing"},
-      {"label": "Sitemap", "url": "https://zengtrade.in/sitemap.xml"}
+      {
+        "label": "Test checkout guide",
+        "url": "https://zengtrade.in/ops/billing"
+      },
+      {
+        "label": "GSC playbook",
+        "url": "https://zengtrade.in/ops/gsc"
+      },
+      {
+        "label": "Pricing page",
+        "url": "https://zengtrade.in/pricing/"
+      },
+      {
+        "label": "Pro checkout",
+        "url": "https://zengtrade.in/app#pricing"
+      },
+      {
+        "label": "Sitemap",
+        "url": "https://zengtrade.in/sitemap.xml"
+      }
     ]
+  },
+  "gates": {
+    "production": true,
+    "billing": true,
+    "migration_0011": false,
+    "worker": false,
+    "worker_heartbeat_utc": "2026-08-11T09:57:38",
+    "all_p0_green": false
   }
 }

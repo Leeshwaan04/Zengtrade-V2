@@ -24,6 +24,21 @@
 
   var SUPA = "https://ponvarxeytfcntckczbn.supabase.co";
   var ANON = "sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";
+
+  function trackPageview() {
+    try {
+      fetch(SUPA + "/rest/v1/event", {
+        method: "POST",
+        headers: { apikey: ANON, "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({
+          name: "pageview",
+          path: ("/dashboard" + location.hash).slice(0, 290),
+          ref: (document.referrer || "").slice(0, 290),
+        }),
+        keepalive: true,
+      }).catch(function () {});
+    } catch (e) {}
+  }
   var LS_AUTH = "sb-ponvarxeytfcntckczbn-auth-token";
 
   /* strategy_keys the cloud worker can actually run (mirror of worker REGISTRY).
@@ -47,6 +62,7 @@
   }
   var sess = session();
   if (!sess) { location.replace("/login"); return; }
+  trackPageview();
 
   function sbHeaders(extra) {
     var h = { apikey: ANON, Authorization: "Bearer " + (session() || {}).tok,
@@ -116,7 +132,8 @@
       "position:fixed;top:0;left:0;right:0;z-index:95;padding:8px 14px;text-align:center;" +
       "font:600 12.5px/1.4 var(--sans,system-ui);background:#fff8e6;color:#7a5a00;" +
       "border-bottom:1px solid #f0d78a";
-    el.textContent = "Paper worker offline — deploys save, but trades pause until the worker restarts.";
+    el.innerHTML = "Paper worker offline — deploys save, but trades pause until the worker restarts. " +
+      '<a href="/how-it-works/" style="color:inherit;font-weight:700;margin-left:6px">How paper trading works</a>';
     document.body.appendChild(el);
   }
   maybeWorkerBanner();
@@ -298,6 +315,8 @@
     ".zt-deploy-nudge a{color:#fff;background:var(--green,#00ab4e);padding:8px 14px;border-radius:9px;" +
     "font-weight:700;text-decoration:none;white-space:nowrap}";
   function nudgeDeployIfCold() {
+    var delay = 5000;
+    try { if (localStorage.getItem("zt_fresh_signup")) { delay = 800; localStorage.removeItem("zt_fresh_signup"); } } catch (e) {}
     setTimeout(function () {
       mine("deployment?select=strategy_key&status=eq.running&limit=1").then(function (rows) {
         if (rows && rows.length) return;
@@ -319,7 +338,7 @@
         el.querySelector("button").onclick = function () { el.remove(); };
         document.body.appendChild(el);
       });
-    }, 5000);
+    }, delay);
   }
   function inject() {
     var st = document.createElement("style");

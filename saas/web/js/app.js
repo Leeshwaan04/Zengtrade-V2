@@ -2,7 +2,7 @@
 // Dashboard · Strategies · Activity · Account, plus first-run onboarding. Every render is defensive
 // (loading / empty / error states), every action gives feedback, all user data is escaped.
 import { requireAuth, signOut, sb, niceError } from "./auth.js";
-import { maybeWorkerBanner } from "./worker-status.js";
+import { maybeWorkerBanner, isWorkerAlive } from "./worker-status.js";
 import { getTier, isPro, openCheckout, checkoutReady, PLANS, FREE_DEPLOY_LIMIT } from "./billing.js";
 import { STRATEGIES, byKey, nameOf } from "./strategies.js";
 import { esc, money, pct, num, timeAgo, tone, toast, skeletonRows, equityCurve } from "./ui.js";
@@ -10,7 +10,7 @@ import { esc, money, pct, num, timeAgo, tone, toast, skeletonRows, equityCurve }
 const $ = s => document.querySelector(s);
 const app = $("#view");
 let user = null, tier = "free", billCycle = "month";
-let state = { deployments: [], trades: [], loading: true, error: null };
+let state = { deployments: [], trades: [], loading: true, error: null, workerAlive: true };
 
 const ROUTES = ["dashboard", "strategies", "forward", "accuracy", "analytics", "activity", "account"];
 const route = () => (location.hash.replace("#", "") || "dashboard");
@@ -19,6 +19,13 @@ const route = () => (location.hash.replace("#", "") || "dashboard");
 (async function boot() {
   user = await requireAuth();                 // redirects to /login if signed out
   if (!user) return;
+  try {
+    await sb.from("event").insert({
+      name: "pageview",
+      path: ("/app" + location.hash).slice(0, 290),
+      ref: (document.referrer || "").slice(0, 290),
+    });
+  } catch { /* funnel */ }
   $("#userEmail").textContent = user.email;
   $("#signout").onclick = () => signOut();
   $("#upgradeBtn").onclick = () => location.hash = "pricing";
@@ -110,6 +117,7 @@ async function load() {
     state.deployments = dep.data || [];
     state.trades = tr.data || [];
     tier = isPro(prof.data?.tier) ? prof.data.tier : "free";   // keep the real tier (pro OR elite)
+    state.workerAlive = await isWorkerAlive();
   } catch (e) {
     state.error = niceError(e);
     toast(state.error, "error");
@@ -162,12 +170,15 @@ function activationChecklist() {
   const traded = metrics().n > 0;
   if (deployed && traded) return "";
   const s1 = "done", s2 = deployed ? "done" : "on", s3 = traded ? "done" : (deployed ? "on" : "");
+  const workerNote = deployed && !traded && !state.workerAlive
+    ? `<p class="muted" style="margin:8px 0 0;font-size:13px">Paper worker is offline — deploys are saved but trades pause until the worker is running. <a href="/how-it-works/">Learn more</a></p>`
+    : "";
   return `<div class="card" id="activation">
     <div class="card-h"><h3>Activation checklist</h3><span class="muted">signup → deploy → trades</span></div>
     <ol class="act-steps">
       <li class="${s1}"><span class="dot"></span><span><b>Account created</b><br><span class="muted">You're signed in as ${esc(user.email)}</span></span></li>
       <li class="${s2}"><span class="dot"></span><span><b>Deploy a paper strategy</b><br><span class="muted">Use Algo Studio or Strategies tab — live Binance prices, zero risk.</span></span></li>
-      <li class="${s3}"><span class="dot"></span><span><b>First closed trade</b><br><span class="muted">Worker runs every ~5 min; check Forward Test for evidence.</span></span></li>
+      <li class="${s3}"><span class="dot"></span><span><b>First closed trade</b><br><span class="muted">Worker runs every ~5 min; check Forward Test for evidence.</span>${workerNote}</span></li>
     </ol>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
       <a class="btn primary sm" href="/dashboard">Open Algo Studio</a>
@@ -228,6 +239,27 @@ const emptyDeployCta = (title, blurb) => `<div class="empty"><p><b>${title}</b><
 function wireEmptyDeploy() {
   const b = $("#ev-deploy");
   if (b) b.onclick = () => { location.hash = "strategies"; };
+}
+
+function showPostDeployHint() {
+  if (document.getElementById("ztPostDeployHint")) return;
+  const workerNote = state.workerAlive
+    ? "Trades appear in Forward Test as the worker runs (~15 min)."
+    : "Worker is offline — deploy saved; trades start when the worker is live.";
+  const el = document.createElement("div");
+  el.id = "ztPostDeployHint";
+  el.setAttribute("role", "status");
+  el.style.cssText =
+    "position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:90;" +
+    "max-width:min(480px,calc(100% - 24px));padding:14px 16px;border-radius:14px;" +
+    "background:var(--surface,#fff);border:1px solid var(--line,#e2e8f0);box-shadow:0 8px 24px rgba(0,0,0,.12);" +
+    "font:600 13px/1.45 var(--sans,system-ui);display:flex;gap:12px;align-items:center;flex-wrap:wrap";
+  el.innerHTML =
+    `<div style="flex:1"><b>Strategy deployed</b><br><span style="font-weight:500;color:var(--slate,#64748b)">${workerNote}</span></div>` +
+    `<a href="#forward" style="padding:8px 14px;border-radius:9px;background:var(--green,#00ab4e);color:#04140a;text-decoration:none;font-weight:700">Forward Test</a>` +
+    `<button type="button" style="border:0;background:transparent;cursor:pointer;color:var(--slate,#64748b)" aria-label="Dismiss">✕</button>`;
+  el.querySelector("button").onclick = () => el.remove();
+  document.body.appendChild(el);
 }
 
 // ---- Forward Test (closed-trade evidence) ----
@@ -400,6 +432,7 @@ async function deploy(key) {
     await sb.from("event").insert({ name: "deploy_success", path: (location.pathname + location.hash).slice(0, 290) });
   } catch { /* funnel */ }
   toast(`${nameOf(key)} deployed to paper.`, "success");
+  showPostDeployHint();
   await load(); render();
 }
 async function stop(key) {

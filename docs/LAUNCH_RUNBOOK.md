@@ -22,10 +22,10 @@ Production checklist for `zengtrade.in`. Autopilot CTO agent maintains this file
 
 | Step | Action | Done |
 |------|--------|------|
-| 9 | `supabase secrets set NOWPAYMENTS_API_KEY=...` | ☐ |
-| 10 | Deploy `nowpayments-create-invoice` + `nowpayments-ipn` | ☐ |
-| 11 | Test checkout → `profile.tier` = pro | ☐ |
-| 12 | Remove "Opening soon" on paid plans when #11 passes | ☐ |
+| 9 | `supabase secrets set NOWPAYMENTS_API_KEY=...` | ☑ (edge functions live — `./scripts/verify-billing.sh`) |
+| 10 | Deploy `nowpayments-create-invoice` + `nowpayments-ipn` | ☑ |
+| 11 | Test checkout → `profile.tier` = pro | ☐ (founder: <https://zengtrade.in/ops/billing>) |
+| 12 | Remove "Opening soon" on paid plans when #11 passes | ☑ (`checkoutReady()` live) |
 
 ## P2 — Growth
 
@@ -35,7 +35,8 @@ Production checklist for `zengtrade.in`. Autopilot CTO agent maintains this file
 | 14 | Integrate `seo/out` coin pages into landing build | CBO | ☑ (`build.py` fetches live coin pages + sitemap) |
 | 15 | Founding Pro offer live on `/pricing/` | CBO | ☑ ($19/mo founding copy in build) |
 
-## Worker quick start (Railway)
+**Founder P0 (blocking activation):** <https://zengtrade.in/ops/p0>  
+**Full ops dashboard:** <https://zengtrade.in/ops>
 
 ```bash
 cd saas/worker

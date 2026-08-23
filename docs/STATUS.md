@@ -17,19 +17,14 @@
 
 ## Founder dashboard
 
-👉 **https://zengtrade.in/ops** — live CTO / CPO / CBO progress, approval alerts, auto-refresh (bookmark this).
-
-Internal agent log: `docs/GROWTH_DASHBOARD.md`
-
-## Autopilot agents
-
-Daily updates: **[GROWTH_DASHBOARD.md](GROWTH_DASHBOARD.md)**  
-Charters: `.cursor/autopilot/{cto,cpo,cbo}.md`
+👉 **https://zengtrade.in/ops/p0** — P0 checklist (migration + worker, ~15 min)  
+👉 **https://zengtrade.in/ops** — full CTO / CPO / CBO dashboard
 
 ## PRs
 
 | PR | Status |
 |----|--------|
+| [#5](https://github.com/Leeshwaan04/Zengtrade-V2/pull/5) autopilot health | Open (CI green) |
 | [#3](https://github.com/Leeshwaan04/Zengtrade-V2/pull/3) autopilot | **Merged** 2026-08-23 |
 | [#2](https://github.com/Leeshwaan04/Zengtrade-V2/pull/2) crypto-only | Merged (superseded by #3) |
 
@@ -41,4 +36,5 @@ Charters: `.cursor/autopilot/{cto,cpo,cbo}.md`
 ./tests/e2e_smoke.sh
 SITE=https://zengtrade.in ./scripts/check-production.sh
 ./scripts/founder-preflight.sh
+./scripts/wait-for-p0.sh          # after founder completes P0 actions
 ```

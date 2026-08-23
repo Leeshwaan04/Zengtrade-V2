@@ -34,7 +34,23 @@ from strategies import BOT  # ensures bot path added
 from bot.crypto_data import CryptoDataFeed
 FEED = CryptoDataFeed()
 
-def db(): c=psycopg2.connect(DATABASE_URL); c.autocommit=False; return c
+def db():
+    return psycopg2.connect(DATABASE_URL)
+
+def db_with_retry(attempts=5, delay=4):
+    """Railway/Render cold starts can lag DNS — retry before exiting."""
+    last = None
+    for i in range(attempts):
+        try:
+            c = db()
+            c.autocommit = False
+            return c
+        except Exception as e:
+            last = e
+            if i < attempts - 1:
+                print(f"  db connect retry {i + 1}/{attempts}: {e}", flush=True)
+                time.sleep(delay)
+    raise last
 def active(cur):
     cur.execute("select user_id, strategy_key, params from deployment where mode='paper' and status='running'")
     return cur.fetchall()
@@ -96,9 +112,14 @@ def run_cycle(conn, replay_days=None):
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument("--once",action="store_true")
     ap.add_argument("--replay",type=int); ap.add_argument("--interval",type=int,default=300)
-    a=ap.parse_args(); conn=db()
-    print(f"zengtrade worker · {len(X.FEATURED)} featured strategies · universe={len(UNIVERSE)}")
+    a=ap.parse_args(); conn=db_with_retry()
+    print(f"zengtrade worker · {len(X.FEATURED)} featured strategies · universe={len(UNIVERSE)}", flush=True)
     try:
+        # Prove the process is alive before the first 5-min cycle (Railway deploy health).
+        cur = conn.cursor()
+        heartbeat(cur, 0, 0)
+        conn.commit()
+        print("  startup heartbeat ok", flush=True)
         if a.replay: d,n=run_cycle(conn,a.replay); print(f"  replay {a.replay}d: {n} trades across {d} deployments")
         elif a.once: d,n=run_cycle(conn); print(f"  cycle: {d} deployments · {n} closed")
         else:

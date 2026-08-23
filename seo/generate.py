@@ -31,6 +31,8 @@ COINS = {
     "SOL": ("Solana", "solana", "layer-1"),
     "BNB": ("BNB", "bnb", "major"),
     "XRP": ("XRP", "xrp", "payments"),
+    "ADA": ("Cardano", "cardano", "layer-1"),
+    "DOGE": ("Dogecoin", "dogecoin", "payments"),
 }
 
 CATEGORY_ANGLE = {
@@ -188,7 +190,7 @@ def coin_parts(sym, name, slug, cat, tk, closes):
     <div class="lp-wrap">
       <h2 class="lp-h2">Related coins</h2>
       <div class="lp-grid4">{rel_html}</div>
-      <a class="lp-cta primary" href="/login?mode=signup" style="margin-top:20px">Start free, paper-trade {e(name)} strategies</a>
+      <a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=coin_{slug}" style="margin-top:20px">Start free, paper-trade {e(name)} strategies</a>
       <p class="lp-fineprint">Live data · educational software, not investment advice · paper-first, non-custodial</p>
     </div>
   </section>
@@ -217,7 +219,9 @@ def coin_hub_main(syms_present):
     </div>
   </section>
   <section class="lp-sec" aria-label="Coins">
-    <div class="lp-wrap"><div class="lp-grid4">{cards}</div></div>
+    <div class="lp-wrap"><div class="lp-grid4">{cards}</div>
+      <a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=coins_hub" style="margin-top:20px">Start free — paper-trade any coin</a>
+    </div>
   </section>
 </main>"""
 

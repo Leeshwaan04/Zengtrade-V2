@@ -32,7 +32,8 @@ export async function maybeWorkerBanner() {
     "position:sticky;top:0;z-index:80;padding:10px 16px;text-align:center;" +
     "font:600 13px/1.45 var(--sans,system-ui,sans-serif);" +
     "background:#fff8e6;color:#7a5a00;border-bottom:1px solid #f0d78a";
-  bannerEl.textContent =
-    "Paper worker is offline — deploys are saved but new trades won't run until the worker is back. Usually fixed within minutes of hosting.";
+  bannerEl.innerHTML =
+    'Paper worker is offline — deploys are saved but new trades won\u2019t run until the worker is back. ' +
+    '<a href="/how-it-works/" style="color:inherit;font-weight:700;margin-left:6px">How paper trading works</a>';
   document.body.prepend(bannerEl);
 }
