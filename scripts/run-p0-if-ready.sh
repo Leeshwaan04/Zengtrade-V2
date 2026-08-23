@@ -45,7 +45,7 @@ if [[ -n "${DATABASE_URL:-}" ]]; then
 fi
 
 echo ""
-./scripts/check-p0-readiness.sh
+./scripts/check-p0-readiness.sh || true
 echo ""
 ./scripts/founder-parallel-work.sh 2>/dev/null || true
 if ./scripts/check-parallel-growth.sh >/dev/null 2>&1; then
