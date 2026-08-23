@@ -3,6 +3,8 @@
 **Owner:** QA&VAPT autopilot (`.cursor/autopilot/qavapt.md`).  
 **Run:** `./scripts/security-smoke.sh` + `./tests/e2e_smoke.sh` each session.
 
+**While worker blocked:** `./scripts/verify-partial-activation.sh` · `./scripts/check-sales-ready.sh` · `docs/FOUNDER_PARALLEL.md`
+
 | ID | Area | Check | Status | Evidence |
 |----|------|-------|--------|----------|
 | Q1 | Client secrets | No service_role / API keys in browser JS | ☑ | `security-smoke.sh` (2026-08-23) |

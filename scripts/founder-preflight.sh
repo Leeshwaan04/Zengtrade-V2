@@ -113,6 +113,7 @@ if [[ $WORK_OK -eq 0 ]]; then
 fi
 echo ""
 echo "Full checklist: docs/FOUNDER_DEPLOY.md · QA: docs/QA_VAPT_CHECKLIST.md"
+echo "Parallel work: docs/FOUNDER_PARALLEL.md · ./scripts/guide-founder-parallel.sh"
 echo ""
 echo "=== Next founder action ==="
 ./scripts/founder-next-action.sh 2>/dev/null || true

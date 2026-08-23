@@ -1449,6 +1449,21 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 21:39Z)
 - worker ❌ · migration 0011 ✅ · parallel growth ✅ · sales-ready ✅
 
+### Day 1 (session 124) — QA parallel ops + FOUNDER_PARALLEL QA row
+
+### CTO
+- **Shipped:** founder-preflight FOUNDER_PARALLEL link
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** —
+
+### CBO
+- **Shipped:** —
+
+### Status (`./scripts/check-growth-standup.sh` @ 21:41Z)
+- worker ❌ · migration 0011 ✅ · parallel growth ✅ · sales-ready ✅
+
 ---
 
 ## Daily log template

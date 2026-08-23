@@ -72,6 +72,7 @@ Verify with:
 ./scripts/guide-partial-e2e.sh         # CPO: founder manual partial E2E steps
 ./scripts/check-parallel-growth.sh   # CBO/CPO: partial + billing + GSC while worker down
 ./scripts/guide-founder-parallel.sh  # Founder: all parallel playbooks in one command
+docs/FOUNDER_PARALLEL.md             # one-page parallel work index
 ./scripts/check-p0-readiness.sh   # secrets + gates before apply-p0
 ./scripts/check-railway-deploy.sh   # when RAILWAY_API_TOKEN is set
 ```

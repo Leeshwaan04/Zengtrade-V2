@@ -29,13 +29,25 @@
       <li><code>./scripts/verify-activation-path.sh</code> — after P0 green</li>
       <li><code>./scripts/check-plan-intent.sh</code> · <code>./scripts/check-seo-content.sh</code> — production funnel/SEO</li>
       <li><code>./scripts/verify-partial-activation.sh</code> — signup → deploy UI (no worker)</li>
-      <li><code>./scripts/check-parallel-growth.sh</code> — parallel gates while worker blocked</li>
+      <li><code>./scripts/guide-partial-e2e.sh</code> — founder manual partial E2E steps</li>
+      <li><code>./scripts/check-parallel-growth.sh</code> · <code>./scripts/check-sales-ready.sh</code></li>
+      <li><code>./scripts/guide-founder-parallel.sh</code> — all parallel playbooks</li>
     </ol>
     <p id="probe">Probing production IPN gate…</p>
   </div>
 
+  <div class="card" style="background:#eef2ff;border-color:#c7d2fe">
+    <h2 style="font-size:16px;margin:0 0 8px">While worker is blocked</h2>
+    <p style="font-size:14px;margin:0 0 8px">Automated QA you can run now (no trades required):</p>
+    <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.7">
+      <li><code>./scripts/security-smoke.sh</code> — secrets, IPN gate, RLS anon probes</li>
+      <li><code>./scripts/verify-partial-activation.sh</code> — signup → deploy funnel</li>
+      <li><code>./scripts/check-sales-ready.sh</code> — billing path integrity</li>
+    </ul>
+    <p style="font-size:13px;margin:12px 0 0">Index: <code>docs/FOUNDER_PARALLEL.md</code></p>
+  </div>
+
   <div class="card">
-    <h2 style="font-size:16px;margin:0 0 8px">Manual (before paid ads)</h2>
     <ol>
       <li><a href="/ops/e2e">E2E activation</a> — signup → deploy → trades (partial steps 1–2 OK while worker down)</li>
       <li><b>RLS isolation</b> — second account must not see first user's trades (<a href="/app">/app</a>)</li>

@@ -20,9 +20,12 @@ Run automated gates now:
 ./scripts/security-smoke.sh
 ./scripts/verify-partial-activation.sh   # signup → deploy UI only
 ./scripts/check-parallel-growth.sh
+./scripts/check-sales-ready.sh           # billing path while worker down
 ```
 
 Full `./scripts/verify-activation-path.sh` and `/ops/e2e` trades path need `./scripts/check-worker.sh` green.
+
+Parallel index: `docs/FOUNDER_PARALLEL.md`
 
 ## Priority queue
 

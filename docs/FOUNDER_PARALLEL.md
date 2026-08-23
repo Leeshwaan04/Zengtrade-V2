@@ -20,6 +20,7 @@ Runs `check-parallel-growth.sh`, `check-sales-ready.sh`, and prints manual playb
 | **CBO** | GSC verify + sitemap | https://zengtrade.in/ops/gsc · `docs/GSC_SETUP.md` |
 | **CBO / Sales** | First Pro checkout | https://zengtrade.in/ops/billing · `./scripts/check-sales-ready.sh` |
 | **Marketing** | LinkedIn build-in-public | `docs/content/LINKEDIN_BUILD_IN_PUBLIC.md` |
+| **QA&VAPT** | Security + partial activation probes | `./scripts/security-smoke.sh` · `./scripts/verify-partial-activation.sh` |
 
 ## Verify probes
 
