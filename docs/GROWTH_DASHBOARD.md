@@ -234,19 +234,17 @@
 - **Shipped:** `docs/CBO_WEEK1.md` organic playbook; live coin pSEO confirmed on zengtrade.in.
 - **Next:** GSC verify + sitemap submit.
 
-### Day 1 (session 16) — E2E HTML guide + smart action bar
+### Day 1 (session 17) — GitHub issue notification + mobile ops PWA
 
 ### CTO
-- **Shipped:** `/ops/e2e` live P0 gate check + 6-step activation test; action bar dims completed gates.
-- **Blocked:** Worker + 0011 — founder must use /ops/migrate and /ops/worker.
+- **Shipped:** GitHub issue #4 for founder P0 approvals; ops PWA manifest (add to home screen).
+- **Blocked:** Migration 0011 + worker — awaiting founder on /ops/migrate and /ops/worker.
 
 ### CPO
-- **Shipped:** Post-P0 E2E playbook as HTML with heartbeat probe on step 3.
-- **Next:** Run /ops/e2e after founder completes P0.
+- **Next:** /ops/e2e after P0.
 
 ### CBO
-- **Shipped:** (awaiting P0)
-- **Next:** /ops/billing after worker live.
+- **Next:** /ops/billing after P0.
 
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*

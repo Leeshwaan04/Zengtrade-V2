@@ -15,5 +15,4 @@ jobs:
     steps:
       - name: Founder action required
         run: |
-          echo "::error::zengtrade P0 health check failed. Open https://zengtrade.in/ops for CTO/CPO/CBO status and approval items."
-          echo "Workflow: ${{ github.event.workflow_run.html_url }}"
+          echo "::error::zengtrade P0 health check failed. Open https://zengtrade.in/ops — GitHub issue https://github.com/Leeshwaan04/Zengtrade-V2/issues/4"

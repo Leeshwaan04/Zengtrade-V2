@@ -1,0 +1,13 @@
+{
+  "name": "zengtrade Founder Ops",
+  "short_name": "Ops",
+  "description": "CTO · CPO · CBO live progress and approvals",
+  "start_url": "/ops",
+  "scope": "/ops",
+  "display": "standalone",
+  "background_color": "#f4f7fb",
+  "theme_color": "#00ab4e",
+  "icons": [
+    { "src": "/assets/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

@@ -260,6 +260,10 @@ _ops_data = os.path.join(AUTH_SRC, "ops-data.json")
 if os.path.exists(_ops_data):
     d = os.path.join(DIST, "ops"); os.makedirs(d, exist_ok=True)
     shutil.copy(_ops_data, os.path.join(d, "data.json"))
+_ops_manifest = os.path.join(AUTH_SRC, "ops-manifest.json")
+if os.path.exists(_ops_manifest):
+    d = os.path.join(DIST, "ops"); os.makedirs(d, exist_ok=True)
+    shutil.copy(_ops_manifest, os.path.join(d, "manifest.json"))
 _mig11 = os.path.abspath(os.path.join(HERE, "..", "..", "saas", "db", "migrations", "0011_funnel_events_v2.sql"))
 if os.path.exists(_mig11):
     d = os.path.join(DIST, "ops"); os.makedirs(d, exist_ok=True)
