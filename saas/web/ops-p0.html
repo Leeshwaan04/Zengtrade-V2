@@ -25,12 +25,20 @@
   .back{font-size:13px;font-weight:600;color:var(--blue);text-decoration:none;display:inline-block;margin-bottom:14px}
   .foot{font-size:12px;color:var(--slate-2);margin-top:20px;line-height:1.6}
   .foot a{color:var(--blue);font-weight:600}
+  .callout{background:#fff8e6;border:2px solid #f5d76e;border-radius:14px;padding:16px 18px;margin-bottom:18px;font-size:14px;line-height:1.55}
+  .callout b{color:var(--navy)}
+  .callout code{font-size:12px}
 </style></head><body>
 <div class="wrap">
   <a class="back" href="/ops">← Full Founder Ops</a>
   <h1>P0 checklist</h1>
   <p class="sub">~15 minutes · Unblocks signup → deploy → trades and CBO growth. Site + billing are already live.</p>
   <p id="overall" class="pill bad">Checking gates…</p>
+  <div id="workerOnly" class="callout" hidden>
+    <b>Migration 0011 is live.</b> Sole blocker: add <code>DATABASE_URL</code> to Railway <code>paper-worker</code> (or Cloud Agent / GitHub Secrets) and redeploy.
+    Pooler: <code>aws-0-ap-northeast-1.pooler.supabase.com</code> · session mode · port <code>5432</code>.
+    <a href="https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings" target="_blank" rel="noopener">Copy URI from Supabase</a>
+  </div>
 
   <div class="step" id="step1">
     <h2><span class="num">1</span> Apply migration 0011</h2>
@@ -91,9 +99,15 @@ async function refresh(){
   document.getElementById("g2").className="gate "+(w.ok?"ok":"bad");
   document.getElementById("step1").classList.toggle("done",mig);
   document.getElementById("step2").classList.toggle("done",w.ok);
+  const workerOnly=document.getElementById("workerOnly");
+  if(workerOnly) workerOnly.hidden=!(mig&&!w.ok);
   const all=mig&&w.ok;
   const pill=document.getElementById("overall");
-  pill.textContent=all?"✓ All P0 green — run E2E":"Action required — complete steps below";
+  if(mig&&!w.ok){
+    pill.textContent="Step 2 only — add DATABASE_URL + deploy worker";
+  } else {
+    pill.textContent=all?"✓ All P0 green — run E2E":"Action required — complete steps below";
+  }
   pill.className="pill "+(all?"ok":"bad");
   const s3=document.getElementById("step3");
   const btn=document.getElementById("e2eBtn");

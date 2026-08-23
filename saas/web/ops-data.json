@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T18:14:56Z",
+  "updated": "2026-08-23T18:17:00Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -54,7 +54,8 @@
       "test-database-url.sh \u2014 psql connection preflight before migration 0011",
       "run-p0-if-ready.sh \u2014 agent entry point on main (auto-apply when DATABASE_URL available)",
       "discover-supabase-pooler.sh \u2014 find Supavisor host (e.g. aws-0-ap-northeast-1)",
-      "Migration 0011 green on production (session 73) \u2014 funnel v2 events live"
+      "Migration 0011 green on production (session 73) \u2014 funnel v2 events live",
+      "/ops/p0 worker-only callout + /ops/worker links existing Railway paper-worker (session 74)"
     ],
     "next": "Add DATABASE_URL \u2192 run-p0-if-ready.sh deploys paper-worker on Railway",
     "links": [

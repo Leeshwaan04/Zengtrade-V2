@@ -36,8 +36,19 @@
     <p style="font-size:14px;line-height:1.55;margin:0">Agent runs <code>./scripts/apply-p0-autopilot.sh</code> → sets vars on Railway <b>paper-worker</b> service (<code>saas/worker</code> Dockerfile) and redeploys. Requires <code>DATABASE_URL</code> + <code>RAILWAY_API_TOKEN</code> in Cloud Agent secrets.</p>
   </div>
 
+  <div class="card" style="background:var(--green-soft);border-color:var(--green-line)">
+    <h2>Existing Railway service (fastest)</h2>
+    <p style="font-size:14px;line-height:1.55;margin:0 0 10px">Project <b>ravishing-tenderness</b> already has <code>paper-worker</code> configured for <code>saas/worker</code>. Add variable <code>DATABASE_URL</code> → redeploy.</p>
+    <ol>
+      <li>Open <a href="https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b" target="_blank" rel="noopener">Railway project</a> → service <b>paper-worker</b></li>
+      <li>Variables → <code>DATABASE_URL</code> = <a href="https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings" target="_blank" rel="noopener">Supabase session URI</a> (pooler <code>aws-0-ap-northeast-1.pooler.supabase.com</code>, port <code>5432</code>)</li>
+      <li>Redeploy → logs: <code>zengtrade worker</code> + <code>startup heartbeat ok</code></li>
+    </ol>
+    <div class="links"><a href="https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b" target="_blank" rel="noopener">Open paper-worker</a></div>
+  </div>
+
   <div class="card">
-    <h2>Option A — Railway (recommended)</h2>
+    <h2>Option A — Railway (new service)</h2>
     <ol>
       <li><a href="https://railway.app/new" target="_blank" rel="noopener">Create Railway project</a> → Deploy from GitHub → <code>Leeshwaan04/Zengtrade-V2</code></li>
       <li>Settings → <b>Root directory</b>: <code>saas/worker</code></li>

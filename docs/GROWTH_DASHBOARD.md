@@ -732,6 +732,19 @@
 ### Status (`./scripts/status-report.sh` @ 18:12Z)
 - production ✅ | billing ✅ | migration 0011 ✅ | worker ❌ | security-smoke ✅
 
+### Day 1 (session 74) — founder confirmed manual migration (option B)
+
+### CTO
+- **Confirmed:** Founder ran SQL in Supabase SQL Editor — migration 0011 probes still green.
+- **Shipped:** `/ops/p0` worker-only callout when migration done; `/ops/worker` links existing Railway `paper-worker` service.
+- **Blocked:** `DATABASE_URL` still missing (Cloud Agent + Railway) — worker heartbeat stale since 2026-08-11.
+
+### Founder next action
+Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b) → redeploy → agent runs `./scripts/run-p0-if-ready.sh` or verify at `/ops`.
+
+### Status (`./scripts/status-report.sh` @ 18:15Z)
+- migration 0011 ✅ | worker ❌ (sole P0 blocker)
+
 ---
 
 ### CTO
