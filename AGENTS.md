@@ -68,7 +68,7 @@ Verify with:
 ./scripts/check-gsc-ready.sh       # CBO: organic/GSC preflight
 ./scripts/check-e2e-gates.sh       # CPO: can /ops/e2e start?
 ./scripts/check-activation-ready.sh  # CPO: signup → deploy UI (no worker)
-./scripts/verify-partial-activation.sh  # CPO: migration + activation combined
+./scripts/verify-activation-path.sh --partial  # CPO: migration + activation + deploy_success event
 ./scripts/verify-activation-path.sh --partial  # CPO: partial path without worker
 ./scripts/guide-partial-e2e.sh         # CPO: founder manual partial E2E steps
 ./scripts/guide-gsc-founder.sh         # CBO: founder manual GSC verify + sitemap

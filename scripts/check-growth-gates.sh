@@ -37,8 +37,6 @@ else
   echo ">> Partial activation (worker blocked)"
   if ./scripts/verify-activation-path.sh --partial >/dev/null 2>&1; then
     echo "OK   Partial activation — signup → deploy (verify-activation-path --partial)"
-  elif ./scripts/verify-partial-activation.sh >/dev/null 2>&1; then
-    echo "OK   Partial activation — signup → deploy at /ops/e2e (steps 1–2)"
   else
     echo "WARN Partial activation — run ./scripts/verify-activation-path.sh --partial"
   fi

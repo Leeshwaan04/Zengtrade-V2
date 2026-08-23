@@ -27,7 +27,7 @@ run() {
   echo ""
 }
 
-run "Partial activation (CPO)" ./scripts/verify-partial-activation.sh
+run "Partial activation (CPO)" ./scripts/verify-activation-path.sh --partial
 run "Free-tier deploy cap (CPO)" ./scripts/check-free-tier-limit.sh
 run "Billing-ready (CBO)" env SITE="$SITE" ./scripts/check-billing-ready.sh
 run "GSC-ready (CBO)" env SITE="$SITE" ./scripts/check-gsc-ready.sh

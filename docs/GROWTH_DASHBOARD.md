@@ -1958,6 +1958,33 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 23:24Z)
 - worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
 
+### Day 1 (session 145) — canonical partial activation gate
+
+### CTO
+- **Shipped:** status-report DATABASE_URL auth line when RAILWAY_API_TOKEN set
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** verify-activation-path --partial is canonical; verify-partial-activation aliases it; parallel/QA gates aligned
+
+### CBO
+- **Shipped:** —
+
+### SEO
+- **Shipped:** —
+
+### Marketing
+- **Shipped:** —
+
+### Sales
+- **Shipped:** —
+
+### QA&VAPT
+- **Shipped:** e2e_smoke + check-parallel-growth passed
+
+### Status (`./scripts/check-growth-standup.sh` @ 23:29Z)
+- worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
+
 ---
 
 ## Daily log template

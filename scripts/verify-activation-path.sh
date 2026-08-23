@@ -9,7 +9,17 @@ cd "$ROOT"
 if [[ "${1:-}" == "--partial" ]]; then
   echo "== Partial activation path (signup → deploy, no trades) =="
   ./scripts/check-migrations.sh
-  ./scripts/verify-partial-activation.sh
+  echo ""
+  export SITE="${SITE:-https://zengtrade.in}"
+  SITE="$SITE" ./scripts/check-activation-ready.sh
+  echo ""
+
+  if ./scripts/check-worker.sh >/dev/null 2>&1; then
+    echo "Worker is live — run full path: ./scripts/verify-activation-path.sh"
+    echo "Manual E2E: $SITE/ops/e2e"
+    exit 0
+  fi
+
   code=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
     'https://ponvarxeytfcntckczbn.supabase.co/rest/v1/event' \
     -H 'apikey: sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1' \

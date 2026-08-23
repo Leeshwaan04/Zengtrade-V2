@@ -28,7 +28,7 @@ run() {
 
 run "Security smoke" ./scripts/security-smoke.sh
 run "XSS hygiene (/app)" ./scripts/check-xss-hygiene.sh
-run "Partial activation (CPO)" ./scripts/verify-partial-activation.sh
+run "Partial activation (CPO)" ./scripts/verify-activation-path.sh --partial
 run "Sales-ready (billing)" ./scripts/check-sales-ready.sh
 
 if [[ $fail -eq 0 ]]; then

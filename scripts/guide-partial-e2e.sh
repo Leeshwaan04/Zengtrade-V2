@@ -8,14 +8,12 @@ export SITE="${SITE:-https://zengtrade.in}"
 echo "== Partial E2E guide (CPO) — $SITE =="
 echo ""
 
-if ! ./scripts/verify-partial-activation.sh; then
+if ! ./scripts/verify-activation-path.sh --partial; then
   echo ""
   echo "Fix probes above before manual test."
   exit 1
 fi
 
-echo ""
-echo "Automated gate: ./scripts/verify-activation-path.sh --partial"
 echo ""
 echo "== Manual steps (incognito) =="
 echo ""
