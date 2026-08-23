@@ -55,7 +55,8 @@
       "run-p0-if-ready.sh \u2014 agent entry point on main (auto-apply when DATABASE_URL available)",
       "discover-supabase-pooler.sh \u2014 find Supavisor host (e.g. aws-0-ap-northeast-1)",
       "Migration 0011 green on production (session 73) \u2014 funnel v2 events live",
-      "/ops/p0 worker-only callout + /ops/worker links existing Railway paper-worker (session 74)"
+      "/ops/p0 worker-only callout + /ops/worker links existing Railway paper-worker (session 74)",
+      "wait-for-p0.sh polls run-p0-if-ready when Railway gets DATABASE_URL (session 76)"
     ],
     "next": "Add DATABASE_URL \u2192 run-p0-if-ready.sh deploys paper-worker on Railway",
     "links": [
@@ -88,7 +89,8 @@
       "Post-deploy banner in /app links to Forward Test (signup \u2192 deploy \u2192 trades)",
       "Fresh signup deploy nudge on /dashboard in ~800ms (zt_fresh_signup flag)",
       "Activation checklist: worker-live wait hint (5\u201315 min to first trade)",
-      "Go-live bar read-only checklist on /app#pricing (docs/GO_LIVE_BAR.md)"
+      "Go-live bar read-only checklist on /app#pricing (docs/GO_LIVE_BAR.md)",
+      "/ops/e2e worker-only blocked state with Railway link (session 76)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [
