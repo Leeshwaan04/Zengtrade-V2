@@ -42,3 +42,17 @@ python3 demo_backtest.py
 ## Indian market (removed)
 
 NSE/Kite/Zerodha integration has been archived to `archive/indian/`. This repository targets crypto markets only.
+
+## Production launch (zengtrade.in)
+
+| Doc | Purpose |
+|-----|---------|
+| [docs/STATUS.md](docs/STATUS.md) | Live ship gate + PR status |
+| [docs/MERGE_AND_SHIP.md](docs/MERGE_AND_SHIP.md) | Merge PR #3 → GitHub Pages |
+| [docs/FOUNDER_DEPLOY.md](docs/FOUNDER_DEPLOY.md) | Supabase, worker, billing |
+| [docs/GROWTH_DASHBOARD.md](docs/GROWTH_DASHBOARD.md) | Daily autopilot progress |
+
+```bash
+./tests/e2e_smoke.sh
+SITE=https://zengtrade.in ./scripts/check-production.sh   # after merge
+```
