@@ -463,6 +463,17 @@ function renderPricing() {
       </div></div>
     ${soon}
     <div class="grid plans">${PLANS.map(p => planCard(p, ready)).join("")}</div>
+    <div class="card" style="margin-top:20px">
+      <div class="card-h"><h3>Go-live bar</h3><span class="muted">Read-only · live execution coming soon</span></div>
+      <p class="muted" style="font-size:13px;margin:0 0 10px">Each strategy must clear these gates on <b>your</b> forward paper book before live is considered — no backtest shortcuts.</p>
+      <ul style="font-size:13px;line-height:1.65;color:var(--slate);margin:0;padding-left:1.2em">
+        <li>≥ 30 closed paper trades</li>
+        <li>Net P&amp;L after costs &gt; 0</li>
+        <li>Profit factor ≥ 1.1</li>
+        <li>Positive expectancy in ≥ 2 market regimes</li>
+        <li>Pro or Elite tier when live rail ships</li>
+      </ul>
+    </div>
     <p class="iso center">* Live execution unlocks per strategy only after it clears the go-live bar in paper. Non-custodial, your keys, your coins. Not investment advice.</p>`;
   app.querySelectorAll(".cycle button").forEach(b => b.onclick = () => { billCycle = b.dataset.c; renderPricing(); });
   PLANS.forEach(p => {

@@ -17,12 +17,12 @@ if [[ $mig -eq 0 || $work -eq 0 ]]; then
     railway_resolve_database_url >/dev/null 2>&1 && rail_db=1
 
     if [[ $rail_db -eq 1 ]]; then
-      echo "NEXT: DATABASE_URL found on Railway — run ./scripts/apply-p0-autopilot.sh"
+      echo "NEXT: DATABASE_URL found on Railway — run ./scripts/run-p0-if-ready.sh"
       exit 1
     fi
 
     echo "NEXT: Add DATABASE_URL (Supabase session pooler :5432)"
-    echo "     Cloud Agent secrets → ./scripts/apply-p0-autopilot.sh"
+    echo "     Cloud Agent secrets → ./scripts/run-p0-if-ready.sh"
     echo "     OR Railway paper-worker variables (agent auto-resolves)"
     echo "     OR GitHub repo Secrets → Apply P0 workflow"
     echo "     Manual: https://zengtrade.in/ops/p0"

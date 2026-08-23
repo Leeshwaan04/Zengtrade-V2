@@ -1,12 +1,12 @@
 {
-  "updated": "2026-08-23T17:35:55Z",
+  "updated": "2026-08-23T17:38:56Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
     {
       "id": "p0-unblock",
       "title": "Add DATABASE_URL",
-      "detail": "Add DATABASE_URL to Cloud Agent secrets (Supabase pooler :5432) or GitHub repo Secrets. Agent runs ./scripts/apply-p0-autopilot.sh automatically.",
+      "detail": "Add DATABASE_URL to Cloud Agent secrets (Supabase pooler :5432) or GitHub repo Secrets. Agent runs ./scripts/run-p0-if-ready.sh on main.",
       "url": "https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings",
       "alt_url": "https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml",
       "urgent": true
@@ -54,7 +54,7 @@
       "test-database-url.sh \u2014 psql connection preflight before migration 0011",
       "run-p0-if-ready.sh \u2014 agent entry point on main (auto-apply when DATABASE_URL available)"
     ],
-    "next": "Add DATABASE_URL secret \u2192 apply-p0-autopilot",
+    "next": "Add DATABASE_URL secret \u2192 run-p0-if-ready.sh",
     "links": [
       {
         "label": "GitHub Actions",

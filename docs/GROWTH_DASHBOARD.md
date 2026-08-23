@@ -701,14 +701,16 @@
 ### Status (`./scripts/status-report.sh` @ 17:21Z)
 - migration 0011 ❌ | worker ❌ | security-smoke ✅
 
-### Day 1 (session 66) — agent P0 entry point on main
+### Day 1 (session 67) — main autopilot + CPO go-live bar
 
 ### CTO
-- **Shipped:** `run-p0-if-ready.sh` — single turn entry (env or Railway `DATABASE_URL` → apply + post-P0).
-- **Shipped:** `/ops/p0` — Supabase URI link + Railway variable path.
-- **Blocked:** `DATABASE_URL` still missing.
+- **Blocked:** `DATABASE_URL` still missing — `./scripts/run-p0-if-ready.sh` exits at readiness.
+- **Shipped:** Autopilot README updated for main-only (no PRs).
 
-### Status (`./scripts/status-report.sh` @ 17:33Z)
+### CPO
+- **Shipped:** Read-only go-live bar checklist on `/app#pricing` (matches `docs/GO_LIVE_BAR.md`).
+
+### Status (`./scripts/status-report.sh` @ 17:36Z)
 - migration 0011 ❌ | worker ❌ | security-smoke ✅
 
 ---

@@ -1,21 +1,23 @@
 # zengtrade Autopilot Agents
 
-Four role-based Cloud Agent charters run on a schedule (or on demand). Each agent reads its charter, executes the highest-priority unchecked task, updates `docs/GROWTH_DASHBOARD.md`, commits to `cursor/<role>-*-ff74` (or merges to `main` when ready), and posts a short summary.
+Four role-based Cloud Agent charters run on a schedule (or on demand). Each agent reads its charter, executes the highest-priority unchecked task, updates `saas/web/ops-data.json` and `docs/GROWTH_DASHBOARD.md`, and **commits directly to `main`** (no PRs unless the founder asks).
 
 ## How to enable true autopilot (Cursor)
 
 1. **Cursor → Automations** (or Cloud Agents): create **four** scheduled agents (or one daily orchestrator).
 2. **Repository:** `Leeshwaan04/Zengtrade-V2`
-3. **Base branch:** `main`
+3. **Base branch:** `main` (commit and push to `main` only)
 4. **Schedule:** daily 09:00 UTC (adjust to your timezone)
 5. **Paste the prompt** from each charter file below.
 
-| Agent | Charter file | Branch prefix |
-|-------|----------------|---------------|
-| CTO | `.cursor/autopilot/cto.md` | `cursor/cto-*-ff74` |
-| CPO | `.cursor/autopilot/cpo.md` | `cursor/cpo-*-ff74` |
-| CBO | `.cursor/autopilot/cbo.md` | `cursor/cbo-*-ff74` |
-| QA&VAPT | `.cursor/autopilot/qavapt.md` | `cursor/qavapt-*-ff74` |
+| Agent | Charter file |
+|-------|----------------|
+| CTO | `.cursor/autopilot/cto.md` |
+| CPO | `.cursor/autopilot/cpo.md` |
+| CBO | `.cursor/autopilot/cbo.md` |
+| QA&VAPT | `.cursor/autopilot/qavapt.md` |
+
+**CTO first action each run:** `./scripts/run-p0-if-ready.sh`
 
 ### Single orchestrator (simpler)
 
@@ -24,7 +26,7 @@ One daily agent with prompt:
 ```
 Read .cursor/autopilot/README.md and run CTO, CPO, CBO, then QA&VAPT charters in order.
 Update docs/GROWTH_DASHBOARD.md with today's date section.
-Commit, push, update open PR if any. Summarize for the founder in 5 bullets.
+Commit and push to main. Summarize for the founder in 5 bullets.
 ```
 
 ## Founder dashboard (bookmark this)
