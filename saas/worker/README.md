@@ -24,8 +24,8 @@ Copy `.env.example` -> `.env`, set `DATABASE_URL` to your Supabase Postgres URI 
 ```
 # from saas/worker/
 # Railway:  railway up            (see railway.toml; set DATABASE_URL in dashboard)
+# Render:   repo root render.yaml   (Blueprint → set DATABASE_URL)
 # Fly.io:   fly launch && fly secrets set DATABASE_URL=... && fly deploy  (see fly.toml)
-# Render:   new Background Worker, Docker, env DATABASE_URL
 ```
 The Dockerfile runs continuous mode automatically.
 

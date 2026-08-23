@@ -204,6 +204,36 @@
 - **Shipped:** Production sitemap includes `/login` + `/app`.
 - **Next:** GSC + checkout test.
 
+### Day 1 (session 13) — worker status UX + quickstart
+
+### CTO
+- **Shipped:** Worker-down banner on `/app` + `/dashboard`; `docs/WORKER_QUICKSTART.md`; `migrate-0011-only.sh`.
+- **Blocked:** Worker still stale; 0011 not applied.
+- **Next:** Founder Railway deploy + SQL paste.
+
+### CPO
+- **Shipped:** Users see honest “worker offline” message instead of silent no-trades.
+- **Next:** E2E after worker live.
+
+### CBO
+- **Shipped:** (pending GSC — founder action)
+- **Next:** Submit https://zengtrade.in/sitemap.xml after worker proof post.
+
+### Day 1 (session 14) — Render blueprint + CBO week 1 + UX proof
+
+### CTO
+- **Shipped:** `render.yaml` worker blueprint; `scripts/status-report.sh` one-screen P0 gate.
+- **Blocked:** Worker + 0011 unchanged.
+- **Next:** Founder `./scripts/status-report.sh` → green.
+
+### CPO
+- **Verified:** Production pricing ($19 founding), signup page, coin SEO pages load (screenshots).
+- **Next:** Logged-in activation E2E after worker.
+
+### CBO
+- **Shipped:** `docs/CBO_WEEK1.md` organic playbook; live coin pSEO confirmed on zengtrade.in.
+- **Next:** GSC verify + sitemap submit.
+
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*
