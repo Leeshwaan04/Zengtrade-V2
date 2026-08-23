@@ -26,6 +26,15 @@ if [[ -z "${DATABASE_URL:-}" && -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]
 fi
 
 if [[ -n "${DATABASE_URL:-}" ]]; then
+  sanitized=$(./scripts/sanitize-database-url.sh "$DATABASE_URL")
+  if [[ "$sanitized" != "$DATABASE_URL" ]]; then
+    echo "WARN  DATABASE_URL had [brackets] around password — auto-stripping"
+    DATABASE_URL="$sanitized"
+    export DATABASE_URL
+  fi
+fi
+
+if [[ -n "${DATABASE_URL:-}" ]]; then
   export DATABASE_URL
   ./scripts/apply-p0-autopilot.sh
   exec ./scripts/post-p0-success.sh

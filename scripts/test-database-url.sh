@@ -5,6 +5,15 @@ set -euo pipefail
 DATABASE_URL="${DATABASE_URL:-${SUPABASE_DATABASE_URL:-}}"
 DATABASE_URL="${DATABASE_URL//[[:space:]]/}"
 [[ -n "$DATABASE_URL" ]] || { echo "ERROR: DATABASE_URL not set (Cloud Agent secret empty?)" >&2; echo "Run: ./scripts/founder-database-url-help.sh" >&2; exit 1; }
+
+# Supabase UI shows [YOUR-PASSWORD] — founders sometimes paste brackets literally
+sanitized=$(./scripts/sanitize-database-url.sh "$DATABASE_URL")
+if [[ "$sanitized" != "$DATABASE_URL" ]]; then
+  echo "WARN  Stripped [brackets] from DATABASE_URL — use Supabase copy button, not placeholder text" >&2
+  DATABASE_URL="$sanitized"
+fi
+export DATABASE_URL
+
 command -v psql >/dev/null || { echo "ERROR: psql not installed" >&2; exit 1; }
 
 if python3 -c 'import os,sys; from urllib.parse import urlparse
