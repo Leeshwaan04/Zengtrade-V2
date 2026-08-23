@@ -6,7 +6,7 @@
     {
       "id": "p0-unblock",
       "title": "Add DATABASE_URL",
-      "detail": "Postgres URI from Supabase → Database → Connection string (session pooler :5432). Use the database password — not sb_secret/sb_publishable API keys. Agent runs ./scripts/run-p0-if-ready.sh.",
+      "detail": "Pooler host: aws-0-ap-northeast-1.pooler.supabase.com \u2014 copy full session URI from Supabase Database settings (database password, not API keys). Or reset password and update Cloud Agent DATABASE_URL.",
       "url": "https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings",
       "alt_url": "https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml",
       "urgent": true
@@ -52,7 +52,8 @@
       "apply-p0.yml GitHub Action \u2014 one-shot P0 when DATABASE_URL + RAILWAY_API_TOKEN in repo Secrets",
       "railway_resolve_database_url \u2014 apply-p0 can pick up DATABASE_URL from any Railway service",
       "test-database-url.sh \u2014 psql connection preflight before migration 0011",
-      "run-p0-if-ready.sh \u2014 agent entry point on main (auto-apply when DATABASE_URL available)"
+      "run-p0-if-ready.sh \u2014 agent entry point on main (auto-apply when DATABASE_URL available)",
+      "discover-supabase-pooler.sh \u2014 find Supavisor host (e.g. aws-0-ap-northeast-1)"
     ],
     "next": "Add DATABASE_URL secret \u2192 run-p0-if-ready.sh",
     "links": [

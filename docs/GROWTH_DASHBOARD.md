@@ -701,15 +701,15 @@
 ### Status (`./scripts/status-report.sh` @ 17:21Z)
 - migration 0011 ❌ | worker ❌ | security-smoke ✅
 
-### Day 1 (session 68) — API keys ≠ DATABASE_URL
+### Day 1 (session 70) — pooler host found, password rejected
 
 ### CTO
-- **Received:** `sb_publishable` + `sb_secret` — service role REST works (HTTP 200).
-- **Blocked:** `DATABASE_URL` in VM uses API key as Postgres password — connection fails.
-- **Need:** Supabase → Database → Connection string (session pooler :5432) with **database password**, not API keys.
+- **Found:** Project pooler is `aws-0-ap-northeast-1.pooler.supabase.com` (not us-east-1).
+- **Blocked:** Password `Whatisthisabou` → `password authentication failed` on Postgres.
+- **Shipped:** `scripts/discover-supabase-pooler.sh` — finds correct Supavisor host for `DATABASE_URL`.
 
-### Status
-- migration 0011 ❌ | worker ❌
+### Founder action
+- Reset DB password in Supabase → Database → copy full session pooler URI, or re-send correct password.
 
 ---
 
@@ -751,6 +751,21 @@ Copy for each new day:
 - Next:
 
 ### CBO
+- Shipped:
+- Blocked:
+- Next:
+
+### SEO
+- Shipped:
+- Blocked:
+- Next:
+
+### Marketing
+- Shipped:
+- Blocked:
+- Next:
+
+### Sales
 - Shipped:
 - Blocked:
 - Next:
