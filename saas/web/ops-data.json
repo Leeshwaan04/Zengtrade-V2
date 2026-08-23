@@ -62,7 +62,7 @@
     "shipped": [
       "Activation checklist on /app",
       "Worker-offline banner links to /how-it-works on /app and /dashboard",
-      "signup_complete only on real signups (not sign-in repeats)"
+      "Pageview tracking on /dashboard and /app after auth",
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [
