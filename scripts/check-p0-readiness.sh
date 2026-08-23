@@ -12,6 +12,11 @@ echo "== P0 readiness =="
 echo ""
 printf "DATABASE_URL in environment     %s\n" "$([[ $db_set -eq 1 ]] && echo '✅ set' || echo '❌ missing')"
 printf "RAILWAY_API_TOKEN in environment %s\n" "$([[ $rail_set -eq 1 ]] && echo '✅ set' || echo '❌ missing')"
+if command -v psql >/dev/null 2>&1; then
+  printf "psql client                      ✅ %s\n" "$(psql --version | head -1)"
+else
+  printf "psql client                      ❌ missing (needed for migration)\n"
+fi
 echo ""
 
 mig=0 work=0

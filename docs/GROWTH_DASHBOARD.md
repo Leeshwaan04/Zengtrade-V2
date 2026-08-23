@@ -679,6 +679,19 @@
 ### Status (`./scripts/status-report.sh` @ 17:18Z)
 - migration 0011 ❌ | worker ❌ | PR #7 draft (merge to ship)
 
+### Day 1 (session 59) — founder blocker unchanged
+
+### CTO
+- **Blocked:** `DATABASE_URL` still not in Cloud Agent VM — cannot run `apply-p0-autopilot.sh`.
+- **Ready:** `psql` + `RAILWAY_API_TOKEN` on VM; PR #7 CI green (draft, not merged to main).
+
+### Founder (required)
+1. **Merge [PR #7](https://github.com/Leeshwaan04/Zengtrade-V2/pull/7)** to `main`
+2. **Add `DATABASE_URL`** to Cloud Agent secrets (Supabase → Database → URI, session pooler port **5432**)
+
+### Status (`./scripts/status-report.sh` @ 17:19Z)
+- migration 0011 ❌ | worker ❌
+
 ---
 
 ### CTO
