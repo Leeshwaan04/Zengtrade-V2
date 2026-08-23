@@ -159,7 +159,7 @@ PRICING_MAIN = f"""<main id="main">
     <div class="lp-wrap center">
       <div class="lp-eyebrow"><span class="dot"></span> simple · honest · cancel anytime</div>
       <h1 id="h-pr" class="lp-h1">Pricing that only charges when it earns its place.</h1>
-      <p class="lp-sub">Start free and paper-trade forever. You pay only when you want unlimited strategies and live execution on your own exchange, never for the data, never for hidden extras.</p>
+      <p class="lp-sub">Start free and paper-trade forever. Pro unlocks unlimited paper strategies; live execution on your own exchange rolls out per the go-live bar — never charge for data or hidden extras.</p>
       <p class="lp-sub" style="margin-top:12px"><b>Founding offer:</b> first 100 Pro members lock in <b>$19/mo</b> (normally $29) — unlimited paper while live execution rolls out.</p>
     </div>
   </section>
@@ -354,7 +354,7 @@ emit("how-it-works", shell(
     "https://zengtrade.in/how-it-works/", main_hiw_paper), "https://zengtrade.in/how-it-works/")
 
 emit("pricing", shell(
-    "Pricing, free to start, pay only for live execution | zengtrade",
+    "Pricing — free paper trading, Pro from $19/mo | zengtrade",
     "zengtrade pricing: Free forever to paper-trade, Pro for unlimited paper strategies (founding $19/mo). Live execution rolls out per go-live bar. Data is always free. Non-custodial. Cancel anytime.",
     "https://zengtrade.in/pricing/", PRICING_MAIN), "https://zengtrade.in/pricing/")
 

@@ -668,6 +668,17 @@
 ### Status (`./scripts/status-report.sh` @ 17:16Z)
 - migration 0011 ❌ | worker ❌ | awaiting DATABASE_URL
 
+### Day 1 (session 58) — pricing SEO title + e2e smoke P0 scripts
+
+### CBO
+- **Shipped:** Pricing page `<title>` + subcopy aligned to paper-first / live coming soon.
+
+### CTO
+- **Shipped:** `e2e_smoke.sh` asserts P0 helper scripts + `apply-p0.yml` exist.
+
+### Status (`./scripts/status-report.sh` @ 17:18Z)
+- migration 0011 ❌ | worker ❌ | PR #7 draft (merge to ship)
+
 ---
 
 ### CTO
