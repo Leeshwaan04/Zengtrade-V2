@@ -31,6 +31,8 @@ COINS = {
     "SOL": ("Solana", "solana", "layer-1"),
     "BNB": ("BNB", "bnb", "major"),
     "XRP": ("XRP", "xrp", "payments"),
+    "ADA": ("Cardano", "cardano", "layer-1"),
+    "DOGE": ("Dogecoin", "dogecoin", "payments"),
 }
 
 CATEGORY_ANGLE = {

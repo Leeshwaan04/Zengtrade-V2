@@ -317,6 +317,15 @@
 ### CBO
 - **Shipped:** Pageview beacon + login signup_view capture UTM query params.
 
+### Day 1 (session 25) — merge prep + coin SEO expand
+
+### CTO
+- **Shipped:** `MERGE_AND_SHIP.md` updated for PR #5; `check-production.sh` probes `/ops` + soft-check `/ops/p0`.
+- **Blocked:** P0 unchanged — merge PR #5 then founder completes /ops/p0.
+
+### CBO
+- **Shipped:** Coin SEO expanded (+Cardano, +Dogecoin) in `seo/generate.py` — 7 coin pages after next build.
+
 ### Metrics snapshot
 - Pageviews 7d: *(fill from /admin)*
 - Users / deployers / trades: *(fill from /admin)*

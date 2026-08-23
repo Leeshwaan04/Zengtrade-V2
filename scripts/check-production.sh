@@ -23,6 +23,17 @@ check "app" "$SITE/app" "zengtrade"
 check "pricing" "$SITE/pricing/"
 check "sitemap" "$SITE/sitemap.xml" "<urlset"
 check "dashboard" "$SITE/dashboard/" "zengtrade"
+check "ops" "$SITE/ops" "Founder Ops"
+# ops/p0 ships with PR #5 — warn until live, don't fail pre-merge deploys
+if code=$(curl -sfL -o /tmp/ztcurl.out -w '%{http_code}' "$SITE/ops/p0" 2>/dev/null); then
+  if grep -q "P0 checklist" /tmp/ztcurl.out 2>/dev/null; then
+    echo "OK   ops-p0 — HTTP $code"
+  else
+    echo "WARN ops-p0 — HTTP $code but missing content"
+  fi
+else
+  echo "WARN ops-p0 — not deployed yet (merge PR #5 for /ops/p0)"
+fi
 check "app-js" "$SITE/js/auth.js" "establishSession"
 rm -f /tmp/ztcurl.out
 if [[ $fail -ne 0 ]]; then
