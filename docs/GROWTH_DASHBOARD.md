@@ -1524,6 +1524,33 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 22:01Z)
 - worker ❌ · migration 0011 ✅ · parallel growth ✅ · sales-ready ✅
 
+### Day 1 (session 129) — Growth log roles + MRR standup + guide verify
+
+### CTO
+- **Shipped:** append-growth-log --seo/--marketing/--sales/--qa; check-founder-guides.sh; sync-ops-gates sales_ready
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** ops/e2e guide-free-tier-test CLI hint
+
+### CBO
+- **Shipped:** —
+
+### SEO
+- **Shipped:** —
+
+### Marketing
+- **Shipped:** —
+
+### Sales
+- **Shipped:** guide-mrr-standup.sh — weekly /admin MRR checklist
+
+### QA&VAPT
+- **Shipped:** check-founder-guides in e2e_smoke
+
+### Status (`./scripts/check-growth-standup.sh` @ 22:05Z)
+- worker ❌ · migration 0011 ✅ · parallel growth ✅ · sales-ready ✅
+
 ---
 
 ## Daily log template

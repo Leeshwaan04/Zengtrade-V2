@@ -113,7 +113,9 @@
       "sync-growth-dashboard-header.sh auto-updates GROWTH_DASHBOARD probes (session 121)",
       "append-growth-log auto-syncs header; status-report Sales-ready (session 122)",
       "FOUNDER_PARALLEL.md + sync header probe retries (session 123)",
-      "docs/STATUS.md session 128 + /ops parallel role guides (session 128)"
+      "docs/STATUS.md session 128 + /ops parallel role guides (session 128)",
+      "append-growth-log --seo/--marketing/--sales/--qa flags (session 129)",
+      "check-founder-guides.sh + sync-ops-gates sales_ready (session 129)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -335,7 +337,8 @@
       "/ops/billing worker-offline note before checkout test (session 92)",
       "check-billing-ready.sh \u2014 one-command Pro checkout preflight (session 95)",
       "check-sales-ready.sh \u2014 billing + plan intent + pricing truth (session 116)",
-      "guide-first-pro-checkout.sh \u2014 founder CLI first MRR steps (session 126)"
+      "guide-first-pro-checkout.sh \u2014 founder CLI first MRR steps (session 126)",
+      "guide-mrr-standup.sh \u2014 weekly /admin MRR standup (session 129)"
     ],
     "next": "Founder: run /ops/billing checkout smoke (no worker required); track MRR in /admin",
     "links": [

@@ -40,7 +40,7 @@ Activation (deploy → trades) still needs worker for full funnel trust; billing
 ### P1 — Close rate
 - [x] Objection handling in `SALES_PLAYBOOK.md`
 - [x] Parallel work table in playbook
-- [ ] Weekly `/admin` MRR standup with real paying count
+- [ ] Weekly `/admin` MRR standup with real paying count — `./scripts/guide-mrr-standup.sh`
 
 ## Definition of done (each run)
 

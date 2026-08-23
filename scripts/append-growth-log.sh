@@ -2,7 +2,8 @@
 # Append a session block to docs/GROWTH_DASHBOARD.md (daily autopilot log).
 # Usage:
 #   ./scripts/append-growth-log.sh 109 "Short title" \
-#     --cto "shipped bullet" --cpo "..." --cbo "..."
+#     --cto "..." --cpo "..." --cbo "..." \
+#     --seo "..." --marketing "..." --sales "..." --qa "..."
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -15,11 +16,19 @@ shift 2
 CTO_SHIPPED=""
 CPO_SHIPPED=""
 CBO_SHIPPED=""
+SEO_SHIPPED=""
+MARKETING_SHIPPED=""
+SALES_SHIPPED=""
+QA_SHIPPED=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --cto) CTO_SHIPPED="$2"; shift 2 ;;
     --cpo) CPO_SHIPPED="$2"; shift 2 ;;
     --cbo) CBO_SHIPPED="$2"; shift 2 ;;
+    --seo) SEO_SHIPPED="$2"; shift 2 ;;
+    --marketing) MARKETING_SHIPPED="$2"; shift 2 ;;
+    --sales) SALES_SHIPPED="$2"; shift 2 ;;
+    --qa) QA_SHIPPED="$2"; shift 2 ;;
     *) shift ;;
   esac
 done
@@ -42,6 +51,18 @@ BLOCK="### Day 1 (session ${SESSION}) — ${TITLE}
 
 ### CBO
 - **Shipped:** ${CBO_SHIPPED:-—}
+
+### SEO
+- **Shipped:** ${SEO_SHIPPED:-—}
+
+### Marketing
+- **Shipped:** ${MARKETING_SHIPPED:-—}
+
+### Sales
+- **Shipped:** ${SALES_SHIPPED:-—}
+
+### QA&VAPT
+- **Shipped:** ${QA_SHIPPED:-—}
 
 ${STATUS_BLOCK}
 "

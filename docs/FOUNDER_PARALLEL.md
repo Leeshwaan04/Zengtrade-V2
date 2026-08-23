@@ -20,6 +20,7 @@ Runs `check-parallel-growth.sh`, `check-sales-ready.sh`, and prints manual playb
 | **SEO** | Monthly GSC review | `./scripts/guide-monthly-gsc-review.sh` · `docs/SEO_PLAYBOOK.md` |
 | **CBO** | GSC verify + sitemap | `./scripts/guide-gsc-founder.sh` · https://zengtrade.in/ops/gsc · `docs/GSC_SETUP.md` |
 | **CBO / Sales** | First Pro checkout | `./scripts/guide-first-pro-checkout.sh` · https://zengtrade.in/ops/billing |
+| **Sales** | Weekly MRR standup | `./scripts/guide-mrr-standup.sh` · https://zengtrade.in/admin |
 | **Marketing** | LinkedIn build-in-public | `./scripts/guide-linkedin-bip.sh` · `docs/content/LINKEDIN_BUILD_IN_PUBLIC.md` |
 | **QA&VAPT** | Security + partial activation probes | `./scripts/check-qa-parallel.sh` · `./scripts/security-smoke.sh` |
 

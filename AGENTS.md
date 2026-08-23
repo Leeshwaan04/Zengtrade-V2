@@ -59,7 +59,7 @@ Verify with:
 ./scripts/status-report.sh
 ./scripts/check-growth-standup.sh   # daily log helper (status + parallel work)
 ./scripts/log-growth-session.sh N   # print status block for GROWTH_DASHBOARD.md
-./scripts/append-growth-log.sh N "title" --cto "..."  # append session to GROWTH_DASHBOARD.md
+./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..." --seo "..." --marketing "..." --sales "..." --qa "..."
 ./scripts/snapshot-growth-metrics.sh  # markdown table for dashboard metrics
 ./scripts/sync-growth-dashboard-header.sh  # update GROWTH_DASHBOARD.md probe rows
 ./scripts/check-growth-gates.sh      # all production growth + P0 probes
@@ -72,8 +72,11 @@ Verify with:
 ./scripts/guide-partial-e2e.sh         # CPO: founder manual partial E2E steps
 ./scripts/guide-gsc-founder.sh         # CBO: founder manual GSC verify + sitemap
 ./scripts/guide-first-pro-checkout.sh  # Sales: founder manual first Pro MRR
-./scripts/guide-free-tier-test.sh      # CPO: Q9 manual free-tier deploy cap test
+./scripts/guide-linkedin-bip.sh        # Marketing: LinkedIn build-in-public CLI
 ./scripts/guide-monthly-gsc-review.sh  # SEO: monthly GSC review checklist
+./scripts/guide-free-tier-test.sh      # CPO: Q9 manual free-tier deploy cap test
+./scripts/guide-mrr-standup.sh        # Sales: weekly /admin MRR checklist
+./scripts/check-founder-guides.sh     # verify all guide-*.sh scripts
 ./scripts/check-free-tier-limit.sh     # CPO: free-tier deploy cap probes
 ./scripts/check-parallel-growth.sh   # CBO/CPO: partial + billing + GSC while worker down
 ./scripts/check-qa-parallel.sh       # QA: security + XSS + partial + sales (worker blocked)

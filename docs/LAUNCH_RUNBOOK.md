@@ -46,10 +46,13 @@ Production checklist for `zengtrade.in`. Autopilot CTO agent maintains this file
 ./scripts/check-sales-ready.sh        # Pro checkout path
 ```
 
-- CPO partial E2E: `./scripts/guide-partial-e2e.sh` · <https://zengtrade.in/ops/e2e> (steps 1–2)
-- CBO GSC: <https://zengtrade.in/ops/gsc> · `docs/GSC_SETUP.md` § Founder completion log
-- CBO / Sales billing: <https://zengtrade.in/ops/billing> · `./scripts/check-sales-ready.sh`
-- Marketing: `docs/content/LINKEDIN_BUILD_IN_PUBLIC.md` (founder-ready post)
+- CPO partial E2E: `./scripts/guide-partial-e2e.sh` · `./scripts/guide-free-tier-test.sh` · <https://zengtrade.in/ops/e2e> (steps 1–2)
+- CBO GSC: `./scripts/guide-gsc-founder.sh` · <https://zengtrade.in/ops/gsc> · `docs/GSC_SETUP.md` § Founder completion log
+- CBO / Sales billing: `./scripts/guide-first-pro-checkout.sh` · <https://zengtrade.in/ops/billing>
+- Sales MRR standup: `./scripts/guide-mrr-standup.sh` · <https://zengtrade.in/admin>
+- Marketing: `./scripts/guide-linkedin-bip.sh` · `docs/content/LINKEDIN_BUILD_IN_PUBLIC.md`
+- SEO monthly: `./scripts/guide-monthly-gsc-review.sh`
+- QA parallel: `./scripts/check-qa-parallel.sh` · <https://zengtrade.in/ops/security>
 - Unblock: Cloud Agent `DATABASE_PASSWORD` or <https://zengtrade.in/ops/worker>
 - Recovery: `docs/WORKER_RECOVERY.md` (diagnose → fix → verify)
 

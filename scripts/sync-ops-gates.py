@@ -98,6 +98,7 @@ def main() -> int:
             ).returncode
             == 0
         )
+    gates["sales_ready"] = probe("check-sales-ready.sh")
     gates["all_p0_green"] = all(
         gates[k] for k in ("production", "billing", "migration_0011", "worker")
     )
