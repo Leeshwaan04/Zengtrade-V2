@@ -11,8 +11,9 @@
 | Paying Pro/Elite | — | — | 10 |
 | MRR (USD) | $0 | $0 | $290 |
 | Worker status | Unknown | Offline (last heartbeat 2026-08-11T09:57:38 UTC · wrong Railway DB password) | Live 99% |
-| Parallel growth (excl. worker) | — | 5/5 gates ✅ | — |
+| Parallel growth (excl. worker) | — | ✅ founder-parallel-ready | — |
 | Sales-ready | — | ✅ check-sales-ready.sh | — |
+| QA parallel | — | ✅ check-qa-parallel.sh | — |
 
 *Fill "Today" from [zengtrade.in/admin](https://zengtrade.in/admin) after login.*
 
@@ -1577,6 +1578,33 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 
 ### Status (`./scripts/check-growth-standup.sh` @ 22:09Z)
 - worker ❌ · migration 0011 ✅ · parallel growth ❌ · sales-ready ✅
+
+### Day 1 (session 131) — Growth log probe retries + coin spotlight guide
+
+### CTO
+- **Shipped:** log-growth-session retries; /ops Sales-ready + QA parallel gates; health-watch founder-parallel-ready
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** —
+
+### CBO
+- **Shipped:** —
+
+### SEO
+- **Shipped:** —
+
+### Marketing
+- **Shipped:** guide-coin-spotlight.sh — coin spotlight post template (partial activation OK)
+
+### Sales
+- **Shipped:** —
+
+### QA&VAPT
+- **Shipped:** —
+
+### Status (`./scripts/check-growth-standup.sh` @ 22:12Z)
+- worker ❌ · migration 0011 ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
 
 ---
 

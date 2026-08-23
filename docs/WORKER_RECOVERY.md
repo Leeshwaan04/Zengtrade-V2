@@ -16,6 +16,8 @@ The paper worker (`saas/worker/`) connects to Supabase Postgres and runs strateg
 
 ## Diagnose (no secrets printed)
 
+Preflight: `./scripts/run-p0-if-ready.sh` · Founder CLI: `./scripts/guide-worker-recovery.sh` · https://zengtrade.in/ops/worker
+
 ```bash
 ./scripts/run-p0-if-ready.sh              # P0 summary + parallel work hints
 ./scripts/validate-database-credentials.sh  # env + Railway URI auth probe

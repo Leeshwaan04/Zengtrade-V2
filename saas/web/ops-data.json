@@ -117,7 +117,8 @@
       "append-growth-log --seo/--marketing/--sales/--qa flags (session 129)",
       "check-founder-guides.sh + sync-ops-gates sales_ready (session 129)",
       "check-founder-parallel-ready.sh + sync-ops qa_parallel_ready (session 130)",
-      "log-growth-session probe retries; /ops sales+QA gates (session 131)"
+      "log-growth-session probe retries; /ops sales+QA gates (session 131)",
+      "guide-worker-recovery.sh + GROWTH_DASHBOARD QA parallel row (session 132)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [

@@ -37,9 +37,15 @@ echo "| Worker status | $worker_txt |"
 echo "| Migration 0011 | $([[ $mig -eq 1 ]] && echo '✅' || echo '❌') |"
 echo "| Activation UI | $([[ $act -eq 1 ]] && echo '✅' || echo '❌') |"
 echo "| Billing-ready | $([[ $bill -eq 1 ]] && echo '✅' || echo '❌') |"
-sales=0
-./scripts/check-sales-ready.sh >/dev/null 2>&1 && sales=1
+sales=0 qa=0
+for _ in 1 2 3; do
+  [[ $sales -eq 0 ]] && ./scripts/check-sales-ready.sh >/dev/null 2>&1 && sales=1
+  [[ $qa -eq 0 ]] && ./scripts/check-qa-parallel.sh >/dev/null 2>&1 && qa=1
+  [[ $sales -eq 1 && $qa -eq 1 ]] && break
+  sleep 2
+done
 echo "| Sales-ready | $([[ $sales -eq 1 ]] && echo '✅' || echo '❌') |"
+echo "| QA parallel | $([[ $qa -eq 1 ]] && echo '✅' || echo '❌') |"
 echo "| GSC-ready | $([[ $gsc -eq 1 ]] && echo '✅' || echo '❌') |"
 echo "| Funnel CTAs (7 coins) | $([[ $funnel -eq 1 ]] && echo '✅' || echo '❌') |"
 echo "| Signups / deployers / MRR | /admin (login required) |"

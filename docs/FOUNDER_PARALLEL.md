@@ -14,7 +14,7 @@ Runs `check-parallel-growth.sh`, `check-sales-ready.sh`, and prints manual playb
 
 | Role | Action | Link / script |
 |------|--------|----------------|
-| **CTO** | Fix worker password | https://zengtrade.in/ops/worker · `docs/WORKER_RECOVERY.md` |
+| **CTO** | Fix worker password | `./scripts/guide-worker-recovery.sh` · https://zengtrade.in/ops/worker · `docs/WORKER_RECOVERY.md` |
 | **CTO** | Cloud Agent unblock | Secret `DATABASE_PASSWORD` → `./scripts/run-p0-if-ready.sh` |
 | **CPO** | Partial E2E (signup → deploy) | `./scripts/guide-partial-e2e.sh` · https://zengtrade.in/ops/e2e · `./scripts/guide-free-tier-test.sh` |
 | **SEO** | Monthly GSC review | `./scripts/guide-monthly-gsc-review.sh` · `docs/SEO_PLAYBOOK.md` |

@@ -26,7 +26,7 @@ if [[ $mig -eq 0 || $work -eq 0 ]]; then
           echo "NEXT: Railway DATABASE_URL password invalid — reset in Supabase Connect"
           echo "     → copy Session URI (port 5432, no [brackets]) → Railway paper-worker → Deploy"
           echo "     Or add Cloud Agent secret DATABASE_PASSWORD only"
-          echo "     Guide: https://zengtrade.in/ops/worker"
+          echo "     Guide: https://zengtrade.in/ops/worker · ./scripts/guide-worker-recovery.sh"
           echo ""
           ./scripts/founder-parallel-work.sh 2>/dev/null || true
         fi
@@ -55,9 +55,14 @@ if [[ $mig -eq 0 ]]; then
 fi
 if [[ $work -eq 0 ]]; then
   echo "NEXT: Deploy paper worker → https://zengtrade.in/ops/worker"
+  echo "     CLI: ./scripts/guide-worker-recovery.sh"
   echo ""
   ./scripts/founder-parallel-work.sh 2>/dev/null || true
-  if ./scripts/check-parallel-growth.sh >/dev/null 2>&1; then
+  if ./scripts/check-founder-parallel-ready.sh >/dev/null 2>&1; then
+    echo ""
+    echo "Founder parallel probes green — sole blocker is DATABASE_PASSWORD"
+    echo "Founder playbook: ./scripts/guide-founder-parallel.sh"
+  elif ./scripts/check-parallel-growth.sh >/dev/null 2>&1; then
     echo ""
     echo "Parallel growth gates green (5/5 excl. worker) — sole blocker is DATABASE_PASSWORD"
     echo "Founder playbook: ./scripts/guide-founder-parallel.sh"

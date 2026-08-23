@@ -30,6 +30,7 @@ fi
 echo "== Manual playbooks =="
 echo ""
 echo "CTO  Unblock worker (P0):"
+echo "     ./scripts/guide-worker-recovery.sh"
 echo "     $SITE/ops/worker"
 echo "     docs/WORKER_RECOVERY.md"
 echo "     Cloud Agent secret DATABASE_PASSWORD → ./scripts/run-p0-if-ready.sh"

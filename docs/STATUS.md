@@ -1,6 +1,6 @@
 # zengtrade — live status
 
-**Last autopilot check:** 2026-08-23 (session 131)  
+**Last autopilot check:** 2026-08-23 (session 132)  
 **Production:** https://zengtrade.in
 
 ## Ship gate
@@ -30,7 +30,7 @@ Reset Supabase DB password → update Railway `paper-worker` `DATABASE_URL` → 
 | Role | Guide |
 |------|--------|
 | **All** | `./scripts/guide-founder-parallel.sh` |
-| CTO | `./scripts/validate-database-credentials.sh` · **https://zengtrade.in/ops/worker** |
+| CTO | `./scripts/guide-worker-recovery.sh` · **https://zengtrade.in/ops/worker** |
 | CPO | `./scripts/guide-partial-e2e.sh` · `./scripts/guide-free-tier-test.sh` |
 | CBO / Sales | `./scripts/guide-gsc-founder.sh` · `./scripts/guide-first-pro-checkout.sh` |
 | Marketing | `./scripts/guide-linkedin-bip.sh` · `./scripts/guide-coin-spotlight.sh` |

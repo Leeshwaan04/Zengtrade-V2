@@ -77,7 +77,7 @@ Verify with:
 ./scripts/guide-monthly-gsc-review.sh  # SEO: monthly GSC review checklist
 ./scripts/guide-free-tier-test.sh      # CPO: Q9 manual free-tier deploy cap test
 ./scripts/guide-mrr-standup.sh        # Sales: weekly /admin MRR checklist
-./scripts/check-founder-parallel-ready.sh  # all parallel + QA + guides (worker blocked)
+./scripts/guide-worker-recovery.sh     # CTO: P0 worker recovery CLI
 ./scripts/check-founder-guides.sh     # verify all guide-*.sh scripts
 ./scripts/check-free-tier-limit.sh     # CPO: free-tier deploy cap probes
 ./scripts/check-parallel-growth.sh   # CBO/CPO: partial + billing + GSC while worker down

@@ -5,13 +5,14 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 GROWTH="$ROOT/docs/GROWTH_DASHBOARD.md"
 
-work=0 parallel=0 sales=0 mig=0
+work=0 parallel=0 sales=0 qa=0 mig=0
 ./scripts/check-migrations.sh >/dev/null 2>&1 && mig=1
 ./scripts/check-worker.sh >/dev/null 2>&1 && work=1
 for _ in 1 2 3; do
   [[ $parallel -eq 1 && $sales -eq 1 ]] && break
-  [[ $parallel -eq 0 ]] && ./scripts/check-parallel-growth.sh >/dev/null 2>&1 && parallel=1
+  [[ $parallel -eq 0 ]] && ./scripts/check-founder-parallel-ready.sh >/dev/null 2>&1 && parallel=1
   [[ $sales -eq 0 ]] && ./scripts/check-sales-ready.sh >/dev/null 2>&1 && sales=1
+  [[ $qa -eq 0 ]] && ./scripts/check-qa-parallel.sh >/dev/null 2>&1 && qa=1
   sleep 2
 done
 
@@ -27,10 +28,11 @@ else
   worker_today="Offline (P0 — wrong Railway DB password)"
 fi
 
-parallel_today=$([[ $parallel -eq 1 ]] && echo "5/5 gates ✅" || echo "❌ run ./scripts/check-parallel-growth.sh")
+parallel_today=$([[ $parallel -eq 1 ]] && echo "✅ founder-parallel-ready" || echo "❌ run ./scripts/check-founder-parallel-ready.sh")
 sales_today=$([[ $sales -eq 1 ]] && echo "✅ check-sales-ready.sh" || echo "❌")
+qa_today=$([[ $qa -eq 1 ]] && echo "✅ check-qa-parallel.sh" || echo "❌")
 
-export WORKER_TODAY="$worker_today" PARALLEL_TODAY="$parallel_today" SALES_TODAY="$sales_today" MIG_TODAY=$([[ $mig -eq 1 ]] && echo "✅" || echo "❌")
+export WORKER_TODAY="$worker_today" PARALLEL_TODAY="$parallel_today" SALES_TODAY="$sales_today" QA_TODAY="$qa_today" MIG_TODAY=$([[ $mig -eq 1 ]] && echo "✅" || echo "❌")
 python3 <<'PY'
 import os
 import re
@@ -49,6 +51,16 @@ def sub_row(label: str, today: str) -> None:
 
 sub_row("Worker status", os.environ["WORKER_TODAY"])
 sub_row("Parallel growth (excl. worker)", os.environ["PARALLEL_TODAY"])
+
+if "| QA parallel |" in text:
+    sub_row("QA parallel", os.environ["QA_TODAY"])
+else:
+    needle = "| Sales-ready |"
+    insert = f"| QA parallel | — | {os.environ['QA_TODAY']} | — |\n"
+    idx = text.find(needle)
+    if idx >= 0:
+        line_end = text.find("\n", idx)
+        text = text[: line_end + 1] + insert + text[line_end + 1 :]
 
 if "| Sales-ready |" in text:
     sub_row("Sales-ready", os.environ["SALES_TODAY"])
