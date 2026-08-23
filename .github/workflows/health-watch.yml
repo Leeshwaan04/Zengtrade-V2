@@ -29,8 +29,12 @@ jobs:
         run: ./scripts/check-plan-intent.sh || echo "::warning::Plan-intent check failed — merge latest main"
       - name: SEO content pages (SEO)
         run: ./scripts/check-seo-content.sh || echo "::warning::SEO content check failed — merge latest main"
-      - name: Sitemap coin pages (CBO)
-        run: ./scripts/check-sitemap.sh || echo "::warning::Sitemap missing coin URLs — merge latest main / rebuild landing"
+      - name: GSC readiness (CBO)
+        run: ./scripts/check-gsc-ready.sh || echo "::warning::GSC readiness check failed"
+      - name: Billing ready (Sales)
+        run: ./scripts/check-billing-ready.sh || echo "::warning::Billing-ready check failed"
+      - name: Activation UI (CPO)
+        run: ./scripts/check-activation-ready.sh || echo "::warning::Activation UI check failed"
       - name: Sync ops gate snapshot
         run: python3 scripts/sync-ops-gates.py || true
 

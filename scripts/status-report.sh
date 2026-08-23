@@ -48,4 +48,8 @@ else
   echo "Next: https://zengtrade.in/ops/p0"
 fi
 ./scripts/founder-next-action.sh 2>/dev/null || true
+if [[ $work -eq 0 ]]; then
+  echo ""
+  ./scripts/founder-parallel-work.sh 2>/dev/null || true
+fi
 exit 1

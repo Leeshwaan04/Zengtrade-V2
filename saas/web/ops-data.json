@@ -1,12 +1,12 @@
 {
-  "updated": "2026-08-23T20:08:35Z",
+  "updated": "2026-08-23T20:11:33Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
     {
       "id": "p0-unblock",
-      "title": "Add DATABASE_URL",
-      "detail": "Pooler host: aws-0-ap-northeast-1.pooler.supabase.com \u2014 copy full session URI from Supabase Database settings (database password, not API keys). Or reset password and update Cloud Agent DATABASE_URL.",
+      "title": "Fix DATABASE_URL password",
+      "detail": "Railway has DATABASE_URL but Postgres auth fails. Reset in Supabase Connect \u2192 copy Session URI (port 5432). Or add Cloud Agent secret DATABASE_PASSWORD only \u2014 agent auto-fixes Railway.",
       "url": "https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings",
       "alt_url": "https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml",
       "urgent": true
@@ -30,7 +30,7 @@
     {
       "id": "gsc",
       "title": "Google Search Console \u2014 submit sitemap",
-      "detail": "After worker is live; organic growth Week 1",
+      "detail": "GSC-ready now \u2014 verify domain + submit sitemap.xml (can run while worker is blocked)",
       "url": "https://zengtrade.in/ops/gsc",
       "urgent": false
     }
@@ -72,7 +72,8 @@
       "check-growth-gates.sh run() fix \u2014 production probe no longer false FAIL (session 93)",
       "apply-p0 uses resolve-database-url when Railway password wrong (session 95)",
       "check-p0-readiness shows DATABASE_PASSWORD secret status (session 95)",
-      "status-report + sync-ops-gates: billing/GSC/activation UI gates (session 96)"
+      "status-report + sync-ops-gates: billing/GSC/activation UI gates (session 96)",
+      "founder-parallel-work.sh + /ops growth gates banner (session 97)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -164,7 +165,8 @@
       "check-gsc-ready.sh \u2014 sitemap + SEO + funnel + signup landing (session 94)",
       "/ops/gsc live GSC-ready probe (session 94)",
       "check-billing-ready.sh \u2014 Pro checkout + founding $19 + checkout_click (session 95)",
-      "/ops/billing live billing-ready probe (session 95)"
+      "/ops/billing live billing-ready probe (session 95)",
+      "founder-parallel-work.sh \u2014 parallel CBO tasks while worker down (session 97)"
     ],
     "next": "GSC sitemap + first proof post after forward trades exist; Pro checkout E2E at /ops/billing",
     "links": [
@@ -314,7 +316,7 @@
     "billing": true,
     "billing_ready": true,
     "gsc_ready": true,
-    "activation_ready": true,
+    "activation_ready": false,
     "migration_0011": true,
     "worker": false,
     "worker_heartbeat_utc": "2026-08-11T09:57:38",

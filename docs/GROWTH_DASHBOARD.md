@@ -1037,6 +1037,20 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/status-report.sh` @ 20:08Z)
 - worker ❌ · activation UI ✅ · billing-ready ✅ · GSC-ready ✅
 
+### Day 1 (session 97) — parallel work while worker blocked
+
+### CBO / CPO
+- **Shipped:** `founder-parallel-work.sh` — lists billing, GSC, activation UI tasks independent of worker.
+- **Shipped:** `/ops` growth gate tiles (activation, billing-ready, GSC) + “Meanwhile” banner when worker down.
+- **Shipped:** `founder-next-action.sh` + `status-report.sh` print parallel work after P0 blocker.
+
+### CTO
+- **Shipped:** `health-watch.yml` runs GSC, billing-ready, activation UI probes every 6h.
+- **Blocked:** Railway Postgres password still invalid.
+
+### Status (`./scripts/status-report.sh` @ 20:12Z)
+- worker ❌ · parallel CBO/CPO work available now
+
 ---
 
 ### CTO

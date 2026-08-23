@@ -27,6 +27,8 @@ if [[ $mig -eq 0 || $work -eq 0 ]]; then
           echo "     → copy Session URI (port 5432, no [brackets]) → Railway paper-worker → Deploy"
           echo "     Or add Cloud Agent secret DATABASE_PASSWORD only"
           echo "     Guide: https://zengtrade.in/ops/worker"
+          echo ""
+          ./scripts/founder-parallel-work.sh 2>/dev/null || true
         fi
       else
         echo "NEXT: DATABASE_URL found on Railway — run ./scripts/run-p0-if-ready.sh"
@@ -53,6 +55,8 @@ if [[ $mig -eq 0 ]]; then
 fi
 if [[ $work -eq 0 ]]; then
   echo "NEXT: Deploy paper worker → https://zengtrade.in/ops/worker"
+  echo ""
+  ./scripts/founder-parallel-work.sh 2>/dev/null || true
   exit 1
 fi
 

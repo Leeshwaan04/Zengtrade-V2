@@ -26,7 +26,7 @@
   .alert h2{font:800 15px/1.3 var(--sans);margin:0 0 8px}
   .alert ul{margin:0;padding-left:18px;font-size:14px;line-height:1.55}
   .alert a{color:inherit;font-weight:700}
-  .gates{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+  .gates{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:18px}
   .gate{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow)}
   .gate .k{font:700 10px/1 var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--slate)}
   .gate .v{font:800 22px/1.2 var(--sans);margin-top:6px}
@@ -82,6 +82,11 @@
     <a class="secondary" href="/ops/e2e">E2E test (CPO)</a>
     <a class="secondary" href="/ops/security">QA &amp; VAPT</a>
     <a class="secondary" href="/admin">Admin metrics</a>
+  </div>
+
+  <div id="parallelBox" class="alert ok" hidden style="background:#eef2ff;border-color:#c7d2fe;color:#1e3a5f">
+    <h2>Meanwhile — worker blocked</h2>
+    <ul id="parallelList"></ul>
   </div>
 
   <div class="gates" id="gates"></div>
@@ -151,6 +156,30 @@ async function probeBilling() {
       headers: { Origin: SITE, "Access-Control-Request-Method": "POST" },
     });
     return r.ok;
+  } catch { return false; }
+}
+
+async function probeBillingReady() {
+  if (!await probeBilling()) return false;
+  try {
+    const t = await fetch(SITE + "/pricing/", { cache: "no-store" }).then(r => r.text());
+    return /\$19|19\/mo/i.test(t);
+  } catch { return false; }
+}
+
+async function probeActivationUi() {
+  if (!await probeMigration0011()) return false;
+  try {
+    const studio = await fetch(SITE + "/dashboard/studio.js", { cache: "no-store" }).then(r => r.text());
+    return studio.includes("deployCustom");
+  } catch { return false; }
+}
+
+async function probeGscReady() {
+  try {
+    const sm = await fetch(SITE + "/sitemap.xml", { cache: "no-store" }).then(r => r.text());
+    const rb = await fetch(SITE + "/robots.txt", { cache: "no-store" }).then(r => r.text());
+    return sm.includes("<urlset") && rb.includes("Sitemap:");
   } catch { return false; }
 }
 
@@ -236,8 +265,9 @@ async function refresh() {
   const shipBanner = document.getElementById("shipBanner");
   if (shipBanner) shipBanner.hidden = p0Live;
 
-  const [appOk, authOk, migOk, billOk, worker] = await Promise.all([
+  const [appOk, authOk, migOk, billOk, worker, actOk, billReady, gscOk] = await Promise.all([
     probeSite("/app"), probeAuthJs(), probeMigration0011(), probeBilling(), probeWorker(),
+    probeActivationUi(), probeBillingReady(), probeGscReady(),
   ]);
   const live = { prod: appOk && authOk, migration: migOk, billing: billOk, worker: worker.ok };
 
@@ -245,6 +275,11 @@ async function refresh() {
   try {
     data = await fetch("/ops/data.json?" + Date.now(), { cache: "no-store" }).then(r => r.json());
   } catch { /* static fallback */ }
+
+  const g = data.gates || {};
+  const activationOk = g.activation_ready ?? actOk;
+  const billingReadyOk = g.billing_ready ?? billReady;
+  const gscReadyOk = g.gsc_ready ?? gscOk;
 
   let workerDetail = worker.ts ? `${worker.ageMin}m ago · ${worker.deps} deps` : "no heartbeat";
   if (!worker.ok && migOk && data.gates?.railway_paper_worker === "FAILED" && data.gates?.database_url_auth_ok === false) {
@@ -254,10 +289,26 @@ async function refresh() {
   document.getElementById("gates").innerHTML = [
     gate("Production /app", appOk, "billing + evidence"),
     gate("Google OAuth fix", authOk, "establishSession"),
-    gate("Billing rail", billOk, "NOWPayments"),
     gate("Migration 0011", migOk, "funnel v2"),
     gate("Paper worker", worker.ok, workerDetail),
+    gate("Activation UI", activationOk, "signup → deploy"),
+    gate("Billing-ready", billingReadyOk, "Pro checkout"),
+    gate("GSC-ready", gscReadyOk, "organic / sitemap"),
+    gate("Billing rail", billOk, "NOWPayments"),
   ].join("");
+
+  const parallel = document.getElementById("parallelBox");
+  const parallelList = document.getElementById("parallelList");
+  if (!worker.ok && migOk && parallel && parallelList) {
+    const items = [];
+    if (activationOk) items.push(`<li><b>CPO</b> — <a href="/login?mode=signup">signup</a> → <a href="/dashboard">deploy</a> (trades need worker)</li>`);
+    if (billingReadyOk) items.push(`<li><b>CBO</b> — <a href="/ops/billing">test Pro checkout</a></li>`);
+    if (gscReadyOk) items.push(`<li><b>CBO</b> — <a href="/ops/gsc">GSC sitemap submit</a></li>`);
+    if (items.length) {
+      parallel.hidden = false;
+      parallelList.innerHTML = items.join("");
+    } else parallel.hidden = true;
+  } else if (parallel) parallel.hidden = true;
 
   const allGreen = live.prod && live.billing && live.migration && live.worker;
   const pill = document.getElementById("overallPill");
