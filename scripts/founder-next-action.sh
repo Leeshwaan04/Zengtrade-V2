@@ -17,7 +17,20 @@ if [[ $mig -eq 0 || $work -eq 0 ]]; then
     railway_resolve_database_url >/dev/null 2>&1 && rail_db=1
 
     if [[ $rail_db -eq 1 ]]; then
-      echo "NEXT: DATABASE_URL found on Railway — run ./scripts/run-p0-if-ready.sh"
+      resolved=$(railway_resolve_database_url 2>/dev/null || true)
+      if [[ -n "${resolved:-}" ]]; then
+        resolved=$(./scripts/sanitize-database-url.sh "$resolved" 2>/dev/null || echo "$resolved")
+        if DATABASE_URL="$resolved" ./scripts/test-database-url.sh >/dev/null 2>&1; then
+          echo "NEXT: DATABASE_URL found on Railway — run ./scripts/run-p0-if-ready.sh"
+        else
+          echo "NEXT: Railway DATABASE_URL password invalid — reset in Supabase Connect"
+          echo "     → copy Session URI (port 5432, no [brackets]) → Railway paper-worker → Deploy"
+          echo "     Or add Cloud Agent secret DATABASE_PASSWORD only"
+          echo "     Guide: https://zengtrade.in/ops/worker"
+        fi
+      else
+        echo "NEXT: DATABASE_URL found on Railway — run ./scripts/run-p0-if-ready.sh"
+      fi
       exit 1
     fi
 

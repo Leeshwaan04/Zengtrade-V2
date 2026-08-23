@@ -35,9 +35,13 @@
   <p class="sub">~15 minutes · Unblocks signup → deploy → trades and CBO growth. Site + billing are already live.</p>
   <p id="overall" class="pill bad">Checking gates…</p>
   <div id="workerOnly" class="callout" hidden>
-    <b>Migration 0011 is live.</b> Sole blocker: add <code>DATABASE_URL</code> to Railway <code>paper-worker</code> (or Cloud Agent / GitHub Secrets) and redeploy.
+    <b>Migration 0011 is live.</b> Sole blocker: paper worker — add or fix <code>DATABASE_URL</code> on Railway <code>paper-worker</code> and redeploy.
     Pooler: <code>aws-0-ap-northeast-1.pooler.supabase.com</code> · session mode · port <code>5432</code>.
     <a href="https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings" target="_blank" rel="noopener">Copy URI from Supabase</a>
+  </div>
+  <div id="badPw" class="callout" style="background:#fff0f0;border-color:#f5c2c2" hidden>
+    <b>DATABASE_URL is on Railway but password is wrong</b> (deploy FAILED). Reset password in Supabase Connect → copy Session URI (no <code>[brackets]</code>) → Railway → <b>Deploy</b>.
+    Or add Cloud Agent secret <code>DATABASE_PASSWORD</code>. <a href="/ops/worker">Full guide</a>
   </div>
 
   <div class="step" id="step1">
@@ -100,10 +104,16 @@ async function refresh(){
   document.getElementById("step1").classList.toggle("done",mig);
   document.getElementById("step2").classList.toggle("done",w.ok);
   const workerOnly=document.getElementById("workerOnly");
-  if(workerOnly) workerOnly.hidden=!(mig&&!w.ok);
+  const badPw=document.getElementById("badPw");
+  const ageMin=parseInt(String(w.detail),10);
+  const likelyBadPw=mig&&!w.ok&&(w.detail==="no heartbeat"||(!isNaN(ageMin)&&ageMin>60));
+  if(badPw) badPw.hidden=!likelyBadPw;
+  if(workerOnly) workerOnly.hidden=likelyBadPw||!(mig&&!w.ok);
   const all=mig&&w.ok;
   const pill=document.getElementById("overall");
-  if(mig&&!w.ok){
+  if(likelyBadPw){
+    pill.textContent="Step 2 — fix DATABASE_URL password on Railway";
+  } else if(mig&&!w.ok){
     pill.textContent="Step 2 only — add DATABASE_URL + deploy worker";
   } else {
     pill.textContent=all?"✓ All P0 green — run E2E":"Action required — complete steps below";

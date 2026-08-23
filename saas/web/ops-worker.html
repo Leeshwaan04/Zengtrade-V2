@@ -27,6 +27,17 @@
   <h1>Deploy paper worker</h1>
   <p class="sub">Founder approval · ~10 min · Without this, <a href="/dashboard">deploys save</a> but <b>no trades run</b> on live Binance prices. See also <a href="/ops/p0">P0 checklist</a>.</p>
 
+  <div class="card" style="background:#fff0f0;border:2px solid #f5c2c2;margin-bottom:14px" id="badPw" hidden>
+    <h2>DATABASE_URL is set — password is wrong</h2>
+    <p style="font-size:14px;line-height:1.55;margin:0 0 10px">Railway has <code>DATABASE_URL</code> but Postgres auth fails (latest deploy <b>FAILED</b>). The variable name is correct — fix the <b>password</b>:</p>
+    <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.6">
+      <li><a href="https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings" target="_blank" rel="noopener">Supabase → Database</a> → <b>Reset database password</b></li>
+      <li><b>Connect</b> → URI → <b>Session</b> → port <code>5432</code> → copy full URI (use copy button — <b>no [brackets]</b> around password)</li>
+      <li><a href="https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b" target="_blank" rel="noopener">Railway paper-worker</a> → Variables → replace <code>DATABASE_URL</code> value → <b>Deploy</b></li>
+    </ol>
+    <p style="font-size:13px;margin:12px 0 0;padding:10px;background:#eef2ff;border-radius:8px;border:1px solid #c7d2fe"><b>Cloud Agent shortcut:</b> add secret <code>DATABASE_PASSWORD</code> only (after reset) — agent builds the URI and redeploys via <code>run-p0-if-ready.sh</code>.</p>
+  </div>
+
   <div class="card" style="background:var(--green-soft);border:2px solid var(--green-line)">
     <h2>Railway Variables — what to add (you are here)</h2>
     <p style="font-size:14px;line-height:1.55;margin:0 0 8px"><b>One variable required</b> on service <code>paper-worker</code>:</p>
@@ -54,7 +65,12 @@
   </div>
 
   <div class="card" style="background:#eef2ff;border-color:#c7d2fe">
-    <h2>Option 1 — Cloud Agent</h2>
+    <h2>Option 1 — Cloud Agent (password only)</h2>
+    <p style="font-size:14px;line-height:1.55;margin:0">Add Cloud Agent secret <code>DATABASE_PASSWORD</code> (database password only, not API keys). Agent runs <code>./scripts/run-p0-if-ready.sh</code> → builds session pooler URI → sets Railway <b>paper-worker</b> vars and redeploys. Also works: full <code>DATABASE_URL</code> + <code>RAILWAY_API_TOKEN</code>.</p>
+  </div>
+
+  <div class="card" style="background:#eef2ff;border-color:#c7d2fe">
+    <h2>Option 2 — Cloud Agent (full URI)</h2>
     <p style="font-size:14px;line-height:1.55;margin:0">Agent runs <code>./scripts/apply-p0-autopilot.sh</code> → sets vars on Railway <b>paper-worker</b> service (<code>saas/worker</code> Dockerfile) and redeploys. Requires <code>DATABASE_URL</code> + <code>RAILWAY_API_TOKEN</code> in Cloud Agent secrets.</p>
   </div>
 
@@ -132,4 +148,13 @@ document.getElementById("copyTpl").onclick=()=>{
 };
 checkHb();
 setInterval(checkHb,30000);
+// Stale heartbeat + migration green → likely wrong DATABASE_URL password on Railway
+(async function maybeBadPassword(){
+  try{
+    const mig=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({name:"deploy_success",path:"/ops-worker-probe"})});
+    const rows=await fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{headers:{apikey:ANON},cache:"no-store"}).then(r=>r.json());
+    const age=rows[0]?Math.round((Date.now()-new Date(rows[0].updated_at))/60000):99999;
+    if(mig.status===201&&age>60) document.getElementById("badPw").hidden=false;
+  }catch(e){}
+})();
 </script></body></html>
