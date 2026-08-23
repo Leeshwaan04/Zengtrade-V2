@@ -7,7 +7,8 @@ RAILWAY_API="${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}"
 
 railway_gql() {
   local query="$1"
-  local variables="${2:-\{\}}"
+  local variables="${2-}"
+  [[ -n "$variables" ]] || variables='{}'
   local payload
   payload=$(python3 -c 'import json,sys; print(json.dumps({"query": sys.argv[1], "variables": json.loads(sys.argv[2])}))' "$query" "$variables")
   curl -sfL https://backboard.railway.com/graphql/v2 \
