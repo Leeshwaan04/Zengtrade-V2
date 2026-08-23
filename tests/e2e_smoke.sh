@@ -49,6 +49,7 @@ test -f scripts/check-e2e-gates.sh
 test -f scripts/verify-partial-activation.sh
 test -f scripts/check-parallel-growth.sh
 test -f scripts/log-growth-session.sh
+test -f scripts/append-growth-log.sh
 test -f scripts/check-growth-gates.sh
 test -f .github/workflows/apply-p0.yml
 test -f docs/QA_VAPT_CHECKLIST.md

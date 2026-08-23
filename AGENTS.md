@@ -59,6 +59,7 @@ Verify with:
 ./scripts/status-report.sh
 ./scripts/check-growth-standup.sh   # daily log helper (status + parallel work)
 ./scripts/log-growth-session.sh N   # print status block for GROWTH_DASHBOARD.md
+./scripts/append-growth-log.sh N "title" --cto "..."  # append session to GROWTH_DASHBOARD.md
 ./scripts/snapshot-growth-metrics.sh  # markdown table for dashboard metrics
 ./scripts/check-growth-gates.sh      # all production growth + P0 probes
 ./scripts/check-billing-ready.sh     # CBO/Sales: Pro checkout preflight

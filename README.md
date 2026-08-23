@@ -45,14 +45,18 @@ NSE/Kite/Zerodha integration has been archived to `archive/indian/`. This reposi
 
 ## Production launch (zengtrade.in)
 
+**Founder dashboard:** https://zengtrade.in/ops · **P0 checklist:** https://zengtrade.in/ops/p0
+
 | Doc | Purpose |
 |-----|---------|
-| [docs/STATUS.md](docs/STATUS.md) | Live ship gate + PR status |
-| [docs/MERGE_AND_SHIP.md](docs/MERGE_AND_SHIP.md) | Merge PR #3 → GitHub Pages |
+| [docs/STATUS.md](docs/STATUS.md) | Live ship gates + P0 blocker |
 | [docs/FOUNDER_DEPLOY.md](docs/FOUNDER_DEPLOY.md) | Supabase, worker, billing |
 | [docs/GROWTH_DASHBOARD.md](docs/GROWTH_DASHBOARD.md) | Daily autopilot progress |
+| [docs/LAUNCH_RUNBOOK.md](docs/LAUNCH_RUNBOOK.md) | P0/P1/P2 checklist |
 
 ```bash
+./scripts/run-p0-if-ready.sh              # agent: auto-apply when DATABASE_PASSWORD set
+./scripts/check-parallel-growth.sh        # while worker blocked
 ./tests/e2e_smoke.sh
-SITE=https://zengtrade.in ./scripts/check-production.sh   # after merge
+SITE=https://zengtrade.in ./scripts/check-production.sh
 ```

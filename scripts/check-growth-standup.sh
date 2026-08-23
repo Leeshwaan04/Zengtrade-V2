@@ -11,6 +11,8 @@ echo ""
 ./scripts/snapshot-growth-metrics.sh 2>/dev/null || true
 if ! ./scripts/check-worker.sh >/dev/null 2>&1; then
   ./scripts/check-parallel-growth.sh 2>/dev/null | tail -8 || true
+  echo ""
+  echo "Log this session: ./scripts/append-growth-log.sh N \"title\" --cto \"...\" --cpo \"...\" --cbo \"...\""
 fi
 if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
   ./scripts/sync-ops-gates.py 2>/dev/null || true
