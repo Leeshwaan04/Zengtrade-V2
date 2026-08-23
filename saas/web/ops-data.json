@@ -128,6 +128,29 @@
       }
     ]
   },
+  "qavapt": {
+    "headline": "QA & VAPT",
+    "shipped": [
+      "Charter: .cursor/autopilot/qavapt.md + docs/QA_VAPT_CHECKLIST.md",
+      "scripts/security-smoke.sh — client secrets, IPN gate, admin RPC auth",
+      "Founder playbook at /ops/security"
+    ],
+    "next": "Run security-smoke + E2E after P0; manual RLS isolation (2 accounts)",
+    "links": [
+      {
+        "label": "QA / VAPT playbook",
+        "url": "https://zengtrade.in/ops/security"
+      },
+      {
+        "label": "E2E activation",
+        "url": "https://zengtrade.in/ops/e2e"
+      },
+      {
+        "label": "Checklist (repo)",
+        "url": "https://github.com/Leeshwaan04/Zengtrade-V2/blob/main/docs/QA_VAPT_CHECKLIST.md"
+      }
+    ]
+  },
   "gates": {
     "production": true,
     "billing": true,

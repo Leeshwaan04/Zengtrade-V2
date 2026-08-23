@@ -1,12 +1,12 @@
 # zengtrade Autopilot Agents
 
-Three role-based Cloud Agent charters run on a schedule (or on demand). Each agent reads its charter, executes the highest-priority unchecked task, updates `docs/GROWTH_DASHBOARD.md`, commits to `cursor/autopilot-ff74` (or merges to `main` when ready), and posts a short summary.
+Four role-based Cloud Agent charters run on a schedule (or on demand). Each agent reads its charter, executes the highest-priority unchecked task, updates `docs/GROWTH_DASHBOARD.md`, commits to `cursor/<role>-*-ff74` (or merges to `main` when ready), and posts a short summary.
 
 ## How to enable true autopilot (Cursor)
 
-1. **Cursor → Automations** (or Cloud Agents): create **three** scheduled agents (or one daily orchestrator).
+1. **Cursor → Automations** (or Cloud Agents): create **four** scheduled agents (or one daily orchestrator).
 2. **Repository:** `Leeshwaan04/Zengtrade-V2`
-3. **Base branch:** `main` (or `cursor/autopilot-ff74` while iterating)
+3. **Base branch:** `main`
 4. **Schedule:** daily 09:00 UTC (adjust to your timezone)
 5. **Paste the prompt** from each charter file below.
 
@@ -15,13 +15,14 @@ Three role-based Cloud Agent charters run on a schedule (or on demand). Each age
 | CTO | `.cursor/autopilot/cto.md` | `cursor/cto-*-ff74` |
 | CPO | `.cursor/autopilot/cpo.md` | `cursor/cpo-*-ff74` |
 | CBO | `.cursor/autopilot/cbo.md` | `cursor/cbo-*-ff74` |
+| QA&VAPT | `.cursor/autopilot/qavapt.md` | `cursor/qavapt-*-ff74` |
 
 ### Single orchestrator (simpler)
 
 One daily agent with prompt:
 
 ```
-Read .cursor/autopilot/README.md and run CTO, then CPO, then CBO charters in order.
+Read .cursor/autopilot/README.md and run CTO, CPO, CBO, then QA&VAPT charters in order.
 Update docs/GROWTH_DASHBOARD.md with today's date section.
 Commit, push, update open PR if any. Summarize for the founder in 5 bullets.
 ```
@@ -29,9 +30,8 @@ Commit, push, update open PR if any. Summarize for the founder in 5 bullets.
 ## Founder dashboard (bookmark this)
 
 **https://zengtrade.in/ops/p0** — P0 checklist (~15 min: migration 0011 + worker).  
-**https://zengtrade.in/ops** — full CTO / CPO / CBO dashboard.
-
-Merge **[PR #5](https://github.com/Leeshwaan04/Zengtrade-V2/pull/5)** when CI green to ship `/ops/p0` and funnel fixes to production.
+**https://zengtrade.in/ops** — full CTO / CPO / CBO / QA&VAPT dashboard.  
+**https://zengtrade.in/ops/security** — QA & VAPT playbook.
 
 Agents update `saas/web/ops-data.json` on each run (not markdown for the founder).
 

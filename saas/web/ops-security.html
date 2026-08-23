@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>QA &amp; VAPT · zengtrade ops</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css.css">
+<style>
+  body{background:var(--bg);color:var(--navy);font-family:var(--sans);margin:0}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 18px 48px}
+  h1{font:800 22px/1.2;margin:0 0 8px}
+  p,li{font-size:14px;line-height:1.6;color:var(--slate)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin:14px 0}
+  a{color:var(--blue);font-weight:700}
+  .back{display:inline-block;margin-bottom:14px;font-size:13px;font-weight:600;color:var(--blue);text-decoration:none}
+  code{font:600 12px var(--mono);background:var(--surface-2);padding:2px 6px;border-radius:6px}
+  #probe{font:600 13px var(--mono);margin-top:12px;padding:10px;border-radius:10px;background:var(--surface-2)}
+  #probe.ok{color:var(--green-d)}#probe.bad{color:var(--red-d)}
+</style></head><body>
+<div class="wrap">
+  <a class="back" href="/ops">← Founder Ops</a>
+  <h1>QA &amp; VAPT (autopilot)</h1>
+  <p>Quality assurance + vulnerability checks before scale. Agent charter: <code>.cursor/autopilot/qavapt.md</code> · checklist: <code>docs/QA_VAPT_CHECKLIST.md</code> (repo).</p>
+
+  <div class="card">
+    <h2 style="font-size:16px;margin:0 0 8px">Automated (CI / local)</h2>
+    <ol>
+      <li><code>./scripts/security-smoke.sh</code> — client secret hygiene, IPN gate, admin RPC auth</li>
+      <li><code>./tests/e2e_smoke.sh</code> — build + auth modules + worker compile</li>
+      <li><code>./scripts/verify-activation-path.sh</code> — after P0 green</li>
+    </ol>
+    <p id="probe">Probing production IPN gate…</p>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:16px;margin:0 0 8px">Manual (before paid ads)</h2>
+    <ol>
+      <li><a href="/ops/e2e">E2E activation</a> — signup → deploy → trades</li>
+      <li><b>RLS isolation</b> — second account must not see first user's trades (<a href="/app">/app</a>)</li>
+      <li><a href="/ops/billing">Pro checkout</a> — tier flip only via signed IPN</li>
+      <li>Review <code>docs/QA_VAPT_CHECKLIST.md</code> — mark Q1–V3</li>
+    </ol>
+  </div>
+</div>
+<script>
+fetch("https://ponvarxeytfcntckczbn.supabase.co/functions/v1/nowpayments-ipn",{
+  method:"POST",headers:{"Content-Type":"application/json"},body:'{"probe":true}'
+}).then(r=>{
+  const el=document.getElementById("probe");
+  if(r.status===401||r.status===403){el.textContent="✓ IPN webhook rejects unsigned requests (HTTP "+r.status+")";el.className="ok";}
+  else{el.textContent="✗ IPN gate unexpected HTTP "+r.status+" — review edge function";el.className="bad";}
+}).catch(()=>{document.getElementById("probe").textContent="✗ Could not reach IPN function";document.getElementById("probe").className="bad";});
+</script></body></html>
