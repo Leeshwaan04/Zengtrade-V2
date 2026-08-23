@@ -28,8 +28,9 @@
       <li><code>./tests/e2e_smoke.sh</code> — build + auth modules + worker compile</li>
       <li><code>./scripts/verify-activation-path.sh</code> — after P0 green</li>
       <li><code>./scripts/check-plan-intent.sh</code> · <code>./scripts/check-seo-content.sh</code> — production funnel/SEO</li>
-      <li><code>./scripts/check-activation-ready.sh</code> · <code>./scripts/check-billing-ready.sh</code> · <code>./scripts/check-gsc-ready.sh</code></li>
-      <li><code>./scripts/security-smoke.sh</code> — run locally or in CI</li>
+      <li><code>./scripts/verify-partial-activation.sh</code> — signup → deploy UI (no worker)</li>
+      <li><code>./scripts/check-parallel-growth.sh</code> — parallel gates while worker blocked</li>
+      <li><code>./scripts/security-smoke.sh</code> — run locally or in CI (health-watch)</li>
     </ol>
     <p id="probe">Probing production IPN gate…</p>
   </div>
@@ -37,7 +38,7 @@
   <div class="card">
     <h2 style="font-size:16px;margin:0 0 8px">Manual (before paid ads)</h2>
     <ol>
-      <li><a href="/ops/e2e">E2E activation</a> — signup → deploy → trades</li>
+      <li><a href="/ops/e2e">E2E activation</a> — signup → deploy → trades (partial steps 1–2 OK while worker down)</li>
       <li><b>RLS isolation</b> — second account must not see first user's trades (<a href="/app">/app</a>)</li>
       <li><a href="/ops/billing">Pro checkout</a> — tier flip only via signed IPN</li>
       <li>Review <code>docs/QA_VAPT_CHECKLIST.md</code> — mark Q1–V3</li>

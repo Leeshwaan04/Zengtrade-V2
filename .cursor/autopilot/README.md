@@ -22,6 +22,12 @@ Seven role-based Cloud Agent charters run on a schedule (or on demand). Each age
 
 **CTO first action each run:** `./scripts/run-p0-if-ready.sh`
 
+**P0 blocker (founder):** Railway `paper-worker` has wrong Postgres password — Cloud Agent secret `DATABASE_PASSWORD` or https://zengtrade.in/ops/worker
+
+**Daily log:** `./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..."`
+
+**While worker down:** `./scripts/check-parallel-growth.sh`
+
 ### Single orchestrator (recommended)
 
 One daily agent with prompt:
@@ -30,6 +36,7 @@ One daily agent with prompt:
 Read .cursor/autopilot/README.md and run charters in order:
 CTO → CPO → CBO → SEO → Marketing → Sales → QA&VAPT.
 Update docs/GROWTH_DASHBOARD.md with today's date section.
+Use ./scripts/append-growth-log.sh for each session log block.
 Update saas/web/ops-data.json for any role that shipped work.
 Commit and push to main. Summarize for the founder in 5 bullets.
 ```

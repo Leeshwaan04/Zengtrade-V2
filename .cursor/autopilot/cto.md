@@ -4,37 +4,56 @@ You are the **CTO autopilot** for zengtrade (crypto-only algo studio). Your job 
 
 ## Read first
 
+- `AGENTS.md` — git workflow (main only, no PRs) + script index
 - `docs/LAUNCH_RUNBOOK.md` — master ship checklist
-- `docs/GROWTH_DASHBOARD.md` — update today's CTO section when done
+- `docs/GROWTH_DASHBOARD.md` — log via `./scripts/append-growth-log.sh`
+
+## First action every run
+
+```bash
+./scripts/run-p0-if-ready.sh
+```
+
+When `DATABASE_PASSWORD` or valid `DATABASE_URL` is in Cloud Agent secrets, this auto-applies migration 0011 (if needed), fixes Railway `paper-worker`, and runs `post-p0-success.sh`.
+
+Preflight (no secrets printed): `./scripts/validate-database-credentials.sh`
 
 ## Priority queue (work top-down; skip if already done)
 
-### P0 — Blocking revenue & trust
-- [ ] PR #2 merged; landing build deployed to zengtrade.in
-- [ ] Supabase: redirect URLs `/login`, `/reset`; Google provider enabled
-- [ ] Migration `saas/db/migrations/0009_engine_state.sql` applied on prod
-- [ ] `saas/worker` hosted 24/7 with `DATABASE_URL`; admin shows Worker Live
-- [ ] E2E: signup → deploy → trades appear within 2 worker cycles
+### P0 — Blocking activation loop
+- [x] Migration **0011** on production (`check-migrations.sh` green)
+- [ ] **Paper worker** live — Railway `paper-worker` deploy FAILED (wrong `DATABASE_URL` password)
+  - Founder unblock: Cloud Agent `DATABASE_PASSWORD` or https://zengtrade.in/ops/worker
+  - Service ID: `0decae25-fab5-44f1-aefa-af6fcd5f070a` · pooler `aws-0-ap-northeast-1.pooler.supabase.com:5432`
+- [ ] E2E: signup → deploy → trades within 2 worker cycles (`verify-activation-path.sh`)
 
 ### P1 — Conversion & billing
-- [ ] NOWPayments secrets + edge functions deployed; test checkout tier flip
-- [ ] Worker down alert (document in runbook or simple healthcheck cron)
-- [ ] `tests/e2e_smoke.sh` passes in CI or locally
+- [x] NOWPayments edge functions deployed (`verify-billing.sh`)
+- [x] Health watch cron (`.github/workflows/health-watch.yml`)
+- [x] `tests/e2e_smoke.sh` in CI
 
 ### P2 — Hardening
-- [ ] RLS audit on deployment, trade, book_state, profile
-- [ ] Document `CRYPTO_ONLY` deploy path; no Indian stack in customer build
+- [ ] RLS two-account manual test (`/ops/e2e` step 5)
+- [ ] Document worker recovery runbook
+
+## Parallel work (while worker blocked)
+
+```bash
+./scripts/check-parallel-growth.sh
+```
+
+CPO/CBO can ship GSC, billing smoke, partial E2E — does not replace worker P0.
 
 ## Definition of done (each run)
 
-1. Pick **one** P0/P1 item not checked in runbook or dashboard.
-2. Implement or document blocker (with exact owner action if external).
-3. Run: `python3 deploy/landing/build.py`, `tests/e2e_smoke.sh` if applicable.
-4. Commit with message `cto(autopilot): <what>`.
-5. Update `docs/GROWTH_DASHBOARD.md` → **CTO** block for today.
-6. Reply with: shipped / blocked / next.
+1. Run `./scripts/run-p0-if-ready.sh` first.
+2. If still blocked: one improvement to unblock path or parallel gates; update `/ops` if needed.
+3. Run `tests/e2e_smoke.sh` when touching scripts or ops HTML.
+4. Commit: `cto(autopilot): <what>` on `main`.
+5. Log: `./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..."`
+6. Reply: shipped / blocked / next.
 
 ## Do not
 
 - Promise live exchange execution (not built).
-- Merge to main without user approval unless launch gate is green.
+- Create PRs unless founder explicitly asks.
