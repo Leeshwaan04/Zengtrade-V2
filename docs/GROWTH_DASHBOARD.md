@@ -1143,6 +1143,22 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 20:30Z)
 - worker ❌ · 6/6 growth gates (excl. worker) ✅ · partial E2E at `/ops/e2e`
 
+### Day 1 (session 104) — verify-partial-activation + E2E UI
+
+### CPO
+- **Shipped:** `verify-partial-activation.sh` — CLI gate for signup → deploy without worker.
+- **Shipped:** `/ops/e2e` — steps 1–2 green when migration live; `deploy_click` in funnel probe.
+
+### CTO
+- **Shipped:** `snapshot-growth-metrics.sh` — correct 5/5 gates score (excl. worker) + probe retries.
+- **Blocked:** Railway Postgres password still invalid.
+
+### CBO
+- **Shipped:** `SALES_PLAYBOOK.md` — parallel billing checks while worker blocked.
+
+### Status (`./scripts/check-growth-standup.sh` @ 20:38Z)
+- worker ❌ · partial activation ✅ · `./scripts/verify-partial-activation.sh`
+
 ---
 
 ### CTO

@@ -13,10 +13,14 @@ SITE="$SITE" ./scripts/check-activation-ready.sh >/dev/null 2>&1 && act=1
 SITE="$SITE" ./scripts/check-billing-ready.sh >/dev/null 2>&1 && bill=1
 SITE="$SITE" ./scripts/check-gsc-ready.sh >/dev/null 2>&1 && gsc=1
 SITE="$SITE" ./scripts/check-funnel-ctas.sh >/dev/null 2>&1 && funnel=1
-if [[ $act -eq 0 ]]; then
+for _ in 1 2; do
+  [[ $act -eq 1 && $bill -eq 1 && $gsc -eq 1 && $funnel -eq 1 ]] && break
   sleep 2
-  SITE="$SITE" ./scripts/check-activation-ready.sh >/dev/null 2>&1 && act=1
-fi
+  [[ $act -eq 0 ]] && SITE="$SITE" ./scripts/check-activation-ready.sh >/dev/null 2>&1 && act=1
+  [[ $bill -eq 0 ]] && SITE="$SITE" ./scripts/check-billing-ready.sh >/dev/null 2>&1 && bill=1
+  [[ $gsc -eq 0 ]] && SITE="$SITE" ./scripts/check-gsc-ready.sh >/dev/null 2>&1 && gsc=1
+  [[ $funnel -eq 0 ]] && SITE="$SITE" ./scripts/check-funnel-ctas.sh >/dev/null 2>&1 && funnel=1
+done
 
 hb=$(curl -sfL 'https://ponvarxeytfcntckczbn.supabase.co/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at' \
   -H 'apikey: sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1' 2>/dev/null \
@@ -36,8 +40,8 @@ echo "| Billing-ready | $([[ $bill -eq 1 ]] && echo '✅' || echo '❌') |"
 echo "| GSC-ready | $([[ $gsc -eq 1 ]] && echo '✅' || echo '❌') |"
 echo "| Funnel CTAs (7 coins) | $([[ $funnel -eq 1 ]] && echo '✅' || echo '❌') |"
 echo "| Signups / deployers / MRR | /admin (login required) |"
-gates=$((work + mig + act + bill + gsc + funnel))
-echo "| Growth gates (excl. worker) | $gates/6 |"
+gates=$((mig + act + bill + gsc + funnel))
+echo "| Growth gates (excl. worker) | $gates/5 |"
 echo ""
 if [[ $work -eq 0 ]]; then
   ./scripts/founder-next-action.sh 2>/dev/null | sed 's/^/  /' || true

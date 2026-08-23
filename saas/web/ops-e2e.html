@@ -23,7 +23,7 @@
 <div class="wrap">
   <a class="back" href="/ops">← Founder Ops</a>
   <h1>E2E activation test (CPO)</h1>
-  <p class="sub">Run after <a href="/ops/p0">P0 checklist</a> shows worker green. Migration 0011 is already live on production.</p>
+  <p class="sub">Run after <a href="/ops/p0">P0 checklist</a> shows worker green. When worker is blocked, steps <b>1–2</b> (signup → deploy) can still be tested — trades need a live worker.</p>
   <p id="pre" class="gatebox">Checking P0 gates…</p>
 
   <div class="step" id="s1"><h2><span class="dot"></span>1 · Signup</h2>
@@ -50,7 +50,7 @@ async function gates(){
   let mig=false, work=false;
   try{
     const h={apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"};
-    for(const name of ["signup_complete","deploy_success","checkout_click"]){
+    for(const name of ["signup_complete","deploy_click","deploy_success","checkout_click"]){
       const r=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name,path:"/e2e-probe"})});
       if(r.status!==201){ mig=false; break; }
       mig=true;
@@ -70,17 +70,23 @@ async function gates(){
   if(ready){
     pre.innerHTML="✓ P0 ready — run the steps below";
     pre.className="gatebox ok";
+    document.getElementById("s1").classList.add("ok");
+    document.getElementById("s2").classList.add("ok");
   }else if(mig&&!work){
     const hbEl=document.getElementById("hb");
     const ageTxt=hbEl?.textContent||"";
     const ageMin=parseInt(ageTxt,10);
     const likelyBadPw=ageTxt==="none"||(!isNaN(ageMin)&&ageMin>60);
     if(likelyBadPw){
-      pre.innerHTML='✗ Migration 0011 live — <b>activation UI ready</b> (signup + deploy). <b>Railway DATABASE_URL password is wrong</b> (deploy FAILED). <a href="/ops/worker">Reset Supabase password</a> → copy Session URI → Railway Deploy. Or Cloud Agent secret <code>DATABASE_PASSWORD</code>.';
+      pre.innerHTML='✗ Migration 0011 live — <b>partial E2E: steps 1–2 OK</b> (signup + deploy). <b>Railway DATABASE_URL password is wrong</b> (deploy FAILED). <a href="/ops/worker">Reset Supabase password</a> → copy Session URI → Railway Deploy. Or Cloud Agent secret <code>DATABASE_PASSWORD</code>.';
     }else{
-      pre.innerHTML='✗ Migration 0011 live — <a href="https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b" target="_blank" rel="noopener">deploy paper-worker</a> or <a href="/ops/worker">worker guide</a>. <code>./scripts/wait-for-p0.sh</code> auto-deploys when credentials work.';
+      pre.innerHTML='✗ Migration 0011 live — <b>partial E2E: steps 1–2 OK</b>. Deploy <a href="https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b" target="_blank" rel="noopener">paper-worker</a> for trades. <a href="/ops/worker">Worker guide</a>.';
     }
     pre.className="gatebox bad";
+    document.getElementById("s1").classList.add("ok");
+    document.getElementById("s2").classList.add("ok");
+    document.getElementById("s1").classList.remove("bad");
+    document.getElementById("s2").classList.remove("bad");
   }else{
     const parts=[];
     if(!mig) parts.push('<a href="/ops/migrate">migration 0011</a>');
@@ -88,11 +94,12 @@ async function gates(){
     pre.innerHTML="✗ Complete "+parts.join(" + ")+" first — or run <a href=\"https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml\" target=\"_blank\" rel=\"noopener\">Apply P0</a> (GitHub Secrets + APPLY)";
     pre.className="gatebox bad";
   }
-  document.getElementById("s1").classList.toggle("bad",!ready);
-  document.getElementById("s2").classList.toggle("bad",!ready);
+  document.getElementById("s1").classList.toggle("bad",!mig);
+  document.getElementById("s2").classList.toggle("bad",!mig);
   document.getElementById("s3").classList.toggle("ok",work);
   document.getElementById("s3").classList.toggle("bad",!work);
   document.getElementById("s4").classList.toggle("bad",!work);
+  if(mig){ document.getElementById("s1").classList.add("ok"); document.getElementById("s2").classList.add("ok"); }
 }
 gates();
 document.getElementById("recheck").onclick=gates;

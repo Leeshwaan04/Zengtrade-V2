@@ -66,6 +66,17 @@ else
 fi
 echo ""
 
+echo ""
+
+PARTIAL_OK=0
+if [[ $WORK_OK -eq 0 ]]; then
+  echo ">> Partial activation (CPO — no worker)"
+  if ./scripts/verify-partial-activation.sh 2>/dev/null; then
+    PARTIAL_OK=1
+  fi
+  echo ""
+fi
+
 echo "=== Summary ==="
 [[ $PROD_OK -eq 1 ]] && echo "✅ Production site probes passed" || echo "❌ Production — check Pages deploy"
 [[ $BILL_OK -eq 1 ]] && echo "✅ Billing functions deployed" || echo "❌ Billing — run scripts/deploy-billing.sh + secrets"
@@ -73,6 +84,7 @@ echo "=== Summary ==="
 [[ $WORK_OK -eq 1 ]] && echo "✅ Worker heartbeat fresh" || echo "❌ Worker — deploy saas/worker (FOUNDER_DEPLOY.md §4)"
 [[ $SEC_OK -eq 1 ]] && echo "✅ Security smoke passed" || echo "❌ Security — run ./scripts/security-smoke.sh"
 [[ ${PRICE_OK:-0} -eq 1 ]] && echo "✅ Pricing funnel truth" || echo "❌ Pricing — run ./scripts/check-pricing-truth.sh"
+[[ $WORK_OK -eq 0 && $PARTIAL_OK -eq 1 ]] && echo "✅ Partial activation (signup → deploy UI)"
 echo ""
 if SITE="$SITE" ./scripts/check-sitemap.sh 2>/dev/null; then
   echo "✅ Sitemap includes all coin pSEO pages"

@@ -14,6 +14,7 @@ any=0
 
 if SITE="$SITE" ./scripts/check-activation-ready.sh >/dev/null 2>&1; then
   echo "  CPO  Activation UI — signup → deploy: $SITE/login?mode=signup → $SITE/dashboard"
+  echo "       Partial verify: ./scripts/verify-partial-activation.sh · $SITE/ops/e2e (steps 1–2)"
   any=1
 fi
 if SITE="$SITE" ./scripts/check-billing-ready.sh >/dev/null 2>&1; then

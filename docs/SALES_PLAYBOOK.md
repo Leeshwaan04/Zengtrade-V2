@@ -23,6 +23,19 @@ Checkout: NOWPayments crypto invoice → IPN grants tier via `grant_paid` RPC.
 
 Founder test: **https://zengtrade.in/ops/billing**
 
+## Parallel work (worker blocked)
+
+Billing and plan-intent can be verified **before** paper trades exist:
+
+| Check | Command / link |
+|-------|----------------|
+| Billing-ready probe | `./scripts/check-billing-ready.sh` |
+| Founding $19 on prod | `./scripts/check-production-pricing.sh` |
+| Manual checkout smoke | https://zengtrade.in/ops/billing |
+| Partial activation (no trades) | `./scripts/verify-partial-activation.sh` |
+
+Do not claim forward P&L or closed-trade activation until `./scripts/check-worker.sh` is green.
+
 ## Objection handling (honest)
 
 | Objection | Response |
