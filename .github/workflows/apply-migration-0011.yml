@@ -1,6 +1,6 @@
 name: Apply migration 0011
 
-# Founder: add DATABASE_URL to repo Secrets first (Supabase → Database → URI).
+# Founder: add DATABASE_URL or DATABASE_PASSWORD to repo Secrets first.
 # Then: Actions → Apply migration 0011 → Run workflow → type APPLY
 on:
   workflow_dispatch:
@@ -16,12 +16,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Require DATABASE_URL secret
+      - name: Require database secret
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
         run: |
-          if [ -z "$DATABASE_URL" ]; then
-            echo "::error::Add DATABASE_URL to repo Secrets (Settings → Secrets → Actions)"
+          if [ -z "$DATABASE_URL" ] && [ -z "$DATABASE_PASSWORD" ]; then
+            echo "::error::Add DATABASE_URL or DATABASE_PASSWORD to repo Secrets (Settings → Secrets → Actions)"
             exit 1
           fi
       - name: Install psql client
@@ -29,7 +30,13 @@ jobs:
       - name: Apply 0011_funnel_events_v2.sql
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f saas/db/migrations/0011_funnel_events_v2.sql
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+        run: |
+          if [ -z "${DATABASE_URL:-}" ]; then
+            export DATABASE_URL
+            DATABASE_URL="$(./scripts/resolve-database-url.sh)"
+          fi
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f saas/db/migrations/0011_funnel_events_v2.sql
       - name: Verify funnel v2 events (signup_complete + deploy_success + checkout_click)
         run: |
           for ev in signup_complete deploy_success checkout_click; do

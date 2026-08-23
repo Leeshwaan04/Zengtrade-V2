@@ -1051,6 +1051,19 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/status-report.sh` @ 20:12Z)
 - worker ❌ · parallel CBO/CPO work available now
 
+### Day 1 (session 98) — GitHub DATABASE_PASSWORD + growth standup
+
+### CTO
+- **Shipped:** `apply-p0.yml` + `apply-migration-0011.yml` accept `DATABASE_PASSWORD` repo secret (password only).
+- **Shipped:** `check-growth-standup.sh` — daily standup helper for `GROWTH_DASHBOARD` logs.
+- **Blocked:** Railway Postgres password still invalid; no secrets in Cloud Agent env.
+
+### CBO
+- **Shipped:** `FOUNDER_DEPLOY.md` + `/ops/worker` — GSC can run while worker blocked; GitHub `DATABASE_PASSWORD` path.
+
+### Status (`./scripts/check-growth-standup.sh` @ 20:15Z)
+- worker ❌ · billing-ready ✅ · GSC-ready ✅ · activation UI ✅
+
 ---
 
 ### CTO

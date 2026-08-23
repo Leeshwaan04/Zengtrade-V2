@@ -24,7 +24,7 @@ Dashboard → **Authentication → URL configuration**
 
 ## 3. Migration 0011 + paper worker (P0)
 
-**Option A — one-shot GitHub Action (recommended):** add `DATABASE_URL` + `RAILWAY_API_TOKEN` to [repo Secrets](https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions) → run [Apply P0](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml) → type `APPLY`.
+**Option A — one-shot GitHub Action (recommended):** add `DATABASE_PASSWORD` (password only) or `DATABASE_URL` + `RAILWAY_API_TOKEN` to [repo Secrets](https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions) → run [Apply P0](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml) → type `APPLY`.
 
 **Option B — Cloud Agent:** add `DATABASE_PASSWORD` (password only) or full `DATABASE_URL` to Cursor secrets → `./scripts/validate-database-credentials.sh` then `./scripts/run-p0-if-ready.sh`.
 
@@ -59,7 +59,7 @@ E2E: https://zengtrade.in/ops/e2e — signup → deploy → trades within ~15 mi
 
 ## 7. Organic (CBO)
 
-https://zengtrade.in/ops/gsc — GSC + sitemap after forward trades exist.
+https://zengtrade.in/ops/gsc — verify domain + submit sitemap (**can run while worker is blocked**). First proof posts after forward trades exist (`docs/content/WEEKLY_PROOF.md`).
 
 ---
 

@@ -73,7 +73,8 @@
       "apply-p0 uses resolve-database-url when Railway password wrong (session 95)",
       "check-p0-readiness shows DATABASE_PASSWORD secret status (session 95)",
       "status-report + sync-ops-gates: billing/GSC/activation UI gates (session 96)",
-      "founder-parallel-work.sh + /ops growth gates banner (session 97)"
+      "founder-parallel-work.sh + /ops growth gates banner (session 97)",
+      "apply-p0.yml accepts DATABASE_PASSWORD GitHub secret (session 98)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
