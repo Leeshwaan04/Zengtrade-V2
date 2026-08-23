@@ -8,8 +8,12 @@ GROWTH="$ROOT/docs/GROWTH_DASHBOARD.md"
 work=0 parallel=0 sales=0 mig=0
 ./scripts/check-migrations.sh >/dev/null 2>&1 && mig=1
 ./scripts/check-worker.sh >/dev/null 2>&1 && work=1
-./scripts/check-parallel-growth.sh >/dev/null 2>&1 && parallel=1
-./scripts/check-sales-ready.sh >/dev/null 2>&1 && sales=1
+for _ in 1 2 3; do
+  [[ $parallel -eq 1 && $sales -eq 1 ]] && break
+  [[ $parallel -eq 0 ]] && ./scripts/check-parallel-growth.sh >/dev/null 2>&1 && parallel=1
+  [[ $sales -eq 0 ]] && ./scripts/check-sales-ready.sh >/dev/null 2>&1 && sales=1
+  sleep 2
+done
 
 hb=$(curl -sfL 'https://ponvarxeytfcntckczbn.supabase.co/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at' \
   -H 'apikey: sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1' 2>/dev/null \

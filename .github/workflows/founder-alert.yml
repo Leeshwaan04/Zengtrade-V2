@@ -17,5 +17,6 @@ jobs:
         run: |
           echo "::error::zengtrade P0 health check failed. Fix DATABASE_URL password: https://zengtrade.in/ops/worker"
           echo "::error::Add DATABASE_PASSWORD to Cloud Agent or GitHub Secrets → Apply P0 workflow"
-          echo "::error::Parallel work meanwhile: ./scripts/check-parallel-growth.sh — https://zengtrade.in/ops/gsc"
+          echo "::error::Parallel work meanwhile: ./scripts/guide-founder-parallel.sh"
+          echo "::error::GSC: https://zengtrade.in/ops/gsc · Billing: https://zengtrade.in/ops/billing"
           echo "::error::Dashboard: https://zengtrade.in/ops/p0 — issue https://github.com/Leeshwaan04/Zengtrade-V2/issues/4"

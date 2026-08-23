@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T21:36:49Z",
+  "updated": "2026-08-23T21:39:27Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -111,7 +111,8 @@
       "guide-founder-parallel.sh founder playbook while worker blocked (session 118)",
       "docs/STATUS.md session 120 refresh + founder_actions parallel tasks (session 120)",
       "sync-growth-dashboard-header.sh auto-updates GROWTH_DASHBOARD probes (session 121)",
-      "append-growth-log auto-syncs header; status-report Sales-ready (session 122)"
+      "append-growth-log auto-syncs header; status-report Sales-ready (session 122)",
+      "FOUNDER_PARALLEL.md + sync header probe retries (session 123)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -380,7 +381,7 @@
   "gates": {
     "production": true,
     "billing": true,
-    "billing_ready": true,
+    "billing_ready": false,
     "gsc_ready": true,
     "activation_ready": true,
     "funnel_ctas": true,

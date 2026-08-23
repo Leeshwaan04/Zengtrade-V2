@@ -12,7 +12,7 @@
 | MRR (USD) | $0 | $0 | $290 |
 | Worker status | Unknown | Offline (last heartbeat 2026-08-11T09:57:38 UTC · wrong Railway DB password) | Live 99% |
 | Parallel growth (excl. worker) | — | 5/5 gates ✅ | — |
-| Sales-ready | — | ❌ | — |
+| Sales-ready | — | ✅ check-sales-ready.sh | — |
 
 *Fill "Today" from [zengtrade.in/admin](https://zengtrade.in/admin) after login.*
 
@@ -1433,6 +1433,21 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 
 ### Status (`./scripts/check-growth-standup.sh` @ 21:36Z)
 - worker ❌ · migration 0011 ✅ · parallel growth ✅
+
+### Day 1 (session 123) — FOUNDER_PARALLEL.md + header sync retries
+
+### CTO
+- **Shipped:** sync-growth-dashboard-header probe retries; wait-for-p0 + founder-alert
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** check-e2e-gates guide-partial-e2e hint
+
+### CBO
+- **Shipped:** FOUNDER_PARALLEL.md one-page index
+
+### Status (`./scripts/check-growth-standup.sh` @ 21:39Z)
+- worker ❌ · migration 0011 ✅ · parallel growth ✅ · sales-ready ✅
 
 ---
 

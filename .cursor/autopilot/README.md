@@ -26,7 +26,7 @@ Seven role-based Cloud Agent charters run on a schedule (or on demand). Each age
 
 **Daily log:** `./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..."` (auto-syncs header probes via `sync-growth-dashboard-header.sh`)
 
-**While worker down:** `./scripts/guide-founder-parallel.sh` · `./scripts/check-parallel-growth.sh`
+**While worker down:** `./scripts/guide-founder-parallel.sh` · `docs/FOUNDER_PARALLEL.md`
 
 ### Single orchestrator (recommended)
 

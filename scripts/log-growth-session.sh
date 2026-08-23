@@ -13,17 +13,25 @@ work=0 mig=0
 ./scripts/check-worker.sh >/dev/null 2>&1 && work=1
 ./scripts/check-migrations.sh >/dev/null 2>&1 && mig=1
 
-parallel="—"
-if [[ $work -eq 0 ]] && ./scripts/check-parallel-growth.sh >/dev/null 2>&1; then
-  parallel="✅"
-elif [[ $work -eq 0 ]]; then
-  parallel="❌"
-fi
-
 worker_txt=$([[ $work -eq 1 ]] && echo "✅" || echo "❌")
 
+parallel="—"
+sales="—"
+if [[ $work -eq 0 ]]; then
+  if ./scripts/check-parallel-growth.sh >/dev/null 2>&1; then
+    parallel="✅"
+  else
+    parallel="❌"
+  fi
+  if ./scripts/check-sales-ready.sh >/dev/null 2>&1; then
+    sales="✅"
+  else
+    sales="❌"
+  fi
+fi
+
 echo "### Status (\`./scripts/check-growth-standup.sh\` @ ${tshort})"
-echo "- worker ${worker_txt} · migration 0011 $([[ $mig -eq 1 ]] && echo '✅' || echo '❌') · parallel growth ${parallel}"
+echo "- worker ${worker_txt} · migration 0011 $([[ $mig -eq 1 ]] && echo '✅' || echo '❌') · parallel growth ${parallel} · sales-ready ${sales}"
 if [[ -n "$shipped" ]]; then
   echo "- ${shipped}"
 fi

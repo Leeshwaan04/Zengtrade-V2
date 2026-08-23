@@ -34,7 +34,7 @@ Dashboard → **Authentication → URL configuration**
 ./scripts/guide-partial-e2e.sh       # founder manual partial E2E
 ```
 
-Links: https://zengtrade.in/ops/e2e (steps 1–2) · https://zengtrade.in/ops/gsc · https://zengtrade.in/ops/billing
+Links: https://zengtrade.in/ops/e2e (steps 1–2) · https://zengtrade.in/ops/gsc · https://zengtrade.in/ops/billing · `docs/FOUNDER_PARALLEL.md`
 
 **Option A — one-shot GitHub Action (recommended):** add `DATABASE_PASSWORD` (password only) or `DATABASE_URL` + `RAILWAY_API_TOKEN` to [repo Secrets](https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions) → run [Apply P0](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml) → type `APPLY`.
 
