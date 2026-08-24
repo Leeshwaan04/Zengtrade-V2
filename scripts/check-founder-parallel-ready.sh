@@ -66,6 +66,18 @@ else
 fi
 echo ""
 
+echo ">> CPO founder standup guide"
+if [[ -x scripts/guide-cpo-founder-standup.sh ]] \
+  && grep -q 'guide-partial-e2e' scripts/guide-cpo-founder-standup.sh \
+  && grep -q 'guide-free-tier-test' scripts/guide-cpo-founder-standup.sh \
+  && grep -q 'guide-cpo-founder-standup' saas/web/ops-e2e.html; then
+  echo "OK   guide-cpo-founder-standup partial activation playbook"
+else
+  echo "FAIL guide-cpo-founder-standup incomplete"
+  fail=1
+fi
+echo ""
+
 if [[ $fail -eq 0 ]]; then
   echo "All founder parallel probes green — manual playbooks:"
   echo "  ./scripts/guide-founder-parallel.sh"

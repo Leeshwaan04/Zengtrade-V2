@@ -158,6 +158,13 @@ else
   echo "FAIL guide-partial-e2e missing worker-offline banner step"
   fail=1
 fi
+if grep -q 'guide-cpo-founder-standup' saas/web/ops-e2e.html \
+  && [[ -x scripts/guide-cpo-founder-standup.sh ]]; then
+  echo "OK   ops-e2e links guide-cpo-founder-standup combined playbook"
+else
+  echo "FAIL ops-e2e missing guide-cpo-founder-standup CLI link"
+  fail=1
+fi
 
 echo ""
 echo ">> Ops migrate parallel card"

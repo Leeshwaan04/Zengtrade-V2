@@ -362,7 +362,7 @@ async function refresh() {
   const parallelList = document.getElementById("parallelList");
   if (!worker.ok && migOk && parallel && parallelList) {
     const items = [];
-    if (activationOk) items.push(`<li><b>CPO</b> — <a href="/ops/e2e">partial E2E</a> steps 1–2 · <code>./scripts/verify-activation-path.sh --partial</code></li>`);
+    if (activationOk) items.push(`<li><b>CPO</b> — <a href="/ops/e2e">partial E2E</a> steps 1–2 · <code>./scripts/guide-cpo-founder-standup.sh</code></li>`);
     if (activationOk) items.push(`<li><b>Trust path</b> — <a href="/dashboard">deploy</a> → View evidence → <a href="/app#forward">/app#forward</a> before <a href="/ops/billing">checkout</a></li>`);
     if (billingReadyOk) items.push(`<li><b>CBO / Sales</b> — <a href="/ops/billing">first Pro checkout</a> · <code>./scripts/guide-cbo-founder-standup.sh</code></li>`);
     if (gscReadyOk) items.push(`<li><b>CBO / SEO</b> — <a href="/ops/gsc">GSC sitemap</a> · <code>./scripts/guide-gsc-founder.sh</code></li>`);

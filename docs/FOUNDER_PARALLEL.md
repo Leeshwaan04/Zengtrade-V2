@@ -21,6 +21,7 @@ Index: **docs/GUIDE_INDEX.md** · `./scripts/list-founder-guides.sh`
 | **CTO** | Cloud Agent unblock | Secret `DATABASE_PASSWORD` → `./scripts/run-p0-if-ready.sh` |
 | **CTO** | GitHub auto-P0 | Repo Secrets → [health-watch](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/health-watch.yml) (every 6h) or [Apply P0](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml) |
 | **CPO** | Partial verify (CLI) | `./scripts/verify-activation-path.sh --partial` |
+| **CPO** | Partial activation (combined) | `./scripts/guide-cpo-founder-standup.sh` · https://zengtrade.in/ops/e2e |
 | **CPO** | Partial E2E (signup → deploy) | `./scripts/guide-partial-e2e.sh` · https://zengtrade.in/ops/e2e · `./scripts/guide-free-tier-test.sh` |
 | **CPO / CBO** | Deploy-first trust path | https://zengtrade.in/dashboard deploy → **View evidence** → https://zengtrade.in/app#forward (before checkout) |
 | **SEO** | Monthly GSC review | `./scripts/guide-monthly-gsc-review.sh` · `docs/SEO_PLAYBOOK.md` |
