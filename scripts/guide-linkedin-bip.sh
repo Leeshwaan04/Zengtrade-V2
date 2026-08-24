@@ -28,9 +28,16 @@ Next: forward paper loop once our worker is back (DB credential fix in progress)
 
 Try the deploy path: https://zengtrade.in/login?mode=signup&utm_source=linkedin&utm_medium=social&utm_campaign=build_in_public
 
+Browse strategies by coin: https://zengtrade.in/coins/?utm_source=linkedin&utm_medium=social&utm_campaign=build_in_public_coins
+
 Not investment advice. Paper only. No live execution.
 POST
 echo ""
+if ./scripts/check-parallel-growth.sh >/dev/null 2>&1; then
+  echo "== Growth goal (parallel green) =="
+  ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
+  echo ""
+fi
 echo "== After posting =="
 echo "1. Note date + post URL in docs/GROWTH_DASHBOARD.md (Marketing)"
 echo "2. Watch $SITE/admin for signup_complete / deploy_click (utm_campaign=build_in_public)"

@@ -108,6 +108,7 @@
         el.innerHTML = "<div><b>Strategy deployed</b><br><span style=\"color:var(--slate,#64748b)\">" +
           sub + "</span></div>" +
           "<a href=\"/app#forward\">View evidence</a>" +
+          (workerUp ? "" : "<a href=\"/ops/e2e\">E2E status</a>") +
           "<button type=\"button\" style=\"border:0;background:transparent;color:var(--slate);cursor:pointer\" " +
           "aria-label=\"Dismiss\">✕</button>";
         el.querySelector("button").onclick = function () { el.remove(); };
@@ -146,6 +147,7 @@
       "border-bottom:1px solid #f0d78a";
     el.innerHTML = "Paper worker offline — deploys save, but trades pause until the worker restarts. " +
       '<a href="/ops/worker" style="color:inherit;font-weight:700;margin-left:6px">Worker status</a> · ' +
+      '<a href="/ops/e2e" style="color:inherit;font-weight:700">E2E status</a> · ' +
       '<a href="/how-it-works/" style="color:inherit;font-weight:700">How paper trading works</a>';
     document.body.appendChild(el);
   }

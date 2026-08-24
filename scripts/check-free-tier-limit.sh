@@ -41,6 +41,11 @@ echo ""
 if [[ $fail -eq 0 ]]; then
   echo "Automated probes green — manual Q9: deploy 2 strategies on Free; second must show upgrade CTA"
   echo "Partial E2E: ./scripts/guide-partial-e2e.sh · $SITE/ops/e2e"
+  if [[ -z "${ZT_QUIET_GROWTH:-}" ]]; then
+    echo ""
+    echo "Growth goal:"
+    GROWTH_PARTIAL=1 ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
+  fi
   exit 0
 fi
 echo "Fix failures above before manual free-tier test."

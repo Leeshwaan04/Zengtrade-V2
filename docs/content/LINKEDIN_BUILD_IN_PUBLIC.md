@@ -21,6 +21,8 @@ Next: forward paper loop once our worker is back (DB credential fix in progress)
 
 Try the deploy path: https://zengtrade.in/login?mode=signup&utm_source=linkedin&utm_medium=social&utm_campaign=build_in_public
 
+Browse strategies by coin: https://zengtrade.in/coins/?utm_source=linkedin&utm_medium=social&utm_campaign=build_in_public_coins
+
 Not investment advice. Paper only. No live execution.
 ```
 
