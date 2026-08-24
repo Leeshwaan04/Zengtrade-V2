@@ -39,6 +39,7 @@ One-page map of CLI playbooks while the paper worker is blocked (or after P0 gre
 
 | Page | URL |
 |------|-----|
+| Migration 0011 (parallel hub) | https://zengtrade.in/ops/migrate |
 | Founder ops | https://zengtrade.in/ops |
 | P0 checklist | https://zengtrade.in/ops/p0 |
 | Worker recovery | https://zengtrade.in/ops/worker |

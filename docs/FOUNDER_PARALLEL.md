@@ -16,6 +16,7 @@ Index: **docs/GUIDE_INDEX.md** · `./scripts/list-founder-guides.sh`
 
 | Role | Action | Link / script |
 |------|--------|----------------|
+| **All** | Parallel hub (migration 0011 live, worker down) | https://zengtrade.in/ops/migrate · `./scripts/guide-founder-parallel.sh` |
 | **CTO** | Fix worker password | `./scripts/guide-worker-recovery.sh` · https://zengtrade.in/ops/worker · `docs/WORKER_RECOVERY.md` |
 | **CTO** | Cloud Agent unblock | Secret `DATABASE_PASSWORD` → `./scripts/run-p0-if-ready.sh` |
 | **CTO** | GitHub auto-P0 | Repo Secrets → [health-watch](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/health-watch.yml) (every 6h) or [Apply P0](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml) |

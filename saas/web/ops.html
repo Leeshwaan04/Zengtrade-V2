@@ -367,6 +367,7 @@ async function refresh() {
     if (billingReadyOk) items.push(`<li><b>CBO / Sales</b> — <a href="/ops/billing">first Pro checkout</a> · <code>./scripts/guide-first-pro-checkout.sh</code></li>`);
     if (gscReadyOk) items.push(`<li><b>CBO / SEO</b> — <a href="/ops/gsc">GSC sitemap</a> · <code>./scripts/guide-gsc-founder.sh</code></li>`);
     if (parallelOk) {
+      items.push(`<li><b>Hub</b> — <a href="/ops/migrate">/ops/migrate</a> parallel playbooks · <code>./scripts/guide-founder-parallel.sh</code></li>`);
       items.push(`<li><b>Marketing</b> — <code>./scripts/guide-linkedin-bip.sh</code> · <code>./scripts/guide-coin-spotlight.sh</code></li>`);
       items.push(`<li><b>QA&VAPT</b> — <a href="/ops/security">security</a> · <code>./scripts/check-qa-parallel.sh</code></li>`);
       items.push(`<li><b>CLI</b> — <code>./scripts/guide-founder-parallel.sh</code> · <code>./scripts/check-parallel-growth.sh</code></li>`);

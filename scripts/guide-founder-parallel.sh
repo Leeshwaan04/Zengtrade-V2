@@ -18,6 +18,7 @@ fi
 env ZT_QUIET_GROWTH=1 ./scripts/check-parallel-growth.sh || true
 echo ""
 echo "One-shot probes: ./scripts/check-founder-parallel-ready.sh"
+echo "Parallel hub (migration live): $SITE/ops/migrate"
 echo ""
 
 if ./scripts/check-sales-ready.sh 2>/dev/null; then

@@ -43,6 +43,18 @@ else
 fi
 echo ""
 
+echo ">> Ops migrate parallel hub"
+if grep -q '/ops/migrate' scripts/guide-founder-parallel.sh \
+  && grep -q '/ops/migrate' docs/FOUNDER_PARALLEL.md \
+  && grep -q 'parallelBox' saas/web/ops-migrate.html \
+  && grep -q '/ops/migrate' saas/web/ops.html; then
+  echo "OK   /ops/migrate parallel hub wired in guides + ops page"
+else
+  echo "FAIL /ops/migrate parallel hub incomplete"
+  fail=1
+fi
+echo ""
+
 if [[ $fail -eq 0 ]]; then
   echo "All founder parallel probes green — manual playbooks:"
   echo "  ./scripts/guide-founder-parallel.sh"
