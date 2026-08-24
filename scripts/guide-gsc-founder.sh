@@ -43,3 +43,6 @@ echo "Playbook: docs/GSC_SETUP.md · Monthly review: docs/SEO_PLAYBOOK.md"
 echo "Do not post forward P&L until worker live: ./scripts/check-worker.sh"
 echo ""
 echo "Parallel (no worker): first Pro MRR — $SITE/ops/billing · ./scripts/guide-first-pro-checkout.sh"
+echo ""
+echo "Growth objective:"
+./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true

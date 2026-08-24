@@ -26,6 +26,10 @@ for slug in bitcoin ethereum solana bnb xrp cardano dogecoin; do
   check_page "coin $slug" "/coins/${slug}/" "coin_${slug}"
 done
 
+# Secondary internal links (coins hub discovery — sessions 167–168)
+check_page "home coins hub" "/" "home_coins"
+check_page "how-it-works coins" "/how-it-works/" "paper_loop_coins"
+
 if [[ $fail -ne 0 ]]; then
   echo ""
   echo "Rebuild landing (deploy/landing/build.py) and redeploy main."

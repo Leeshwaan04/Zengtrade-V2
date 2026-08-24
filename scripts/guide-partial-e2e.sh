@@ -31,3 +31,6 @@ echo "   After P0: $SITE/app#forward within ~5–15 min"
 echo ""
 echo "Full checklist: $SITE/ops/e2e"
 echo "Recovery: docs/WORKER_RECOVERY.md"
+echo ""
+echo "Growth objective:"
+./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
