@@ -80,5 +80,5 @@ fi
 
 GROWTH_PROD=$prod GROWTH_MIG=$mig GROWTH_WORK=$work GROWTH_GSC=$gsc GROWTH_SALES=$sales \
   GROWTH_DB_AUTH=$db_auth GROWTH_PARTIAL=$partial GROWTH_BILL=$bill GROWTH_OAUTH=$oauth \
-  ./scripts/print-growth-goal-summary.sh
+  ./scripts/print-growth-goal-summary-fast.sh
 exit 1

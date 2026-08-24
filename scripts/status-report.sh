@@ -14,7 +14,7 @@ echo "$prod_out" | grep -q 'OK   ops-p0' && ops_p0=1
 ./scripts/check-worker.sh >/dev/null 2>&1 && work=1
 ./scripts/check-billing-ready.sh >/dev/null 2>&1 && bill=1
 ./scripts/check-sales-ready.sh >/dev/null 2>&1 && sales=1
-./scripts/check-qa-parallel.sh >/dev/null 2>&1 && qa=1
+env ZT_QUIET_GROWTH=1 ./scripts/check-qa-parallel.sh >/dev/null 2>&1 && qa=1
 SITE=https://zengtrade.in ./scripts/check-gsc-ready.sh >/dev/null 2>&1 && gsc=1
 SITE=https://zengtrade.in ./scripts/check-activation-ready.sh >/dev/null 2>&1 && act=1
 
@@ -59,7 +59,7 @@ if [[ $ops_p0 -eq 0 ]]; then
 fi
 if [[ $mig -eq 1 && $work -eq 0 ]]; then
   echo "Next: https://zengtrade.in/ops/worker — paper worker only (add DATABASE_URL on Railway)"
-  if ./scripts/check-parallel-growth.sh >/dev/null 2>&1; then
+  if env ZT_QUIET_GROWTH=1 ./scripts/check-parallel-growth.sh >/dev/null 2>&1; then
     echo "Parallel growth: 5/5 gates green (excl. worker) — ./scripts/guide-founder-parallel.sh"
   fi
 elif [[ $mig -eq 0 ]]; then
@@ -71,6 +71,6 @@ echo ""
 echo "Growth goal audit:"
 GROWTH_PROD=$prod GROWTH_MIG=$mig GROWTH_WORK=$work GROWTH_GSC=$gsc GROWTH_SALES=$sales \
   GROWTH_DB_AUTH=$db_auth GROWTH_PARTIAL=$partial GROWTH_BILL=$bill \
-  ./scripts/print-growth-goal-summary.sh 2>/dev/null || true
+  ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null || true
 ./scripts/founder-next-action.sh 2>/dev/null || true
 exit 1

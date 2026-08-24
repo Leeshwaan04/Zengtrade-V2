@@ -147,7 +147,8 @@
       "check-founder-parallel-ready growth summary; FOUNDER_PARALLEL goals; ops-gsc goals (session 160)",
       "check-qa-parallel growth summary; ops-security goals card; dedupe verify bullet (session 161)",
       "check-parallel-growth growth summary; ops-e2e growth_goal card (session 162)",
-      "print-growth-goal-summary-fast; ZT_QUIET_GROWTH dedupe; p0-readiness fast path (session 163)"
+      "print-growth-goal-summary-fast; ZT_QUIET_GROWTH dedupe; p0-readiness fast path (session 163)",
+      "fast summary in status-report/audit/growth-gates/guide; ops-migrate goals (session 164)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [

@@ -15,7 +15,7 @@ if ./scripts/check-worker.sh >/dev/null 2>&1; then
   exit 0
 fi
 
-./scripts/check-parallel-growth.sh || true
+env ZT_QUIET_GROWTH=1 ./scripts/check-parallel-growth.sh || true
 echo ""
 echo "One-shot probes: ./scripts/check-founder-parallel-ready.sh"
 echo ""
@@ -66,7 +66,7 @@ echo "     $SITE/ops/security · docs/QA_VAPT_CHECKLIST.md"
 echo ""
 echo "CLI  ./scripts/validate-database-credentials.sh (no secrets printed)"
 echo "     ./scripts/audit-growth-goal.sh — CTO/CPO/CBO goal audit"
-echo "     ./scripts/check-growth-goal.sh · ./scripts/print-growth-goal-summary.sh"
+echo "     ./scripts/check-growth-goal.sh · ./scripts/print-growth-goal-summary-fast.sh"
 echo ""
 echo "== Growth objective =="
-./scripts/print-growth-goal-summary.sh 2>/dev/null | sed 's/^/  /' || true
+./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true

@@ -51,6 +51,7 @@
   </div>
   <pre id="sql">Loading SQL…</pre>
   <p id="status"></p>
+  <p id="growthGoals" style="display:none;background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:14px;font-size:14px;line-height:1.55;margin-top:14px"></p>
 </div>
 <script>
 const SUPA="https://ponvarxeytfcntckczbn.supabase.co", ANON="sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";
@@ -61,14 +62,34 @@ document.getElementById("copy").onclick=()=>{
     document.getElementById("status").className="";
   });
 };
+async function growthGoalsCard(){
+  const el=document.getElementById("growthGoals");
+  if(!el) return;
+  try{
+    const rows=await fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{headers:{apikey:ANON},cache:"no-store"}).then(r=>r.json());
+    const age=rows[0]?Math.round((Date.now()-new Date(rows[0].updated_at))/60000):99999;
+    if(age<=12) return;
+    const data=await fetch("/ops/data.json?"+Date.now(),{cache:"no-store"}).then(r=>r.json());
+    const gg=data.gates?.growth_goal||{};
+    const cpo=gg.cpo_full_ok?"✅ trades":(gg.cpo_partial_ok?"partial ✅":"❌");
+    el.innerHTML="<b>Migration live — next P0:</b> <a href=\"/ops/worker\">paper worker</a> (DATABASE_URL).<br><b>Growth goals:</b> CTO "+(gg.cto_ok?"✅":"❌")+" · CPO "+cpo+" · CBO "+(gg.cbo_infra_ok?"infra ✅ — <a href=\"/ops/gsc\">GSC</a> + <a href=\"/ops/billing\">Pro checkout</a>":"❌");
+    el.style.display="block";
+  }catch(e){}
+}
 async function verifyMigration(){
   const st=document.getElementById("status");
   const h={apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"};
   const r1=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"signup_complete",path:"/ops-verify"})});
   const r2=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"deploy_success",path:"/ops-verify"})});
   const r3=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"checkout_click",path:"/ops-verify"})});
-  if(r1.status===201&&r2.status===201&&r3.status===201){st.textContent="✓ Migration 0011 is live (signup, deploy, checkout events).";st.className="ok";}
-  else{st.textContent="✗ Still blocked (signup "+r1.status+", deploy "+r2.status+", checkout "+r3.status+"). Run the SQL in Supabase first.";st.className="bad";}
+  if(r1.status===201&&r2.status===201&&r3.status===201){
+    st.textContent="✓ Migration 0011 is live (signup, deploy, checkout events).";
+    st.className="ok";
+    growthGoalsCard();
+  }else{
+    st.textContent="✗ Still blocked (signup "+r1.status+", deploy "+r2.status+", checkout "+r3.status+"). Run the SQL in Supabase first.";
+    st.className="bad";
+  }
 }
 document.getElementById("verify").onclick=verifyMigration;
 verifyMigration();
