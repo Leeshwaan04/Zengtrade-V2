@@ -3659,6 +3659,35 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 - DATABASE_URL auth ❌ (Railway password — /ops/worker)
 - growth goals: CTO ❌ · CPO partial ✅ · CBO ✅ infra · MRR founder /admin
 
+### Day 1 (session 203) — GSC + marketing organic copy align with trust path
+
+### CTO
+- **Shipped:** —
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** —
+
+### CBO
+- **Shipped:** /ops/gsc parallel MRR trust path; GSC_SETUP founder log
+
+### SEO
+- **Shipped:** check-gsc-ready ops-gsc probe; guide-gsc-founder trust path
+
+### Marketing
+- **Shipped:** LINKEDIN_BUILD_IN_PUBLIC + WEEKLY_PROOF + guide-linkedin-bip View evidence
+
+### Sales
+- **Shipped:** —
+
+### QA&VAPT
+- **Shipped:** e2e_smoke + check-gsc-ready green
+
+### Status (`./scripts/check-growth-standup.sh` @ 07:27Z)
+- worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
+- DATABASE_URL auth ❌ (Railway password — /ops/worker)
+- growth goals: CTO ❌ · CPO partial ✅ · CBO ✅ infra · MRR founder /admin
+
 ---
 
 ## Daily log template
