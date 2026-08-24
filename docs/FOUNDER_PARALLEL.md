@@ -16,6 +16,7 @@ Index: **docs/GUIDE_INDEX.md** · `./scripts/list-founder-guides.sh`
 
 | Role | Action | Link / script |
 |------|--------|----------------|
+| **All** | Combined growth standup (CPO + CBO) | `./scripts/guide-founder-growth-standup.sh` · `./scripts/guide-founder-parallel.sh` |
 | **All** | Parallel hub (migration 0011 live, worker down) | https://zengtrade.in/ops/migrate · `./scripts/guide-founder-parallel.sh` |
 | **CTO** | Fix worker password | `./scripts/guide-worker-recovery.sh` · https://zengtrade.in/ops/worker · `docs/WORKER_RECOVERY.md` |
 | **CTO** | Cloud Agent unblock | Secret `DATABASE_PASSWORD` → `./scripts/run-p0-if-ready.sh` |

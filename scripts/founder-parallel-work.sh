@@ -34,6 +34,7 @@ if SITE="$SITE" ./scripts/check-gsc-ready.sh >/dev/null 2>&1; then
   any=1
 fi
 if ./scripts/check-parallel-growth.sh >/dev/null 2>&1; then
+  echo "  Combined standup — ./scripts/guide-founder-growth-standup.sh"
   echo "  Marketing LinkedIn BIP — ./scripts/guide-linkedin-bip.sh"
   echo "  Marketing Coin spotlight — ./scripts/guide-coin-spotlight.sh [slug]"
   echo "  QA&VAPT parallel — ./scripts/check-qa-parallel.sh · $SITE/ops/security"

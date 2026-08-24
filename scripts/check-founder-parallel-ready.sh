@@ -78,6 +78,18 @@ else
 fi
 echo ""
 
+echo ">> Founder growth standup (CPO + CBO)"
+if [[ -x scripts/guide-founder-growth-standup.sh ]] \
+  && grep -q 'guide-cpo-founder-standup' scripts/guide-founder-growth-standup.sh \
+  && grep -q 'guide-cbo-founder-standup' scripts/guide-founder-growth-standup.sh \
+  && grep -q 'guide-founder-growth-standup' saas/web/ops-migrate.html; then
+  echo "OK   guide-founder-growth-standup combined CPO + CBO playbook"
+else
+  echo "FAIL guide-founder-growth-standup incomplete"
+  fail=1
+fi
+echo ""
+
 if [[ $fail -eq 0 ]]; then
   echo "All founder parallel probes green — manual playbooks:"
   echo "  ./scripts/guide-founder-parallel.sh"

@@ -16,7 +16,7 @@
 | Parallel growth (excl. worker) | — | ✅ founder-parallel-ready | — |
 | Sales-ready | — | ✅ check-sales-ready.sh | — |
 | QA parallel | — | ✅ check-qa-parallel.sh | — |
-| Growth: CBO infra | — | ❌ | — |
+| Growth: CBO infra | — | ✅ GSC+sales-ready · MRR founder | — |
 | Growth: CPO trades | — | partial ✅ (trades need worker) | — |
 | Growth: CTO loop | — | ❌ /ops/worker | — |
 
@@ -3916,6 +3916,35 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 - **Shipped:** check-activation-ready + check-founder-parallel-ready probe CPO standup
 
 ### Status (`./scripts/check-growth-standup.sh` @ 08:15Z)
+- worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
+- DATABASE_URL auth ❌ (Railway password — /ops/worker)
+- growth goals: CTO ❌ · CPO partial ✅ · CBO ✅ infra · MRR founder /admin
+
+### Day 1 (session 212) — founder growth standup — combined CPO + CBO
+
+### CTO
+- **Shipped:** guide-founder-growth-standup.sh chains parallel probes + CPO/CBO standups
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** wired into /ops/migrate, /ops parallel list, founder-preflight
+
+### CBO
+- **Shipped:** founder-parallel-work + GUIDE_INDEX quick start → combined standup
+
+### SEO
+- **Shipped:** —
+
+### Marketing
+- **Shipped:** —
+
+### Sales
+- **Shipped:** —
+
+### QA&VAPT
+- **Shipped:** check-founder-guides (14) + check-founder-parallel-ready probe
+
+### Status (`./scripts/check-growth-standup.sh` @ 08:19Z)
 - worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
 - DATABASE_URL auth ❌ (Railway password — /ops/worker)
 - growth goals: CTO ❌ · CPO partial ✅ · CBO ✅ infra · MRR founder /admin
