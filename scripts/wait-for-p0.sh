@@ -24,6 +24,7 @@ while true; do
     && ./scripts/check-worker.sh >/dev/null 2>&1; then
     echo ""
     echo "P0 gates green at $(date -u +%Y-%m-%dT%H:%MZ)"
+    echo "Next: post-p0-success → /ops/e2e steps 3–4 → guide-qa-rls-isolation.sh"
     break
   fi
   # Picks up DATABASE_URL from Cloud Agent env or Railway service variables

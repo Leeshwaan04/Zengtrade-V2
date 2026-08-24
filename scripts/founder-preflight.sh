@@ -71,12 +71,12 @@ echo ""
 PARTIAL_OK=0
 if [[ $WORK_OK -eq 0 ]]; then
   echo ">> Partial activation (CPO — no worker)"
-  if ./scripts/verify-activation-path.sh --partial >/dev/null 2>&1; then
+  if env ZT_QUIET_GROWTH=1 ./scripts/verify-activation-path.sh --partial >/dev/null 2>&1; then
     PARTIAL_OK=1
   fi
   echo ""
   echo ">> QA parallel (worker blocked)"
-  ./scripts/check-qa-parallel.sh 2>/dev/null || echo "⚠️  QA parallel — run ./scripts/check-qa-parallel.sh"
+  env ZT_QUIET_GROWTH=1 ./scripts/check-qa-parallel.sh 2>/dev/null || echo "⚠️  QA parallel — run ./scripts/check-qa-parallel.sh"
   echo ""
 fi
 
@@ -127,6 +127,8 @@ fi
 echo ""
 ./scripts/print-growth-goal-summary.sh 2>/dev/null || true
 echo ""
-echo "After P0 green: ./scripts/verify-activation-path.sh && ./scripts/security-smoke.sh"
+echo "After P0 green: ./scripts/post-p0-success.sh"
+echo "  E2E trades: https://zengtrade.in/ops/e2e (steps 3–4)"
+echo "  RLS Q3:     ./scripts/guide-qa-rls-isolation.sh"
 echo "Full audit: ./scripts/audit-growth-goal.sh"
 echo "Log session: ./scripts/append-growth-log.sh N \"title\" --cto \"...\""

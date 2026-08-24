@@ -86,7 +86,10 @@ elif [[ -n "${rail_resolved:-}" ]]; then
 fi
 
 if [[ $mig -eq 1 && $work -eq 1 ]]; then
-  echo "P0 already green — run ./scripts/post-p0-success.sh"
+  echo "P0 already green — run:"
+  echo "  ./scripts/post-p0-success.sh"
+  echo "  ./scripts/guide-qa-rls-isolation.sh   # after trades visible"
+  echo "  ./scripts/audit-growth-goal.sh"
   exit 0
 fi
 

@@ -17,7 +17,10 @@ SITE=https://zengtrade.in ./scripts/check-production.sh
 **https://zengtrade.in/ops/p0** — migration 0011 + paper worker (blocks trades + full funnel).
 
 ```bash
-./scripts/wait-for-p0.sh        # polls until green, then activation verify
+./scripts/wait-for-p0.sh        # polls until green, then post-p0-success.sh
+# or when already green:
+./scripts/post-p0-success.sh
+./scripts/guide-qa-rls-isolation.sh   # after trades in /app#forward
 ```
 
 See **`docs/FOUNDER_DEPLOY.md`** for detail.
