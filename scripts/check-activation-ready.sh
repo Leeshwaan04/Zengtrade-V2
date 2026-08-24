@@ -79,6 +79,13 @@ else
   fail=1
 fi
 
+if grep -q 'function goAlgoStudio' saas/web/js/app.js && grep -q 'goAlgoStudio' saas/web/js/app.js; then
+  echo "OK   app.js deploy CTAs route to Algo Studio (goAlgoStudio)"
+else
+  echo "FAIL app.js missing goAlgoStudio deploy routing"
+  fail=1
+fi
+
 if grep -q 'Deploy a free paper strategy' saas/web/js/app.js; then
   echo "OK   pricing deploy-first hint (0 deployments)"
 else

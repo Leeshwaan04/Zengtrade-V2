@@ -180,12 +180,12 @@ function activationChecklist() {
     <div class="card-h"><h3>Activation checklist</h3><span class="muted">signup → deploy → trades</span></div>
     <ol class="act-steps">
       <li class="${s1}"><span class="dot"></span><span><b>Account created</b><br><span class="muted">You're signed in as ${esc(user.email)}</span></span></li>
-      <li class="${s2}"><span class="dot"></span><span><b>Deploy a paper strategy</b><br><span class="muted">Use Algo Studio or Strategies tab — live Binance prices, zero risk.</span></span></li>
+      <li class="${s2}"><span class="dot"></span><span><b>Deploy a paper strategy</b><br><span class="muted">Algo Studio → Library → Deploy on live Binance prices, zero risk.</span></span></li>
       <li class="${s3}"><span class="dot"></span><span><b>First closed trade</b><br><span class="muted">Worker runs every ~5 min; check Forward Test for evidence.</span>${workerNote}</span></li>
     </ol>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
       <a class="btn primary sm" href="/dashboard">Open Algo Studio</a>
-      <button class="btn ghost sm" id="act-strat" type="button">Deploy here</button>
+      <a class="btn ghost sm" href="#strategies">Deploy from Strategies tab</a>
     </div>
   </div>`;
 }
@@ -227,12 +227,18 @@ function renderDashboard() {
     </div>
     <p class="iso">🔒 Your data is yours alone, isolated per account and enforced at the database level (row-level security).</p>`;
   drawCurve();
-  $("#goStrat") && ($("#goStrat").onclick = () => location.hash = "strategies");
+  $("#goStrat") && ($("#goStrat").onclick = goAlgoStudio);
   $("#up2") && ($("#up2").onclick = () => location.hash = "pricing");
-  $("#firstDeploy") && ($("#firstDeploy").onclick = () => location.hash = "strategies");
-  $("#act-strat") && ($("#act-strat").onclick = () => location.hash = "strategies");
+  $("#firstDeploy") && ($("#firstDeploy").onclick = goAlgoStudio);
 }
-function drawCurve() { const m = metrics(); equityCurve($("#curve"), m.curve); }
+// ---- deploy routing (Algo Studio is primary surface) ----
+function goAlgoStudio() {
+  if (!state.deployments.length) {
+    try { localStorage.setItem("zt_fresh_signup", "1"); } catch { /* ignore */ }
+  }
+  location.href = "/dashboard";
+}
+
 function stratRow(s) {
   const meta = byKey[s.key] || { name: s.key, style: "" };
   const w = s.n ? (100 * s.wins / s.n) : 0;
@@ -246,7 +252,7 @@ function stratRow(s) {
 const emptyStrategies = () => `<div class="empty">
   <p><b>No strategies deployed yet.</b></p>
   <p class="muted">Deploy one to start paper-trading on live crypto prices, zero money at risk.</p>
-  <button class="btn primary" id="firstDeploy">Browse strategies</button></div>`;
+  <button class="btn primary" id="firstDeploy">Open Algo Studio</button></div>`;
 
 const emptyDeployCta = (title, blurb) => {
   const deployed = state.deployments.some((d) => d.status === "running");
@@ -259,7 +265,7 @@ const emptyDeployCta = (title, blurb) => {
 };
 function wireEmptyDeploy() {
   const b = $("#ev-deploy");
-  if (b) b.onclick = () => { location.href = "/dashboard"; };
+  if (b) b.onclick = goAlgoStudio;
   const pro = $("#ev-pro");
   if (pro) pro.onclick = () => { markCheckoutRef("forward_empty_pro"); location.hash = "pricing"; };
 }
