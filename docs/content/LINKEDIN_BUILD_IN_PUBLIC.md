@@ -17,7 +17,7 @@
 Shipping zengtrade in public — paper trading on live Binance prices.
 
 Today on production: signup → Algo Studio → deploy is live (partial E2E steps 1–2).
-Next: forward paper loop once our worker is back (DB credential fix in progress).
+Post-deploy: evidence at /app#forward (trades when worker is back).
 
 Try the deploy path: https://zengtrade.in/login?mode=signup&utm_source=linkedin&utm_medium=social&utm_campaign=build_in_public
 

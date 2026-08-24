@@ -3398,6 +3398,35 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 - DATABASE_URL auth ❌ (Railway password — /ops/worker)
 - growth goals: CTO ❌ · CPO partial ✅ · CBO ✅ infra · MRR founder /admin
 
+### Day 1 (session 194) — /dashboard in sitemap + growth-summary smoke timeout
+
+### CTO
+- **Shipped:** e2e_smoke 30s timeout on print-growth-goal-summary-fast
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** sitemap + GSC index Algo Studio deploy surface
+
+### CBO
+- **Shipped:** check-sitemap dashboard repo fallback
+
+### SEO
+- **Shipped:** build.py adds /dashboard to sitemap.xml
+
+### Marketing
+- **Shipped:** LinkedIn BIP post-deploy /app#forward line
+
+### Sales
+- **Shipped:** —
+
+### QA&VAPT
+- **Shipped:** e2e_smoke + parallel growth green
+
+### Status (`./scripts/check-growth-standup.sh` @ 06:38Z)
+- worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
+- DATABASE_URL auth ❌ (Railway password — /ops/worker)
+- growth goals: CTO ❌ · CPO partial ✅ · CBO ✅ infra · MRR founder /admin
+
 ---
 
 ## Daily log template

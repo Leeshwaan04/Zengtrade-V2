@@ -36,8 +36,9 @@ need "robots.txt"
 grep -q 'establishSession' "$DIST/js/auth.js" || { echo "FAIL auth.js missing establishSession"; exit 1; }
 echo "OK   auth.js establishSession"
 
-grep -q 'https://zengtrade.in/app' "$DIST/sitemap.xml" || { echo "FAIL sitemap missing /app"; exit 1; }
 grep -q 'https://zengtrade.in/login' "$DIST/sitemap.xml" || { echo "FAIL sitemap missing /login"; exit 1; }
+grep -q 'https://zengtrade.in/dashboard' "$DIST/sitemap.xml" || { echo "FAIL sitemap missing /dashboard"; exit 1; }
+grep -q 'https://zengtrade.in/app' "$DIST/sitemap.xml" || { echo "FAIL sitemap missing /app"; exit 1; }
 grep -q '/coins/bitcoin/' "$DIST/sitemap.xml" || { echo "FAIL sitemap missing coin pages"; exit 1; }
 for slug in cardano dogecoin; do
   grep -q "/coins/${slug}/" "$DIST/sitemap.xml" || { echo "FAIL sitemap missing /coins/${slug}/"; exit 1; }

@@ -60,8 +60,10 @@ test -f scripts/log-growth-session.sh
 test -f scripts/append-growth-log.sh
 test -f scripts/audit-growth-goal.sh
 test -f scripts/print-growth-goal-summary.sh
+test -f scripts/print-growth-goal-summary-fast.sh
 test -x scripts/check-growth-goal.sh
 test -f scripts/check-growth-gates.sh
+timeout 30 env ZT_QUIET_GROWTH=1 ./scripts/print-growth-goal-summary-fast.sh >/dev/null
 test -f .github/workflows/apply-p0.yml
 grep -q 'run-p0-if-ready' .github/workflows/apply-p0.yml
 test -f docs/QA_VAPT_CHECKLIST.md

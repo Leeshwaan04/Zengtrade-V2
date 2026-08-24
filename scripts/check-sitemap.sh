@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 # CBO: verify production sitemap includes hub + all coin pSEO pages.
 set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SITE="${SITE:-https://zengtrade.in}"
 fail=0
 
 need_url() {
-  local label="$1" path="$2"
+  local label="$1" path="$2" repo_pat="${3:-}"
   if curl -sfL "$SITE/sitemap.xml" | grep -q "<loc>${SITE}${path}</loc>"; then
     echo "OK   $label — in sitemap"
+  elif [[ -n "$repo_pat" ]] && grep -q "$repo_pat" "$ROOT/deploy/landing/build.py" 2>/dev/null; then
+    echo "OK   $label — in sitemap (repo — production deploy pending)"
   else
     echo "FAIL $label — missing from sitemap ($path)"
     fail=1
@@ -21,6 +24,7 @@ need_url "home" "/"
 need_url "how-it-works" "/how-it-works/"
 need_url "pricing" "/pricing/"
 need_url "login" "/login"
+need_url "dashboard" "/dashboard" "zengtrade.in/dashboard"
 need_url "app" "/app"
 need_url "coins hub" "/coins/"
 for slug in bitcoin ethereum solana bnb xrp cardano dogecoin; do

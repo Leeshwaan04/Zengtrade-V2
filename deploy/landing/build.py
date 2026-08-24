@@ -420,6 +420,7 @@ if coins:
 # Product routes (auth-gated but indexable landing/signup entry points for GSC)
 urls.extend([
     "https://zengtrade.in/login",
+    "https://zengtrade.in/dashboard",
     "https://zengtrade.in/app",
 ])
 
