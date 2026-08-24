@@ -3282,6 +3282,35 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 - DATABASE_URL auth ❌ (Railway password — /ops/worker)
 - growth goals: CTO ❌ · CPO partial ✅ · CBO ✅ infra · MRR founder /admin
 
+### Day 1 (session 190) — onboarding → Algo Studio activation path
+
+### CTO
+- **Shipped:** —
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** maybeOnboard + empty deploy CTAs route to /dashboard; Open Algo Studio button
+
+### CBO
+- **Shipped:** admin MRR alert Google OAuth; billing-ready /admin probe
+
+### SEO
+- **Shipped:** —
+
+### Marketing
+- **Shipped:** —
+
+### Sales
+- **Shipped:** guide-mrr-standup OAuth on ?plan=pro
+
+### QA&VAPT
+- **Shipped:** e2e_smoke + activation/billing probes green
+
+### Status (`./scripts/check-growth-standup.sh` @ 06:03Z)
+- worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
+- DATABASE_URL auth ❌ (Railway password — /ops/worker)
+- growth goals: CTO ❌ · CPO partial ✅ · CBO ✅ infra · MRR founder /admin
+
 ---
 
 ## Daily log template

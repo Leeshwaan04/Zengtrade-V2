@@ -53,6 +53,13 @@ else
   fail=1
 fi
 
+if grep -q 'Verify in /admin' saas/web/js/app.js; then
+  echo "OK   maybePaidReturn /admin MRR verification link"
+else
+  echo "FAIL app.js missing post-checkout /admin link"
+  fail=1
+fi
+
 echo ""
 if [[ $fail -eq 0 ]]; then
   echo "Billing-ready — test checkout at $SITE/ops/billing"

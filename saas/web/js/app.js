@@ -259,7 +259,7 @@ const emptyDeployCta = (title, blurb) => {
 };
 function wireEmptyDeploy() {
   const b = $("#ev-deploy");
-  if (b) b.onclick = () => { location.hash = "strategies"; };
+  if (b) b.onclick = () => { location.href = "/dashboard"; };
   const pro = $("#ev-pro");
   if (pro) pro.onclick = () => { markCheckoutRef("forward_empty_pro"); location.hash = "pricing"; };
 }
@@ -557,7 +557,8 @@ async function maybeOnboard() {
   dlg.showModal();
   $("#ob-deploy").onclick = async () => {
     dlg.close(); localStorage.setItem("zt_onboarded", "1");
-    location.hash = "strategies";
+    try { localStorage.setItem("zt_fresh_signup", "1"); } catch { /* ignore */ }
+    location.href = "/dashboard";
   };
   $("#ob-skip").onclick = () => { dlg.close(); localStorage.setItem("zt_onboarded", "1"); };
 }

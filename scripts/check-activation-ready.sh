@@ -137,6 +137,13 @@ else
   fail=1
 fi
 
+if grep -q 'location.href = "/dashboard"' saas/web/js/app.js && grep -q 'ob-deploy' saas/web/app.html; then
+  echo "OK   onboarding deploy → Algo Studio (/dashboard)"
+else
+  echo "FAIL app.js missing onboarding → /dashboard redirect"
+  fail=1
+fi
+
 echo ""
 if [[ $fail -eq 0 ]]; then
   echo "Activation UI ready — trades need paper worker: ./scripts/check-worker.sh"
