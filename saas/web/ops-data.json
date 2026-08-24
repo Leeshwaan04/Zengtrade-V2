@@ -150,7 +150,8 @@
       "print-growth-goal-summary-fast; ZT_QUIET_GROWTH dedupe; p0-readiness fast path (session 163)",
       "fast summary in status-report/audit/growth-gates/guide; ops-migrate goals (session 164)",
       "probe-database-auth.sh; faster standup/log-growth-session/sync-header (session 165)",
-      "home JSON-LD schema; check-growth-standup dedupe; p0-readiness probe (session 166)"
+      "home JSON-LD schema; check-growth-standup dedupe; p0-readiness probe (session 166)",
+      "pricing FAQPage JSON-LD; home coins hub CTA; check-e2e-gates growth summary (session 167)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [

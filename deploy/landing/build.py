@@ -86,6 +86,16 @@ HOME_SCHEMA = """<script type="application/ld+json">
 </script>"""
 
 
+PRICING_FAQ_SCHEMA = """<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Is there really a free plan?","acceptedAnswer":{"@type":"Answer","text":"Yes, Free is free forever. One paper strategy, live crypto data, full backtest/forward-test and honest analytics. No card required."}},
+{"@type":"Question","name":"Do you take a cut of my trades or hold my funds?","acceptedAnswer":{"@type":"Answer","text":"No. zengtrade is non-custodial. Live execution runs on your own exchange with your own API keys; we never touch your coins and take no trading commission."}},
+{"@type":"Question","name":"Can I cancel anytime?","acceptedAnswer":{"@type":"Answer","text":"Anytime, in one click. You keep Free access after cancelling."}},
+{"@type":"Question","name":"Why is live execution gated?","acceptedAnswer":{"@type":"Answer","text":"A strategy only unlocks live once it clears the go-live bar in paper: enough closed trades, positive expectancy net of cost, across regimes."}}
+]}
+</script>"""
+
+
 def shell(title, desc, canon, main, extra_head=""):
     return f"""<!DOCTYPE html><html lang="en" data-regime="bull"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -145,6 +155,14 @@ HOME_MAIN = """<main id="main">
         <p class="lp-sub">Bull, Neutral, Bear: no strategy wins in every regime, so the engine deploys the ones proven to fit the tape and stands the rest down to cash. That's how it protects capital first and compounds second.</p>
         <a class="lp-cta ghost" href="/how-it-works/">How the regime engine works →</a>
       </div>
+    </div>
+  </section>
+
+  <section class="lp-sec" aria-label="Paper trade by coin">
+    <div class="lp-wrap center">
+      <h2 class="lp-h2">Paper-trade by coin</h2>
+      <p class="lp-sub">Live regime reads and strategy context for Bitcoin, Ethereum, Solana, and more — honest pages, not hype.</p>
+      <a class="lp-cta ghost" href="/coins/?utm_source=site&amp;utm_medium=organic&amp;utm_campaign=home_coins">Browse coin strategies →</a>
     </div>
   </section>
 
@@ -368,7 +386,7 @@ emit("how-it-works", shell(
 emit("pricing", shell(
     "Pricing — free paper trading, Pro from $19/mo | zengtrade",
     "zengtrade pricing: Free forever to paper-trade, Pro for unlimited paper strategies (founding $19/mo). Live execution rolls out per go-live bar. Data is always free. Non-custodial. Cancel anytime.",
-    "https://zengtrade.in/pricing/", PRICING_MAIN), "https://zengtrade.in/pricing/")
+    "https://zengtrade.in/pricing/", PRICING_MAIN, extra_head=PRICING_FAQ_SCHEMA), "https://zengtrade.in/pricing/")
 
 # ---- coin hub + per-coin pages (identical shell -> full design parity) -----------------
 if coins:
