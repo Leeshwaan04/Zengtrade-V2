@@ -109,10 +109,13 @@
           sub + "</span></div>" +
           "<a href=\"/app#forward\">View evidence</a>" +
           "<a href=\"/coins/?utm_source=site&amp;utm_medium=organic&amp;utm_campaign=deploy_success_coins\">More coin strategies</a>" +
+          "<a href=\"/app#pricing\" data-zt-pro-upgrade>Pro $19/mo</a>" +
           (workerUp ? "" : "<a href=\"/ops/e2e\">E2E status</a>") +
           "<button type=\"button\" style=\"border:0;background:transparent;color:var(--slate);cursor:pointer\" " +
           "aria-label=\"Dismiss\">✕</button>";
         el.querySelector("button").onclick = function () { el.remove(); };
+        var proLink = el.querySelector("[data-zt-pro-upgrade]");
+        if (proLink) proLink.onclick = function (e) { markCheckoutRef("deploy_success_pro"); };
         document.body.appendChild(el);
       }, 800);
     }
@@ -126,6 +129,14 @@
   }
 
   var FREE_DEPLOY_LIMIT = 1;
+
+  function markCheckoutRef(ref) {
+    try { sessionStorage.setItem("zt_checkout_ref", ref); } catch (e) {}
+  }
+  function goUpgradeFromFreeLimit() {
+    markCheckoutRef("free_limit_upgrade");
+    location.href = "/app#pricing";
+  }
 
   function maybeWorkerBanner() {
     ORIG(SUPA + "/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at", {
@@ -260,6 +271,7 @@
             return jresp({
               error: "Free includes " + FREE_DEPLOY_LIMIT + " paper strategy. Upgrade to Pro for unlimited.",
               upgrade: "/app#pricing",
+              upgrade_ref: "free_limit_upgrade",
             });
           return jresp({ error: msg });
         }).catch(function () { return jresp({ error: "Deploy failed - try again." }); });
@@ -655,7 +667,7 @@
         if (/FREE_LIMIT/i.test(msg)) {
           err.textContent = "Free includes 1 strategy — upgrade at /app#pricing";
           err.hidden = false;
-          setTimeout(function () { location.href = "/app#pricing"; }, 900);
+          setTimeout(goUpgradeFromFreeLimit, 900);
           return;
         }
         err.textContent = msg;

@@ -19,8 +19,11 @@ grep -q 'enforce_deploy_limit' saas/db/migrations/0005_grant_paid_and_deploy_lim
   ok "migration 0005 server-side deploy cap" || \
   bad "migration 0005 missing enforce_deploy_limit"
 
-grep -q 'FREE_DEPLOY_LIMIT' saas/web/js/billing.js && ok "billing.js FREE_DEPLOY_LIMIT" || \
-  bad "billing.js missing FREE_DEPLOY_LIMIT"
+grep -q 'zt_checkout_ref' saas/web/js/billing.js && ok "billing.js checkout attribution ref" || \
+  bad "billing.js missing zt_checkout_ref checkout attribution"
+
+grep -q 'free_limit_upgrade' deploy/landing/studio.js && ok "studio.js free_limit_upgrade path" || \
+  bad "studio.js missing free_limit_upgrade handler"
 
 prod_ok=0
 for attempt in 1 2 3; do

@@ -272,8 +272,11 @@ function showPostDeployHint() {
     `<div style="flex:1"><b>Strategy deployed</b><br><span style="font-weight:500;color:var(--slate,#64748b)">${workerNote}</span></div>` +
     `<a href="#forward" style="padding:8px 14px;border-radius:9px;background:var(--green,#00ab4e);color:#04140a;text-decoration:none;font-weight:700">Forward Test</a>` +
     `<a href="/coins/?utm_source=site&amp;utm_medium=organic&amp;utm_campaign=deploy_success_coins" style="padding:8px 14px;border-radius:9px;border:1px solid var(--line,#e2e8f0);color:var(--navy,#101e36);text-decoration:none;font-weight:700">More coins</a>` +
+    `<a href="#pricing" data-zt-pro-upgrade style="padding:8px 14px;border-radius:9px;border:1px solid var(--line,#e2e8f0);color:var(--navy,#101e36);text-decoration:none;font-weight:700">Pro $19/mo</a>` +
     `<button type="button" style="border:0;background:transparent;cursor:pointer;color:var(--slate,#64748b)" aria-label="Dismiss">✕</button>`;
   el.querySelector("button").onclick = () => el.remove();
+  const proBtn = el.querySelector("[data-zt-pro-upgrade]");
+  if (proBtn) proBtn.onclick = (e) => { markCheckoutRef("deploy_success_pro"); };
   document.body.appendChild(el);
 }
 
@@ -438,10 +441,14 @@ function renderAccount() {
 }
 
 // ---------------------------------------------------------------- actions (optimistic + toast)
+function markCheckoutRef(ref) {
+  try { sessionStorage.setItem("zt_checkout_ref", ref); } catch { /* ignore */ }
+}
 async function deploy(key) {
   const already = state.deployments.some(d => d.strategy_key === key);
   if (!isPro(tier) && !already && state.deployments.length >= FREE_DEPLOY_LIMIT) {
     toast(`Free includes ${FREE_DEPLOY_LIMIT} strategy, upgrade to Pro for unlimited.`, "info");
+    markCheckoutRef("free_limit_upgrade");
     setTimeout(() => location.hash = "pricing", 500); return;
   }
   const { error } = await sb.from("deployment").upsert(
@@ -451,6 +458,7 @@ async function deploy(key) {
     const m = niceError(error);
     if (/free_limit|more than one strategy/i.test(m)) {
       toast(`Free includes ${FREE_DEPLOY_LIMIT} strategy — upgrade to Pro for unlimited.`, "info");
+      markCheckoutRef("free_limit_upgrade");
       setTimeout(() => { location.hash = "pricing"; }, 500);
       return;
     }

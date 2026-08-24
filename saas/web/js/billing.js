@@ -33,10 +33,17 @@ export async function openCheckout(user, plan = "pro", cycle = "month") {
   try {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) { toast("Please sign in first.", "info"); return; }
+    let ref = "";
+    try {
+      ref = sessionStorage.getItem("zt_checkout_ref") || "";
+      sessionStorage.removeItem("zt_checkout_ref");
+    } catch { /* ignore */ }
+    const pathBase = `/app#pricing:${plan}:${cycle}`;
+    const path = (ref ? `${pathBase}:${ref}` : pathBase).slice(0, 290);
     try {
       await sb.from("event").insert({
         name: "checkout_click",
-        path: (`/app#pricing:${plan}:${cycle}`).slice(0, 290),
+        path,
       });
     } catch { /* funnel */ }
     toast("Starting secure checkout…", "info");
