@@ -9,9 +9,17 @@ label="${1:-session}"
 shipped="${2:-}"
 
 tshort="$(date -u +%H:%M)Z"
-work=0 mig=0
+work=0 mig=0 gsc_ready=0 sales_ready=0 prod=0 db_auth_ok=0
 ./scripts/check-worker.sh >/dev/null 2>&1 && work=1
 ./scripts/check-migrations.sh >/dev/null 2>&1 && mig=1
+SITE=https://zengtrade.in ./scripts/check-production.sh >/dev/null 2>&1 && prod=1
+SITE=https://zengtrade.in ./scripts/check-gsc-ready.sh >/dev/null 2>&1 && gsc_ready=1
+./scripts/check-sales-ready.sh >/dev/null 2>&1 && sales_ready=1
+if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
+  ./scripts/validate-database-credentials.sh >/dev/null 2>&1 && db_auth_ok=1
+else
+  db_auth_ok=1
+fi
 
 worker_txt=$([[ $work -eq 1 ]] && echo "✅" || echo "❌")
 
@@ -47,6 +55,16 @@ if [[ $work -eq 0 && $mig -eq 1 ]]; then
 else
   echo "- worker ${worker_txt} · migration 0011 $([[ $mig -eq 1 ]] && echo '✅' || echo '❌') · parallel growth ${parallel} · sales-ready ${sales}${qa:+ · qa parallel ${qa}}"
 fi
+cto_g=$([[ $prod -eq 1 && $mig -eq 1 && $work -eq 1 && $db_auth_ok -eq 1 ]] && echo '✅' || echo '❌')
+if [[ $work -eq 1 ]]; then
+  cpo_g="✅ trades"
+elif [[ "$partial" == "✅" ]]; then
+  cpo_g="partial ✅"
+else
+  cpo_g="❌"
+fi
+cbo_g=$([[ $gsc_ready -eq 1 && $sales_ready -eq 1 ]] && echo '✅ infra' || echo '❌')
+echo "- growth goals: CTO ${cto_g} · CPO ${cpo_g} · CBO ${cbo_g} · MRR founder /admin"
 if [[ -n "$shipped" ]]; then
   echo "- ${shipped}"
 fi

@@ -1,6 +1,6 @@
 # zengtrade — live status
 
-**Last autopilot check:** 2026-08-24 (session 154)  
+**Last autopilot check:** 2026-08-24 (session 155)  
 **Production:** https://zengtrade.in
 
 ## Ship gate
@@ -18,6 +18,9 @@
 | Sales-ready (Pro checkout path) | ✅ `./scripts/check-sales-ready.sh` |
 | QA parallel (excl. worker) | ✅ `./scripts/check-qa-parallel.sh` |
 | DATABASE_URL auth (Railway) | ❌ wrong password — `./scripts/validate-database-credentials.sh` |
+| Growth: CTO loop | ❌ auth+worker+DB — `/ops/worker` |
+| Growth: CPO trades | partial ✅ — full E2E needs worker |
+| Growth: CBO infra | ✅ GSC+sales-ready · first MRR founder `/admin` |
 | Paper worker | ❌ **Down** — heartbeat stale (2026-08-11); Railway deploy **FAILED** (wrong `DATABASE_URL` password) |
 
 ## P0 blocker (founder)

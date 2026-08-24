@@ -171,7 +171,7 @@ function activationChecklist() {
   if (deployed && traded) return "";
   const s1 = "done", s2 = deployed ? "done" : "on", s3 = traded ? "done" : (deployed ? "on" : "");
   const workerNote = deployed && !traded && !state.workerAlive
-    ? `<p class="muted" style="margin:8px 0 0;font-size:13px">Paper worker is offline — deploys are saved but trades pause until the worker is running. <a href="/how-it-works/">How paper trading works</a></p>`
+    ? `<p class="muted" style="margin:8px 0 0;font-size:13px">Paper worker is offline — deploys are saved but trades pause until the worker is running. <a href="/ops/worker">Worker status</a> · <a href="/how-it-works/">How paper trading works</a></p>`
     : deployed && !traded && state.workerAlive
     ? `<p class="muted" style="margin:8px 0 0;font-size:13px">Worker is running — first closed trade usually within 5–15 min. Open <a href="#forward">Forward Test</a>.</p>`
     : "";
@@ -279,7 +279,7 @@ function showPostDeployHint() {
 function forwardEmptyBlurb() {
   const deployed = state.deployments.some(d => d.status === "running");
   if (deployed && !state.workerAlive) {
-    return "Deploy saved — paper worker is offline. Trades appear when the worker is back (~every 5 min when live).";
+    return "Deploy saved — paper worker is offline. Trades appear when the worker is back (~every 5 min when live). Check /ops/worker for status.";
   }
   if (deployed && state.workerAlive) {
     return "Worker is running — first closed trade usually within 5–15 min on live Binance prices.";
@@ -366,7 +366,7 @@ function renderStrategies() {
   if (state.loading) { app.innerHTML = `<div class="grid cards">${skeletonRows(3)}</div>`; return; }
   const deployed = new Set(state.deployments.map(d => d.strategy_key));
   const workerNote = !state.workerAlive
-    ? `<p class="muted" style="margin-top:8px;font-size:13px">Paper worker is offline — deploys are saved but trades pause until it restarts. <a href="/how-it-works/">How paper trading works</a></p>`
+    ? `<p class="muted" style="margin-top:8px;font-size:13px">Paper worker is offline — deploys are saved but trades pause until it restarts. <a href="/ops/worker">Worker status</a> · <a href="/how-it-works/">How paper trading works</a></p>`
     : "";
   app.innerHTML = `
     <div class="page-h"><h2>Strategies</h2><p class="muted">Deploy to paper-trade free. Backtest figures are ~2 years of real data, net of fees, <b>backtest, not forward-proven.</b> Watch each earn its track record in your own book before it ever runs live.</p>${workerNote}</div>

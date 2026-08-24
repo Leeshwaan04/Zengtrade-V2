@@ -370,6 +370,10 @@ async function refresh() {
       items.push(`<li><b>QA&VAPT</b> — <a href="/ops/security">security</a> · <code>./scripts/check-qa-parallel.sh</code></li>`);
       items.push(`<li><b>CLI</b> — <code>./scripts/guide-founder-parallel.sh</code> · <code>./scripts/check-parallel-growth.sh</code></li>`);
     }
+    const gg = g.growth_goal || {};
+    if (gg.cto_ok === false) {
+      items.push(`<li><b>Growth</b> — CTO blocked: <a href="/ops/worker">fix DATABASE_URL</a> · CPO ${gg.cpo_partial_ok ? "partial ✅" : "❌"} · CBO ${gg.cbo_infra_ok ? "infra ✅ · MRR founder" : "❌"}</li>`);
+    }
     if (items.length) {
       parallel.hidden = false;
       parallelList.innerHTML = items.join("");

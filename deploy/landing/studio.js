@@ -145,7 +145,8 @@
       "font:600 12.5px/1.4 var(--sans,system-ui);background:#fff8e6;color:#7a5a00;" +
       "border-bottom:1px solid #f0d78a";
     el.innerHTML = "Paper worker offline — deploys save, but trades pause until the worker restarts. " +
-      '<a href="/how-it-works/" style="color:inherit;font-weight:700;margin-left:6px">How paper trading works</a>';
+      '<a href="/ops/worker" style="color:inherit;font-weight:700;margin-left:6px">Worker status</a> · ' +
+      '<a href="/how-it-works/" style="color:inherit;font-weight:700">How paper trading works</a>';
     document.body.appendChild(el);
   }
   maybeWorkerBanner();
