@@ -29,3 +29,6 @@ echo "  ./scripts/check-funnel-ctas.sh"
 echo ""
 echo "Founder setup (once): ./scripts/guide-gsc-founder.sh · $SITE/ops/gsc"
 echo "Playbook: docs/SEO_PLAYBOOK.md § Monthly GSC review"
+echo ""
+echo "Growth objective:"
+GROWTH_GSC=1 ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true

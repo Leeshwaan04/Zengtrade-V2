@@ -58,6 +58,13 @@ else
   fail=1
 fi
 
+if grep -q 'utm_campaign=signup_coins' saas/web/login.html; then
+  echo "OK   login coins CTA (signup_coins)"
+else
+  echo "FAIL login.html missing signup_coins coins hub CTA"
+  fail=1
+fi
+
 echo ""
 echo ">> Plan intent"
 if SITE="$SITE" ./scripts/check-plan-intent.sh >/dev/null 2>&1; then
@@ -69,8 +76,19 @@ fi
 
 echo ""
 echo ">> Evidence app (worker-offline UX)"
-if grep -q '/ops/e2e' saas/web/js/app.js; then
-  echo "OK   app.js worker-offline E2E hints"
+prod_ok=0
+for attempt in 1 2 3; do
+  appjs=$(curl -sfL "$SITE/js/app.js" 2>/dev/null) || appjs=""
+  if [[ -n "$appjs" ]] && echo "$appjs" | grep -q '/ops/e2e'; then
+    prod_ok=1
+    break
+  fi
+  [[ $attempt -lt 3 ]] && sleep 2
+done
+if [[ $prod_ok -eq 1 ]]; then
+  echo "OK   app.js worker-offline E2E hints (production)"
+elif grep -q '/ops/e2e' saas/web/js/app.js; then
+  echo "OK   app.js worker-offline E2E hints (repo — production CDN may lag)"
 else
   echo "FAIL app.js missing /ops/e2e worker-offline hints"
   fail=1

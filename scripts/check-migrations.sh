@@ -56,3 +56,8 @@ if [[ $fail -ne 0 ]]; then
   exit 1
 fi
 echo "All migration probes passed."
+if [[ -z "${ZT_QUIET_GROWTH:-}" ]]; then
+  echo ""
+  echo "Growth objective:"
+  GROWTH_MIG=1 ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
+fi

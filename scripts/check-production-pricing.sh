@@ -34,3 +34,8 @@ if [[ $fail -ne 0 ]]; then
 fi
 echo ""
 echo "Founding Pro pricing present on production."
+if [[ -z "${ZT_QUIET_GROWTH:-}" ]]; then
+  echo ""
+  echo "Growth goal:"
+  GROWTH_SALES=1 GROWTH_BILL=1 ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
+fi

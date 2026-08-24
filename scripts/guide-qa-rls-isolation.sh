@@ -14,6 +14,9 @@ if ! ./scripts/check-worker.sh >/dev/null 2>&1; then
   echo ""
   echo "While blocked, run parallel QA instead:"
   echo "  ./scripts/check-qa-parallel.sh"
+  echo ""
+  echo "Growth objective:"
+  ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
   exit 1
 fi
 
