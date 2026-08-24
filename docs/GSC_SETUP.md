@@ -39,7 +39,7 @@ Verify after deploy: `./scripts/check-gsc-ready.sh` (or `./scripts/check-sitemap
 - `https://zengtrade.in/coins/` (hub)
 - `https://zengtrade.in/login?mode=signup`
 
-Organic UTMs to track in `/admin`: `home_coins`, `pricing_coins`, `pricing_pro`, `pricing_elite`, `signup_coins`, `signup_nudge_coins`, `deploy_success_coins`, `paper_loop_coins`.
+Organic UTMs to track in `/admin`: `home_coins`, `pricing_coins`, `pricing_pro`, `pricing_elite`, `coins_hub_pro`, `coin_{slug}_pro`, `signup_coins`, `signup_nudge_coins`, `deploy_success_coins`, `paper_loop_coins`.
 
 `checkout_click` path suffixes (Pro upgrade intent): `free_limit_upgrade` (2nd deploy blocked), `deploy_success_pro` (post-deploy upsell), `forward_empty_pro` (Forward Test empty state).
 

@@ -59,6 +59,23 @@ check_page "home coins hub" "/" "home_coins" || fail=1
 check_page "how-it-works coins" "/how-it-works/" "paper_loop_coins" || fail=1
 check_page "login coins CTA" "/login" "signup_coins" || fail=1
 
+if check_page "coins hub pro" "/coins/" "coins_hub_pro"; then
+  true
+elif grep -q 'coins_hub_pro' seo/generate.py 2>/dev/null; then
+  echo "OK   coins hub pro — utm_campaign=coins_hub_pro (repo — production deploy pending)"
+else
+  echo "FAIL coins hub pro — missing coins_hub_pro in generate.py"
+  fail=1
+fi
+if check_page "coin bitcoin pro" "/coins/bitcoin/" "coin_bitcoin_pro"; then
+  true
+elif grep -q 'coin_{slug}_pro' seo/generate.py 2>/dev/null; then
+  echo "OK   coin bitcoin pro — utm_campaign=coin_bitcoin_pro (repo — production deploy pending)"
+else
+  echo "FAIL coin bitcoin pro — missing coin_*_pro in generate.py"
+  fail=1
+fi
+
 if [[ $fail -ne 0 ]]; then
   echo ""
   echo "Rebuild landing (deploy/landing/build.py) and redeploy main."

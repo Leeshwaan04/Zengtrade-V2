@@ -23,6 +23,8 @@ Try the deploy path: https://zengtrade.in/login?mode=signup&utm_source=linkedin&
 
 Browse strategies by coin: https://zengtrade.in/coins/?utm_source=linkedin&utm_medium=social&utm_campaign=build_in_public_coins
 
+Founding Pro ($19/mo, unlimited paper): https://zengtrade.in/login?mode=signup&plan=pro&utm_source=linkedin&utm_medium=social&utm_campaign=build_in_public_pro
+
 Not investment advice. Paper only. No live execution.
 ```
 
