@@ -68,6 +68,15 @@ else
 fi
 
 echo ""
+echo ">> Evidence app (worker-offline UX)"
+if grep -q '/ops/e2e' saas/web/js/app.js; then
+  echo "OK   app.js worker-offline E2E hints"
+else
+  echo "FAIL app.js missing /ops/e2e worker-offline hints"
+  fail=1
+fi
+
+echo ""
 if [[ $fail -eq 0 ]]; then
   echo "Activation UI ready — trades need paper worker: ./scripts/check-worker.sh"
   echo "Manual E2E when worker live: $SITE/ops/e2e"

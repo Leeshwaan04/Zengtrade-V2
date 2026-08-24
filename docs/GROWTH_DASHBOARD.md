@@ -16,7 +16,7 @@
 | Parallel growth (excl. worker) | — | ❌ run ./scripts/check-founder-parallel-ready.sh | — |
 | Sales-ready | — | ✅ check-sales-ready.sh | — |
 | QA parallel | — | ✅ check-qa-parallel.sh | — |
-| Growth: CBO infra | — | ✅ GSC+sales-ready · MRR founder | — |
+| Growth: CBO infra | — | ❌ | — |
 | Growth: CPO trades | — | partial ✅ (trades need worker) | — |
 | Growth: CTO loop | — | ❌ /ops/worker | — |
 
@@ -2759,6 +2759,35 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 - worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ❌ · sales-ready ✅ · qa parallel ✅
 - DATABASE_URL auth ❌ (Railway password — /ops/worker)
 - growth goals: CTO ❌ · CPO partial ✅ · CBO ❌ · MRR founder /admin
+
+### Day 1 (session 173) — evidence E2E hints + funnel/SEO growth footers + coin spotlight
+
+### CTO
+- **Shipped:** —
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** app.js worker-offline /ops/e2e links; check-activation-ready probe; guide-free-tier growth summary
+
+### CBO
+- **Shipped:** check-funnel-ctas + check-seo-content growth summaries
+
+### SEO
+- **Shipped:** —
+
+### Marketing
+- **Shipped:** guide-coin-spotlight coins hub UTM; REDDIT partial-activation note + coins link
+
+### Sales
+- **Shipped:** —
+
+### QA&VAPT
+- **Shipped:** e2e_smoke passed
+
+### Status (`./scripts/check-growth-standup.sh` @ 03:26Z)
+- worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ❌ · sales-ready ✅ · qa parallel ✅
+- DATABASE_URL auth ❌ (Railway password — /ops/worker)
+- growth goals: CTO ❌ · CPO partial ✅ · CBO ✅ infra · MRR founder /admin
 
 ---
 

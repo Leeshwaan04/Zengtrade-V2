@@ -33,3 +33,6 @@ echo "   → Supabase: free user cannot insert 2nd distinct strategy_key in depl
 echo ""
 echo "Related: ./scripts/guide-partial-e2e.sh · $SITE/ops/e2e"
 echo "After Pro upgrade: unlimited paper strategies (honest copy — live coming soon)"
+echo ""
+echo "Growth objective:"
+GROWTH_PARTIAL=1 ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true

@@ -2,6 +2,8 @@
 
 **Status:** Draft only. Post after `./scripts/verify-activation-path.sh` passes and you have a real Forward Test screenshot.
 
+**Partial (worker offline):** You may share signup → deploy only — see `./scripts/guide-partial-e2e.sh` and `docs/content/LINKEDIN_BUILD_IN_PUBLIC.md`. Do **not** claim closed trades.
+
 ---
 
 ## Title
@@ -37,5 +39,7 @@ If useful, I can share a screenshot of the forward book once we have another wee
 ## Comment (if sub rules require link in comments)
 
 Paper signup (free tier): https://zengtrade.in/login?mode=signup&utm_source=reddit&utm_medium=organic&utm_campaign=algotrading_draft
+
+Coin strategies hub: https://zengtrade.in/coins/?utm_source=reddit&utm_medium=organic&utm_campaign=algotrading_coins
 
 How it works: https://zengtrade.in/how-it-works/
