@@ -59,6 +59,9 @@ check_login_or_repo 'prepOAuthSignup' 'Google OAuth prep (prepOAuthSignup)' || f
 check_login_or_repo 'persistCheckoutRef' 'checkout ref persistence (zt_checkout_ref)' || fail=1
 check_login_or_repo 'planBanner' 'plan intent banner (?plan=pro|elite)' || fail=1
 check_login_or_repo 'PENDING_SIGNUP_KEY' 'OAuth signup_complete tracking' || fail=1
+check_login_or_repo 'SITE.dashboard' 'default signup redirect to /dashboard' || fail=1
+check_login_or_repo 'Algo Studio' 'signup foot → Algo Studio link' || fail=1
+check_login_or_repo 'zt_fresh_signup' 'fresh signup deploy nudge flag' || fail=1
 
 if [[ $fail -eq 0 ]]; then
   echo ""

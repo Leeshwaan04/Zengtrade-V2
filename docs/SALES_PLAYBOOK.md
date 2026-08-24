@@ -15,7 +15,7 @@ Checkout: NOWPayments crypto invoice → IPN grants tier via `grant_paid` RPC.
 ## Funnel stages
 
 1. **Awareness** — SEO / marketing → landing
-2. **Signup** — `signup_complete` event
+2. **Signup** — `signup_complete` event · default lands on `/dashboard` (Algo Studio) · `?plan=pro|elite` → `/app#pricing`
 3. **Activation** — deploy → first closed trade (builds trust to buy)
 4. **Intent** — `plan_intent` from `?plan=pro|elite` (pricing/coins/social UTMs); `utm_campaign` flows to `checkout_click` path via `zt_checkout_ref`
 5. **Checkout** — `checkout_click` → invoice → `?paid=1` poll  

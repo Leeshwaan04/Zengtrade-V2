@@ -16,7 +16,7 @@
 | Parallel growth (excl. worker) | — | ✅ founder-parallel-ready | — |
 | Sales-ready | — | ✅ check-sales-ready.sh | — |
 | QA parallel | — | ✅ check-qa-parallel.sh | — |
-| Growth: CBO infra | — | ❌ | — |
+| Growth: CBO infra | — | ✅ GSC+sales-ready · MRR founder | — |
 | Growth: CPO trades | — | partial ✅ (trades need worker) | — |
 | Growth: CTO loop | — | ❌ /ops/worker | — |
 
@@ -3452,6 +3452,35 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 - **Shipped:** e2e_smoke + probe-dist goAlgoStudio green
 
 ### Status (`./scripts/check-growth-standup.sh` @ 06:44Z)
+- worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
+- DATABASE_URL auth ❌ (Railway password — /ops/worker)
+- growth goals: CTO ❌ · CPO partial ✅ · CBO ✅ infra · MRR founder /admin
+
+### Day 1 (session 196) — plan-intent + production signup→dashboard probes
+
+### CTO
+- **Shipped:** check-production login Algo Studio foot (repo fallback)
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** check-plan-intent dashboard redirect + zt_fresh_signup probes
+
+### CBO
+- **Shipped:** SALES_PLAYBOOK signup routing docs
+
+### SEO
+- **Shipped:** —
+
+### Marketing
+- **Shipped:** —
+
+### Sales
+- **Shipped:** guide-partial-e2e + ops-e2e login foot expectations
+
+### QA&VAPT
+- **Shipped:** e2e_smoke + plan-intent green on production
+
+### Status (`./scripts/check-growth-standup.sh` @ 06:49Z)
 - worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
 - DATABASE_URL auth ❌ (Railway password — /ops/worker)
 - growth goals: CTO ❌ · CPO partial ✅ · CBO ✅ infra · MRR founder /admin

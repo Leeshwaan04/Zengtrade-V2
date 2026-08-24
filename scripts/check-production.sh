@@ -22,6 +22,14 @@ check "login" "$SITE/login"
 check "app" "$SITE/app" "zengtrade"
 check "app-onboard" "$SITE/app" "closed trades appear as the worker runs"
 check "login-coins" "$SITE/login" "signup_coins"
+if grep -q 'Algo Studio' /tmp/ztcurl.out 2>/dev/null; then
+  echo "OK   login-algo — Algo Studio signup foot"
+elif grep -q 'Algo Studio' saas/web/login.html 2>/dev/null; then
+  echo "WARN login-algo — Algo Studio foot in repo (CDN deploy pending)"
+else
+  echo "FAIL login-algo — missing Algo Studio signup foot on /login"
+  fail=1
+fi
 check "pricing" "$SITE/pricing/"
 check "sitemap" "$SITE/sitemap.xml" "<urlset"
 check "dashboard" "$SITE/dashboard/" "zengtrade"
