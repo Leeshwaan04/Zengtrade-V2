@@ -47,6 +47,7 @@ echo "OK   sitemap key URLs (7 coins)"
 
 grep -q 'OAuth callbacks must land' "$DIST/dashboard/studio.js" || { echo "FAIL studio.js OAuth guard"; exit 1; }
 grep -q 'deploy_success_coins' "$DIST/dashboard/studio.js" || { echo "FAIL studio.js missing deploy_success_coins CTA"; exit 1; }
+grep -q 'View evidence' "$DIST/dashboard/studio.js" || { echo "FAIL studio.js missing worker-offline evidence link"; exit 1; }
 grep -q 'free_limit_upgrade' "$DIST/dashboard/studio.js" || { echo "FAIL studio.js missing free_limit_upgrade"; exit 1; }
 echo "OK   studio.js OAuth guard + deploy CTAs"
 

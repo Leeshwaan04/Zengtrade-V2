@@ -79,6 +79,13 @@ else
   fail=1
 fi
 
+if grep -q 'ztWorkerDown' deploy/landing/studio.js && grep -q 'View evidence' deploy/landing/studio.js; then
+  echo "OK   studio.js worker-offline banner → /app#forward"
+else
+  echo "FAIL studio.js missing worker-offline evidence link"
+  fail=1
+fi
+
 if grep -q 'deploy_success_coins' deploy/landing/studio.js; then
   echo "OK   studio.js deploy_success_coins post-deploy CTA"
 else

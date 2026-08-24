@@ -108,7 +108,7 @@ Worker down does not block partial activation or first Pro MRR prep:
 | Goal | Status while worker down |
 |------|--------------------------|
 | CTO | Blocked until `DATABASE_URL` auth passes — see fix paths above |
-| CPO | Partial OK: signup → deploy (`./scripts/verify-activation-path.sh --partial`) |
+| CPO | Partial OK: `./scripts/guide-partial-e2e.sh` · login → `/dashboard` deploy → `/app#forward` |
 | CBO | GSC + sales-ready probes green; founder: GSC verify + first Pro checkout → `/admin` MRR |
 
 ## Related docs
