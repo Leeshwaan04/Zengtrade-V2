@@ -35,8 +35,9 @@ export async function openCheckout(user, plan = "pro", cycle = "month") {
     if (!session) { toast("Please sign in first.", "info"); return; }
     let ref = "";
     try {
-      ref = sessionStorage.getItem("zt_checkout_ref") || "";
+      ref = sessionStorage.getItem("zt_checkout_ref") || localStorage.getItem("zt_checkout_ref") || "";
       sessionStorage.removeItem("zt_checkout_ref");
+      localStorage.removeItem("zt_checkout_ref");
     } catch { /* ignore */ }
     const pathBase = `/app#pricing:${plan}:${cycle}`;
     const path = (ref ? `${pathBase}:${ref}` : pathBase).slice(0, 290);

@@ -131,7 +131,10 @@
   var FREE_DEPLOY_LIMIT = 1;
 
   function markCheckoutRef(ref) {
-    try { sessionStorage.setItem("zt_checkout_ref", ref); } catch (e) {}
+    try {
+      sessionStorage.setItem("zt_checkout_ref", ref);
+      localStorage.setItem("zt_checkout_ref", ref);
+    } catch (e) {}
   }
   function goUpgradeFromFreeLimit() {
     markCheckoutRef("free_limit_upgrade");

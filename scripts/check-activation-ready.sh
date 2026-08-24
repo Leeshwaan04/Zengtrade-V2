@@ -86,10 +86,10 @@ else
   fail=1
 fi
 
-if grep -q 'zt_checkout_ref' saas/web/login.html && grep -q 'location.pathname+location.search' saas/web/login.html; then
-  echo "OK   login UTM → checkout ref + signup_complete path"
+if grep -q 'zt_checkout_ref' saas/web/login.html && grep -q 'localStorage.setItem("zt_checkout_ref"' saas/web/login.html; then
+  echo "OK   login UTM → checkout ref (session + localStorage, OAuth-safe)"
 else
-  echo "FAIL login.html missing UTM checkout attribution"
+  echo "FAIL login.html missing durable UTM checkout attribution"
   fail=1
 fi
 

@@ -6,17 +6,39 @@ fail=0
 
 check_page() {
   local label="$1" path="$2" campaign="$3"
+  if _page_has_campaign "$path" "$campaign"; then
+    echo "OK   $label — utm_source=site utm_campaign=$campaign"
+    return 0
+  fi
+  echo "FAIL $label — missing utm on signup CTA (expected utm_campaign=$campaign)"
+  return 1
+}
+
+_page_has_campaign() {
+  local path="$1" campaign="$2"
   local html="" attempt
   for attempt in 1 2 3; do
     html=$(curl -sfL --compressed -A 'zengtrade-growth-probe/1' \
       --retry 3 --retry-delay 2 --retry-all-errors "$SITE$path" 2>/dev/null) || html=""
     if [[ -n "$html" ]] && echo "$html" | grep -q "utm_source=site" && echo "$html" | grep -q "utm_campaign=${campaign}"; then
-      echo "OK   $label — utm_source=site utm_campaign=$campaign"
       return 0
     fi
     [[ $attempt -lt 3 ]] && sleep 2
   done
-  echo "FAIL $label — missing utm on signup CTA (expected utm_campaign=$campaign)"
+  return 1
+}
+
+check_page_or_repo() {
+  local label="$1" path="$2" campaign="$3" repo_file="$4" repo_pat="$5"
+  if _page_has_campaign "$path" "$campaign"; then
+    echo "OK   $label — utm_source=site utm_campaign=$campaign"
+    return 0
+  fi
+  if [[ -f "$repo_file" ]] && grep -q "$repo_pat" "$repo_file" 2>/dev/null; then
+    echo "OK   $label — utm_campaign=$campaign (repo — production deploy pending)"
+    return 0
+  fi
+  echo "FAIL $label — missing utm_campaign=$campaign"
   return 1
 }
 
@@ -25,30 +47,9 @@ echo ""
 
 check_page "home" "/" "landing" || fail=1
 check_page "pricing" "/pricing/" "pricing" || fail=1
-if check_page "pricing coins hub" "/pricing/" "pricing_coins"; then
-  true
-elif grep -q 'utm_campaign=pricing_coins' deploy/landing/build.py 2>/dev/null; then
-  echo "OK   pricing coins hub — utm_campaign=pricing_coins (repo — production deploy pending)"
-else
-  echo "FAIL pricing coins hub — missing pricing_coins in build.py"
-  fail=1
-fi
-if check_page "pricing pro" "/pricing/" "pricing_pro"; then
-  true
-elif grep -q 'campaign = f"pricing_{pid}"' deploy/landing/build.py 2>/dev/null; then
-  echo "OK   pricing pro — utm_campaign=pricing_pro (repo — production deploy pending)"
-else
-  echo "FAIL pricing pro — missing pricing_pro in build.py"
-  fail=1
-fi
-if check_page "pricing elite" "/pricing/" "pricing_elite"; then
-  true
-elif grep -q 'campaign = f"pricing_{pid}"' deploy/landing/build.py 2>/dev/null; then
-  echo "OK   pricing elite — utm_campaign=pricing_elite (repo — production deploy pending)"
-else
-  echo "FAIL pricing elite — missing pricing_elite in build.py"
-  fail=1
-fi
+check_page_or_repo "pricing coins hub" "/pricing/" "pricing_coins" deploy/landing/build.py 'utm_campaign=pricing_coins' || fail=1
+check_page_or_repo "pricing pro" "/pricing/" "pricing_pro" deploy/landing/build.py 'campaign = f"pricing_{pid}"' || fail=1
+check_page_or_repo "pricing elite" "/pricing/" "pricing_elite" deploy/landing/build.py 'campaign = f"pricing_{pid}"' || fail=1
 check_page "coins hub" "/coins/" "coins_hub" || fail=1
 for slug in bitcoin ethereum solana bnb xrp cardano dogecoin; do
   check_page "coin $slug" "/coins/${slug}/" "coin_${slug}" || fail=1
@@ -57,32 +58,11 @@ done
 # Secondary internal links (coins hub discovery — sessions 167–168)
 check_page "home coins hub" "/" "home_coins" || fail=1
 check_page "how-it-works coins" "/how-it-works/" "paper_loop_coins" || fail=1
-if check_page "how-it-works pro" "/how-it-works/" "paper_loop_pro"; then
-  true
-elif grep -q 'paper_loop_pro' deploy/landing/build.py 2>/dev/null; then
-  echo "OK   how-it-works pro — utm_campaign=paper_loop_pro (repo — production deploy pending)"
-else
-  echo "FAIL how-it-works pro — missing paper_loop_pro in build.py"
-  fail=1
-fi
+check_page_or_repo "how-it-works pro" "/how-it-works/" "paper_loop_pro" deploy/landing/build.py 'paper_loop_pro' || fail=1
 check_page "login coins CTA" "/login" "signup_coins" || fail=1
 
-if check_page "coins hub pro" "/coins/" "coins_hub_pro"; then
-  true
-elif grep -q 'coins_hub_pro' seo/generate.py 2>/dev/null; then
-  echo "OK   coins hub pro — utm_campaign=coins_hub_pro (repo — production deploy pending)"
-else
-  echo "FAIL coins hub pro — missing coins_hub_pro in generate.py"
-  fail=1
-fi
-if check_page "coin bitcoin pro" "/coins/bitcoin/" "coin_bitcoin_pro"; then
-  true
-elif grep -q 'coin_{slug}_pro' seo/generate.py 2>/dev/null; then
-  echo "OK   coin bitcoin pro — utm_campaign=coin_bitcoin_pro (repo — production deploy pending)"
-else
-  echo "FAIL coin bitcoin pro — missing coin_*_pro in generate.py"
-  fail=1
-fi
+check_page_or_repo "coins hub pro" "/coins/" "coins_hub_pro" seo/generate.py 'coins_hub_pro' || fail=1
+check_page_or_repo "coin bitcoin pro" "/coins/bitcoin/" "coin_bitcoin_pro" seo/generate.py 'coin_{slug}_pro' || fail=1
 
 if [[ $fail -ne 0 ]]; then
   echo ""

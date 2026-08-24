@@ -46,8 +46,8 @@ else
   fail=1
 fi
 
-if grep -q 'zt_checkout_ref' saas/web/js/billing.js; then
-  echo "OK   billing.js checkout attribution (zt_checkout_ref)"
+if grep -q 'localStorage.getItem("zt_checkout_ref")' saas/web/js/billing.js; then
+  echo "OK   billing.js checkout attribution (session + localStorage)"
 else
   echo "FAIL billing.js missing zt_checkout_ref attribution"
   fail=1

@@ -105,11 +105,24 @@ function shouldTrackSignupComplete(user){
   return Date.now()-created<180000;
 }
 
+function persistCheckoutRef(ref){
+  if(!ref) return;
+  try{
+    sessionStorage.setItem("zt_checkout_ref",ref);
+    localStorage.setItem("zt_checkout_ref",ref);
+  }catch(e){}
+}
+
 function maybeCheckoutRefFromUtm(){
   try{
     const utm=new URLSearchParams(location.search).get("utm_campaign");
-    if(utm) sessionStorage.setItem("zt_checkout_ref",utm);
+    if(utm) persistCheckoutRef(utm);
   }catch(e){}
+}
+
+function prepOAuthSignup(){
+  try{ localStorage.setItem(PENDING_SIGNUP_KEY,String(Date.now())); }catch(e){}
+  maybeCheckoutRefFromUtm();
 }
 
 function trackSignupComplete(){
@@ -181,7 +194,7 @@ $("f-up").onsubmit=async e=>{e.preventDefault();const b=e.target.querySelector("
        show("Account created, check your email to confirm, then sign in.",true); busy(b,false,"Create free account"); }
   catch(err){ show(niceError(err)); busy(b,false,"Create free account"); }};
 
-$("google").onclick=async()=>{ try{ await signInWithGoogle(); }catch(e){ show(niceError(e)); } };
+$("google").onclick=async()=>{ prepOAuthSignup(); try{ await signInWithGoogle(); }catch(e){ show(niceError(e)); } };
 $("forgot").onclick=async e=>{ e.preventDefault(); const em=$("i-email").value.trim(); if(!em) return show("Enter your email first.");
   try{ await resetPassword(em); show("Password reset link sent.",true); }catch(err){ show(niceError(err)); } };
 </script></body></html>

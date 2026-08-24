@@ -453,7 +453,10 @@ function renderAccount() {
 
 // ---------------------------------------------------------------- actions (optimistic + toast)
 function markCheckoutRef(ref) {
-  try { sessionStorage.setItem("zt_checkout_ref", ref); } catch { /* ignore */ }
+  try {
+    sessionStorage.setItem("zt_checkout_ref", ref);
+    localStorage.setItem("zt_checkout_ref", ref);
+  } catch { /* ignore */ }
 }
 async function deploy(key) {
   const already = state.deployments.some(d => d.strategy_key === key);
