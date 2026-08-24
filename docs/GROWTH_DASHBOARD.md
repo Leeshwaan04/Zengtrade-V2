@@ -2905,6 +2905,64 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 - DATABASE_URL auth ❌ (Railway password — /ops/worker)
 - growth goals: CTO ❌ · CPO partial ✅ · CBO ❌ · MRR founder /admin
 
+### Day 1 (session 177) — production probes + worker standup + SEO playbook
+
+### CTO
+- **Shipped:** check-worker growth summary on failure; check-production onboarding + login-coins probes
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** probe-dist app onboarding worker-honesty
+
+### CBO
+- **Shipped:** guide-gsc-founder coins hub indexing; SEO_PLAYBOOK partial-proof + probe list
+
+### SEO
+- **Shipped:** SEO_PLAYBOOK WebSite/signup_coins probe alignment
+
+### Marketing
+- **Shipped:** LINKEDIN_BUILD_IN_PUBLIC → WEEKLY_PROOF partial cross-link
+
+### Sales
+- **Shipped:** —
+
+### QA&VAPT
+- **Shipped:** e2e_smoke + check-production passed
+
+### Status (`./scripts/check-growth-standup.sh` @ 03:50Z)
+- worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ❌
+- DATABASE_URL auth ❌ (Railway password — /ops/worker)
+- growth goals: CTO ❌ · CPO partial ✅ · CBO ✅ infra · MRR founder /admin
+
+### Day 1 (session 178) — ZT_QUIET_GROWTH standup speed + sales guide
+
+### CTO
+- **Shipped:** run-p0 + founder-parallel-work default ZT_QUIET_GROWTH; nested check growth footers
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** verify-activation-path + check-activation-ready quiet mode
+
+### CBO
+- **Shipped:** check-gsc/billing/sales-ready quiet mode
+
+### SEO
+- **Shipped:** —
+
+### Marketing
+- **Shipped:** —
+
+### Sales
+- **Shipped:** guide-first-pro-checkout signup_coins organic alt
+
+### QA&VAPT
+- **Shipped:** check-railway-deploy recovery hints; e2e_smoke passed
+
+### Status (`./scripts/check-growth-standup.sh` @ 04:10Z)
+- worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
+- DATABASE_URL auth ❌ (Railway password — /ops/worker)
+- growth goals: CTO ❌ · CPO partial ✅ · CBO ❌ · MRR founder /admin
+
 ---
 
 ## Daily log template

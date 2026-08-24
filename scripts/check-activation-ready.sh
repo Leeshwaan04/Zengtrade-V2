@@ -113,9 +113,11 @@ echo ""
 if [[ $fail -eq 0 ]]; then
   echo "Activation UI ready — trades need paper worker: ./scripts/check-worker.sh"
   echo "Manual E2E when worker live: $SITE/ops/e2e"
-  echo ""
-  echo "Growth objective:"
-  GROWTH_PARTIAL=1 GROWTH_MIG=1 ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
+  if [[ -z "${ZT_QUIET_GROWTH:-}" ]]; then
+    echo ""
+    echo "Growth objective:"
+    GROWTH_PARTIAL=1 GROWTH_MIG=1 ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
+  fi
   exit 0
 fi
 exit 1

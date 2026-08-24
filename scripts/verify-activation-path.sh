@@ -34,9 +34,11 @@ if [[ "${1:-}" == "--partial" ]]; then
   echo ""
   echo "Partial activation green — manual E2E steps 1–2: https://zengtrade.in/ops/e2e"
   echo "Trades (steps 3–4) blocked until worker: https://zengtrade.in/ops/worker"
-  echo ""
-  echo "Growth objective:"
-  GROWTH_PARTIAL=1 GROWTH_MIG=1 ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
+  if [[ -z "${ZT_QUIET_GROWTH:-}" ]]; then
+    echo ""
+    echo "Growth objective:"
+    GROWTH_PARTIAL=1 GROWTH_MIG=1 ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
+  fi
   exit 0
 fi
 

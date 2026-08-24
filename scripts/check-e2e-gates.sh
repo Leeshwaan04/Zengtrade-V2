@@ -33,9 +33,11 @@ if [[ $mig -eq 1 && $work -eq 0 ]]; then
     echo "Activation UI ❌ — run ./scripts/check-activation-ready.sh"
   fi
   echo ""
-  echo "Growth objective:"
-  ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
-  echo ""
+  if [[ -z "${ZT_QUIET_GROWTH:-}" ]]; then
+    echo "Growth objective:"
+    ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
+    echo ""
+  fi
   echo "P0 unblock: ./scripts/guide-worker-recovery.sh · https://zengtrade.in/ops/worker"
   exit 1
 fi

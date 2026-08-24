@@ -40,9 +40,11 @@ echo ""
 if [[ $fail -eq 0 ]]; then
   echo "GSC-ready — founder: add property + submit $SITE/sitemap.xml"
   echo "Guide: $SITE/ops/gsc · docs/GSC_SETUP.md"
-  echo ""
-  echo "Growth objective:"
-  GROWTH_GSC=1 GROWTH_SALES=1 ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
+  if [[ -z "${ZT_QUIET_GROWTH:-}" ]]; then
+    echo ""
+    echo "Growth objective:"
+    GROWTH_GSC=1 GROWTH_SALES=1 ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
+  fi
   exit 0
 fi
 echo "Fix failures above, then submit sitemap in Search Console."

@@ -28,7 +28,7 @@ run() {
 }
 
 run "Parallel growth (CPO/CBO)" env ZT_QUIET_GROWTH=1 ./scripts/check-parallel-growth.sh
-run "Partial activation (CPO)" ./scripts/verify-activation-path.sh --partial
+run "Partial activation (CPO)" env ZT_QUIET_GROWTH=1 ./scripts/verify-activation-path.sh --partial
 run "QA parallel (QA&VAPT)" env ZT_QUIET_GROWTH=1 ./scripts/check-qa-parallel.sh
 run "Founder guides" ./scripts/check-founder-guides.sh
 

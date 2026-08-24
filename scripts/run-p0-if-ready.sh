@@ -4,6 +4,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+export ZT_QUIET_GROWTH="${ZT_QUIET_GROWTH:-1}"
 
 mig=0 work=0
 ./scripts/check-migrations.sh >/dev/null 2>&1 && mig=1

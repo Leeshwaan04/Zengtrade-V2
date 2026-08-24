@@ -29,9 +29,11 @@ section "Pricing truth (no live overpromise)" ./scripts/check-pricing-truth.sh
 if [[ $fail -eq 0 ]]; then
   echo "Sales-ready — founder manual checkout: $SITE/ops/billing"
   echo "After IPN: confirm paying + MRR in $SITE/admin"
-  echo ""
-  echo "Growth objective:"
-  GROWTH_SALES=1 GROWTH_GSC=1 GROWTH_BILL=1 ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
+  if [[ -z "${ZT_QUIET_GROWTH:-}" ]]; then
+    echo ""
+    echo "Growth objective:"
+    GROWTH_SALES=1 GROWTH_GSC=1 GROWTH_BILL=1 ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
+  fi
   exit 0
 fi
 exit 1

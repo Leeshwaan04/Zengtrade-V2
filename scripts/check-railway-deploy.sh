@@ -44,6 +44,14 @@ fi
 
 case "$dep_status" in
   SUCCESS) exit 0 ;;
-  FAILED|CRASHED) exit 1 ;;
-  *) exit 2 ;;
+  FAILED|CRASHED)
+    if [[ -z "${ZT_QUIET_GROWTH:-}" ]]; then
+      echo "Recovery: ./scripts/guide-worker-recovery.sh · https://zengtrade.in/ops/worker"
+    fi
+    exit 1 ;;
+  *)
+    if [[ -z "${ZT_QUIET_GROWTH:-}" ]]; then
+      echo "Recovery: ./scripts/guide-worker-recovery.sh"
+    fi
+    exit 2 ;;
 esac
