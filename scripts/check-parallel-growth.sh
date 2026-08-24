@@ -44,5 +44,5 @@ if [[ $fail -eq 0 ]]; then
 fi
 
 echo "Fix failures above, then unblock worker for trades E2E."
-./scripts/founder-next-action.sh 2>/dev/null || true
+echo "P0: https://zengtrade.in/ops/worker · ./scripts/guide-worker-recovery.sh"
 exit 1

@@ -72,5 +72,4 @@ echo "Growth goal audit:"
 GROWTH_PROD=$prod GROWTH_MIG=$mig GROWTH_WORK=$work GROWTH_GSC=$gsc GROWTH_SALES=$sales \
   GROWTH_DB_AUTH=$db_auth GROWTH_PARTIAL=$partial GROWTH_BILL=$bill \
   ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null || true
-./scripts/founder-next-action.sh 2>/dev/null || true
 exit 1

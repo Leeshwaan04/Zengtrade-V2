@@ -2615,6 +2615,35 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 - DATABASE_URL auth ❌ (Railway password — /ops/worker)
 - growth goals: CTO ❌ · CPO partial ✅ · CBO ✅ infra · MRR founder /admin
 
+### Day 1 (session 168) — how-it-works HowTo + standup speed
+
+### CTO
+- **Shipped:** status-report/snapshot/growth-gates drop slow founder-next-action (~30s standup)
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** how-it-works paper loop → /coins/ CTA (utm paper_loop_coins)
+
+### CBO
+- **Shipped:** HowTo JSON-LD on /how-it-works for activation SEO
+
+### SEO
+- **Shipped:** probe-dist HowTo + paper_loop_coins checks
+
+### Marketing
+- **Shipped:** how-it-works internal link to coin hub
+
+### Sales
+- **Shipped:** —
+
+### QA&VAPT
+- **Shipped:** e2e_smoke passed
+
+### Status (`./scripts/check-growth-standup.sh` @ 02:17Z)
+- worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
+- DATABASE_URL auth ❌ (Railway password — /ops/worker)
+- growth goals: CTO ❌ · CPO partial ✅ · CBO ✅ infra · MRR founder /admin
+
 ---
 
 ## Daily log template

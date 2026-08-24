@@ -85,8 +85,8 @@ echo ""
 echo "Growth goal summary:"
 GROWTH_PROD=$prod GROWTH_MIG=$mig GROWTH_WORK=$work GROWTH_GSC=$gsc GROWTH_SALES=$sales \
   GROWTH_DB_AUTH=$db_auth_ok GROWTH_PARTIAL=$partial GROWTH_BILL=$bill \
-  ./scripts/print-growth-goal-summary.sh 2>/dev/null | sed 's/^/  /' || true
+  ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
 echo ""
 if [[ $work -eq 0 ]]; then
-  ./scripts/founder-next-action.sh 2>/dev/null | sed 's/^/  /' || true
+  echo "  P0: https://zengtrade.in/ops/worker · ./scripts/guide-worker-recovery.sh"
 fi

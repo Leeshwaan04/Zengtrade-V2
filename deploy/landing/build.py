@@ -96,6 +96,17 @@ PRICING_FAQ_SCHEMA = """<script type="application/ld+json">
 </script>"""
 
 
+HOWITWORKS_SCHEMA = """<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"HowTo","name":"Paper trade a crypto strategy on zengtrade",
+"description":"Deploy a regime-aware strategy in paper mode, let the worker run on live prices, and review evidence in Forward Test before risking capital.",
+"step":[
+{"@type":"HowToStep","name":"Deploy in Algo Studio","text":"Pick a strategy from the library or build your own. One click deploys paper mode — your capital stays untouched."},
+{"@type":"HowToStep","name":"Worker runs every ~5 min","text":"Live spot prices with a full cost model (~35 bps round-trip). Stands down in regimes where the book has no edge."},
+{"@type":"HowToStep","name":"Review evidence in /app","text":"Forward Test, accuracy, and activity tabs build an honest track record before connecting an exchange."}
+]}
+</script>"""
+
+
 def shell(title, desc, canon, main, extra_head=""):
     return f"""<!DOCTYPE html><html lang="en" data-regime="bull"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -239,6 +250,7 @@ PAPER_LOOP_SEC = """
       <div class="lp-cta-row center" style="margin-top:18px">
         <a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=paper_loop">Start paper trading free</a>
         <a class="lp-cta ghost" href="/dashboard">Open Algo Studio</a>
+        <a class="lp-cta ghost" href="/coins/?utm_source=site&amp;utm_medium=organic&amp;utm_campaign=paper_loop_coins">Explore coin strategies →</a>
       </div>
     </div>
   </section>
@@ -381,7 +393,7 @@ emit("", shell(
 emit("how-it-works", shell(
     "How zengtrade works, the regime engine, honesty & survival-first risk",
     "How zengtrade works: it reads Bull/Neutral/Bear regimes, runs only the strategies proven to fit, never fabricates a number, and protects capital first. Paper-first, non-custodial.",
-    "https://zengtrade.in/how-it-works/", main_hiw_paper), "https://zengtrade.in/how-it-works/")
+    "https://zengtrade.in/how-it-works/", main_hiw_paper, extra_head=HOWITWORKS_SCHEMA), "https://zengtrade.in/how-it-works/")
 
 emit("pricing", shell(
     "Pricing — free paper trading, Pro from $19/mo | zengtrade",

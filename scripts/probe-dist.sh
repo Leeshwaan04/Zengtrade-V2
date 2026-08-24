@@ -57,4 +57,8 @@ echo "OK   pricing FAQ JSON-LD"
 grep -q 'home_coins' "$DIST/index.html" || { echo "FAIL home missing coins hub CTA"; exit 1; }
 echo "OK   home coins hub CTA"
 
+grep -q 'HowTo' "$DIST/how-it-works/index.html" || { echo "FAIL how-it-works missing HowTo JSON-LD"; exit 1; }
+grep -q 'paper_loop_coins' "$DIST/how-it-works/index.html" || { echo "FAIL how-it-works missing coins CTA"; exit 1; }
+echo "OK   how-it-works HowTo + coins CTA"
+
 echo "All dist probes passed."
