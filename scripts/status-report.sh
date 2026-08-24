@@ -38,7 +38,7 @@ echo "Worker heartbeat last: $hb UTC"
 
 if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
   ./scripts/check-railway-deploy.sh 2>/dev/null || true
-  if ./scripts/validate-database-credentials.sh >/dev/null 2>&1; then
+  if ./scripts/probe-database-auth.sh >/dev/null 2>&1; then
     db_auth=1
     echo "DATABASE_URL auth     ✅"
   else

@@ -26,7 +26,7 @@ curl -sfL "$SITE/js/auth.js" 2>/dev/null | grep -q establishSession && oauth=1
 ./scripts/check-migrations.sh >/dev/null 2>&1 && mig=1
 ./scripts/check-worker.sh >/dev/null 2>&1 && work=1
 if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
-  ./scripts/validate-database-credentials.sh >/dev/null 2>&1 && db_auth=1
+  ./scripts/probe-database-auth.sh >/dev/null 2>&1 && db_auth=1
 else
   db_auth=1
 fi

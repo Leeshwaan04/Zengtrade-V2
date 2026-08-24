@@ -16,7 +16,7 @@ SITE=https://zengtrade.in ./scripts/check-production.sh >/dev/null 2>&1 && prod=
 SITE=https://zengtrade.in ./scripts/check-gsc-ready.sh >/dev/null 2>&1 && gsc_ready=1
 ./scripts/check-sales-ready.sh >/dev/null 2>&1 && sales_ready=1
 if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
-  ./scripts/validate-database-credentials.sh >/dev/null 2>&1 && db_auth_ok=1
+  ./scripts/probe-database-auth.sh >/dev/null 2>&1 && db_auth_ok=1
 else
   db_auth_ok=1
 fi
@@ -33,9 +33,9 @@ if [[ $work -eq 0 ]]; then
   qa="❌"
   partial="❌"
   for _ in 1 2 3; do
-    [[ "$parallel" == "❌" ]] && ./scripts/check-parallel-growth.sh >/dev/null 2>&1 && parallel="✅"
+    [[ "$parallel" == "❌" ]] && env ZT_QUIET_GROWTH=1 ./scripts/check-parallel-growth.sh >/dev/null 2>&1 && parallel="✅"
     [[ "$sales" == "❌" ]] && ./scripts/check-sales-ready.sh >/dev/null 2>&1 && sales="✅"
-    [[ "$qa" == "❌" ]] && ./scripts/check-qa-parallel.sh >/dev/null 2>&1 && qa="✅"
+    [[ "$qa" == "❌" ]] && env ZT_QUIET_GROWTH=1 ./scripts/check-qa-parallel.sh >/dev/null 2>&1 && qa="✅"
     [[ "$partial" == "❌" && $mig -eq 1 ]] && ./scripts/verify-activation-path.sh --partial >/dev/null 2>&1 && partial="✅"
     [[ "$parallel" == "✅" && "$sales" == "✅" ]] && break
     sleep 2
@@ -46,7 +46,7 @@ echo "### Status (\`./scripts/check-growth-standup.sh\` @ ${tshort})"
 if [[ $work -eq 0 && $mig -eq 1 ]]; then
   echo "- worker ${worker_txt} · migration 0011 $([[ $mig -eq 1 ]] && echo '✅' || echo '❌') · partial activation ${partial} · parallel growth ${parallel} · sales-ready ${sales}${qa:+ · qa parallel ${qa}}"
   if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
-    if ./scripts/validate-database-credentials.sh >/dev/null 2>&1; then
+    if ./scripts/probe-database-auth.sh >/dev/null 2>&1; then
       echo "- DATABASE_URL auth ✅"
     else
       echo "- DATABASE_URL auth ❌ (Railway password — /ops/worker)"

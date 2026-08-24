@@ -11,7 +11,7 @@ work=0 parallel=0 sales=0 qa=0 mig=0 partial=0 gsc=0 prod=0 db_auth="—"
 SITE=https://zengtrade.in ./scripts/check-production.sh >/dev/null 2>&1 && prod=1
 SITE=https://zengtrade.in ./scripts/check-gsc-ready.sh >/dev/null 2>&1 && gsc=1
 if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
-  if ./scripts/validate-database-credentials.sh >/dev/null 2>&1; then
+  if ./scripts/probe-database-auth.sh >/dev/null 2>&1; then
     db_auth="✅"
   else
     db_auth="❌ /ops/worker"
@@ -19,9 +19,9 @@ if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
 fi
 for _ in 1 2 3; do
   [[ $parallel -eq 1 && $sales -eq 1 ]] && break
-  [[ $parallel -eq 0 ]] && ./scripts/check-founder-parallel-ready.sh >/dev/null 2>&1 && parallel=1
+  [[ $parallel -eq 0 ]] && env ZT_QUIET_GROWTH=1 ./scripts/check-parallel-growth.sh >/dev/null 2>&1 && parallel=1
   [[ $sales -eq 0 ]] && ./scripts/check-sales-ready.sh >/dev/null 2>&1 && sales=1
-  [[ $qa -eq 0 ]] && ./scripts/check-qa-parallel.sh >/dev/null 2>&1 && qa=1
+  [[ $qa -eq 0 ]] && env ZT_QUIET_GROWTH=1 ./scripts/check-qa-parallel.sh >/dev/null 2>&1 && qa=1
   [[ $partial -eq 0 && $work -eq 0 && $mig -eq 1 ]] && ./scripts/verify-activation-path.sh --partial >/dev/null 2>&1 && partial=1
   sleep 2
 done

@@ -58,7 +58,7 @@ echo "| GSC-ready | $([[ $gsc -eq 1 ]] && echo '✅' || echo '❌') |"
 echo "| Funnel CTAs (7 coins) | $([[ $funnel -eq 1 ]] && echo '✅' || echo '❌') |"
 echo "| Signups / deployers / MRR | /admin (login required) |"
 if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
-  if ./scripts/validate-database-credentials.sh >/dev/null 2>&1; then
+  if ./scripts/probe-database-auth.sh >/dev/null 2>&1; then
     db_auth_ok=1
     echo "| DATABASE_URL auth | ✅ |"
   else
