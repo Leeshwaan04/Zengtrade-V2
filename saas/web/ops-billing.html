@@ -63,13 +63,20 @@ fetch(SUPA+"/rest/v1/event",{method:"POST",headers:{apikey:ANON,"Content-Type":"
   else{el.innerHTML="⚠ <code>checkout_click</code> blocked (HTTP "+r.status+") — apply <a href=\"/ops/migrate\">migration 0011</a> first";}
 });
 fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{headers:{apikey:ANON}})
-.then(r=>r.json()).then(rows=>{
+.then(r=>r.json()).then(async rows=>{
   const ts=rows[0]?.updated_at;
   const age=ts?Math.round((Date.now()-new Date(ts))/60000):99999;
   const el=document.getElementById("p0gate");
   if(age>12){
     el.style.display="block";
-    el.innerHTML="<b>Note:</b> Paper worker is offline — you can still test checkout. Parallel gates: <code>./scripts/check-parallel-growth.sh</code>. Activation E2E (trades) needs <a href=\"/ops/worker\">worker live</a>.";
+    let cbo="";
+    try{
+      const data=await fetch("/ops/data.json?"+Date.now(),{cache:"no-store"}).then(r=>r.json());
+      if(data.gates?.growth_goal?.cbo_infra_ok){
+        cbo=" <b>CBO goal:</b> infra ✅ — target Paying ≥ 1 + MRR &gt; $0 in <a href=\"/admin\">/admin</a>.";
+      }
+    }catch(e){}
+    el.innerHTML="<b>Note:</b> Paper worker is offline — checkout still works. Parallel: <code>./scripts/check-parallel-growth.sh</code>. Trades need <a href=\"/ops/worker\">worker live</a>."+cbo;
   }
 }).catch(()=>{});
 (async function(){

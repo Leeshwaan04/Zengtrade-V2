@@ -96,6 +96,21 @@ Stopping the worker does **not** delete deployments or historical trades. Users 
 - [ ] `RAILWAY_API_TOKEN` is an **account** token from railway.com/account/tokens
 - [ ] After green heartbeat: `./scripts/verify-activation-path.sh`
 
+## While blocked — parallel growth goals
+
+Worker down does not block partial activation or first Pro MRR prep:
+
+```bash
+./scripts/print-growth-goal-summary.sh
+./scripts/guide-founder-parallel.sh
+```
+
+| Goal | Status while worker down |
+|------|--------------------------|
+| CTO | Blocked until `DATABASE_URL` auth passes — see fix paths above |
+| CPO | Partial OK: signup → deploy (`./scripts/verify-activation-path.sh --partial`) |
+| CBO | GSC + sales-ready probes green; founder: GSC verify + first Pro checkout → `/admin` MRR |
+
 ## Related docs
 
 - `saas/worker/README.md` — local run + hosting options

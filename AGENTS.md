@@ -59,6 +59,7 @@ Verify with:
 ./scripts/status-report.sh
 ./scripts/audit-growth-goal.sh          # CTO/CPO/CBO goal requirements vs live probes
 ./scripts/check-growth-goal.sh          # alias for audit-growth-goal.sh
+./scripts/print-growth-goal-summary.sh  # fast summary (do not nest from founder-parallel-work.sh)
 ./scripts/check-growth-standup.sh   # daily log helper (status + parallel work)
 ./scripts/log-growth-session.sh N   # print status block for GROWTH_DASHBOARD.md (incl. growth goals line)
 ./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..." --seo "..." --marketing "..." --sales "..." --qa "..."

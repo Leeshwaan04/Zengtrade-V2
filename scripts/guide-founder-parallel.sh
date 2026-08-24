@@ -66,3 +66,7 @@ echo "     $SITE/ops/security · docs/QA_VAPT_CHECKLIST.md"
 echo ""
 echo "CLI  ./scripts/validate-database-credentials.sh (no secrets printed)"
 echo "     ./scripts/audit-growth-goal.sh — CTO/CPO/CBO goal audit"
+echo "     ./scripts/check-growth-goal.sh · ./scripts/print-growth-goal-summary.sh"
+echo ""
+echo "== Growth objective =="
+./scripts/print-growth-goal-summary.sh 2>/dev/null | sed 's/^/  /' || true

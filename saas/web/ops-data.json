@@ -142,7 +142,8 @@
       "app.js + studio.js worker links /ops/worker; log-growth-session goal line (session 155)",
       "standup/preflight dedupe audit; snapshot growth goal rows (session 156)",
       "check-growth-goal alias; ops-p0 growth goals; guide-worker-recovery summary (session 157)",
-      "founder-parallel-work + check-p0-readiness growth summary; ops-worker goals (session 158)"
+      "founder-parallel-work + check-p0-readiness growth summary; ops-worker goals (session 158)",
+      "guide-founder-parallel growth summary; WORKER_RECOVERY goals; ops-billing CBO (session 159)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
