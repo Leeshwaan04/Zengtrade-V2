@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-24T06:39:08Z",
+  "updated": "2026-08-24T12:28:37Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -37,7 +37,7 @@
     {
       "id": "sales-checkout",
       "title": "First Pro checkout \u2014 test MRR",
-      "detail": "Sales-ready probes green — optional trust path: /dashboard deploy → View evidence → /app#forward before checkout. Then ./scripts/guide-first-pro-checkout.sh and confirm Paying + MRR in /admin (worker not required)",
+      "detail": "Sales-ready probes green \u2014 optional trust path: /dashboard deploy \u2192 View evidence \u2192 /app#forward before checkout. Then ./scripts/guide-first-pro-checkout.sh and confirm Paying + MRR in /admin (worker not required)",
       "url": "https://zengtrade.in/ops/billing",
       "urgent": false
     },
@@ -161,8 +161,8 @@
       "founder-preflight + check-p0-readiness + wait-for-p0 post-P0 alignment (session 207)",
       "/ops/migrate parallel work card when migration 0011 live + worker down (session 208)",
       "founder parallel hub: guide-founder-parallel + FOUNDER_PARALLEL + /ops parallel list (session 209)",
-      "guide-founder-growth-standup.sh — combined CPO + CBO founder standup (session 212)",
-      "guide-cto-founder-standup.sh — P0 worker recovery combined playbook (session 215)",
+      "guide-founder-growth-standup.sh \u2014 combined CPO + CBO founder standup (session 212)",
+      "guide-cto-founder-standup.sh \u2014 P0 worker recovery combined playbook (session 215)",
       "guide-founder-growth-standup quick mode ZT_QUICK_GROWTH_STANDUP (session 218)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
@@ -234,7 +234,7 @@
       "studio.js worker-offline banner View evidence \u2192 /app#forward (session 197)",
       "/ops/e2e + guide-partial-e2e document dashboard worker-offline evidence link (session 198)",
       "app.js activation checklist View evidence when worker offline (session 199)",
-      "guide-cpo-founder-standup.sh — partial activation + Q9 combined playbook (session 211)"
+      "guide-cpo-founder-standup.sh \u2014 partial activation + Q9 combined playbook (session 211)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [
@@ -300,9 +300,9 @@
       "guide-gsc-founder links parallel Pro MRR checkout (session 148)",
       "check-parallel-growth includes sales-ready; GROWTH_DASHBOARD DATABASE_URL auth row (session 149)",
       "/admin deploy-first trust path in MRR + P0 banners (session 200)",
-      "founder parallel trust path unified — /ops, /ops/p0, /ops/worker, FOUNDER_PARALLEL (session 201)",
+      "founder parallel trust path unified \u2014 /ops, /ops/p0, /ops/worker, FOUNDER_PARALLEL (session 201)",
       "GSC_SETUP + /ops/gsc parallel MRR trust path (session 203)",
-      "guide-cbo-founder-standup.sh — GSC + first MRR combined playbook (session 210)"
+      "guide-cbo-founder-standup.sh \u2014 GSC + first MRR combined playbook (session 210)"
     ],
     "next": "Founder: GSC completion log (docs/GSC_SETUP.md); Pro checkout at /ops/billing",
     "links": [
@@ -340,7 +340,7 @@
       "GSC founder completion log in GSC_SETUP.md + /ops/gsc (session 117)",
       "guide-monthly-gsc-review.sh \u2014 founder monthly GSC CLI (session 128)",
       "/ops/gsc parallel MRR trust path + partial proof View evidence (session 203)",
-      "guide-seo-founder-standup.sh — GSC + organic combined playbook (session 217)"
+      "guide-seo-founder-standup.sh \u2014 GSC + organic combined playbook (session 217)"
     ],
     "next": "GSC property + sitemap submit after P0; expand pSEO via seo/generate.py",
     "links": [
@@ -378,7 +378,7 @@
       "guide-coin-spotlight.sh \u2014 coin spotlight post template (session 131)",
       "LINKEDIN + WEEKLY_PROOF partial copy documents dashboard View evidence banner (session 203)",
       "guide-coin-spotlight evidence URL + partial deploy angle (session 205)",
-      "guide-marketing-founder-standup.sh — organic partial-proof combined playbook (session 214)"
+      "guide-marketing-founder-standup.sh \u2014 organic partial-proof combined playbook (session 214)"
     ],
     "next": "Founder: publish LinkedIn build-in-public post; forward-proof after P0",
     "links": [
@@ -418,7 +418,7 @@
       "guide-mrr-standup.sh \u2014 weekly /admin MRR standup (session 129)",
       "/ops/billing + guide-first-pro-checkout deploy-first View evidence trust path (session 199)",
       "/admin MRR alert deploy-first trust path when paying=0 (session 200)",
-      "guide-sales-founder-standup.sh — first Pro MRR combined playbook (session 216)"
+      "guide-sales-founder-standup.sh \u2014 first Pro MRR combined playbook (session 216)"
     ],
     "next": "Founder: run /ops/billing checkout smoke (no worker required); track MRR in /admin",
     "links": [
@@ -455,7 +455,7 @@
       "check-qa-parallel.sh + check-xss-hygiene.sh (session 125)",
       "guide-qa-rls-isolation.sh + check-founder-parallel-ready.sh (session 130)",
       "check-qa-parallel includes check-free-tier-limit Q9 + ops-security playbook probe (session 202)",
-      "guide-qa-founder-standup.sh — parallel QA combined playbook (session 213)"
+      "guide-qa-founder-standup.sh \u2014 parallel QA combined playbook (session 213)"
     ],
     "next": "Run security-smoke + E2E after P0; manual RLS isolation (2 accounts)",
     "links": [
@@ -477,7 +477,7 @@
     "production": true,
     "billing": true,
     "billing_ready": true,
-    "gsc_ready": false,
+    "gsc_ready": true,
     "activation_ready": true,
     "funnel_ctas": true,
     "migration_0011": true,
@@ -493,7 +493,7 @@
       "cto_ok": false,
       "cpo_partial_ok": true,
       "cpo_full_ok": false,
-      "cbo_infra_ok": false,
+      "cbo_infra_ok": true,
       "first_mrr_ok": false
     }
   }
