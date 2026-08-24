@@ -55,6 +55,17 @@ else
 fi
 echo ""
 
+echo ">> CBO founder standup guide"
+if [[ -x scripts/guide-cbo-founder-standup.sh ]] \
+  && grep -q 'guide-gsc-founder' scripts/guide-cbo-founder-standup.sh \
+  && grep -q 'guide-first-pro-checkout' scripts/guide-cbo-founder-standup.sh; then
+  echo "OK   guide-cbo-founder-standup GSC + MRR playbook"
+else
+  echo "FAIL guide-cbo-founder-standup incomplete"
+  fail=1
+fi
+echo ""
+
 if [[ $fail -eq 0 ]]; then
   echo "All founder parallel probes green — manual playbooks:"
   echo "  ./scripts/guide-founder-parallel.sh"

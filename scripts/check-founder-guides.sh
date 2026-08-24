@@ -23,6 +23,7 @@ guides=(
   guide-coin-spotlight.sh
   guide-worker-recovery.sh
   guide-mrr-standup.sh
+  guide-cbo-founder-standup.sh
 )
 
 for g in "${guides[@]}"; do

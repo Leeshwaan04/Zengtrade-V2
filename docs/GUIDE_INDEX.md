@@ -27,6 +27,7 @@ One-page map of CLI playbooks while the paper worker is blocked (or after P0 gre
 | **CTO** | `./scripts/guide-worker-recovery.sh` | P0 blocked — wrong Railway DB password |
 | **CPO** | `./scripts/guide-partial-e2e.sh` | Signup → deploy (steps 1–2); View evidence → `/app#forward` |
 | **CPO** | `./scripts/guide-free-tier-test.sh` | Q9 — second deploy blocked on Free |
+| **CBO / Sales** | `./scripts/guide-cbo-founder-standup.sh` | GSC + first Pro MRR combined (worker blocked) |
 | **CBO / SEO** | `./scripts/guide-gsc-founder.sh` | GSC verify + sitemap submit |
 | **SEO** | `./scripts/guide-monthly-gsc-review.sh` | Monthly GSC performance review |
 | **CBO / Sales** | `./scripts/guide-first-pro-checkout.sh` | First Pro MRR checkout |

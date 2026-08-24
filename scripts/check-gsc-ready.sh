@@ -51,6 +51,7 @@ if [[ $fail -eq 0 ]]; then
   echo ">> GSC ops playbook (/ops/gsc)"
   if grep -q 'View evidence' saas/web/ops-gsc.html \
     && grep -q 'guide-first-pro-checkout' saas/web/ops-gsc.html \
+    && grep -q 'guide-cbo-founder-standup' saas/web/ops-gsc.html \
     && grep -q 'WEEKLY_PROOF' saas/web/ops-gsc.html; then
     echo "OK   ops-gsc parallel MRR + partial proof docs"
   else
