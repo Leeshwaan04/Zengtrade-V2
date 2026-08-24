@@ -46,9 +46,23 @@
     <p style="font-size:13px;margin:12px 0 0;color:var(--slate)">CLI: <code>./scripts/check-sales-ready.sh</code> · <code>./scripts/guide-first-pro-checkout.sh</code> · Playbook: <code>docs/SALES_PLAYBOOK.md</code></p>
     <a class="btn" href="/admin" style="margin-top:8px">Open /admin</a>
   </div>
+
+  <p id="growthGoals" class="card" style="display:none;background:#eef2ff;border-color:#c7d2fe;font-size:14px;line-height:1.55"></p>
 </div>
 <script>
 const SUPA="https://ponvarxeytfcntckczbn.supabase.co", ANON="sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";
+(async function growthGoals(){
+  const el=document.getElementById("growthGoals");
+  if(!el) return;
+  try{
+    const data=await fetch("/ops/data.json?"+Date.now(),{cache:"no-store"}).then(r=>r.json());
+    const gg=data.gates?.growth_goal||{};
+    const cpo=gg.cpo_full_ok?"✅ trades":(gg.cpo_partial_ok?"partial ✅":"❌");
+    const mrr=gg.first_mrr_ok?"✅ MRR":"❌ first checkout → /admin";
+    el.innerHTML="<b>Growth goals:</b> CTO "+(gg.cto_ok?"✅":"❌")+" · CPO "+cpo+" · CBO "+(gg.cbo_infra_ok?"infra ✅":"❌")+" · <b>"+mrr+"</b> · parallel <a href=\"/ops/gsc\">GSC</a>";
+    el.style.display="block";
+  }catch(e){}
+})();
 fetch("https://ponvarxeytfcntckczbn.supabase.co/functions/v1/nowpayments-create-invoice",{
   method:"OPTIONS",headers:{Origin:location.origin,"Access-Control-Request-Method":"POST"}
 }).then(r=>{

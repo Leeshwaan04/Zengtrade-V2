@@ -38,3 +38,6 @@ echo "   → $SITE/admin — Paying ≥ 1 · MRR > \$0 · checkout_clicks_7d inc
 echo ""
 echo "Playbook: docs/SALES_PLAYBOOK.md § First Pro checkout"
 echo "Honest copy: Pro = unlimited paper today; live execution coming soon"
+echo ""
+echo "Growth objective (after first MRR in /admin, CBO goal complete):"
+./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
