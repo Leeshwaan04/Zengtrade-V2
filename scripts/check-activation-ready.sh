@@ -87,10 +87,25 @@ for attempt in 1 2 3; do
 done
 if [[ $prod_ok -eq 1 ]]; then
   echo "OK   app.js worker-offline E2E hints (production)"
+  if echo "$appjs" | grep -q 'Paper deploy is live'; then
+    echo "OK   app.js pricing worker-honesty (production)"
+  else
+    echo "WARN app.js pricing worker-honesty not on CDN yet"
+  fi
 elif grep -q '/ops/e2e' saas/web/js/app.js; then
   echo "OK   app.js worker-offline E2E hints (repo — production CDN may lag)"
+  if grep -q 'Paper deploy is live' saas/web/js/app.js; then
+    echo "OK   app.js pricing worker-honesty (repo — production CDN may lag)"
+  fi
 else
   echo "FAIL app.js missing /ops/e2e worker-offline hints"
+  fail=1
+fi
+
+if grep -q 'closed trades appear as the worker runs' saas/web/app.html; then
+  echo "OK   onboarding worker-honesty copy"
+else
+  echo "FAIL app.html missing onboarding worker-honesty copy"
   fail=1
 fi
 

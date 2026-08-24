@@ -90,3 +90,8 @@ if [[ $fail -ne 0 ]]; then
   exit 1
 fi
 echo "security-smoke passed."
+if [[ -z "${ZT_QUIET_GROWTH:-}" ]]; then
+  echo ""
+  echo "Growth objective:"
+  ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
+fi

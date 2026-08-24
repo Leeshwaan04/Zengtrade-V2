@@ -12,7 +12,7 @@ Owner: **Marketing Lead autopilot** (`.cursor/autopilot/marketing.md`)
 |-------|--------|
 | `utm_source` | `site`, `reddit`, `twitter`, `linkedin`, `gsc` |
 | `utm_medium` | `organic`, `social`, `community`, `email` |
-| `utm_campaign` | `landing`, `pricing`, `coin_btc`, `weekly_proof`, `algotrading_draft` |
+| `utm_campaign` | `landing`, `pricing`, `home_coins`, `signup_coins`, `paper_loop`, `paper_loop_coins`, `build_in_public`, `build_in_public_coins`, `weekly_proof`, `weekly_proof_partial`, `coin_spotlight_{slug}`, `algotrading_draft` |
 
 Signup URL template:
 
@@ -35,6 +35,8 @@ Founder/CBO can run these **before** paper worker is live (no forward trades yet
 | GSC verify + sitemap | https://zengtrade.in/ops/gsc | Search Console screenshot |
 | Pro checkout smoke | https://zengtrade.in/ops/billing | Invoice created (test mode OK) |
 | Signup → deploy UI | https://zengtrade.in/ops/e2e | Partial E2E when migration ✅ |
+| Login coins discovery | `/login` → `signup_coins` UTM | `./scripts/check-funnel-ctas.sh` |
+| Partial proof posts | `docs/content/WEEKLY_PROOF.md` § Partial | `./scripts/guide-linkedin-bip.sh` |
 | Founder playbook (all parallel) | `./scripts/guide-founder-parallel.sh` | CLI summary |
 
 **Do not** claim forward P&L or closed trades until `./scripts/check-worker.sh` is green.

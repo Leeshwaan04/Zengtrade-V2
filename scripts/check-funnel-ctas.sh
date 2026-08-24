@@ -6,14 +6,17 @@ fail=0
 
 check_page() {
   local label="$1" path="$2" campaign="$3"
-  local html
-  html=$(curl -sfL "$SITE$path" 2>/dev/null) || { echo "FAIL $label — could not fetch $path"; fail=1; return; }
-  if echo "$html" | grep -q "utm_source=site" && echo "$html" | grep -q "utm_campaign=${campaign}"; then
-    echo "OK   $label — utm_source=site utm_campaign=$campaign"
-  else
-    echo "FAIL $label — missing utm on signup CTA (expected utm_campaign=$campaign)"
-    fail=1
-  fi
+  local html="" attempt
+  for attempt in 1 2 3; do
+    html=$(curl -sfL "$SITE$path" 2>/dev/null) || html=""
+    if [[ -n "$html" ]] && echo "$html" | grep -q "utm_source=site" && echo "$html" | grep -q "utm_campaign=${campaign}"; then
+      echo "OK   $label — utm_source=site utm_campaign=$campaign"
+      return
+    fi
+    [[ $attempt -lt 3 ]] && sleep 2
+  done
+  echo "FAIL $label — missing utm on signup CTA (expected utm_campaign=$campaign)"
+  fail=1
 }
 
 echo "Funnel CTA probe — $SITE"
