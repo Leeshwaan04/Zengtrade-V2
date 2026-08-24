@@ -32,6 +32,7 @@ fi
 echo "== Manual playbooks =="
 echo ""
 echo "CTO  Unblock worker (P0):"
+echo "     ./scripts/guide-cto-founder-standup.sh   # P0 recovery combined"
 echo "     ./scripts/guide-worker-recovery.sh"
 echo "     $SITE/ops/worker"
 echo "     docs/WORKER_RECOVERY.md"

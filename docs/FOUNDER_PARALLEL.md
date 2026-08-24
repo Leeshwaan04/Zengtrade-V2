@@ -16,9 +16,10 @@ Index: **docs/GUIDE_INDEX.md** · `./scripts/list-founder-guides.sh`
 
 | Role | Action | Link / script |
 |------|--------|----------------|
-| **All** | Combined growth standup (CPO + CBO + QA + Marketing) | `./scripts/guide-founder-growth-standup.sh` · `./scripts/guide-founder-parallel.sh` |
+| **All** | Combined growth standup (all roles + CTO P0) | `./scripts/guide-founder-growth-standup.sh` · `./scripts/guide-founder-parallel.sh` |
 | **All** | Parallel hub (migration 0011 live, worker down) | https://zengtrade.in/ops/migrate · `./scripts/guide-founder-parallel.sh` |
-| **CTO** | Fix worker password | `./scripts/guide-worker-recovery.sh` · https://zengtrade.in/ops/worker · `docs/WORKER_RECOVERY.md` |
+| **CTO** | P0 worker recovery (combined) | `./scripts/guide-cto-founder-standup.sh` · https://zengtrade.in/ops/worker |
+| **CTO** | Fix worker password | `./scripts/guide-worker-recovery.sh` · `docs/WORKER_RECOVERY.md` |
 | **CTO** | Cloud Agent unblock | Secret `DATABASE_PASSWORD` → `./scripts/run-p0-if-ready.sh` |
 | **CTO** | GitHub auto-P0 | Repo Secrets → [health-watch](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/health-watch.yml) (every 6h) or [Apply P0](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml) |
 | **CPO** | Partial verify (CLI) | `./scripts/verify-activation-path.sh --partial` |

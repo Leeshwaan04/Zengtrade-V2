@@ -28,6 +28,7 @@ guides=(
   guide-founder-growth-standup.sh
   guide-qa-founder-standup.sh
   guide-marketing-founder-standup.sh
+  guide-cto-founder-standup.sh
 )
 
 for g in "${guides[@]}"; do

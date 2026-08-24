@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 export SITE="${SITE:-https://zengtrade.in}"
 
-echo "== Founder growth standup (CPO + CBO + QA + Marketing) — $SITE =="
+echo "== Founder growth standup (CPO + CBO + QA + Marketing + CTO P0) — $SITE =="
 echo ""
 
 if ./scripts/check-worker.sh >/dev/null 2>&1; then
@@ -53,4 +53,8 @@ echo ""
 ./scripts/guide-marketing-founder-standup.sh
 
 echo ""
-echo "P0 unblock — ./scripts/guide-worker-recovery.sh · $SITE/ops/worker"
+echo "=========================================="
+echo " CTO — P0 worker unblock (growth blocker)"
+echo "=========================================="
+echo ""
+./scripts/guide-cto-founder-standup.sh

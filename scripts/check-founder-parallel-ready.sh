@@ -84,8 +84,9 @@ if [[ -x scripts/guide-founder-growth-standup.sh ]] \
   && grep -q 'guide-cbo-founder-standup' scripts/guide-founder-growth-standup.sh \
   && grep -q 'guide-qa-founder-standup' scripts/guide-founder-growth-standup.sh \
   && grep -q 'guide-marketing-founder-standup' scripts/guide-founder-growth-standup.sh \
+  && grep -q 'guide-cto-founder-standup' scripts/guide-founder-growth-standup.sh \
   && grep -q 'guide-founder-growth-standup' saas/web/ops-migrate.html; then
-  echo "OK   guide-founder-growth-standup combined CPO + CBO + QA + Marketing playbook"
+  echo "OK   guide-founder-growth-standup combined all-role playbook (+ CTO P0)"
 else
   echo "FAIL guide-founder-growth-standup incomplete"
   fail=1
@@ -110,6 +111,17 @@ if [[ -x scripts/guide-marketing-founder-standup.sh ]] \
   echo "OK   guide-marketing-founder-standup organic partial-proof playbook"
 else
   echo "FAIL guide-marketing-founder-standup incomplete"
+  fail=1
+fi
+echo ""
+
+echo ">> CTO founder standup guide"
+if [[ -x scripts/guide-cto-founder-standup.sh ]] \
+  && grep -q 'check-p0-readiness' scripts/guide-cto-founder-standup.sh \
+  && grep -q 'guide-cto-founder-standup' saas/web/ops-worker.html; then
+  echo "OK   guide-cto-founder-standup P0 worker recovery playbook"
+else
+  echo "FAIL guide-cto-founder-standup incomplete"
   fail=1
 fi
 echo ""

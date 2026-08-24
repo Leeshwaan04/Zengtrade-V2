@@ -24,7 +24,8 @@ One-page map of CLI playbooks while the paper worker is blocked (or after P0 gre
 
 | Role | Script | When |
 |------|--------|------|
-| **All** | `./scripts/guide-founder-growth-standup.sh` | Combined CPO + CBO + QA + Marketing standup (worker blocked) |
+| **All** | `./scripts/guide-founder-growth-standup.sh` | Combined all-role standup incl. CTO P0 (worker blocked) |
+| **CTO** | `./scripts/guide-cto-founder-standup.sh` | P0 worker recovery combined (check-p0-readiness + validate) |
 | **CTO** | `./scripts/guide-worker-recovery.sh` | P0 blocked — wrong Railway DB password |
 | **CPO** | `./scripts/guide-cpo-founder-standup.sh` | Partial activation combined (signup → deploy + Q9) |
 | **CPO** | `./scripts/guide-partial-e2e.sh` | Signup → deploy (steps 1–2); View evidence → `/app#forward` |
