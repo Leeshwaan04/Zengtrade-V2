@@ -189,7 +189,10 @@ HOME_MAIN = """<main id="main">
 # ---- NEW PRICING ----------------------------------------------------------------------
 def plan(name, price, per, tag, feats, featured=False, cta="Start free", pid=""):
     lis = "".join(f"<li>{f}</li>" for f in feats)
-    href = "/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=pricing" + (f"&amp;plan={pid}" if pid else "")
+    campaign = f"pricing_{pid}" if pid else "pricing"
+    href = f"/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign={campaign}"
+    if pid:
+        href += f"&amp;plan={pid}"
     return f"""<div class="pr-plan{' feat' if featured else ''}">{'<div class="pr-ribbon">Most popular</div>' if featured else ''}
       <div class="pr-name">{name}</div><div class="pr-price">{price}<span>{per}</span></div>
       <div class="pr-tag">{tag}</div><ul class="pr-feats">{lis}</ul>

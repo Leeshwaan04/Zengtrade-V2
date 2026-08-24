@@ -33,6 +33,22 @@ else
   echo "FAIL pricing coins hub — missing pricing_coins in build.py"
   fail=1
 fi
+if check_page "pricing pro" "/pricing/" "pricing_pro"; then
+  true
+elif grep -q 'campaign = f"pricing_{pid}"' deploy/landing/build.py 2>/dev/null; then
+  echo "OK   pricing pro — utm_campaign=pricing_pro (repo — production deploy pending)"
+else
+  echo "FAIL pricing pro — missing pricing_pro in build.py"
+  fail=1
+fi
+if check_page "pricing elite" "/pricing/" "pricing_elite"; then
+  true
+elif grep -q 'campaign = f"pricing_{pid}"' deploy/landing/build.py 2>/dev/null; then
+  echo "OK   pricing elite — utm_campaign=pricing_elite (repo — production deploy pending)"
+else
+  echo "FAIL pricing elite — missing pricing_elite in build.py"
+  fail=1
+fi
 check_page "coins hub" "/coins/" "coins_hub" || fail=1
 for slug in bitcoin ethereum solana bnb xrp cardano dogecoin; do
   check_page "coin $slug" "/coins/${slug}/" "coin_${slug}" || fail=1
