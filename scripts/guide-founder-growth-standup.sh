@@ -40,6 +40,13 @@ echo ""
 
 echo ""
 echo "=========================================="
+echo " SEO — GSC + organic"
+echo "=========================================="
+echo ""
+./scripts/guide-seo-founder-standup.sh
+
+echo ""
+echo "=========================================="
 echo " Sales — first Pro MRR"
 echo "=========================================="
 echo ""

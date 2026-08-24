@@ -26,6 +26,7 @@ Index: **docs/GUIDE_INDEX.md** · `./scripts/list-founder-guides.sh`
 | **CPO** | Partial activation (combined) | `./scripts/guide-cpo-founder-standup.sh` · https://zengtrade.in/ops/e2e |
 | **CPO** | Partial E2E (signup → deploy) | `./scripts/guide-partial-e2e.sh` · https://zengtrade.in/ops/e2e · `./scripts/guide-free-tier-test.sh` |
 | **CPO / CBO** | Deploy-first trust path | https://zengtrade.in/dashboard deploy → **View evidence** → https://zengtrade.in/app#forward (before checkout) |
+| **SEO** | GSC + organic (combined) | `./scripts/guide-seo-founder-standup.sh` · https://zengtrade.in/ops/gsc |
 | **SEO** | Monthly GSC review | `./scripts/guide-monthly-gsc-review.sh` · `docs/SEO_PLAYBOOK.md` |
 | **CBO** | GSC + first Pro MRR (combined) | `./scripts/guide-cbo-founder-standup.sh` · https://zengtrade.in/ops/gsc · https://zengtrade.in/ops/billing |
 | **CBO** | GSC verify + sitemap | `./scripts/guide-gsc-founder.sh` · https://zengtrade.in/ops/gsc · `docs/GSC_SETUP.md` |

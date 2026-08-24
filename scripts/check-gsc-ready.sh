@@ -52,6 +52,7 @@ if [[ $fail -eq 0 ]]; then
   if grep -q 'View evidence' saas/web/ops-gsc.html \
     && grep -q 'guide-first-pro-checkout' saas/web/ops-gsc.html \
     && grep -q 'guide-cbo-founder-standup' saas/web/ops-gsc.html \
+    && grep -q 'guide-seo-founder-standup' saas/web/ops-gsc.html \
     && grep -q 'WEEKLY_PROOF' saas/web/ops-gsc.html; then
     echo "OK   ops-gsc parallel MRR + partial proof docs"
   else

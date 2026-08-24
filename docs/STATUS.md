@@ -1,6 +1,6 @@
 # zengtrade — live status
 
-**Last autopilot check:** 2026-08-24 (session 216)  
+**Last autopilot check:** 2026-08-24 (session 217)  
 **Production:** https://zengtrade.in
 
 ## Ship gate

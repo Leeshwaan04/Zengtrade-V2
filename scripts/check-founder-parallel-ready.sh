@@ -86,6 +86,7 @@ if [[ -x scripts/guide-founder-growth-standup.sh ]] \
   && grep -q 'guide-marketing-founder-standup' scripts/guide-founder-growth-standup.sh \
   && grep -q 'guide-cto-founder-standup' scripts/guide-founder-growth-standup.sh \
   && grep -q 'guide-sales-founder-standup' scripts/guide-founder-growth-standup.sh \
+  && grep -q 'guide-seo-founder-standup' scripts/guide-founder-growth-standup.sh \
   && grep -q 'guide-founder-growth-standup' saas/web/ops-migrate.html; then
   echo "OK   guide-founder-growth-standup combined all-role playbook (+ CTO P0)"
 else
@@ -135,6 +136,18 @@ if [[ -x scripts/guide-sales-founder-standup.sh ]] \
   echo "OK   guide-sales-founder-standup first Pro MRR playbook"
 else
   echo "FAIL guide-sales-founder-standup incomplete"
+  fail=1
+fi
+echo ""
+
+echo ">> SEO founder standup guide"
+if [[ -x scripts/guide-seo-founder-standup.sh ]] \
+  && grep -q 'guide-gsc-founder' scripts/guide-seo-founder-standup.sh \
+  && grep -q 'guide-monthly-gsc-review' scripts/guide-seo-founder-standup.sh \
+  && grep -q 'guide-seo-founder-standup' saas/web/ops-gsc.html; then
+  echo "OK   guide-seo-founder-standup GSC + organic playbook"
+else
+  echo "FAIL guide-seo-founder-standup incomplete"
   fail=1
 fi
 echo ""
