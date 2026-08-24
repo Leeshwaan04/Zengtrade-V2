@@ -38,7 +38,9 @@ fi
 
 db_auth="${GROWTH_DB_AUTH:-}"
 if [[ -z "$db_auth" ]]; then
-  if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
+  if [[ -n "${ZT_SKIP_GROWTH_SUMMARY:-}" ]]; then
+    if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then db_auth=0; else db_auth=1; fi
+  elif [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
     if ./scripts/validate-database-credentials.sh >/dev/null 2>&1; then db_auth=1; else db_auth=0; fi
   else
     db_auth=1

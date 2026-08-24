@@ -38,3 +38,4 @@ if ./scripts/check-parallel-growth.sh >/dev/null 2>&1; then
 fi
 
 [[ $any -eq 1 ]] || echo "  (run ./scripts/check-growth-gates.sh after Pages deploy)"
+echo "  Growth goal: ./scripts/print-growth-goal-summary.sh · ./scripts/check-growth-goal.sh"

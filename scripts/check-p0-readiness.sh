@@ -18,6 +18,19 @@ if [[ $db_set -eq 0 && $rail_set -eq 1 ]]; then
   fi
 fi
 
+mig=0 work=0
+./scripts/check-migrations.sh >/dev/null 2>&1 && mig=1
+./scripts/check-worker.sh >/dev/null 2>&1 && work=1
+
+growth_summary_if_blocked() {
+  if [[ $work -eq 0 ]]; then
+    echo ""
+    echo "Growth goal:"
+    GROWTH_MIG=$mig GROWTH_WORK=$work GROWTH_DB_AUTH=$db_auth_ok \
+      ./scripts/print-growth-goal-summary.sh 2>/dev/null | sed 's/^/  /' || true
+  fi
+}
+
 echo "== P0 readiness =="
 echo ""
 printf "DATABASE_URL in environment     %s\n" "$([[ $db_set -eq 1 ]] && echo '✅ set' || echo '❌ missing')"
@@ -47,9 +60,6 @@ else
 fi
 echo ""
 
-mig=0 work=0
-./scripts/check-migrations.sh >/dev/null 2>&1 && mig=1
-./scripts/check-worker.sh >/dev/null 2>&1 && work=1
 printf "Migration 0011 (production)     %s\n" "$([[ $mig -eq 1 ]] && echo '✅' || echo '❌')"
 printf "Paper worker heartbeat          %s\n" "$([[ $work -eq 1 ]] && echo '✅' || echo '❌')"
 if [[ $mig -eq 1 && $work -eq 0 ]]; then
@@ -58,15 +68,21 @@ if [[ $mig -eq 1 && $work -eq 0 ]]; then
 fi
 echo ""
 
+db_auth_ok=1
 if [[ $rail_set -eq 1 ]]; then
   ./scripts/check-railway-deploy.sh 2>/dev/null || true
   echo ""
   if ./scripts/validate-database-credentials.sh >/dev/null 2>&1; then
     printf "DATABASE_URL auth (probe)        ✅\n"
   else
+    db_auth_ok=0
     printf "DATABASE_URL auth (probe)        ❌ wrong password — /ops/worker\n"
   fi
   echo ""
+elif [[ -n "${rail_resolved:-}" ]]; then
+  if ! DATABASE_URL="$rail_resolved" ./scripts/test-database-url.sh >/dev/null 2>&1; then
+    db_auth_ok=0
+  fi
 fi
 
 if [[ $mig -eq 1 && $work -eq 1 ]]; then
@@ -91,6 +107,7 @@ if [[ $db_set -eq 0 && $rail_db -eq 1 && $rail_set -eq 1 ]]; then
     echo "  Test after fix: ./scripts/validate-database-credentials.sh"
     echo "  Recovery: ./scripts/guide-worker-recovery.sh · docs/WORKER_RECOVERY.md"
     echo "  Parallel work: ./scripts/guide-founder-parallel.sh"
+    growth_summary_if_blocked
     exit 1
   fi
 fi
@@ -114,4 +131,5 @@ if [[ -f .github/workflows/apply-p0.yml ]]; then
 else
   echo "  • apply-p0.yml missing on main — push workflow to main"
 fi
+growth_summary_if_blocked
 exit 1
