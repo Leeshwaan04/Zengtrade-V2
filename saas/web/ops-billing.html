@@ -26,6 +26,7 @@
     <h2 style="font-size:16px;margin:0 0 8px">Steps</h2>
     <ol>
       <li><a href="/login?mode=signup&plan=pro">Sign up with Pro intent</a> → lands on pricing after auth</li>
+      <li>Organic alt: <a href="/login">/login</a> → Browse coin strategies (<code>signup_coins</code> UTM) → upgrade from <a href="/app#pricing">/app#pricing</a></li>
       <li>Choose <b>Pro</b> → complete NOWPayments invoice (test or real)</li>
       <li>Return to <a href="/app?paid=1">/app?paid=1</a> — tier should flip within minutes</li>
       <li>Confirm in <a href="/admin">/admin</a> → Paying / MRR tiles</li>
@@ -90,7 +91,7 @@ fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{h
         cbo=" <b>CBO goal:</b> infra ✅ — target Paying ≥ 1 + MRR &gt; $0 in <a href=\"/admin\">/admin</a>.";
       }
     }catch(e){}
-    el.innerHTML="<b>Note:</b> Paper worker is offline — checkout still works. Parallel: <code>./scripts/check-parallel-growth.sh</code>. Trades need <a href=\"/ops/worker\">worker live</a>."+cbo;
+    el.innerHTML="<b>Note:</b> Paper worker is offline — checkout still works. Partial activation: <a href=\"/ops/e2e\">/ops/e2e</a> steps 1–2. Trades need <a href=\"/ops/worker\">worker live</a>."+cbo;
   }
 }).catch(()=>{});
 (async function(){

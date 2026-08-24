@@ -33,7 +33,8 @@ Billing and plan-intent can be verified **before** paper trades exist:
 | Sales-ready (full checkout path) | `./scripts/check-sales-ready.sh` |
 | Founding $19 on prod | `./scripts/check-production-pricing.sh` |
 | Manual checkout smoke | https://zengtrade.in/ops/billing |
-| Partial activation (no trades) | `./scripts/verify-activation-path.sh --partial` |
+| Partial activation (no trades) | `./scripts/verify-activation-path.sh --partial` · https://zengtrade.in/ops/e2e |
+| Organic signup (coins) | `/login` → `signup_coins` UTM · `./scripts/check-funnel-ctas.sh` |
 | All parallel gates | `./scripts/check-parallel-growth.sh` |
 
 Do not claim forward P&L or closed-trade activation until `./scripts/check-worker.sh` is green.
@@ -71,6 +72,7 @@ Run when `./scripts/check-sales-ready.sh` is green.
 |------|--------|----------------|
 | 1 | Open https://zengtrade.in/ops/billing | Page shows billing-ready ✓ |
 | 2 | Sign up with Pro intent (`?plan=pro`) | Lands on `/app#pricing` |
+| 2b | Organic: `/login` → Browse coin strategies (`signup_coins`) → `/app#pricing` | Same funnel, different UTM |
 | 3 | Start Pro checkout → complete NOWPayments invoice | Invoice created (test or real) |
 | 4 | Return to `/app?paid=1` | Tier shows Pro within a few minutes |
 | 5 | Open `/admin` | **Paying** count ≥ 1 · **MRR** > $0 · `checkout_clicks_7d` incremented |

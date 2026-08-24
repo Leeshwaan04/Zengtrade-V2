@@ -39,6 +39,13 @@ else
   fail=1
 fi
 
+if grep -q 'signup_coins' saas/web/ops-billing.html; then
+  echo "OK   ops-billing organic signup path (signup_coins)"
+else
+  echo "FAIL ops-billing missing signup_coins organic path"
+  fail=1
+fi
+
 echo ""
 if [[ $fail -eq 0 ]]; then
   echo "Billing-ready — test checkout at $SITE/ops/billing"
