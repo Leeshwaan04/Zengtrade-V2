@@ -54,6 +54,7 @@
     <code>./scripts/guide-founder-parallel.sh</code> ·
     <code>./scripts/guide-worker-recovery.sh</code> ·
     <a href="https://github.com/Leeshwaan04/Zengtrade-V2/blob/main/docs/GUIDE_INDEX.md" target="_blank" rel="noopener">Guide index</a>
+    <p id="growthGoals" style="font-size:12.5px;margin:10px 0 0;line-height:1.5" hidden></p>
   </div>
 
   <div class="step" id="step1">
@@ -123,6 +124,19 @@ async function refresh(){
   if(workerOnly) workerOnly.hidden=likelyBadPw||!(mig&&!w.ok);
   const parallelBox=document.getElementById("parallelBox");
   if(parallelBox) parallelBox.hidden=!(mig&&!w.ok);
+  const ggEl=document.getElementById("growthGoals");
+  if(ggEl){
+    if(mig&&!w.ok){
+      try{
+        const data=await fetch("/ops/data.json?"+Date.now(),{cache:"no-store"}).then(r=>r.json());
+        const gg=data.gates?.growth_goal||{};
+        const cpo=gg.cpo_full_ok?"✅ trades":(gg.cpo_partial_ok?"partial ✅":"❌");
+        const cbo=gg.cbo_infra_ok?"infra ✅ · <a href=\"/ops/billing\">first Pro MRR</a>":"❌";
+        ggEl.innerHTML="<b>Growth goals:</b> CTO "+(gg.cto_ok?"✅":"❌")+" · CPO "+cpo+" · CBO "+cbo;
+        ggEl.hidden=false;
+      }catch(e){ggEl.hidden=true;}
+    }else ggEl.hidden=true;
+  }
   const all=mig&&w.ok;
   const partial=mig&&!w.ok;
   const pill=document.getElementById("overall");

@@ -56,3 +56,6 @@ echo "  ./scripts/post-p0-success.sh"
 echo ""
 echo "Full runbook: docs/WORKER_RECOVERY.md"
 echo "Parallel work while blocked: ./scripts/guide-founder-parallel.sh"
+echo ""
+echo "== Growth goal (while blocked) =="
+./scripts/print-growth-goal-summary.sh 2>/dev/null || true

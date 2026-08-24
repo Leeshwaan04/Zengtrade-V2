@@ -9,6 +9,7 @@ One-page map of CLI playbooks while the paper worker is blocked (or after P0 gre
 | Script | What it checks |
 |--------|----------------|
 | `./scripts/audit-growth-goal.sh` | CTO/CPO/CBO goal audit (all role requirements) |
+| `./scripts/check-growth-goal.sh` | Same as audit-growth-goal (discoverability alias) |
 | `./scripts/print-growth-goal-summary.sh` | Growth goal summary (fast; used by status-report) |
 | `./scripts/check-founder-parallel-ready.sh` | Parallel growth + QA parallel + all guides exist |
 | `./scripts/check-parallel-growth.sh` | CPO/CBO partial activation, billing, GSC, sales (excl. worker) |

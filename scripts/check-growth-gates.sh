@@ -20,6 +20,10 @@ run() {
 }
 
 echo "== zengtrade growth gates — $SITE =="
+echo ""
+echo "Growth objective:"
+./scripts/print-growth-goal-summary.sh 2>/dev/null | sed 's/^/  /' || true
+echo ""
 
 run "Production site" env SITE="$SITE" ./scripts/check-production.sh
 run "Billing ready (MRR)" env SITE="$SITE" ./scripts/check-billing-ready.sh

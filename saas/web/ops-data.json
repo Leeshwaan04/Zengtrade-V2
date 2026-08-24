@@ -140,7 +140,8 @@
       "print-growth-goal-summary + /ops growth_goal gates; seo/marketing/qa charters (session 153)",
       "worker banner /ops/worker link; GROWTH_DASHBOARD goal rows; audit summary DRY (session 154)",
       "app.js + studio.js worker links /ops/worker; log-growth-session goal line (session 155)",
-      "standup/preflight dedupe audit; snapshot growth goal rows (session 156)"
+      "standup/preflight dedupe audit; snapshot growth goal rows (session 156)",
+      "check-growth-goal alias; ops-p0 growth goals; guide-worker-recovery summary (session 157)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [

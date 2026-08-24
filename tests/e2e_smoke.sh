@@ -60,6 +60,7 @@ test -f scripts/log-growth-session.sh
 test -f scripts/append-growth-log.sh
 test -f scripts/audit-growth-goal.sh
 test -f scripts/print-growth-goal-summary.sh
+test -x scripts/check-growth-goal.sh
 test -f scripts/check-growth-gates.sh
 test -f .github/workflows/apply-p0.yml
 grep -q 'run-p0-if-ready' .github/workflows/apply-p0.yml
