@@ -134,7 +134,9 @@
       "apply-p0.yml unified run-p0-if-ready + validate preflight (session 147)",
       "P0 founder messaging unified to run-p0-if-ready (session 148)",
       "parallel growth includes sales-ready; GROWTH_DASHBOARD DATABASE_URL auth (session 149)",
-      "audit-growth-goal.sh + /ops DATABASE_URL auth gate + check-p0 DB auth (session 150)"
+      "audit-growth-goal.sh + /ops DATABASE_URL auth gate + check-p0 DB auth (session 150)",
+      "audit wired into health-watch, post-p0, founder-preflight, cto charter (session 151)",
+      "audit in cpo/cbo/sales charters; STATUS ship gate + status-report tail (session 152)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [

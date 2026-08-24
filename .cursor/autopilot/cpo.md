@@ -46,11 +46,12 @@ Manual: https://zengtrade.in/ops/e2e (steps 1–2). Steps 3–4 need `./scripts/
 
 ## Definition of done (each run)
 
-1. If worker down: improve partial activation path or UX honesty (no fake trades).
-2. If worker live: drive full E2E; run `verify-activation-path.sh`.
-3. Commit: `cpo(autopilot): <what>` on `main`.
-4. Log: `./scripts/append-growth-log.sh N "title" --cpo "..."`.
-5. Reply: user impact / metric / next.
+1. Run `./scripts/audit-growth-goal.sh` — CPO rows show partial vs full activation; log if status changed.
+2. If worker down: improve partial activation path or UX honesty (no fake trades).
+3. If worker live: drive full E2E; run `verify-activation-path.sh`.
+4. Commit: `cpo(autopilot): <what>` on `main`.
+5. Log: `./scripts/append-growth-log.sh N "title" --cpo "..."`.
+6. Reply: user impact / metric / next.
 
 ## Do not
 

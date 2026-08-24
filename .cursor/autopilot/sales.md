@@ -44,9 +44,10 @@ Activation (deploy → trades) still needs worker for full funnel trust; billing
 
 ## Definition of done (each run)
 
-1. Improve checkout path, probes, or `/ops/billing` clarity.
-2. Commit: `sales(autopilot): <what>` on `main`.
-3. Log via `append-growth-log.sh`; update `ops-data.json` → **sales**.
+1. Run `./scripts/audit-growth-goal.sh` — sales-ready vs first Pro MRR (`/admin`); log if status changed.
+2. Improve checkout path, probes, or `/ops/billing` clarity.
+3. Commit: `sales(autopilot): <what>` on `main`.
+4. Log via `append-growth-log.sh`; update `ops-data.json` → **sales**.
 
 ## Do not
 

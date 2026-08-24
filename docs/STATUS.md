@@ -1,6 +1,6 @@
 # zengtrade — live status
 
-**Last autopilot check:** 2026-08-23 (session 150)  
+**Last autopilot check:** 2026-08-24 (session 152)  
 **Production:** https://zengtrade.in
 
 ## Ship gate
@@ -13,8 +13,11 @@
 | Billing edge functions | ✅ NOWPayments + founding $19 |
 | Migration 0011 (funnel v2) | ✅ `signup_complete`, `deploy_click`, `deploy_success`, `checkout_click` |
 | Parallel growth (excl. worker) | ✅ `./scripts/check-parallel-growth.sh` |
+| Growth goal audit | ✅ `./scripts/audit-growth-goal.sh` (CTO/CPO/CBO probes) |
+| Partial activation (signup→deploy) | ✅ `./scripts/verify-activation-path.sh --partial` |
 | Sales-ready (Pro checkout path) | ✅ `./scripts/check-sales-ready.sh` |
 | QA parallel (excl. worker) | ✅ `./scripts/check-qa-parallel.sh` |
+| DATABASE_URL auth (Railway) | ❌ wrong password — `./scripts/validate-database-credentials.sh` |
 | Paper worker | ❌ **Down** — heartbeat stale (2026-08-11); Railway deploy **FAILED** (wrong `DATABASE_URL` password) |
 
 ## P0 blocker (founder)

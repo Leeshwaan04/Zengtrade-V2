@@ -65,5 +65,8 @@ elif [[ $mig -eq 0 ]]; then
 else
   echo "Next: https://zengtrade.in/ops/p0"
 fi
+echo ""
+echo "Growth goal audit:"
+./scripts/audit-growth-goal.sh 2>/dev/null | tail -n 8 || true
 ./scripts/founder-next-action.sh 2>/dev/null || true
 exit 1

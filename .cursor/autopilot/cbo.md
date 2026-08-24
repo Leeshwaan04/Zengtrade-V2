@@ -53,11 +53,12 @@ Do **not** post forward P&L or r/algotrading until `./scripts/check-worker.sh` g
 
 ## Definition of done (each run)
 
-1. Prefer work that does not require worker (GSC, billing smoke, copy).
-2. Run `python3 deploy/landing/build.py` if marketing files changed.
-3. Commit: `cbo(autopilot): <what>` on `main`.
-4. Log: `./scripts/append-growth-log.sh N "title" --cbo "..."`.
-5. Reply: growth lever / next.
+1. Run `./scripts/audit-growth-goal.sh` — CBO rows show GSC/sales-ready vs live MRR; log if status changed.
+2. Prefer work that does not require worker (GSC, billing smoke, copy).
+3. Run `python3 deploy/landing/build.py` if marketing files changed.
+4. Commit: `cbo(autopilot): <what>` on `main`.
+5. Log: `./scripts/append-growth-log.sh N "title" --cbo "..."`.
+6. Reply: growth lever / next.
 
 ## Do not
 
