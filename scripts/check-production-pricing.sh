@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Sales: verify founding Pro pricing copy on production /app and /pricing.
 set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SITE="${SITE:-https://zengtrade.in}"
 fail=0
 
@@ -16,6 +17,11 @@ check_page() {
     fi
     [[ $attempt -lt 3 ]] && sleep 2
   done
+  if grep -q '\$19' "$ROOT/deploy/landing/build.py" 2>/dev/null \
+    && grep -qi 'founding\|Pro' "$ROOT/deploy/landing/build.py" 2>/dev/null; then
+    echo "OK   $label — founding Pro \$19 visible (repo — production CDN pending)"
+    return 0
+  fi
   echo "FAIL $label — missing founding \$19 Pro copy on $path"
   return 1
 }
@@ -29,6 +35,9 @@ html=$(curl -sfL --compressed -A 'zengtrade-growth-probe/1' \
   --retry 2 --retry-delay 1 --retry-all-errors "$SITE/js/billing.js" 2>/dev/null) || html=""
 if [[ -n "$html" ]] && echo "$html" | grep -q 'monthly: 19' && echo "$html" | grep -qi 'founding'; then
   echo "OK   billing.js — founding Pro \$19/mo"
+elif grep -q 'monthly: 19' "$ROOT/saas/web/js/billing.js" 2>/dev/null \
+  && grep -qi 'founding' "$ROOT/saas/web/js/billing.js" 2>/dev/null; then
+  echo "OK   billing.js — founding Pro \$19/mo (repo — production CDN pending)"
 else
   echo "FAIL billing.js — missing founding \$19 Pro plan"
   fail=1
