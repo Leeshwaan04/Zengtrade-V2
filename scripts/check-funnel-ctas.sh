@@ -57,6 +57,14 @@ done
 # Secondary internal links (coins hub discovery — sessions 167–168)
 check_page "home coins hub" "/" "home_coins" || fail=1
 check_page "how-it-works coins" "/how-it-works/" "paper_loop_coins" || fail=1
+if check_page "how-it-works pro" "/how-it-works/" "paper_loop_pro"; then
+  true
+elif grep -q 'paper_loop_pro' deploy/landing/build.py 2>/dev/null; then
+  echo "OK   how-it-works pro — utm_campaign=paper_loop_pro (repo — production deploy pending)"
+else
+  echo "FAIL how-it-works pro — missing paper_loop_pro in build.py"
+  fail=1
+fi
 check_page "login coins CTA" "/login" "signup_coins" || fail=1
 
 if check_page "coins hub pro" "/coins/" "coins_hub_pro"; then

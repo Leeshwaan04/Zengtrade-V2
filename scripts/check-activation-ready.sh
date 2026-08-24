@@ -86,6 +86,13 @@ else
   fail=1
 fi
 
+if grep -q 'zt_checkout_ref' saas/web/login.html && grep -q 'location.pathname+location.search' saas/web/login.html; then
+  echo "OK   login UTM → checkout ref + signup_complete path"
+else
+  echo "FAIL login.html missing UTM checkout attribution"
+  fail=1
+fi
+
 echo ""
 echo ">> Plan intent"
 if SITE="$SITE" ./scripts/check-plan-intent.sh >/dev/null 2>&1; then

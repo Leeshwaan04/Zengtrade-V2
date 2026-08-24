@@ -255,6 +255,7 @@ PAPER_LOOP_SEC = """
         <a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=paper_loop">Start paper trading free</a>
         <a class="lp-cta ghost" href="/dashboard">Open Algo Studio</a>
         <a class="lp-cta ghost" href="/coins/?utm_source=site&amp;utm_medium=organic&amp;utm_campaign=paper_loop_coins">Explore coin strategies →</a>
+        <a class="lp-cta ghost" href="/login?mode=signup&amp;plan=pro&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=paper_loop_pro">Founding Pro $19/mo</a>
       </div>
     </div>
   </section>

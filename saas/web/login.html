@@ -39,11 +39,13 @@
   .foot{text-align:center;color:var(--slate-2);font-size:11.5px;margin-top:18px;line-height:1.6}
   .foot a{color:var(--slate);text-decoration:none}
   form>.btn{margin-top:16px}
+  .plan-banner{text-align:center;font-size:13px;line-height:1.5;color:var(--green-d);background:var(--green-soft);border:1px solid var(--green-line);border-radius:10px;padding:10px 12px;margin:-6px 0 16px}
 </style></head><body>
 <div class="ambient" aria-hidden="true"><span class="aurora a1"></span><span class="aurora a2"></span><span class="aurora a3"></span><span class="grid-motion"></span></div>
 <div class="auth">
   <div class="brand"><svg class="logo" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#00AB4E"/><path d="M24.69 13.67A9 9 0 1 1 20.5 8.21" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M12.5 19.5L17 15L20 17.5L26.5 8.8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>zengtrade</div>
   <p class="tag">Honest, survival-first crypto strategies</p>
+  <p id="planBanner" class="plan-banner" hidden></p>
   <div class="card">
     <div class="tabs" role="tablist">
       <button role="tab" id="t-in" aria-selected="true">Sign in</button>
@@ -103,11 +105,18 @@ function shouldTrackSignupComplete(user){
   return Date.now()-created<180000;
 }
 
+function maybeCheckoutRefFromUtm(){
+  try{
+    const utm=new URLSearchParams(location.search).get("utm_campaign");
+    if(utm) sessionStorage.setItem("zt_checkout_ref",utm);
+  }catch(e){}
+}
+
 function trackSignupComplete(){
   try{
     fetch("https://ponvarxeytfcntckczbn.supabase.co/rest/v1/event",{method:"POST",
       headers:{apikey:"sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1","Content-Type":"application/json",Prefer:"return=minimal"},
-      body:JSON.stringify({name:"signup_complete",path:location.pathname.slice(0,290)}),
+      body:JSON.stringify({name:"signup_complete",path:(location.pathname+location.search).slice(0,290)}),
       keepalive:true}).catch(()=>{});
   }catch(e){}
 }
@@ -121,6 +130,7 @@ function goAfterAuth(user){
   const pl=localStorage.getItem("zt_intent_plan");
   if(pl==="pro"||pl==="elite"){
     try{ localStorage.removeItem("zt_intent_plan"); }catch(e){}
+    maybeCheckoutRefFromUtm();
     location.href=SITE.app+"#pricing";
   }else location.href=SITE.dashboard;
 }
@@ -147,6 +157,14 @@ $("t-up").onclick=()=>{$("t-up").ariaSelected="true";$("t-in").ariaSelected="fal
   if(_q.get("mode")==="signup"){$("t-up").click();}
   const _pl=_q.get("plan"); if(_pl==="pro"||_pl==="elite"){
     localStorage.setItem("zt_intent_plan",_pl);
+    maybeCheckoutRefFromUtm();
+    const banner=$("planBanner");
+    if(banner){
+      banner.hidden=false;
+      banner.innerHTML=_pl==="pro"
+        ? "Founding <b>Pro $19/mo</b> — unlimited paper strategies. You'll land on checkout after signup."
+        : "Elite <b>$79/mo</b> — you'll land on pricing after signup.";
+    }
     try{ fetch("https://ponvarxeytfcntckczbn.supabase.co/rest/v1/event",{method:"POST",
       headers:{apikey:"sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1","Content-Type":"application/json",Prefer:"return=minimal"},
       body:JSON.stringify({name:"plan_intent",path:("/login?plan="+_pl).slice(0,290),ref:(document.referrer||"").slice(0,290)}),

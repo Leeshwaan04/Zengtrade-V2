@@ -12,7 +12,7 @@ Owner: **Marketing Lead autopilot** (`.cursor/autopilot/marketing.md`)
 |-------|--------|
 | `utm_source` | `site`, `reddit`, `twitter`, `linkedin`, `gsc` |
 | `utm_medium` | `organic`, `social`, `community`, `email` |
-| `utm_campaign` | `landing`, `pricing`, `pricing_pro`, `pricing_elite`, `home_coins`, `pricing_coins`, `coins_hub`, `coins_hub_pro`, `coin_{slug}_pro`, `signup_coins`, `signup_nudge_coins`, `deploy_success_coins`, `paper_loop`, `paper_loop_coins`, `build_in_public`, `build_in_public_pro`, `build_in_public_coins`, `weekly_proof`, `weekly_proof_partial`, `coin_spotlight_{slug}`, `algotrading_draft` |
+| `utm_campaign` | `landing`, `pricing`, `pricing_pro`, `pricing_elite`, `home_coins`, `pricing_coins`, `coins_hub`, `coins_hub_pro`, `coin_{slug}_pro`, `signup_coins`, `signup_nudge_coins`, `deploy_success_coins`, `paper_loop`, `paper_loop_coins`, `paper_loop_pro`, `build_in_public`, `build_in_public_pro`, `build_in_public_coins`, `weekly_proof`, `weekly_proof_partial`, `weekly_proof_pro`, `coin_spotlight_{slug}`, `algotrading_draft` |
 
 Signup URL template:
 

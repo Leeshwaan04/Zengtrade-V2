@@ -64,7 +64,8 @@ echo "OK   home coins hub CTA"
 
 grep -q 'HowTo' "$DIST/how-it-works/index.html" || { echo "FAIL how-it-works missing HowTo JSON-LD"; exit 1; }
 grep -q 'paper_loop_coins' "$DIST/how-it-works/index.html" || { echo "FAIL how-it-works missing coins CTA"; exit 1; }
-echo "OK   how-it-works HowTo + coins CTA"
+grep -q 'paper_loop_pro' "$DIST/how-it-works/index.html" || { echo "FAIL how-it-works missing paper_loop_pro CTA"; exit 1; }
+echo "OK   how-it-works HowTo + coins/Pro CTAs"
 
 grep -q 'signup_coins' "$DIST/login/index.html" || { echo "FAIL login missing signup_coins coins CTA"; exit 1; }
 echo "OK   login coins hub CTA"

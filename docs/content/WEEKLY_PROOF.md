@@ -48,6 +48,7 @@ Next: forward paper closes once our 24/7 worker is back online.
 
 Try free: https://zengtrade.in/login?mode=signup&utm_source=site&utm_medium=organic&utm_campaign=weekly_proof_partial
 Coin strategies: https://zengtrade.in/coins/?utm_source=site&utm_medium=organic&utm_campaign=weekly_proof_coins
+Founding Pro: https://zengtrade.in/login?mode=signup&plan=pro&utm_source=site&utm_medium=organic&utm_campaign=weekly_proof_pro
 
 Not investment advice. Paper only.
 ```
