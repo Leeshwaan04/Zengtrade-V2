@@ -58,9 +58,11 @@ Index: **docs/FOUNDER_PARALLEL.md**
 ```bash
 ./scripts/post-p0-success.sh
 ./scripts/verify-activation-path.sh
+./scripts/guide-qa-rls-isolation.sh   # after trades visible — /ops/e2e step 5
+./scripts/audit-growth-goal.sh
 ```
 
-Full E2E: **https://zengtrade.in/ops/e2e** (signup → deploy → trades)
+Full E2E: **https://zengtrade.in/ops/e2e** (signup → deploy → trades → RLS)
 
 ## Agent log
 

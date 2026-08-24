@@ -56,6 +56,7 @@ test -f scripts/check-parallel-growth.sh
 grep -q 'test-database-url' scripts/resolve-database-url.sh
 grep -q 'post-p0-success' scripts/apply-p0-autopilot.sh
 grep -q 'check-free-tier-limit' scripts/post-p0-success.sh
+grep -q 'coin_spotlight_evidence' scripts/guide-coin-spotlight.sh
 grep -q '\-\-partial' scripts/verify-activation-path.sh
 test -f scripts/log-growth-session.sh
 test -f scripts/append-growth-log.sh

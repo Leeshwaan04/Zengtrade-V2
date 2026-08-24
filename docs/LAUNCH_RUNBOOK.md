@@ -15,7 +15,7 @@ Production checklist for `zengtrade.in`. Autopilot CTO agent maintains this file
 | 4 | Enable Google provider + OAuth client | CEO | ☐ |
 | 5 | SQL: run migrations `0009` + `0010` + **`0011`** (or `./scripts/check-migrations.sh`) | CTO | ☑ (0011 live on production) |
 | 6 | Host `saas/worker` (see `saas/worker/README.md`) with prod `DATABASE_URL` | CTO | ☐ (Railway deploy FAILED — wrong password) |
-| 7 | E2E manual: signup → `/dashboard` → deploy → trades in ≤15 min | CPO | ☐ (partial: steps 1–2 at `/ops/e2e` while worker blocked) |
+| 7 | E2E manual: signup → `/dashboard` → deploy → trades in ≤15 min | CPO | ☐ (partial: steps 1–2 at `/ops/e2e`; View evidence → `/app#forward`) |
 | 8 | Run `./tests/e2e_smoke.sh` | CTO | ☑ (also runs on PR via `.github/workflows/ci-smoke.yml`) |
 
 ## P1 — Revenue rail
@@ -46,7 +46,7 @@ Production checklist for `zengtrade.in`. Autopilot CTO agent maintains this file
 ./scripts/check-sales-ready.sh        # Pro checkout path
 ```
 
-- CPO partial E2E: `./scripts/guide-partial-e2e.sh` · `./scripts/guide-free-tier-test.sh` · <https://zengtrade.in/ops/e2e> (steps 1–2)
+- CPO partial E2E: `./scripts/guide-partial-e2e.sh` · `./scripts/guide-free-tier-test.sh` · <https://zengtrade.in/ops/e2e> (steps 1–2) · deploy → View evidence → `/app#forward`
 - CBO GSC: `./scripts/guide-gsc-founder.sh` · <https://zengtrade.in/ops/gsc> · `docs/GSC_SETUP.md` § Founder completion log
 - CBO / Sales billing: `./scripts/guide-first-pro-checkout.sh` · <https://zengtrade.in/ops/billing>
 - Sales MRR standup: `./scripts/guide-mrr-standup.sh` · <https://zengtrade.in/admin>
@@ -55,6 +55,17 @@ Production checklist for `zengtrade.in`. Autopilot CTO agent maintains this file
 - QA parallel: `./scripts/check-qa-parallel.sh` · <https://zengtrade.in/ops/security>
 - Unblock: Cloud Agent `DATABASE_PASSWORD` or <https://zengtrade.in/ops/worker>
 - Recovery: `docs/WORKER_RECOVERY.md` (diagnose → fix → verify)
+
+## After P0 green (steps 6–7)
+
+When `./scripts/check-worker.sh` passes:
+
+```bash
+./scripts/post-p0-success.sh           # verify-activation-path + Q9 + growth gates
+./scripts/audit-growth-goal.sh         # CTO/CPO/CBO goal audit
+```
+
+Manual E2E: <https://zengtrade.in/ops/e2e> steps 3–4 (trades) · step 5 RLS (`./scripts/guide-qa-rls-isolation.sh`)
 
 ```bash
 cd saas/worker

@@ -52,6 +52,7 @@ fi
 if [[ $prod -eq 1 && $bill -eq 1 && $mig -eq 1 && $work -eq 1 ]]; then
   echo ""
   echo "All P0 gates green — run ./scripts/post-p0-success.sh then E2E signup → deploy → trades."
+  echo "Then: ./scripts/guide-qa-rls-isolation.sh · ./scripts/audit-growth-goal.sh"
   exit 0
 fi
 echo ""

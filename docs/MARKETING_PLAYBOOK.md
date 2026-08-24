@@ -75,6 +75,7 @@ Coin of the week: [BTC/ETH/SOL] — regime read + paper-first angle
 - What the 30-day tape looks like (honest, no hype)
 - Which strategy style fits (trend vs mean-reversion) — paper only
 - CTA: https://zengtrade.in/login?mode=signup&utm_source=site&utm_medium=organic&utm_campaign=coin_spotlight_[slug]
+- Deploy → evidence: `/dashboard` deploy · View evidence → `/app#forward` (partial OK while worker down)
 
 Not investment advice. Paper trading on live Binance prices.
 ```
