@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-24T01:19:59Z",
+  "updated": "2026-08-24T01:25:15Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -144,7 +144,8 @@
       "check-growth-goal alias; ops-p0 growth goals; guide-worker-recovery summary (session 157)",
       "founder-parallel-work + check-p0-readiness growth summary; ops-worker goals (session 158)",
       "guide-founder-parallel growth summary; WORKER_RECOVERY goals; ops-billing CBO (session 159)",
-      "check-founder-parallel-ready growth summary; FOUNDER_PARALLEL goals; ops-gsc goals (session 160)"
+      "check-founder-parallel-ready growth summary; FOUNDER_PARALLEL goals; ops-gsc goals (session 160)",
+      "check-qa-parallel growth summary; ops-security goals card; dedupe verify bullet (session 161)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -447,6 +448,8 @@
     "worker": false,
     "worker_heartbeat_utc": "2026-08-11T09:57:38",
     "all_p0_green": false,
+    "railway_database_url_set": true,
+    "railway_paper_worker": "FAILED",
     "database_url_auth_ok": false,
     "parallel_growth_ready": true,
     "sales_ready": true,
