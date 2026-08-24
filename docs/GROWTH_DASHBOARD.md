@@ -12,12 +12,12 @@
 | MRR (USD) | $0 | $0 | $290 |
 | Worker status | Unknown | Offline (last heartbeat 2026-08-11T09:57:38 UTC · wrong Railway DB password) | Live 99% |
 | DATABASE_URL auth | — | ❌ /ops/worker | — |
-| Partial activation (signup→deploy) | — | ✅ verify-activation-path --partial | — |
-| Parallel growth (excl. worker) | — | ✅ founder-parallel-ready | — |
-| Sales-ready | — | ✅ check-sales-ready.sh | — |
-| QA parallel | — | ✅ check-qa-parallel.sh | — |
-| Growth: CBO infra | — | ✅ GSC+sales-ready · MRR founder | — |
-| Growth: CPO trades | — | partial ✅ (trades need worker) | — |
+| Partial activation (signup→deploy) | — | ❌ | — |
+| Parallel growth (excl. worker) | — | ❌ run ./scripts/check-founder-parallel-ready.sh | — |
+| Sales-ready | — | ❌ | — |
+| QA parallel | — | ❌ | — |
+| Growth: CBO infra | — | ❌ | — |
+| Growth: CPO trades | — | ❌ | — |
 | Growth: CTO loop | — | ❌ /ops/worker | — |
 
 *Fill "Today" from [zengtrade.in/admin](https://zengtrade.in/admin) after login.*
@@ -2989,6 +2989,35 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 
 ### Status (`./scripts/check-growth-standup.sh` @ 04:14Z)
 - worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
+- DATABASE_URL auth ❌ (Railway password — /ops/worker)
+- growth goals: CTO ❌ · CPO partial ✅ · CBO ❌ · MRR founder /admin
+
+### Day 1 (session 180) — pricing coins CTA + GSC founder alignment
+
+### CTO
+- **Shipped:** check-growth-gates default ZT_QUIET_GROWTH for nested probes
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** —
+
+### CBO
+- **Shipped:** pricing page pricing_coins UTM; check-funnel-ctas + probe-dist probes
+
+### SEO
+- **Shipped:** ops-gsc coins hub + partial proof; GSC_SETUP UTMs; check-gsc-ready signup_coins
+
+### Marketing
+- **Shipped:** MARKETING_PLAYBOOK pricing_coins campaign
+
+### Sales
+- **Shipped:** —
+
+### QA&VAPT
+- **Shipped:** e2e_smoke passed
+
+### Status (`./scripts/check-growth-standup.sh` @ 04:18Z)
+- worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ❌ · sales-ready ❌ · qa parallel ❌
 - DATABASE_URL auth ❌ (Railway password — /ops/worker)
 - growth goals: CTO ❌ · CPO partial ✅ · CBO ❌ · MRR founder /admin
 

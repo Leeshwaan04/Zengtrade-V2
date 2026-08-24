@@ -52,7 +52,8 @@ grep -q 'WebSite' "$DIST/index.html" || { echo "FAIL home missing WebSite JSON-L
 echo "OK   home JSON-LD schema"
 
 grep -q 'FAQPage' "$DIST/pricing/index.html" || { echo "FAIL pricing missing FAQPage JSON-LD"; exit 1; }
-echo "OK   pricing FAQ JSON-LD"
+grep -q 'pricing_coins' "$DIST/pricing/index.html" || { echo "FAIL pricing missing coins hub CTA"; exit 1; }
+echo "OK   pricing FAQ JSON-LD + coins CTA"
 
 grep -q 'home_coins' "$DIST/index.html" || { echo "FAIL home missing coins hub CTA"; exit 1; }
 echo "OK   home coins hub CTA"

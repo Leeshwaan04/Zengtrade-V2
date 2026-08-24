@@ -202,6 +202,7 @@ PRICING_MAIN = f"""<main id="main">
       <h1 id="h-pr" class="lp-h1">Pricing that only charges when it earns its place.</h1>
       <p class="lp-sub">Start free and paper-trade forever. Pro unlocks unlimited paper strategies; live execution on your own exchange rolls out per the go-live bar — never charge for data or hidden extras.</p>
       <p class="lp-sub" style="margin-top:12px"><b>Founding offer:</b> first 100 Pro members lock in <b>$19/mo</b> (normally $29) — unlimited paper while live execution rolls out.</p>
+      <p class="lp-sub" style="margin-top:10px"><a class="lp-cta ghost" href="/coins/?utm_source=site&amp;utm_medium=organic&amp;utm_campaign=pricing_coins" style="display:inline-flex;margin-top:4px">Browse strategies by coin →</a></p>
     </div>
   </section>
   <section class="lp-sec" aria-label="Plans">

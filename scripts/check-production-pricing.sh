@@ -6,23 +6,28 @@ fail=0
 
 check_page() {
   local label="$1" path="$2"
-  local html
-  html=$(curl -sfL "$SITE$path" 2>/dev/null) || { echo "FAIL $label — could not fetch $path"; fail=1; return; }
-  if echo "$html" | grep -q '\$19' && echo "$html" | grep -qi 'founding\|Pro'; then
-    echo "OK   $label — founding Pro \$19 visible"
-  else
-    echo "FAIL $label — missing founding \$19 Pro copy on $path"
-    fail=1
-  fi
+  local html="" attempt
+  for attempt in 1 2 3; do
+    html=$(curl -sfL --compressed -A 'zengtrade-growth-probe/1' \
+      --retry 2 --retry-delay 1 --retry-all-errors "$SITE$path" 2>/dev/null) || html=""
+    if [[ -n "$html" ]] && echo "$html" | grep -q '\$19' && echo "$html" | grep -qi 'founding\|Pro'; then
+      echo "OK   $label — founding Pro \$19 visible"
+      return 0
+    fi
+    [[ $attempt -lt 3 ]] && sleep 2
+  done
+  echo "FAIL $label — missing founding \$19 Pro copy on $path"
+  return 1
 }
 
 echo "Production pricing probe — $SITE"
 echo ""
 
-check_page "pricing page" "/pricing/"
+check_page "pricing page" "/pricing/" || fail=1
 
-html=$(curl -sfL "$SITE/js/billing.js" 2>/dev/null) || { echo "FAIL billing.js — could not fetch"; exit 1; }
-if echo "$html" | grep -q 'monthly: 19' && echo "$html" | grep -qi 'founding'; then
+html=$(curl -sfL --compressed -A 'zengtrade-growth-probe/1' \
+  --retry 2 --retry-delay 1 --retry-all-errors "$SITE/js/billing.js" 2>/dev/null) || html=""
+if [[ -n "$html" ]] && echo "$html" | grep -q 'monthly: 19' && echo "$html" | grep -qi 'founding'; then
   echo "OK   billing.js — founding Pro \$19/mo"
 else
   echo "FAIL billing.js — missing founding \$19 Pro plan"

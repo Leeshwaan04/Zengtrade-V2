@@ -36,6 +36,14 @@ else
   fail=1
 fi
 
+login_page=$(curl -sfL "$SITE/login" 2>/dev/null) || login_page=""
+if [[ -n "$login_page" ]] && echo "$login_page" | grep -q 'utm_campaign=signup_coins'; then
+  echo "OK   Login coins CTA (signup_coins)"
+else
+  echo "FAIL Login — missing signup_coins coins hub CTA"
+  fail=1
+fi
+
 echo ""
 if [[ $fail -eq 0 ]]; then
   echo "GSC-ready — founder: add property + submit $SITE/sitemap.xml"

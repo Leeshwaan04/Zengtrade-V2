@@ -36,7 +36,12 @@ Verify after deploy: `./scripts/check-gsc-ready.sh` (or `./scripts/check-sitemap
 - `https://zengtrade.in/pricing/`
 - `https://zengtrade.in/how-it-works/`
 - `https://zengtrade.in/coins/bitcoin/`
+- `https://zengtrade.in/coins/` (hub)
 - `https://zengtrade.in/login?mode=signup`
+
+Organic UTMs to track in `/admin`: `home_coins`, `pricing_coins`, `signup_coins`, `paper_loop_coins`.
+
+**Partial proof posts** (worker offline): `docs/content/WEEKLY_PROOF.md` § Partial — no closed-trade claims.
 
 ## 4. Weekly CBO review
 

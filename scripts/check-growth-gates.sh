@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 export SITE="${SITE:-https://zengtrade.in}"
+export ZT_QUIET_GROWTH="${ZT_QUIET_GROWTH:-1}"
 
 fail=0
 run() {

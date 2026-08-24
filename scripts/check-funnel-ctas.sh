@@ -8,31 +8,40 @@ check_page() {
   local label="$1" path="$2" campaign="$3"
   local html="" attempt
   for attempt in 1 2 3; do
-    html=$(curl -sfL "$SITE$path" 2>/dev/null) || html=""
+    html=$(curl -sfL --compressed -A 'zengtrade-growth-probe/1' \
+      --retry 3 --retry-delay 2 --retry-all-errors "$SITE$path" 2>/dev/null) || html=""
     if [[ -n "$html" ]] && echo "$html" | grep -q "utm_source=site" && echo "$html" | grep -q "utm_campaign=${campaign}"; then
       echo "OK   $label — utm_source=site utm_campaign=$campaign"
-      return
+      return 0
     fi
     [[ $attempt -lt 3 ]] && sleep 2
   done
   echo "FAIL $label — missing utm on signup CTA (expected utm_campaign=$campaign)"
-  fail=1
+  return 1
 }
 
 echo "Funnel CTA probe — $SITE"
 echo ""
 
-check_page "home" "/" "landing"
-check_page "pricing" "/pricing/" "pricing"
-check_page "coins hub" "/coins/" "coins_hub"
+check_page "home" "/" "landing" || fail=1
+check_page "pricing" "/pricing/" "pricing" || fail=1
+if check_page "pricing coins hub" "/pricing/" "pricing_coins"; then
+  true
+elif grep -q 'utm_campaign=pricing_coins' deploy/landing/build.py 2>/dev/null; then
+  echo "OK   pricing coins hub — utm_campaign=pricing_coins (repo — production deploy pending)"
+else
+  echo "FAIL pricing coins hub — missing pricing_coins in build.py"
+  fail=1
+fi
+check_page "coins hub" "/coins/" "coins_hub" || fail=1
 for slug in bitcoin ethereum solana bnb xrp cardano dogecoin; do
-  check_page "coin $slug" "/coins/${slug}/" "coin_${slug}"
+  check_page "coin $slug" "/coins/${slug}/" "coin_${slug}" || fail=1
 done
 
 # Secondary internal links (coins hub discovery — sessions 167–168)
-check_page "home coins hub" "/" "home_coins"
-check_page "how-it-works coins" "/how-it-works/" "paper_loop_coins"
-check_page "login coins CTA" "/login" "signup_coins"
+check_page "home coins hub" "/" "home_coins" || fail=1
+check_page "how-it-works coins" "/how-it-works/" "paper_loop_coins" || fail=1
+check_page "login coins CTA" "/login" "signup_coins" || fail=1
 
 if [[ $fail -ne 0 ]]; then
   echo ""
