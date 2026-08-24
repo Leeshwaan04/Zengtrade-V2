@@ -28,8 +28,20 @@ run() {
 
 run "Security smoke" ./scripts/security-smoke.sh
 run "XSS hygiene (/app)" ./scripts/check-xss-hygiene.sh
-run "Partial activation (CPO)" ./scripts/verify-activation-path.sh --partial
-run "Sales-ready (billing)" ./scripts/check-sales-ready.sh
+run "Partial activation (CPO)" env ZT_QUIET_GROWTH=1 ./scripts/verify-activation-path.sh --partial
+run "Sales-ready (billing)" env ZT_QUIET_GROWTH=1 ./scripts/check-sales-ready.sh
+run "Free-tier limit probes (Q9)" env ZT_QUIET_GROWTH=1 ./scripts/check-free-tier-limit.sh
+
+echo ">> QA ops-security playbook"
+if grep -q 'guide-free-tier-test' saas/web/ops-security.html \
+  && grep -qi 'view evidence' saas/web/ops-security.html \
+  && grep -q 'check-founder-parallel-ready' saas/web/ops-security.html; then
+  echo "OK   ops-security partial QA + Q9 + trust path docs"
+else
+  echo "FAIL ops-security.html missing parallel QA playbook content"
+  fail=1
+fi
+echo ""
 
 if [[ $fail -eq 0 ]]; then
   echo "All QA parallel gates green — full E2E needs worker: https://zengtrade.in/ops/e2e"

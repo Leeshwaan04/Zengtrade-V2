@@ -44,17 +44,20 @@
     <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.7">
       <li><code>./scripts/security-smoke.sh</code> — secrets, IPN gate, RLS anon probes</li>
       <li><code>./scripts/verify-activation-path.sh --partial</code> — signup → deploy funnel</li>
+      <li><code>./scripts/guide-partial-e2e.sh</code> — manual steps 1–2 · View evidence → <a href="/app#forward">/app#forward</a></li>
+      <li><code>./scripts/check-free-tier-limit.sh</code> · <code>./scripts/guide-free-tier-test.sh</code> — Q9 second deploy blocked</li>
+      <li><code>./scripts/check-founder-parallel-ready.sh</code> — all parallel probes in one command</li>
       <li><code>./scripts/guide-qa-rls-isolation.sh</code> — post-P0 manual RLS isolation (Q3)</li>
       <li><code>./scripts/check-xss-hygiene.sh</code> — /app XSS hygiene</li>
     </ul>
-    <p style="font-size:13px;margin:12px 0 0">Index: <code>docs/FOUNDER_PARALLEL.md</code> · <code>./scripts/check-growth-goal.sh</code></p>
+    <p style="font-size:13px;margin:12px 0 0">Trust path before checkout: <a href="/dashboard">deploy</a> → View evidence → <a href="/app#forward">/app#forward</a> · Index: <code>docs/FOUNDER_PARALLEL.md</code> · <code>./scripts/check-growth-goal.sh</code></p>
   </div>
 
   <p id="growthGoals" class="card" style="display:none;background:#eef2ff;border-color:#c7d2fe;font-size:14px;line-height:1.55"></p>
 
   <div class="card">
     <ol>
-      <li><a href="/ops/e2e">E2E activation</a> — signup → deploy → trades (partial steps 1–2 OK while worker down)</li>
+      <li><a href="/ops/e2e">E2E activation</a> — signup → deploy → trades (partial steps 1–2 OK while worker down; View evidence → <a href="/app#forward">/app#forward</a>)</li>
       <li><b>RLS isolation</b> — second account must not see first user's trades (<a href="/app">/app</a>)</li>
       <li><a href="/ops/billing">Pro checkout</a> — tier flip only via signed IPN</li>
       <li>Review <code>docs/QA_VAPT_CHECKLIST.md</code> — mark Q1–V3</li>

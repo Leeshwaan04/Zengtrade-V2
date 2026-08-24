@@ -436,7 +436,8 @@
       "Q8b partial activation probe in QA_VAPT_CHECKLIST (session 118)",
       "/ops/security parallel QA card + FOUNDER_PARALLEL index (session 124)",
       "check-qa-parallel.sh + check-xss-hygiene.sh (session 125)",
-      "guide-qa-rls-isolation.sh + check-founder-parallel-ready.sh (session 130)"
+      "guide-qa-rls-isolation.sh + check-founder-parallel-ready.sh (session 130)",
+      "check-qa-parallel includes check-free-tier-limit Q9 + ops-security playbook probe (session 202)"
     ],
     "next": "Run security-smoke + E2E after P0; manual RLS isolation (2 accounts)",
     "links": [
