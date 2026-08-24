@@ -172,7 +172,7 @@ function activationChecklist() {
   if (deployed && traded) return "";
   const s1 = "done", s2 = deployed ? "done" : "on", s3 = traded ? "done" : (deployed ? "on" : "");
   const workerNote = deployed && !traded && !state.workerAlive
-    ? `<p class="muted" style="margin:8px 0 0;font-size:13px">Paper worker is offline — deploys are saved but trades pause until the worker is running. <a href="/ops/worker">Worker status</a> · <a href="/ops/e2e">E2E status</a> · <a href="/how-it-works/">How paper trading works</a></p>`
+    ? `<p class="muted" style="margin:8px 0 0;font-size:13px">Paper worker is offline — deploys are saved but trades pause until the worker is running. <a href="#forward">View evidence</a> · <a href="/ops/worker">Worker status</a> · <a href="/ops/e2e">E2E status</a> · <a href="/how-it-works/">How paper trading works</a></p>`
     : deployed && !traded && state.workerAlive
     ? `<p class="muted" style="margin:8px 0 0;font-size:13px">Worker is running — first closed trade usually within 5–15 min. Open <a href="#forward">Forward Test</a>.</p>`
     : "";
@@ -298,7 +298,7 @@ function showPostDeployHint() {
 function forwardEmptyBlurb() {
   const deployed = state.deployments.some(d => d.status === "running");
   if (deployed && !state.workerAlive) {
-    return "Deploy saved — paper worker is offline. Trades appear when the worker is back (~every 5 min when live). <a href=\"/ops/worker\">Worker status</a> · <a href=\"/ops/e2e\">E2E status</a>";
+    return "Deploy saved in <a href=\"/dashboard\">Algo Studio</a> — paper worker is offline. Trades appear when the worker is back (~every 5 min when live). <a href=\"/ops/worker\">Worker status</a> · <a href=\"/ops/e2e\">E2E status</a>";
   }
   if (deployed && !isPro(tier)) {
     return "Waiting for closed trades on your forward book — unlimited strategies on Pro ($19/mo founding).";

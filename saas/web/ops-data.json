@@ -224,7 +224,8 @@
       "worker-status banner links /ops/worker for P0 visibility (session 154)",
       "app.js activation + deploy copy links /ops/worker (session 155)",
       "studio.js worker-offline banner View evidence \u2192 /app#forward (session 197)",
-      "/ops/e2e + guide-partial-e2e document dashboard worker-offline evidence link (session 198)"
+      "/ops/e2e + guide-partial-e2e document dashboard worker-offline evidence link (session 198)",
+      "app.js activation checklist View evidence when worker offline (session 199)"
     ],
     "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
     "links": [
@@ -396,7 +397,8 @@
       "check-billing-ready.sh \u2014 one-command Pro checkout preflight (session 95)",
       "check-sales-ready.sh \u2014 billing + plan intent + pricing truth (session 116)",
       "guide-first-pro-checkout.sh \u2014 founder CLI first MRR steps (session 126)",
-      "guide-mrr-standup.sh \u2014 weekly /admin MRR standup (session 129)"
+      "guide-mrr-standup.sh \u2014 weekly /admin MRR standup (session 129)",
+      "/ops/billing + guide-first-pro-checkout deploy-first View evidence trust path (session 199)"
     ],
     "next": "Founder: run /ops/billing checkout smoke (no worker required); track MRR in /admin",
     "links": [

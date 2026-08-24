@@ -46,6 +46,13 @@ else
   fail=1
 fi
 
+if grep -q 'View evidence' saas/web/ops-billing.html && grep -q '/app#forward' saas/web/ops-billing.html; then
+  echo "OK   ops-billing partial deploy trust path (View evidence)"
+else
+  echo "FAIL ops-billing missing partial deploy → evidence copy"
+  fail=1
+fi
+
 if grep -q 'localStorage.getItem("zt_checkout_ref")' saas/web/js/billing.js; then
   echo "OK   billing.js checkout attribution (session + localStorage)"
 else

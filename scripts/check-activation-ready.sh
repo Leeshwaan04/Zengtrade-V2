@@ -100,6 +100,13 @@ else
   fail=1
 fi
 
+if grep -q 'View evidence' saas/web/js/app.js && grep -q 'activationChecklist' saas/web/js/app.js; then
+  echo "OK   app.js activation checklist View evidence link (worker offline)"
+else
+  echo "FAIL app.js missing activation checklist View evidence link"
+  fail=1
+fi
+
 if grep -q 'Deploy a free paper strategy' saas/web/js/app.js; then
   echo "OK   pricing deploy-first hint (0 deployments)"
 else
