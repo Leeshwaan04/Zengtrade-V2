@@ -38,10 +38,11 @@ Do **not** publish forward P&L or r/algotrading until `./scripts/check-worker.sh
 
 ## Definition of done (each run)
 
-1. Draft or improve content; no live-trading hype.
-2. If landing copy changed: `python3 deploy/landing/build.py`.
-3. Commit: `marketing(autopilot): <what>` on `main`.
-4. Log via `append-growth-log.sh`; update `ops-data.json` → **marketing**.
+1. Run `./scripts/audit-growth-goal.sh` — CBO infra vs live MRR; log if status changed.
+2. Draft or improve content; no live-trading hype.
+3. If landing copy changed: `python3 deploy/landing/build.py`.
+4. Commit: `marketing(autopilot): <what>` on `main`.
+5. Log via `append-growth-log.sh`; update `ops-data.json` → **marketing**.
 
 ## Do not
 

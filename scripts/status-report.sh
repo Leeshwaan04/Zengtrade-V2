@@ -7,7 +7,7 @@ cd "$ROOT"
 echo "zengtrade status — $(date -u +%Y-%m-%dT%H:%MZ)"
 echo ""
 
-prod=0 mig=0 work=0 bill=0 gsc=0 act=0 sales=0 qa=0 ops_p0=0
+prod=0 mig=0 work=0 bill=0 gsc=0 act=0 sales=0 qa=0 ops_p0=0 db_auth=0 partial=0
 prod_out=$(SITE=https://zengtrade.in ./scripts/check-production.sh 2>&1) && prod=1 || true
 echo "$prod_out" | grep -q 'OK   ops-p0' && ops_p0=1
 ./scripts/check-migrations.sh >/dev/null 2>&1 && mig=1
@@ -27,7 +27,6 @@ printf "Paper worker        %s\n" "$([[ $work -eq 1 ]] && echo '✅' || echo '�
 printf "GSC-ready           %s\n" "$([[ $gsc -eq 1 ]] && echo '✅' || echo '❌')"
 printf "Activation UI       %s\n" "$([[ $act -eq 1 ]] && echo '✅' || echo '❌')"
 if [[ $work -eq 0 && $mig -eq 1 ]]; then
-  partial=0
   ./scripts/verify-activation-path.sh --partial >/dev/null 2>&1 && partial=1
   printf "Partial activation  %s\n" "$([[ $partial -eq 1 ]] && echo '✅ (signup → deploy)' || echo '❌')"
 fi
@@ -40,10 +39,13 @@ echo "Worker heartbeat last: $hb UTC"
 if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
   ./scripts/check-railway-deploy.sh 2>/dev/null || true
   if ./scripts/validate-database-credentials.sh >/dev/null 2>&1; then
+    db_auth=1
     echo "DATABASE_URL auth     ✅"
   else
     echo "DATABASE_URL auth     ❌ (Railway password invalid — /ops/worker)"
   fi
+else
+  db_auth=1
 fi
 
 if [[ $prod -eq 1 && $bill -eq 1 && $mig -eq 1 && $work -eq 1 ]]; then
@@ -67,6 +69,8 @@ else
 fi
 echo ""
 echo "Growth goal audit:"
-./scripts/audit-growth-goal.sh 2>/dev/null | tail -n 8 || true
+GROWTH_PROD=$prod GROWTH_MIG=$mig GROWTH_WORK=$work GROWTH_GSC=$gsc GROWTH_SALES=$sales \
+  GROWTH_DB_AUTH=$db_auth GROWTH_PARTIAL=$partial GROWTH_BILL=$bill \
+  ./scripts/print-growth-goal-summary.sh 2>/dev/null || true
 ./scripts/founder-next-action.sh 2>/dev/null || true
 exit 1

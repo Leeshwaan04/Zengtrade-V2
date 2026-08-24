@@ -49,11 +49,12 @@ Parallel index: `docs/FOUNDER_PARALLEL.md`
 
 ## Definition of done (each run)
 
-1. Run `security-smoke.sh` + `e2e_smoke.sh` when touching product code.
-2. Pick one checklist item; partial activation QA OK while worker down.
-3. Commit: `qavapt(autopilot): <what>` on `main`.
-4. Log: `./scripts/append-growth-log.sh N "title" --cto "..."` (use QA&VAPT in shipped line via manual GROWTH block if needed).
-5. Update `saas/web/ops-data.json` → `qavapt` when shipping.
+1. Run `./scripts/audit-growth-goal.sh` — partial vs full activation; log if status changed.
+2. Run `security-smoke.sh` + `e2e_smoke.sh` when touching product code.
+3. Pick one checklist item; partial activation QA OK while worker down.
+4. Commit: `qavapt(autopilot): <what>` on `main`.
+5. Log: `./scripts/append-growth-log.sh N "title" --qa "..."`.
+6. Update `saas/web/ops-data.json` → `qavapt` when shipping.
 
 Founder guide: **https://zengtrade.in/ops/security**
 

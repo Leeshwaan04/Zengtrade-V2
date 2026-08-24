@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T23:50:09Z",
+  "updated": "2026-08-24T00:15:20Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -136,7 +136,8 @@
       "parallel growth includes sales-ready; GROWTH_DASHBOARD DATABASE_URL auth (session 149)",
       "audit-growth-goal.sh + /ops DATABASE_URL auth gate + check-p0 DB auth (session 150)",
       "audit wired into health-watch, post-p0, founder-preflight, cto charter (session 151)",
-      "audit in cpo/cbo/sales charters; STATUS ship gate + status-report tail (session 152)"
+      "audit in cpo/cbo/sales charters; STATUS ship gate + status-report tail (session 152)",
+      "print-growth-goal-summary + /ops growth_goal gates; seo/marketing/qa charters (session 153)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
@@ -443,6 +444,13 @@
     "parallel_growth_ready": true,
     "sales_ready": true,
     "qa_parallel_ready": true,
-    "partial_activation_ready": true
+    "partial_activation_ready": true,
+    "growth_goal": {
+      "cto_ok": false,
+      "cpo_partial_ok": true,
+      "cpo_full_ok": false,
+      "cbo_infra_ok": true,
+      "first_mrr_ok": false
+    }
   }
 }

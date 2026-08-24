@@ -42,10 +42,11 @@ Founder: verify GSC property + submit **https://zengtrade.in/sitemap.xml** — `
 
 ## Definition of done (each run)
 
-1. Prefer indexability work that does not need worker.
-2. If HTML changed: `python3 deploy/landing/build.py`.
-3. Commit: `seo(autopilot): <what>` on `main`.
-4. Log via `append-growth-log.sh`; update `ops-data.json` → **seo**.
+1. Run `./scripts/audit-growth-goal.sh` — GSC-ready row; log if status changed.
+2. Prefer indexability work that does not need worker.
+3. If HTML changed: `python3 deploy/landing/build.py`.
+4. Commit: `seo(autopilot): <what>` on `main`.
+5. Log via `append-growth-log.sh`; update `ops-data.json` → **seo**.
 
 ## Do not
 

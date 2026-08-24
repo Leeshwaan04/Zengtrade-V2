@@ -340,6 +340,22 @@ async function refresh() {
       dbAuthOk,
       dbAuthOk ? "Postgres OK" : "wrong Railway password · /ops/worker"
     );
+    const gg = g.growth_goal || {};
+    document.getElementById("gates").innerHTML += gate(
+      "Goal: CTO loop",
+      gg.cto_ok === true,
+      "auth + worker + DB"
+    );
+    document.getElementById("gates").innerHTML += gate(
+      "Goal: CPO trades",
+      gg.cpo_full_ok === true,
+      gg.cpo_full_ok ? "signup → trades" : (gg.cpo_partial_ok ? "partial — needs worker" : "blocked")
+    );
+    document.getElementById("gates").innerHTML += gate(
+      "Goal: CBO infra",
+      gg.cbo_infra_ok === true,
+      "GSC + sales-ready"
+    );
   }
 
   const parallel = document.getElementById("parallelBox");

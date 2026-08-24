@@ -119,6 +119,33 @@ def main() -> int:
         gates[k] for k in ("production", "billing", "migration_0011", "worker")
     )
 
+    cto_ok = all(
+        (
+            gates["production"],
+            gates["billing"],
+            gates["migration_0011"],
+            gates["worker"],
+            gates.get("database_url_auth_ok", False),
+        )
+    )
+    cpo_full = False
+    if gates["worker"]:
+        cpo_full = (
+            subprocess.run(
+                ["./scripts/verify-activation-path.sh"],
+                cwd=ROOT,
+                capture_output=True,
+            ).returncode
+            == 0
+        )
+    gates["growth_goal"] = {
+        "cto_ok": cto_ok,
+        "cpo_partial_ok": gates["partial_activation_ready"],
+        "cpo_full_ok": cpo_full,
+        "cbo_infra_ok": gates["gsc_ready"] and gates["sales_ready"],
+        "first_mrr_ok": False,
+    }
+
     data = json.loads(OPS_DATA.read_text(encoding="utf-8"))
     data["updated"] = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace(
         "+00:00", "Z"
