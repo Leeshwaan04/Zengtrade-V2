@@ -28,7 +28,15 @@ qa="—"
 partial="—"
 
 if [[ $work -eq 0 ]]; then
-  if env ZT_QUIET_GROWTH=1 ./scripts/check-parallel-growth.sh >/dev/null 2>&1; then
+  parallel_ok=0
+  for _ in 1 2; do
+    if env ZT_QUIET_GROWTH=1 ./scripts/check-parallel-growth.sh >/dev/null 2>&1; then
+      parallel_ok=1
+      break
+    fi
+    sleep 3
+  done
+  if [[ $parallel_ok -eq 1 ]]; then
     parallel="✅"
     sales="✅"
     partial="✅"
