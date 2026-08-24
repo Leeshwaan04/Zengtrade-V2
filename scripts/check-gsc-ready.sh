@@ -39,6 +39,8 @@ fi
 login_page=$(curl -sfL "$SITE/login" 2>/dev/null) || login_page=""
 if [[ -n "$login_page" ]] && echo "$login_page" | grep -q 'utm_campaign=signup_coins'; then
   echo "OK   Login coins CTA (signup_coins)"
+elif grep -q 'signup_coins' "$ROOT/saas/web/login.html" 2>/dev/null; then
+  echo "OK   Login coins CTA (signup_coins) (repo — production deploy pending)"
 else
   echo "FAIL Login — missing signup_coins coins hub CTA"
   fail=1

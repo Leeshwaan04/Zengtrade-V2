@@ -5,6 +5,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 export SITE="${SITE:-https://zengtrade.in}"
+export ZT_IN_GROWTH_SUMMARY=1
+export ZT_QUIET_GROWTH=1
 
 probe_or_env() {
   local var="$1" script="$2"
@@ -13,7 +15,7 @@ probe_or_env() {
     echo "$v"
     return
   fi
-  if [[ -n "$script" ]] && "$ROOT/scripts/$script" >/dev/null 2>&1; then
+  if [[ -n "$script" ]] && env ZT_QUIET_GROWTH=1 ZT_IN_GROWTH_SUMMARY=1 "$ROOT/scripts/$script" >/dev/null 2>&1; then
     echo 1
   else
     echo 0
@@ -50,7 +52,7 @@ fi
 partial="${GROWTH_PARTIAL:-}"
 if [[ -z "$partial" ]]; then
   if [[ "$work" -eq 0 && "$mig" -eq 1 ]]; then
-    if ./scripts/verify-activation-path.sh --partial >/dev/null 2>&1; then partial=1; else partial=0; fi
+    if env ZT_QUIET_GROWTH=1 ZT_IN_GROWTH_SUMMARY=1 ./scripts/verify-activation-path.sh --partial >/dev/null 2>&1; then partial=1; else partial=0; fi
   elif [[ "$work" -eq 1 ]]; then
     partial=1
   else
@@ -65,7 +67,7 @@ if [[ $work -eq 0 ]]; then
   cpo_fail=1
 else
   full=0
-  if ./scripts/verify-activation-path.sh >/dev/null 2>&1; then full=1; fi
+  if env ZT_QUIET_GROWTH=1 ZT_IN_GROWTH_SUMMARY=1 ./scripts/verify-activation-path.sh >/dev/null 2>&1; then full=1; fi
   [[ $full -eq 1 ]] || cpo_fail=1
 fi
 

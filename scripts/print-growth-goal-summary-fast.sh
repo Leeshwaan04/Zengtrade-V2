@@ -5,6 +5,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+export ZT_IN_GROWTH_SUMMARY=1
+export ZT_QUIET_GROWTH=1
+export ZT_SKIP_GROWTH_SUMMARY=1
+
 export GROWTH_WORK="${GROWTH_WORK:-0}"
 export GROWTH_DB_AUTH="${GROWTH_DB_AUTH:-0}"
 export GROWTH_PARTIAL="${GROWTH_PARTIAL:-1}"

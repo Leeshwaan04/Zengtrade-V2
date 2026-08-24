@@ -64,8 +64,8 @@ echo ""
 
 echo "### CBO — organic + first Pro MRR"
 gsc=0 sales=0
-SITE="$SITE" ./scripts/check-gsc-ready.sh >/dev/null 2>&1 && gsc=1
-./scripts/check-sales-ready.sh >/dev/null 2>&1 && sales=1
+ZT_QUIET_GROWTH=1 SITE="$SITE" ./scripts/check-gsc-ready.sh >/dev/null 2>&1 && gsc=1
+ZT_QUIET_GROWTH=1 ./scripts/check-sales-ready.sh >/dev/null 2>&1 && sales=1
 line CBO "GSC-ready (organic infrastructure)" "$gsc" "/ops/gsc"
 line CBO "Sales-ready (Pro checkout path)" "$sales" "/ops/billing"
 line CBO "First Pro MRR (live)" "0" "founder: /admin Paying ≥ 1 · MRR > \$0"
