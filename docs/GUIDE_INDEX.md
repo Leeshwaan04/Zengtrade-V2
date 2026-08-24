@@ -2,7 +2,7 @@
 
 One-page map of CLI playbooks while the paper worker is blocked (or after P0 green).
 
-**Quick start:** `./scripts/guide-founder-growth-standup.sh` · `./scripts/guide-founder-parallel.sh` · **All probes:** `./scripts/check-founder-parallel-ready.sh`
+**Quick start:** `./scripts/guide-founder-growth-standup.sh` · quick probes only: `ZT_QUICK_GROWTH_STANDUP=1 ./scripts/guide-founder-growth-standup.sh` · **All probes:** `./scripts/check-founder-parallel-ready.sh`
 
 ## Verify scripts (automated)
 
@@ -24,7 +24,7 @@ One-page map of CLI playbooks while the paper worker is blocked (or after P0 gre
 
 | Role | Script | When |
 |------|--------|------|
-| **All** | `./scripts/guide-founder-growth-standup.sh` | Combined all-role standup incl. CTO P0 (worker blocked) |
+| **All** | `./scripts/guide-founder-growth-standup.sh` | Combined all-role standup incl. CTO P0 (worker blocked); add `--quick` or `ZT_QUICK_GROWTH_STANDUP=1` for probes + index only |
 | **CTO** | `./scripts/guide-cto-founder-standup.sh` | P0 worker recovery combined (check-p0-readiness + validate) |
 | **CTO** | `./scripts/guide-worker-recovery.sh` | P0 blocked — wrong Railway DB password |
 | **CPO** | `./scripts/guide-cpo-founder-standup.sh` | Partial activation combined (signup → deploy + Q9) |

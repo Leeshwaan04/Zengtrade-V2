@@ -162,7 +162,8 @@
       "/ops/migrate parallel work card when migration 0011 live + worker down (session 208)",
       "founder parallel hub: guide-founder-parallel + FOUNDER_PARALLEL + /ops parallel list (session 209)",
       "guide-founder-growth-standup.sh — combined CPO + CBO founder standup (session 212)",
-      "guide-cto-founder-standup.sh — P0 worker recovery combined playbook (session 215)"
+      "guide-cto-founder-standup.sh — P0 worker recovery combined playbook (session 215)",
+      "guide-founder-growth-standup quick mode ZT_QUICK_GROWTH_STANDUP (session 218)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [

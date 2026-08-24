@@ -86,6 +86,7 @@ if [[ -x scripts/guide-founder-growth-standup.sh ]] \
   && grep -q 'guide-marketing-founder-standup' scripts/guide-founder-growth-standup.sh \
   && grep -q 'guide-cto-founder-standup' scripts/guide-founder-growth-standup.sh \
   && grep -q 'guide-sales-founder-standup' scripts/guide-founder-growth-standup.sh \
+  && grep -q 'ZT_QUICK_GROWTH_STANDUP' scripts/guide-founder-growth-standup.sh \
   && grep -q 'guide-seo-founder-standup' scripts/guide-founder-growth-standup.sh \
   && grep -q 'guide-founder-growth-standup' saas/web/ops-migrate.html; then
   echo "OK   guide-founder-growth-standup combined all-role playbook (+ CTO P0)"

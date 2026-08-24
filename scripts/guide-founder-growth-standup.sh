@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
-# All roles: combined CPO + CBO founder standup while paper worker is blocked.
+# All roles: combined founder standup while paper worker is blocked.
+# Quick mode: ZT_QUICK_GROWTH_STANDUP=1 or --quick (probes + role index only).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 export SITE="${SITE:-https://zengtrade.in}"
 
-echo "== Founder growth standup (CPO + CBO + QA + Marketing + CTO P0) — $SITE =="
+QUICK=0
+[[ "${1:-}" == "--quick" ]] && QUICK=1
+[[ -n "${ZT_QUICK_GROWTH_STANDUP:-}" ]] && QUICK=1
+
+echo "== Founder growth standup (all roles + CTO P0) — $SITE =="
 echo ""
 
 if ./scripts/check-worker.sh >/dev/null 2>&1; then
@@ -22,6 +27,22 @@ if ! env ZT_QUIET_GROWTH=1 ./scripts/check-founder-parallel-ready.sh; then
   echo "Fix probe failures above."
   echo "Hub: $SITE/ops/migrate · ./scripts/guide-founder-parallel.sh"
   exit 1
+fi
+
+if [[ $QUICK -eq 1 ]]; then
+  echo "Quick mode — probes green. Run role standups for detail:"
+  echo ""
+  printf "  %-14s %s\n" "CTO (P0)" "./scripts/guide-cto-founder-standup.sh"
+  printf "  %-14s %s\n" "CPO" "./scripts/guide-cpo-founder-standup.sh"
+  printf "  %-14s %s\n" "CBO" "./scripts/guide-cbo-founder-standup.sh"
+  printf "  %-14s %s\n" "SEO" "./scripts/guide-seo-founder-standup.sh"
+  printf "  %-14s %s\n" "Sales" "./scripts/guide-sales-founder-standup.sh"
+  printf "  %-14s %s\n" "QA&VAPT" "./scripts/guide-qa-founder-standup.sh"
+  printf "  %-14s %s\n" "Marketing" "./scripts/guide-marketing-founder-standup.sh"
+  echo ""
+  echo "Full run: ./scripts/guide-founder-growth-standup.sh"
+  echo "Hub: $SITE/ops/migrate · $SITE/ops"
+  exit 0
 fi
 
 echo ""

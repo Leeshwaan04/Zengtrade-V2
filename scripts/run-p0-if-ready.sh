@@ -66,12 +66,15 @@ echo ""
 if ./scripts/check-founder-parallel-ready.sh >/dev/null 2>&1; then
   echo ""
   echo "Founder parallel probes green — sole blocker is DATABASE_PASSWORD / Railway deploy"
-  echo "Recovery: ./scripts/guide-worker-recovery.sh"
-  echo "Playbooks: ./scripts/guide-founder-parallel.sh · docs/GUIDE_INDEX.md"
+  echo "Growth standup: ./scripts/guide-founder-growth-standup.sh"
+  echo "Quick index:   ZT_QUICK_GROWTH_STANDUP=1 ./scripts/guide-founder-growth-standup.sh"
+  echo "P0 recovery:   ./scripts/guide-cto-founder-standup.sh"
+  echo "Playbooks:     ./scripts/guide-founder-parallel.sh · docs/GUIDE_INDEX.md"
 elif ./scripts/check-parallel-growth.sh >/dev/null 2>&1; then
   echo ""
   echo "Parallel growth gates green — sole blocker is DATABASE_PASSWORD / Railway deploy"
   echo "Recovery: ./scripts/guide-worker-recovery.sh"
+  echo "Growth standup: ./scripts/guide-founder-growth-standup.sh"
   echo "Founder playbook: ./scripts/guide-founder-parallel.sh"
 fi
 exit 1
