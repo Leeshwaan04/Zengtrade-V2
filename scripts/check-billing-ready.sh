@@ -46,6 +46,13 @@ else
   fail=1
 fi
 
+if grep -q 'zt_checkout_ref' saas/web/js/billing.js; then
+  echo "OK   billing.js checkout attribution (zt_checkout_ref)"
+else
+  echo "FAIL billing.js missing zt_checkout_ref attribution"
+  fail=1
+fi
+
 echo ""
 if [[ $fail -eq 0 ]]; then
   echo "Billing-ready — test checkout at $SITE/ops/billing"

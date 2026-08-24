@@ -48,6 +48,16 @@
     <a class="btn" href="/admin" style="margin-top:8px">Open /admin</a>
   </div>
 
+  <div class="card" style="background:#eef2ff;border-color:#c7d2fe">
+    <h2 style="font-size:16px;margin:0 0 8px">Upgrade attribution (checkout_click path)</h2>
+    <p style="font-size:14px;margin:0 0 10px">After checkout, inspect <code>event.path</code> in Supabase or watch <code>checkout_clicks_7d</code> in <a href="/admin">/admin</a>:</p>
+    <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.7">
+      <li><code>free_limit_upgrade</code> — deploy a 2nd strategy on Free (<a href="/dashboard">Algo Studio</a>)</li>
+      <li><code>deploy_success_pro</code> — post-deploy “Pro $19/mo” CTA</li>
+      <li><code>forward_empty_pro</code> — Forward Test empty state → Pro button</li>
+    </ul>
+  </div>
+
   <p id="growthGoals" class="card" style="display:none;background:#eef2ff;border-color:#c7d2fe;font-size:14px;line-height:1.55"></p>
 </div>
 <script>

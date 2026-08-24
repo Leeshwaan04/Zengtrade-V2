@@ -247,12 +247,20 @@ const emptyStrategies = () => `<div class="empty">
   <p class="muted">Deploy one to start paper-trading on live crypto prices, zero money at risk.</p>
   <button class="btn primary" id="firstDeploy">Browse strategies</button></div>`;
 
-const emptyDeployCta = (title, blurb) => `<div class="empty"><p><b>${title}</b></p><p class="muted">${blurb}</p>
+const emptyDeployCta = (title, blurb) => {
+  const deployed = state.deployments.some((d) => d.status === "running");
+  const proBtn = deployed && !isPro(tier)
+    ? `<button class="btn ghost" id="ev-pro" type="button" style="margin-left:8px">Pro $19/mo — unlimited</button>`
+    : "";
+  return `<div class="empty"><p><b>${title}</b></p><p class="muted">${blurb}</p>
   <button class="btn primary" id="ev-deploy">Deploy a strategy</button>
-  <a class="btn ghost" href="/dashboard" style="margin-left:8px">Open Algo Studio</a></div>`;
+  <a class="btn ghost" href="/dashboard" style="margin-left:8px">Open Algo Studio</a>${proBtn}</div>`;
+};
 function wireEmptyDeploy() {
   const b = $("#ev-deploy");
   if (b) b.onclick = () => { location.hash = "strategies"; };
+  const pro = $("#ev-pro");
+  if (pro) pro.onclick = () => { markCheckoutRef("forward_empty_pro"); location.hash = "pricing"; };
 }
 
 function showPostDeployHint() {
@@ -284,6 +292,9 @@ function forwardEmptyBlurb() {
   const deployed = state.deployments.some(d => d.status === "running");
   if (deployed && !state.workerAlive) {
     return "Deploy saved — paper worker is offline. Trades appear when the worker is back (~every 5 min when live). <a href=\"/ops/worker\">Worker status</a> · <a href=\"/ops/e2e\">E2E status</a>";
+  }
+  if (deployed && !isPro(tier)) {
+    return "Waiting for closed trades on your forward book — unlimited strategies on Pro ($19/mo founding).";
   }
   if (deployed && state.workerAlive) {
     return "Worker is running — first closed trade usually within 5–15 min on live Binance prices.";

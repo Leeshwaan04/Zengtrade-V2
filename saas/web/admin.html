@@ -175,6 +175,7 @@ function showMrrAlert(o){
   el.innerHTML=parallel
     ? "<b>CBO — first Pro MRR (parallel)</b> — Billing probes green while worker is down. "+
       "<a href=\"/ops/billing\">Test Pro checkout</a> → confirm <b>Paying ≥ 1</b> and <b>MRR &gt; $0</b> here. "+
+      "Checkout paths: <code>free_limit_upgrade</code> · <code>deploy_success_pro</code> · <code>forward_empty_pro</code> in event path. "+
       "Guide: <code>./scripts/guide-first-pro-checkout.sh</code>"
     : "<b>CBO — first Pro MRR</b> — Worker is live but no paying customers yet. "+
       "<a href=\"/ops/billing\">Run checkout test</a> → targets: Paying ≥ 1 · MRR &gt; $0 · checkout_clicks_7d rising.";
@@ -203,7 +204,7 @@ async function load(){
     { k:"Plan intents 7d", v:fmt(o.plan_intents_7d), s:"?plan=pro|elite" },
     { k:"Deploy clicks 7d", v:fmt(o.deploy_clicks_7d), s:"activation" },
     { k:"Deploy success 7d", v:fmt(o.deploy_success_7d), s:"paper live" },
-    { k:"Checkout clicks 7d", v:fmt(o.checkout_clicks_7d), s:"revenue intent" },
+    { k:"Checkout clicks 7d", v:fmt(o.checkout_clicks_7d), s:"path suffixes in event table" },
     { k:"Worker", v:alive?"Live":"Down", s:o.worker_last_cycle?("last cycle "+timeAgo(o.worker_last_cycle)):"no cycles yet", cls:alive?"good":"bad" },
   ];
   $("tiles").innerHTML = tiles.map(t=>`<div class="tile ${t.cls||""}"><div class="k">${t.k}</div><div class="v">${t.v}</div><div class="s">${t.s}</div></div>`).join("");

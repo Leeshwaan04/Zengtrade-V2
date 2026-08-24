@@ -79,6 +79,13 @@ else
   fail=1
 fi
 
+if grep -q 'forward_empty_pro' saas/web/js/app.js; then
+  echo "OK   app.js forward_empty_pro Pro upsell"
+else
+  echo "FAIL app.js missing forward_empty_pro Pro upsell"
+  fail=1
+fi
+
 echo ""
 echo ">> Plan intent"
 if SITE="$SITE" ./scripts/check-plan-intent.sh >/dev/null 2>&1; then

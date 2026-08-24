@@ -267,12 +267,14 @@
         }
         return r.json().then(function (e) {
           var msg = (e && (e.message || e.details || e.hint)) || "Deploy failed - try again.";
-          if (/FREE_LIMIT/i.test(msg))
+          if (/FREE_LIMIT/i.test(msg)) {
+            setTimeout(goUpgradeFromFreeLimit, 900);
             return jresp({
               error: "Free includes " + FREE_DEPLOY_LIMIT + " paper strategy. Upgrade to Pro for unlimited.",
               upgrade: "/app#pricing",
               upgrade_ref: "free_limit_upgrade",
             });
+          }
           return jresp({ error: msg });
         }).catch(function () { return jresp({ error: "Deploy failed - try again." }); });
       });

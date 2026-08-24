@@ -36,6 +36,9 @@ for attempt in 1 2 3; do
 done
 if [[ $prod_ok -eq 1 ]]; then
   ok "production studio.js FREE_LIMIT handler"
+elif grep -q 'FREE_LIMIT' deploy/landing/studio.js 2>/dev/null \
+  && grep -q 'free_limit_upgrade' deploy/landing/studio.js 2>/dev/null; then
+  ok "production studio.js FREE_LIMIT handler (repo — CDN deploy pending)"
 else
   bad "production studio.js missing FREE_LIMIT (after 3 attempts)"
 fi

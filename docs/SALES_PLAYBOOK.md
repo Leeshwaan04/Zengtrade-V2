@@ -19,7 +19,7 @@ Checkout: NOWPayments crypto invoice → IPN grants tier via `grant_paid` RPC.
 3. **Activation** — deploy → first closed trade (builds trust to buy)
 4. **Intent** — `plan_intent` from `?plan=pro|elite`
 5. **Checkout** — `checkout_click` → invoice → `?paid=1` poll  
-   Path suffixes: `:free_limit_upgrade` (free cap hit), `:deploy_success_pro` (post-deploy upsell)
+   Path suffixes: `:free_limit_upgrade` (free cap hit), `:deploy_success_pro` (post-deploy upsell), `:forward_empty_pro` (Forward Test empty state)
 6. **Retention** — usage in `/app`, upgrade stickiness
 
 Founder test: **https://zengtrade.in/ops/billing**
