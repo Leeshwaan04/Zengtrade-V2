@@ -53,6 +53,7 @@ Do not claim forward P&L or closed-trade activation until `./scripts/check-worke
 
 - MRR tile · `paying` · `checkout_clicks_7d` · `plan_intents_7d`
 - `deploy_success_7d` (activated users ready to upgrade)
+- When MRR = $0: `/admin` banner shows deploy-first trust path (`/dashboard` → View evidence → `/app#forward`) before `/ops/billing` checkout
 
 ## Verification
 

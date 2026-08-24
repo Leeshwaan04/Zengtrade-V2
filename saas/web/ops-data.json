@@ -289,7 +289,8 @@
       "/admin first-MRR CTA when paying=0 \u2014 parallel checkout while worker blocked (session 135)",
       "/ops/gsc parallel MRR card; /ops/billing sales-ready probe (session 140)",
       "guide-gsc-founder links parallel Pro MRR checkout (session 148)",
-      "check-parallel-growth includes sales-ready; GROWTH_DASHBOARD DATABASE_URL auth row (session 149)"
+      "check-parallel-growth includes sales-ready; GROWTH_DASHBOARD DATABASE_URL auth row (session 149)",
+      "/admin deploy-first trust path in MRR + P0 banners (session 200)"
     ],
     "next": "Founder: GSC completion log (docs/GSC_SETUP.md); Pro checkout at /ops/billing",
     "links": [
@@ -398,7 +399,8 @@
       "check-sales-ready.sh \u2014 billing + plan intent + pricing truth (session 116)",
       "guide-first-pro-checkout.sh \u2014 founder CLI first MRR steps (session 126)",
       "guide-mrr-standup.sh \u2014 weekly /admin MRR standup (session 129)",
-      "/ops/billing + guide-first-pro-checkout deploy-first View evidence trust path (session 199)"
+      "/ops/billing + guide-first-pro-checkout deploy-first View evidence trust path (session 199)",
+      "/admin MRR alert deploy-first trust path when paying=0 (session 200)"
     ],
     "next": "Founder: run /ops/billing checkout smoke (no worker required); track MRR in /admin",
     "links": [

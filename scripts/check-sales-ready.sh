@@ -26,6 +26,18 @@ section "Billing-ready" env SITE="$SITE" ./scripts/check-billing-ready.sh
 section "Plan intent routing" env SITE="$SITE" ./scripts/check-plan-intent.sh
 section "Pricing truth (no live overpromise)" ./scripts/check-pricing-truth.sh
 
+echo ">> Admin first-MRR founder surface"
+if grep -q 'first Pro MRR' saas/web/admin.html \
+  && grep -q 'View evidence' saas/web/admin.html \
+  && grep -q '/dashboard' saas/web/admin.html \
+  && grep -q 'guide-first-pro-checkout' saas/web/admin.html; then
+  echo "OK   admin MRR alert deploy-first trust path"
+else
+  echo "FAIL admin.html missing deploy-first trust path in MRR alert"
+  fail=1
+fi
+echo ""
+
 if [[ $fail -eq 0 ]]; then
   echo "Sales-ready — founder manual checkout: $SITE/ops/billing"
   echo "After IPN: confirm paying + MRR in $SITE/admin"

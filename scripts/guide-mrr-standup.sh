@@ -25,6 +25,7 @@ echo "| deploy_success_7d | Activated users ready to upgrade (partial OK while w
 echo "| signups (total) | Day-over-day from dashboard |"
 echo ""
 echo "Worker offline: deploy_success can grow without closed trades — see $SITE/ops/e2e"
+echo "Deploy-first trust path (before checkout): $SITE/dashboard → View evidence → $SITE/app#forward"
 echo "If MRR = \$0 after checkout test:"
 echo "  → ./scripts/guide-first-pro-checkout.sh"
 echo "  → Supabase edge logs: nowpayments-ipn"
