@@ -6,9 +6,10 @@ cd "$ROOT"
 export SITE="${SITE:-https://zengtrade.in}"
 
 ts=$(date -u +%Y-%m-%dT%H:%MZ)
-work=0 mig=0 act=0 bill=0 gsc=0 funnel=0
+work=0 mig=0 act=0 bill=0 gsc=0 funnel=0 prod=0 sales=0 partial=0 db_auth_ok=0
 ./scripts/check-worker.sh >/dev/null 2>&1 && work=1
 ./scripts/check-migrations.sh >/dev/null 2>&1 && mig=1
+SITE="$SITE" ./scripts/check-production.sh >/dev/null 2>&1 && prod=1
 SITE="$SITE" ./scripts/check-activation-ready.sh >/dev/null 2>&1 && act=1
 SITE="$SITE" ./scripts/check-billing-ready.sh >/dev/null 2>&1 && bill=1
 SITE="$SITE" ./scripts/check-gsc-ready.sh >/dev/null 2>&1 && gsc=1
@@ -58,13 +59,33 @@ echo "| Funnel CTAs (7 coins) | $([[ $funnel -eq 1 ]] && echo '✅' || echo '❌
 echo "| Signups / deployers / MRR | /admin (login required) |"
 if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
   if ./scripts/validate-database-credentials.sh >/dev/null 2>&1; then
+    db_auth_ok=1
     echo "| DATABASE_URL auth | ✅ |"
   else
     echo "| DATABASE_URL auth | ❌ Railway password — /ops/worker |"
   fi
+else
+  db_auth_ok=1
 fi
+cto_goal=$([[ $prod -eq 1 && $mig -eq 1 && $work -eq 1 && $db_auth_ok -eq 1 ]] && echo '✅ auth+worker+DB' || echo '❌ /ops/worker')
+if [[ $work -eq 1 ]]; then
+  cpo_goal="✅ signup → trades"
+elif [[ $partial -eq 1 ]]; then
+  cpo_goal="partial ✅ (trades need worker)"
+else
+  cpo_goal="❌"
+fi
+cbo_goal=$([[ $gsc -eq 1 && $sales -eq 1 ]] && echo '✅ GSC+sales-ready · MRR /admin' || echo '❌')
+echo "| Growth: CTO loop | $cto_goal |"
+echo "| Growth: CPO trades | $cpo_goal |"
+echo "| Growth: CBO infra | $cbo_goal |"
 gates=$((mig + act + bill + gsc + funnel))
 echo "| Growth gates (excl. worker) | $gates/5 |"
+echo ""
+echo "Growth goal summary:"
+GROWTH_PROD=$prod GROWTH_MIG=$mig GROWTH_WORK=$work GROWTH_GSC=$gsc GROWTH_SALES=$sales \
+  GROWTH_DB_AUTH=$db_auth_ok GROWTH_PARTIAL=$partial GROWTH_BILL=$bill \
+  ./scripts/print-growth-goal-summary.sh 2>/dev/null | sed 's/^/  /' || true
 echo ""
 if [[ $work -eq 0 ]]; then
   ./scripts/founder-next-action.sh 2>/dev/null | sed 's/^/  /' || true

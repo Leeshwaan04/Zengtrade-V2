@@ -79,7 +79,7 @@ async function gates(){
     const ageMin=parseInt(ageTxt,10);
     const likelyBadPw=ageTxt==="none"||(!isNaN(ageMin)&&ageMin>60);
     if(likelyBadPw){
-      pre.innerHTML='✗ Migration 0011 live — <b>partial E2E: steps 1–2 OK</b> (signup + deploy). <b>Railway DATABASE_URL password is wrong</b> (deploy FAILED). <a href="/ops/worker">Reset Supabase password</a> → copy Session URI → Railway Deploy. Or Cloud Agent secret <code>DATABASE_PASSWORD</code>.';
+      pre.innerHTML='✗ Migration 0011 live — <b>partial E2E: steps 1–2 OK</b> (signup + deploy). <b>Railway DATABASE_URL password is wrong</b> (deploy FAILED). <a href="/ops/worker">Reset Supabase password</a> → copy Session URI → Railway Deploy. Or Cloud Agent secret <code>DATABASE_PASSWORD</code>.<br><span style="font-size:12.5px">Growth: CPO partial ✅ · CBO parallel — <a href="/ops/billing">step 7 Pro checkout</a> → <a href="/admin">/admin</a> MRR</span>';
     }else{
       pre.innerHTML='✗ Migration 0011 live — <b>partial E2E: steps 1–2 OK</b>. Deploy <a href="https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b" target="_blank" rel="noopener">paper-worker</a> for trades. <a href="/ops/worker">Worker guide</a>.';
     }

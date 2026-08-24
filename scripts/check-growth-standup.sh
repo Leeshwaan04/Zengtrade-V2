@@ -20,7 +20,7 @@ if ! ./scripts/check-worker.sh >/dev/null 2>&1; then
   echo ""
   echo "Log: ./scripts/append-growth-log.sh N \"title\" --cto \"...\" --cpo \"...\" --cbo \"...\" --seo \"...\" --marketing \"...\" --sales \"...\" --qa \"...\""
   echo ""
-  ./scripts/audit-growth-goal.sh 2>/dev/null || true
+  echo "Full audit: ./scripts/audit-growth-goal.sh (status-report above includes growth goal summary)"
 fi
 if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
   ./scripts/sync-ops-gates.py 2>/dev/null || true
