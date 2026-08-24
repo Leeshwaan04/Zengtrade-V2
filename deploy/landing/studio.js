@@ -108,6 +108,7 @@
         el.innerHTML = "<div><b>Strategy deployed</b><br><span style=\"color:var(--slate,#64748b)\">" +
           sub + "</span></div>" +
           "<a href=\"/app#forward\">View evidence</a>" +
+          "<a href=\"/coins/?utm_source=site&amp;utm_medium=organic&amp;utm_campaign=deploy_success_coins\">More coin strategies</a>" +
           (workerUp ? "" : "<a href=\"/ops/e2e\">E2E status</a>") +
           "<button type=\"button\" style=\"border:0;background:transparent;color:var(--slate);cursor:pointer\" " +
           "aria-label=\"Dismiss\">✕</button>";
@@ -342,6 +343,7 @@
         el.innerHTML = "<div><b>Deploy your first strategy</b><br><span style=\"color:var(--slate,#64748b)\">" +
           "Paper-trade on live Binance prices — open Library and tap Deploy.</span></div>" +
           "<a href=\"#\" data-zt-lib>Open Library</a>" +
+          "<a href=\"/coins/?utm_source=site&amp;utm_medium=organic&amp;utm_campaign=signup_nudge_coins\">Browse coins</a>" +
           "<button type=\"button\" style=\"border:0;background:transparent;color:var(--slate);cursor:pointer\" " +
           "aria-label=\"Dismiss\">✕</button>";
         el.querySelector("[data-zt-lib]").onclick = function (e) {

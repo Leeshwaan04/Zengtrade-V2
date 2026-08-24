@@ -65,6 +65,20 @@ else
   fail=1
 fi
 
+if grep -q 'deploy_success_coins' deploy/landing/studio.js; then
+  echo "OK   studio.js deploy_success_coins post-deploy CTA"
+else
+  echo "FAIL studio.js missing deploy_success_coins post-deploy CTA"
+  fail=1
+fi
+
+if grep -q 'deploy_success_coins' saas/web/js/app.js; then
+  echo "OK   app.js deploy_success_coins post-deploy CTA"
+else
+  echo "FAIL app.js missing deploy_success_coins post-deploy CTA"
+  fail=1
+fi
+
 echo ""
 echo ">> Plan intent"
 if SITE="$SITE" ./scripts/check-plan-intent.sh >/dev/null 2>&1; then

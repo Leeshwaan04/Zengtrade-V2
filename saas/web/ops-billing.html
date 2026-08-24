@@ -52,6 +52,19 @@
 </div>
 <script>
 const SUPA="https://ponvarxeytfcntckczbn.supabase.co", ANON="sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";
+async function foundingPricingVisible(site){
+  for(let i=0;i<3;i++){
+    try{
+      const pr=await fetch(site+"/pricing/").then(r=>r.ok?r.text():"");
+      if(/\$19|19\/mo/i.test(pr)) return true;
+    }catch(e){}
+    if(i<2) await new Promise(r=>setTimeout(r,1500));
+  }
+  try{
+    const b=await fetch(site+"/js/billing.js").then(r=>r.ok?r.text():"");
+    return /monthly:\s*19/i.test(b)&&/founding/i.test(b);
+  }catch(e){return false;}
+}
 (async function growthGoals(){
   const el=document.getElementById("growthGoals");
   if(!el) return;
@@ -99,8 +112,8 @@ fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{h
   const SITE=location.origin;
   let ok=true;
   try{
-    const pr=await fetch(SITE+"/pricing/").then(r=>r.ok?r.text():"");
-    ok=ok&&/\$19|19\/mo/i.test(pr);
+    const prOk=await foundingPricingVisible(SITE);
+    ok=ok&&prOk;
     const r=await fetch("https://ponvarxeytfcntckczbn.supabase.co/functions/v1/nowpayments-create-invoice",{
       method:"OPTIONS",headers:{Origin:location.origin,"Access-Control-Request-Method":"POST"}
     });
@@ -117,8 +130,8 @@ fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{h
   const SITE=location.origin;
   let ok=true;
   try{
-    const pr=await fetch(SITE+"/pricing/").then(r=>r.ok?r.text():"");
-    ok=ok&&/\$19|19\/mo/i.test(pr);
+    const prOk=await foundingPricingVisible(SITE);
+    ok=ok&&prOk;
     const r=await fetch("https://ponvarxeytfcntckczbn.supabase.co/functions/v1/nowpayments-create-invoice",{
       method:"OPTIONS",headers:{Origin:location.origin,"Access-Control-Request-Method":"POST"}
     });

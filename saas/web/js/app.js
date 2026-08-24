@@ -271,6 +271,7 @@ function showPostDeployHint() {
   el.innerHTML =
     `<div style="flex:1"><b>Strategy deployed</b><br><span style="font-weight:500;color:var(--slate,#64748b)">${workerNote}</span></div>` +
     `<a href="#forward" style="padding:8px 14px;border-radius:9px;background:var(--green,#00ab4e);color:#04140a;text-decoration:none;font-weight:700">Forward Test</a>` +
+    `<a href="/coins/?utm_source=site&amp;utm_medium=organic&amp;utm_campaign=deploy_success_coins" style="padding:8px 14px;border-radius:9px;border:1px solid var(--line,#e2e8f0);color:var(--navy,#101e36);text-decoration:none;font-weight:700">More coins</a>` +
     `<button type="button" style="border:0;background:transparent;cursor:pointer;color:var(--slate,#64748b)" aria-label="Dismiss">✕</button>`;
   el.querySelector("button").onclick = () => el.remove();
   document.body.appendChild(el);
