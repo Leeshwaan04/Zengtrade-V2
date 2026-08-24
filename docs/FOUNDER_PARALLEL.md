@@ -16,7 +16,7 @@ Index: **docs/GUIDE_INDEX.md** · `./scripts/list-founder-guides.sh`
 
 | Role | Action | Link / script |
 |------|--------|----------------|
-| **All** | Combined growth standup (CPO + CBO) | `./scripts/guide-founder-growth-standup.sh` · `./scripts/guide-founder-parallel.sh` |
+| **All** | Combined growth standup (CPO + CBO + QA) | `./scripts/guide-founder-growth-standup.sh` · `./scripts/guide-founder-parallel.sh` |
 | **All** | Parallel hub (migration 0011 live, worker down) | https://zengtrade.in/ops/migrate · `./scripts/guide-founder-parallel.sh` |
 | **CTO** | Fix worker password | `./scripts/guide-worker-recovery.sh` · https://zengtrade.in/ops/worker · `docs/WORKER_RECOVERY.md` |
 | **CTO** | Cloud Agent unblock | Secret `DATABASE_PASSWORD` → `./scripts/run-p0-if-ready.sh` |
@@ -32,6 +32,7 @@ Index: **docs/GUIDE_INDEX.md** · `./scripts/list-founder-guides.sh`
 | **Sales** | Weekly MRR standup | `./scripts/guide-mrr-standup.sh` · https://zengtrade.in/admin |
 | **Marketing** | LinkedIn build-in-public | `./scripts/guide-linkedin-bip.sh` · `docs/content/LINKEDIN_BUILD_IN_PUBLIC.md` |
 | **Marketing** | Coin spotlight post | `./scripts/guide-coin-spotlight.sh [slug]` · `docs/MARKETING_PLAYBOOK.md` |
+| **QA&VAPT** | Parallel QA (combined) | `./scripts/guide-qa-founder-standup.sh` · https://zengtrade.in/ops/security |
 | **QA&VAPT** | Security + partial activation | `./scripts/check-qa-parallel.sh` · `./scripts/guide-qa-rls-isolation.sh` (post-P0) |
 
 ## Verify probes

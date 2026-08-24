@@ -82,10 +82,22 @@ echo ">> Founder growth standup (CPO + CBO)"
 if [[ -x scripts/guide-founder-growth-standup.sh ]] \
   && grep -q 'guide-cpo-founder-standup' scripts/guide-founder-growth-standup.sh \
   && grep -q 'guide-cbo-founder-standup' scripts/guide-founder-growth-standup.sh \
+  && grep -q 'guide-qa-founder-standup' scripts/guide-founder-growth-standup.sh \
   && grep -q 'guide-founder-growth-standup' saas/web/ops-migrate.html; then
-  echo "OK   guide-founder-growth-standup combined CPO + CBO playbook"
+  echo "OK   guide-founder-growth-standup combined CPO + CBO + QA playbook"
 else
   echo "FAIL guide-founder-growth-standup incomplete"
+  fail=1
+fi
+echo ""
+
+echo ">> QA founder standup guide"
+if [[ -x scripts/guide-qa-founder-standup.sh ]] \
+  && grep -q 'check-qa-parallel' scripts/guide-qa-founder-standup.sh \
+  && grep -q 'guide-qa-founder-standup' saas/web/ops-security.html; then
+  echo "OK   guide-qa-founder-standup parallel QA playbook"
+else
+  echo "FAIL guide-qa-founder-standup incomplete"
   fail=1
 fi
 echo ""

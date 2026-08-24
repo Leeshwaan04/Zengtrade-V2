@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 export SITE="${SITE:-https://zengtrade.in}"
 
-echo "== Founder growth standup (CPO + CBO) — $SITE =="
+echo "== Founder growth standup (CPO + CBO + QA) — $SITE =="
 echo ""
 
 if ./scripts/check-worker.sh >/dev/null 2>&1; then
@@ -39,6 +39,12 @@ echo ""
 ./scripts/guide-cbo-founder-standup.sh
 
 echo ""
-echo "Optional: QA parallel — ./scripts/check-qa-parallel.sh · $SITE/ops/security"
+echo "=========================================="
+echo " QA&VAPT — parallel security + activation"
+echo "=========================================="
+echo ""
+./scripts/guide-qa-founder-standup.sh
+
+echo ""
 echo "Marketing — ./scripts/guide-linkedin-bip.sh · ./scripts/guide-coin-spotlight.sh [slug]"
 echo "P0 unblock — ./scripts/guide-worker-recovery.sh · $SITE/ops/worker"

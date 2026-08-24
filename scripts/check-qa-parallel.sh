@@ -35,7 +35,8 @@ run "Free-tier limit probes (Q9)" env ZT_QUIET_GROWTH=1 ./scripts/check-free-tie
 echo ">> QA ops-security playbook"
 if grep -q 'guide-free-tier-test' saas/web/ops-security.html \
   && grep -qi 'view evidence' saas/web/ops-security.html \
-  && grep -q 'check-founder-parallel-ready' saas/web/ops-security.html; then
+  && grep -q 'check-founder-parallel-ready' saas/web/ops-security.html \
+  && grep -q 'guide-qa-founder-standup' saas/web/ops-security.html; then
   echo "OK   ops-security partial QA + Q9 + trust path docs"
 else
   echo "FAIL ops-security.html missing parallel QA playbook content"
