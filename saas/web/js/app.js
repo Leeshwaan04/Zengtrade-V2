@@ -86,10 +86,11 @@ async function maybePaidReturn() {
     if (isPro(t)) {
       tier = t;
       bar.style.background = "var(--green,#00ab4e)"; bar.style.color = "#04140a";
-      bar.innerHTML = `✓ You're on ${t === "elite" ? "Elite" : "Pro"} now. Enjoy the full library.`;
+      bar.innerHTML = `✓ You're on ${t === "elite" ? "Elite" : "Pro"} now. Enjoy the full library.` +
+        ` <a href="/admin" style="color:inherit;text-decoration:underline;margin-left:8px;font-weight:700">Verify in /admin</a>`;
       $("#upgradeBtn").style.display = "none";
       await load(); render();
-      setTimeout(() => bar.remove(), 7000);
+      setTimeout(() => bar.remove(), 12000);
       return;
     }
     if (Date.now() - started > 240000) {           // give up after ~4 min

@@ -72,7 +72,8 @@ Run when `./scripts/check-sales-ready.sh` is green.
 | Step | Action | Success signal |
 |------|--------|----------------|
 | 1 | Open https://zengtrade.in/ops/billing | Page shows billing-ready ✓ |
-| 2 | Sign up with Pro intent (`?plan=pro`) | Lands on `/app#pricing` |
+| 2 | Sign up with Pro intent (`?plan=pro`) | Plan banner on `/login` · lands on `/app#pricing` |
+| 2a | Same URL → **Continue with Google** | `prepOAuthSignup` preserves plan + `utm_campaign` → `zt_checkout_ref` on checkout |
 | 2b | Organic: `/login` → Browse coin strategies (`signup_coins`) → `/app#pricing` | Same funnel, different UTM |
 | 3 | Start Pro checkout → complete NOWPayments invoice | Invoice created (test or real) |
 | 4 | Return to `/app?paid=1` | Tier shows Pro within a few minutes |
