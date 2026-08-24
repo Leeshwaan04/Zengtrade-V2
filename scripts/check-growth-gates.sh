@@ -59,5 +59,13 @@ if [[ $fail -eq 0 ]]; then
   exit 0
 fi
 echo "Some gates failed — see ./scripts/status-report.sh and ./scripts/founder-next-action.sh"
+echo ""
+echo "Growth goal:"
+GROWTH_PROD=0 GROWTH_MIG=0 GROWTH_WORK=0
+SITE="$SITE" ./scripts/check-production.sh >/dev/null 2>&1 && GROWTH_PROD=1
+./scripts/check-migrations.sh >/dev/null 2>&1 && GROWTH_MIG=1
+./scripts/check-worker.sh >/dev/null 2>&1 && GROWTH_WORK=1
+export GROWTH_PROD GROWTH_MIG GROWTH_WORK
+./scripts/print-growth-goal-summary.sh 2>/dev/null || true
 ./scripts/founder-next-action.sh 2>/dev/null || true
 exit 1

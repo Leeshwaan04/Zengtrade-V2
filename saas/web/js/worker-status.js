@@ -34,6 +34,7 @@ export async function maybeWorkerBanner() {
     "background:#fff8e6;color:#7a5a00;border-bottom:1px solid #f0d78a";
   bannerEl.innerHTML =
     'Paper worker is offline — deploys are saved but new trades won\u2019t run until the worker is back. ' +
-    '<a href="/how-it-works/" style="color:inherit;font-weight:700;margin-left:6px">How paper trading works</a>';
+    '<a href="/ops/worker" style="color:inherit;font-weight:700;margin-left:6px">Worker status</a> · ' +
+    '<a href="/how-it-works/" style="color:inherit;font-weight:700">How paper trading works</a>';
   document.body.prepend(bannerEl);
 }

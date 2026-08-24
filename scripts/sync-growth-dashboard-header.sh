@@ -5,9 +5,11 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 GROWTH="$ROOT/docs/GROWTH_DASHBOARD.md"
 
-work=0 parallel=0 sales=0 qa=0 mig=0 partial=0 db_auth="—"
+work=0 parallel=0 sales=0 qa=0 mig=0 partial=0 gsc=0 prod=0 db_auth="—"
 ./scripts/check-migrations.sh >/dev/null 2>&1 && mig=1
 ./scripts/check-worker.sh >/dev/null 2>&1 && work=1
+SITE=https://zengtrade.in ./scripts/check-production.sh >/dev/null 2>&1 && prod=1
+SITE=https://zengtrade.in ./scripts/check-gsc-ready.sh >/dev/null 2>&1 && gsc=1
 if [[ -n "${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}" ]]; then
   if ./scripts/validate-database-credentials.sh >/dev/null 2>&1; then
     db_auth="✅"
@@ -41,7 +43,20 @@ partial_today=$([[ $partial -eq 1 ]] && echo "✅ verify-activation-path --parti
 sales_today=$([[ $sales -eq 1 ]] && echo "✅ check-sales-ready.sh" || echo "❌")
 qa_today=$([[ $qa -eq 1 ]] && echo "✅ check-qa-parallel.sh" || echo "❌")
 
-export WORKER_TODAY="$worker_today" PARALLEL_TODAY="$parallel_today" PARTIAL_TODAY="$partial_today" SALES_TODAY="$sales_today" QA_TODAY="$qa_today" DB_AUTH_TODAY="$db_auth" MIG_TODAY=$([[ $mig -eq 1 ]] && echo "✅" || echo "❌")
+db_auth_ok=0
+[[ "$db_auth" == "✅" ]] && db_auth_ok=1
+cto_goal_today=$([[ $prod -eq 1 && $mig -eq 1 && $work -eq 1 && $db_auth_ok -eq 1 ]] && echo "✅ auth+worker+DB" || echo "❌ /ops/worker")
+if [[ $work -eq 1 ]]; then
+  cpo_goal_today="✅ signup → trades"
+elif [[ $partial -eq 1 ]]; then
+  cpo_goal_today="partial ✅ (trades need worker)"
+else
+  cpo_goal_today="❌"
+fi
+cbo_goal_today=$([[ $gsc -eq 1 && $sales -eq 1 ]] && echo "✅ GSC+sales-ready · MRR founder" || echo "❌")
+
+export WORKER_TODAY="$worker_today" PARALLEL_TODAY="$parallel_today" PARTIAL_TODAY="$partial_today" SALES_TODAY="$sales_today" QA_TODAY="$qa_today" DB_AUTH_TODAY="$db_auth" MIG_TODAY=$([[ $mig -eq 1 ]] && echo "✅" || echo "❌") \
+  CTO_GOAL_TODAY="$cto_goal_today" CPO_GOAL_TODAY="$cpo_goal_today" CBO_GOAL_TODAY="$cbo_goal_today"
 python3 <<'PY'
 import os
 import re
@@ -102,6 +117,22 @@ else:
     if idx >= 0:
         line_end = text.find("\n", idx)
         text = text[: line_end + 1] + insert + text[line_end + 1 :]
+
+for label, key in (
+    ("Growth: CTO loop", "CTO_GOAL_TODAY"),
+    ("Growth: CPO trades", "CPO_GOAL_TODAY"),
+    ("Growth: CBO infra", "CBO_GOAL_TODAY"),
+):
+    today = os.environ.get(key, "—")
+    if f"| {label} |" in text:
+        sub_row(label, today)
+    else:
+        needle = "| QA parallel |"
+        insert = f"| {label} | — | {today} | — |\n"
+        idx = text.find(needle)
+        if idx >= 0:
+            line_end = text.find("\n", idx)
+            text = text[: line_end + 1] + insert + text[line_end + 1 :]
 
 growth.write_text(text, encoding="utf-8")
 print(f"Updated GROWTH_DASHBOARD probes: worker={os.environ['WORKER_TODAY'][:40]}…")

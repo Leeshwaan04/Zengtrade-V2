@@ -16,6 +16,9 @@
 | Parallel growth (excl. worker) | — | ✅ founder-parallel-ready | — |
 | Sales-ready | — | ✅ check-sales-ready.sh | — |
 | QA parallel | — | ✅ check-qa-parallel.sh | — |
+| Growth: CBO infra | — | ✅ GSC+sales-ready · MRR founder | — |
+| Growth: CPO trades | — | partial ✅ (trades need worker) | — |
+| Growth: CTO loop | — | ❌ /ops/worker | — |
 
 *Fill "Today" from [zengtrade.in/admin](https://zengtrade.in/admin) after login.*
 
@@ -2204,6 +2207,34 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 - **Shipped:** qavapt charter audit; e2e_smoke passed
 
 ### Status (`./scripts/check-growth-standup.sh` @ 00:16Z)
+- worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
+- DATABASE_URL auth ❌ (Railway password — /ops/worker)
+
+### Day 1 (session 154) — worker banner + GROWTH_DASHBOARD goal rows
+
+### CTO
+- **Shipped:** audit summary DRY via print-growth-goal-summary; check-growth-gates tail
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** worker-status.js banner links /ops/worker
+
+### CBO
+- **Shipped:** GROWTH_DASHBOARD Growth: CBO infra row in header sync
+
+### SEO
+- **Shipped:** —
+
+### Marketing
+- **Shipped:** —
+
+### Sales
+- **Shipped:** —
+
+### QA&VAPT
+- **Shipped:** e2e_smoke passed
+
+### Status (`./scripts/check-growth-standup.sh` @ 00:21Z)
 - worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
 - DATABASE_URL auth ❌ (Railway password — /ops/worker)
 

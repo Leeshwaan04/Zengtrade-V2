@@ -26,7 +26,7 @@ Seven role-based Cloud Agent charters run on a schedule (or on demand). Each age
 
 **Daily log:** `./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..." --seo "..." --marketing "..." --sales "..." --qa "..."` (auto-syncs header probes)
 
-**While worker down:** `./scripts/check-founder-parallel-ready.sh` · `./scripts/guide-founder-parallel.sh` · `./scripts/audit-growth-goal.sh` · `docs/GUIDE_INDEX.md`
+**While worker down:** `./scripts/check-founder-parallel-ready.sh` · `./scripts/guide-founder-parallel.sh` · `./scripts/audit-growth-goal.sh` · `./scripts/print-growth-goal-summary.sh` · `docs/GUIDE_INDEX.md`
 
 ### Single orchestrator (recommended)
 

@@ -78,15 +78,7 @@ if [[ $cto_fail -eq 0 && $cpo_fail -eq 0 && $cbo_fail -eq 0 ]]; then
   exit 0
 fi
 
-if [[ $cto_fail -eq 1 ]]; then
-  echo "CTO blocked — ./scripts/run-p0-if-ready.sh · https://zengtrade.in/ops/worker"
-fi
-if [[ $cpo_fail -eq 1 && $work -eq 0 ]]; then
-  echo "CPO partial OK — full trades after worker: https://zengtrade.in/ops/e2e"
-fi
-if [[ $cbo_fail -eq 1 ]]; then
-  echo "CBO blocked — fix ./scripts/check-gsc-ready.sh or ./scripts/check-sales-ready.sh"
-elif [[ $gsc -eq 1 && $sales -eq 1 ]]; then
-  echo "CBO founder — GSC: ./scripts/guide-gsc-founder.sh · MRR: ./scripts/guide-first-pro-checkout.sh · /admin"
-fi
+GROWTH_PROD=$prod GROWTH_MIG=$mig GROWTH_WORK=$work GROWTH_GSC=$gsc GROWTH_SALES=$sales \
+  GROWTH_DB_AUTH=$db_auth GROWTH_PARTIAL=$partial GROWTH_BILL=$bill GROWTH_OAUTH=$oauth \
+  ./scripts/print-growth-goal-summary.sh
 exit 1
