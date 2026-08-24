@@ -65,6 +65,13 @@ else
   fail=1
 fi
 
+if grep -q 'Algo Studio' saas/web/login.html && grep -q '/dashboard' saas/web/login.html; then
+  echo "OK   login signup → Algo Studio foot copy"
+else
+  echo "FAIL login.html missing Algo Studio signup foot"
+  fail=1
+fi
+
 if grep -q 'showForwardHint' deploy/landing/studio.js && grep -q '/app#forward' deploy/landing/studio.js; then
   echo "OK   studio.js post-deploy → /app#forward hint"
 else

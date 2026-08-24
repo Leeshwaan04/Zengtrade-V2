@@ -76,6 +76,8 @@ grep -q 'coin_bitcoin_pro' "$DIST/coins/bitcoin/index.html" || { echo "FAIL bitc
 echo "OK   coins hub + coin Pro CTAs"
 
 grep -q 'closed trades appear as the worker runs' "$DIST/app/index.html" || { echo "FAIL app missing onboarding worker-honesty copy"; exit 1; }
-echo "OK   app onboarding worker-honesty"
+grep -q 'function goAlgoStudio' "$DIST/js/app.js" || { echo "FAIL app.js missing goAlgoStudio deploy routing"; exit 1; }
+grep -q 'opens.*Algo Studio' "$DIST/login/index.html" || { echo "FAIL login missing Algo Studio signup foot"; exit 1; }
+echo "OK   app onboarding worker-honesty + goAlgoStudio + login foot"
 
 echo "All dist probes passed."

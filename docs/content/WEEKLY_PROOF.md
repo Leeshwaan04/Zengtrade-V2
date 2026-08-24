@@ -44,7 +44,7 @@ Use when signup → deploy is live but forward trades are not yet running:
 Building zengtrade in public — paper trading on live Binance prices.
 
 Today: signup → Algo Studio → deploy is live on production.
-Next: forward paper closes once our 24/7 worker is back online.
+Post-deploy: track evidence at /app#forward (closed trades when worker is back).
 
 Try free: https://zengtrade.in/login?mode=signup&utm_source=site&utm_medium=organic&utm_campaign=weekly_proof_partial
 Coin strategies: https://zengtrade.in/coins/?utm_source=site&utm_medium=organic&utm_campaign=weekly_proof_coins

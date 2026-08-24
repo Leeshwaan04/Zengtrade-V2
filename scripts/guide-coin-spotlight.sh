@@ -27,9 +27,11 @@ fi
 coin_url="$SITE/coins/${slug}/"
 coins_hub="$SITE/coins/?utm_source=site&utm_medium=organic&utm_campaign=coin_spotlight_hub"
 signup="$SITE/login?mode=signup&utm_source=site&utm_medium=organic&utm_campaign=coin_spotlight_${slug}"
+studio="$SITE/dashboard?utm_source=site&utm_medium=organic&utm_campaign=coin_spotlight_deploy"
 
 echo "Target coin page: $coin_url"
 echo "Coins hub: $coins_hub"
+echo "Algo Studio deploy: $studio"
 echo "Verify UTMs: ./scripts/check-funnel-ctas.sh"
 echo ""
 echo "== Post template =="
@@ -39,6 +41,7 @@ Coin of the week: ${slug^^} — regime read + paper-first angle
 - What the 30-day tape looks like (honest, no hype)
 - Which strategy style fits (trend vs mean-reversion) — paper only
 - CTA: ${signup}
+- Deploy in Algo Studio: ${studio}
 - Browse all coins: ${coins_hub}
 
 Not investment advice. Paper trading on live Binance prices.
