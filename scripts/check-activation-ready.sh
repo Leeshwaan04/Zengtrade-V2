@@ -160,6 +160,17 @@ else
 fi
 
 echo ""
+echo ">> Ops migrate parallel card"
+if grep -q 'parallelBox' saas/web/ops-migrate.html \
+  && grep -q 'guide-founder-parallel' saas/web/ops-migrate.html \
+  && grep -q 'View evidence' saas/web/ops-migrate.html; then
+  echo "OK   ops-migrate parallel work card (migration live, worker down)"
+else
+  echo "FAIL ops-migrate missing parallel work card"
+  fail=1
+fi
+
+echo ""
 echo ">> Evidence app (worker-offline UX)"
 prod_ok=0
 for attempt in 1 2 3; do

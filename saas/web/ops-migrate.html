@@ -26,6 +26,17 @@
   <a class="back" href="/ops">← Founder Ops</a>
   <h1>Apply migration 0011</h1>
   <p class="sub">Founder approval · ~2 min · Enables funnel v2 events in <a href="/admin">/admin</a> (signup_complete, deploy_success, checkout_click).</p>
+  <div id="parallelBox" class="card" style="display:none;background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:14px;margin-bottom:16px">
+    <b>Migration 0011 live — parallel work while worker is down:</b>
+    <p style="font-size:14px;margin:8px 0 0;line-height:1.6">
+      <a href="/ops/e2e">Partial E2E</a> steps 1–2 ·
+      <a href="/dashboard">deploy</a> → View evidence → <a href="/app#forward">/app#forward</a> ·
+      <a href="/ops/billing">Pro checkout</a> ·
+      <a href="/ops/gsc">GSC</a> ·
+      <code>./scripts/guide-founder-parallel.sh</code>
+    </p>
+    <p style="font-size:13px;margin:8px 0 0;color:var(--slate)">Next P0: <a href="/ops/worker">paper worker</a> — Cloud Agent secret <code>DATABASE_PASSWORD</code> or <a href="/ops/p0">full checklist</a></p>
+  </div>
   <div class="card" style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:14px;margin-bottom:12px">
     <b>Full P0 (recommended):</b> Add <code>DATABASE_URL</code> + <code>RAILWAY_API_TOKEN</code> to <a href="https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions" target="_blank" rel="noopener">GitHub repo Secrets</a>,
     then <a href="https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml" target="_blank" rel="noopener">Run workflow “Apply P0”</a> → type <code>APPLY</code> (migration + paper-worker in one step).
@@ -74,6 +85,8 @@ async function growthGoalsCard(){
     const cpo=gg.cpo_full_ok?"✅ trades":(gg.cpo_partial_ok?"partial ✅":"❌");
     el.innerHTML="<b>Migration live — next P0:</b> <a href=\"/ops/worker\">paper worker</a> (DATABASE_URL).<br><b>Growth goals:</b> CTO "+(gg.cto_ok?"✅":"❌")+" · CPO "+cpo+" · CBO "+(gg.cbo_infra_ok?"infra ✅ — <a href=\"/ops/gsc\">GSC</a> + <a href=\"/ops/billing\">Pro checkout</a>":"❌");
     el.style.display="block";
+    const pb=document.getElementById("parallelBox");
+    if(pb) pb.style.display="block";
   }catch(e){}
 }
 async function verifyMigration(){
@@ -86,6 +99,12 @@ async function verifyMigration(){
     st.textContent="✓ Migration 0011 is live (signup, deploy, checkout events).";
     st.className="ok";
     growthGoalsCard();
+    const rows=await fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{headers:{apikey:ANON},cache:"no-store"}).then(r=>r.json()).catch(()=>[]);
+    const age=rows[0]?Math.round((Date.now()-new Date(rows[0].updated_at))/60000):99999;
+    if(age>12){
+      const pb=document.getElementById("parallelBox");
+      if(pb) pb.style.display="block";
+    }
   }else{
     st.textContent="✗ Still blocked (signup "+r1.status+", deploy "+r2.status+", checkout "+r3.status+"). Run the SQL in Supabase first.";
     st.className="bad";

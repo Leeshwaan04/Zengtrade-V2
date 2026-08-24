@@ -158,7 +158,8 @@
       "funnel CTA home_coins + paper_loop_coins; SEO probes; GSC/partial guides (session 171)",
       "post-p0-success check-free-tier-limit + growth goal completion steps (session 204)",
       "founder-next-action post-p0-success path; FOUNDER_DEPLOY + GUIDE_INDEX (session 206)",
-      "founder-preflight + check-p0-readiness + wait-for-p0 post-P0 alignment (session 207)"
+      "founder-preflight + check-p0-readiness + wait-for-p0 post-P0 alignment (session 207)",
+      "/ops/migrate parallel work card when migration 0011 live + worker down (session 208)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
