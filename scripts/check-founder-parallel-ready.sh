@@ -27,9 +27,9 @@ run() {
   echo ""
 }
 
-run "Parallel growth (CPO/CBO)" ./scripts/check-parallel-growth.sh
+run "Parallel growth (CPO/CBO)" env ZT_QUIET_GROWTH=1 ./scripts/check-parallel-growth.sh
 run "Partial activation (CPO)" ./scripts/verify-activation-path.sh --partial
-run "QA parallel (QA&VAPT)" ./scripts/check-qa-parallel.sh
+run "QA parallel (QA&VAPT)" env ZT_QUIET_GROWTH=1 ./scripts/check-qa-parallel.sh
 run "Founder guides" ./scripts/check-founder-guides.sh
 
 if [[ $fail -eq 0 ]]; then
@@ -37,7 +37,7 @@ if [[ $fail -eq 0 ]]; then
   echo "  ./scripts/guide-founder-parallel.sh"
   echo ""
   echo "Growth objective:"
-  ./scripts/print-growth-goal-summary.sh 2>/dev/null | sed 's/^/  /' || true
+  ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
   exit 0
 fi
 

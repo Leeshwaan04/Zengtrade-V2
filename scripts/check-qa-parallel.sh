@@ -33,9 +33,11 @@ run "Sales-ready (billing)" ./scripts/check-sales-ready.sh
 
 if [[ $fail -eq 0 ]]; then
   echo "All QA parallel gates green — full E2E needs worker: https://zengtrade.in/ops/e2e"
-  echo ""
-  echo "Growth objective:"
-  ./scripts/print-growth-goal-summary.sh 2>/dev/null | sed 's/^/  /' || true
+  if [[ -z "${ZT_QUIET_GROWTH:-}" ]]; then
+    echo ""
+    echo "Growth objective:"
+    GROWTH_GSC= ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
+  fi
   exit 0
 fi
 

@@ -26,8 +26,8 @@ growth_summary_if_blocked() {
   if [[ $work -eq 0 ]]; then
     echo ""
     echo "Growth goal:"
-    GROWTH_MIG=$mig GROWTH_WORK=$work GROWTH_DB_AUTH=$db_auth_ok \
-      ./scripts/print-growth-goal-summary.sh 2>/dev/null | sed 's/^/  /' || true
+    GROWTH_MIG=$mig GROWTH_WORK=$work GROWTH_DB_AUTH=${db_auth_ok:-0} \
+      ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
   fi
 }
 
