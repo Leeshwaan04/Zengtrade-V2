@@ -31,3 +31,6 @@ echo "  → ./scripts/security-smoke.sh (unsigned IPN must 401)"
 echo ""
 echo "Log date + paying count in docs/GROWTH_DASHBOARD.md (Sales section)."
 echo "Playbook: docs/SALES_PLAYBOOK.md § Weekly sales standup"
+echo ""
+echo "Growth objective:"
+./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true

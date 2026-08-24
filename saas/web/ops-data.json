@@ -153,7 +153,8 @@
       "home JSON-LD schema; check-growth-standup dedupe; p0-readiness probe (session 166)",
       "pricing FAQPage JSON-LD; home coins hub CTA; check-e2e-gates growth summary (session 167)",
       "how-it-works HowTo JSON-LD + coins CTA; standup drops slow founder-next-action (session 168)",
-      "ops-billing growth_goal + first MRR; check-sales-ready growth summary (session 169)"
+      "ops-billing growth_goal + first MRR; check-sales-ready growth summary (session 169)",
+      "activation/billing/partial-verify growth summaries; guide-mrr-standup (session 170)"
     ],
     "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
     "links": [
