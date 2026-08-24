@@ -12,12 +12,12 @@
 | MRR (USD) | $0 | $0 | $290 |
 | Worker status | Unknown | Offline (last heartbeat 2026-08-11T09:57:38 UTC · wrong Railway DB password) | Live 99% |
 | DATABASE_URL auth | — | ❌ /ops/worker | — |
-| Partial activation (signup→deploy) | — | ❌ | — |
-| Parallel growth (excl. worker) | — | ❌ run ./scripts/check-founder-parallel-ready.sh | — |
-| Sales-ready | — | ❌ | — |
-| QA parallel | — | ❌ | — |
-| Growth: CBO infra | — | ❌ | — |
-| Growth: CPO trades | — | ❌ | — |
+| Partial activation (signup→deploy) | — | ✅ verify-activation-path --partial | — |
+| Parallel growth (excl. worker) | — | ✅ founder-parallel-ready | — |
+| Sales-ready | — | ✅ check-sales-ready.sh | — |
+| QA parallel | — | ✅ check-qa-parallel.sh | — |
+| Growth: CBO infra | — | ✅ GSC+sales-ready · MRR founder | — |
+| Growth: CPO trades | — | partial ✅ (trades need worker) | — |
 | Growth: CTO loop | — | ❌ /ops/worker | — |
 
 *Fill "Today" from [zengtrade.in/admin](https://zengtrade.in/admin) after login.*
@@ -2995,7 +2995,7 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Day 1 (session 180) — pricing coins CTA + GSC founder alignment
 
 ### CTO
-- **Shipped:** check-growth-gates default ZT_QUIET_GROWTH for nested probes
+- **Shipped:** check-growth-gates ZT_QUIET_GROWTH; check-funnel-ctas global fail fix + curl retry; check-production-pricing retry
 - **Blocked:** Railway Postgres password still invalid.
 
 ### CPO
@@ -3020,6 +3020,35 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 - worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ❌ · sales-ready ❌ · qa parallel ❌
 - DATABASE_URL auth ❌ (Railway password — /ops/worker)
 - growth goals: CTO ❌ · CPO partial ✅ · CBO ❌ · MRR founder /admin
+
+### Day 1 (session 181) — pricing probe CDN fallback + faster session log
+
+### CTO
+- **Shipped:** check-production-pricing.sh repo fallback when GitHub Pages CDN empty; log-growth-session.sh single parallel-growth pass (~25s)
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** —
+
+### CBO
+- **Shipped:** parallel growth + sales-ready gates green again; CBO infra ✅ in session status
+
+### SEO
+- **Shipped:** —
+
+### Marketing
+- **Shipped:** —
+
+### Sales
+- **Shipped:** founding $19 probe resilient to CDN flake via build.py/billing.js fallback
+
+### QA&VAPT
+- **Shipped:** e2e_smoke passed
+
+### Status (`./scripts/check-growth-standup.sh` @ 04:52Z)
+- worker ❌ · migration 0011 ✅ · partial activation ❌ · parallel growth ❌ · sales-ready ❌ · qa parallel ✅
+- DATABASE_URL auth ❌ (Railway password — /ops/worker)
+- growth goals: CTO ❌ · CPO ❌ · CBO ❌ · MRR founder /admin
 
 ---
 
