@@ -70,8 +70,10 @@ Expected when healthy: `updated_at` within **12 minutes**, logs show `startup he
 ```bash
 ./scripts/validate-database-credentials.sh   # auth OK
 ./scripts/check-worker.sh                  # heartbeat < 12 min
-./scripts/post-p0-success.sh               # full activation + growth gates
+./scripts/post-p0-success.sh               # full activation + growth gates + Q9 probes
 ```
+
+`post-p0-success.sh` runs `verify-activation-path.sh` (must exit 0), `check-free-tier-limit.sh`, security smoke, sales/GSC probes, and `audit-growth-goal.sh`.
 
 Manual product check:
 
@@ -108,7 +110,8 @@ Worker down does not block partial activation or first Pro MRR prep:
 | Goal | Status while worker down |
 |------|--------------------------|
 | CTO | Blocked until `DATABASE_URL` auth passes — see fix paths above |
-| CPO | Partial OK: `./scripts/guide-partial-e2e.sh` · login → `/dashboard` deploy → `/app#forward` |
+| CPO | Partial OK: `./scripts/guide-partial-e2e.sh` · login → `/dashboard` deploy → View evidence → `/app#forward` |
+| CPO | Full OK after post-p0: closed trades in `/app#forward` + `verify-activation-path.sh` exit 0 |
 | CBO | GSC + sales-ready probes green; founder: GSC verify + first Pro checkout → `/admin` MRR |
 
 ## Related docs

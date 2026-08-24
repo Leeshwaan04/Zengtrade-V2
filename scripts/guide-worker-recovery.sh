@@ -24,7 +24,11 @@ echo ">> Heartbeat"
 echo ""
 
 if ./scripts/check-worker.sh >/dev/null 2>&1; then
-  echo "Worker is live — run ./scripts/post-p0-success.sh"
+  echo "Worker is live — run full post-P0:"
+  echo "  ./scripts/post-p0-success.sh"
+  echo "  Manual E2E trades: $SITE/ops/e2e steps 3–4"
+  echo "  RLS isolation:     ./scripts/guide-qa-rls-isolation.sh"
+  echo "  Growth audit:      ./scripts/audit-growth-goal.sh"
   exit 0
 fi
 

@@ -10,6 +10,10 @@ echo ""
 ./scripts/verify-activation-path.sh
 echo ""
 
+echo ">> Free-tier deploy cap (CPO Q9)"
+ZT_QUIET_GROWTH=1 ./scripts/check-free-tier-limit.sh
+echo ""
+
 echo ">> Security smoke (QA&VAPT)"
 ZT_QUIET_GROWTH=1 ./scripts/security-smoke.sh
 echo ""
@@ -41,13 +45,14 @@ echo ">> Plan intent routing (Sales)"
 ZT_QUIET_GROWTH=1 ./scripts/check-plan-intent.sh
 echo ""
 
-echo "== Manual next steps =="
+echo "== Manual next steps (growth goal completion) =="
+echo "CTO  Loop green when this script exits 0 + heartbeat < 12m"
 echo "CPO  Partial (if testing before worker): ./scripts/guide-partial-e2e.sh"
 echo "       login → /dashboard (Algo Studio) deploy → post-deploy hint → /app#forward"
 echo "CPO  Full trades: signup → /dashboard deploy → wait one worker cycle (~5 min) → closed trades in /app#forward"
-echo "CPO  Full CLI gate:     ./scripts/verify-activation-path.sh"
-echo "CPO  Manual E2E:        https://zengtrade.in/ops/e2e"
-echo "CBO  Pro checkout:      https://zengtrade.in/ops/billing"
+echo "CPO  Full CLI gate:     ./scripts/verify-activation-path.sh (must exit 0)"
+echo "CPO  Manual E2E:        https://zengtrade.in/ops/e2e (steps 3–4 trades · step 5 RLS)"
+echo "CBO  Pro checkout:      https://zengtrade.in/ops/billing → Paying ≥ 1 in /admin"
 echo "CBO  GSC sitemap:      https://zengtrade.in/ops/gsc"
 echo "QA   RLS 2-account:     ./scripts/guide-qa-rls-isolation.sh · /ops/e2e step 5"
 echo ""
