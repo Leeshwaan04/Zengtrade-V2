@@ -25,6 +25,7 @@
   <h1>E2E activation test (CPO)</h1>
   <p class="sub">Run after <a href="/ops/p0">P0 checklist</a> shows worker green. When worker is blocked, steps <b>1–2</b> (signup → deploy) can still be tested — trades need a live worker.</p>
   <p id="pre" class="gatebox">Checking P0 gates…</p>
+  <p id="growthGoals" class="gatebox" style="display:none;background:#eef2ff;border-color:#c7d2fe;font-size:14px;line-height:1.55"></p>
 
   <div class="step" id="s1"><h2><span class="dot"></span>1 · Signup</h2>
     <p>Incognito → <a href="/login?mode=signup" target="_blank" rel="noopener">Create account</a> (Google or email). Should land on <a href="/dashboard">/dashboard</a>.</p></div>
@@ -103,6 +104,18 @@ async function gates(){
   document.getElementById("s4").classList.toggle("bad",!work);
   if(ready){ document.getElementById("s7").classList.add("ok"); }
   if(mig){ document.getElementById("s1").classList.add("ok"); document.getElementById("s2").classList.add("ok"); }
+  growthGoalsCard(work);
+}
+async function growthGoalsCard(work){
+  const el=document.getElementById("growthGoals");
+  if(!el||work) return;
+  try{
+    const data=await fetch("/ops/data.json?"+Date.now(),{cache:"no-store"}).then(r=>r.json());
+    const gg=data.gates?.growth_goal||{};
+    const cpo=gg.cpo_full_ok?"✅ trades":(gg.cpo_partial_ok?"partial ✅":"❌");
+    el.innerHTML="<b>Growth goals (worker offline):</b> CTO "+(gg.cto_ok?"✅":"❌")+" · CPO "+cpo+" · CBO "+(gg.cbo_infra_ok?"infra ✅ — step 7 <a href=\"/ops/billing\">Pro checkout</a> → <a href=\"/admin\">/admin</a>":"❌");
+    el.style.display="block";
+  }catch(e){}
 }
 gates();
 document.getElementById("recheck").onclick=gates;

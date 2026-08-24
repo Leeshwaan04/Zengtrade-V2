@@ -35,6 +35,10 @@ run "Sales-ready (CBO / MRR)" ./scripts/check-sales-ready.sh
 
 if [[ $fail -eq 0 ]]; then
   echo "All parallel gates green — worker is sole P0 blocker: https://zengtrade.in/ops/worker"
+  echo ""
+  echo "Growth objective:"
+  GROWTH_WORK=0 GROWTH_PARTIAL=1 GROWTH_GSC=1 GROWTH_SALES=1 GROWTH_BILL=1 GROWTH_MIG=1 GROWTH_DB_AUTH=0 \
+    ./scripts/print-growth-goal-summary.sh 2>/dev/null | sed 's/^/  /' || true
   exit 0
 fi
 
