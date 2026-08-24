@@ -14,7 +14,8 @@ if ! ./scripts/check-worker.sh >/dev/null 2>&1; then
   env ZT_QUIET_GROWTH=1 ./scripts/check-parallel-growth.sh 2>/dev/null | tail -8 || true
   if env ZT_QUIET_GROWTH=1 ./scripts/check-founder-parallel-ready.sh >/dev/null 2>&1; then
     echo ""
-    echo "Founder parallel ready: ✅ — ./scripts/guide-founder-parallel.sh"
+    echo "Founder parallel ready: ✅ — ./scripts/guide-founder-growth-standup.sh"
+    echo "  (or ./scripts/guide-founder-parallel.sh for playbook index)"
   fi
   echo ""
   echo "Founder playbook: ./scripts/guide-founder-parallel.sh"

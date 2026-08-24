@@ -18,7 +18,7 @@ fi
 env ZT_QUIET_GROWTH=1 ./scripts/check-parallel-growth.sh || true
 echo ""
 echo "One-shot probes: ./scripts/check-founder-parallel-ready.sh"
-echo "Combined standup: ./scripts/guide-founder-growth-standup.sh   # CPO + CBO"
+echo "Combined standup: ./scripts/guide-founder-growth-standup.sh   # CPO + CBO + QA"
 echo "Parallel hub (migration live): $SITE/ops/migrate"
 echo ""
 
@@ -59,6 +59,7 @@ echo "     $SITE/ops/billing · docs/SALES_PLAYBOOK.md § First Pro checkout"
 echo "     ./scripts/guide-mrr-standup.sh   # weekly /admin MRR"
 echo ""
 echo "Marketing  Build-in-public (partial activation — no trades claim):"
+echo "     ./scripts/guide-marketing-founder-standup.sh   # organic posts combined"
 echo "     ./scripts/guide-linkedin-bip.sh"
 echo "     ./scripts/guide-coin-spotlight.sh [bitcoin|ethereum|solana|...]"
 echo "     docs/content/LINKEDIN_BUILD_IN_PUBLIC.md"

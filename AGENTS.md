@@ -92,7 +92,8 @@ Verify with:
 ./scripts/guide-cpo-founder-standup.sh   # CPO: partial activation + Q9 combined
 ./scripts/guide-cbo-founder-standup.sh   # CBO: GSC + first MRR combined
 ./scripts/guide-qa-founder-standup.sh    # QA: parallel security + activation combined
-./scripts/guide-founder-growth-standup.sh # All: CPO + CBO + QA combined
+./scripts/guide-founder-growth-standup.sh # All: CPO + CBO + QA + Marketing combined
+./scripts/guide-marketing-founder-standup.sh # Marketing: organic partial-proof posts
 docs/FOUNDER_PARALLEL.md             # one-page parallel work index
 docs/GUIDE_INDEX.md                  # all founder guide scripts + ops links
 ./scripts/list-founder-guides.sh     # verify guides + print index path

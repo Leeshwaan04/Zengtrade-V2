@@ -24,7 +24,7 @@ One-page map of CLI playbooks while the paper worker is blocked (or after P0 gre
 
 | Role | Script | When |
 |------|--------|------|
-| **All** | `./scripts/guide-founder-growth-standup.sh` | Combined CPO + CBO + QA standup (worker blocked) |
+| **All** | `./scripts/guide-founder-growth-standup.sh` | Combined CPO + CBO + QA + Marketing standup (worker blocked) |
 | **CTO** | `./scripts/guide-worker-recovery.sh` | P0 blocked — wrong Railway DB password |
 | **CPO** | `./scripts/guide-cpo-founder-standup.sh` | Partial activation combined (signup → deploy + Q9) |
 | **CPO** | `./scripts/guide-partial-e2e.sh` | Signup → deploy (steps 1–2); View evidence → `/app#forward` |
@@ -34,6 +34,7 @@ One-page map of CLI playbooks while the paper worker is blocked (or after P0 gre
 | **SEO** | `./scripts/guide-monthly-gsc-review.sh` | Monthly GSC performance review |
 | **CBO / Sales** | `./scripts/guide-first-pro-checkout.sh` | First Pro MRR checkout |
 | **Sales** | `./scripts/guide-mrr-standup.sh` | Weekly `/admin` MRR + funnel review |
+| **Marketing** | `./scripts/guide-marketing-founder-standup.sh` | Organic partial-proof posts (worker blocked) |
 | **Marketing** | `./scripts/guide-linkedin-bip.sh` | LinkedIn build-in-public post |
 | **Marketing** | `./scripts/guide-coin-spotlight.sh [slug]` | Coin spotlight post (e.g. `bitcoin`) |
 | **QA&VAPT** | `./scripts/guide-qa-founder-standup.sh` | Parallel QA combined (security + partial + sales) |

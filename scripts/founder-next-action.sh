@@ -62,6 +62,7 @@ if [[ $work -eq 0 ]]; then
   if ./scripts/check-founder-parallel-ready.sh >/dev/null 2>&1; then
     echo ""
     echo "Founder parallel probes green — sole blocker is DATABASE_PASSWORD"
+    echo "Founder growth standup: ./scripts/guide-founder-growth-standup.sh"
     echo "Founder playbook: ./scripts/guide-founder-parallel.sh"
   elif ./scripts/check-parallel-growth.sh >/dev/null 2>&1; then
     echo ""

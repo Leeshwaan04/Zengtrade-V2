@@ -16,7 +16,7 @@ Index: **docs/GUIDE_INDEX.md** · `./scripts/list-founder-guides.sh`
 
 | Role | Action | Link / script |
 |------|--------|----------------|
-| **All** | Combined growth standup (CPO + CBO + QA) | `./scripts/guide-founder-growth-standup.sh` · `./scripts/guide-founder-parallel.sh` |
+| **All** | Combined growth standup (CPO + CBO + QA + Marketing) | `./scripts/guide-founder-growth-standup.sh` · `./scripts/guide-founder-parallel.sh` |
 | **All** | Parallel hub (migration 0011 live, worker down) | https://zengtrade.in/ops/migrate · `./scripts/guide-founder-parallel.sh` |
 | **CTO** | Fix worker password | `./scripts/guide-worker-recovery.sh` · https://zengtrade.in/ops/worker · `docs/WORKER_RECOVERY.md` |
 | **CTO** | Cloud Agent unblock | Secret `DATABASE_PASSWORD` → `./scripts/run-p0-if-ready.sh` |
@@ -30,6 +30,7 @@ Index: **docs/GUIDE_INDEX.md** · `./scripts/list-founder-guides.sh`
 | **CBO** | GSC verify + sitemap | `./scripts/guide-gsc-founder.sh` · https://zengtrade.in/ops/gsc · `docs/GSC_SETUP.md` |
 | **CBO / Sales** | First Pro checkout | `./scripts/guide-first-pro-checkout.sh` · https://zengtrade.in/ops/billing · `/admin` MRR |
 | **Sales** | Weekly MRR standup | `./scripts/guide-mrr-standup.sh` · https://zengtrade.in/admin |
+| **Marketing** | Organic partial proof (combined) | `./scripts/guide-marketing-founder-standup.sh` · `./scripts/guide-linkedin-bip.sh` |
 | **Marketing** | LinkedIn build-in-public | `./scripts/guide-linkedin-bip.sh` · `docs/content/LINKEDIN_BUILD_IN_PUBLIC.md` |
 | **Marketing** | Coin spotlight post | `./scripts/guide-coin-spotlight.sh [slug]` · `docs/MARKETING_PLAYBOOK.md` |
 | **QA&VAPT** | Parallel QA (combined) | `./scripts/guide-qa-founder-standup.sh` · https://zengtrade.in/ops/security |
