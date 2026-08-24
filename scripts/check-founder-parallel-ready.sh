@@ -32,6 +32,17 @@ run "Partial activation (CPO)" env ZT_QUIET_GROWTH=1 ./scripts/verify-activation
 run "QA parallel (QA&VAPT)" env ZT_QUIET_GROWTH=1 ./scripts/check-qa-parallel.sh
 run "Founder guides" ./scripts/check-founder-guides.sh
 
+echo ">> Founder parallel guide trust path"
+if grep -q 'View evidence' scripts/guide-founder-parallel.sh \
+  && grep -q '/app#forward' scripts/guide-founder-parallel.sh \
+  && grep -qi 'trust path' docs/FOUNDER_PARALLEL.md; then
+  echo "OK   guide-founder-parallel deploy-first trust path"
+else
+  echo "FAIL founder parallel trust path docs incomplete"
+  fail=1
+fi
+echo ""
+
 if [[ $fail -eq 0 ]]; then
   echo "All founder parallel probes green — manual playbooks:"
   echo "  ./scripts/guide-founder-parallel.sh"

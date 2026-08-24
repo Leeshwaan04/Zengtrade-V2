@@ -37,7 +37,7 @@
     {
       "id": "sales-checkout",
       "title": "First Pro checkout \u2014 test MRR",
-      "detail": "Sales-ready probes green \u2014 run ./scripts/guide-first-pro-checkout.sh then confirm Paying + MRR in /admin (worker not required)",
+      "detail": "Sales-ready probes green — optional trust path: /dashboard deploy → View evidence → /app#forward before checkout. Then ./scripts/guide-first-pro-checkout.sh and confirm Paying + MRR in /admin (worker not required)",
       "url": "https://zengtrade.in/ops/billing",
       "urgent": false
     },
@@ -290,7 +290,8 @@
       "/ops/gsc parallel MRR card; /ops/billing sales-ready probe (session 140)",
       "guide-gsc-founder links parallel Pro MRR checkout (session 148)",
       "check-parallel-growth includes sales-ready; GROWTH_DASHBOARD DATABASE_URL auth row (session 149)",
-      "/admin deploy-first trust path in MRR + P0 banners (session 200)"
+      "/admin deploy-first trust path in MRR + P0 banners (session 200)",
+      "founder parallel trust path unified — /ops, /ops/p0, /ops/worker, FOUNDER_PARALLEL (session 201)"
     ],
     "next": "Founder: GSC completion log (docs/GSC_SETUP.md); Pro checkout at /ops/billing",
     "links": [

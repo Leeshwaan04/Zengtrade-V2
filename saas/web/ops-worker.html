@@ -117,6 +117,7 @@
     <p style="font-size:14px;line-height:1.55;margin:0 0 8px">While you fix the password, CPO/CBO can still ship:</p>
     <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.6">
       <li><b>CPO</b> — partial E2E steps 1–2: <a href="/ops/e2e">/ops/e2e</a> · <code>./scripts/verify-activation-path.sh --partial</code></li>
+      <li><b>Trust path</b> — <a href="/dashboard">deploy</a> → View evidence → <a href="/app#forward">/app#forward</a> before checkout</li>
       <li><b>CBO</b> — GSC verify + sitemap: <a href="/ops/gsc">/ops/gsc</a></li>
       <li><b>CBO</b> — Pro checkout smoke: <a href="/ops/billing">/ops/billing</a></li>
       <li><b>CLI</b> — <code>./scripts/check-parallel-growth.sh</code></li>
@@ -137,7 +138,7 @@
   <div class="card" id="parallelGrowth" style="background:#eef2ff;border-color:#c7d2fe" hidden>
     <h2>Meanwhile — growth goals (no worker)</h2>
     <p id="growthGoals" style="font-size:14px;line-height:1.55;margin:0">Loading…</p>
-    <p style="font-size:13px;margin:10px 0 0"><a href="/ops/e2e">Partial E2E</a> · <a href="/ops/gsc">GSC</a> · <a href="/ops/billing">Pro checkout</a> · <code>./scripts/guide-founder-parallel.sh</code></p>
+    <p style="font-size:13px;margin:10px 0 0"><a href="/ops/e2e">Partial E2E</a> · <a href="/dashboard">deploy</a> → <a href="/app#forward">evidence</a> · <a href="/ops/gsc">GSC</a> · <a href="/ops/billing">Pro checkout</a> · <code>./scripts/guide-founder-parallel.sh</code></p>
   </div>
 
   <div class="card">
