@@ -24,7 +24,7 @@ cat <<'POST'
 Shipping zengtrade in public — paper trading on live Binance prices.
 
 Today on production: signup → Algo Studio → deploy is live (partial E2E steps 1–2).
-Post-deploy: evidence at /app#forward (trades when worker is back).
+Post-deploy: evidence at /app#forward (yellow banner on /dashboard links View evidence; trades when worker is back).
 
 Try the deploy path: https://zengtrade.in/login?mode=signup&utm_source=linkedin&utm_medium=social&utm_campaign=build_in_public
 

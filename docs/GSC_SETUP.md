@@ -66,6 +66,8 @@ Tick when done — log date in `docs/GROWTH_DASHBOARD.md` under **CBO**:
 
 Preflight (automated): `./scripts/check-gsc-ready.sh` · Founder guide: `./scripts/guide-gsc-founder.sh` · https://zengtrade.in/ops/gsc
 
+**Parallel first Pro MRR (no worker):** optional deploy-first trust path — `/dashboard` deploy → View evidence → `/app#forward` → `/ops/billing` checkout → confirm `/admin` Paying ≥ 1.
+
 Do **not** publish forward P&L proof posts until `./scripts/check-worker.sh` is green.
 
 ## 6. Coin SEO scale

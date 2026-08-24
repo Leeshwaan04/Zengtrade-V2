@@ -48,6 +48,19 @@ fi
 
 echo ""
 if [[ $fail -eq 0 ]]; then
+  echo ">> GSC ops playbook (/ops/gsc)"
+  if grep -q 'View evidence' saas/web/ops-gsc.html \
+    && grep -q 'guide-first-pro-checkout' saas/web/ops-gsc.html \
+    && grep -q 'WEEKLY_PROOF' saas/web/ops-gsc.html; then
+    echo "OK   ops-gsc parallel MRR + partial proof docs"
+  else
+    echo "FAIL ops-gsc.html missing parallel trust path / proof copy"
+    fail=1
+  fi
+  echo ""
+fi
+
+if [[ $fail -eq 0 ]]; then
   echo "GSC-ready — founder: add property + submit $SITE/sitemap.xml"
   echo "Guide: $SITE/ops/gsc · docs/GSC_SETUP.md"
   if [[ -z "${ZT_QUIET_GROWTH:-}" ]]; then
