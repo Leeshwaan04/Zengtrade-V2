@@ -75,6 +75,7 @@ Run when `./scripts/check-sales-ready.sh` is green.
 | 2 | Sign up with Pro intent (`?plan=pro`) | Plan banner on `/login` · lands on `/app#pricing` |
 | 2a | Same URL → **Continue with Google** | `prepOAuthSignup` preserves plan + `utm_campaign` → `zt_checkout_ref` on checkout |
 | 2b | Organic: `/login` → Browse coin strategies (`signup_coins`) → `/app#pricing` | Same funnel, different UTM |
+| 2c | Deploy first (recommended) | `/dashboard` deploy → post-deploy hint → `/app#forward` before checkout |
 | 3 | Start Pro checkout → complete NOWPayments invoice | Invoice created (test or real) |
 | 4 | Return to `/app?paid=1` | Tier shows Pro within a few minutes |
 | 5 | Open `/admin` | **Paying** count ≥ 1 · **MRR** > $0 · `checkout_clicks_7d` incremented |

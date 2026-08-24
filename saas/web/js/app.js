@@ -503,10 +503,16 @@ function renderPricing() {
   const workerNote = !state.workerAlive
     ? `<p class="muted" style="text-align:center;font-size:13px;margin:-4px 0 18px;line-height:1.55">Paper deploy is live — forward evidence fills in when the worker runs. <a href="/dashboard">Open Algo Studio</a> · <a href="/ops/e2e">Status</a></p>`
     : "";
+  const deployFirst = !state.deployments.length
+    ? `<div class="card" style="margin-bottom:16px;background:var(--green-soft,#eafaf1);border-color:var(--green-line,#bfe9cf)">
+        <p style="margin:0;font-size:14px;line-height:1.55"><b>New here?</b> Deploy a free paper strategy in <a href="/dashboard">Algo Studio</a> first — watch forward evidence build, then upgrade when you're ready.</p>
+      </div>`
+    : "";
   app.innerHTML = `
     <div class="page-h center"><h2>Simple, honest pricing</h2>
       <p class="muted">Start free. Upgrade when you want more, cancel anytime.</p>
       ${workerNote}
+      ${deployFirst}
       <div class="cycle">
         <button data-c="month" class="${billCycle === "month" ? "on" : ""}">Monthly</button>
         <button data-c="year" class="${billCycle === "year" ? "on" : ""}">Annual <span class="save">2 months free</span></button>
@@ -528,7 +534,10 @@ function renderPricing() {
   app.querySelectorAll(".cycle button").forEach(b => b.onclick = () => { billCycle = b.dataset.c; renderPricing(); });
   PLANS.forEach(p => {
     const b = document.getElementById(`plan-${p.id}`);
-    if (b) b.onclick = () => p.id === "free" ? (location.hash = "strategies") : openCheckout(user, p.id, billCycle);
+    if (b) b.onclick = () => {
+      if (p.id === "free") { location.href = "/dashboard"; return; }
+      openCheckout(user, p.id, billCycle);
+    };
   });
 }
 function planCard(p, ready = true) {

@@ -65,10 +65,24 @@ else
   fail=1
 fi
 
+if grep -q 'showForwardHint' deploy/landing/studio.js && grep -q '/app#forward' deploy/landing/studio.js; then
+  echo "OK   studio.js post-deploy → /app#forward hint"
+else
+  echo "FAIL studio.js missing post-deploy evidence hint"
+  fail=1
+fi
+
 if grep -q 'deploy_success_coins' deploy/landing/studio.js; then
   echo "OK   studio.js deploy_success_coins post-deploy CTA"
 else
   echo "FAIL studio.js missing deploy_success_coins post-deploy CTA"
+  fail=1
+fi
+
+if grep -q 'Deploy a free paper strategy' saas/web/js/app.js; then
+  echo "OK   pricing deploy-first hint (0 deployments)"
+else
+  echo "FAIL app.js missing pricing deploy-first hint"
   fail=1
 fi
 

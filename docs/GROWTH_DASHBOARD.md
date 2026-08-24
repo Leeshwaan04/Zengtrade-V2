@@ -13,7 +13,7 @@
 | Worker status | Unknown | Offline (last heartbeat 2026-08-11T09:57:38 UTC · wrong Railway DB password) | Live 99% |
 | DATABASE_URL auth | — | ❌ /ops/worker | — |
 | Partial activation (signup→deploy) | — | ✅ verify-activation-path --partial | — |
-| Parallel growth (excl. worker) | — | ✅ founder-parallel-ready | — |
+| Parallel growth (excl. worker) | — | ❌ run ./scripts/check-founder-parallel-ready.sh | — |
 | Sales-ready | — | ✅ check-sales-ready.sh | — |
 | QA parallel | — | ✅ check-qa-parallel.sh | — |
 | Growth: CBO infra | — | ✅ GSC+sales-ready · MRR founder | — |
@@ -3310,6 +3310,35 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 - worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
 - DATABASE_URL auth ❌ (Railway password — /ops/worker)
 - growth goals: CTO ❌ · CPO partial ✅ · CBO ✅ infra · MRR founder /admin
+
+### Day 1 (session 191) — deploy-first pricing + post-deploy evidence path
+
+### CTO
+- **Shipped:** —
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** pricing deploy-first banner; free plan → /dashboard; studio→forward probes
+
+### CBO
+- **Shipped:** SALES_PLAYBOOK deploy-before-checkout step 2c
+
+### SEO
+- **Shipped:** —
+
+### Marketing
+- **Shipped:** —
+
+### Sales
+- **Shipped:** guide-partial-e2e post-deploy evidence path
+
+### QA&VAPT
+- **Shipped:** e2e_smoke + activation probes green
+
+### Status (`./scripts/check-growth-standup.sh` @ 06:08Z)
+- worker ❌ · migration 0011 ✅ · partial activation ❌ · parallel growth ❌ · sales-ready ❌ · qa parallel ✅
+- DATABASE_URL auth ❌ (Railway password — /ops/worker)
+- growth goals: CTO ❌ · CPO ❌ · CBO ❌ · MRR founder /admin
 
 ---
 
