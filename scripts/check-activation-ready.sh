@@ -138,6 +138,21 @@ else
 fi
 
 echo ""
+echo ">> Partial E2E docs"
+if grep -q 'View evidence' saas/web/ops-e2e.html && grep -q '/app#forward' saas/web/ops-e2e.html; then
+  echo "OK   ops-e2e step 2 documents View evidence → /app#forward"
+else
+  echo "FAIL ops-e2e missing worker-offline evidence copy"
+  fail=1
+fi
+if grep -q 'yellow banner' scripts/guide-partial-e2e.sh; then
+  echo "OK   guide-partial-e2e worker-offline banner step"
+else
+  echo "FAIL guide-partial-e2e missing worker-offline banner step"
+  fail=1
+fi
+
+echo ""
 echo ">> Evidence app (worker-offline UX)"
 prod_ok=0
 for attempt in 1 2 3; do
