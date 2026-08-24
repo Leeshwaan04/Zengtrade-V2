@@ -2557,6 +2557,35 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 - DATABASE_URL auth ❌ (Railway password — /ops/worker)
 - growth goals: CTO ❌ · CPO partial ✅ · CBO ✅ infra · MRR founder /admin
 
+### Day 1 (session 166) — home JSON-LD + standup dedupe
+
+### CTO
+- **Shipped:** check-p0-readiness probe-database-auth; check-growth-standup skips duplicate founder-parallel-ready
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** —
+
+### CBO
+- **Shipped:** home SoftwareApplication + WebSite JSON-LD in build.py (organic SEO)
+
+### SEO
+- **Shipped:** probe-dist checks home JSON-LD; schema on rebuilt landing
+
+### Marketing
+- **Shipped:** —
+
+### Sales
+- **Shipped:** —
+
+### QA&VAPT
+- **Shipped:** e2e_smoke passed
+
+### Status (`./scripts/check-growth-standup.sh` @ 02:06Z)
+- worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
+- DATABASE_URL auth ❌ (Railway password — /ops/worker)
+- growth goals: CTO ❌ · CPO partial ✅ · CBO ✅ infra · MRR founder /admin
+
 ---
 
 ## Daily log template

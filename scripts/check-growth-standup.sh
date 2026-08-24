@@ -10,11 +10,8 @@ echo ""
 echo ""
 ./scripts/snapshot-growth-metrics.sh 2>/dev/null || true
 if ! ./scripts/check-worker.sh >/dev/null 2>&1; then
-  if ./scripts/check-founder-parallel-ready.sh 2>/dev/null | tail -3; then
-    :
-  else
-    ./scripts/check-parallel-growth.sh 2>/dev/null | tail -8 || true
-  fi
+  echo ""
+  env ZT_QUIET_GROWTH=1 ./scripts/check-parallel-growth.sh 2>/dev/null | tail -8 || true
   echo ""
   echo "Founder playbook: ./scripts/guide-founder-parallel.sh"
   echo ""

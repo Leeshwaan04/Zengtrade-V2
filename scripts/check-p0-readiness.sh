@@ -72,7 +72,7 @@ db_auth_ok=1
 if [[ $rail_set -eq 1 ]]; then
   ./scripts/check-railway-deploy.sh 2>/dev/null || true
   echo ""
-  if ./scripts/validate-database-credentials.sh >/dev/null 2>&1; then
+  if ./scripts/probe-database-auth.sh >/dev/null 2>&1; then
     printf "DATABASE_URL auth (probe)        ✅\n"
   else
     db_auth_ok=0

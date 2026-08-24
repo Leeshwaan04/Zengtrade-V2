@@ -74,6 +74,18 @@ BEACON = """<script>
 </script>"""
 
 
+HOME_SCHEMA = """<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"zengtrade",
+"applicationCategory":"FinanceApplication","operatingSystem":"Web","url":"https://zengtrade.in/",
+"description":"Regime-aware algorithmic crypto trading strategies you can paper-trade, backtest and forward-test on live data before risking a dollar. Survival-first, honest about every cost, non-custodial.",
+"offers":{"@type":"Offer","price":"0","priceCurrency":"USD","description":"Free to start, paper trading"},
+"publisher":{"@type":"Organization","name":"zengtrade","url":"https://zengtrade.in/","logo":"https://zengtrade.in/assets/logo.svg"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","name":"zengtrade","url":"https://zengtrade.in/"}
+</script>"""
+
+
 def shell(title, desc, canon, main, extra_head=""):
     return f"""<!DOCTYPE html><html lang="en" data-regime="bull"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -346,7 +358,7 @@ def emit(path, html_str, canon):
 emit("", shell(
     "zengtrade, regime-aware crypto trading strategies, paper-first",
     "Regime-aware algorithmic crypto trading strategies you can paper-trade, backtest and forward-test on live data before risking a dollar. Survival-first, honest about every cost, non-custodial. Not investment advice.",
-    "https://zengtrade.in/", HOME_MAIN), "https://zengtrade.in/")
+    "https://zengtrade.in/", HOME_MAIN, extra_head=HOME_SCHEMA), "https://zengtrade.in/")
 
 emit("how-it-works", shell(
     "How zengtrade works, the regime engine, honesty & survival-first risk",
