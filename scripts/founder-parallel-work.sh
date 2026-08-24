@@ -15,6 +15,7 @@ any=0
 
 if SITE="$SITE" ./scripts/check-activation-ready.sh >/dev/null 2>&1; then
   echo "  CPO  Activation UI — signup → deploy: $SITE/login?mode=signup → $SITE/dashboard"
+  echo "       Trust path: deploy → View evidence → $SITE/app#forward"
   echo "       Partial verify: ./scripts/verify-activation-path.sh --partial"
   echo "       Manual E2E: ./scripts/guide-partial-e2e.sh · $SITE/ops/e2e (steps 1–2)"
   echo "       Free-tier Q9: ./scripts/guide-free-tier-test.sh"
@@ -34,6 +35,7 @@ if SITE="$SITE" ./scripts/check-gsc-ready.sh >/dev/null 2>&1; then
 fi
 if ./scripts/check-parallel-growth.sh >/dev/null 2>&1; then
   echo "  Marketing LinkedIn BIP — ./scripts/guide-linkedin-bip.sh"
+  echo "  Marketing Coin spotlight — ./scripts/guide-coin-spotlight.sh [slug]"
   echo "  QA&VAPT parallel — ./scripts/check-qa-parallel.sh · $SITE/ops/security"
   any=1
 fi

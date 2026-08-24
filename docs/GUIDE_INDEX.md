@@ -25,7 +25,7 @@ One-page map of CLI playbooks while the paper worker is blocked (or after P0 gre
 | Role | Script | When |
 |------|--------|------|
 | **CTO** | `./scripts/guide-worker-recovery.sh` | P0 blocked — wrong Railway DB password |
-| **CPO** | `./scripts/guide-partial-e2e.sh` | Signup → deploy (steps 1–2, no trades) |
+| **CPO** | `./scripts/guide-partial-e2e.sh` | Signup → deploy (steps 1–2); View evidence → `/app#forward` |
 | **CPO** | `./scripts/guide-free-tier-test.sh` | Q9 — second deploy blocked on Free |
 | **CBO / SEO** | `./scripts/guide-gsc-founder.sh` | GSC verify + sitemap submit |
 | **SEO** | `./scripts/guide-monthly-gsc-review.sh` | Monthly GSC performance review |
@@ -52,7 +52,8 @@ One-page map of CLI playbooks while the paper worker is blocked (or after P0 gre
 ```bash
 ./scripts/post-p0-success.sh
 ./scripts/verify-activation-path.sh
-./scripts/guide-qa-rls-isolation.sh   # Q3 RLS
+./scripts/guide-qa-rls-isolation.sh   # Q3 RLS — /ops/e2e step 5
+./scripts/audit-growth-goal.sh
 ```
 
 While worker blocked:
@@ -60,7 +61,10 @@ While worker blocked:
 ```bash
 ./scripts/verify-activation-path.sh --partial
 ./scripts/guide-partial-e2e.sh
+./scripts/guide-free-tier-test.sh       # Q9 free deploy cap
 ```
+
+Trust path (partial or before checkout): `/dashboard` deploy → View evidence → `/app#forward`
 
 Full E2E: https://zengtrade.in/ops/e2e
 

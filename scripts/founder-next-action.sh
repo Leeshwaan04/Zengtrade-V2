@@ -71,5 +71,8 @@ if [[ $work -eq 0 ]]; then
   exit 1
 fi
 
-echo "NEXT: P0 green — run ./scripts/wait-for-p0.sh then E2E https://zengtrade.in/ops/e2e"
+echo "NEXT: P0 green — run ./scripts/post-p0-success.sh"
+echo "     E2E trades: https://zengtrade.in/ops/e2e (steps 3–4)"
+echo "     RLS Q3:     ./scripts/guide-qa-rls-isolation.sh"
+echo "     Audit:      ./scripts/audit-growth-goal.sh"
 exit 0

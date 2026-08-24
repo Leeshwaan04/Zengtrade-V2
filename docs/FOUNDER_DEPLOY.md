@@ -34,7 +34,7 @@ Dashboard → **Authentication → URL configuration**
 ./scripts/guide-partial-e2e.sh       # founder manual partial E2E
 ```
 
-Links: https://zengtrade.in/ops/e2e (steps 1–2) · https://zengtrade.in/ops/gsc · https://zengtrade.in/ops/billing · `docs/FOUNDER_PARALLEL.md`
+Links: https://zengtrade.in/ops/e2e (steps 1–2) · deploy → View evidence → `/app#forward` · https://zengtrade.in/ops/gsc · https://zengtrade.in/ops/billing · `docs/FOUNDER_PARALLEL.md`
 
 **Option A — one-shot GitHub Action (recommended):** add `DATABASE_PASSWORD` (password only) or `DATABASE_URL` + `RAILWAY_API_TOKEN` to [repo Secrets](https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions) → run [Apply P0](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml) → type `APPLY`.
 
@@ -64,12 +64,15 @@ Preflight: `./scripts/check-sales-ready.sh` (billing + plan intent + pricing tru
 ## 6. Verify full loop
 
 ```bash
-./scripts/wait-for-p0.sh        # polls until P0 green, then activation verify
-# or manually:
-./scripts/founder-preflight.sh
+./scripts/post-p0-success.sh      # verify-activation-path + growth gates (preferred)
+./scripts/verify-activation-path.sh
+./scripts/guide-qa-rls-isolation.sh   # Q3 — after trades visible
+./scripts/audit-growth-goal.sh
 ```
 
-E2E: https://zengtrade.in/ops/e2e — signup → deploy → trades within ~15 min.
+Or poll until ready: `./scripts/wait-for-p0.sh` (runs post-p0-success when P0 green).
+
+E2E: https://zengtrade.in/ops/e2e — signup → deploy → trades within ~15 min · step 5 RLS.
 
 ## 7. Organic (CBO)
 
