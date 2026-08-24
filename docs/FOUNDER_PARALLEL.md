@@ -30,6 +30,7 @@ Index: **docs/GUIDE_INDEX.md** · `./scripts/list-founder-guides.sh`
 | **CBO** | GSC + first Pro MRR (combined) | `./scripts/guide-cbo-founder-standup.sh` · https://zengtrade.in/ops/gsc · https://zengtrade.in/ops/billing |
 | **CBO** | GSC verify + sitemap | `./scripts/guide-gsc-founder.sh` · https://zengtrade.in/ops/gsc · `docs/GSC_SETUP.md` |
 | **CBO / Sales** | First Pro checkout | `./scripts/guide-first-pro-checkout.sh` · https://zengtrade.in/ops/billing · `/admin` MRR |
+| **CBO / Sales** | First Pro MRR (combined) | `./scripts/guide-sales-founder-standup.sh` · https://zengtrade.in/ops/billing |
 | **Sales** | Weekly MRR standup | `./scripts/guide-mrr-standup.sh` · https://zengtrade.in/admin |
 | **Marketing** | Organic partial proof (combined) | `./scripts/guide-marketing-founder-standup.sh` · `./scripts/guide-linkedin-bip.sh` |
 | **Marketing** | LinkedIn build-in-public | `./scripts/guide-linkedin-bip.sh` · `docs/content/LINKEDIN_BUILD_IN_PUBLIC.md` |

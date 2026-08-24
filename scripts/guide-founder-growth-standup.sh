@@ -40,6 +40,13 @@ echo ""
 
 echo ""
 echo "=========================================="
+echo " Sales — first Pro MRR"
+echo "=========================================="
+echo ""
+./scripts/guide-sales-founder-standup.sh
+
+echo ""
+echo "=========================================="
 echo " QA&VAPT — parallel security + activation"
 echo "=========================================="
 echo ""

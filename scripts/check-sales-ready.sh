@@ -30,7 +30,8 @@ echo ">> Admin first-MRR founder surface"
 if grep -q 'first Pro MRR' saas/web/admin.html \
   && grep -q 'View evidence' saas/web/admin.html \
   && grep -q '/dashboard' saas/web/admin.html \
-  && grep -q 'guide-first-pro-checkout' saas/web/admin.html; then
+  && grep -q 'guide-first-pro-checkout' saas/web/admin.html \
+  && grep -q 'guide-sales-founder-standup' saas/web/ops-billing.html; then
   echo "OK   admin MRR alert deploy-first trust path"
 else
   echo "FAIL admin.html missing deploy-first trust path in MRR alert"

@@ -415,7 +415,8 @@
       "guide-first-pro-checkout.sh \u2014 founder CLI first MRR steps (session 126)",
       "guide-mrr-standup.sh \u2014 weekly /admin MRR standup (session 129)",
       "/ops/billing + guide-first-pro-checkout deploy-first View evidence trust path (session 199)",
-      "/admin MRR alert deploy-first trust path when paying=0 (session 200)"
+      "/admin MRR alert deploy-first trust path when paying=0 (session 200)",
+      "guide-sales-founder-standup.sh — first Pro MRR combined playbook (session 216)"
     ],
     "next": "Founder: run /ops/billing checkout smoke (no worker required); track MRR in /admin",
     "links": [

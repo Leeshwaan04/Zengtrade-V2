@@ -85,6 +85,7 @@ if [[ -x scripts/guide-founder-growth-standup.sh ]] \
   && grep -q 'guide-qa-founder-standup' scripts/guide-founder-growth-standup.sh \
   && grep -q 'guide-marketing-founder-standup' scripts/guide-founder-growth-standup.sh \
   && grep -q 'guide-cto-founder-standup' scripts/guide-founder-growth-standup.sh \
+  && grep -q 'guide-sales-founder-standup' scripts/guide-founder-growth-standup.sh \
   && grep -q 'guide-founder-growth-standup' saas/web/ops-migrate.html; then
   echo "OK   guide-founder-growth-standup combined all-role playbook (+ CTO P0)"
 else
@@ -122,6 +123,18 @@ if [[ -x scripts/guide-cto-founder-standup.sh ]] \
   echo "OK   guide-cto-founder-standup P0 worker recovery playbook"
 else
   echo "FAIL guide-cto-founder-standup incomplete"
+  fail=1
+fi
+echo ""
+
+echo ">> Sales founder standup guide"
+if [[ -x scripts/guide-sales-founder-standup.sh ]] \
+  && grep -q 'guide-first-pro-checkout' scripts/guide-sales-founder-standup.sh \
+  && grep -q 'guide-mrr-standup' scripts/guide-sales-founder-standup.sh \
+  && grep -q 'guide-sales-founder-standup' saas/web/ops-billing.html; then
+  echo "OK   guide-sales-founder-standup first Pro MRR playbook"
+else
+  echo "FAIL guide-sales-founder-standup incomplete"
   fail=1
 fi
 echo ""

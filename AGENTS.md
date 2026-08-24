@@ -95,6 +95,7 @@ Verify with:
 ./scripts/guide-founder-growth-standup.sh # All: CPO + CBO + QA + Marketing combined
 ./scripts/guide-marketing-founder-standup.sh # Marketing: organic partial-proof posts
 ./scripts/guide-cto-founder-standup.sh    # CTO: P0 worker recovery combined
+./scripts/guide-sales-founder-standup.sh  # Sales: first Pro MRR combined
 docs/FOUNDER_PARALLEL.md             # one-page parallel work index
 docs/GUIDE_INDEX.md                  # all founder guide scripts + ops links
 ./scripts/list-founder-guides.sh     # verify guides + print index path

@@ -34,6 +34,7 @@ One-page map of CLI playbooks while the paper worker is blocked (or after P0 gre
 | **CBO / SEO** | `./scripts/guide-gsc-founder.sh` | GSC verify + sitemap submit |
 | **SEO** | `./scripts/guide-monthly-gsc-review.sh` | Monthly GSC performance review |
 | **CBO / Sales** | `./scripts/guide-first-pro-checkout.sh` | First Pro MRR checkout |
+| **Sales** | `./scripts/guide-sales-founder-standup.sh` | First Pro MRR combined (worker blocked) |
 | **Sales** | `./scripts/guide-mrr-standup.sh` | Weekly `/admin` MRR + funnel review |
 | **Marketing** | `./scripts/guide-marketing-founder-standup.sh` | Organic partial-proof posts (worker blocked) |
 | **Marketing** | `./scripts/guide-linkedin-bip.sh` | LinkedIn build-in-public post |
