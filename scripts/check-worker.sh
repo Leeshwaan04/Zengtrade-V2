@@ -11,6 +11,11 @@ raw=$(curl -sfL "$SUPABASE_URL/rest/v1/engine_state?key=eq._worker_heartbeat&sel
 ts=$(echo "$raw" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['updated_at'] if d else '')" 2>/dev/null || true)
 if [[ -z "$ts" ]]; then
   echo "FAIL worker — no _worker_heartbeat row (apply migration 0009 + deploy worker)"
+  if [[ -z "${ZT_QUIET_GROWTH:-}" ]]; then
+    echo ""
+    echo "Growth objective:"
+    ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
+  fi
   exit 1
 fi
 
@@ -30,4 +35,10 @@ fi
 
 echo "FAIL worker — heartbeat stale (${age_min}m ago, max ${MAX_AGE_MIN}m) · last seen $ts"
 echo "      Deploy saas/worker on Railway/Fly — docs/FOUNDER_DEPLOY.md §4"
+echo "      Recovery: ./scripts/guide-worker-recovery.sh · https://zengtrade.in/ops/worker"
+if [[ -z "${ZT_QUIET_GROWTH:-}" ]]; then
+  echo ""
+  echo "Growth objective:"
+  ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
+fi
 exit 1

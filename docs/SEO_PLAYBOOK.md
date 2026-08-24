@@ -66,13 +66,15 @@ Run on the **first Monday** of each month after property is verified.
 Automated preflight (no GSC API required):
 
 ```bash
-./scripts/check-gsc-ready.sh
 ./scripts/check-sitemap.sh
-./scripts/check-funnel-ctas.sh
+./scripts/check-funnel-ctas.sh      # includes home_coins, signup_coins, paper_loop_coins
+./scripts/check-seo-content.sh      # SoftwareApplication + WebSite + FAQPage + HowTo
 ./scripts/guide-monthly-gsc-review.sh   # founder monthly checklist
 ```
 
-**KPI targets (30d):** 500 organic sessions/week · coin landing CTR from GSC · signups with `utm_campaign=coin_*`.
+**Partial activation (worker offline):** honest organic copy in `docs/content/WEEKLY_PROOF.md` § Partial — no closed-trade claims until `./scripts/check-worker.sh` is green.
+
+**KPI targets (30d):** 500 organic sessions/week · coin landing CTR from GSC · signups with `utm_campaign=coin_*` or `signup_coins`.
 
 ## Do not
 

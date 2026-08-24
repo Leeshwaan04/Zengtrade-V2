@@ -64,4 +64,7 @@ echo "OK   how-it-works HowTo + coins CTA"
 grep -q 'signup_coins' "$DIST/login/index.html" || { echo "FAIL login missing signup_coins coins CTA"; exit 1; }
 echo "OK   login coins hub CTA"
 
+grep -q 'closed trades appear as the worker runs' "$DIST/app/index.html" || { echo "FAIL app missing onboarding worker-honesty copy"; exit 1; }
+echo "OK   app onboarding worker-honesty"
+
 echo "All dist probes passed."

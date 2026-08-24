@@ -35,4 +35,5 @@ Not investment advice. Paper only. No live execution.
 ## Related
 
 - Full playbook: `docs/MARKETING_PLAYBOOK.md`
+- Partial proof template: `docs/content/WEEKLY_PROOF.md` § Partial proof (worker offline)
 - Reddit (post after full E2E): `docs/content/REDDIT_ALGOTRADING_DRAFT.md`

@@ -4,6 +4,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+export ZT_QUIET_GROWTH=1
 
 label="${1:-session}"
 shipped="${2:-}"

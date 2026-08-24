@@ -20,6 +20,8 @@ check() {
 check "home" "$SITE/"
 check "login" "$SITE/login"
 check "app" "$SITE/app" "zengtrade"
+check "app-onboard" "$SITE/app" "closed trades appear as the worker runs"
+check "login-coins" "$SITE/login" "signup_coins"
 check "pricing" "$SITE/pricing/"
 check "sitemap" "$SITE/sitemap.xml" "<urlset"
 check "dashboard" "$SITE/dashboard/" "zengtrade"
@@ -41,3 +43,8 @@ if [[ $fail -ne 0 ]]; then
   exit 1
 fi
 echo "All production probes passed."
+if [[ -z "${ZT_QUIET_GROWTH:-}" ]]; then
+  echo ""
+  echo "Growth objective:"
+  ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
+fi
