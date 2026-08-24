@@ -29,4 +29,21 @@ else
   fail=1
 fi
 
+if echo "$html" | grep -q 'utm_campaign=signup_coins'; then
+  echo "OK   login coins CTA (signup_coins)"
+else
+  echo "FAIL missing signup_coins coins hub CTA on /login"
+  fail=1
+fi
+
+if [[ $fail -eq 0 ]]; then
+  echo ""
+  echo "Plan intent routing ready on production."
+  if [[ -z "${ZT_QUIET_GROWTH:-}" ]]; then
+    echo ""
+    echo "Growth goal:"
+    GROWTH_SALES=1 GROWTH_BILL=1 ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
+  fi
+fi
+
 exit "$fail"

@@ -34,3 +34,8 @@ if [[ $fail -ne 0 ]]; then
 fi
 echo ""
 echo "All sitemap URLs present."
+if [[ -z "${ZT_QUIET_GROWTH:-}" ]]; then
+  echo ""
+  echo "Growth goal:"
+  GROWTH_GSC=1 ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
+fi

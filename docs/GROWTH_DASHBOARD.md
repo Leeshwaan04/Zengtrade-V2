@@ -13,7 +13,7 @@
 | Worker status | Unknown | Offline (last heartbeat 2026-08-11T09:57:38 UTC · wrong Railway DB password) | Live 99% |
 | DATABASE_URL auth | — | ❌ /ops/worker | — |
 | Partial activation (signup→deploy) | — | ✅ verify-activation-path --partial | — |
-| Parallel growth (excl. worker) | — | ❌ run ./scripts/check-founder-parallel-ready.sh | — |
+| Parallel growth (excl. worker) | — | ✅ founder-parallel-ready | — |
 | Sales-ready | — | ✅ check-sales-ready.sh | — |
 | QA parallel | — | ✅ check-qa-parallel.sh | — |
 | Growth: CBO infra | — | ❌ | — |
@@ -2817,6 +2817,35 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 - worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ❌ · sales-ready ✅ · qa parallel ✅
 - DATABASE_URL auth ❌ (Railway password — /ops/worker)
 - growth goals: CTO ❌ · CPO partial ✅ · CBO ❌ · MRR founder /admin
+
+### Day 1 (session 175) — WebSite SEO probe + pricing honesty UX + check footers
+
+### CTO
+- **Shipped:** —
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** app.js pricing worker-honesty note; probe-dist login signup_coins
+
+### CBO
+- **Shipped:** check-seo WebSite probe + CDN retry; check-sitemap/plan-intent/pricing-truth growth footers
+
+### SEO
+- **Shipped:** check-seo-content WebSite schema + fetch retry
+
+### Marketing
+- **Shipped:** WEEKLY_PROOF partial-activation template
+
+### Sales
+- **Shipped:** check-plan-intent signup_coins production probe
+
+### QA&VAPT
+- **Shipped:** e2e_smoke passed
+
+### Status (`./scripts/check-growth-standup.sh` @ 03:37Z)
+- worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
+- DATABASE_URL auth ❌ (Railway password — /ops/worker)
+- growth goals: CTO ❌ · CPO partial ✅ · CBO ✅ infra · MRR founder /admin
 
 ---
 

@@ -6,14 +6,21 @@ fail=0
 
 check_html() {
   local label="$1" path="$2" pattern="$3"
-  local html
-  html=$(curl -sfL "$SITE$path" 2>/dev/null) || { echo "FAIL $label — could not fetch $path"; fail=1; return; }
-  if echo "$html" | grep -q "$pattern"; then
-    echo "OK   $label"
+  local html="" attempt
+  for attempt in 1 2 3; do
+    html=$(curl -sfL "$SITE$path" 2>/dev/null) || html=""
+    if [[ -n "$html" ]] && echo "$html" | grep -q "$pattern"; then
+      echo "OK   $label"
+      return
+    fi
+    [[ $attempt -lt 3 ]] && sleep 2
+  done
+  if [[ -z "$html" ]]; then
+    echo "FAIL $label — could not fetch $path"
   else
     echo "FAIL $label — expected pattern missing on $path"
-    fail=1
   fi
+  fail=1
 }
 
 echo "SEO content probe — $SITE"
@@ -25,6 +32,7 @@ check_html "how-it-works HowTo schema" "/how-it-works/" "HowTo"
 check_html "how-it-works coins CTA" "/how-it-works/" "paper_loop_coins"
 check_html "home coins CTA" "/" "home_coins"
 check_html "home SoftwareApplication schema" "/" "SoftwareApplication"
+check_html "home WebSite schema" "/" "WebSite"
 check_html "pricing founding offer" "/pricing/" "first 100"
 check_html "pricing FAQPage schema" "/pricing/" "FAQPage"
 check_html "coins hub" "/coins/" "coins_hub\\|/coins/"

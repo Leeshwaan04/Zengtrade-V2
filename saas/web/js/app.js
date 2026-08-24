@@ -476,9 +476,13 @@ async function stop(key) {
 function renderPricing() {
   const ready = checkoutReady();
   const soon = ready ? "" : `<div class="soon-banner">${"⏳"} <div><b>Paid plans open in a few days.</b><span>The checkout is going through payment-provider activation. Free is fully live now, start there, and you'll be able to upgrade in-place the moment it opens (no re-signup).</span></div></div>`;
+  const workerNote = !state.workerAlive
+    ? `<p class="muted" style="text-align:center;font-size:13px;margin:-4px 0 18px;line-height:1.55">Paper deploy is live — forward evidence fills in when the worker runs. <a href="/dashboard">Open Algo Studio</a> · <a href="/ops/e2e">Status</a></p>`
+    : "";
   app.innerHTML = `
     <div class="page-h center"><h2>Simple, honest pricing</h2>
       <p class="muted">Start free. Upgrade when you want more, cancel anytime.</p>
+      ${workerNote}
       <div class="cycle">
         <button data-c="month" class="${billCycle === "month" ? "on" : ""}">Monthly</button>
         <button data-c="year" class="${billCycle === "year" ? "on" : ""}">Annual <span class="save">2 months free</span></button>

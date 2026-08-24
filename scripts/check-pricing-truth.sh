@@ -32,4 +32,21 @@ else
   fail=1
 fi
 
+if grep -q 'Paper deploy is live' saas/web/js/app.js; then
+  echo "OK   app.js pricing worker-honesty note"
+else
+  echo "FAIL app.js missing pricing worker-honesty note"
+  fail=1
+fi
+
+if [[ $fail -eq 0 ]]; then
+  echo ""
+  echo "Pricing truth checks passed — no live execution overpromise."
+  if [[ -z "${ZT_QUIET_GROWTH:-}" ]]; then
+    echo ""
+    echo "Growth goal:"
+    GROWTH_SALES=1 ./scripts/print-growth-goal-summary-fast.sh 2>/dev/null | sed 's/^/  /' || true
+  fi
+fi
+
 exit "$fail"

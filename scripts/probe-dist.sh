@@ -61,4 +61,7 @@ grep -q 'HowTo' "$DIST/how-it-works/index.html" || { echo "FAIL how-it-works mis
 grep -q 'paper_loop_coins' "$DIST/how-it-works/index.html" || { echo "FAIL how-it-works missing coins CTA"; exit 1; }
 echo "OK   how-it-works HowTo + coins CTA"
 
+grep -q 'signup_coins' "$DIST/login/index.html" || { echo "FAIL login missing signup_coins coins CTA"; exit 1; }
+echo "OK   login coins hub CTA"
+
 echo "All dist probes passed."
