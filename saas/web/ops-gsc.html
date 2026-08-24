@@ -51,8 +51,24 @@
   </div>
 
   <p>Track weekly in <a href="/admin">/admin</a> → pageviews, signups, MRR.</p>
+  <p id="growthGoals" class="card" style="display:none;background:#eef2ff;border-color:#c7d2fe;font-size:14px;line-height:1.55;margin-top:14px"></p>
 </div>
 <script>
+const SUPA="https://ponvarxeytfcntckczbn.supabase.co", ANON="sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";
+(async function growthGoals(){
+  const el=document.getElementById("growthGoals");
+  if(!el) return;
+  try{
+    const rows=await fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{headers:{apikey:ANON},cache:"no-store"}).then(r=>r.json());
+    const age=rows[0]?Math.round((Date.now()-new Date(rows[0].updated_at))/60000):99999;
+    if(age<=12) return;
+    const data=await fetch("/ops/data.json?"+Date.now(),{cache:"no-store"}).then(r=>r.json());
+    const gg=data.gates?.growth_goal||{};
+    const cpo=gg.cpo_full_ok?"✅ trades":(gg.cpo_partial_ok?"partial ✅":"❌");
+    el.innerHTML="<b>Growth goals (worker offline):</b> CTO "+(gg.cto_ok?"✅":"❌")+" · CPO "+cpo+" · CBO "+(gg.cbo_infra_ok?"infra ✅ — complete GSC above + <a href=\"/ops/billing\">Pro checkout</a>":"❌");
+    el.style.display="block";
+  }catch(e){}
+})();
 (async function(){
   const el=document.getElementById("gscStatus");
   const SITE=location.origin;

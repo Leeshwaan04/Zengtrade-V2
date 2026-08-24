@@ -35,6 +35,9 @@ run "Founder guides" ./scripts/check-founder-guides.sh
 if [[ $fail -eq 0 ]]; then
   echo "All founder parallel probes green — manual playbooks:"
   echo "  ./scripts/guide-founder-parallel.sh"
+  echo ""
+  echo "Growth objective:"
+  ./scripts/print-growth-goal-summary.sh 2>/dev/null | sed 's/^/  /' || true
   exit 0
 fi
 

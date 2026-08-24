@@ -40,7 +40,21 @@ Index: **docs/GUIDE_INDEX.md** · `./scripts/list-founder-guides.sh`
 ./scripts/status-report.sh
 ./scripts/check-p0-readiness.sh    # P0 secrets + unblock paths (no secrets printed)
 ./scripts/sync-growth-dashboard-header.sh   # refresh GROWTH_DASHBOARD.md header
+./scripts/check-growth-goal.sh            # full CTO/CPO/CBO audit
+./scripts/print-growth-goal-summary.sh    # fast growth objective summary
 ```
+
+## Growth objective (while worker blocked)
+
+```bash
+./scripts/print-growth-goal-summary.sh
+```
+
+| Goal | Typical status |
+|------|----------------|
+| CTO | Blocked — fix `DATABASE_URL` on Railway (`/ops/worker`) |
+| CPO | Partial OK — signup → deploy; full trades need worker |
+| CBO | Infra green — founder: GSC verify + first Pro checkout → `/admin` MRR |
 
 ## Do not (until worker live)
 
