@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-03T15:29:33Z",
+  "updated": "2026-09-03T20:20:41Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -477,7 +477,7 @@
     "production": true,
     "billing": true,
     "billing_ready": true,
-    "gsc_ready": true,
+    "gsc_ready": false,
     "activation_ready": true,
     "funnel_ctas": true,
     "migration_0011": true,
@@ -493,7 +493,7 @@
       "cto_ok": false,
       "cpo_partial_ok": true,
       "cpo_full_ok": false,
-      "cbo_infra_ok": true,
+      "cbo_infra_ok": false,
       "first_mrr_ok": false
     }
   }
