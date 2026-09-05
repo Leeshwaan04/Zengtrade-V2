@@ -38,18 +38,23 @@ export async function completeAuthCallback() {
   }
   if (!p.hasCode && !p.hasHash) return null;
 
-  if (p.hasCode) {
-    const { data, error } = await sb.auth.exchangeCodeForSession(p.code);
+  // BUG FIX (2026-09-06): this client is created with detectSessionInUrl:true, so it is
+  // ALREADY exchanging this ?code=/#access_token= in the background the instant it's
+  // constructed. This used to also call exchangeCodeForSession(p.code) itself for the
+  // ?code= (PKCE) case — a second, redundant exchange of the same single-use code, racing
+  // the SDK's own automatic one. Whichever call lost that race got an "already used" error
+  // from Supabase, so a just-confirmed user landed back on an empty /login form as if
+  // nothing happened; only a manual reload (which re-read the already-persisted session)
+  // fixed it. getSession() awaits the SDK's own in-flight exchange internally, so — exactly
+  // like the hash flow below already did — just wait on that instead of repeating it. The
+  // short retry covers the real network round-trip that exchange takes on slower connections.
+  for (let i = 0; i < 10; i++) {
+    const { data: { session }, error } = await sb.auth.getSession();
     if (error) throw error;
-    history.replaceState({}, "", location.pathname);
-    return data.session;
+    if (session) { history.replaceState({}, "", location.pathname); return session; }
+    await new Promise((r) => setTimeout(r, 300));
   }
-
-  // Implicit / hash flow — detectSessionInUrl handles this on getSession().
-  const { data: { session }, error } = await sb.auth.getSession();
-  if (error) throw error;
-  if (session) history.replaceState({}, "", location.pathname);
-  return session;
+  return null;
 }
 
 /** Await any in-flight OAuth callback, then return the active session (if any). */
