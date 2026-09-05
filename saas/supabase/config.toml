@@ -2,12 +2,6 @@
 #   supabase link --project-ref ponvarxeytfcntckczbn
 project_id = "ponvarxeytfcntckczbn"
 
-[functions.lemonsqueezy-webhook]
-verify_jwt = false   # Lemon Squeezy calls this with its OWN HMAC signature, not a Supabase JWT
-
-[functions.polar-webhook]
-verify_jwt = false   # Polar signs with a Standard-Webhooks HMAC, not a Supabase JWT
-
 [functions.nowpayments-ipn]
 verify_jwt = false   # NOWPayments signs with its own HMAC-SHA512 (x-nowpayments-sig), not a Supabase JWT
 

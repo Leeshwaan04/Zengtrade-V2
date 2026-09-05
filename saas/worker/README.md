@@ -30,14 +30,14 @@ Founder/agent unblock: Cloud Agent `DATABASE_PASSWORD` only → `./scripts/run-p
 Verify: `./scripts/check-worker.sh` (heartbeat < 12 min). Guide: https://zengtrade.in/ops/worker  
 Recovery runbook: `docs/WORKER_RECOVERY.md`
 
-**A) Docker host — Railway / Render / Fly.io (easiest, ~$5/mo):**
+**A) Docker host — Railway (easiest, ~$5/mo):**
 ```
 # from saas/worker/
-# Railway:  railway up            (see railway.toml; set DATABASE_URL in dashboard)
-# Render:   repo root render.yaml   (Blueprint → set DATABASE_URL)
-# Fly.io:   fly launch && fly secrets set DATABASE_URL=... && fly deploy  (see fly.toml)
+railway up            # see railway.toml; set DATABASE_URL in dashboard
 ```
-The Dockerfile runs continuous mode automatically.
+The Dockerfile runs continuous mode automatically. (Render and Fly.io configs existed here
+briefly during earlier autopilot sessions and were removed 2026-09-06 — Railway is the one
+actual deploy target; don't re-add alternates without a reason to actually use them.)
 
 **B) Plain Linux VPS (systemd):**
 ```

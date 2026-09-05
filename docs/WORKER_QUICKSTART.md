@@ -18,23 +18,7 @@ Paper trades **do not run** without this process. Site + auth can be live while 
 4. Deploy → Logs should show: `zengtrade worker · … featured strategies` then **`startup heartbeat ok`**
 5. Re-run `./scripts/check-worker.sh` — heartbeat must be **< 12 min**
 
-### Render (alternative)
-
-1. [render.com](https://render.com) → **New Blueprint** → connect this repo
-2. Uses root `render.yaml` (worker service)
-3. Set `DATABASE_URL` in Render dashboard when prompted
-4. `./scripts/check-worker.sh`
-
-## 3. Fly.io (alternative)
-
-```bash
-cd saas/worker
-fly launch --no-deploy
-fly secrets set DATABASE_URL='postgresql://...'
-fly deploy
-```
-
-## 4. Verify in product
+## 3. Verify in product
 
 - Deploy a strategy on `/dashboard`
 - Wait one cycle (~5 min)

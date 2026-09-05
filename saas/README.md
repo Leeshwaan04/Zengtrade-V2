@@ -48,7 +48,7 @@ Any static host works — the app is plain HTML/JS.
 - [x] Per-user dashboard: deploy/stop strategies, live stats from *their* rows
 - [ ] Worker: run the Python strategy engine per user and write `trade` / `book_state`
 - [ ] Evidence tabs (Forward Test / Accuracy / Analytics) scoped per user
-- [ ] Billing (Lemon Squeezy / Paddle) + Pro entitlements
+- [x] Billing (NOWPayments) + Pro entitlements
 - [ ] Terms / Privacy / risk-disclaimer pages
 
 ## Non-negotiables
@@ -58,41 +58,17 @@ Any static host works — the app is plain HTML/JS.
 
 ---
 
-## Billing (Lemon Squeezy) — setup
+## Billing (NOWPayments) — setup
 
-Model: **Free = 1 paper strategy · Pro ($29/mo) = unlimited + live execution when a strategy clears
-the bar.** Non-custodial, hosted checkout, no card data ever touches us.
+Model: **Free = 1 paper strategy · Pro ($19/mo founding) = unlimited + live execution when a
+strategy clears the bar.** Non-custodial, hosted checkout, no card data ever touches us. The
+checkout invoice is minted server-side by the `nowpayments-create-invoice` Edge Function; the
+`nowpayments-ipn` function verifies NOWPayments' HMAC-SHA512 signature and grants the tier via the
+`grant_paid()` Postgres function (service-role only — see `db/migrations/0005_grant_paid_and_deploy_limit.sql`).
+Idempotent via the `webhook_event` table (duplicate IPN events are skipped). See
+`saas/deploy_nowpayments.sh` to (re)deploy the functions and `saas/tests/nowpayments_signature.mjs`
+to verify a forged webhook is rejected.
 
-### 1. Lemon Squeezy
-1. Create a store → add a **Subscription product** "zengtrade Pro", $29/mo.
-2. Product → the Pro **variant** → note the **Variant ID** and your **store slug**.
-3. Put both in `web/js/config.js` → `LEMONSQUEEZY.storeSlug` / `.proVariantId` (public — safe).
-4. Settings → **Webhooks** → add `https://<PROJECT>.supabase.co/functions/v1/lemonsqueezy-webhook`,
-   sign with a strong secret, subscribe to `subscription_*` events. Save the signing secret.
-5. Rotate the API key you exposed earlier (Settings → API) — it's only needed for server-side API
-   calls (not required for this webhook flow).
-
-### 2. Deploy the webhook (Supabase Edge Function)
-```bash
-supabase login
-supabase link --project-ref ponvarxeytfcntckczbn
-supabase secrets set LEMONSQUEEZY_WEBHOOK_SECRET=<the signing secret from step 4>
-supabase functions deploy lemonsqueezy-webhook --no-verify-jwt
-```
-`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are injected automatically. The service role is what
-lets the webhook flip `profile.tier` past RLS — it lives only in the function's env, never in the browser.
-
-### 3. Flow
-```
-Free user hits deploy limit / clicks Upgrade
-   → hosted LS checkout (email + user_id prefilled)
-   → payment → LS fires webhook → signature verified → profile.tier = 'pro'
-   → dashboard unlocks unlimited strategies
-Cancel/expire → webhook sets tier back to 'free'
-```
-Idempotent via the `webhook_event` table (duplicate events are skipped).
-
-### ⚠️ Don't charge yet
-The rail is built, but **activate paid tiers only once a strategy is forward-proven** (Accuracy bar).
-Billing on an unproven edge just collects refunds. `trend_follow` is backtest-promising — run it
-forward first.
+(This repo has previously tried Lemon Squeezy and Polar for billing — both were removed
+2026-09-06 along with their webhook functions and deploy scripts. NOWPayments is the only live
+provider; don't resurrect the others without a reason to actually switch.)
