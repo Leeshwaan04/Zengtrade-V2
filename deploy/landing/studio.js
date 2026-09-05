@@ -167,7 +167,6 @@
       '<a href="/how-it-works/" style="color:inherit;font-weight:700">How paper trading works</a>';
     document.body.appendChild(el);
   }
-  maybeWorkerBanner();
 
   /* ---- customers live in the Algo Studio: persona pinned, crypto book pinned ---- */
   try {
@@ -179,6 +178,14 @@
   } catch (e) {}
 
   var ORIG = window.fetch.bind(window);
+
+  // BUG FIX (2026-09-06): this used to be called right after its definition, BEFORE the
+  // `var ORIG = ...` line below — ORIG was still undefined at that point (var hoisting only
+  // hoists the declaration, not the assignment), so maybeWorkerBanner() threw "ORIG is not a
+  // function" on every single /dashboard/ page load. That uncaught error silently skipped this
+  // call, meaning the "paper worker is offline" banner never showed even while the worker was
+  // genuinely down. Now it only runs once ORIG actually holds the native fetch.
+  maybeWorkerBanner();
 
   /* ---- shared payloads: engine_state row, else static seed ---- */
   function engineGet(fileKey) {
