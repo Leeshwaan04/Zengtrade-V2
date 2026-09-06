@@ -63,9 +63,11 @@ Verify parallel gates before posting: `./scripts/check-parallel-growth.sh`
 | Week | Asset | Channel |
 |------|-------|---------|
 | 1 | Forward diary (template in `docs/content/WEEKLY_PROOF.md`) | X thread |
-| 2 | "Backtest vs forward" explainer | LinkedIn |
+| 2 | "Backtest vs forward" explainer | LinkedIn teaser → canonical version lives on-site: `/learn/backtest-vs-forward-test/` (SEO Manager charter, session 219) |
 | 3 | r/algotrading value post | Reddit (draft: `docs/content/REDDIT_ALGOTRADING_DRAFT.md`) |
-| 4 | Coin spotlight #1 | Blog section on coin page |
+| 4 | Coin spotlight #1 | Built as the on-site `/learn/` educational section (SEO Manager charter, `seo/generate.py` pattern), not a separate coin-page blog build — see `docs/KEYWORD_STRATEGY.md` |
+
+**UTM addition:** `utm_campaign=learn_{slug}` / `learn_{slug}_pro` on `/learn/` article CTAs, same convention as `coin_{slug}` — captured automatically by the existing pageview beacon, no new tracking needed.
 
 **Coin spotlight template (week N):** run `./scripts/guide-coin-spotlight.sh [slug]` for founder-ready copy.
 

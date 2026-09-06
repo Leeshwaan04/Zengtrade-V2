@@ -9,8 +9,10 @@ guidance, an honest cost note, an FAQ, and hub-and-spoke internal links, with fu
 NOT a thin-content mill: the data + the regime read + the category guidance vary per coin, so no
 two pages are templated duplicates (which Google penalises as "scaled content abuse").
 
-Run:  python3 seo/generate.py           # prototype set (5 coins) -> seo/out/
-      python3 seo/generate.py --all     # every active USDT major (scale later)
+This module is a content library, not a standalone script: `COINS` is built dynamically at import
+time (top ~150 coins by live CoinGecko market cap, cross-checked against live Binance USDT-spot
+tradability - see build_coin_universe()), so there's no separate "prototype vs --all" step. Run
+the whole site (which imports this module) with:  python3 deploy/landing/build.py
 """
 from __future__ import annotations
 import html, json, os, sys, time
@@ -21,7 +23,6 @@ except ImportError:
     print("pip install requests"); sys.exit(1)
 
 BASE = "https://data-api.binance.vision"
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out")
 SITE = "https://zengtrade.in"
 
 # Curated category map for well-known symbols (drives which CATEGORY_ANGLE paragraph a coin
@@ -46,6 +47,28 @@ CATEGORY_MAP = {
     "XMR": "privacy", "ZEC": "privacy", "DASH": "privacy",
     "OKB": "exchange-token", "CRO": "exchange-token", "LEO": "exchange-token",
     "GT": "exchange-token", "KCS": "exchange-token",
+    # Expanded session 219 after live-checking the actual top-150 roster (was 90/150 falling back
+    # to the generic "altcoin" bucket - see docs/KEYWORD_STRATEGY.md). Classified from each coin's
+    # real, publicly-known purpose; genuinely ambiguous/unfamiliar ones are left in DEFAULT_CATEGORY
+    # on purpose rather than guessed, this list needs revisiting each time the roster shifts.
+    "TRX": "layer-1", "GRAM": "layer-1", "ETC": "layer-1", "VET": "layer-1", "STX": "layer-2",
+    "DCR": "layer-1", "LUNC": "layer-1", "XTZ": "layer-1", "CFX": "layer-1", "XPL": "layer-1",
+    "KAIA": "layer-1", "IOTA": "layer-1", "NEO": "layer-1", "S": "layer-1", "DGB": "layer-1",
+    "QTUM": "layer-1", "KSM": "layer-1", "NIGHT": "layer-1",
+    "POL": "layer-2",
+    "ASTER": "defi", "ONDO": "defi", "WLFI": "defi", "MORPHO": "defi", "ENA": "defi", "SKY": "defi",
+    "JST": "defi", "NEXO": "defi", "ETHFI": "defi", "AERO": "defi", "FF": "defi", "RAY": "defi",
+    "SUN": "defi", "SYRUP": "defi", "JTO": "defi", "CVX": "defi", "EIGEN": "defi", "PROM": "defi",
+    "PLUME": "defi", "ZRX": "defi", "RSR": "defi", "ORCA": "defi", "YFI": "defi", "COW": "defi",
+    "1INCH": "defi", "MET": "defi", "KMNO": "defi",
+    "PUMP": "meme", "TRUMP": "meme", "PENGU": "meme", "AI": "meme", "MARSCOIN": "meme",
+    "BANANAS31": "meme",
+    "XEC": "payments",
+    "QNT": "infra", "PYTH": "infra", "ZRO": "infra", "GNO": "infra", "ENS": "infra", "TWT": "infra",
+    "GLM": "infra", "BAT": "infra", "RIF": "infra", "GAS": "infra", "SFP": "infra", "JASMY": "infra",
+    "VIRTUAL": "ai", "KAITO": "ai", "ARKM": "ai", "SENT": "ai",
+    "CHZ": "gaming", "APE": "gaming", "SUPER": "gaming",
+    "ZEN": "privacy", "ZAMA": "privacy",
 }
 DEFAULT_CATEGORY = "altcoin"
 
@@ -64,6 +87,30 @@ CATEGORY_ANGLE = {
     "altcoin": "{name} doesn't yet have enough of a distinct behavioural profile in zengtrade's playbook to get a specialised angle, so the engine treats {sym} with its standard regime-aware rules: confirm the trend, size conservatively, and stand down in choppy or high-vol conditions.",
 }
 
+# Display label + one-sentence intro per category section on the /coins/ hub. Seeded from the same
+# personality CATEGORY_ANGLE already establishes per coin page (one source of truth for how
+# zengtrade frames each category), reworded as a section-level intro rather than per-coin copy.
+CATEGORY_LABEL = {
+    "major": "Majors", "layer-1": "Layer-1s", "layer-2": "Layer-2s", "defi": "DeFi",
+    "meme": "Meme Coins", "payments": "Payments", "infra": "Infrastructure & Oracles",
+    "ai": "AI & Data", "gaming": "Gaming & Metaverse", "privacy": "Privacy",
+    "exchange-token": "Exchange Tokens", "altcoin": "More Coins",
+}
+CATEGORY_HUB_INTRO = {
+    "major": "The large-caps that tend to lead the market's regime - the engine reads their trend against the broader tape before it commits.",
+    "layer-1": "Higher-beta base-layer chains: bigger trends in a bull regime, faster drawdowns in a bear, sized and exited accordingly.",
+    "layer-2": "Scaling chains that often gap on unlock or listing news - the engine waits for a confirmed continuation, not the initial spike.",
+    "defi": "Protocol tokens that track on-chain activity and de-risk hard in market stress - reversion-favoured, sized down in high-vol regimes.",
+    "meme": "Social-momentum coins that can move double digits intraday - small size, strong confirmation required, fast ATR-based exits.",
+    "payments": "Coins that range for long stretches then move in bursts - mean-reversion and breakout confirmation over chasing a trend.",
+    "infra": "Oracle, naming, and infrastructure-layer tokens whose moves often lag broader shifts by a cycle - the engine waits for their own trend to confirm.",
+    "ai": "Narrative- and funding-cycle-driven tokens - trend confirmation required before sizing into a single-narrative spike.",
+    "gaming": "Gaming and metaverse-linked tokens tied to narrative cycles and emission schedules more than broad market regime.",
+    "privacy": "Thinner-liquidity coins with episodic, regulation-driven volatility - sized conservatively, wider confirmation required.",
+    "exchange-token": "Exchange-native tokens whose price often reflects that exchange's own volume more than the broader crypto regime.",
+    "altcoin": "Coins zengtrade doesn't yet have a specialised playbook angle for - still live prices, a real regime read, and the standard regime-aware rules.",
+}
+
 
 def get(path, **params):
     r = requests.get(BASE + path, params=params, timeout=20)
@@ -77,7 +124,17 @@ def get(path, **params):
 STABLE_BASES = {
     "USDT", "USDC", "FDUSD", "USD1", "DAI", "TUSD", "BUSD", "PYUSD", "USDP", "GUSD",
     "EUR", "EURI", "AEUR", "USDE", "USDS", "PAXG", "XAUT",
+    # Added session 219: these slipped through into the live top-150 roster despite being
+    # $1-pegged (RLUSD, BFUSD, "United Stables", legacy Frax Dollar, USD.AI) - same reasoning as
+    # the rest of this set, a "trading strategy" page for a stable-value asset is empty content.
+    "RLUSD", "BFUSD", "U", "FRAX", "CHIP",
 }
+
+# Not cryptocurrencies at all - tokenized wrappers for traditional-market assets (e.g. a Binance
+# "bStock" tokenized equity). zengtrade is a crypto-only product (see README/CRYPTO_PRODUCT.md);
+# a regime-read/strategy page for a tokenized stock proxy would be a category error, not just thin
+# content, so these are excluded even though they trade against USDT on Binance spot.
+NON_CRYPTO_BASES = {"CRCLB"}
 
 # CoinGecko's `id` field is usually a fine slug (bitcoin, ethereum, solana, ...), but for a few
 # well-known coins it's the project/company name rather than the ticker people actually search for
@@ -99,6 +156,7 @@ def build_coin_universe(n=150):
         s["baseAsset"] for s in info["symbols"]
         if s["status"] == "TRADING" and s.get("isSpotTradingAllowed")
         and s["quoteAsset"] == "USDT" and s["baseAsset"] not in STABLE_BASES
+        and s["baseAsset"] not in NON_CRYPTO_BASES
     }
     universe, seen = {}, set()
     for page in (1, 2, 3):
@@ -311,22 +369,62 @@ def coin_parts(sym, name, slug, cat, tk, closes):
     return title, desc, f"{SITE}/coins/{slug}/", main, extra_head
 
 
+# Display order for hub sections - majors and the largest, most-searched groups first; the
+# undifferentiated fallback bucket always last regardless of its size.
+CATEGORY_ORDER = ["major", "layer-1", "layer-2", "defi", "payments", "infra", "ai", "gaming",
+                  "meme", "privacy", "exchange-token", "altcoin"]
+
+INLINE_FALLBACK_LIMIT = 16   # how many "More coins" cards show before the <details> disclosure
+
+
+def _coin_card(sym):
+    return (f'<a class="home-card" href="/coins/{COINS[sym][1]}/"><b>{html.escape(COINS[sym][0])}</b>'
+            f'<span>{sym} strategies &amp; live regime read</span></a>')
+
+
 def coin_hub_main(syms_present):
-    """The /coins/ hub <main>, using the shared design system."""
-    cards = "".join(
-        f'<a class="home-card" href="/coins/{COINS[s][1]}/"><b>{html.escape(COINS[s][0])}</b>'
-        f'<span>{s} strategies &amp; live regime read</span></a>' for s in syms_present)
+    """The /coins/ hub <main>, grouped by category so each section can independently target its
+    own long-tail (e.g. "defi trading strategies"), rather than one flat 150-card grid. The
+    fallback ("altcoin"/"More coins") bucket is progressively disclosed via a native <details> -
+    reuses the same zero-JS pattern coin_parts() already uses for its FAQ - so it stays fully
+    crawlable without dumping every uncategorised coin above the fold."""
+    by_cat = {}
+    for s in syms_present:
+        by_cat.setdefault(COINS[s][2], []).append(s)
+    sections = []
+    for cat in CATEGORY_ORDER:
+        syms = by_cat.get(cat)
+        if not syms:
+            continue
+        label = CATEGORY_LABEL.get(cat, cat.title())
+        intro = CATEGORY_HUB_INTRO.get(cat, "")
+        if cat == "altcoin" and len(syms) > INLINE_FALLBACK_LIMIT:
+            head, rest = syms[:INLINE_FALLBACK_LIMIT], syms[INLINE_FALLBACK_LIMIT:]
+            grid = (f'<div class="lp-grid4">{"".join(_coin_card(s) for s in head)}</div>'
+                    f'<details class="faq" style="margin-top:12px"><summary>Show {len(rest)} more</summary>'
+                    f'<div class="lp-grid4" style="margin-top:12px">{"".join(_coin_card(s) for s in rest)}</div></details>')
+        else:
+            grid = f'<div class="lp-grid4">{"".join(_coin_card(s) for s in syms)}</div>'
+        anchor = f"cat-{cat}"
+        sections.append(f"""<section class="lp-sec" aria-label="{html.escape(label)}" id="{anchor}">
+    <div class="lp-wrap">
+      <h2 class="lp-h2">{html.escape(label)}</h2>
+      <p class="lp-sub" style="margin-bottom:16px">{html.escape(intro)}</p>
+      {grid}
+    </div>
+  </section>""")
     return f"""<main id="main">
   <section class="lp-hero" aria-labelledby="h-hub">
     <div class="lp-wrap">
       <div class="lp-eyebrow"><span class="dot"></span> trading strategies by coin</div>
       <h1 id="h-hub" class="lp-h1">Crypto strategies, <span class="hl">by coin</span></h1>
-      <p class="lp-sub coin-hub-lead">Live prices, a current market-regime read, and paper-tradeable regime-aware strategies for each major coin. Honest about every cost, non-custodial.</p>
+      <p class="lp-sub coin-hub-lead">Live prices, a current market-regime read, and paper-tradeable regime-aware strategies for each major coin, grouped by category. Honest about every cost, non-custodial.</p>
     </div>
   </section>
-  <section class="lp-sec" aria-label="Coins">
-    <div class="lp-wrap"><div class="lp-grid4">{cards}</div>
-      <div class="lp-cta-row center" style="margin-top:20px">
+  {"".join(sections)}
+  <section class="lp-sec" aria-label="Get started">
+    <div class="lp-wrap">
+      <div class="lp-cta-row center" style="margin-top:4px">
       <a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=coins_hub">Start free — paper-trade any coin</a>
       <a class="lp-cta ghost" href="/login?mode=signup&amp;plan=pro&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=coins_hub_pro">Founding Pro $19/mo</a>
       </div>
