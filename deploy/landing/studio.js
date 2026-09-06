@@ -80,6 +80,39 @@
     });
   }
 
+  /* ---- toasts: reuse the terminal's own #toastWrap/.toast component (same one every other
+   * tab's confirmations use) instead of a bespoke floating card. Fixes two real bugs the ad hoc
+   * version had: (1) it rendered at document.body scale with up to 4 action links, so on shorter
+   * viewports it grew tall enough to cover the very form it was nudging the user to fill in;
+   * (2) it looked and behaved differently from every other notification in the product. */
+  function ztToast(o) {
+    var host = document.getElementById("toastWrap");
+    if (!host || (o.uniqueClass && host.querySelector("." + o.uniqueClass))) return null;
+    var t = document.createElement("div");
+    t.className = "toast" + (o.uniqueClass ? " " + o.uniqueClass : "");
+    t.setAttribute("role", "status");
+    var icoFn = typeof window.icon === "function" ? window.icon : function () { return ""; };
+    var acts = (o.actions || []).map(function (a) {
+      return '<button type="button" class="tbtn ' + a.cls + '" data-zt-act="' + a.key + '">' + esc(a.label) + "</button>";
+    }).join("");
+    t.innerHTML = '<div class="toast-ico">' + icoFn(o.icon, 22) + '</div>' +
+      '<div class="toast-body"><b>' + esc(o.title) + "</b><span>" + o.body + "</span></div>" +
+      '<div class="toast-acts">' + acts + "</div>";
+    host.appendChild(t);
+    function dismissToast() {
+      if (typeof window.dismiss === "function") { window.dismiss(t); return; }
+      t.classList.add("out");
+      setTimeout(function () { t.remove(); }, 300);
+    }
+    (o.actions || []).forEach(function (a) {
+      var btn = t.querySelector('[data-zt-act="' + a.key + '"]');
+      if (btn) btn.onclick = function () { if (a.onClick) a.onClick(); dismissToast(); };
+    });
+    t._ztDismiss = dismissToast;
+    if (o.timeout) t._timer = setTimeout(function () { if (document.body.contains(t)) dismissToast(); }, o.timeout);
+    return t;
+  }
+
   function trackEvent(name) {
     try {
       ORIG(SUPA + "/rest/v1/event", {
@@ -98,25 +131,20 @@
     } catch (e) { return; }
     function renderHint(workerUp) {
       setTimeout(function () {
-        if (document.querySelector(".zt-forward-hint")) return;
-        var el = document.createElement("div");
-        el.className = "zt-deploy-nudge zt-forward-hint";
-        el.setAttribute("role", "status");
         var sub = workerUp
           ? "Trades appear in Evidence as the worker runs on live prices (usually within 15 min)."
           : "Deploy saved. Trades will run when the paper worker is back online — check the banner above.";
-        el.innerHTML = "<div><b>Strategy deployed</b><br><span style=\"color:var(--slate,#64748b)\">" +
-          sub + "</span></div>" +
-          "<a href=\"/app#forward\">View evidence</a>" +
-          "<a href=\"/coins/?utm_source=site&amp;utm_medium=organic&amp;utm_campaign=deploy_success_coins\">More coin strategies</a>" +
-          "<a href=\"/app#pricing\" data-zt-pro-upgrade>Pro $19/mo</a>" +
-          (workerUp ? "" : "<a href=\"/ops/e2e\">E2E status</a>") +
-          "<button type=\"button\" style=\"border:0;background:transparent;color:var(--slate);cursor:pointer\" " +
-          "aria-label=\"Dismiss\">✕</button>";
-        el.querySelector("button").onclick = function () { el.remove(); };
-        var proLink = el.querySelector("[data-zt-pro-upgrade]");
-        if (proLink) proLink.onclick = function (e) { markCheckoutRef("deploy_success_pro"); };
-        document.body.appendChild(el);
+        ztToast({
+          uniqueClass: "zt-forward-toast",
+          icon: "check",
+          title: "Strategy deployed",
+          body: sub,
+          timeout: 7000,
+          actions: [
+            { key: "view", cls: "primary", label: "View evidence", onClick: function () { location.href = "/app#forward"; } },
+            { key: "ok", cls: "ghost", label: "Dismiss" },
+          ],
+        });
       }, 800);
     }
     ORIG(SUPA + "/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at", {
@@ -155,17 +183,17 @@
     if (document.getElementById("ztWorkerDown")) return;
     var el = document.createElement("div");
     el.id = "ztWorkerDown";
+    el.className = "zt-banner-warn";
     el.setAttribute("role", "status");
-    el.style.cssText =
-      "position:fixed;top:0;left:0;right:0;z-index:95;padding:8px 14px;text-align:center;" +
-      "font:600 12.5px/1.4 var(--sans,system-ui);background:#fff8e6;color:#7a5a00;" +
-      "border-bottom:1px solid #f0d78a";
     el.innerHTML = "Paper worker offline — deploys save, but trades pause until the worker restarts. " +
-      '<a href="/app#forward" style="color:inherit;font-weight:700;margin-left:6px">View evidence</a> · ' +
-      '<a href="/ops/worker" style="color:inherit;font-weight:700">Worker status</a> · ' +
-      '<a href="/ops/e2e" style="color:inherit;font-weight:700">E2E status</a> · ' +
-      '<a href="/how-it-works/" style="color:inherit;font-weight:700">How paper trading works</a>';
-    document.body.appendChild(el);
+      '<a href="/app#forward">View evidence</a> · ' +
+      '<a href="/ops/worker">Worker status</a> · ' +
+      '<a href="/ops/e2e">E2E status</a> · ' +
+      '<a href="/how-it-works/">How paper trading works</a>';
+    /* in-flow, not fixed: every other system banner in the terminal (rdy-banner, bot-banner,
+     * rg-banner) sits in the page instead of floating over it. A fixed top bar here used to
+     * render on top of the sticky .topbar (position:sticky;top:0;z-index:50) on every tab. */
+    document.body.insertBefore(el, document.body.firstChild);
   }
 
   /* ---- customers live in the Algo Studio: persona pinned, crypto book pinned ---- */
@@ -346,45 +374,42 @@
     ".ais-relogin", "[data-harness]", "#glGo", "[data-stopall]", '[data-algomkt="in"]',
     ".mkt-live", ".mkt-dot", ".he-stat.off", ".tix-offline",
     "#modeFab", "#personaGate"               // persona switcher removed: the Studio IS the product
-  ].join(",") + "{display:none !important}";
-  var NUDGE_CSS =
-    ".zt-deploy-nudge{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:90;" +
-    "max-width:min(520px,92vw);background:var(--surface,#fff);border:1px solid var(--green,#00ab4e);" +
-    "border-radius:12px;padding:12px 16px;box-shadow:0 8px 28px rgba(16,30,54,.14);font-size:13px;" +
-    "display:flex;gap:12px;align-items:center;flex-wrap:wrap}" +
-    ".zt-deploy-nudge b{color:var(--navy,#101e36)}" +
-    ".zt-deploy-nudge a{color:#fff;background:var(--green,#00ab4e);padding:8px 14px;border-radius:9px;" +
-    "font-weight:700;text-decoration:none;white-space:nowrap}";
+  ].join(",") + "{display:none !important}" +
+    /* worker-down banner — same warn tokens as every other caution note in the terminal
+     * (.note-warn, .rdy-banner.no), just in the page flow instead of floating over it. */
+    ".zt-banner-warn{padding:8px 14px;text-align:center;font:600 12.5px/1.4 var(--sans);" +
+    "background:var(--tint-warn);color:var(--amber);border-bottom:1px solid var(--bd-warn)}" +
+    ".zt-banner-warn a{color:inherit;font-weight:700;text-decoration:none;margin:0 2px}" +
+    ".zt-banner-warn a:hover{text-decoration:underline}";
   function nudgeDeployIfCold() {
     var delay = 5000;
     try { if (localStorage.getItem("zt_fresh_signup")) { delay = 800; localStorage.removeItem("zt_fresh_signup"); } } catch (e) {}
     setTimeout(function () {
       mine("deployment?select=strategy_key&status=eq.running&limit=1").then(function (rows) {
         if (rows && rows.length) return;
-        if (document.querySelector(".zt-deploy-nudge")) return;
-        var el = document.createElement("div");
-        el.className = "zt-deploy-nudge";
-        el.setAttribute("role", "status");
-        el.innerHTML = "<div><b>Deploy your first strategy</b><br><span style=\"color:var(--slate,#64748b)\">" +
-          "Paper-trade on live Binance prices — open Library and tap Deploy.</span></div>" +
-          "<a href=\"#\" data-zt-lib>Open Library</a>" +
-          "<a href=\"/coins/?utm_source=site&amp;utm_medium=organic&amp;utm_campaign=signup_nudge_coins\">Browse coins</a>" +
-          "<button type=\"button\" style=\"border:0;background:transparent;color:var(--slate);cursor:pointer\" " +
-          "aria-label=\"Dismiss\">✕</button>";
-        el.querySelector("[data-zt-lib]").onclick = function (e) {
-          e.preventDefault();
-          var lib = document.querySelector('[data-algoview="library"]');
-          if (lib) lib.click();
-          el.remove();
-        };
-        el.querySelector("button").onclick = function () { el.remove(); };
-        document.body.appendChild(el);
+        /* the CTA below is "Open Library" — showing it to someone already composing a custom
+         * strategy in Builder is exactly the noisy, badly-timed nudge this used to be. */
+        if (document.querySelector(".ztb")) return;
+        ztToast({
+          uniqueClass: "zt-cold-nudge",
+          icon: "send",
+          title: "Deploy your first strategy",
+          body: "Paper-trade on live Binance prices — it takes under a minute, zero risk.",
+          timeout: 9000,
+          actions: [
+            { key: "lib", cls: "primary", label: "Open Library", onClick: function () {
+                var lib = document.querySelector('[data-algoview="library"]');
+                if (lib) lib.click();
+              } },
+            { key: "later", cls: "ghost", label: "Not now" },
+          ],
+        });
       });
     }, delay);
   }
   function inject() {
     var st = document.createElement("style");
-    st.textContent = css + NUDGE_CSS + ZTB_CSS;
+    st.textContent = css + ZTB_CSS;
     document.head.appendChild(st);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", inject);
@@ -462,9 +487,15 @@
       .replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 24);
   }
 
+  /* Layout scaffolding only below — every actual control (inputs, selects, segmented toggles,
+   * pill chips, buttons, notes, errors) is drawn with the terminal's own component classes
+   * (.flow-input, .seg/.seg-btn, .preset, .type-pill, .flow-note, .flow-err, .btn-ghost, .num)
+   * so Builder looks and behaves like a tab the rest of the app actually shipped, not a bolt-on.
+   * The few *-ztb classes that remain have no existing counterpart: they only place things on
+   * the page (grid/row/card shells), they don't reskin anything the app already themes. */
   var ZTB_CSS =
     ".ztb{max-width:880px;margin:0 auto;display:flex;flex-direction:column;gap:14px;padding:4px 2px 26px;font-size:13.5px}" +
-    ".ztb-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-s);padding:14px 16px;box-shadow:var(--shadow)}" +
+    ".ztb-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}" +
     ".ztb-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}" +
     ".ztb-head b{font-size:15.5px;color:var(--navy)}" +
     ".ztb-head p{margin:2px 0 0;color:var(--slate);font-size:12.5px}" +
@@ -472,16 +503,13 @@
     ".ztb-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:16px 26px}" +
     "@media(max-width:760px){.ztb-grid{grid-template-columns:1fr}}" +
     ".ztb-lbl{display:block;font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--slate);text-transform:uppercase;margin:0 0 6px}" +
-    ".ztb-inp,.ztb-sel{width:100%;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--navy);font:inherit;font-size:13.5px;padding:8px 11px;transition:.15s;-webkit-appearance:none;appearance:none}" +
-    ".ztb-sel{background-image:url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"6\"><path d=\"M1 1l4 4 4-4\" stroke=\"%2364748b\" stroke-width=\"1.6\" fill=\"none\" stroke-linecap=\"round\"/></svg>');background-repeat:no-repeat;background-position:right 11px center;padding-right:28px}" +
-    ".ztb-inp:focus,.ztb-sel:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px var(--up-flash)}" +
+    /* coin toggles: same soft-accent "on" treatment as the Library's holding-style pills
+     * (.lib-hold-tab), so a selected chip means the same thing on every tab. */
     ".ztb-chips{display:flex;gap:8px;flex-wrap:wrap}" +
-    ".ztb-chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 14px;font:inherit;font-size:12.5px;font-weight:700;color:var(--slate);cursor:pointer;transition:.15s}" +
-    ".ztb-chip:hover{border-color:var(--slate)}" +
-    ".ztb-chip.on{background:var(--green);border-color:var(--green);color:#fff}" +
-    ".ztb-seg{display:inline-flex;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}" +
-    ".ztb-seg button{border:0;background:transparent;color:var(--slate);font:inherit;font-size:12.5px;font-weight:600;padding:6px 13px;border-radius:7px;cursor:pointer;transition:.15s;white-space:nowrap}" +
-    ".ztb-seg button.on{background:var(--surface);color:var(--green-d);box-shadow:var(--shadow)}" +
+    ".ztb-chip{display:inline-flex;align-items:center;border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:6px 13px;font:inherit;font-size:12.5px;font-weight:700;color:var(--slate);cursor:pointer;transition:.15s}" +
+    ".ztb-chip:hover{border-color:var(--green);color:var(--navy)}" +
+    ".ztb-chip.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--green-d)}" +
+    ".ztb-chip:focus-visible{outline:none;box-shadow:var(--ring)}" +
     ".ztb-presets{display:flex;gap:8px;flex-wrap:wrap;align-items:center;color:var(--slate);font-size:12px;font-weight:600}" +
     ".ztb-rules{display:grid;grid-template-columns:1fr 1fr;gap:14px}" +
     "@media(max-width:860px){.ztb-rules{grid-template-columns:1fr}}" +
@@ -490,23 +518,19 @@
     ".ztb-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:2px}" +
     ".ztb-f{flex:1 1 86px;min-width:86px}" +
     ".ztb-f.sig{flex:2 1 100%}" +
-    ".ztb-sent{margin-top:11px;font-size:12.5px;color:var(--slate);background:var(--bg);border-radius:8px;padding:8px 11px;line-height:1.5}" +
+    ".ztb-sent{margin-top:11px;font-size:12.5px;color:var(--slate);background:var(--surface-2);border-radius:8px;padding:8px 11px;line-height:1.5}" +
     ".ztb-sent b{color:var(--navy)}" +
-    ".ztb-note{display:block;font-size:12.5px;color:var(--slate);background:var(--tint-info);border:1px solid var(--line);border-radius:var(--radius-s);padding:11px 14px;line-height:1.6}" +
-    ".ztb-note b{color:var(--navy)}" +
-    ".ztb-deploy{background:var(--green);color:#fff;border:0;border-radius:11px;font:inherit;font-weight:800;font-size:14px;padding:12px 24px;cursor:pointer;box-shadow:var(--shadow);transition:.15s;align-self:flex-start}" +
-    ".ztb-deploy:hover{background:var(--green-d);transform:translateY(-1px)}" +
-    ".ztb-err{color:var(--red-d);background:var(--tint-down);border:1px solid var(--bd-down);border-radius:9px;padding:9px 12px;font-size:12.5px}" +
+    /* Deploy is the page's one primary action, sized up from the standard .btn-primary the way
+     * a form's submit button reasonably is elsewhere in the app — but on the same --accent
+     * token, so it still tracks the regime color like every other primary CTA instead of a
+     * hardcoded green that drifts from the rest of the UI the moment the regime isn't bull. */
+    ".ztb-deploy{background:var(--accent);color:#fff;border:0;border-radius:11px;font:inherit;font-weight:800;font-size:14px;padding:12px 24px;cursor:pointer;box-shadow:var(--shadow);transition:.15s;align-self:flex-start}" +
+    ".ztb-deploy:hover{background:var(--accent-d);box-shadow:var(--shadow-hover)}" +
     ".ztb-item{display:flex;align-items:center;gap:12px;padding:11px 2px;border-top:1px solid var(--line)}" +
     ".ztb-item:first-of-type{border-top:0}" +
-    ".ztb-dot{width:8px;height:8px;border-radius:50%;background:#c3ccd9;flex:0 0 auto}" +
-    ".ztb-item.run .ztb-dot{background:var(--green);box-shadow:0 0 0 3px var(--up-flash)}" +
     ".ztb-item .nm{font-weight:700;color:var(--navy)}" +
     ".ztb-item .stt{font-size:11px;color:var(--slate)}" +
-    ".ztb-item .pnl{margin-left:auto;font-weight:800;font-variant-numeric:tabular-nums}" +
-    ".ztb-item .pnl.up{color:var(--green-d)}.ztb-item .pnl.dn{color:var(--red-d)}" +
-    ".ztb-ghost{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 12px;font:inherit;font-size:12px;font-weight:600;color:var(--slate);cursor:pointer;transition:.15s}" +
-    ".ztb-ghost:hover{color:var(--navy);border-color:var(--slate)}";
+    ".ztb-item .num{margin-left:auto;font-weight:800}";
 
   var PRESETS = {
     dip:   { name: "RSI dip buyer",      style: "reversion", ivl: "day", coins: ["BTCUSDT", "ETHUSDT"],
@@ -544,11 +568,11 @@
     return '<div class="ztb-card ztb-rule ztb-cond" data-side="' + side + '">' +
       '<span class="ztb-lbl">' + (side === "entry" ? "Enter when" : "Exit when") + "</span>" +
       '<div class="ztb-row">' +
-      '<span class="ztb-f sig"><span class="ztb-lbl">Signal</span><select class="ztb-sel" data-f="ind">' + opts + "</select></span>" +
-      '<span class="ztb-f" data-p="p1"><span class="ztb-lbl" data-lbl="p1">Period</span><input class="ztb-inp" data-f="p1" type="number" min="2" max="200" value="' + d.p1 + '"></span>' +
-      '<span class="ztb-f" data-p="p2" hidden><span class="ztb-lbl" data-lbl="p2">Slow</span><input class="ztb-inp" data-f="p2" type="number" min="3" max="400" value="' + d.p2 + '"></span>' +
-      '<span class="ztb-f"><span class="ztb-lbl">Condition</span><select class="ztb-sel" data-f="op"><option value="<"' + (d.op === "<" ? " selected" : "") + ">below</option><option value=\">\"" + (d.op === ">" ? " selected" : "") + ">above</option></select></span>" +
-      '<span class="ztb-f" data-p="value"><span class="ztb-lbl">Value</span><input class="ztb-inp" data-f="value" type="number" step="any" value="' + d.value + '"></span>' +
+      '<span class="ztb-f sig"><span class="ztb-lbl">Signal</span><select class="flow-input" data-f="ind">' + opts + "</select></span>" +
+      '<span class="ztb-f" data-p="p1"><span class="ztb-lbl" data-lbl="p1">Period</span><input class="flow-input num" data-f="p1" type="number" min="2" max="200" value="' + d.p1 + '"></span>' +
+      '<span class="ztb-f" data-p="p2" hidden><span class="ztb-lbl" data-lbl="p2">Slow</span><input class="flow-input num" data-f="p2" type="number" min="3" max="400" value="' + d.p2 + '"></span>' +
+      '<span class="ztb-f"><span class="ztb-lbl">Condition</span><select class="flow-input" data-f="op"><option value="<"' + (d.op === "<" ? " selected" : "") + ">below</option><option value=\">\"" + (d.op === ">" ? " selected" : "") + ">above</option></select></span>" +
+      '<span class="ztb-f" data-p="value"><span class="ztb-lbl">Value</span><input class="flow-input num" data-f="value" type="number" step="any" value="' + d.value + '"></span>' +
       "</div>" +
       '<div class="ztb-sent" data-sent></div>' +
       "</div>";
@@ -607,12 +631,12 @@
     if (!rows.length) return '<div class="ztb-sent">No strategies yet. Compose one above, hit Deploy, and it starts trading paper on live prices within about five minutes.</div>';
     return rows.map(function (r) {
       var run = r.status === "running";
-      return '<div class="ztb-item' + (run ? " run" : "") + '" data-key="' + esc(r.key) + '">' +
-        '<span class="ztb-dot"></span>' +
+      return '<div class="ztb-item" data-key="' + esc(r.key) + '">' +
+        '<span class="live-dot' + (run ? " live" : "") + '"></span>' +
         '<span><span class="nm">' + esc(r.name) + '</span><br><span class="stt">' + (run ? "Running · paper · live prices" : "Stopped") + "</span></span>" +
-        '<b class="pnl ' + (r.realised >= 0 ? "up" : "dn") + '">' + (r.realised >= 0 ? "+" : "") + "$" + r.realised.toFixed(2) + "</b>" +
-        '<button class="ztb-ghost" data-zta="' + (run ? "stop" : "resume") + '">' + (run ? "Stop" : "Resume") + "</button>" +
-        '<button class="ztb-ghost" data-zta="delete">Delete</button></div>';
+        '<b class="num ' + (r.realised >= 0 ? "up" : "down") + '">' + (r.realised >= 0 ? "+" : "") + "$" + r.realised.toFixed(2) + "</b>" +
+        '<button class="btn-ghost sm" data-zta="' + (run ? "stop" : "resume") + '">' + (run ? "Stop" : "Resume") + "</button>" +
+        '<button class="btn-ghost sm danger" data-zta="delete">Delete</button></div>';
     }).join("");
   }
   function builderPane() {
@@ -620,23 +644,23 @@
       '<div class="ztb-card ztb-head"><div><b>Strategy Builder</b><p>You compose the signals - the engine keeps the rails.</p></div><span class="ztb-badge">PAPER · LIVE PRICES</span></div>' +
 
       '<div class="ztb-presets"><span>Start from:</span>' +
-      '<button class="ztb-chip" data-ztpreset="dip">RSI dip buyer</button>' +
-      '<button class="ztb-chip" data-ztpreset="cross">Golden cross rider</button>' +
-      '<button class="ztb-chip" data-ztpreset="snap">Stretch snap-back</button></div>' +
+      '<button class="preset" data-ztpreset="dip">RSI dip buyer</button>' +
+      '<button class="preset" data-ztpreset="cross">Golden cross rider</button>' +
+      '<button class="preset" data-ztpreset="snap">Stretch snap-back</button></div>' +
 
       '<div class="ztb-card"><div class="ztb-grid">' +
-      '<span><span class="ztb-lbl">Name</span><input class="ztb-inp" id="ztbName" maxlength="40" placeholder="My RSI dip buyer" value="My RSI dip buyer"></span>' +
+      '<span><span class="ztb-lbl">Name</span><input class="flow-input" id="ztbName" maxlength="40" placeholder="My RSI dip buyer" value="My RSI dip buyer"></span>' +
       '<span><span class="ztb-lbl">Coins</span><span class="ztb-chips">' + COINS.map(function (c, i) {
         return '<button class="ztb-chip' + (i < 2 ? " on" : "") + '" data-coin="' + c + '">' + c.replace("USDT", "") + "</button>";
       }).join("") + "</span></span>" +
-      '<span><span class="ztb-lbl">Timeframe</span><span class="ztb-seg" id="ztbIvl"><button class="on" data-v="day">Daily</button><button data-v="5minute">5-minute</button></span></span>' +
-      '<span><span class="ztb-lbl">Exit style</span><span class="ztb-seg" id="ztbStyle"><button data-v="trend">Trend · trail the stop</button><button class="on" data-v="reversion">Reversion · fixed target</button></span></span>' +
+      '<span><span class="ztb-lbl">Timeframe</span><span class="seg" id="ztbIvl"><button class="seg-btn on" data-v="day">Daily</button><button class="seg-btn" data-v="5minute">5-minute</button></span></span>' +
+      '<span><span class="ztb-lbl">Exit style</span><span class="seg" id="ztbStyle"><button class="seg-btn" data-v="trend">Trend · trail the stop</button><button class="seg-btn on" data-v="reversion">Reversion · fixed target</button></span></span>' +
       "</div></div>" +
 
       '<div class="ztb-rules">' + condHtml("entry") + condHtml("exit") + "</div>" +
 
-      '<span class="ztb-note"><b>The rails are not optional.</b> Every custom strategy runs through the same engine as the built-ins: ATR stops, a cost-aware entry gate that refuses trades which only feed fees, an anti-churn cooldown, a breakeven-after-cost profit lock, and a $1,000 paper notional per position. Global cost model: 35bps round-trip.</span>' +
-      '<div class="ztb-err" id="ztbErr" hidden></div>' +
+      '<p class="flow-note">' + icon("shield", 13) + '<span><b>The rails are not optional.</b> Every custom strategy runs through the same engine as the built-ins: ATR stops, a cost-aware entry gate that refuses trades which only feed fees, an anti-churn cooldown, a breakeven-after-cost profit lock, and a $1,000 paper notional per position. Global cost model: 35bps round-trip.</span></p>' +
+      '<div id="ztbErrHost"></div>' +
       '<button class="ztb-deploy" id="ztbDeploy">Deploy in Paper</button>' +
 
       '<div class="ztb-card"><span class="ztb-lbl">My strategies</span><div id="ztbList">Loading…</div></div>' +
@@ -658,9 +682,18 @@
       var el = document.getElementById("ztbList"); if (el) el.innerHTML = customList(rows);
     });
   }
+  /* create/remove, not hidden-attribute toggling — matches flowError()/clearFlowError() in
+   * app.js. (.flow-err sets display:flex, which as author CSS beats the UA [hidden] rule, so
+   * toggling .hidden on a pre-rendered .flow-err leaves an empty bar visible when "hidden".) */
+  function ztbShowError(msg) {
+    var host = document.getElementById("ztbErrHost"); if (!host) return;
+    host.innerHTML = '<div class="flow-err" role="alert">' + icon("alert", 13) + "<span>" + esc(msg) + "</span></div>";
+  }
+  function ztbClearError() {
+    var host = document.getElementById("ztbErrHost"); if (host) host.innerHTML = "";
+  }
   function deployCustom() {
     var root = document.querySelector(".ztb"); if (!root) return;
-    var err = document.getElementById("ztbErr");
     var name = (document.getElementById("ztbName").value || "").trim() || "My strategy";
     var coins = [].slice.call(root.querySelectorAll(".ztb-chip.on[data-coin]")).map(function (c) { return c.dataset.coin; });
     var seg = function (id) { var b = root.querySelector("#" + id + " .on"); return b ? b.dataset.v : null; };
@@ -674,18 +707,16 @@
       body: JSON.stringify({ user_id: s.uid, strategy_key: slug(name), mode: "paper",
                              status: "running", params: spec }),
     }).then(function (r) {
-      if (r.ok) { err.hidden = true; trackEvent("deploy_click"); trackEvent("deploy_success"); showForwardHint(); refreshList(); }
+      if (r.ok) { ztbClearError(); trackEvent("deploy_click"); trackEvent("deploy_success"); showForwardHint(); refreshList(); }
       else r.json().then(function (e) {
         var msg = (e && (e.message || e.details || e.hint)) || "Deploy failed - try again.";
         if (/FREE_LIMIT/i.test(msg)) {
-          err.textContent = "Free includes 1 strategy — upgrade at /app#pricing";
-          err.hidden = false;
+          ztbShowError("Free includes 1 strategy — upgrade at /app#pricing");
           setTimeout(goUpgradeFromFreeLimit, 900);
           return;
         }
-        err.textContent = msg;
-        err.hidden = false;
-      }).catch(function () { err.textContent = "Deploy failed - try again."; err.hidden = false; });
+        ztbShowError(msg);
+      }).catch(function () { ztbShowError("Deploy failed - try again."); });
     });
   }
   function customAction(key, act) {
@@ -720,7 +751,12 @@
   }
   document.addEventListener("click", function (e) {
     var t = e.target.closest && e.target.closest("[data-ztbuilder]");
-    if (t) { e.preventDefault(); builderOn = true; renderBuilder(); return; }
+    if (t) {
+      e.preventDefault(); builderOn = true; renderBuilder();
+      var nudge = document.querySelector(".zt-cold-nudge");
+      if (nudge && nudge._ztDismiss) nudge._ztDismiss();
+      return;
+    }
     if (e.target.closest && e.target.closest("[data-algoview]")) { builderOn = false; }
     if (e.target.id === "ztbDeploy") { deployCustom(); return; }
     var pre = e.target.closest && e.target.closest("[data-ztpreset]");
