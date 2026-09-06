@@ -79,6 +79,12 @@ STABLE_BASES = {
     "EUR", "EURI", "AEUR", "USDE", "USDS", "PAXG", "XAUT",
 }
 
+# CoinGecko's `id` field is usually a fine slug (bitcoin, ethereum, solana, ...), but for a few
+# well-known coins it's the project/company name rather than the ticker people actually search for
+# and type (binancecoin, ripple), overriding those keeps the URL matching what users expect and
+# what was already live under the original 7-coin prototype, rather than silently changing it.
+SLUG_OVERRIDE = {"BNB": "bnb", "XRP": "xrp"}
+
 
 def build_coin_universe(n=150):
     """Real top-N coins ranked by CoinGecko market cap (stable, hard to game), filtered to
@@ -114,8 +120,8 @@ def build_coin_universe(n=150):
             if not sym or sym in seen or sym not in tradable:
                 continue
             seen.add(sym)
-            universe[sym] = (r.get("name") or sym, r.get("id") or sym.lower(),
-                              CATEGORY_MAP.get(sym, DEFAULT_CATEGORY))
+            slug = SLUG_OVERRIDE.get(sym) or r.get("id") or sym.lower()
+            universe[sym] = (r.get("name") or sym, slug, CATEGORY_MAP.get(sym, DEFAULT_CATEGORY))
             if len(universe) >= n:
                 break
     return universe
