@@ -74,8 +74,10 @@ Do **not** publish forward P&L proof posts until `./scripts/check-worker.sh` is 
 
 ```bash
 pip install requests
-python3 seo/generate.py        # 5 coins prototype
-python3 seo/generate.py --all  # full set (when ready)
+python3 deploy/landing/build.py   # builds the full site, coin roster included
 ```
 
-Coin pages are also built live in `deploy/landing/build.py` via Binance API during CI deploy.
+`seo/generate.py`'s `COINS` is built dynamically (top ~150 by CoinGecko market cap, cross-checked
+against live Binance USDT spot tradability, see `docs/KEYWORD_STRATEGY.md`), not a fixed prototype
+list, so there's no separate "prototype vs. --all" step anymore, one build always produces the
+current full roster.
