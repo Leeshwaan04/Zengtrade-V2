@@ -217,18 +217,39 @@ def sparkline(closes, w=560, h=90):
             f'<polyline points="{pts}" fill="none" stroke="{col}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>')
 
 
+def _trend_stats(closes):
+    """(pct change, directness) over a series of closes - directness is net move vs total path
+    length walked (1 = straight line, ~0 = choppy back-and-forth). Shared math behind both
+    regime_tilt() and regime_read()."""
+    first, last = closes[0], closes[-1]
+    chg = (last / first - 1) * 100
+    path = sum(abs(closes[i] - closes[i - 1]) for i in range(1, len(closes)))
+    directness = abs(last - first) / (path or 1)
+    return chg, directness
+
+
+def regime_tilt(closes, min_bars=10):
+    """Label only (Bull/Bear/Choppy/Unknown), no prose - cheap enough to call per timeframe for
+    the multi-timeframe read, unlike regime_read() which also builds a full explanatory sentence."""
+    if len(closes) < min_bars:
+        return "Unknown"
+    chg, directness = _trend_stats(closes)
+    if chg > 8 and directness > 0.35:
+        return "Bull"
+    if chg < -8 and directness > 0.35:
+        return "Bear"
+    return "Choppy"
+
+
 def regime_read(closes):
     """Honest, data-driven regime tilt from 30 daily closes: trend strength vs range."""
     if len(closes) < 20:
         return ("Neutral", "Not enough recent data to call a regime, the engine would gather evidence before deploying.")
-    first, last = closes[0], closes[-1]
-    chg = (last / first - 1) * 100
-    # simple trend/range: net move vs the path length (choppiness)
-    path = sum(abs(closes[i] - closes[i-1]) for i in range(1, len(closes)))
-    directness = abs(last - first) / (path or 1)   # 1 = straight line, ~0 = choppy
-    if chg > 8 and directness > 0.35:
+    chg, directness = _trend_stats(closes)
+    tilt = regime_tilt(closes)
+    if tilt == "Bull":
         return ("Bull", f"{sym_hint} has trended up ~{chg:.0f}% over 30 days with a clean path, a Bull read. The engine would run breakout/trend strategies here, trailing the winner.")
-    if chg < -8 and directness > 0.35:
+    if tilt == "Bear":
         return ("Bear", f"Down ~{abs(chg):.0f}% over 30 days in a directed move, a Bear read. Directional longs stand down to cash; only market-neutral / short-premium sleeves stay on.")
     return ("Neutral/Choppy", f"Net {chg:+.0f}% over 30 days but a choppy path, a ranging read. The engine favours mean-reversion and waits for a real trend before committing.")
 
@@ -259,14 +280,79 @@ COIN_CSS = """
 .coin-regime b{color:var(--navy)}.coin-regime span{color:var(--slate)}
 a.home-card{text-decoration:none}
 .coin-hub-lead{color:var(--slate);max-width:60ch}
+.coin-mtf{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:0 0 16px}
+.coin-mtf-lbl{display:block;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--slate);margin-bottom:9px}
+.coin-mtf-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:9px}
+.coin-mtf-tag{display:flex;flex-direction:column;gap:1px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:6px 12px;min-width:74px}
+.coin-mtf-tag i{font-style:normal;font-size:9.5px;color:var(--slate);text-transform:uppercase;letter-spacing:.3px}
+.coin-mtf-tag b{font:700 13px/1.3 var(--sans);color:var(--navy)}
+.coin-mtf-tag.up b{color:var(--green)}.coin-mtf-tag.down b{color:var(--red)}
+.coin-mtf-note{font-size:12.5px;color:var(--slate);line-height:1.5;margin:0}
 @media(max-width:600px){.coin-stats{grid-template-columns:repeat(2,1fr)}.coin-price b{font-size:27px}}
 """
 
 
-def coin_parts(sym, name, slug, cat, tk, closes):
+def _mtf_class(tilt):
+    return "up" if tilt == "Bull" else ("down" if tilt == "Bear" else "")
+
+
+def multi_timeframe_read(name, closes_1d, closes_4h, closes_1w):
+    """(tilt_short, tilt_med, tilt_long, note) - the data behind the multi-timeframe comparison,
+    separated from HTML rendering so the same read feeds both the visual block and an FAQ answer
+    without computing it twice."""
+    tilt_short = regime_tilt(closes_4h)     # ~1 week (4h candles)
+    tilt_med = regime_tilt(closes_1d)       # ~30 days (daily candles) - the "main" regime read
+    tilt_long = regime_tilt(closes_1w)      # ~6 months (weekly candles)
+    windows = [("short-term", tilt_short), ("medium-term", tilt_med), ("long-term", tilt_long)]
+    known = [(w, t) for w, t in windows if t != "Unknown"]
+    distinct = {t for _, t in known}
+    if len(known) < 2:
+        note = f"Not enough history yet to compare {name}'s tape across timeframes."
+    elif len(distinct) == 1:
+        note = (f"{name}'s short, medium, and long-term reads all agree: {tilt_med}. That kind of "
+                f"alignment across timeframes is itself a signal - a regime this consistent is less "
+                f"likely to flip without warning than a mixed read would be.")
+    elif len(known) == 3 and len(distinct) == 3:
+        note = (f"{name} shows a different read on every timeframe ({tilt_short} short-term, "
+                f"{tilt_med} over 30 days, {tilt_long} over 6 months) - genuinely no consensus right "
+                f"now, exactly the kind of tape where the engine sits out rather than guesses.")
+    else:
+        # exactly one window is the odd one out (or only 2 windows are known) - name it specifically
+        # rather than assuming it's always the short-vs-long pair, since either the medium-term or
+        # either end can be the outlier depending on the actual data.
+        counts = {}
+        for _, t in known:
+            counts[t] = counts.get(t, 0) + 1
+        majority = max(counts, key=counts.get)
+        outlier_windows = [w for w, t in known if t != majority]
+        outlier_label = " and ".join(outlier_windows) if outlier_windows else "one timeframe"
+        note = (f"{name}'s {outlier_label} read ({', '.join(t for w, t in known if w in outlier_windows)}) "
+                f"doesn't match its otherwise-consistent {majority} read elsewhere - exactly the kind "
+                f"of setup where the engine waits for confirmation across timeframes rather than "
+                f"committing to one story too early.")
+    return tilt_short, tilt_med, tilt_long, note
+
+
+def multi_timeframe_html(tilt_short, tilt_med, tilt_long, note):
+    e = html.escape
+    tags = "".join(
+        f'<span class="coin-mtf-tag {_mtf_class(t)}"><i>{lbl}</i><b>{e(t)}</b></span>'
+        for lbl, t in (("1wk", tilt_short), ("30d", tilt_med), ("6mo", tilt_long))
+    )
+    return f"""<div class="coin-mtf"><span class="coin-mtf-lbl">Across timeframes</span>
+      <div class="coin-mtf-row">{tags}</div>
+      <p class="coin-mtf-note">{e(note)}</p></div>"""
+
+
+def coin_parts(sym, name, slug, cat, tk, closes, closes_4h=None, closes_1w=None):
     """Return (title, desc, canonical, main_html, extra_head) for a coin page.
     main_html is a <main> that drops straight into the shared shell(); extra_head is the
-    coin's JSON-LD (BreadcrumbList + FAQPage). All chrome/footer/typography come from shell()."""
+    coin's JSON-LD (BreadcrumbList + FAQPage). All chrome/footer/typography come from shell().
+    closes_4h/closes_1w are optional (default to closes) so this stays callable the old way -
+    the multi-timeframe block just degrades to comparing one timeframe against itself rather
+    than crashing if a caller doesn't have the extra data yet."""
+    closes_4h = closes_4h if closes_4h else closes
+    closes_1w = closes_1w if closes_1w else closes
     global sym_hint
     sym_hint = name
     price = float(tk["lastPrice"]); chg = float(tk["priceChangePercent"])
@@ -282,6 +368,7 @@ def coin_parts(sym, name, slug, cat, tk, closes):
     other = [s for s in COINS if s != sym and COINS[s][2] != cat]
     related = [(s, COINS[s][0], COINS[s][1]) for s in (same_cat + other)[:4]]
     e = html.escape
+    tilt_short, tilt_med, tilt_long, mtf_note = multi_timeframe_read(name, closes, closes_4h, closes_1w)
     faqs = [
         (f"Can I paper-trade {name} strategies on zengtrade?",
          f"Yes. zengtrade runs regime-aware strategies on {name} ({sym}) using live market data, 24/7, in paper first, so you prove an edge before any real capital is at risk."),
@@ -289,6 +376,8 @@ def coin_parts(sym, name, slug, cat, tk, closes):
          f"No. zengtrade is non-custodial. Live execution runs on your own exchange with your own keys. It never holds your {sym} or funds."),
         (f"What market regime is {name} in right now?",
          f"As of {as_of}, {name}'s 30-day tape reads {reg}. {reg_txt} Regimes change, so the engine re-reads every cycle."),
+        (f"Does {name}'s short-term read agree with its longer-term trend?",
+         mtf_note),
     ]
     faq_schema = {"@context": "https://schema.org", "@type": "FAQPage",
                   "mainEntity": [{"@type": "Question", "name": q,
@@ -333,6 +422,7 @@ def coin_parts(sym, name, slug, cat, tk, closes):
   <section class="lp-sec" aria-label="How zengtrade trades {e(name)}">
     <div class="lp-wrap">
       <div class="coin-regime"><div><b>Regime read: {e(reg)}</b><br><span>{e(reg_txt)}</span></div></div>
+      {multi_timeframe_html(tilt_short, tilt_med, tilt_long, mtf_note)}
       <h2 class="lp-h2">How zengtrade trades {e(name)}</h2>
       <p class="lp-sub">{e(angle)} Every strategy runs <b>paper-first</b> on live {sym} data, so you prove an edge before a dollar is at risk, then run it on <b>your own exchange</b> (non-custodial, your keys).</p>
       <h2 class="lp-h2">Honest about the cost</h2>
@@ -434,7 +524,13 @@ def coin_hub_main(syms_present):
 
 
 def fetch_coins(syms=None):
-    """Fetch (tk, closes) for each coin. Returns [(sym,name,slug,cat,tk,closes), ...] present."""
+    """Fetch (tk, closes at 3 timeframes) for each coin. Returns
+    [(sym,name,slug,cat,tk,closes_1d,closes_4h,closes_1w), ...] present.
+
+    Three timeframes, not one, so the page can show whether a coin's short-term tape agrees with
+    its bigger structural trend (e.g. "bull daily, still choppy on the 6-month view") - the
+    disagreement between timeframes is a genuinely useful, honest signal a single 30-day read
+    can't show. limit=42 4h-candles = ~1 week; limit=26 weekly candles = ~6 months."""
     syms = syms or list(COINS.keys())
     print("fetching 24h tickers…")
     all24 = {t["symbol"]: t for t in get("/api/v3/ticker/24hr")}
@@ -444,8 +540,11 @@ def fetch_coins(syms=None):
         tk = all24.get(sym + "USDT")
         if not tk:
             print("  skip", sym, "(no ticker)"); continue
-        kl = get("/api/v3/klines", symbol=sym + "USDT", interval="1d", limit=30)
-        out.append((sym, name, slug, cat, tk, [float(k[4]) for k in kl]))
+        kl_1d = get("/api/v3/klines", symbol=sym + "USDT", interval="1d", limit=30)
+        kl_4h = get("/api/v3/klines", symbol=sym + "USDT", interval="4h", limit=42)
+        kl_1w = get("/api/v3/klines", symbol=sym + "USDT", interval="1w", limit=26)
+        closes = lambda kl: [float(k[4]) for k in kl]
+        out.append((sym, name, slug, cat, tk, closes(kl_1d), closes(kl_4h), closes(kl_1w)))
     return out
 
 
