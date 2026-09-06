@@ -36,6 +36,9 @@ check_html "home WebSite schema" "/" "WebSite"
 check_html "pricing founding offer" "/pricing/" "first 100"
 check_html "pricing FAQPage schema" "/pricing/" "FAQPage"
 check_html "coins hub" "/coins/" "coins_hub\\|/coins/"
+check_html "coins hub category sections" "/coins/" "Majors\\|Layer-1s"
+check_html "learn hub" "/learn/" "guides"
+check_html "learn article UTM CTA" "/learn/is-zengtrade-custodial/" "utm_campaign=learn_"
 check_html "robots.txt" "/robots.txt" "Sitemap:"
 
 if [[ $fail -ne 0 ]]; then

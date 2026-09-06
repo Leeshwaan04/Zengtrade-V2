@@ -35,9 +35,9 @@ Founder: verify GSC property + submit **https://zengtrade.in/sitemap.xml** — `
 - [x] 7 coin pages live with `utm_campaign=coin_*`
 - [x] Coins hub internal links
 - [x] Expand via `seo/generate.py` — 150 real coins, CoinGecko market-cap ranked (session 219)
-- [ ] Coins hub: category-segmented sections instead of one flat grid (in progress, session 219)
-- [ ] `/learn/` educational content section — claims MARKETING_PLAYBOOK's week-4 "blog section on
-      coin page" idea; built here (technical pipeline = coin pSEO pattern), not a separate build
+- [x] Coins hub: category-segmented sections instead of one flat grid (session 219)
+- [x] `/learn/` educational content section — 6 articles live, claims MARKETING_PLAYBOOK's week-4
+      "blog section" idea; extends the existing "Learn" mega-nav dropdown (session 219)
 
 ### P2 — Compounding
 - [x] Paper loop section on how-it-works

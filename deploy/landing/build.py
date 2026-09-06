@@ -317,12 +317,22 @@ try:
 except Exception as ex:
     print("  ! coin pages skipped (marketing site still builds):", ex)
 
+# ---- /learn/ educational articles live in content/articles.py (same shell(), same pattern) ----
+article_css, articles = "", []
+try:
+    sys.path.insert(0, os.path.abspath(os.path.join(HERE, "..", "..", "content")))
+    import articles as ART
+    article_css = ART.ARTICLE_CSS
+    articles = ART.load_articles()                 # markdown files; skipped gracefully if missing
+except Exception as ex:
+    print("  ! /learn/ articles skipped (marketing site still builds):", ex)
+
 # ---- write everything -----------------------------------------------------------------
 if os.path.exists(DIST):
     shutil.rmtree(DIST)
 os.makedirs(DIST)
 shutil.copytree(os.path.join(HERE, "assets"), os.path.join(DIST, "assets"))
-open(os.path.join(DIST, "site.css"), "w").write(css + HOME_CSS + coin_css)   # ONE stylesheet for every page
+open(os.path.join(DIST, "site.css"), "w").write(css + HOME_CSS + coin_css + article_css)   # ONE stylesheet for every page
 
 # ---- bundle the Supabase auth app onto the SAME origin (login / dashboard / legal) -----
 # Written as FOLDERS (login/index.html) so clean URLs work on GitHub Pages, which has no
@@ -430,13 +440,24 @@ emit("pricing", shell(
 if coins:
     present = [c[0] for c in coins]
     emit("coins", shell(
-        "Crypto trading strategies by coin, live regime reads & paper trading | zengtrade",
-        "Paper-trade regime-aware strategies on every major coin. Live prices, backtests, and a current market-regime read for each. Honest about every cost, non-custodial. Not investment advice.",
+        "Crypto Trading Strategies by Coin | zengtrade",
+        "Paper-trade regime-aware strategies on 150+ coins, grouped by category. Live prices and a real regime read for each. Non-custodial.",
         "https://zengtrade.in/coins/", G.coin_hub_main(present)), "https://zengtrade.in/coins/")
     for sym, name, slug, cat, tk, closes in coins:
         title, desc, canon, cmain, extra = G.coin_parts(sym, name, slug, cat, tk, closes)
         emit(os.path.join("coins", slug), shell(title, desc, canon, cmain, extra_head=extra), canon)
         print("  ✓ /coins/%s/  ($%s, %s%% 24h)" % (slug, tk["lastPrice"], tk["priceChangePercent"]))
+
+# ---- /learn/ hub + articles (identical shell -> full design parity) -------------------
+if articles:
+    emit("learn", shell(
+        "Learn: Crypto Trading Guides & Explainers | zengtrade",
+        "Plain-English guides on market regimes, paper trading, backtest costs, and non-custodial execution. No hype, no live-trading promises.",
+        "https://zengtrade.in/learn/", ART.articles_hub_main(articles)), "https://zengtrade.in/learn/")
+    for a in articles:
+        title, desc, canon, amain, extra = ART.article_parts(a)
+        emit(os.path.join("learn", a["slug"]), shell(title, desc, canon, amain, extra_head=extra), canon)
+        print("  ✓ /learn/%s/" % a["slug"])
 
 # Product routes (auth-gated but indexable landing/signup entry points for GSC)
 urls.extend([

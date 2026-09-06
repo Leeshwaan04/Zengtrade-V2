@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install build deps
-        run: pip install requests
+        run: pip install requests markdown
       - name: E2E smoke
         run: ./tests/e2e_smoke.sh
       - name: Security smoke (QA&VAPT)

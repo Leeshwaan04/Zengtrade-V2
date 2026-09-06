@@ -336,7 +336,7 @@ def coin_parts(sym, name, slug, cat, tk, closes):
       <h2 class="lp-h2">How zengtrade trades {e(name)}</h2>
       <p class="lp-sub">{e(angle)} Every strategy runs <b>paper-first</b> on live {sym} data, so you prove an edge before a dollar is at risk, then run it on <b>your own exchange</b> (non-custodial, your keys).</p>
       <h2 class="lp-h2">Honest about the cost</h2>
-      <p class="lp-sub">zengtrade never hides friction. Fees, slippage and (for Indian users) the 1% TDS are subtracted from every {sym} backtest and paper trade, so the edge you see is the edge <b>net of cost</b>, not a gross number that evaporates live.</p>
+      <p class="lp-sub">zengtrade never hides friction. Fees, slippage and (for Indian users) the 1% TDS are subtracted from every {sym} backtest and paper trade, so the edge you see is the edge <b>net of cost</b>, not a gross number that evaporates live. <a href="/learn/crypto-backtest-costs-fees-slippage-tds/">See exactly how these costs are calculated →</a></p>
     </div>
   </section>
 

@@ -68,7 +68,7 @@ on that phrase.
 - **Primary:** `crypto trading strategies by coin`
 - **Secondary:** `list of crypto strategies`, `[coin] vs [coin] trading strategy`
 - **Intent:** Browsing/comparison across coins, not committed to one yet.
-- **Gap worth closing:** at 150 coins, the hub is currently one flat grid (verified in `seo/generate.py`'s `coin_hub_main`). Grouping by category (major / layer-1 / defi / meme / ...) with category subheadings would (a) let the hub itself rank for `[category] crypto trading strategies` long-tail (e.g. "defi trading strategies," "meme coin trading bot") without a new page, and (b) make 150 links actually scannable for a human, which matters for dwell time. Not done yet — flagging as the highest-leverage remaining on-page change from today's audit.
+- **Shipped (session 219):** grouped into 11 category sections (Majors, Layer-1s, Layer-2s, DeFi, Payments, Infrastructure & Oracles, AI & Data, Gaming & Metaverse, Meme Coins, Privacy, More Coins), each its own `<h2>` + intro sentence — each section can now independently rank for `[category] crypto trading strategies` long-tail (e.g. "defi trading strategies," "meme coin trading bot") without a new page. `CATEGORY_MAP` coverage expanded from ~60 to ~155 symbols in the same pass (fallback bucket dropped from 90/150 to 12/150) so "More Coins" stays a genuinely small catch-all, not most of the page.
 
 ---
 
@@ -102,20 +102,41 @@ would just restate this with the name swapped.
 
 ---
 
+## `/learn/` educational articles (shipped session 219)
+
+Closes gap #1 below. Six hand-authored markdown articles (`content/articles/*.md`, rendered by
+`content/articles.py` through the same `shell()` every other page uses), reachable from the
+existing "Learn" mega-nav dropdown (`/learn/` added as a new top item, the dropdown's 3 pre-existing
+how-it-works anchors left untouched) and from `/learn/` itself. Each targets a distinct definitional
+query none of the coin pages or marketing FAQs already own:
+
+| Article | Primary keyword | Intent |
+|---|---|---|
+| `/learn/what-is-a-market-regime-in-crypto-trading/` | `what is a market regime in crypto trading` | Informational — canonical deep-dive; `/how-it-works/` should eventually link out to this instead of re-explaining inline |
+| `/learn/what-is-paper-trading-crypto/` | `what is paper trading crypto` | Informational |
+| `/learn/crypto-backtest-costs-fees-slippage-tds/` | `crypto backtest costs fees slippage` | Informational — **highest-leverage of the six**: all 150 coin pages' "Honest about the cost" paragraph should link here as the canonical deep-dive, giving every coin page a real, substantive internal link instead of a dead end |
+| `/learn/bull-bear-choppy-position-sizing/` | `position sizing by market regime` | Informational |
+| `/learn/backtest-vs-forward-test/` | `backtest vs forward test` | Informational — repurposes `MARKETING_PLAYBOOK.md`'s never-built "week 2" LinkedIn-only explainer into the canonical on-site version |
+| `/learn/is-zengtrade-custodial/` | `is zengtrade custodial` | Informational/trust — closes former gap #4 (no platform-level "is this custodial" page) |
+
+**UTM convention:** `utm_campaign=learn_{slug}` / `_pro` on each article's signup/Pro CTA, same
+shape as `coin_{slug}`, captured automatically by the existing pageview beacon — see
+`docs/MARKETING_PLAYBOOK.md`'s UTM table.
+
+**Shipped:** all 150 coin pages' "Honest about the cost" paragraph now links to this article
+(`seo/generate.py`'s `coin_parts()`).
+
 ## Content gaps and opportunities (things that don't exist yet)
 
-1. **No on-site educational/blog content.** `docs/content/REDDIT_ALGOTRADING_DRAFT.md`,
-   `LINKEDIN_BUILD_IN_PUBLIC.md`, and `WEEKLY_PROOF.md` are off-site social drafts — there is no
-   `/blog/` or `/learn/` section on zengtrade.in itself. This is the single biggest structural gap:
-   definitional long-tail queries ("what is a market regime in crypto trading," "what is paper
-   trading crypto," "backtest cost model explained") currently have nowhere on-site to land, and
-   this is exactly the kind of content that earns backlinks organically (people link to
-   explainers, not to pricing pages).
+1. ~~No on-site educational/blog content~~ — **closed session 219**, see `/learn/` section above.
 2. **No comparison content.** No "zengtrade vs. [X]" or "best crypto paper trading platforms"
-   style page. This is a real, high-intent commercial-investigation query pattern for anyone
-   comparing options, currently entirely unaddressed.
-3. **Coins hub isn't segmented by category** (see above) — a quick win once the priority list gets there.
-4. **No FAQ/glossary hub independent of individual pages** — each coin page's FAQ is coin-specific by design (correct), but there's no single page answering platform-level questions ("is this legal," "is this custodial," "what happens if I lose money in paper mode") that could rank for those exact informational queries and currently only live scattered across pricing/how-it-works FAQs.
+   style page. Deliberately still out of scope: for a solo-founder site with no legal/accuracy-
+   maintenance process for claims about named competitors, the risk is asymmetric. If this intent
+   is worth targeting later, the lower-risk version is "how to evaluate a paper-trading platform"
+   (same intent, no claims about anyone by name) — revisit only if GSC shows real comparison-intent
+   impressions.
+3. ~~Coins hub isn't segmented by category~~ — **closed session 219**, see above.
+4. ~~No FAQ/glossary hub independent of individual pages~~ — **closed session 219** via `/learn/is-zengtrade-custodial/`; the broader "platform-level FAQ hub" idea is otherwise superseded by `/learn/` itself.
 
 ## Measurement (how to know if this strategy is working)
 
