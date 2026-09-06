@@ -203,6 +203,10 @@ except Exception as ex:
 
 
 def sparkline(closes, w=560, h=90):
+    """Static, zero-JS SVG line - kept as a real fallback (not just a loading placeholder) inside
+    the interactive chart's container, so a page still shows a real chart if the CDN library is
+    slow, blocked, or JS is off. Only ever needs to render the 1M view; the interactive chart
+    layer replaces it once (if) LightweightCharts loads."""
     if len(closes) < 2:
         return ""
     lo, hi = min(closes), max(closes)
@@ -215,6 +219,66 @@ def sparkline(closes, w=560, h=90):
             f'aria-label="30-day price trend">'
             f'<polygon points="{area}" fill="{col}" opacity="0.08"/>'
             f'<polyline points="{pts}" fill="none" stroke="{col}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>')
+
+
+CHART_LIB_URL = "https://cdn.jsdelivr.net/npm/lightweight-charts@5.2.1/dist/lightweight-charts.standalone.production.js"
+_CHART_TABS = (("24h", "24H"), ("1w", "1W"), ("1m", "1M"), ("3m", "3M"), ("1y", "1Y"))
+
+
+def chart_block(sym, closes_1m, bars):
+    """TradingView's open-source Lightweight Charts (~60KB gzip, not the heavy embeddable
+    widget/iframe) with 5 pre-fetched timeframe tabs. All bar data is embedded at build time
+    (fetch_coins already ran at build time), so switching timeframes is a pure client-side
+    series.setData() - no live API call needed, the page stays fast and doesn't depend on
+    Binance being reachable client-side just to redraw a chart. Falls back to a static SVG
+    sparkline (real content, not a spinner) if the CDN script fails to load."""
+    data_json = json.dumps({tf: bars[tf] for tf, _ in _CHART_TABS}, separators=(",", ":"))
+    tabs_html = "".join(
+        f'<button type="button" class="chart-tab{" on" if tf == "1m" else ""}" data-tf="{tf}">{lbl}</button>'
+        for tf, lbl in _CHART_TABS)
+    return f"""<div class="chart-card">
+        <div class="chart-tabs" role="tablist" aria-label="Chart timeframe">{tabs_html}</div>
+        <div class="chart-canvas" id="chart-{sym}">{sparkline(closes_1m)}</div>
+      </div>
+      <script src="{CHART_LIB_URL}"></script>
+      <script>
+      (function(){{
+        var data={data_json};
+        var el=document.getElementById("chart-{sym}");
+        if(!window.LightweightCharts||!el) return;   // static sparkline above stays as the real fallback
+        function v(n){{return getComputedStyle(document.documentElement).getPropertyValue(n).trim()||n;}}
+        function baseOpts(){{return {{layout:{{background:{{color:"transparent"}},textColor:v("--slate")}},
+          grid:{{vertLines:{{color:v("--line")}},horzLines:{{color:v("--line")}}}},
+          rightPriceScale:{{borderColor:v("--line")}},timeScale:{{borderColor:v("--line")}}}};}}
+        el.innerHTML="";
+        var chart=LightweightCharts.createChart(el, Object.assign({{width:el.clientWidth,height:220}}, baseOpts()));
+        var series=chart.addSeries(LightweightCharts.AreaSeries, {{lineWidth:2,priceLineVisible:false}});
+        function setTf(tf){{
+          var rows=data[tf]||[];
+          if(!rows.length) return;
+          var up=rows[rows.length-1].close>=rows[0].close;
+          var c=up?v("--green"):v("--red");
+          series.applyOptions({{lineColor:c,topColor:c+"33",bottomColor:"transparent"}});
+          series.setData(rows.map(function(b){{return {{time:b.time,value:b.close}};}}));
+          chart.timeScale().fitContent();
+        }}
+        setTf("1m");
+        var tabWrap=el.previousElementSibling;
+        if(tabWrap) tabWrap.querySelectorAll(".chart-tab").forEach(function(btn){{
+          btn.onclick=function(){{
+            tabWrap.querySelectorAll(".chart-tab").forEach(function(b){{b.classList.remove("on")}});
+            btn.classList.add("on"); setTf(btn.dataset.tf);
+          }};
+        }});
+        if(window.ResizeObserver) new ResizeObserver(function(){{chart.applyOptions({{width:el.clientWidth}});}}).observe(el);
+        var surfaceToggle=document.getElementById("surfaceToggle");
+        if(surfaceToggle) surfaceToggle.addEventListener("click", function(){{
+          setTimeout(function(){{chart.applyOptions(baseOpts());
+            var activeTf=(tabWrap&&tabWrap.querySelector(".chart-tab.on"))?tabWrap.querySelector(".chart-tab.on").dataset.tf:"1m";
+            setTf(activeTf);}}, 40);
+        }});
+      }})();
+      </script>"""
 
 
 def _trend_stats(closes):
@@ -270,6 +334,13 @@ COIN_CSS = """
 .coin-chg{font:700 15px/1 var(--mono)}
 .coin-chg.up{color:var(--green)}.coin-chg.down{color:var(--red)}
 .spark{width:100%;height:96px;display:block;margin:14px 0;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:10px}
+.chart-card{margin:14px 0}
+.chart-tabs{display:flex;gap:4px;margin-bottom:8px}
+.chart-tab{border:1px solid var(--line);background:var(--surface);color:var(--slate);font:inherit;font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:8px;cursor:pointer;transition:.15s}
+.chart-tab:hover{color:var(--navy)}
+.chart-tab.on{background:var(--green);border-color:var(--green);color:#fff}
+.chart-canvas{width:100%;min-height:220px;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:10px;overflow:hidden}
+.chart-canvas .spark{margin:0;border:0;padding:0;height:200px}
 .coin-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin:16px 0}
 .coin-stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
 .coin-stat span{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--slate);font-weight:700}
@@ -344,15 +415,16 @@ def multi_timeframe_html(tilt_short, tilt_med, tilt_long, note):
       <p class="coin-mtf-note">{e(note)}</p></div>"""
 
 
-def coin_parts(sym, name, slug, cat, tk, closes, closes_4h=None, closes_1w=None):
+def coin_parts(sym, name, slug, cat, tk, bars):
     """Return (title, desc, canonical, main_html, extra_head) for a coin page.
     main_html is a <main> that drops straight into the shared shell(); extra_head is the
     coin's JSON-LD (BreadcrumbList + FAQPage). All chrome/footer/typography come from shell().
-    closes_4h/closes_1w are optional (default to closes) so this stays callable the old way -
-    the multi-timeframe block just degrades to comparing one timeframe against itself rather
-    than crashing if a caller doesn't have the extra data yet."""
-    closes_4h = closes_4h if closes_4h else closes
-    closes_1w = closes_1w if closes_1w else closes
+    bars = {"24h","1w","1m","3m","1y": [{time,open,high,low,close}, ...]} from fetch_coins() -
+    backs both the interactive chart and the multi-timeframe regime read from the SAME data, so
+    the two can never quietly disagree with each other."""
+    closes = [b["close"] for b in bars["1m"]]                 # ~30 days (daily) - the "main" read
+    closes_4h = [b["close"] for b in bars["1w"]]              # ~1 week (4h bars)
+    closes_1w = [b["close"] for b in bars["1y"][-26:]]        # ~6 months (last 26 weekly bars)
     global sym_hint
     sym_hint = name
     price = float(tk["lastPrice"]); chg = float(tk["priceChangePercent"])
@@ -408,7 +480,7 @@ def coin_parts(sym, name, slug, cat, tk, closes, closes_4h=None, closes_1w=None)
       <div class="lp-eyebrow"><span class="dot"></span> live price · regime read · paper-tradeable</div>
       <h1 id="h-coin" class="lp-h1">{e(name)} <span class="hl">{sym}</span> trading strategies</h1>
       <div class="coin-price"><b data-live-price="{sym}">${fmt(price)}</b><span class="coin-chg {'up' if chg>=0 else 'down'}" data-live-chg="{sym}">{chg:+.2f}% 24h</span></div>
-      {sparkline(closes)}
+      {chart_block(sym, closes, bars)}
       <div class="coin-stats">
         <div class="coin-stat"><span>24h High</span><b>${fmt(hi)}</b></div>
         <div class="coin-stat"><span>24h Low</span><b>${fmt(lo)}</b></div>
@@ -523,14 +595,22 @@ def coin_hub_main(syms_present):
 </main>"""
 
 
-def fetch_coins(syms=None):
-    """Fetch (tk, closes at 3 timeframes) for each coin. Returns
-    [(sym,name,slug,cat,tk,closes_1d,closes_4h,closes_1w), ...] present.
+def _bars(kl):
+    """Binance kline rows -> [{time, open, high, low, close}, ...] (unix seconds), the shape
+    TradingView's Lightweight Charts expects for setData()."""
+    return [{"time": int(k[0] // 1000), "open": float(k[1]), "high": float(k[2]),
+              "low": float(k[3]), "close": float(k[4])} for k in kl]
 
-    Three timeframes, not one, so the page can show whether a coin's short-term tape agrees with
-    its bigger structural trend (e.g. "bull daily, still choppy on the 6-month view") - the
-    disagreement between timeframes is a genuinely useful, honest signal a single 30-day read
-    can't show. limit=42 4h-candles = ~1 week; limit=26 weekly candles = ~6 months."""
+
+def fetch_coins(syms=None):
+    """Fetch tk + OHLC bars across 5 chart timeframes for each coin. Returns
+    [(sym,name,slug,cat,tk,bars), ...] present, where bars = {"24h","1w","1m","3m","1y": [...]}.
+
+    Only ONE extra API call per coin versus the single-timeframe version (the 1h/24h fetch) - 1w
+    reuses the existing 4h fetch, and 1m is a slice of the (now-larger) 3m daily fetch, so the
+    3M/6mo-equivalent windows aren't fetched twice. Same bars also back the multi-timeframe regime
+    read (short=1w's 4h closes, medium=1m's daily closes, long=last 26 of 1y's weekly closes),
+    so the chart and the regime-tilt text always agree with each other by construction."""
     syms = syms or list(COINS.keys())
     print("fetching 24h tickers…")
     all24 = {t["symbol"]: t for t in get("/api/v3/ticker/24hr")}
@@ -540,11 +620,13 @@ def fetch_coins(syms=None):
         tk = all24.get(sym + "USDT")
         if not tk:
             print("  skip", sym, "(no ticker)"); continue
-        kl_1d = get("/api/v3/klines", symbol=sym + "USDT", interval="1d", limit=30)
-        kl_4h = get("/api/v3/klines", symbol=sym + "USDT", interval="4h", limit=42)
-        kl_1w = get("/api/v3/klines", symbol=sym + "USDT", interval="1w", limit=26)
-        closes = lambda kl: [float(k[4]) for k in kl]
-        out.append((sym, name, slug, cat, tk, closes(kl_1d), closes(kl_4h), closes(kl_1w)))
+        kl_1h = get("/api/v3/klines", symbol=sym + "USDT", interval="1h", limit=24)   # 24H tab
+        kl_4h = get("/api/v3/klines", symbol=sym + "USDT", interval="4h", limit=42)   # 1W tab (~1 week)
+        kl_1d = get("/api/v3/klines", symbol=sym + "USDT", interval="1d", limit=90)   # 3M tab; sliced for 1M
+        kl_1w = get("/api/v3/klines", symbol=sym + "USDT", interval="1w", limit=52)   # 1Y tab
+        bars_1d = _bars(kl_1d)
+        bars = {"24h": _bars(kl_1h), "1w": _bars(kl_4h), "1m": bars_1d[-30:], "3m": bars_1d, "1y": _bars(kl_1w)}
+        out.append((sym, name, slug, cat, tk, bars))
     return out
 
 

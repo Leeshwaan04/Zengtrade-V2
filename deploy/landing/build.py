@@ -443,8 +443,8 @@ if coins:
         "Crypto Trading Strategies by Coin | zengtrade",
         "Paper-trade regime-aware strategies on 150+ coins, grouped by category. Live prices and a real regime read for each. Non-custodial.",
         "https://zengtrade.in/coins/", G.coin_hub_main(present)), "https://zengtrade.in/coins/")
-    for sym, name, slug, cat, tk, closes, closes_4h, closes_1w in coins:
-        title, desc, canon, cmain, extra = G.coin_parts(sym, name, slug, cat, tk, closes, closes_4h, closes_1w)
+    for sym, name, slug, cat, tk, bars in coins:
+        title, desc, canon, cmain, extra = G.coin_parts(sym, name, slug, cat, tk, bars)
         emit(os.path.join("coins", slug), shell(title, desc, canon, cmain, extra_head=extra), canon)
         print("  ✓ /coins/%s/  ($%s, %s%% 24h)" % (slug, tk["lastPrice"], tk["priceChangePercent"]))
 
