@@ -100,7 +100,7 @@ HOWITWORKS_SCHEMA = """<script type="application/ld+json">
 {"@context":"https://schema.org","@type":"HowTo","name":"Paper trade a crypto strategy on zengtrade",
 "description":"Deploy a regime-aware strategy in paper mode, let the worker run on live prices, and review evidence in Forward Test before risking capital.",
 "step":[
-{"@type":"HowToStep","name":"Deploy in Algo Studio","text":"Pick a strategy from the library or build your own. One click deploys paper mode — your capital stays untouched."},
+{"@type":"HowToStep","name":"Deploy in Algo Studio","text":"Pick a strategy from the library or build your own. One click deploys paper mode. Your capital stays untouched."},
 {"@type":"HowToStep","name":"Worker runs every ~5 min","text":"Live spot prices with a full cost model (~35 bps round-trip). Stands down in regimes where the book has no edge."},
 {"@type":"HowToStep","name":"Review evidence in /app","text":"Forward Test, accuracy, and activity tabs build an honest track record before connecting an exchange."}
 ]}
@@ -153,7 +153,7 @@ HOME_MAIN = """<main id="main">
       <div class="home-card"><div class="hc-ic">◐</div><b>Regime-aware</b><span>Reads Bull, Neutral &amp; Bear, and runs only the strategies proven to win in the current regime.</span></div>
       <div class="home-card"><div class="hc-ic">◈</div><b>Survival-first</b><span>A Governor, kill-switch and position intelligence sit over every trade. Cash is a deliberate position.</span></div>
       <div class="home-card"><div class="hc-ic">✓</div><b>Radically honest</b><span>Never fabricates a number. Every backtest is net of fees, slippage &amp; tax, a dash when it can't source one.</span></div>
-      <div class="home-card"><div class="hc-ic">₿</div><b>Crypto-native, 24/7</b><span>Live Binance prices around the clock — the same survival-first engine, built for crypto from the ground up.</span></div>
+      <div class="home-card"><div class="hc-ic">₿</div><b>Crypto-native, 24/7</b><span>Live Binance prices around the clock, the same survival-first engine, built for crypto from the ground up.</span></div>
     </div>
   </section>
 
@@ -172,7 +172,7 @@ HOME_MAIN = """<main id="main">
   <section class="lp-sec" aria-label="Paper trade by coin">
     <div class="lp-wrap center">
       <h2 class="lp-h2">Paper-trade by coin</h2>
-      <p class="lp-sub">Live regime reads and strategy context for Bitcoin, Ethereum, Solana, and more — honest pages, not hype.</p>
+      <p class="lp-sub">Live regime reads and strategy context for Bitcoin, Ethereum, Solana, and more, honest pages, not hype.</p>
       <a class="lp-cta ghost" href="/coins/?utm_source=site&amp;utm_medium=organic&amp;utm_campaign=home_coins">Browse coin strategies →</a>
     </div>
   </section>
@@ -203,15 +203,15 @@ PRICING_MAIN = f"""<main id="main">
     <div class="lp-wrap center">
       <div class="lp-eyebrow"><span class="dot"></span> simple · honest · cancel anytime</div>
       <h1 id="h-pr" class="lp-h1">Pricing that only charges when it earns its place.</h1>
-      <p class="lp-sub">Start free and paper-trade forever. Pro unlocks unlimited paper strategies; live execution on your own exchange rolls out per the go-live bar — never charge for data or hidden extras.</p>
-      <p class="lp-sub" style="margin-top:12px"><b>Founding offer:</b> first 100 Pro members lock in <b>$19/mo</b> (normally $29) — unlimited paper while live execution rolls out.</p>
+      <p class="lp-sub">Start free and paper-trade forever. Pro unlocks unlimited paper strategies; live execution on your own exchange rolls out per the go-live bar: never charge for data or hidden extras.</p>
+      <p class="lp-sub" style="margin-top:12px"><b>Founding offer:</b> first 100 Pro members lock in <b>$19/mo</b> (normally $29): unlimited paper while live execution rolls out.</p>
       <p class="lp-sub" style="margin-top:10px"><a class="lp-cta ghost" href="/coins/?utm_source=site&amp;utm_medium=organic&amp;utm_campaign=pricing_coins" style="display:inline-flex;margin-top:4px">Browse strategies by coin →</a></p>
     </div>
   </section>
   <section class="lp-sec" aria-label="Plans">
     <div class="lp-wrap pr-grid">
       {plan("Free", "$0", "forever", "Learn &amp; paper-trade, free forever", ["1 paper strategy","Live crypto prices, 24/7","Backtest + Forward Test","Accuracy &amp; Analytics","Honest, cost-accurate P&amp;L"], cta="Get started")}
-      {plan("Pro", "$19", "/mo", "Founding price · unlimited paper", ["Everything in Free","<b>Unlimited</b> paper strategies","Live execution <em>(coming soon)</em> — per go-live bar*","Tick-level stops &amp; kill-switch <em>(with live)</em>","Email &amp; push alerts"], featured=True, cta="Get Pro", pid="pro")}
+      {plan("Pro", "$19", "/mo", "Founding price · unlimited paper", ["Everything in Free","<b>Unlimited</b> paper strategies","Live execution <em>(coming soon)</em>: per go-live bar*","Tick-level stops &amp; kill-switch <em>(with live)</em>","Email &amp; push alerts"], featured=True, cta="Get Pro", pid="pro")}
       {plan("Elite", "$79", "/mo", "Maximum firepower", ["Everything in Pro","Perps + options engines","Multiple exchange accounts","Custom risk parameters","Priority support &amp; early access"], cta="Get Elite", pid="elite")}
     </div>
     <p class="pr-iso center">* Live execution unlocks per strategy only after it clears the go-live bar in paper. Non-custodial, your keys, your coins. Not investment advice.</p>
@@ -245,9 +245,9 @@ PAPER_LOOP_SEC = """
     <div class="lp-wrap">
       <div class="lp-eyebrow"><span class="dot"></span> activation loop</div>
       <h2 id="h-paper" class="lp-h2">Paper trading that mirrors what would run live</h2>
-      <p class="lp-sub">No simulated prices. The worker reads the same Binance tape the backtest used and writes every fill to your isolated book. What you see in Forward Test is what the engine would have done — costs included.</p>
+      <p class="lp-sub">No simulated prices. The worker reads the same Binance tape the backtest used and writes every fill to your isolated book. What you see in Forward Test is what the engine would have done, costs included.</p>
       <div class="lp-grid3">
-        <div class="home-card"><div class="hc-ic">1</div><b>Deploy in Algo Studio</b><span>Pick a strategy from the library or build your own. One click deploys paper mode — your capital stays untouched.</span></div>
+        <div class="home-card"><div class="hc-ic">1</div><b>Deploy in Algo Studio</b><span>Pick a strategy from the library or build your own. One click deploys paper mode. Your capital stays untouched.</span></div>
         <div class="home-card"><div class="hc-ic">2</div><b>Worker runs every ~5 min</b><span>Live spot prices, full cost model (~35 bps round-trip baked in). Stands down in regimes where the book has no edge.</span></div>
         <div class="home-card"><div class="hc-ic">3</div><b>Evidence in /app</b><span>Forward Test, accuracy, and activity tabs build an honest track record before you ever connect an exchange.</span></div>
       </div>
@@ -401,7 +401,7 @@ emit("how-it-works", shell(
     "https://zengtrade.in/how-it-works/", main_hiw_paper, extra_head=HOWITWORKS_SCHEMA), "https://zengtrade.in/how-it-works/")
 
 emit("pricing", shell(
-    "Pricing — free paper trading, Pro from $19/mo | zengtrade",
+    "Pricing: free paper trading, Pro from $19/mo | zengtrade",
     "zengtrade pricing: Free forever to paper-trade, Pro for unlimited paper strategies (founding $19/mo). Live execution rolls out per go-live bar. Data is always free. Non-custodial. Cancel anytime.",
     "https://zengtrade.in/pricing/", PRICING_MAIN, extra_head=PRICING_FAQ_SCHEMA), "https://zengtrade.in/pricing/")
 
