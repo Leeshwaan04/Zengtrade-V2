@@ -24,21 +24,44 @@ BASE = "https://data-api.binance.vision"
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out")
 SITE = "https://zengtrade.in"
 
-# curated names + slugs for the prototype (real coins; scale from exchangeInfo later)
-COINS = {
-    "BTC": ("Bitcoin", "bitcoin", "major"),
-    "ETH": ("Ethereum", "ethereum", "major"),
-    "SOL": ("Solana", "solana", "layer-1"),
-    "BNB": ("BNB", "bnb", "major"),
-    "XRP": ("XRP", "xrp", "payments"),
-    "ADA": ("Cardano", "cardano", "layer-1"),
-    "DOGE": ("Dogecoin", "dogecoin", "payments"),
+# Curated category map for well-known symbols (drives which CATEGORY_ANGLE paragraph a coin
+# gets). Anything not listed falls back to DEFAULT_CATEGORY, still personalised with its own
+# live data/regime read, so a fallback page is still unique, just with generic-altcoin framing.
+CATEGORY_MAP = {
+    "BTC": "major", "ETH": "major", "BNB": "major",
+    "SOL": "layer-1", "ADA": "layer-1", "AVAX": "layer-1", "DOT": "layer-1", "NEAR": "layer-1",
+    "ATOM": "layer-1", "APT": "layer-1", "SUI": "layer-1", "ICP": "layer-1", "ALGO": "layer-1",
+    "TON": "layer-1", "SEI": "layer-1", "INJ": "layer-1", "TIA": "layer-1", "HBAR": "layer-1",
+    "EGLD": "layer-1", "FTM": "layer-1", "KAS": "layer-1", "FLOW": "layer-1", "MINA": "layer-1",
+    "MATIC": "layer-2", "ARB": "layer-2", "OP": "layer-2", "IMX": "layer-2", "STRK": "layer-2",
+    "MANTA": "layer-2", "METIS": "layer-2", "ZK": "layer-2",
+    "UNI": "defi", "AAVE": "defi", "MKR": "defi", "CRV": "defi", "LDO": "defi", "COMP": "defi",
+    "SNX": "defi", "SUSHI": "defi", "DYDX": "defi", "CAKE": "defi", "GMX": "defi", "RUNE": "defi",
+    "PENDLE": "defi", "JUP": "defi",
+    "SHIB": "meme", "PEPE": "meme", "FLOKI": "meme", "BONK": "meme", "WIF": "meme",
+    "XRP": "payments", "XLM": "payments", "DOGE": "payments", "LTC": "payments", "BCH": "payments",
+    "LINK": "infra", "GRT": "infra", "FIL": "infra", "AR": "infra", "STORJ": "infra", "BAND": "infra",
+    "FET": "ai", "RENDER": "ai", "AGIX": "ai", "TAO": "ai", "WLD": "ai", "OCEAN": "ai",
+    "SAND": "gaming", "MANA": "gaming", "AXS": "gaming", "GALA": "gaming", "ENJ": "gaming", "ILV": "gaming",
+    "XMR": "privacy", "ZEC": "privacy", "DASH": "privacy",
+    "OKB": "exchange-token", "CRO": "exchange-token", "LEO": "exchange-token",
+    "GT": "exchange-token", "KCS": "exchange-token",
 }
+DEFAULT_CATEGORY = "altcoin"
 
 CATEGORY_ANGLE = {
     "major": "As a large-cap major, {name} tends to lead the market's regime. zengtrade's engine reads {sym}'s own trend against the broader BTC-led regime and only deploys directional strategies when the tape confirms, otherwise it stands down to cash.",
     "layer-1": "{name} is a higher-beta layer-1: it can trend hard in a bull regime and bleed fast in a bear. The engine sizes {sym} smaller and leans on the chandelier/trailing exit so a strong run is captured but a reversal is cut early.",
+    "layer-2": "{name} often trades with high beta to its host layer-1 and can gap on unlock or listing-driven news. The engine treats those gaps cautiously, requiring a confirmed trend continuation rather than chasing the initial spike.",
+    "defi": "{name} tends to track on-chain protocol activity and de-risks hard in broad market stress. The engine favours reversion entries after outsized single-day moves in {sym} and stands directional bets down in high-vol regimes.",
+    "meme": "{name} is driven by social momentum more than fundamentals and can move double digits intraday. The engine keeps {sym} position sizing small, demands strong confirmation before entering, and exits fast on ATR-based stops rather than holding through drawdown.",
     "payments": "{name} often ranges for long stretches then moves in bursts. zengtrade favours mean-reversion and breakout confirmation on {sym} in choppy regimes, and stands directional strategies down until a real trend prints.",
+    "infra": "{name} is an infrastructure/oracle-layer token whose moves often lag broader market shifts by a cycle. The engine waits for {sym}'s own trend to confirm independently rather than assuming it mirrors BTC or ETH.",
+    "ai": "{name} trades on narrative and funding-cycle sentiment as much as usage data, with sharp reversals when the theme rotates. The engine requires trend confirmation on {sym} and avoids sizing up into a single-narrative spike.",
+    "gaming": "{name} correlates with gaming/metaverse narrative cycles and token-emission schedules more than broad market regime. The engine sizes {sym} conservatively and favours confirmed breakouts over anticipating a narrative turn.",
+    "privacy": "{name} tends to have thinner liquidity and episodic, regulation-driven volatility. The engine sizes {sym} conservatively and requires wider confirmation before committing capital.",
+    "exchange-token": "{name} is an exchange-native token whose price often reflects that exchange's own volume and buyback cadence more than the broader crypto regime. The engine reads {sym}'s own trend independently before deploying.",
+    "altcoin": "{name} doesn't yet have enough of a distinct behavioural profile in zengtrade's playbook to get a specialised angle, so the engine treats {sym} with its standard regime-aware rules: confirm the trend, size conservatively, and stand down in choppy or high-vol conditions.",
 }
 
 
@@ -46,6 +69,73 @@ def get(path, **params):
     r = requests.get(BASE + path, params=params, timeout=20)
     r.raise_for_status()
     return r.json()
+
+
+# Coin universe: the STABLE_BASES below are pegged assets (or gold-backed) that don't have a
+# "regime" in the sense the engine reads one, so a strategies/regime-read page for them would be
+# empty/misleading content, not a genuine one, they're excluded rather than padded in.
+STABLE_BASES = {
+    "USDT", "USDC", "FDUSD", "USD1", "DAI", "TUSD", "BUSD", "PYUSD", "USDP", "GUSD",
+    "EUR", "EURI", "AEUR", "USDE", "USDS", "PAXG", "XAUT",
+}
+
+
+def build_coin_universe(n=150):
+    """Real top-N coins ranked by CoinGecko market cap (stable, hard to game), filtered to
+    whichever of those are actually tradable on Binance USDT spot right now (so every page still
+    backs its stats with live Binance data). Market cap, not 24h volume, drives the ranking on
+    purpose: a single pump-of-the-day microcap can spike into a raw-volume top-150 for one day
+    (an earlier version of this picked up things like MARSCOIN and MUBARAK that way), whereas
+    market cap tracks what people actually recognise and search for. Dynamic, not hardcoded, so
+    the roster stays current as rankings shift over time."""
+    info = get("/api/v3/exchangeInfo")
+    tradable = {
+        s["baseAsset"] for s in info["symbols"]
+        if s["status"] == "TRADING" and s.get("isSpotTradingAllowed")
+        and s["quoteAsset"] == "USDT" and s["baseAsset"] not in STABLE_BASES
+    }
+    universe, seen = {}, set()
+    for page in (1, 2, 3):
+        if len(universe) >= n:
+            break
+        try:
+            rows = requests.get(
+                "https://api.coingecko.com/api/v3/coins/markets",
+                params={"vs_currency": "usd", "order": "market_cap_desc", "per_page": 250, "page": page},
+                timeout=20,
+            ).json()
+        except Exception as ex:
+            print("  ! CoinGecko market-cap lookup failed on page", page, ":", ex)
+            break
+        if not isinstance(rows, list) or not rows:
+            break
+        for r in rows:
+            sym = str(r.get("symbol", "")).upper()
+            if not sym or sym in seen or sym not in tradable:
+                continue
+            seen.add(sym)
+            universe[sym] = (r.get("name") or sym, r.get("id") or sym.lower(),
+                              CATEGORY_MAP.get(sym, DEFAULT_CATEGORY))
+            if len(universe) >= n:
+                break
+    return universe
+
+
+try:
+    COINS = build_coin_universe(150)
+    if not COINS:
+        raise RuntimeError("empty coin universe")
+except Exception as ex:
+    print("  ! live coin universe fetch failed, falling back to the 7-coin prototype set:", ex)
+    COINS = {
+        "BTC": ("Bitcoin", "bitcoin", "major"),
+        "ETH": ("Ethereum", "ethereum", "major"),
+        "SOL": ("Solana", "solana", "layer-1"),
+        "BNB": ("BNB", "bnb", "major"),
+        "XRP": ("XRP", "xrp", "payments"),
+        "ADA": ("Cardano", "cardano", "layer-1"),
+        "DOGE": ("Dogecoin", "dogecoin", "payments"),
+    }
 
 
 def sparkline(closes, w=560, h=90):
@@ -122,7 +212,11 @@ def coin_parts(sym, name, slug, cat, tk, closes):
     angle = CATEGORY_ANGLE[cat].format(name=name, sym=sym)
     fmt = lambda n: f"{n:,.0f}" if n >= 1000 else (f"{n:,.2f}" if n >= 1 else f"{n:,.4f}")
     as_of = time.strftime("%d %b %Y", time.gmtime())
-    related = [(s, COINS[s][0], COINS[s][1]) for s in COINS if s != sym][:4]
+    # prefer same-category neighbours (topically relevant internal links), top up with anything
+    # else if the category is small, so every page still gets 4 related links.
+    same_cat = [s for s in COINS if s != sym and COINS[s][2] == cat]
+    other = [s for s in COINS if s != sym and COINS[s][2] != cat]
+    related = [(s, COINS[s][0], COINS[s][1]) for s in (same_cat + other)[:4]]
     e = html.escape
     faqs = [
         (f"Can I paper-trade {name} strategies on zengtrade?",
