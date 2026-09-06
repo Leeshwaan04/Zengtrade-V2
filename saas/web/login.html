@@ -5,6 +5,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="/assets/logo.svg">
 <link rel="stylesheet" href="/css.css">
+<!-- Google Analytics (GA4, zengtrade, web stream 15728393601) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0YVJ0XVK7K"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-0YVJ0XVK7K');
+</script>
 <style>
   body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px 18px;
     background:radial-gradient(1200px 500px at 50% -10%,var(--green-soft),transparent 70%),var(--bg)}
@@ -85,6 +93,7 @@
 <script type="module">
 import { signIn, signUp, signInWithGoogle, resetPassword, establishSession, currentUser, niceError } from "/js/auth.js";
 import { SITE } from "/js/config.js";
+import { gaEvent } from "/js/ga.js";
 const $=id=>document.getElementById(id), msg=$("msg");
 const show=(t,ok)=>{msg.className="msg "+(ok?"ok":"err");msg.textContent=t;};
 const busy=(b,on,txt)=>{b.disabled=on;if(txt)b.textContent=txt;};
@@ -125,19 +134,20 @@ function prepOAuthSignup(){
   maybeCheckoutRefFromUtm();
 }
 
-function trackSignupComplete(){
+function trackSignupComplete(method){
   try{
     fetch("https://ponvarxeytfcntckczbn.supabase.co/rest/v1/event",{method:"POST",
       headers:{apikey:"sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1","Content-Type":"application/json",Prefer:"return=minimal"},
       body:JSON.stringify({name:"signup_complete",path:(location.pathname+location.search).slice(0,290)}),
       keepalive:true}).catch(()=>{});
   }catch(e){}
+  gaEvent("sign_up", { method: method || "email" });
 }
 
 function goAfterAuth(user){
   const freshSignup=shouldTrackSignupComplete(user);
   if(freshSignup){
-    trackSignupComplete();
+    trackSignupComplete(user?.app_metadata?.provider);
     try{ localStorage.setItem("zt_fresh_signup","1"); }catch(e){}
   }
   const pl=localStorage.getItem("zt_intent_plan");
@@ -182,6 +192,7 @@ $("t-up").onclick=()=>{$("t-up").ariaSelected="true";$("t-in").ariaSelected="fal
       headers:{apikey:"sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1","Content-Type":"application/json",Prefer:"return=minimal"},
       body:JSON.stringify({name:"plan_intent",path:("/login?plan="+_pl).slice(0,290),ref:(document.referrer||"").slice(0,290)}),
       keepalive:true}).catch(()=>{}); }catch(e){}
+    gaEvent("plan_intent", { plan: _pl });
   } }
 
 $("f-in").onsubmit=async e=>{e.preventDefault();const b=e.target.querySelector("button");busy(b,true,"Signing in…");

@@ -4,6 +4,7 @@
 import { sb } from "./auth.js";
 import { SUPABASE_URL } from "./config.js";
 import { toast } from "./ui.js";
+import { gaEvent } from "./ga.js";
 
 export const FREE_DEPLOY_LIMIT = 1;
 
@@ -47,6 +48,13 @@ export async function openCheckout(user, plan = "pro", cycle = "month") {
         path,
       });
     } catch { /* funnel */ }
+    const planDef = PLANS.find((p) => p.id === plan);
+    const value = planDef ? (cycle === "year" ? planDef.annual : planDef.monthly) : 0;
+    gaEvent("begin_checkout", {
+      currency: "USD",
+      value,
+      items: [{ item_id: plan, item_name: `zengtrade ${plan} (${cycle})`, price: value, quantity: 1 }],
+    });
     toast("Starting secure checkout…", "info");
     const r = await fetch(`${SUPABASE_URL}/functions/v1/nowpayments-create-invoice`, {
       method: "POST",

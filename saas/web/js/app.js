@@ -6,6 +6,7 @@ import { maybeWorkerBanner, isWorkerAlive } from "./worker-status.js";
 import { getTier, isPro, openCheckout, checkoutReady, PLANS, FREE_DEPLOY_LIMIT } from "./billing.js";
 import { STRATEGIES, byKey, nameOf } from "./strategies.js";
 import { esc, money, pct, num, timeAgo, tone, toast, skeletonRows, equityCurve } from "./ui.js";
+import { gaEvent } from "./ga.js";
 
 const $ = s => document.querySelector(s);
 const app = $("#view");
@@ -489,6 +490,8 @@ async function deploy(key) {
     await sb.from("event").insert({ name: "deploy_click", path: (location.pathname + location.hash).slice(0, 290) });
     await sb.from("event").insert({ name: "deploy_success", path: (location.pathname + location.hash).slice(0, 290) });
   } catch { /* funnel */ }
+  gaEvent("deploy_click", { strategy: key });
+  gaEvent("deploy_success", { strategy: key });
   toast(`${nameOf(key)} deployed to paper.`, "success");
   showPostDeployHint();
   await load(); render();

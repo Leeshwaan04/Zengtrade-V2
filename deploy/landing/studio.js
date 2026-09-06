@@ -124,6 +124,15 @@
     } catch (e) {}
   }
 
+  /* GA4 (zengtrade, web stream 15728393601) — not an ES module here, so a plain defensive
+   * wrapper around window.gtag rather than importing js/ga.js. Fires alongside every
+   * trackEvent() call, a second destination, not a replacement for the Supabase funnel. */
+  function gaEvent(name, params) {
+    try {
+      if (typeof window.gtag === "function") window.gtag("event", name, params || {});
+    } catch (e) {}
+  }
+
   function showForwardHint() {
     try {
       if (localStorage.getItem("zt_seen_forward")) return;
@@ -134,12 +143,17 @@
         var sub = workerUp
           ? "Trades appear in Evidence as the worker runs on live prices (usually within 15 min)."
           : "Deploy saved. Trades will run when the paper worker is back online. Check the banner above.";
+        /* the toast itself stays a clean 2-button confirmation (matching every other toast in the
+         * app); this inline link is a secondary funnel touchpoint, not a 3rd action button, kept
+         * as a small text link (.mon-acc-link, same class the Monitor row's own inline link uses)
+         * so it doesn't compete visually with "View evidence". */
+        var coinsLink = ' <a class="mon-acc-link" href="/coins/?utm_source=site&amp;utm_medium=organic&amp;utm_campaign=deploy_success_coins">More coin strategies</a>';
         ztToast({
           uniqueClass: "zt-forward-toast",
           icon: "check",
           title: "Strategy deployed",
-          body: sub,
-          timeout: 7000,
+          body: sub + coinsLink,
+          timeout: 9000,
           actions: [
             { key: "view", cls: "primary", label: "View evidence", onClick: function () { location.href = "/app#forward"; } },
             { key: "ok", cls: "ghost", label: "Dismiss" },
@@ -301,6 +315,8 @@
         if (r.ok) {
           trackEvent("deploy_click");
           trackEvent("deploy_success");
+          gaEvent("deploy_click", { strategy: id });
+          gaEvent("deploy_success", { strategy: id });
           showForwardHint();
           return jresp({ ok: true, id: id, state: "paper" });
         }
@@ -707,7 +723,12 @@
       body: JSON.stringify({ user_id: s.uid, strategy_key: slug(name), mode: "paper",
                              status: "running", params: spec }),
     }).then(function (r) {
-      if (r.ok) { ztbClearError(); trackEvent("deploy_click"); trackEvent("deploy_success"); showForwardHint(); refreshList(); }
+      if (r.ok) {
+        ztbClearError(); trackEvent("deploy_click"); trackEvent("deploy_success");
+        gaEvent("deploy_click", { strategy: slug(name), custom: true });
+        gaEvent("deploy_success", { strategy: slug(name), custom: true });
+        showForwardHint(); refreshList();
+      }
       else r.json().then(function (e) {
         var msg = (e && (e.message || e.details || e.hint)) || "Deploy failed - try again.";
         if (/FREE_LIMIT/i.test(msg)) {
