@@ -10,6 +10,7 @@ All share /site.css, /site.js, the same header/ticker/nav, assets, and the live 
 Run:  python3 deploy/landing/build.py   ->  writes into deploy/landing/dist/
 """
 import os, re, shutil
+from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = open(os.path.join(HERE, "index.html")).read()
@@ -61,12 +62,12 @@ FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
 # ship in page source (same trust model as the Supabase anon key already in this file's BEACON),
 # the Measurement Protocol API secret used for server-side purchase events is a different,
 # sensitive value and lives only as a Supabase secret (GA_MEASUREMENT_PROTOCOL_SECRET), never here.
-GA_SNIPPET = """<script async src="https://www.googletagmanager.com/gtag/js?id=G-0YVJ0XVK7K"></script>
+GA_SNIPPET = """<script async src="https://www.googletagmanager.com/gtag/js?id=G-HTP82WBWMH"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', 'G-0YVJ0XVK7K');
+  gtag('config', 'G-HTP82WBWMH');
 </script>"""
 
 
@@ -411,18 +412,18 @@ def emit(path, html_str, canon):
     urls.append(canon)
 
 emit("", shell(
-    "zengtrade, regime-aware crypto trading strategies, paper-first",
-    "Regime-aware algorithmic crypto trading strategies you can paper-trade, backtest and forward-test on live data before risking a dollar. Survival-first, honest about every cost, non-custodial. Not investment advice.",
+    "zengtrade: Regime-Aware Crypto Trading Strategies",
+    "Paper-trade regime-aware crypto strategies on live prices before risking a dollar. Honest costs, non-custodial. Not investment advice.",
     "https://zengtrade.in/", HOME_MAIN, extra_head=HOME_SCHEMA), "https://zengtrade.in/")
 
 emit("how-it-works", shell(
-    "How zengtrade works, the regime engine, honesty & survival-first risk",
-    "How zengtrade works: it reads Bull/Neutral/Bear regimes, runs only the strategies proven to fit, never fabricates a number, and protects capital first. Paper-first, non-custodial.",
+    "How zengtrade Works: Regime Engine & Risk",
+    "How zengtrade reads Bull/Bear regimes, runs only proven-fit strategies, and protects capital first. Paper-first, non-custodial.",
     "https://zengtrade.in/how-it-works/", main_hiw_paper, extra_head=HOWITWORKS_SCHEMA), "https://zengtrade.in/how-it-works/")
 
 emit("pricing", shell(
-    "Pricing: free paper trading, Pro from $19/mo | zengtrade",
-    "zengtrade pricing: Free forever to paper-trade, Pro for unlimited paper strategies (founding $19/mo). Live execution rolls out per go-live bar. Data is always free. Non-custodial. Cancel anytime.",
+    "Pricing: Free Paper Trading, Pro from $19/mo",
+    "zengtrade pricing: free forever to paper-trade, Pro for unlimited strategies at $19/mo founding rate. Non-custodial, cancel anytime.",
     "https://zengtrade.in/pricing/", PRICING_MAIN, extra_head=PRICING_FAQ_SCHEMA), "https://zengtrade.in/pricing/")
 
 # ---- coin hub + per-coin pages (identical shell -> full design parity) -----------------
@@ -445,8 +446,13 @@ urls.extend([
 ])
 
 # ---- sitemap + robots ------------------------------------------------------------------
+# lastmod = this build's own UTC date: every page here (coin pages especially) is genuinely
+# regenerated from live data on every build, so "today" is an honest modification date, not a
+# fabricated freshness signal, and it's a real crawl-scheduling hint Google actually uses (unlike
+# <priority>, which Google has said it largely ignores, so it's intentionally left out).
+_build_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 sm = ('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-      + "".join(f"  <url><loc>{u}</loc><changefreq>daily</changefreq></url>\n" for u in urls)
+      + "".join(f"  <url><loc>{u}</loc><lastmod>{_build_date}</lastmod><changefreq>daily</changefreq></url>\n" for u in urls)
       + "</urlset>\n")
 open(os.path.join(DIST, "sitemap.xml"), "w").write(sm)
 open(os.path.join(DIST, "robots.txt"), "w").write(

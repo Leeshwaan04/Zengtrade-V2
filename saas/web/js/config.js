@@ -12,7 +12,7 @@ export const AUTH_STORAGE_KEY = "sb-ponvarxeytfcntckczbn-auth-token";
 // ship in page source, same trust model as the anon key above — the Measurement Protocol API
 // secret used for SERVER-SIDE purchase events is a different, sensitive value and lives ONLY in
 // Supabase secrets (GA_MEASUREMENT_PROTOCOL_SECRET), never here. See js/ga.js.
-export const GA_MEASUREMENT_ID = "G-0YVJ0XVK7K";
+export const GA_MEASUREMENT_ID = "G-HTP82WBWMH";
 
 const origin = typeof location !== "undefined" ? location.origin : "https://zengtrade.in";
 

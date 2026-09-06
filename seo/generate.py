@@ -239,10 +239,13 @@ def coin_parts(sym, name, slug, cat, tk, closes):
         {"@type": "ListItem", "position": 1, "name": "Home", "item": f"{SITE}/"},
         {"@type": "ListItem", "position": 2, "name": "Coins", "item": f"{SITE}/coins/"},
         {"@type": "ListItem", "position": 3, "name": name, "item": f"{SITE}/coins/{slug}/"}]}
-    title = f"{name} ({sym}) trading strategies, paper-trade, backtest & regime read | zengtrade"
-    desc = (f"Live {name} price ${fmt(price)} ({chg:+.2f}% 24h). Paper-trade regime-aware {sym} "
-            f"strategies on live data, backtest the edge, and read {name}'s current market regime. "
-            f"Honest about every cost, non-custodial. Not investment advice.")
+    # Kept under ~60/~155 chars (Google's rough display budget for title/description before
+    # truncation) even for the longest coin names, the {price}/{chg} data used to live inline
+    # here, dropped since search-snippet copy is evergreen value-prop text, not a place for a
+    # number that's stale the moment it's crawled, price/regime are shown live on the page itself.
+    title = f"{name} ({sym}) Trading Strategies | zengtrade"
+    desc = (f"Paper-trade regime-aware {sym} strategies on live {name} prices. "
+            f"Real backtests, honest costs, non-custodial. Not investment advice.")
     faq_html = "".join(
         f'<details class="faq"><summary>{e(q)}</summary><p>{e(a)}</p></details>' for q, a in faqs)
     rel_html = "".join(
