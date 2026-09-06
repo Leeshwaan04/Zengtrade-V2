@@ -124,7 +124,7 @@
     } catch (e) {}
   }
 
-  /* GA4 (zengtrade, web stream 15728393601) — not an ES module here, so a plain defensive
+  /* GA4 (zengtrade, web stream 15728393601): not an ES module here, so a plain defensive
    * wrapper around window.gtag rather than importing js/ga.js. Fires alongside every
    * trackEvent() call, a second destination, not a replacement for the Supabase funnel. */
   function gaEvent(name, params) {

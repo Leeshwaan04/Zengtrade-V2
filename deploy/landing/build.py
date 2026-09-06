@@ -58,7 +58,7 @@ FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
          '<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">')
 
 # GA4 property "zengtrade" (zengtrade.in), web stream 15728393601. Measurement IDs are meant to
-# ship in page source (same trust model as the Supabase anon key already in this file's BEACON) —
+# ship in page source (same trust model as the Supabase anon key already in this file's BEACON),
 # the Measurement Protocol API secret used for server-side purchase events is a different,
 # sensitive value and lives only as a Supabase secret (GA_MEASUREMENT_PROTOCOL_SECRET), never here.
 GA_SNIPPET = """<script async src="https://www.googletagmanager.com/gtag/js?id=G-0YVJ0XVK7K"></script>
@@ -372,7 +372,7 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 SD = os.path.join(DIST, "dashboard"); os.makedirs(SD, exist_ok=True)
 term = open(os.path.join(ROOT, "index.html")).read()
 # GA4 additions (2026-09-06): gtag.js loads from googletagmanager.com and beacons to
-# google-analytics.com's regional collect endpoints — both need an explicit CSP allowance or the
+# google-analytics.com's regional collect endpoints, both need an explicit CSP allowance or the
 # strict script-src 'self' here silently blocks every hit on the one page most worth measuring.
 CSP_STUDIO = ("default-src 'self'; script-src 'self' https://www.googletagmanager.com; "
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "

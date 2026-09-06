@@ -1,23 +1,23 @@
-// zengtrade — NOWPayments IPN webhook (Supabase Edge Function, Deno).
+// zengtrade: NOWPayments IPN webhook (Supabase Edge Function, Deno).
 // NOWPayments POSTs here on every payment status change. We verify the HMAC-SHA512 signature,
 // read our user_id + plan + cycle out of order_id, and on a fully-paid status grant that tier for
 // the paid period using the SERVICE ROLE (a trusted server writing on the user's behalf, bypassing
 // RLS). Idempotent via the webhook_event log.
 //
 // Also reports the completed payment to GA4 (property "zengtrade", stream 15728393601) via the
-// Measurement Protocol — this is the ONE funnel event that genuinely cannot be fired client-side:
+// Measurement Protocol: this is the ONE funnel event that genuinely cannot be fired client-side,
 // the money actually lands here, in a server-to-server webhook with no browser present, so a
 // gtag.js call anywhere in the frontend can only ever mean "invoice created," never "paid."
 //
 // Secrets (set with `supabase secrets set ...`, NEVER in code/frontend):
-//   NOWPAYMENTS_IPN_SECRET                     — the IPN key from NOWPayments → Integrations
-//   GA_MEASUREMENT_PROTOCOL_SECRET             — GA4 Admin → Data Streams → zengtrade → Measurement
+//   NOWPAYMENTS_IPN_SECRET                     : the IPN key from NOWPayments -> Integrations
+//   GA_MEASUREMENT_PROTOCOL_SECRET             : GA4 Admin -> Data Streams -> zengtrade -> Measurement
 //                                                 Protocol API secrets (nickname "zengtrade-api")
-//   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY    — auto-available in Edge Functions
+//   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY    : auto-available in Edge Functions
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { verify, parseOrder, grants, tierFor } from "./verify.mjs";
 
-// mirrors PRICES in nowpayments-create-invoice/index.ts — that function is the source of truth
+// mirrors PRICES in nowpayments-create-invoice/index.ts, that function is the source of truth
 // for what NOWPayments actually charges; this copy only feeds the GA4 "value" on the events
 // above, so a report worth cents doesn't hold up a webhook worth a paid subscription.
 const PRICES: Record<string, Record<string, number>> = {
@@ -62,7 +62,7 @@ async function reportPurchaseToGA(opts: {
   try {
     const r = await fetch(url, { method: "POST", body: JSON.stringify(body) });
     // GA4 MP returns 204 with no body on success and never fails the caller's request even when
-    // the payload is malformed (use the /debug/mp/collect endpoint to validate shape changes) —
+    // the payload is malformed (use the /debug/mp/collect endpoint to validate shape changes),
     // logging the status is the only signal available that something's actually wrong here.
     if (r.status !== 204) console.log(`GA4 report non-204: ${r.status}`);
   } catch (e) {
@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
   const { userId, plan, cycle } = parseOrder(evt?.order_id);
   const tier = tierFor(plan);
 
-  // Ack (200) anything we don't act on — waiting/partially_paid/expired — so NOWPayments stops retrying.
+  // Ack (200) anything we don't act on: waiting/partially_paid/expired, so NOWPayments stops retrying.
   if (!userId || !tier || !grants(status)) {
     console.log(`NOWPayments no-op · status ${status} · order ${evt?.order_id}`);
     return new Response("ack", { status: 200 });
