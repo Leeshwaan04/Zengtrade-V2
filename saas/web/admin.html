@@ -7,10 +7,31 @@
 <link rel="icon" type="image/svg+xml" href="/assets/logo.svg">
 <link rel="stylesheet" href="/css.css">
 <style>
-  body{background:var(--bg);color:var(--navy);min-height:100vh}
-  .wrap{max-width:1080px;margin:0 auto;padding:22px 20px 80px}
+  /* Tokens css.css doesn't define but this page (and the pill/tile rules below) already
+     referenced — they were silently falling back to browser defaults (no radius, inherited
+     color) since an undefined var() renders as nothing. Fixed 2026-09-06 alongside the visual
+     consistency pass below. */
+  :root{--radius-s:10px;--amber:#b45309;--red-d:#a12726;--tint-info:#eef2f8}
+  @media(prefers-color-scheme:dark){:root{--amber:#e3a53d;--red-d:#ff8a8c;--tint-info:#141d33}}
+
+  /* UI/UX FIX (2026-09-06): /admin was the one logged-in surface with none of the actual
+     zengtrade brand treatment — no ambient aurora, no real logomark (just a plain colored "Z"
+     square) — while /login, /reset, and the marketing site all share it. Same aurora + logo
+     markup as login.html/reset.html, verbatim, so this reads as the same product rather than a
+     generic admin template bolted on. */
+  body{background:radial-gradient(1100px 460px at 50% -12%,var(--green-soft),transparent 70%),var(--bg);color:var(--navy);min-height:100vh}
+  .ambient{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+  .aurora{position:absolute;border-radius:50%;filter:blur(55px);will-change:transform;mix-blend-mode:multiply}
+  .aurora.a1{width:40vw;height:40vw;left:-10vw;top:-16vh;opacity:.32;background:radial-gradient(circle at 50% 50%,var(--green,#00AB4E),transparent 67%);animation:auroraA 30s ease-in-out infinite}
+  .aurora.a2{width:32vw;height:32vw;right:-8vw;top:4vh;opacity:.2;background:radial-gradient(circle at 50% 50%,var(--green-d,#059142),transparent 70%);animation:auroraB 36s ease-in-out infinite}
+  @keyframes auroraA{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(13vw,9vh) scale(1.18)}}
+  @keyframes auroraB{0%,100%{transform:translate(0,0) scale(1.05)}50%{transform:translate(-11vw,7vh) scale(.9)}}
+  @media(prefers-color-scheme:dark){.aurora{mix-blend-mode:screen}.aurora.a1{opacity:.4}}
+  @media(prefers-reduced-motion:reduce){.aurora{animation:none}}
+  .wrap{max-width:1080px;margin:0 auto;padding:22px 20px 80px;position:relative;z-index:1}
+  #gate{position:relative;z-index:1}
   .abar{display:flex;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap}
-  .abar .logo{width:30px;height:30px;border-radius:8px;background:var(--green);display:grid;place-items:center;color:#fff;font-weight:800}
+  .abar .logo{width:30px;height:30px}
   .abar b{font-size:17px;letter-spacing:-.01em}
   .abar .tag{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--slate);border:1px solid var(--line);border-radius:99px;padding:3px 9px}
   .abar .sp{margin-left:auto;display:flex;gap:8px;align-items:center}
@@ -57,11 +78,13 @@
   .empty{text-align:center;color:var(--slate);font-size:13px;padding:26px}
   .p0alert{background:#fff8e6;border:1px solid #f0d78a;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:13.5px;line-height:1.5;color:#7a5a00}
   .p0alert a{color:inherit;font-weight:700}
+  #gate .brand{justify-content:center;margin-bottom:14px}
 </style></head><body>
+<div class="ambient" aria-hidden="true"><span class="aurora a1"></span><span class="aurora a2"></span></div>
 
 <div id="gate" hidden>
   <div class="card">
-    <h1>zengtrade admin</h1>
+    <div class="brand"><svg class="logo" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#00AB4E"/><path d="M24.69 13.67A9 9 0 1 1 20.5 8.21" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M12.5 19.5L17 15L20 17.5L26.5 8.8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>zengtrade admin</div>
     <p>Restricted. Sign in with an admin account.</p>
     <button class="btn" id="google" style="width:100%">Continue with Google</button>
     <div style="text-align:center;color:var(--slate);font-size:11px;margin:14px 0 2px">or email</div>
@@ -74,7 +97,8 @@
 
 <div id="app" class="wrap" hidden>
   <div class="abar">
-    <span class="logo">Z</span><b>zengtrade</b><span class="tag">Admin</span>
+    <svg class="logo" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#00AB4E"/><path d="M24.69 13.67A9 9 0 1 1 20.5 8.21" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M12.5 19.5L17 15L20 17.5L26.5 8.8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <b>zengtrade</b><span class="tag">Admin</span>
     <div class="sp"><a class="btn" href="/ops" style="text-decoration:none">Founder Ops</a><span class="muted" id="who"></span><button class="btn" id="refresh">Refresh</button><button class="btn" id="out">Sign out</button></div>
   </div>
   <div id="p0alert" class="p0alert" hidden></div>
