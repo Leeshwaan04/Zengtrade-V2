@@ -34,7 +34,7 @@ check "pricing" "$SITE/pricing/"
 check "sitemap" "$SITE/sitemap.xml" "<urlset"
 check "dashboard" "$SITE/dashboard/" "zengtrade"
 check "ops" "$SITE/ops" "Founder Ops"
-# ops/p0 — warn until live, don't fail pre-deploy checks
+# ops/p0: warn until live, don't fail pre-deploy checks
 if code=$(curl -sfL -o /tmp/ztcurl.out -w '%{http_code}' "$SITE/ops/p0/" 2>/dev/null); then
   if grep -q "P0 checklist" /tmp/ztcurl.out 2>/dev/null; then
     echo "OK   ops-p0 — HTTP $code"

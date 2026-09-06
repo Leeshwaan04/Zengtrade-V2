@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Post-P0 activation checks — run after migration 0011 + worker are live.
+# Post-P0 activation checks: run after migration 0011 + worker are live.
 # Partial (worker blocked): ./scripts/verify-activation-path.sh --partial
 # Exit 0 only when production loop is ready for signup → deploy → trades E2E.
 set -euo pipefail

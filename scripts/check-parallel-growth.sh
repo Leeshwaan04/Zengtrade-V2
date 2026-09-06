@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CBO/CPO parallel gates — runnable while paper worker is blocked (no trades).
+# CBO/CPO parallel gates: runnable while paper worker is blocked (no trades).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

@@ -1,4 +1,4 @@
-# Sales Playbook — zengtrade
+# Sales Playbook: zengtrade
 
 Owner: **Sales Manager autopilot** (`.cursor/autopilot/sales.md`)
 
@@ -14,13 +14,13 @@ Checkout: NOWPayments crypto invoice → IPN grants tier via `grant_paid` RPC.
 
 ## Funnel stages
 
-1. **Awareness** — SEO / marketing → landing
-2. **Signup** — `signup_complete` event · default lands on `/dashboard` (Algo Studio) · `?plan=pro|elite` → `/app#pricing`
-3. **Activation** — deploy → first closed trade (builds trust to buy)
-4. **Intent** — `plan_intent` from `?plan=pro|elite` (pricing/coins/social UTMs); `utm_campaign` flows to `checkout_click` path via `zt_checkout_ref`
-5. **Checkout** — `checkout_click` → invoice → `?paid=1` poll  
+1. **Awareness**: SEO / marketing → landing
+2. **Signup**: `signup_complete` event · default lands on `/dashboard` (Algo Studio) · `?plan=pro|elite` → `/app#pricing`
+3. **Activation**: deploy → first closed trade (builds trust to buy)
+4. **Intent**: `plan_intent` from `?plan=pro|elite` (pricing/coins/social UTMs); `utm_campaign` flows to `checkout_click` path via `zt_checkout_ref`
+5. **Checkout**: `checkout_click` → invoice → `?paid=1` poll  
    Path suffixes: `:free_limit_upgrade` (free cap hit), `:deploy_success_pro` (post-deploy upsell), `:forward_empty_pro` (Forward Test empty state)
-6. **Retention** — usage in `/app`, upgrade stickiness
+6. **Retention**: usage in `/app`, upgrade stickiness
 
 Founder test: **https://zengtrade.in/ops/billing**
 
@@ -44,7 +44,7 @@ Do not claim forward P&L or closed-trade activation until `./scripts/check-worke
 
 | Objection | Response |
 |-----------|----------|
-| "Why paper?" | Live execution unlocks per strategy only after forward go-live bar — no backtest-only arming |
+| "Why paper?" | Live execution unlocks per strategy only after forward go-live bar, no backtest-only arming |
 | "Why crypto invoice?" | Non-custodial; we don't hold cards or keys |
 | "Is live trading included?" | Pro is unlimited **paper** today; live rail is on the roadmap with explicit go-live checklist |
 | "Free limit?" | One running paper strategy; Pro removes cap |
@@ -66,7 +66,7 @@ Do not claim forward P&L or closed-trade activation until `./scripts/check-worke
 ./scripts/check-migrations.sh   # checkout_click requires 0011
 ```
 
-## First Pro checkout (founder manual — worker not required)
+## First Pro checkout (founder manual, worker not required)
 
 Run when `./scripts/check-sales-ready.sh` is green.
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CBO funnel truth — Pro must not promise live execution as shipped today.
+# CBO funnel truth: Pro must not promise live execution as shipped today.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

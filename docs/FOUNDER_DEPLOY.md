@@ -1,4 +1,4 @@
-# Founder deploy — production loop
+# Founder deploy: production loop
 
 **Fast path:** bookmark **https://zengtrade.in/ops/p0** (~15 min, live gate checks).
 
@@ -36,13 +36,13 @@ Dashboard → **Authentication → URL configuration**
 
 Links: https://zengtrade.in/ops/e2e (steps 1–2) · deploy → View evidence → `/app#forward` · https://zengtrade.in/ops/gsc · https://zengtrade.in/ops/billing · `docs/FOUNDER_PARALLEL.md`
 
-**Option A — one-shot GitHub Action (recommended):** add `DATABASE_PASSWORD` (password only) or `DATABASE_URL` + `RAILWAY_API_TOKEN` to [repo Secrets](https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions) → run [Apply P0](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml) → type `APPLY`.
+**Option A: one-shot GitHub Action (recommended):** add `DATABASE_PASSWORD` (password only) or `DATABASE_URL` + `RAILWAY_API_TOKEN` to [repo Secrets](https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions) → run [Apply P0](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml) → type `APPLY`.
 
-**Option B — Cloud Agent:** add `DATABASE_PASSWORD` (password only) or full `DATABASE_URL` to Cursor secrets → `./scripts/validate-database-credentials.sh` then `./scripts/run-p0-if-ready.sh`.
+**Option B: Cloud Agent:** add `DATABASE_PASSWORD` (password only) or full `DATABASE_URL` to Cursor secrets → `./scripts/validate-database-credentials.sh` then `./scripts/run-p0-if-ready.sh`.
 
-**Option C — migration only (GitHub):** [Apply migration 0011](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-migration-0011.yml) with `DATABASE_URL` secret.
+**Option C: migration only (GitHub):** [Apply migration 0011](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-migration-0011.yml) with `DATABASE_URL` secret.
 
-**Option D — manual:** https://zengtrade.in/ops/migrate → copy SQL → Supabase SQL Editor; worker at https://zengtrade.in/ops/worker.
+**Option D: manual:** https://zengtrade.in/ops/migrate → copy SQL → Supabase SQL Editor; worker at https://zengtrade.in/ops/worker.
 
 ```bash
 ./scripts/check-migrations.sh   # signup_complete, deploy_success, checkout_click must return OK
@@ -51,9 +51,9 @@ Links: https://zengtrade.in/ops/e2e (steps 1–2) · deploy → View evidence �
 
 ## 4. Paper worker
 
-Already deployed by Apply P0 workflow. Manual guide: https://zengtrade.in/ops/worker — Railway root `saas/worker`, `DATABASE_URL` on port **5432** (session pooler). Recovery: `docs/WORKER_RECOVERY.md`.
+Already deployed by Apply P0 workflow. Manual guide: https://zengtrade.in/ops/worker: Railway root `saas/worker`, `DATABASE_URL` on port **5432** (session pooler). Recovery: `docs/WORKER_RECOVERY.md`.
 
-## 5. Billing (live — test when ready)
+## 5. Billing (live: test when ready)
 
 Edge functions are deployed (`./scripts/verify-billing.sh` ✅).
 
@@ -66,17 +66,17 @@ Preflight: `./scripts/check-sales-ready.sh` (billing + plan intent + pricing tru
 ```bash
 ./scripts/post-p0-success.sh      # verify-activation-path + growth gates (preferred)
 ./scripts/verify-activation-path.sh
-./scripts/guide-qa-rls-isolation.sh   # Q3 — after trades visible
+./scripts/guide-qa-rls-isolation.sh   # Q3, after trades visible
 ./scripts/audit-growth-goal.sh
 ```
 
 Or poll until ready: `./scripts/wait-for-p0.sh` (runs post-p0-success when P0 green).
 
-E2E: https://zengtrade.in/ops/e2e — signup → deploy → trades within ~15 min · step 5 RLS.
+E2E: https://zengtrade.in/ops/e2e: signup → deploy → trades within ~15 min · step 5 RLS.
 
 ## 7. Organic (CBO)
 
-https://zengtrade.in/ops/gsc — verify domain + submit sitemap (**can run while worker is blocked**). First proof posts after forward trades exist (`docs/content/WEEKLY_PROOF.md`).
+https://zengtrade.in/ops/gsc: verify domain + submit sitemap (**can run while worker is blocked**). First proof posts after forward trades exist (`docs/content/WEEKLY_PROOF.md`).
 
 ---
 

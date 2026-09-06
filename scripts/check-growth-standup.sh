@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Daily autopilot standup — P0 status + parallel CBO/CPO work (for GROWTH_DASHBOARD logs).
+# Daily autopilot standup: P0 status + parallel CBO/CPO work (for GROWTH_DASHBOARD logs).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

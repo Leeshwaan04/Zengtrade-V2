@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# QA&VAPT: manual RLS isolation test (Q3) — run after worker + trades E2E.
+# QA&VAPT: manual RLS isolation test (Q3): run after worker + trades E2E.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

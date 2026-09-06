@@ -1,4 +1,4 @@
-// zengtrade SaaS — authentication module.
+// zengtrade SaaS: authentication module.
 // Auth is delegated to Supabase (never hand-rolled): password hashing, sessions, email
 // verification, OAuth and magic links are all handled by a vetted provider. This file is only
 // the thin glue + the route guard.
@@ -41,12 +41,12 @@ export async function completeAuthCallback() {
   // BUG FIX (2026-09-06): this client is created with detectSessionInUrl:true, so it is
   // ALREADY exchanging this ?code=/#access_token= in the background the instant it's
   // constructed. This used to also call exchangeCodeForSession(p.code) itself for the
-  // ?code= (PKCE) case — a second, redundant exchange of the same single-use code, racing
+  // ?code= (PKCE) case: a second, redundant exchange of the same single-use code, racing
   // the SDK's own automatic one. Whichever call lost that race got an "already used" error
   // from Supabase, so a just-confirmed user landed back on an empty /login form as if
   // nothing happened; only a manual reload (which re-read the already-persisted session)
-  // fixed it. getSession() awaits the SDK's own in-flight exchange internally, so — exactly
-  // like the hash flow below already did — just wait on that instead of repeating it. The
+  // fixed it. getSession() awaits the SDK's own in-flight exchange internally, so, exactly
+  // like the hash flow below already did, just wait on that instead of repeating it. The
   // short retry covers the real network round-trip that exchange takes on slower connections.
   for (let i = 0; i < 10; i++) {
     const { data: { session }, error } = await sb.auth.getSession();
@@ -62,7 +62,7 @@ export async function establishSession() {
   try {
     await completeAuthCallback();
   } catch (e) {
-    // Surface to caller — login page shows the message.
+    // Surface to caller: login page shows the message.
     throw e;
   }
   const { data: { session } } = await sb.auth.getSession();

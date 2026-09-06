@@ -1,4 +1,4 @@
--- zengtrade — pay-per-period enforcement.
+-- zengtrade: pay-per-period enforcement.
 -- The NOWPayments IPN sets profile.tier + subscription.current_period_end on payment. Crypto has no
 -- card-style auto-charge, so access must EXPIRE at period end. This function reverts any paid tier to
 -- 'free' once its subscription period has lapsed. Run it on a schedule (pg_cron below, or an external

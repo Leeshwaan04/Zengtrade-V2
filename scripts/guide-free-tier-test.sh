@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CPO: founder manual guide for free-tier deploy limit (Q9 — second deploy blocked).
+# CPO: founder manual guide for free-tier deploy limit (Q9, second deploy blocked).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

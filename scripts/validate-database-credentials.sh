@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Test Postgres credentials before Railway deploy (no secrets printed).
-# Resolves DATABASE_URL from env, DATABASE_PASSWORD, or Railway — then runs psql probe.
+# Resolves DATABASE_URL from env, DATABASE_PASSWORD, or Railway, then runs psql probe.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

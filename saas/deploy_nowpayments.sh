@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# zengtrade — deploy the NOWPayments billing functions to Supabase. Run AFTER `supabase login`.
+# zengtrade: deploy the NOWPayments billing functions to Supabase. Run AFTER `supabase login`.
 #
 # Secrets are read from gitignored files (never args/history):
 #   saas/.nowpayments_api_key      <- your NOWPayments API key   (Integrations → API key)
@@ -7,7 +7,7 @@
 # Create them WITHOUT echoing to the terminal, e.g. with a small editor or:
 #   printf %s 'YOUR_ROTATED_API_KEY'   > saas/.nowpayments_api_key   && chmod 600 saas/.nowpayments_api_key
 #   printf %s 'YOUR_ROTATED_IPN_KEY'   > saas/.nowpayments_ipn_secret && chmod 600 saas/.nowpayments_ipn_secret
-# (Use the ROTATED keys — regenerate them in NOWPayments first, since the originals were exposed.)
+# (Use the ROTATED keys: regenerate them in NOWPayments first, since the originals were exposed.)
 #
 # Usage:  bash saas/deploy_nowpayments.sh
 set -euo pipefail

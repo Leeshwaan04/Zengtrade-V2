@@ -679,7 +679,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
       <div class="lp-mega" role="menu">
         <a class="lp-mega-card" role="menuitem" href="#regime"><span class="lp-mega-ic">◐</span><span class="lp-mega-tx"><b>Algo Studio</b><i>Regime-aware strategies that read Bull · Neutral · Bear.</i></span></a>
         <a class="lp-mega-card" role="menuitem" href="#survival"><span class="lp-mega-ic">◈</span><span class="lp-mega-tx"><b>Survival-first risk</b><i>Governor, kill-switch, position intelligence.</i></span></a>
-        <a class="lp-mega-card" role="menuitem" href="#books"><span class="lp-mega-ic">₿</span><span class="lp-mega-tx"><b>Crypto strategy library</b><i>Spot, perps &amp; options — paper 24/7.</i></span></a>
+        <a class="lp-mega-card" role="menuitem" href="#books"><span class="lp-mega-ic">₿</span><span class="lp-mega-tx"><b>Crypto strategy library</b><i>Spot, perps &amp; options, paper 24/7.</i></span></a>
         <a class="lp-mega-card" role="menuitem" href="#honesty"><span class="lp-mega-ic">✓</span><span class="lp-mega-tx"><b>Honest analytics</b><i>Never a fabricated number, a dash when it can't source one.</i></span></a>
       </div>
     </div>
@@ -770,7 +770,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
           <button class="seg-btn" type="button" id="tab-bear" data-regime-btn="bear" role="tab" aria-selected="false" aria-controls="regimeStage" tabindex="-1"><span class="seg-dot dot-bear"></span>Bear</button>
         </div>
         <div class="auto-pill">
-          <span class="auto-dot" aria-hidden="true"></span>AUTO <b class="auto-conf num">—</b>
+          <span class="auto-dot" aria-hidden="true"></span>AUTO <b class="auto-conf num">-</b>
           <span class="sr-only">Automatic regime detection is off on this page. In the terminal this pill shows the detection engine's confidence; here there is no engine, so it shows a dash.</span>
         </div>
       </div>
@@ -897,7 +897,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
           </div>
 
           <div class="lp-dash-stage">
-            <span class="lp-glyph" aria-hidden="true">—</span>
+            <span class="lp-glyph" aria-hidden="true">-</span>
             <p class="lp-dash-cap">
               this is what a missing number looks like.<br>
               the terminal has nothing it can source, so it says nothing.
@@ -908,17 +908,17 @@ html.js .lp-rv.in{opacity:1;transform:none}
             <div class="sec-stats">
               <div class="sec-stat">
                 <span class="ss-l">Index</span>
-                <span class="ss-v num">—</span>
+                <span class="ss-v num">-</span>
                 <span class="ss-s">no feed</span>
               </div>
               <div class="sec-stat">
                 <span class="ss-l">Unrealised P&amp;L</span>
-                <span class="ss-v num">—</span>
+                <span class="ss-v num">-</span>
                 <span class="ss-s">no book</span>
               </div>
               <div class="sec-stat">
                 <span class="ss-l">Open positions</span>
-                <span class="ss-v num">—</span>
+                <span class="ss-v num">-</span>
                 <span class="ss-s">no session</span>
               </div>
             </div>
@@ -971,7 +971,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
             <div class="lp-node-t">Composite</div>
             <div class="sec-stat" style="background:var(--surface-2)">
               <span class="ss-l">Score</span>
-              <span class="ss-v num" style="font-size:28px;font-weight:400;color:var(--slate)">—</span>
+              <span class="ss-v num" style="font-size:28px;font-weight:400;color:var(--slate)">-</span>
             </div>
             <p class="lp-nfoot">computed on the machine running the engine. this page has no feed, so this page has no score.</p>
           </div>
@@ -1031,27 +1031,27 @@ html.js .lp-rv.in{opacity:1;transform:none}
           <div class="lp-gov-row">
             <span class="lp-key">concentration.symbol</span>
             <span class="lp-desc">how much of the book a single name is allowed to become.</span>
-            <span class="lp-val num">—</span>
+            <span class="lp-val num">-</span>
           </div>
           <div class="lp-gov-row">
             <span class="lp-key">concentration.sector</span>
             <span class="lp-desc">the same ceiling, one level up, so a “diversified” book cannot quietly become one bet.</span>
-            <span class="lp-val num">—</span>
+            <span class="lp-val num">-</span>
           </div>
           <div class="lp-gov-row">
             <span class="lp-key">crowding.max_bots_per_name</span>
             <span class="lp-desc">how many strategies may crowd into the same symbol at once.</span>
-            <span class="lp-val num">—</span>
+            <span class="lp-val num">-</span>
           </div>
           <div class="lp-gov-row">
             <span class="lp-key">exposure.total</span>
             <span class="lp-desc">a hard ceiling across everything open, both books, at any moment.</span>
-            <span class="lp-val num">—</span>
+            <span class="lp-val num">-</span>
           </div>
           <div class="lp-gov-row">
             <span class="lp-key">drawdown.kill_switch</span>
             <span class="lp-desc">the level at which the engine stops trading, and stays stopped.</span>
-            <span class="lp-val num">—</span>
+            <span class="lp-val num">-</span>
           </div>
 
           <p class="lp-gov-foot">
@@ -1078,7 +1078,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
         <h2 class="lp-h2 lp-rv" id="h-books">One book. Built for crypto.</h2>
 
         <p class="lp-body lp-rv" style="--d:60ms">
-          Crypto never closes — so the paper engine runs 24/7 on live Binance prices. The same regime engine
+          Crypto never closes, so the paper engine runs 24/7 on live Binance prices. The same regime engine
           reads the tape, and the same survival-first Governor sits in front of every strategy. Spot, perps,
           and options share one honest cost model and one go-live bar.
         </p>
@@ -1090,13 +1090,13 @@ html.js .lp-rv.in{opacity:1;transform:none}
               <span class="lp-bk-venue">binance · your keys</span>
             </div>
             <h3>Spot, perps and options</h3>
-            <p>The full strategy library — trend, reversion, carry, stat-arb — on USDT spot and derivatives. Non-custodial: your exchange, your keys.</p>
+            <p>The full strategy library (trend, reversion, carry, stat-arb) on USDT spot and derivatives. Non-custodial: your exchange, your keys.</p>
             <div class="lp-chips">
               <span class="lp-chip">spot</span>
               <span class="lp-chip">perpetuals</span>
               <span class="lp-chip">options</span>
             </div>
-            <p class="lp-bk-clock">24/7. The paper engine never stops — forward evidence accrues around the clock.</p>
+            <p class="lp-bk-clock">24/7. The paper engine never stops: forward evidence accrues around the clock.</p>
           </div>
 
           <div class="card lp-spine">
@@ -1387,7 +1387,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
   }
   function tile(p) {                  // built once; values are filled/updated in place
     return '<div class="tix" role="listitem"><span class="tix-name">' + p + '</span>' +
-      '<div class="tix-row"><span class="tix-val num muted" data-px="' + p + '">—</span>' +
+      '<div class="tix-row"><span class="tix-val num muted" data-px="' + p + '">-</span>' +
       '<span class="tix-chg" data-chg="' + p + '"></span></div></div>';
   }
   function build() {                  // duplicate the set → seamless -50% roll; DOM built ONCE

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# QA&VAPT: founder combined standup — parallel QA while paper worker is blocked.
+# QA&VAPT: founder combined standup: parallel QA while paper worker is blocked.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

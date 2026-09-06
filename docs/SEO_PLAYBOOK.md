@@ -1,4 +1,4 @@
-# SEO Playbook — zengtrade
+# SEO Playbook: zengtrade
 
 Owner: **SEO Manager autopilot** (`.cursor/autopilot/seo.md`)
 
@@ -12,7 +12,7 @@ Owner: **SEO Manager autopilot** (`.cursor/autopilot/seo.md`)
 
 ## GSC setup (founder once)
 
-**Can run while worker is blocked** — indexing does not need paper trades. Proof posts should wait for P0.
+**Can run while worker is blocked**, indexing does not need paper trades. Proof posts should wait for P0.
 
 1. [Add property](https://search.google.com/search-console) → `https://zengtrade.in`
 2. Submit `https://zengtrade.in/sitemap.xml`
@@ -31,7 +31,7 @@ Target coins (minimum 7): BTC, ETH, SOL, BNB, XRP, ADA, DOGE.
 
 ## On-page standards
 
-- **Title:** `{Coin} algo trading (paper) · zengtrade` — max ~60 chars
+- **Title:** `{Coin} algo trading (paper) · zengtrade`: max ~60 chars
 - **Meta description:** Honest paper trading on live prices; no live execution promise
 - **H1:** One per page; include coin name + "paper" or "forward test"
 - **CTA:** `/login?mode=signup&utm_source=site&utm_medium=organic&utm_campaign=coin_{slug}`
@@ -59,7 +59,7 @@ Run on the **first Monday** of each month after property is verified.
 | 1 | Open [Search Console](https://search.google.com/search-console) → `https://zengtrade.in` |
 | 2 | **Performance** → last 28 days → export top 20 queries + pages |
 | 3 | Note impressions/clicks for `/`, `/pricing/`, `/how-it-works/`, top 3 coin pages |
-| 4 | **Indexing** → confirm sitemap `https://zengtrade.in/sitemap.xml` — 0 critical errors |
+| 4 | **Indexing** → confirm sitemap `https://zengtrade.in/sitemap.xml`: 0 critical errors |
 | 5 | **URL inspection** → request indexing for any new coin page or major copy change |
 | 6 | Log findings in `docs/GROWTH_DASHBOARD.md` under **SEO** for that month |
 
@@ -72,7 +72,7 @@ Automated preflight (no GSC API required):
 ./scripts/guide-monthly-gsc-review.sh   # founder monthly checklist
 ```
 
-**Partial activation (worker offline):** honest organic copy in `docs/content/WEEKLY_PROOF.md` § Partial — no closed-trade claims until `./scripts/check-worker.sh` is green.
+**Partial activation (worker offline):** honest organic copy in `docs/content/WEEKLY_PROOF.md` § Partial: no closed-trade claims until `./scripts/check-worker.sh` is green.
 
 **KPI targets (30d):** 500 organic sessions/week · coin landing CTR from GSC · signups with `utm_campaign=coin_*` or `signup_coins`.
 

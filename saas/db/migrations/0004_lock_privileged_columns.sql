@@ -1,4 +1,4 @@
--- zengtrade — P0 SECURITY FIX: stop users self-granting a paid tier / forging their track record.
+-- zengtrade: P0 SECURITY FIX: stop users self-granting a paid tier / forging their track record.
 --
 -- RLS is ROW-level, not column-level. The old `own_profile ... with check (id = auth.uid())` policy
 -- authorised a user to UPDATE their OWN profile row, tier column included, so a logged-in free user

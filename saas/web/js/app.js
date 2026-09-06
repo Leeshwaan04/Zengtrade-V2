@@ -61,7 +61,7 @@ async function maybePaidReturn() {
   const q = new URLSearchParams(location.search);
   if (q.get("paid") !== "1") return;
   history.replaceState({}, "", location.pathname + location.hash);   // don't replay on refresh
-  if (isPro(tier)) { toast(`You're on ${tier === "elite" ? "Elite" : "Pro"} — thank you!`, "ok"); return; }
+  if (isPro(tier)) { toast(`You're on ${tier === "elite" ? "Elite" : "Pro"}, thank you!`, "ok"); return; }
 
   if (!document.getElementById("ztSpinKf")) {
     const s = document.createElement("style"); s.id = "ztSpinKf";
@@ -172,9 +172,9 @@ function activationChecklist() {
   if (deployed && traded) return "";
   const s1 = "done", s2 = deployed ? "done" : "on", s3 = traded ? "done" : (deployed ? "on" : "");
   const workerNote = deployed && !traded && !state.workerAlive
-    ? `<p class="muted" style="margin:8px 0 0;font-size:13px">Paper worker is offline — deploys are saved but trades pause until the worker is running. <a href="#forward">View evidence</a> · <a href="/ops/worker">Worker status</a> · <a href="/ops/e2e">E2E status</a> · <a href="/how-it-works/">How paper trading works</a></p>`
+    ? `<p class="muted" style="margin:8px 0 0;font-size:13px">Paper worker is offline: deploys are saved but trades pause until the worker is running. <a href="#forward">View evidence</a> · <a href="/ops/worker">Worker status</a> · <a href="/ops/e2e">E2E status</a> · <a href="/how-it-works/">How paper trading works</a></p>`
     : deployed && !traded && state.workerAlive
-    ? `<p class="muted" style="margin:8px 0 0;font-size:13px">Worker is running — first closed trade usually within 5–15 min. Open <a href="#forward">Forward Test</a>.</p>`
+    ? `<p class="muted" style="margin:8px 0 0;font-size:13px">Worker is running: first closed trade usually within 5–15 min. Open <a href="#forward">Forward Test</a>.</p>`
     : "";
   return `<div class="card" id="activation">
     <div class="card-h"><h3>Activation checklist</h3><span class="muted">signup → deploy → trades</span></div>
@@ -201,20 +201,20 @@ function renderDashboard() {
     if (state.deployments.length >= FREE_DEPLOY_LIMIT) {
       upsell = `<div class="upsell"><div><b>You're on Free, ${FREE_DEPLOY_LIMIT} strategy.</b><span>Upgrade to Pro for unlimited paper strategies; live execution unlocks per go-live bar (coming soon).</span></div><button class="btn primary" id="up2">Upgrade, $19/mo founding</button></div>`;
     } else if (deployed && traded) {
-      upsell = `<div class="upsell"><div><b>Forward evidence is building.</b><span>Pro unlocks unlimited paper strategies — founding $19/mo while live execution rolls out per go-live bar.</span></div><button class="btn primary" id="up2">Go Pro, $19/mo</button></div>`;
+      upsell = `<div class="upsell"><div><b>Forward evidence is building.</b><span>Pro unlocks unlimited paper strategies, founding $19/mo while live execution rolls out per go-live bar.</span></div><button class="btn primary" id="up2">Go Pro, $19/mo</button></div>`;
     }
   }
   app.innerHTML = `
     <div class="page-h">
       <h2>Evidence &amp; billing</h2>
-      <p>Deploy strategies in <a href="/dashboard">Algo Studio</a> — this page tracks your forward paper results, accuracy, and Pro plan.</p>
+      <p>Deploy strategies in <a href="/dashboard">Algo Studio</a>. This page tracks your forward paper results, accuracy, and Pro plan.</p>
     </div>
     ${activationChecklist()}
     ${upsell}
     <div class="grid stats">
       <div class="stat"><span>Net P&amp;L · after costs</span><b class="${tone(m.net)}">${money(m.net)}</b></div>
       <div class="stat"><span>Closed trades</span><b>${num(m.n)}</b></div>
-      <div class="stat"><span>Win rate</span><b>${m.n ? pct(m.win) : "—"}</b></div>
+      <div class="stat"><span>Win rate</span><b>${m.n ? pct(m.win) : "-"}</b></div>
       <div class="stat"><span>Plan</span><b>${isPro(tier) ? "Pro" : "Free"}</b></div>
     </div>
     <div class="card curve-card">
@@ -245,7 +245,7 @@ function stratRow(s) {
   return `<div class="srow">
     <div class="srow-main"><b>${esc(meta.name)}</b><span class="tag">${esc(meta.style || "paper")}</span></div>
     <div class="srow-metric"><span>${num(s.n)}</span><small>trades</small></div>
-    <div class="srow-metric"><span>${s.n ? pct(w) : "—"}</span><small>win</small></div>
+    <div class="srow-metric"><span>${s.n ? pct(w) : "-"}</span><small>win</small></div>
     <div class="srow-metric"><span class="${tone(s.net)}">${money(s.net)}</span><small>net</small></div>
   </div>`;
 }
@@ -257,7 +257,7 @@ const emptyStrategies = () => `<div class="empty">
 const emptyDeployCta = (title, blurb) => {
   const deployed = state.deployments.some((d) => d.status === "running");
   const proBtn = deployed && !isPro(tier)
-    ? `<button class="btn ghost" id="ev-pro" type="button" style="margin-left:8px">Pro $19/mo — unlimited</button>`
+    ? `<button class="btn ghost" id="ev-pro" type="button" style="margin-left:8px">Pro $19/mo, unlimited</button>`
     : "";
   return `<div class="empty"><p><b>${title}</b></p><p class="muted">${blurb}</p>
   <button class="btn primary" id="ev-deploy">Deploy a strategy</button>
@@ -274,7 +274,7 @@ function showPostDeployHint() {
   if (document.getElementById("ztPostDeployHint")) return;
   const workerNote = state.workerAlive
     ? "Trades appear in Forward Test as the worker runs (~15 min)."
-    : "Worker is offline — deploy saved; trades start when the worker is live. <a href=\"/ops/e2e\">E2E status</a>";
+    : "Worker is offline: deploy saved; trades start when the worker is live. <a href=\"/ops/e2e\">E2E status</a>";
   const el = document.createElement("div");
   el.id = "ztPostDeployHint";
   el.setAttribute("role", "status");
@@ -298,15 +298,15 @@ function showPostDeployHint() {
 function forwardEmptyBlurb() {
   const deployed = state.deployments.some(d => d.status === "running");
   if (deployed && !state.workerAlive) {
-    return "Deploy saved in <a href=\"/dashboard\">Algo Studio</a> — paper worker is offline. Trades appear when the worker is back (~every 5 min when live). <a href=\"/ops/worker\">Worker status</a> · <a href=\"/ops/e2e\">E2E status</a>";
+    return "Deploy saved in <a href=\"/dashboard\">Algo Studio</a>. Paper worker is offline. Trades appear when the worker is back (~every 5 min when live). <a href=\"/ops/worker\">Worker status</a> · <a href=\"/ops/e2e\">E2E status</a>";
   }
   if (deployed && !isPro(tier)) {
-    return "Waiting for closed trades on your forward book — unlimited strategies on Pro ($19/mo founding).";
+    return "Waiting for closed trades on your forward book. Unlimited strategies on Pro ($19/mo founding).";
   }
   if (deployed && state.workerAlive) {
-    return "Worker is running — first closed trade usually within 5–15 min on live Binance prices.";
+    return "Worker is running: first closed trade usually within 5–15 min on live Binance prices.";
   }
-  return "Deploy a strategy — the worker fills this in as trades close on live prices.";
+  return "Deploy a strategy: the worker fills this in as trades close on live prices.";
 }
 
 // ---- Forward Test (closed-trade evidence) ----
@@ -315,12 +315,12 @@ function renderForward() {
   const rows = [...state.trades].reverse();
   const m = metrics();
   app.innerHTML = `
-    <div class="page-h"><h2>Forward Test</h2><p class="muted">Your out-of-sample paper track record — every closed trade on live crypto prices, net of costs. This is the evidence that earns go-live consideration.</p></div>
+    <div class="page-h"><h2>Forward Test</h2><p class="muted">Your out-of-sample paper track record: every closed trade on live crypto prices, net of costs. This is the evidence that earns go-live consideration.</p></div>
     <div class="grid stats">
       <div class="stat"><span>Closed trades</span><b>${num(m.n)}</b></div>
-      <div class="stat"><span>Win rate</span><b>${m.n ? pct(m.win) : "—"}</b></div>
+      <div class="stat"><span>Win rate</span><b>${m.n ? pct(m.win) : "-"}</b></div>
       <div class="stat"><span>Net P&amp;L</span><b class="${tone(m.net)}">${money(m.net)}</b></div>
-      <div class="stat"><span>Profit factor</span><b>${m.n ? (m.pf >= 99 ? "∞" : m.pf.toFixed(2)) : "—"}</b></div>
+      <div class="stat"><span>Profit factor</span><b>${m.n ? (m.pf >= 99 ? "∞" : m.pf.toFixed(2)) : "-"}</b></div>
     </div>
     <div class="card table-card">${rows.length ? `
       <div class="tbl-scroll"><table><thead><tr><th>When</th><th>Strategy</th><th>Symbol</th><th class="r">P&amp;L</th><th class="r">Cost</th></tr></thead>
@@ -339,13 +339,13 @@ function renderAccuracy() {
   if (state.loading) { app.innerHTML = `<div class="card">${skeletonRows(4)}</div>`; return; }
   const ps = perStrategy();
   app.innerHTML = `
-    <div class="page-h"><h2>Accuracy</h2><p class="muted">Per-strategy forward accuracy from your closed paper trades — win rate, net P&amp;L, and trade count. Backtest figures are not shown here; only your live forward evidence counts.</p></div>
+    <div class="page-h"><h2>Accuracy</h2><p class="muted">Per-strategy forward accuracy from your closed paper trades: win rate, net P&amp;L, and trade count. Backtest figures are not shown here; only your live forward evidence counts.</p></div>
     <div class="card">${ps.length ? ps.map(s => {
       const w = s.n ? (100 * s.wins / s.n) : 0;
       const meta = byKey[s.key] || { name: s.key };
       return `<div class="srow"><div class="srow-main"><b>${esc(meta.name)}</b><span class="tag">forward</span></div>
         <div class="srow-metric"><span>${num(s.n)}</span><small>trades</small></div>
-        <div class="srow-metric"><span>${s.n ? pct(w) : "—"}</span><small>win</small></div>
+        <div class="srow-metric"><span>${s.n ? pct(w) : "-"}</span><small>win</small></div>
         <div class="srow-metric"><span class="${tone(s.net)}">${money(s.net)}</span><small>net</small></div></div>`;
     }).join("") : emptyDeployCta("No forward data yet.", forwardEmptyBlurb())}</div>`;
   wireEmptyDeploy();
@@ -357,19 +357,19 @@ function renderAnalytics() {
   const m = metrics();
   const bySym = {};
   for (const t of state.trades) {
-    const k = t.symbol || "—";
+    const k = t.symbol || "-";
     const row = bySym[k] || (bySym[k] = { sym: k, n: 0, net: 0, wins: 0 });
     row.n++; row.net += Number(t.pnl || 0); if (t.pnl > 0) row.wins++;
   }
   const symRows = Object.values(bySym).sort((a, b) => b.net - a.net);
   const byStrat = perStrategy().sort((a, b) => b.net - a.net);
   app.innerHTML = `
-    <div class="page-h"><h2>Analytics</h2><p class="muted">P&amp;L attribution across your paper book — by strategy and symbol. All figures are net of booked costs from closed trades.</p></div>
+    <div class="page-h"><h2>Analytics</h2><p class="muted">P&amp;L attribution across your paper book, by strategy and symbol. All figures are net of booked costs from closed trades.</p></div>
     <div class="grid stats">
       <div class="stat"><span>Total net</span><b class="${tone(m.net)}">${money(m.net)}</b></div>
       <div class="stat"><span>Strategies</span><b>${num(byStrat.length)}</b></div>
       <div class="stat"><span>Symbols traded</span><b>${num(symRows.length)}</b></div>
-      <div class="stat"><span>Expectancy / trade</span><b class="${tone(m.n ? m.net / m.n : 0)}">${m.n ? money(m.net / m.n, 2) : "—"}</b></div>
+      <div class="stat"><span>Expectancy / trade</span><b class="${tone(m.n ? m.net / m.n : 0)}">${m.n ? money(m.net / m.n, 2) : "-"}</b></div>
     </div>
     <div class="card"><div class="card-h"><h3>By strategy</h3></div>
       ${byStrat.length ? byStrat.map(s => `<div class="srow"><div class="srow-main"><b>${esc((byKey[s.key] || {}).name || s.key)}</b></div>
@@ -388,7 +388,7 @@ function renderStrategies() {
   if (state.loading) { app.innerHTML = `<div class="grid cards">${skeletonRows(3)}</div>`; return; }
   const deployed = new Set(state.deployments.map(d => d.strategy_key));
   const workerNote = !state.workerAlive
-    ? `<p class="muted" style="margin-top:8px;font-size:13px">Paper worker is offline — deploys are saved but trades pause until it restarts. <a href="/ops/worker">Worker status</a> · <a href="/ops/e2e">E2E status</a> · <a href="/how-it-works/">How paper trading works</a></p>`
+    ? `<p class="muted" style="margin-top:8px;font-size:13px">Paper worker is offline: deploys are saved but trades pause until it restarts. <a href="/ops/worker">Worker status</a> · <a href="/ops/e2e">E2E status</a> · <a href="/how-it-works/">How paper trading works</a></p>`
     : "";
   app.innerHTML = `
     <div class="page-h"><h2>Strategies</h2><p class="muted">Deploy to paper-trade free. Backtest figures are ~2 years of real data, net of fees, <b>backtest, not forward-proven.</b> Watch each earn its track record in your own book before it ever runs live.</p>${workerNote}</div>
@@ -431,8 +431,8 @@ function tradeRow(t) {
     <td class="muted">${timeAgo(t.closed_at)}</td>
     <td>${esc(nameOf(t.strategy_key))}</td>
     <td class="mono">${esc(t.symbol)}</td>
-    <td class="r mono">${t.entry != null ? Number(t.entry).toLocaleString() : "—"}</td>
-    <td class="r mono">${t.exit != null ? Number(t.exit).toLocaleString() : "—"}</td>
+    <td class="r mono">${t.entry != null ? Number(t.entry).toLocaleString() : "-"}</td>
+    <td class="r mono">${t.exit != null ? Number(t.exit).toLocaleString() : "-"}</td>
     <td class="r mono muted">${money(t.cost, 2)}</td>
     <td class="r mono ${tone(t.pnl)}">${money(t.pnl, 2)}</td></tr>`;
 }
@@ -478,7 +478,7 @@ async function deploy(key) {
   if (error) {
     const m = niceError(error);
     if (/free_limit|more than one strategy/i.test(m)) {
-      toast(`Free includes ${FREE_DEPLOY_LIMIT} strategy — upgrade to Pro for unlimited.`, "info");
+      toast(`Free includes ${FREE_DEPLOY_LIMIT} strategy: upgrade to Pro for unlimited.`, "info");
       markCheckoutRef("free_limit_upgrade");
       setTimeout(() => { location.hash = "pricing"; }, 500);
       return;
@@ -507,11 +507,11 @@ function renderPricing() {
   const ready = checkoutReady();
   const soon = ready ? "" : `<div class="soon-banner">${"⏳"} <div><b>Paid plans open in a few days.</b><span>The checkout is going through payment-provider activation. Free is fully live now, start there, and you'll be able to upgrade in-place the moment it opens (no re-signup).</span></div></div>`;
   const workerNote = !state.workerAlive
-    ? `<p class="muted" style="text-align:center;font-size:13px;margin:-4px 0 18px;line-height:1.55">Paper deploy is live — forward evidence fills in when the worker runs. <a href="/dashboard">Open Algo Studio</a> · <a href="/ops/e2e">Status</a></p>`
+    ? `<p class="muted" style="text-align:center;font-size:13px;margin:-4px 0 18px;line-height:1.55">Paper deploy is live: forward evidence fills in when the worker runs. <a href="/dashboard">Open Algo Studio</a> · <a href="/ops/e2e">Status</a></p>`
     : "";
   const deployFirst = !state.deployments.length
     ? `<div class="card" style="margin-bottom:16px;background:var(--green-soft,#eafaf1);border-color:var(--green-line,#bfe9cf)">
-        <p style="margin:0;font-size:14px;line-height:1.55"><b>New here?</b> Deploy a free paper strategy in <a href="/dashboard">Algo Studio</a> first — watch forward evidence build, then upgrade when you're ready.</p>
+        <p style="margin:0;font-size:14px;line-height:1.55"><b>New here?</b> Deploy a free paper strategy in <a href="/dashboard">Algo Studio</a> first, watch forward evidence build, then upgrade when you're ready.</p>
       </div>`
     : "";
   app.innerHTML = `
@@ -527,7 +527,7 @@ function renderPricing() {
     <div class="grid plans">${PLANS.map(p => planCard(p, ready)).join("")}</div>
     <div class="card" style="margin-top:20px">
       <div class="card-h"><h3>Go-live bar</h3><span class="muted">Read-only · live execution coming soon</span></div>
-      <p class="muted" style="font-size:13px;margin:0 0 10px">Each strategy must clear these gates on <b>your</b> forward paper book before live is considered — no backtest shortcuts.</p>
+      <p class="muted" style="font-size:13px;margin:0 0 10px">Each strategy must clear these gates on <b>your</b> forward paper book before live is considered, with no backtest shortcuts.</p>
       <ul style="font-size:13px;line-height:1.65;color:var(--slate);margin:0;padding-left:1.2em">
         <li>≥ 30 closed paper trades</li>
         <li>Net P&amp;L after costs &gt; 0</li>

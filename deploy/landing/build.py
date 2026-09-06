@@ -239,7 +239,7 @@ PRICING_MAIN = f"""<main id="main">
   <section class="lp-sec home-final"><div class="lp-wrap home-final-in"><h2 class="lp-h2">Start free. Upgrade only when it's earned.</h2><div class="lp-cta-row center"><a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=pricing">Start free, no card</a></div></div></section>
 </main>"""
 
-# CBO: blog-quality paper loop section (how-it-works only — compounds SEO + activation clarity)
+# CBO: blog-quality paper loop section (how-it-works only, compounds SEO + activation clarity)
 PAPER_LOOP_SEC = """
   <section class="lp-sec" id="paper-loop" aria-labelledby="h-paper">
     <div class="lp-wrap">

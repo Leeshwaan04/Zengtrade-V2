@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <!-- Content-Security-Policy (defence-in-depth for the innerHTML surface). script-src 'self' (no
      'unsafe-inline') neutralises any injected inline <script>/on*= handler even if an esc() is
-     ever missed. style-src keeps 'unsafe-inline' (the app sets style="" attrs pervasively — low
-     risk). connect-src is an EXPLICIT allowlist — same-origin (the bot API via the tunnel), the
+     ever missed. style-src keeps 'unsafe-inline' (the app sets style="" attrs pervasively, low
+     risk). connect-src is an EXPLICIT allowlist: same-origin (the bot API via the tunnel), the
      local bot API + local Claude proxy (localhost:8756/8787), and Binance data only. The old bare
      'https:' wildcard was removed: it let injected content POST to any host (the AI-endpoint
      exfiltration hole from the audit). A REMOTE AI proxy (non-localhost) must be added here
@@ -37,7 +37,7 @@
 <!-- ====================== TOP BAR ====================== -->
 <header class="topbar">
   <div class="tb-brand">
-    <!-- Ensō Breakout — inlined (not <img>) so `currentColor` picks up the live regime accent.
+    <!-- Ensō Breakout, inlined (not <img>) so `currentColor` picks up the live regime accent.
          aria-hidden: the wordmark beside it already announces the name. -->
     <svg class="brand-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
       <rect width="32" height="32" rx="8" fill="currentColor"/>
@@ -47,12 +47,12 @@
     <span class="brand-pro">zengtrade</span>
   </div>
 
-  <!-- Workspace selector (JS-rendered in Trading mode) — replaces the old NSE/BSE/MCX exchange switch -->
+  <!-- Workspace selector (JS-rendered in Trading mode): replaces the old NSE/BSE/MCX exchange switch -->
   <div class="ws-switch" id="wsSwitch" aria-label="Workspace"></div>
 
   <div class="tb-spacer"></div>
 
-  <!-- Crypto-only product — no Indian market toggle -->
+  <!-- Crypto-only product, no Indian market toggle -->
   <div class="hdr-mkt" id="hdrMkt" aria-label="Market"></div>
 
   <div class="search">
@@ -69,15 +69,15 @@
         <button class="seg-btn" data-regime-btn="neutral" role="tab"><span class="seg-dot dot-neutral"></span>Neutral</button>
         <button class="seg-btn" data-regime-btn="bear" role="tab"><span class="seg-dot dot-bear"></span>Bear</button>
       </div>
-      <button class="auto-pill" id="autoPill" title="AUTO — the detection engine drives the regime">
+      <button class="auto-pill" id="autoPill" title="AUTO: the detection engine drives the regime">
         <span class="auto-dot"></span>AUTO <b class="auto-conf" id="autoConf">100%</b>
       </button>
     </div>
-    <button class="surface-toggle" id="surfaceToggle" title="Day / Night — Trading Floor mode" aria-label="Toggle day or night mode" aria-pressed="false"></button>
+    <button class="surface-toggle" id="surfaceToggle" title="Day / Night: Trading Floor mode" aria-label="Toggle day or night mode" aria-pressed="false"></button>
     <button class="engine-btn icon-only" id="engineBtn" title="Regime Engine" aria-label="Open regime detection engine"><svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2.2" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="7" cy="17" r="2.2" fill="currentColor" stroke="none"/></svg></button>
     <button class="widget-btn" id="widgetBtn" title="Add or manage widgets" aria-label="Open widget library"><svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Widgets</span></button>
-    <button class="plan-chip" id="planChip" title="Your plan — view pricing" aria-label="Your plan — view pricing"></button>
-    <div class="funds-chip"><span id="fundsLabel">Deployable capital</span><b id="fundsVal">—</b></div>
+    <button class="plan-chip" id="planChip" title="Your plan: view pricing" aria-label="Your plan: view pricing"></button>
+    <div class="funds-chip"><span id="fundsLabel">Deployable capital</span><b id="fundsVal">-</b></div>
     <div class="profile">SB</div>
   </div>
 </header>
@@ -85,7 +85,7 @@
 <!-- ====================== INDEX TICKER TAPE ====================== -->
 <div class="ticker-bar">
   <div class="tb-viewport"><div class="tb-ticker" id="topIndex"></div></div>
-  <!-- Live market pulse — relocated here from the top bar so every metric has room to breathe -->
+  <!-- Live market pulse, relocated here from the top bar so every metric has room to breathe -->
   <div class="tb-market">
     <span class="tb-crypto-src" id="tbCryptoSrc">● Live · Binance · 24h</span>
     <div class="mkt-status" id="mktStatus"></div>
@@ -250,7 +250,7 @@
 
     <div class="pg-step pg-step1">
       <h2 class="pg-title">How will you use zengtrade today?</h2>
-      <p class="pg-sub">We'll tailor the entire terminal — order pad, panels, chart and signals — to your style. Switch anytime from the floating control.</p>
+      <p class="pg-sub">We'll tailor the entire terminal (order pad, panels, chart and signals) to your style. Switch anytime from the floating control.</p>
       <div class="pg-opts">
         <button class="pg-opt" data-persona="trader">
           <span class="pg-ic"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M21 7h-5M21 7v5"/></svg></span>
@@ -273,7 +273,7 @@
           <span class="pg-desc">Your market copilot · ask for ideas, screeners, hedges &amp; plain-English insight on demand.</span>
         </button>
       </div>
-      <button class="pg-skip" id="pgSkip">Decide later — start in Trading</button>
+      <button class="pg-skip" id="pgSkip">Decide later, start in Trading</button>
     </div>
 
     <div class="pg-step pg-step2" id="pgStep2"><!-- connect-Kite step, rendered by renderOnboardConnect() --></div>

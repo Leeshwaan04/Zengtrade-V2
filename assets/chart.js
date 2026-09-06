@@ -1,5 +1,5 @@
 /* ============================================================
-   TradePro · Indiabulls Securities — Interactive Chart Engine
+   TradePro · Indiabulls Securities, Interactive Chart Engine
    Canvas2D · pan/zoom/crosshair · multi chart-type ·
    indicator stack · regime-aware overlays · drawing tools ·
    trade-from-chart · bar replay
@@ -171,7 +171,7 @@ function draw(){
   let bars=visBars();
   if(S.type==='heikin')bars=heikin(bars);
   if(!bars.length){
-    // Honest empty state — never synthetic candles
+    // Honest empty state: never synthetic candles
     ctx.fillStyle=withA(cssv('--slate')||'#8a93a6',0.9);
     ctx.font='13px '+(cssv('--ui')||'system-ui');
     ctx.textAlign='center';ctx.textBaseline='middle';
@@ -381,7 +381,7 @@ function updateReadout(bars,L,main,rng){
   if(S.ind.ema200)lg.push(['EMA200',ema(closes,200)[i],S.palette.slate]);
   if(S.ind.vwap)lg.push(['VWAP',vwap(bars)[i],'#8b5cf6']);
   if(S.ind.rsi){const r=rsi(closes,14)[i];lg.push(['RSI',r,'#8b5cf6']);}
-  const le=$('#chLegend');if(le)le.innerHTML=lg.map(([n,v,c])=>`<span class="ch-lg"><i style="background:${c}"></i>${n} <b class="num">${v==null?'—':fmtN(v,n==='RSI'?1:(v>2000?0:1))}</b></span>`).join('');
+  const le=$('#chLegend');if(le)le.innerHTML=lg.map(([n,v,c])=>`<span class="ch-lg"><i style="background:${c}"></i>${n} <b class="num">${v==null?'-':fmtN(v,n==='RSI'?1:(v>2000?0:1))}</b></span>`).join('');
 }
 
 /* ============================================================
@@ -614,7 +614,7 @@ function restore(o){
 }
 function setTimeframe(tf){if(S.mounted&&TF[tf])setTF(tf);}
 /* Real-time tick: nudge the last live candle's close (and extend its high/low) when a
-   fresh WebSocket price arrives for the symbol on screen. Cheap — just redraws. */
+   fresh WebSocket price arrives for the symbol on screen. Cheap: just redraws. */
 function tick(sym,ltp){
   if(!S.mounted||ltp==null||sym!==S.sym||!S.bars.length||S.noData)return;
   const b=S.bars[S.bars.length-1];

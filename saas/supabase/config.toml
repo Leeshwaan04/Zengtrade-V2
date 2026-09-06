@@ -1,4 +1,4 @@
-# zengtrade — Supabase project config. Link with:
+# zengtrade: Supabase project config. Link with:
 #   supabase link --project-ref ponvarxeytfcntckczbn
 project_id = "ponvarxeytfcntckczbn"
 

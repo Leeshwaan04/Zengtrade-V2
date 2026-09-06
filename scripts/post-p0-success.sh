@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Post-P0 verification — run after migration 0011 + worker are green.
+# Post-P0 verification: run after migration 0011 + worker are green.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

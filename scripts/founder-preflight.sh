@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Founder preflight — run before/after merge to confirm ship readiness.
+# Founder preflight: run before/after merge to confirm ship readiness.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

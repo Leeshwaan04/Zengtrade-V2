@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fast growth summary when worker is blocked — skips slow validate-database-credentials re-probe.
+# Fast growth summary when worker is blocked, skips slow validate-database-credentials re-probe.
 # Callers may override any GROWTH_* var before invoking.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

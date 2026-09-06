@@ -1,4 +1,4 @@
-/* Accessibility audit — zengtrade personal terminal (assets/app.js).
+/* Accessibility audit: zengtrade personal terminal (assets/app.js).
  *
  * A dependency-free WCAG-A/AA scan of the LIVE rendered DOM (axe-core can't load under the
  * terminal's CSP). It reports the high-signal, low-false-positive violations that actually

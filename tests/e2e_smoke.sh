@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# zengtrade launch smoke — fast checks before deploy (no browser).
+# zengtrade launch smoke: fast checks before deploy (no browser).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

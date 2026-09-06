@@ -1,4 +1,4 @@
-/* zengtrade crypto-only bootstrap — loaded before app.js.
+/* zengtrade crypto-only bootstrap, loaded before app.js.
  * Pins the terminal to Algo Studio + crypto market; removes Indian/Kite surfaces. */
 (function () {
   'use strict';

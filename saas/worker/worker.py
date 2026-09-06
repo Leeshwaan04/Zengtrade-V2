@@ -79,10 +79,10 @@ def _process(cur, uid, skey, params=None, replay_days=None):
     if params:                                    # user-composed strategy (Builder spec)
         # SECURITY FIX (2026-09-06): `deployment.params` is a bare jsonb column with no CHECK
         # constraint requiring it to be an object. Any authenticated user could set it (via a
-        # direct REST/PATCH call, bypassing the Builder UI entirely) to a plain jsonb scalar —
+        # direct REST/PATCH call, bypassing the Builder UI entirely) to a plain jsonb scalar, 
         # a string, number, array, or bool. json.loads() on anything but a dict/str raises
         # TypeError, and json.loads() on a non-JSON string raises JSONDecodeError; either one
-        # was previously uncaught here, crashing this whole process — and since the offending
+        # was previously uncaught here, crashing this whole process, and since the offending
         # deployment row persists with status='running', the worker crash-looped on every
         # restart, taking paper trading down for every customer, not just the one bad row.
         # Now anything that isn't a dict, or a string that doesn't decode to one, is just
@@ -134,7 +134,7 @@ def run_cycle(conn, replay_days=None):
         # RELIABILITY FIX (2026-09-06): one deployment's exception (a bug in a specific
         # indicator, a transient data-feed hiccup, a DB write conflict) used to abort this
         # entire loop, silently skipping every OTHER user's strategy for the rest of the cycle
-        # and never reaching heartbeat() below — indistinguishable from the worker being fully
+        # and never reaching heartbeat() below, indistinguishable from the worker being fully
         # down. Isolate each deployment so one bad row can only cost that one row's trades.
         try:
             tot += _process(cur, uid, skey, params, replay_days)
@@ -162,7 +162,7 @@ def main():
             while True:
                 # RELIABILITY FIX (2026-09-06): this loop had no exception handling at all, so
                 # any uncaught error from run_cycle() (a DB connection drop mid-cycle, etc.)
-                # crashed the whole process. Railway's restart policy then relaunched it — which
+                # crashed the whole process. Railway's restart policy then relaunched it, which
                 # hits the exact same failure immediately if it's a persistent condition (a bad
                 # DATABASE_URL, a poisoned row), producing a silent crash-loop rather than a
                 # process that stays up and keeps trying. Log and keep the process alive instead;

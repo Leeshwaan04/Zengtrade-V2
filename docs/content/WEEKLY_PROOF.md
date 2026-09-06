@@ -2,9 +2,9 @@
 
 Use after worker is live and you have real forward paper data.
 
-## Post 1 — Forward diary
+## Post 1: Forward diary
 ```
-Week [N] — zengtrade forward paper book (honest)
+Week [N]: zengtrade forward paper book (honest)
 
 Regime: [Bull/Bear/Chop]
 Deployed: [strategy names]
@@ -17,7 +17,7 @@ No live money. Binance spot prices. Full cost model.
 Try free: https://zengtrade.in/login?mode=signup&utm_source=site&utm_medium=organic&utm_campaign=weekly_proof
 ```
 
-## Post 2 — Anti-scam angle
+## Post 2: Anti-scam angle
 ```
 Most crypto "backtests" ignore fees and slippage.
 
@@ -26,7 +26,7 @@ Forward book ≠ backtest fantasy.
 
 [screenshot of Forward Test tab]
 
-zengtrade.in — paper first.
+zengtrade.in: paper first.
 ```
 
 ## Channels
@@ -36,12 +36,12 @@ zengtrade.in — paper first.
 
 **Do not post until LAUNCH_RUNBOOK P0 items 1–7 are checked.**
 
-## Partial proof (worker offline — honest)
+## Partial proof (worker offline, honest)
 
 Use when signup → deploy is live but forward trades are not yet running:
 
 ```
-Building zengtrade in public — paper trading on live Binance prices.
+Building zengtrade in public: paper trading on live Binance prices.
 
 Today: signup → Algo Studio → deploy is live on production.
 Post-deploy: track evidence at /app#forward (yellow banner on /dashboard also links View evidence).

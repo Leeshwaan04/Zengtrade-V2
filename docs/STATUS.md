@@ -1,4 +1,4 @@
-# zengtrade — live status
+# zengtrade: live status
 
 **Last autopilot check:** 2026-08-24 (session 218)  
 **Production:** https://zengtrade.in
@@ -17,11 +17,11 @@
 | Partial activation (signup→deploy) | ✅ `./scripts/verify-activation-path.sh --partial` |
 | Sales-ready (Pro checkout path) | ✅ `./scripts/check-sales-ready.sh` |
 | QA parallel (excl. worker) | ✅ `./scripts/check-qa-parallel.sh` |
-| DATABASE_URL auth (Railway) | ❌ wrong password — `./scripts/validate-database-credentials.sh` |
-| Growth: CTO loop | ❌ auth+worker+DB — `/ops/worker` |
-| Growth: CPO trades | partial ✅ — full E2E needs worker |
+| DATABASE_URL auth (Railway) | ❌ wrong password, `./scripts/validate-database-credentials.sh` |
+| Growth: CTO loop | ❌ auth+worker+DB: `/ops/worker` |
+| Growth: CPO trades | partial ✅: full E2E needs worker |
 | Growth: CBO infra | ✅ GSC+sales-ready · first MRR founder `/admin` |
-| Paper worker | ❌ **Down** — heartbeat stale (2026-08-11); Railway deploy **FAILED** (wrong `DATABASE_URL` password) |
+| Paper worker | ❌ **Down**: heartbeat stale (2026-08-11); Railway deploy **FAILED** (wrong `DATABASE_URL` password) |
 
 ## P0 blocker (founder)
 
@@ -50,15 +50,15 @@ Index: **docs/FOUNDER_PARALLEL.md**
 
 ## Founder dashboards
 
-👉 **https://zengtrade.in/ops** — CTO / CPO / CBO live gates  
-👉 **https://zengtrade.in/admin** — signups, MRR, funnel (login required)
+👉 **https://zengtrade.in/ops**: CTO / CPO / CBO live gates  
+👉 **https://zengtrade.in/admin**: signups, MRR, funnel (login required)
 
 ## After P0 green
 
 ```bash
 ./scripts/post-p0-success.sh
 ./scripts/verify-activation-path.sh
-./scripts/guide-qa-rls-isolation.sh   # after trades visible — /ops/e2e step 5
+./scripts/guide-qa-rls-isolation.sh   # after trades visible, /ops/e2e step 5
 ./scripts/audit-growth-goal.sh
 ```
 

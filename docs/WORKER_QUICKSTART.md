@@ -1,4 +1,4 @@
-# Worker quickstart (founder — ~10 min)
+# Worker quickstart (founder: ~10 min)
 
 Paper trades **do not run** without this process. Site + auth can be live while worker is down.
 
@@ -16,7 +16,7 @@ Paper trades **do not run** without this process. Site + auth can be live while 
    - `DATABASE_URL` = Supabase → Project Settings → Database → **URI** (session pooler, port 5432)
    - `WORKER_INTERVAL` = `300` (optional)
 4. Deploy → Logs should show: `zengtrade worker · … featured strategies` then **`startup heartbeat ok`**
-5. Re-run `./scripts/check-worker.sh` — heartbeat must be **< 12 min**
+5. Re-run `./scripts/check-worker.sh`: heartbeat must be **< 12 min**
 
 ## 3. Verify in product
 

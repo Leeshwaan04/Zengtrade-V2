@@ -1,10 +1,10 @@
--- zengtrade — multi-tenant schema (Postgres / Supabase-flavoured)
+-- zengtrade: multi-tenant schema (Postgres / Supabase-flavoured)
 -- The isolation backbone: every business row carries user_id, and Row-Level Security (RLS)
--- makes it PHYSICALLY IMPOSSIBLE for one user's session to read another's rows — the DB
+-- makes it PHYSICALLY IMPOSSIBLE for one user's session to read another's rows, the DB
 -- enforces it, not the app. This is what turns the single-tenant terminal into a safe product.
 --
 -- Auth itself (users, passwords, OAuth, sessions, email verification) is owned by the auth
--- provider (Supabase auth.users) — we never store or hash passwords ourselves.
+-- provider (Supabase auth.users): we never store or hash passwords ourselves.
 
 -- ---------- profile: 1:1 with the auth user ----------
 create table profile (
@@ -78,7 +78,7 @@ create table trade (
 create index on trade (user_id, strategy_key, closed_at);
 
 -- ============================================================
--- ROW-LEVEL SECURITY — the guarantee. Enable on every tenant table,
+-- ROW-LEVEL SECURITY: the guarantee. Enable on every tenant table,
 -- then a single policy: you may only touch rows where user_id = your auth id.
 -- ============================================================
 alter table profile              enable row level security;
@@ -96,7 +96,7 @@ create policy own_book         on book_state          using (user_id = auth.uid(
 create policy own_trade        on trade               using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 -- The strategy engine (server-side workers) uses the service role to write results,
--- always scoping every insert/update by user_id — RLS is the backstop if app code ever slips.
+-- always scoping every insert/update by user_id, RLS is the backstop if app code ever slips.
 
 -- ---------- webhook idempotency (billing) ----------
 create table webhook_event (

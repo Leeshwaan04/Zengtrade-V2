@@ -55,7 +55,7 @@ for slug in bitcoin ethereum solana bnb xrp cardano dogecoin; do
   check_page "coin $slug" "/coins/${slug}/" "coin_${slug}" || fail=1
 done
 
-# Secondary internal links (coins hub discovery — sessions 167–168)
+# Secondary internal links (coins hub discovery, sessions 167–168)
 check_page "home coins hub" "/" "home_coins" || fail=1
 check_page "how-it-works coins" "/how-it-works/" "paper_loop_coins" || fail=1
 check_page_or_repo "how-it-works pro" "/how-it-works/" "paper_loop_pro" deploy/landing/build.py 'paper_loop_pro' || fail=1

@@ -1,4 +1,4 @@
-// zengtrade — UI toolkit. Zero dependencies, CSP-safe, theme-aware.
+// zengtrade: UI toolkit. Zero dependencies, CSP-safe, theme-aware.
 // Toasts (not alert), formatters, a hand-drawn equity curve, skeletons, safe HTML escaping.
 
 // ---- safety: escape anything user-influenced before it touches innerHTML ----
@@ -15,7 +15,7 @@ export const money = (n, dp = 0) => {
 export const pct = (n, dp = 1) => `${Number(n || 0).toFixed(dp)}%`;
 export const num = (n) => Number(n || 0).toLocaleString("en-US");
 export function timeAgo(iso) {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const s = (Date.now() - new Date(iso).getTime()) / 1000;
   if (s < 60) return "just now";
   if (s < 3600) return `${Math.floor(s / 60)}m ago`;

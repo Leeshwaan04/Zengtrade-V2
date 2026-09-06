@@ -1,5 +1,5 @@
 -- Ensure every new auth user gets a profile row (tier 'free') server-side, so the billing
--- webhook's `update profile set tier='pro'` always has a row to hit — even if the client-side
+-- webhook's `update profile set tier='pro'` always has a row to hit, even if the client-side
 -- ensureProfile() never ran. Idempotent: safe to run more than once.
 
 create or replace function public.handle_new_user()

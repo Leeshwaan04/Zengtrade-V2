@@ -1,6 +1,6 @@
-// zengtrade — featured strategy catalog for the frontend.
+// zengtrade: featured strategy catalog for the frontend.
 // Backtest metrics are HONEST and LABELLED: ~2 years of real daily Binance data, net of global
-// costs, from the evaluation harness. They are backtest — NOT forward-proven — and shown as such.
+// costs, from the evaluation harness. They are backtest (NOT forward-proven) and shown as such.
 export const STRATEGIES = [
   {
     key: "trend_follow", name: "Crypto Trend Follower", style: "Trend",

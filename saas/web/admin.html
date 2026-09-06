@@ -8,14 +8,14 @@
 <link rel="stylesheet" href="/css.css">
 <style>
   /* Tokens css.css doesn't define but this page (and the pill/tile rules below) already
-     referenced — they were silently falling back to browser defaults (no radius, inherited
+     referenced: they were silently falling back to browser defaults (no radius, inherited
      color) since an undefined var() renders as nothing. Fixed 2026-09-06 alongside the visual
      consistency pass below. */
   :root{--radius-s:10px;--amber:#b45309;--red-d:#a12726;--tint-info:#eef2f8}
   @media(prefers-color-scheme:dark){:root{--amber:#e3a53d;--red-d:#ff8a8c;--tint-info:#141d33}}
 
   /* UI/UX FIX (2026-09-06): /admin was the one logged-in surface with none of the actual
-     zengtrade brand treatment — no ambient aurora, no real logomark (just a plain colored "Z"
+     zengtrade brand treatment: no ambient aurora, no real logomark (just a plain colored "Z"
      square) — while /login, /reset, and the marketing site all share it. Same aurora + logo
      markup as login.html/reset.html, verbatim, so this reads as the same product rather than a
      generic admin template bolted on. */

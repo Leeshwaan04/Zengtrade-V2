@@ -38,7 +38,7 @@ _HEADERS = {"User-Agent": "tradepro-paper/1.0"}
 _IVL = {"minute": "1m", "3minute": "3m", "5minute": "5m", "15minute": "15m",
         "30minute": "30m", "60minute": "1h", "hour": "1h", "day": "1d", "week": "1w"}
 
-# cache TTL (seconds) by interval family — daily bars change slowly, intraday faster
+# cache TTL (seconds) by interval family, daily bars change slowly, intraday faster
 _TTL_DAILY = 300.0
 _TTL_INTRADAY = 60.0
 
@@ -67,7 +67,7 @@ class CryptoDataFeed:
         self.quote = quote
         self._cache: dict[tuple, tuple] = {}   # (sym, binance_ivl) -> (fetched_ts, df)
 
-    # symbol IS the token for crypto — engines pass it straight back to historical()
+    # symbol IS the token for crypto, engines pass it straight back to historical()
     def token_for(self, symbol: str) -> str:
         return symbol
 

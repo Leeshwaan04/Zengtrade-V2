@@ -1,4 +1,4 @@
-// zengtrade — billing (NOWPayments). NO secret in the browser: the client only asks a server-side
+// zengtrade: billing (NOWPayments). NO secret in the browser: the client only asks a server-side
 // Edge Function (nowpayments-create-invoice) to mint a hosted invoice, then redirects to it. The API
 // key + IPN secret live ONLY in Supabase secrets; the IPN webhook (nowpayments-ipn) grants the tier.
 import { sb } from "./auth.js";

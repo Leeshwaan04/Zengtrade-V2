@@ -5,7 +5,7 @@ Production checklist for `zengtrade.in`. Autopilot CTO agent maintains this file
 **Quick start:** `docs/FOUNDER_DEPLOY.md` (30-minute founder checklist)  
 **Merge first:** `docs/MERGE_AND_SHIP.md` (5-minute GitHub merge)
 
-## P0 — Ship the core loop
+## P0: Ship the core loop
 
 | Step | Action | Owner | Done |
 |------|--------|-------|------|
@@ -14,20 +14,20 @@ Production checklist for `zengtrade.in`. Autopilot CTO agent maintains this file
 | 3 | Supabase Auth → URL config: `https://zengtrade.in/login`, `https://zengtrade.in/reset` | CEO | ☐ |
 | 4 | Enable Google provider + OAuth client | CEO | ☐ |
 | 5 | SQL: run migrations `0009` + `0010` + **`0011`** (or `./scripts/check-migrations.sh`) | CTO | ☑ (0011 live on production) |
-| 6 | Host `saas/worker` (see `saas/worker/README.md`) with prod `DATABASE_URL` | CTO | ☐ (Railway deploy FAILED — wrong password) |
+| 6 | Host `saas/worker` (see `saas/worker/README.md`) with prod `DATABASE_URL` | CTO | ☐ (Railway deploy FAILED, wrong password) |
 | 7 | E2E manual: signup → `/dashboard` → deploy → trades in ≤15 min | CPO | ☐ (partial: steps 1–2 at `/ops/e2e`; View evidence → `/app#forward`) |
 | 8 | Run `./tests/e2e_smoke.sh` | CTO | ☑ (also runs on PR via `.github/workflows/ci-smoke.yml`) |
 
-## P1 — Revenue rail
+## P1: Revenue rail
 
 | Step | Action | Done |
 |------|--------|------|
-| 9 | `supabase secrets set NOWPAYMENTS_API_KEY=...` | ☑ (edge functions live — `./scripts/verify-billing.sh`) |
+| 9 | `supabase secrets set NOWPAYMENTS_API_KEY=...` | ☑ (edge functions live: `./scripts/verify-billing.sh`) |
 | 10 | Deploy `nowpayments-create-invoice` + `nowpayments-ipn` | ☑ |
 | 11 | Test checkout → `profile.tier` = pro | ☐ (founder: <https://zengtrade.in/ops/billing> · `./scripts/check-sales-ready.sh`) |
 | 12 | Remove "Opening soon" on paid plans when #11 passes | ☑ (`checkoutReady()` live) |
 
-## P2 — Growth
+## P2: Growth
 
 | Step | Action | Done |
 |------|--------|------|

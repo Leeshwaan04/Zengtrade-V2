@@ -62,9 +62,9 @@ Index: **docs/GUIDE_INDEX.md** · `./scripts/list-founder-guides.sh`
 
 | Goal | Typical status |
 |------|----------------|
-| CTO | Blocked — fix `DATABASE_URL` on Railway (`/ops/worker`) |
-| CPO | Partial OK — signup → deploy; full trades need worker |
-| CBO | Infra green — founder: GSC verify + first Pro checkout → `/admin` MRR |
+| CTO | Blocked: fix `DATABASE_URL` on Railway (`/ops/worker`) |
+| CPO | Partial OK: signup → deploy; full trades need worker |
+| CBO | Infra green: founder: GSC verify + first Pro checkout → `/admin` MRR |
 
 ## Do not (until worker live)
 

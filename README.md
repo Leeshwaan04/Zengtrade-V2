@@ -1,4 +1,4 @@
-# zengtrade — Crypto Algo Studio
+# zengtrade: Crypto Algo Studio
 
 Systematic crypto trading on **live Binance spot prices**. Paper-first, regime-aware, honest costs.
 
@@ -8,25 +8,25 @@ Systematic crypto trading on **live Binance spot prices**. Paper-first, regime-a
 # Install deps
 .cursor/scripts/install.sh
 
-# Terminal 1 — crypto API (port 8756)
+# Terminal 1: crypto API (port 8756)
 cd backend && python3 crypto_api.py
 
-# Terminal 2 — 24/7 paper harness
+# Terminal 2: 24/7 paper harness
 cd backend && python3 paper_trade_crypto.py
 
-# Terminal 3 — frontend (port 8011)
+# Terminal 3: frontend (port 8011)
 python3 serve.py
 ```
 
-Open http://localhost:8011 — Algo Studio loads in crypto-only mode.
+Open http://localhost:8011: Algo Studio loads in crypto-only mode.
 
 ## What it does
 
 - **Backtest** strategies on real Binance historical data with honest friction (135 bps spot)
-- **Forward paper trade** 24/7 on live prices — no exchange keys required
-- **Regime engine** — Bull / Bear / Choppy / High-Vol gates which strategies may trade
-- **Risk governor** — concentration caps, drawdown tiers, anti-churn cost gate
-- **Monitor** — per-strategy realised + unrealised P&L marked to live LTP
+- **Forward paper trade** 24/7 on live prices, no exchange keys required
+- **Regime engine**: Bull / Bear / Choppy / High-Vol gates which strategies may trade
+- **Risk governor**: concentration caps, drawdown tiers, anti-churn cost gate
+- **Monitor**: per-strategy realised + unrealised P&L marked to live LTP
 
 See [docs/CRYPTO_PRODUCT.md](docs/CRYPTO_PRODUCT.md) for the full product vision and user problems solved.
 

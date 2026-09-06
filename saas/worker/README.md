@@ -2,7 +2,7 @@
 
 Runs the proven strategy on **live Binance data** for every ACTIVE paper deployment across all
 users, writing trades + book_state back to Supabase. This is what makes deployed strategies
-actually *trade* — the site is inert without it running.
+actually *trade*: the site is inert without it running.
 
 Self-contained: the needed `bot/` modules (crypto_data, strategies_lib, indicators) are vendored
 here, so it has no dependency on the kite repo.
@@ -20,7 +20,7 @@ Copy `.env.example` -> `.env`, set `DATABASE_URL` to your Supabase Postgres URI 
 
 ## Where to host (pick one)
 
-**Production (current):** Railway service `paper-worker` in project `ravishing-tenderness` — set `DATABASE_URL` (Supabase **session** pooler port **5432**):
+**Production (current):** Railway service `paper-worker` in project `ravishing-tenderness`: set `DATABASE_URL` (Supabase **session** pooler port **5432**):
 
 ```
 postgresql://postgres.ponvarxeytfcntckczbn:PASSWORD@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres
@@ -30,13 +30,13 @@ Founder/agent unblock: Cloud Agent `DATABASE_PASSWORD` only → `./scripts/run-p
 Verify: `./scripts/check-worker.sh` (heartbeat < 12 min). Guide: https://zengtrade.in/ops/worker  
 Recovery runbook: `docs/WORKER_RECOVERY.md`
 
-**A) Docker host — Railway (easiest, ~$5/mo):**
+**A) Docker host: Railway (easiest, ~$5/mo):**
 ```
 # from saas/worker/
 railway up            # see railway.toml; set DATABASE_URL in dashboard
 ```
 The Dockerfile runs continuous mode automatically. (Render and Fly.io configs existed here
-briefly during earlier autopilot sessions and were removed 2026-09-06 — Railway is the one
+briefly during earlier autopilot sessions and were removed 2026-09-06, Railway is the one
 actual deploy target; don't re-add alternates without a reason to actually use them.)
 
 **B) Plain Linux VPS (systemd):**
@@ -57,7 +57,7 @@ After a cycle, check Supabase: `select count(*) from trade;` grows, and `book_st
 The user's dashboard then shows live P&L.
 
 ## Notes
-- Reads `deployment` where `mode='paper' and status='running'` — so it only works on strategies
+- Reads `deployment` where `mode='paper' and status='running'`: so it only works on strategies
   users actually deployed. RLS doesn't block it: the worker connects with the DB role (service),
   not a user JWT.
-- Binance data is public (no key). No exchange keys live here — paper only.
+- Binance data is public (no key). No exchange keys live here: paper only.

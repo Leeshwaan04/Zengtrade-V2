@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CPO: founder combined standup — partial activation (signup → deploy, no trades).
+# CPO: founder combined standup: partial activation (signup → deploy, no trades).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

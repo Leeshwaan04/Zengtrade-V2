@@ -9,7 +9,7 @@ The paper worker (`saas/worker/`) connects to Supabase Postgres and runs strateg
 | Signal | Meaning |
 |--------|---------|
 | `./scripts/check-worker.sh` fails | Heartbeat older than 12 minutes |
-| `/ops` Paper worker gate red | Same — check `engine_state._worker_heartbeat` |
+| `/ops` Paper worker gate red | Same: check `engine_state._worker_heartbeat` |
 | Railway deploy **FAILED** | Often wrong `DATABASE_URL` password (auth error at startup) |
 | `validate-database-credentials.sh` → wrong password | Railway URI set but Postgres rejects auth |
 | Stale `DATABASE_URL` secret + fresh `DATABASE_PASSWORD` | `run-p0-if-ready.sh` drops bad env URI and rebuilds from password (session 143) |
@@ -38,23 +38,23 @@ Expected when healthy: `updated_at` within **12 minutes**, logs show `startup he
 
 ## Fix paths (pick one)
 
-### A — Cloud Agent (fastest for agents)
+### A: Cloud Agent (fastest for agents)
 
 1. Reset DB password in [Supabase → Database](https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings) if unsure.
 2. Add Cloud Agent secret **`DATABASE_PASSWORD`** (password only, not API keys).
 3. Agent runs `./scripts/run-p0-if-ready.sh` → builds session pooler URI → updates Railway `paper-worker` → redeploys.
 
-### B — GitHub Action
+### B: GitHub Action
 
 1. Add `DATABASE_PASSWORD` or full `DATABASE_URL` + `RAILWAY_API_TOKEN` to [repo Secrets](https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions).
 2. Run workflow [Apply P0](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml) → type `APPLY` (preflights `validate-database-credentials.sh`, then `run-p0-if-ready.sh`).
 
-### B2 — GitHub health-watch (scheduled)
+### B2: GitHub health-watch (scheduled)
 
 1. Same Secrets as **B** (`DATABASE_PASSWORD` or `DATABASE_URL` + `RAILWAY_API_TOKEN`).
 2. [health-watch](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/health-watch.yml) runs every **6 hours** and auto-runs `run-p0-if-ready.sh` when credentials work.
 
-### C — Manual Railway
+### C: Manual Railway
 
 1. Supabase **Connect** → URI → **Session** → port **5432** → copy full URI (no `[brackets]` around password).
 2. [Railway paper-worker](https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b) → Variables → `DATABASE_URL` → **Deploy**.
@@ -79,8 +79,8 @@ Manual product check:
 
 1. https://zengtrade.in/login?mode=signup → deploy on `/dashboard`
 2. Wait one worker cycle (default **300s**)
-3. https://zengtrade.in/app#forward — closed trades appear
-4. https://zengtrade.in/ops/e2e — steps 3–4 green
+3. https://zengtrade.in/app#forward: closed trades appear
+4. https://zengtrade.in/ops/e2e: steps 3–4 green
 
 ## Stop / rollback (safe)
 
@@ -98,7 +98,7 @@ Stopping the worker does **not** delete deployments or historical trades. Users 
 - [ ] `RAILWAY_API_TOKEN` is an **account** token from railway.com/account/tokens
 - [ ] After green heartbeat: `./scripts/verify-activation-path.sh`
 
-## While blocked — parallel growth goals
+## While blocked: parallel growth goals
 
 Worker down does not block partial activation or first Pro MRR prep:
 
@@ -109,13 +109,13 @@ Worker down does not block partial activation or first Pro MRR prep:
 
 | Goal | Status while worker down |
 |------|--------------------------|
-| CTO | Blocked until `DATABASE_URL` auth passes — see fix paths above |
+| CTO | Blocked until `DATABASE_URL` auth passes: see fix paths above |
 | CPO | Partial OK: `./scripts/guide-partial-e2e.sh` · login → `/dashboard` deploy → View evidence → `/app#forward` |
 | CPO | Full OK after post-p0: closed trades in `/app#forward` + `verify-activation-path.sh` exit 0 |
 | CBO | GSC + sales-ready probes green; founder: GSC verify + first Pro checkout → `/admin` MRR |
 
 ## Related docs
 
-- `saas/worker/README.md` — local run + hosting options
-- `docs/LAUNCH_RUNBOOK.md` — full launch checklist
-- `docs/FOUNDER_DEPLOY.md` — 30-minute founder checklist
+- `saas/worker/README.md`: local run + hosting options
+- `docs/LAUNCH_RUNBOOK.md`: full launch checklist
+- `docs/FOUNDER_DEPLOY.md`: 30-minute founder checklist

@@ -22,10 +22,10 @@ fi
 
 worker_txt=$([[ $work -eq 1 ]] && echo "✅" || echo "❌")
 
-parallel="—"
-sales="—"
-qa="—"
-partial="—"
+parallel="-"
+sales="-"
+qa="-"
+partial="-"
 
 if [[ $work -eq 0 ]]; then
   parallel_ok=0

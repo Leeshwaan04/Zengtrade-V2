@@ -6,7 +6,7 @@ DATABASE_URL="${DATABASE_URL:-${SUPABASE_DATABASE_URL:-}}"
 DATABASE_URL="${DATABASE_URL//[[:space:]]/}"
 [[ -n "$DATABASE_URL" ]] || { echo "ERROR: DATABASE_URL not set (Cloud Agent secret empty?)" >&2; echo "Run: ./scripts/founder-database-url-help.sh" >&2; exit 1; }
 
-# Supabase UI shows [YOUR-PASSWORD] — founders sometimes paste brackets literally
+# Supabase UI shows [YOUR-PASSWORD], founders sometimes paste brackets literally
 sanitized=$(./scripts/sanitize-database-url.sh "$DATABASE_URL")
 if [[ "$sanitized" != "$DATABASE_URL" ]]; then
   echo "WARN  Stripped [brackets] from DATABASE_URL — use Supabase copy button, not placeholder text" >&2

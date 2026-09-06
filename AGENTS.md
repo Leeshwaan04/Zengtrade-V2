@@ -1,4 +1,4 @@
-# zengtrade — agent instructions
+# zengtrade: agent instructions
 
 ## Git workflow
 
@@ -47,11 +47,11 @@ That resolves `DATABASE_URL` from Cloud Agent secrets or Railway service variabl
 
 Preflight credentials (no secrets printed): `./scripts/validate-database-credentials.sh` (founder hints) · `./scripts/probe-database-auth.sh` (quiet standup probe)
 
-**Founder alternative (no Cloud Agent):** add `DATABASE_PASSWORD` (password only) or `DATABASE_URL` + `RAILWAY_API_TOKEN` to [GitHub repo Secrets](https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions) → run workflow [Apply P0](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml) → type `APPLY`. **Or** wait for [health-watch](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/health-watch.yml) (every 6h) — it auto-runs `run-p0-if-ready.sh` when those secrets are set.
+**Founder alternative (no Cloud Agent):** add `DATABASE_PASSWORD` (password only) or `DATABASE_URL` + `RAILWAY_API_TOKEN` to [GitHub repo Secrets](https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions) → run workflow [Apply P0](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml) → type `APPLY`. **Or** wait for [health-watch](https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/health-watch.yml) (every 6h): it auto-runs `run-p0-if-ready.sh` when those secrets are set.
 
-**Fastest Cloud Agent unblock:** secret `DATABASE_PASSWORD` only (Supabase DB password after reset) — agent builds session pooler URI and redeploys Railway `paper-worker`.
+**Fastest Cloud Agent unblock:** secret `DATABASE_PASSWORD` only (Supabase DB password after reset), agent builds session pooler URI and redeploys Railway `paper-worker`.
 
-**Note:** Account tokens from railway.com/account/tokens use `RAILWAY_API_TOKEN` (not `RAILWAY_TOKEN`). The `paper-worker` service (`0decae25-fab5-44f1-aefa-af6fcd5f070a`) is configured for `saas/worker` Dockerfile — the older `Zengtrade-V2` service was deploying the static site by mistake.
+**Note:** Account tokens from railway.com/account/tokens use `RAILWAY_API_TOKEN` (not `RAILWAY_TOKEN`). The `paper-worker` service (`0decae25-fab5-44f1-aefa-af6fcd5f070a`) is configured for `saas/worker` Dockerfile: the older `Zengtrade-V2` service was deploying the static site by mistake.
 
 Verify with:
 
@@ -60,7 +60,7 @@ Verify with:
 ./scripts/audit-growth-goal.sh          # CTO/CPO/CBO goal requirements vs live probes
 ./scripts/check-growth-goal.sh          # alias for audit-growth-goal.sh
 ./scripts/print-growth-goal-summary.sh  # fast summary (do not nest from founder-parallel-work.sh)
-./scripts/print-growth-goal-summary-fast.sh  # after parallel probes — skips slow DB re-probe
+./scripts/print-growth-goal-summary-fast.sh  # after parallel probes: skips slow DB re-probe
 ./scripts/check-growth-standup.sh   # daily log helper (status + parallel work)
 ./scripts/log-growth-session.sh N   # print status block for GROWTH_DASHBOARD.md (incl. growth goals line)
 ./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..." --seo "..." --marketing "..." --sales "..." --qa "..."
@@ -110,4 +110,4 @@ After P0 green: `./scripts/post-p0-success.sh` then E2E at `/ops/e2e`. QA/VAPT: 
 
 Do not mark the growth goal complete until migration 0011 + worker + signup→deploy→trades are verified on production.
 
-While worker is blocked, run `./scripts/check-parallel-growth.sh` — GSC, billing, and partial activation can proceed in parallel.
+While worker is blocked, run `./scripts/check-parallel-growth.sh`: GSC, billing, and partial activation can proceed in parallel.

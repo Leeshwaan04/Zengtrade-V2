@@ -1,4 +1,4 @@
-// zengtrade SaaS — client config. PUBLIC-safe values only.
+// zengtrade SaaS: client config. PUBLIC-safe values only.
 // The anon key is designed to be shipped to browsers; Row-Level Security protects the data.
 // Payment secrets (NOWPayments API key + IPN secret) live ONLY in Supabase secrets, never here:
 // the browser just calls the nowpayments-create-invoice Edge Function, which holds the key.

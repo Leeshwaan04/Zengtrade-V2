@@ -1,10 +1,10 @@
--- zengtrade — billing hardening.
+-- zengtrade: billing hardening.
 -- (A) grant_paid(): ONE atomic transaction for the IPN grant, fixing three audit findings at once:
---     * reliability  — webhook_event dedup + profile + subscription all commit together or roll back
+--     * reliability: webhook_event dedup + profile + subscription all commit together or roll back
 --       together, so a mid-way failure can't leave a paid user un-upgraded (a retry re-processes).
---     * idempotency  — keyed on payment_id ALONE (not payment_id:status), so 'confirmed' then
+--     * idempotency: keyed on payment_id ALONE (not payment_id:status), so 'confirmed' then
 --       'finished' for the same payment grant exactly once.
---     * early renewal — the new period extends from GREATEST(existing end, now), so renewing early
+--     * early renewal: the new period extends from GREATEST(existing end, now), so renewing early
 --       no longer wipes the remaining paid days.
 -- (B) enforce_deploy_limit(): SERVER-SIDE free-tier cap (was client-only), so a free user can't
 --     insert unlimited deployment rows straight through the API.
@@ -33,7 +33,7 @@ exception when unique_violation then
   return 'dup';                                   -- already processed this payment
 end $$;
 
--- lock it down: ONLY the service role (the IPN webhook) may call it — never a logged-in user,
+-- lock it down: ONLY the service role (the IPN webhook) may call it, never a logged-in user,
 -- or this would become a new self-upgrade path.
 revoke all on function grant_paid(uuid, text, text, text) from public, anon, authenticated;
 grant execute on function grant_paid(uuid, text, text, text) to service_role;

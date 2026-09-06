@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# QA&VAPT parallel gates — runnable while paper worker is blocked (no trades).
+# QA&VAPT parallel gates: runnable while paper worker is blocked (no trades).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

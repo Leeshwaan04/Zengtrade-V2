@@ -1,4 +1,4 @@
-# Merge & ship (founder — 5 minutes)
+# Merge & ship (founder: 5 minutes)
 
 ## 1. Merge autopilot PR ✅
 
@@ -12,9 +12,9 @@ SITE=https://zengtrade.in ./scripts/check-production.sh
 ./scripts/wait-for-deploy.sh    # if CDN still propagating
 ```
 
-## 3. Complete P0 (founder — ~15 min)
+## 3. Complete P0 (founder: ~15 min)
 
-**https://zengtrade.in/ops/p0** — migration 0011 + paper worker (blocks trades + full funnel).
+**https://zengtrade.in/ops/p0**: migration 0011 + paper worker (blocks trades + full funnel).
 
 ```bash
 ./scripts/wait-for-p0.sh        # polls until green, then post-p0-success.sh
@@ -27,6 +27,6 @@ See **`docs/FOUNDER_DEPLOY.md`** for detail.
 
 ## 4. Track growth
 
-- **https://zengtrade.in/ops** — CTO / CPO / CBO dashboard
-- **https://zengtrade.in/admin** — metrics + funnel tiles
-- `docs/GROWTH_DASHBOARD.md` — agent log
+- **https://zengtrade.in/ops**: CTO / CPO / CBO dashboard
+- **https://zengtrade.in/admin**: metrics + funnel tiles
+- `docs/GROWTH_DASHBOARD.md`: agent log

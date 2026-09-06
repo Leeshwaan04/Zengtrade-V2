@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CBO: founder combined standup — GSC organic + first Pro MRR (worker not required).
+# CBO: founder combined standup: GSC organic + first Pro MRR (worker not required).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

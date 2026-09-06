@@ -1,9 +1,9 @@
 -- 2026-09-06 VAPT finding (CRITICAL): deployment.params is a bare jsonb column with no shape
 -- constraint. saas/worker/worker.py's _process() called json.loads() on it when it wasn't
--- already a dict; a jsonb SCALAR (a plain string, number, array, or bool — all legal jsonb
+-- already a dict; a jsonb SCALAR (a plain string, number, array, or bool, all legal jsonb
 -- values) crashed with an uncaught TypeError/JSONDecodeError. Any authenticated user, even
 -- free tier, could set this directly via a REST PATCH/POST to their own deployment row
--- (RLS's own_deployment policy allows it — this needs no special privilege), bypassing the
+-- (RLS's own_deployment policy allows it, this needs no special privilege), bypassing the
 -- Builder UI entirely. Because the bad row persists with status='running', the worker
 -- crash-looped on every restart, taking paper trading down for EVERY customer, not just the
 -- one bad row.

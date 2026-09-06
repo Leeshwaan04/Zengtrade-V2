@@ -1,4 +1,4 @@
-# Marketing Playbook — zengtrade
+# Marketing Playbook: zengtrade
 
 Owner: **Marketing Lead autopilot** (`.cursor/autopilot/marketing.md`)
 
@@ -26,7 +26,7 @@ Pro intent:
 https://zengtrade.in/login?mode=signup&plan=pro&utm_source=...
 ```
 
-## Parallel work (worker blocked — GSC + activation)
+## Parallel work (worker blocked, GSC + activation)
 
 Founder/CBO can run these **before** paper worker is live (no forward trades yet):
 
@@ -41,12 +41,12 @@ Founder/CBO can run these **before** paper worker is live (no forward trades yet
 
 **Do not** claim forward P&L or closed trades until `./scripts/check-worker.sh` is green.
 
-Pre-P0 LinkedIn angle (honest — parallel gates green, worker password fix in progress):
+Pre-P0 LinkedIn angle (honest: parallel gates green, worker password fix in progress):
 
 **Founder-ready draft:** `docs/content/LINKEDIN_BUILD_IN_PUBLIC.md`
 
 ```
-Shipping zengtrade in public — paper trading on live Binance prices.
+Shipping zengtrade in public: paper trading on live Binance prices.
 
 Today on production: signup → Algo Studio → deploy is live (partial E2E steps 1–2).
 Next: forward paper loop once our worker is back (DB credential fix in progress).
@@ -70,10 +70,10 @@ Verify parallel gates before posting: `./scripts/check-parallel-growth.sh`
 **Coin spotlight template (week N):** run `./scripts/guide-coin-spotlight.sh [slug]` for founder-ready copy.
 
 ```
-Coin of the week: [BTC/ETH/SOL] — regime read + paper-first angle
+Coin of the week: [BTC/ETH/SOL] · regime read + paper-first angle
 
 - What the 30-day tape looks like (honest, no hype)
-- Which strategy style fits (trend vs mean-reversion) — paper only
+- Which strategy style fits (trend vs mean-reversion), paper only
 - CTA: https://zengtrade.in/login?mode=signup&utm_source=site&utm_medium=organic&utm_campaign=coin_spotlight_[slug]
 - Deploy → evidence: `/dashboard` deploy · View evidence → `/app#forward` (partial OK while worker down)
 
@@ -89,12 +89,12 @@ Not investment advice. Paper trading on live Binance prices.
 - [ ] Screenshot pack: Forward Test tab (real data only)
 - [ ] Founder bio + risk disclaimer linked from posts
 
-## LinkedIn founder post (template — post after P0 E2E)
+## LinkedIn founder post (template, post after P0 E2E)
 
 ```
 Most crypto "algos" sell backtests. We ship paper trading on live Binance prices first.
 
-zengtrade runs regime-aware strategies 24/7 in paper — full cost model (~35 bps round-trip on spot), forward book only, no live execution promises.
+zengtrade runs regime-aware strategies 24/7 in paper: full cost model (~35 bps round-trip on spot), forward book only, no live execution promises.
 
 If you're systematic and tired of fantasy equity curves:
 → Start free (paper): https://zengtrade.in/login?mode=signup&utm_source=linkedin&utm_medium=social&utm_campaign=founder_launch

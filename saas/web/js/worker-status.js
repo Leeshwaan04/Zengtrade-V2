@@ -1,4 +1,4 @@
-// Worker liveness — public heartbeat row (engine_state._worker_heartbeat).
+// Worker liveness: public heartbeat row (engine_state._worker_heartbeat).
 import { sb } from "./auth.js";
 
 const MAX_AGE_MS = 12 * 60 * 1000;

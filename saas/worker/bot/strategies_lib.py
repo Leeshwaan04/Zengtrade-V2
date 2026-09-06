@@ -14,7 +14,7 @@ import pandas as pd
 from . import indicators
 
 
-# ---------------------------------------------------------------- RSI(2) — Connors
+# ---------------------------------------------------------------- RSI(2), Connors
 @dataclass
 class RSI2Config:
     rsi_period: int = 2
@@ -649,7 +649,7 @@ class RelVolBreakoutStrategy:
     def compute(self, df):
         out = df.copy()
         day = out.index.normalize()
-        # prior-N-bar high (shifted so the current bar isn't in its own breakout level) — per session
+        # prior-N-bar high (shifted so the current bar isn't in its own breakout level), per session
         out["brk_hi"] = out["high"].groupby(day).transform(lambda s: s.shift(1).rolling(self.cfg.brk_bars, min_periods=self.cfg.brk_bars).max())
         tp = (out["high"] + out["low"] + out["close"]) / 3.0
         out["vwap"] = (tp * out["volume"]).groupby(day).cumsum() / out["volume"].groupby(day).cumsum()

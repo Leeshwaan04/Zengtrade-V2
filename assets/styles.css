@@ -1,5 +1,5 @@
 /* ============================================================
-   TradePro · Indiabulls Securities — Bull/Bear Terminal
+   TradePro · Indiabulls Securities, Bull/Bear Terminal
    Brand-synced: white base · Plus Jakarta Sans
    Indiabulls green #00AB4E · navy #0F1A2A · blue #1667D9
    ============================================================ */
@@ -80,7 +80,7 @@ html[data-regime="bear"] .up{opacity:.75} html[data-regime="bull"] .down{opacity
   background:var(--surface);border-bottom:1px solid var(--line);
   position:sticky;top:0;z-index:50;
 }
-/* inline SVG mark — color drives the ensō square via currentColor, so it breathes with the regime */
+/* inline SVG mark: color drives the ensō square via currentColor, so it breathes with the regime */
 .brand-logo{height:26px;width:auto;aspect-ratio:1;display:block;color:var(--accent);transition:color .25s}
 .brand-pro{font-weight:800;font-size:15px;color:var(--navy);letter-spacing:-.3px;
   padding-left:11px;margin-left:1px;border-left:1px solid var(--line-2)}
@@ -374,7 +374,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border:0;border-radiu
 .sim-run{width:100%;padding:11px;border-radius:10px;border:1px solid var(--accent-line);cursor:pointer;
   background:var(--accent-soft);color:var(--accent-d);font-family:var(--sans);font-weight:700;font-size:13px;margin-bottom:18px}
 .sim-run.running{background:var(--accent);color:#fff;border-color:var(--accent)}
-/* regime panel source badge — LIVE (mirrors Kite) · what-if · offline */
+/* regime panel source badge: LIVE (mirrors Kite) · what-if · offline */
 .eng-src{display:flex;align-items:center;gap:8px;margin-bottom:13px;padding:8px 11px;border-radius:10px;
   font-size:11.5px;font-weight:600;border:1px solid var(--line);background:var(--surface-2);color:var(--slate)}
 .eng-src .es-txt{flex:1;min-width:0}
@@ -401,7 +401,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border:0;border-radiu
 .er{background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:8px 6px;text-align:center}
 .er span{display:block;font-size:9px;color:var(--slate);text-transform:uppercase;letter-spacing:.3px}
 .er b{font-family:var(--mono);font-size:16px;display:block;margin-top:3px;color:var(--accent-d)}
-/* 4-state regime label colour (Bull/Bear/Choppy/High-Vol) — independent of the live theme accent */
+/* 4-state regime label colour (Bull/Bear/Choppy/High-Vol), independent of the live theme accent */
 #erRegime[data-reg="Bull"]{color:var(--green-d)}
 #erRegime[data-reg="Bear"]{color:var(--red-d)}
 #erRegime[data-reg="Choppy"]{color:var(--blue)}
@@ -639,7 +639,7 @@ body.resizing{user-select:none;cursor:col-resize}
 .topbar{gap:14px;padding:9px 16px;background:var(--topbar-bg,var(--surface));-webkit-backdrop-filter:saturate(140%) blur(10px);backdrop-filter:saturate(140%) blur(10px);
   box-shadow:0 1px 0 var(--line), 0 8px 24px -20px rgba(16,30,54,.5)}
 .tb-brand{display:flex;align-items:center;gap:10px;flex:0 0 auto}
-/* Workspace selector in the top bar (Trading mode only) — JS renders button + dropdown into #wsSwitch */
+/* Workspace selector in the top bar (Trading mode only), JS renders button + dropdown into #wsSwitch */
 .ws-switch{display:flex;align-items:center;gap:7px;flex:0 0 auto;position:relative}
 .ws-switch:empty{display:none}
 .ws-switch .layout-btn{padding:6px 11px;font-size:12px;border-radius:9px}
@@ -744,7 +744,7 @@ body.resizing{user-select:none;cursor:col-resize}
 .floor-sweep.go{animation:floorOn .85s ease}
 @keyframes floorOn{0%{opacity:0;background-position:120% 0}12%{opacity:1}100%{opacity:0;background-position:-50% 0}}
 
-/* ===================== NIGHT — TRADING FLOOR SURFACE ===================== */
+/* ===================== NIGHT: TRADING FLOOR SURFACE ===================== */
 html[data-surface="night"]{
   --bg:#080d18; --surface:#101a2e; --surface-2:#0c1424; --white:#16223a;
   --line:#1f2c46; --line-2:#2c3d5e;
@@ -796,7 +796,7 @@ body{background:var(--bg)}
 
 /* glassmorphism on key surfaces */
 .regime-bar,.chart-card,.panel,.order-card,.ctx-card,.pane-left,.engine,.modal,.search-results,.toast,
-/* algo / ai / trader-desk panels — same glass as the floor so every persona reads consistently */
+/* algo / ai / trader-desk panels, same glass as the floor so every persona reads consistently */
 .av-head,.av-scroll,.ai-main,.ais-card,.desk-wrap{
   background:var(--glass)!important;backdrop-filter:blur(13px) saturate(1.4);-webkit-backdrop-filter:blur(13px) saturate(1.4);
   box-shadow:var(--shadow),inset 0 1px 0 var(--glass-hi)}
@@ -994,7 +994,7 @@ html[data-persona="investor"] .ch-tool[data-tool="trade"]{display:none}
 @keyframes rvAppear{0%{opacity:0}10%{opacity:1}80%{opacity:1}100%{opacity:0;filter:blur(9px);transform:scale(1.1)}}
 .rv-img{max-height:300px;max-width:540px;width:auto;height:auto;display:block;-webkit-user-drag:none}
 .rv-svg{width:168px;height:168px;filter:drop-shadow(0 3px 16px var(--c))}
-/* soft diffuse aura only — no boxy disc (background removed) */
+/* soft diffuse aura only: no boxy disc (background removed) */
 .rv-halo{position:absolute;width:560px;height:560px;border-radius:50%;
   background:radial-gradient(circle,var(--c),transparent 55%);opacity:0;filter:blur(70px);animation:rvHalo 1.45s ease both;mix-blend-mode:screen}
 @keyframes rvHalo{0%{opacity:0;transform:scale(.5)}25%{opacity:.26}60%{opacity:.15}100%{opacity:0;transform:scale(1.25)}}
@@ -1010,7 +1010,7 @@ html[data-persona="investor"] .ch-tool[data-tool="trade"]{display:none}
 /* owl: finer, calmer ray fan */
 .rv-neutral .rv-rays{animation-duration:1.5s;background:repeating-conic-gradient(from 0deg,var(--c) 0 .8deg,transparent .8deg 11deg)}
 
-/* ground shockwave at the feet — bull charge & bear slam impact */
+/* ground shockwave at the feet, bull charge & bear slam impact */
 .rv-ground{position:absolute;width:236px;height:56px;border-radius:50%;border:2px solid var(--c);
   opacity:0;mix-blend-mode:screen;filter:blur(.5px)}
 .rv-bull .rv-ground{animation:rvGround 1.05s ease-out both;animation-delay:.14s}
@@ -1150,7 +1150,7 @@ html[data-surface="night"] .rb-emo:has(.rb-mascot){filter:drop-shadow(0 0 10px v
   max-width:none!important;min-width:0!important;min-height:0!important;overflow:auto;box-shadow:var(--shadow-lg);
   border:1px solid var(--line-2)!important;animation:cardMaxIn .22s ease both}
 @keyframes cardMaxIn{0%{opacity:.55;transform:scale(.985)}100%{opacity:1;transform:none}}
-/* maximized cards must be fully OPAQUE — no glass see-through over the scrim */
+/* maximized cards must be fully OPAQUE, no glass see-through over the scrim */
 .card-max,.chart-card.card-max,.panel.card-max,.pane-left.card-max,
 #orderPad.card-max,#contextModule.card-max{
   background:var(--surface)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
@@ -1177,12 +1177,12 @@ body.card-maxed .chart-resize{display:none}
 }
 
 /* ============================================================
-   INVESTING MODE — recolor + "Invest & Trade" hub
+   INVESTING MODE: recolor + "Invest & Trade" hub
    All rules scoped to html[data-persona="investor"] (or hub-only
    classes that only render in investor mode). Trading mode is
    completely unaffected.
    ============================================================ */
-/* Investor: accent follows the REGIME (green/blue/red) like Trading/Algo/AI — no fixed emerald pin.
+/* Investor: accent follows the REGIME (green/blue/red) like Trading/Algo/AI, no fixed emerald pin.
    Only the page-bg keeps a slightly cooler canvas; the regime colour reads through the whole skin. */
 html[data-persona="investor"]{ --bg:#eef3f1; }
 html[data-persona="investor"][data-surface="night"]{ --bg:#08120e; }
@@ -1221,7 +1221,7 @@ html[data-persona="investor"] #chartResize{display:none!important}
 @media(max-width:880px){ .ih-grid{grid-template-columns:1fr} }
 
 /* ============================================================
-   DAY / NIGHT CASCADE — trading floor powers on/off, pane by pane
+   DAY / NIGHT CASCADE: trading floor powers on/off, pane by pane
    Applied transiently by cascadeSurface(); works in both personas.
    ============================================================ */
 .theme-flip{position:relative;transition:background-color .42s ease,color .42s ease,border-color .42s ease,box-shadow .42s ease,fill .42s ease}
@@ -1234,7 +1234,7 @@ html[data-persona="investor"] #chartResize{display:none!important}
 @media(prefers-reduced-motion:reduce){.theme-flip,.theme-flip *{transition:none!important}.theme-flip::after{display:none}}
 
 /* ============================================================
-   INVESTING HUB DEPTH — portfolio overview hero + events/news
+   INVESTING HUB DEPTH: portfolio overview hero + events/news
    ============================================================ */
 .ih-scroll{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column}
 .ih-scroll .ih-grid{overflow:visible}
@@ -1299,7 +1299,7 @@ html[data-persona="investor"] .panel{max-height:200px}
 .pf-bar{height:6px}
 
 /* ============================================================
-   WIDGETS — persona-aware composable cards
+   WIDGETS: persona-aware composable cards
    Trading = real-time market & execution · Investing = wealth & planning
    Shared chrome (.wg-card / .wg-gallery); accent token differs per persona.
    ============================================================ */
@@ -1414,7 +1414,7 @@ html[data-persona="investor"] .wg-body{gap:8px}
 @media(max-width:900px){.wg-gallery,.wg-gallery.collapsed{width:100vw}.wg-gallery.collapsed{transform:translateX(100vw)}}
 
 /* ============================================================
-   INVEST & TRADE — live tool sections
+   INVEST & TRADE: live tool sections
    Scoped to the investing hub; reuses design tokens so day/night
    + persona accents cascade automatically.
    ============================================================ */
@@ -1656,7 +1656,7 @@ select.flow-input{cursor:pointer;appearance:none;-webkit-appearance:none;backgro
 }
 
 /* ============================================================
-   TRADING — Layout presets bar + Derivatives Desk
+   TRADING: Layout presets bar + Derivatives Desk
    ============================================================ */
 #deskView{display:none}
 .db-label{font-size:10px;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:.4px;flex:0 0 auto}
@@ -1713,21 +1713,21 @@ html[data-persona="trader"][data-layout="build"] .panel{display:none}
 .dc-stat{display:flex;flex-direction:column;gap:1px;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:6px 11px;min-width:62px}
 .dc-stat span{font-size:9px;color:var(--slate);text-transform:uppercase;letter-spacing:.2px}
 .dc-stat b{font-size:13px}
-/* live/connect chip on the derivatives desk + honest "—" cells (real-data, no synthetic chain) */
+/* live/connect chip on the derivatives desk + honest ", " cells (real-data, no synthetic chain) */
 .dc-live{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
 .dc-live.off{color:var(--slate)}
 .dc-live svg{opacity:.7}
-/* Kite reconnect (daily-token self-heal) — topbar + algo banner */
+/* Kite reconnect (daily-token self-heal), topbar + algo banner */
 .mkt-relogin,.bot-relogin,.pf-relogin,.ais-relogin{font:inherit;font-size:10.5px;font-weight:700;cursor:pointer;border-radius:7px;padding:3px 9px;margin-left:2px;
   border:1px solid color-mix(in srgb,var(--amber) 45%,transparent);background:color-mix(in srgb,var(--amber) 16%,transparent);color:var(--amber);transition:background .15s}
 .mkt-relogin:hover,.bot-relogin:hover,.pf-relogin:hover,.ais-relogin:hover{background:color-mix(in srgb,var(--amber) 28%,transparent)}
 .mkt-relogin:disabled,.bot-relogin:disabled{opacity:.6;cursor:default}
-/* honest "connect Kite" notes (portfolio hero + AI signals) — shown instead of fake numbers offline */
+/* honest "connect Kite" notes (portfolio hero + AI signals), shown instead of fake numbers offline */
 .pf-connect{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:11px;border-top:1px solid var(--line);font-size:11.5px;color:var(--slate);line-height:1.5}
 .pf-connect b{color:var(--ink)} .pf-row.pf-offline .pf-val.muted,.pf-row.pf-offline .num.muted{color:var(--slate-2)}
 .ais-off .ais-note{line-height:1.55} .ais-sub{font-size:9px;font-weight:600;color:var(--slate-2);font-style:normal;text-transform:uppercase;letter-spacing:.3px;margin-left:5px}
 
-/* ===================== MONETIZATION — plan chip + pricing storefront ===================== */
+/* ===================== MONETIZATION, plan chip + pricing storefront ===================== */
 .plan-chip{display:inline-flex;align-items:center;gap:5px;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;
   padding:6px 11px;border-radius:10px;border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);
   background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 16%,transparent),color-mix(in srgb,var(--accent) 6%,transparent));color:var(--accent);transition:filter .15s}
@@ -1880,7 +1880,7 @@ html[data-persona="trader"][data-layout="build"] .panel{display:none}
 }
 
 /* ============================================================
-   BUILD-YOUR-OWN — custom widget canvas
+   BUILD-YOUR-OWN: custom widget canvas
    ============================================================ */
 .cv-topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line)}
 .cv-title b{font-size:13.5px;display:inline-flex;align-items:center;gap:7px}
@@ -1968,9 +1968,9 @@ html[data-persona="trader"][data-layout="build"] .panel{display:none}
 .cv-sym:focus-visible{outline:none;box-shadow:var(--ring)}
 
 /* ============================================================
-   ALGO + AI MODES — distinct accents + full-width takeovers
+   ALGO + AI MODES: distinct accents + full-width takeovers
    ============================================================ */
-/* Algo & AI: accent now follows the REGIME (green/blue/red) like Trading — no fixed persona accent pin.
+/* Algo & AI: accent now follows the REGIME (green/blue/red) like Trading, no fixed persona accent pin.
    Only the page-bg keeps a whisper of persona texture; the regime colour reads through the whole skin. */
 html[data-persona="algo"]{ --bg:#eef0f7; }
 html[data-persona="algo"][data-surface="night"]{ --bg:#0a0c1c; }
@@ -1988,7 +1988,7 @@ html[data-persona="ai"] #chartCard,html[data-persona="ai"] #chartResize,html[dat
 
 /* shared takeover shell */
 /* .algo-view must be a flex column that FILLS the pane height, else .av-wrap's flex:1 has no
-   basis and .av-scroll expands to full content height — killing its internal scroll (the tabs
+   basis and .av-scroll expands to full content height, killing its internal scroll (the tabs
    scroll away instead of staying fixed). This completes the fixed-header + scrolling-body chain
    the Crypto Spot/Perps/Options view (and every Algo tab) relies on. */
 .algo-view{display:flex;flex-direction:column;height:100%;min-height:0}
@@ -2011,7 +2011,7 @@ html[data-persona="ai"] #chartCard,html[data-persona="ai"] #chartResize,html[dat
 .mkt-tab.on{background:var(--surface);color:var(--navy);box-shadow:var(--shadow)}
 .mkt-tab:focus-visible{outline:none;box-shadow:var(--ring)}
 .mkt-fl{font-size:13px;line-height:1}
-/* header-mounted market toggle (left of the search bar) — compact variant */
+/* header-mounted market toggle (left of the search bar), compact variant */
 .hdr-mkt{display:flex;align-items:center;flex:0 0 auto}
 .hdr-mkt:empty{display:none}
 .mkt-toggle.hdr{padding:2px;border-radius:9px}
@@ -2106,20 +2106,20 @@ html[data-persona="ai"] #chartCard,html[data-persona="ai"] #chartResize,html[dat
 .cxbt-legend{display:flex;gap:12px;margin:8px 2px 4px;font-size:11px;font-weight:600}
 .cxbt-lg{color:var(--slate)}
 .cxbt-lg.eq{color:var(--blue)} .cxbt-lg.bh{color:var(--slate-2)}
-/* crypto analytics — realised equity curve (cumulative net, tone-coloured) */
+/* crypto analytics: realised equity curve (cumulative net, tone-coloured) */
 .cxeq-svg{width:100%;height:140px;display:block}
 .cxeq-line{fill:none;stroke-width:2;vector-effect:non-scaling-stroke}
 .cxeq-line.up{stroke:var(--green)} .cxeq-line.down{stroke:var(--red)}
 .cxeq-area{stroke:none;opacity:.12}
 .cxeq-area.up{fill:var(--green)} .cxeq-area.down{fill:var(--red)}
-/* crypto analytics — by-hour mini bars */
+/* crypto analytics: by-hour mini bars */
 .cxhr-bars{display:flex;align-items:flex-end;gap:5px;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow-x:auto}
 .cxhr-col{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:22px;flex:1}
 .cxhr-track{width:100%;height:64px;display:flex;align-items:flex-end;justify-content:center;background:var(--bg);border-radius:5px;overflow:hidden}
 .cxhr-fill{width:70%;border-radius:4px 4px 0 0;min-height:4px}
 .cxhr-fill.up{background:var(--green)} .cxhr-fill.down{background:var(--red)}
 .cxhr-lbl{font-size:10px;color:var(--slate);font-variant-numeric:tabular-nums}
-/* crypto analytics — exit-reason chip + CSV export button */
+/* crypto analytics: exit-reason chip + CSV export button */
 .cxrsn{display:inline-block;padding:1px 7px;border-radius:20px;font-size:10.5px;font-weight:600;background:var(--bg);border:1px solid var(--line);color:var(--slate)}
 .cxrsn-target,.cxrsn-signal{color:var(--green);border-color:color-mix(in srgb,var(--green) 35%,var(--line))}
 .cxrsn-stop,.cxrsn-thesisdecay,.cxrsn-rebalance,.cxrsn-trendflip,.cxrsn-scorecollapse{color:var(--red);border-color:color-mix(in srgb,var(--red) 35%,var(--line))}
@@ -2175,7 +2175,7 @@ html[data-persona="ai"] #chartCard,html[data-persona="ai"] #chartResize,html[dat
 .ma-slider:focus-visible{outline:none;box-shadow:var(--ring)}
 .ma-scale{display:flex;justify-content:space-between;font-size:10px;color:var(--slate-2);font-weight:600}
 .ma-note{margin:7px 0 0;font-size:10.5px;color:var(--slate-2);line-height:1.5}
-/* "on deck" — why an inactive strategy is kept (its regime bench) */
+/* "on deck": why an inactive strategy is kept (its regime bench) */
 .mon-ondeck{display:flex;gap:7px;align-items:flex-start;margin:2px 0 4px;padding:9px 11px;border-radius:10px;
   background:color-mix(in srgb,var(--accent) 6%,var(--bg));border:1px solid color-mix(in srgb,var(--accent) 18%,var(--line));
   font-size:11.5px;line-height:1.5;color:var(--slate)}
@@ -2224,7 +2224,7 @@ html[data-persona="ai"] #chartCard,html[data-persona="ai"] #chartResize,html[dat
 .bt-period:focus-visible{outline:none;box-shadow:var(--ring)}
 .bt-card{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:13px;overflow:hidden;min-height:206px}
 .bt-cardh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
-/* title truncates (never clips/wraps), subtitle stays on one line — header height can't blow up */
+/* title truncates (never clips/wraps), subtitle stays on one line, header height can't blow up */
 .bt-cardh b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .bt-cardh span{font-size:10.5px;color:var(--slate);white-space:nowrap;flex:0 0 auto}
 .eq-svg{width:100%;height:160px;display:block}
@@ -2242,11 +2242,11 @@ html[data-persona="ai"] #chartCard,html[data-persona="ai"] #chartResize,html[dat
 .bt-angrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
 .bt-anc{display:flex;flex-direction:column;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 11px}
 .bt-anc>span{font-size:9px;color:var(--slate);text-transform:uppercase;letter-spacing:.2px} .bt-anc>b{font-size:14px}
-/* quantitative anchors under the curve — so the backtest reads as numbers, not just a shape */
+/* quantitative anchors under the curve, so the backtest reads as numbers, not just a shape */
 .eq-cap{display:flex;justify-content:space-between;gap:10px;margin-top:9px;padding-top:9px;border-top:1px solid var(--line);flex-wrap:wrap}
 .eq-cap span{font-size:10px;color:var(--slate);text-transform:uppercase;letter-spacing:.2px;display:flex;align-items:baseline;gap:5px}
 .eq-cap b{font-size:13px} .eq-cap i{font-size:11px;font-style:normal}
-/* validation report — the honest in-sample vs out-of-sample cut (the moat) */
+/* validation report: the honest in-sample vs out-of-sample cut (the moat) */
 .bt-vr{background:var(--surface-2);border:1px solid var(--line);border-radius:13px;padding:13px 15px;margin-top:2px}
 .bt-vrh{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--slate);display:flex;align-items:center;gap:6px;margin-bottom:10px}
 .bt-vrgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -2356,7 +2356,7 @@ html[data-persona="ai"] #chartCard,html[data-persona="ai"] #chartResize,html[dat
 @media(max-width:680px){ .av-head{flex-direction:column;align-items:stretch} .av-tabs{justify-content:space-between} }
 
 /* ============================================================
-   LAYOUT BUILDER — compact Layout menu + named layouts + gallery
+   LAYOUT BUILDER: compact Layout menu + named layouts + gallery
    ============================================================ */
 html[data-persona="trader"] #deskBar{position:relative}
 .layout-btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--navy);font-family:var(--sans);font-weight:700;font-size:12.5px;padding:8px 13px;border-radius:10px;cursor:pointer;transition:.15s}
@@ -2400,23 +2400,23 @@ html[data-persona="trader"] #deskBar{position:relative}
 .lg-wcell{background:var(--surface);border:1px solid var(--line-2);border-radius:5px;padding:5px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:3px}
 .lg-wcell.wsp-2{grid-column:span 2} .lg-wcell.wsp-3{grid-column:span 3}
 .sk{display:flex;flex-direction:column;gap:2.5px;width:100%;height:100%;justify-content:center}
-/* quotes — watchlist/movers rows: label bar + green/red value */
+/* quotes: watchlist/movers rows: label bar + green/red value */
 .sk-q i{display:flex;align-items:center;gap:3px}
 .sk-q i b{display:block;height:3px;border-radius:2px}
 .sk-q i b:first-child{flex:1;background:var(--line-2)}
 .sk-q i b:last-child{width:32%}
 .sk-q .up{background:color-mix(in srgb,#10b981 72%,transparent)} .sk-q .dn{background:color-mix(in srgb,#ef4444 66%,transparent)}
-/* heatmap — green/red/neutral cells */
+/* heatmap: green/red/neutral cells */
 .sk-heat{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:2.5px}
 .sk-heat i{border-radius:2px}
 .sk-heat .g{background:color-mix(in srgb,#10b981 46%,transparent)} .sk-heat .r{background:color-mix(in srgb,#ef4444 42%,transparent)} .sk-heat .n{background:var(--line-2)}
-/* option chain — header + call/put rows, ATM highlighted */
+/* option chain: header + call/put rows, ATM highlighted */
 .sk-chain i{display:flex;gap:3px;align-items:center}
 .sk-chain i.hd{height:3px;width:62%;align-self:center;border-radius:2px;background:color-mix(in srgb,var(--lg-accent,var(--accent)) 55%,transparent)}
 .sk-chain i b{flex:1;height:3px;border-radius:2px}
 .sk-chain i b.g{background:color-mix(in srgb,#10b981 46%,transparent)} .sk-chain i b.r{background:color-mix(in srgb,#ef4444 42%,transparent)}
 .sk-chain i.atm{background:color-mix(in srgb,var(--lg-accent,var(--accent)) 14%,transparent);border-radius:3px;padding:1.5px 2px}
-/* OI — paired vertical bars */
+/* OI: paired vertical bars */
 .sk-bars{flex-direction:row;align-items:flex-end;gap:2.5px}
 .sk-bars i{flex:1;border-radius:1.5px}
 .sk-bars .g{background:color-mix(in srgb,#10b981 58%,transparent)} .sk-bars .r{background:color-mix(in srgb,#ef4444 52%,transparent)}
@@ -2427,14 +2427,14 @@ html[data-persona="trader"] #deskBar{position:relative}
 .sk-cndl i::before{content:"";position:absolute;left:50%;top:-2.5px;bottom:-2.5px;width:1px;transform:translateX(-50%);background:inherit;opacity:.55}
 .sk-cndl .g{background:color-mix(in srgb,#10b981 66%,transparent)} .sk-cndl .r{background:color-mix(in srgb,#ef4444 60%,transparent)}
 .sk-cndl i:nth-child(odd){height:50%}.sk-cndl i:nth-child(even){height:74%}
-/* market depth — bids over asks */
+/* market depth: bids over asks */
 .sk-depth i{display:block;height:3.5px;border-radius:2px}
 .sk-depth .g{background:color-mix(in srgb,#10b981 52%,transparent)} .sk-depth .r{background:color-mix(in srgb,#ef4444 46%,transparent)}
 .sk-depth i:nth-child(1){width:86%}.sk-depth i:nth-child(2){width:64%}.sk-depth i:nth-child(3){width:76%}.sk-depth i:nth-child(4){width:54%}
 /* PCR meter */
 .sk-meter i{display:block;height:5px;border-radius:3px;position:relative;background:linear-gradient(90deg,#ef4444,#f59e0b,#10b981)}
 .sk-meter i::after{content:"";position:absolute;left:62%;top:-1.5px;bottom:-1.5px;width:3px;border-radius:2px;background:var(--navy)}
-/* P&L / margin — big figure + sparkline */
+/* P&L / margin: big figure + sparkline */
 .sk-pnl{align-items:flex-start;gap:4px}
 .sk-pnl .fig{display:block;height:8px;width:58%;border-radius:3px;background:color-mix(in srgb,#10b981 36%,var(--line-2))}
 .sk-pnl .spk{display:flex;align-items:flex-end;gap:2px;width:100%;height:42%}
@@ -2489,7 +2489,7 @@ html[data-persona="trader"] #deskBar{position:relative}
 /* saved-workspace tiles */
 .lg-saved .lg-tag{color:var(--slate-2)}
 .lg-wire-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--slate-2);border:1px dashed var(--line-2);border-radius:6px}
-/* distinct, full-width "start from scratch" CTA — surfaced upfront, separate from the tile grid */
+/* distinct, full-width "start from scratch" CTA, surfaced upfront, separate from the tile grid */
 .lg-scratch-bar{display:flex;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;
   border:1.5px dashed var(--line-2);background:var(--surface-2);border-radius:13px;padding:13px 16px;transition:.16s}
 .lg-scratch-bar:hover{border-color:var(--accent);background:var(--surface);box-shadow:0 14px 30px -22px var(--accent)}
@@ -2506,7 +2506,7 @@ html[data-persona="trader"] #deskBar{position:relative}
 .terminal.ws-landing .pane-left,.terminal.ws-landing .pane-right{display:none}
 
 /* ============================================================
-   AI COPILOT — live-mode badge, settings, streaming indicator
+   AI COPILOT: live-mode badge, settings, streaming indicator
    ============================================================ */
 .ai-head-acts{display:flex;align-items:center;gap:8px;flex:0 0 auto}
 .ai-mode{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:99px;
@@ -2724,7 +2724,7 @@ html[data-persona="ai"] #widgetBtn{display:none}
 .nudge-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#1667d9,#3f8ae0)}
 .nudge-card .btn-go,.nudge-card .btn-ghost{width:auto;flex:none;white-space:nowrap}
 /* ===== Algo Studio UX level-up: capital presets · evidence pips · stat funnel · engine emphasis ===== */
-/* Capital quick-presets — one tap to size the catalog instead of typing */
+/* Capital quick-presets: one tap to size the catalog instead of typing */
 .cap-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .cap-quick{display:inline-flex;gap:6px;flex-wrap:wrap}
 .cap-chip{font-family:var(--sans);font-size:11.5px;font-weight:700;color:var(--slate);cursor:pointer;
@@ -2733,7 +2733,7 @@ html[data-persona="ai"] #widgetBtn{display:none}
 .cap-chip.on{border-color:var(--green,#00ab4e);background:var(--green,#00ab4e);color:#fff}
 .cap-chip:focus-visible{outline:none;box-shadow:var(--ring)}
 
-/* Forward-evidence meter — segmented pips so "0/10" reads as a real, fillable track (not an empty bar) */
+/* Forward-evidence meter: segmented pips so "0/10" reads as a real, fillable track (not an empty bar) */
 .nudge-top{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
 .nudge-top b{font-size:13px;color:var(--navy)}
 .nudge-tag{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;
@@ -2750,7 +2750,7 @@ html[data-persona="ai"] #widgetBtn{display:none}
 .sec-stat:hover{border-color:var(--line-2)}
 .sec-stat .ss-s{line-height:1.3}
 
-/* Active-engine cell — the "what's running right now" punchline gets a soft accent so the eye lands there */
+/* Active-engine cell: the "what's running right now" punchline gets a soft accent so the eye lands there */
 .algo-statusbar .asb-grow{background:linear-gradient(90deg,var(--accent-soft),transparent 72%);border-radius:11px}
 .algo-statusbar .asb-grow .asb-v{font-size:14px}
 
@@ -2878,7 +2878,7 @@ html[data-persona="ai"] #widgetBtn{display:none}
 .wl-ltp.tick-dn,.tix-val.tick-dn,.cx-ltp.tick-dn{animation:tickDn .5s ease-out}
 
 /* ============================================================
-   HEADER POLISH — UX pass (2026-06-29)
+   HEADER POLISH: UX pass (2026-06-29)
    One calm, aligned control band: a single 34px control height,
    consistent radius + transitions, crisp keyboard focus rings,
    subtle depth on hover, and no text wrapping. All token-based
@@ -2954,7 +2954,7 @@ html[data-persona="ai"] #widgetBtn{display:none}
 .profile:focus-visible{outline:none;box-shadow:var(--ring)}
 
 /* ============================================================
-   MARKET-PULSE STRIP — live VIX / breadth / engine + session
+   MARKET-PULSE STRIP: live VIX / breadth / engine + session
    clock RELOCATED into the ticker row (they were crowding the top
    bar). The top bar now carries only identity · search · controls
    · account, so it fits one clean row at every width — and NOTHING
@@ -2968,7 +2968,7 @@ html[data-persona="ai"] #widgetBtn{display:none}
 .tb-market::before{content:"";width:1px;height:18px;background:var(--line);margin-right:14px} /* divide tape | pulse */
 .tb-mdiv{width:1px;height:18px;background:var(--line);flex:0 0 auto}
 
-/* market status — compact inline for the slim data row */
+/* market status: compact inline for the slim data row */
 .ticker-bar .mkt-status{gap:8px;padding:0;background:none;border:0;flex:0 0 auto}
 .ticker-bar .mkt-dot{width:7px;height:7px}
 .ticker-bar .mkt-live{font-size:9px;font-weight:800;letter-spacing:.6px}
@@ -2976,7 +2976,7 @@ html[data-persona="ai"] #widgetBtn{display:none}
 .ticker-bar .mkt-time{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--navy);
   font-variant-numeric:tabular-nums;border-left:1px solid var(--line-2);padding-left:8px}
 
-/* engine readout — flatten the card into an inline stat strip */
+/* engine readout: flatten the card into an inline stat strip */
 .ticker-bar .hdr-engine{background:none;border:0;box-shadow:none;padding:0;margin:0;gap:12px;border-radius:0}
 .ticker-bar .he-stat{flex-direction:row;align-items:baseline;gap:5px}
 .ticker-bar .he-l{font-size:9px}
@@ -2984,10 +2984,10 @@ html[data-persona="ai"] #widgetBtn{display:none}
 .ticker-bar .he-live{font-size:7.5px}
 .ticker-bar .he-div{height:16px}
 
-/* the top bar is now light — one calm row, slightly tighter gap */
+/* the top bar is now light: one calm row, slightly tighter gap */
 .topbar{gap:12px}
 
-/* small screens: the ticker row wraps so tape + pulse stack cleanly —
+/* small screens: the ticker row wraps so tape + pulse stack cleanly, 
    everything stays visible (nothing hidden), just on its own line */
 @media (max-width:1080px){
   .ticker-bar{flex-wrap:wrap;padding-bottom:0}
@@ -3009,7 +3009,7 @@ html[data-persona="ai"] #widgetBtn{display:none}
   .regime-control{flex:0 0 auto;justify-content:flex-start}
 }
 
-/* ===== Algo Studio · Accuracy tab — backtest edge vs live forward results ===== */
+/* ===== Algo Studio · Accuracy tab, backtest edge vs live forward results ===== */
 .acc-list{display:flex;flex-direction:column;gap:12px;margin-top:14px}
 .acc-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);transition:box-shadow .2s,border-color .2s}
 .acc-card:hover{box-shadow:var(--shadow-hover);border-color:var(--line-2)}
@@ -3040,7 +3040,7 @@ html[data-persona="ai"] #widgetBtn{display:none}
 .acc-foot span{font-size:11.5px;color:var(--slate)}
 @media(max-width:760px){.acc-cmp{grid-template-columns:1fr}.acc-q{grid-template-columns:1fr 1fr}}
 
-/* ===== Monitor accordion — click a strategy to reveal its positions + forward accuracy ===== */
+/* ===== Monitor accordion: click a strategy to reveal its positions + forward accuracy ===== */
 .av-scroll{scroll-behavior:smooth;overscroll-behavior:contain}
 .mon-head{cursor:pointer;user-select:none}
 .mon-head .mon-ctrls{display:flex;align-items:center;gap:9px}
@@ -3078,7 +3078,7 @@ html[data-persona="ai"] #widgetBtn{display:none}
 .algo-card.is-deployed{border-color:rgba(0,171,78,.32)}
 .algo-card.is-live{border-color:rgba(229,57,53,.4)}
 
-/* ===== Algo Studio · Analytics tab — portfolio intelligence ===== */
+/* ===== Algo Studio · Analytics tab, portfolio intelligence ===== */
 .an-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);margin-top:13px}
 .an-h{display:flex;align-items:center;gap:8px;margin-bottom:11px;color:var(--navy)}
 .an-h .ico{color:var(--accent-d)}
@@ -3287,7 +3287,7 @@ html[data-persona="ai"] #widgetBtn{display:none}
 .fw-note b{color:var(--navy);font-weight:700}
 
 /* ===================================================================
-   STRATEGY LIBRARY — browse / learn / filter / regime-match
+   STRATEGY LIBRARY: browse / learn / filter / regime-match
    =================================================================== */
 .lib-hero{display:flex;gap:13px;align-items:flex-start;padding:15px 17px;border-radius:14px;
   background:linear-gradient(135deg,var(--accent-soft),var(--surface));border:1px solid var(--accent-line);box-shadow:var(--shadow)}
@@ -3365,7 +3365,7 @@ html[data-persona="ai"] #widgetBtn{display:none}
 .mb-cell.mb-all b{color:#fff}
 .mb-cell.mb-all b.up{color:#5be584}.mb-cell.mb-all b.down{color:#ff9a9a}
 /* Night-mode fix: these "inverse" chips use background:var(--navy), but --navy flips to a LIGHT
-   token in night mode — which washed out their white text (e.g. "Overall +₹8,424" was unreadable).
+   token in night mode: which washed out their white text (e.g. "Overall +₹8,424" was unreadable).
    Pin a dark elevated surface so the white/green text keeps its contrast in both themes. */
 html[data-surface="night"] .mb-cell.mb-all,
 html[data-surface="night"] .lib-chip.on,
@@ -3390,12 +3390,12 @@ html[data-surface="night"] .rk-tier.on{background:var(--white);border-color:var(
 .msc-count{font-size:10.5px;color:var(--slate-2);margin-left:2px}
 .mc-dep{font-weight:700;color:var(--slate)}
 .mon-clearfilt{border:0;background:none;color:var(--accent-d);font-family:var(--sans);font-weight:700;font-size:inherit;cursor:pointer;padding:0;text-decoration:underline}
-/* LAYER 1 — instrument class (Equity / Options / Futures) */
+/* LAYER 1: instrument class (Equity / Options / Futures) */
 .lib-instr{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
 .lib-instr-tab{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;
   padding:11px 14px;border-radius:13px;cursor:pointer;transition:.15s;background:var(--surface);border:1px solid var(--line-2)}
 .lib-instr-tab:hover{border-color:var(--green);box-shadow:var(--shadow)}
-/* active highlight — opaque accent tint (matches the hold sub-tabs; no muddy semi-transparent bleed) */
+/* active highlight: opaque accent tint (matches the hold sub-tabs; no muddy semi-transparent bleed) */
 .lib-instr-tab.on{background:var(--accent-soft);border-color:var(--accent-line)}
 .lib-instr-tab:focus-visible{outline:none;box-shadow:var(--ring)}
 .lii-top{display:inline-flex;align-items:center;gap:7px;color:var(--navy)}
@@ -3410,7 +3410,7 @@ html[data-surface="night"] .rk-tier.on{background:var(--white);border-color:var(
 .lib-instr-tab.on .lii-dep{color:var(--accent-d);opacity:.85}
 .lib-instr-tab.on .lii-dep b{color:var(--accent-d)}
 .lib-instr-tab.on .lii-n{color:#fff;background:var(--accent)}
-/* LAYER 2 — holding style (per-instrument sub-tabs) */
+/* LAYER 2: holding style (per-instrument sub-tabs) */
 .lib-hold{display:flex;flex-wrap:wrap;gap:6px}
 .lib-hold-tab{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--slate);
   background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:6px 13px;cursor:pointer;transition:.15s}
@@ -3467,7 +3467,7 @@ html[data-surface="night"] .rk-tier.on{background:var(--white);border-color:var(
 @media(max-width:640px){.lib-grid{grid-template-columns:1fr}.lib-fav-btn{margin-left:0}}
 
 /* ===================================================================
-   OPPORTUNITY ENGINE — explainable high-conviction decision engine
+   OPPORTUNITY ENGINE: explainable high-conviction decision engine
    =================================================================== */
 .opp-hero{display:flex;gap:13px;align-items:flex-start;padding:15px 17px;border-radius:14px;
   background:linear-gradient(135deg,rgba(22,103,217,.10),var(--surface));border:1px solid rgba(22,103,217,.28);box-shadow:var(--shadow)}
@@ -3538,7 +3538,7 @@ html[data-surface="night"] .rk-tier.on{background:var(--white);border-color:var(
 @media(max-width:640px){.opp-grid{grid-template-columns:1fr}}
 
 /* ===================================================================
-   MOONSHOT MISSION tracker — ₹5,000 → ₹5,000 Cr, honest log-scale road
+   MOONSHOT MISSION tracker: ₹5,000 → ₹5,000 Cr, honest log-scale road
    =================================================================== */
 .msn{flex:0 0 auto;border-radius:16px;padding:16px 18px 20px;margin-bottom:2px;color:#fff;position:relative;overflow:hidden;
   background:linear-gradient(120deg,#0f1a2a 0%,#1a2747 55%,#26346b 100%);box-shadow:var(--shadow-lg)}

@@ -1,4 +1,4 @@
-/* Frontend headless smoke — zengtrade Crypto Algo Studio.
+/* Frontend headless smoke: zengtrade Crypto Algo Studio.
  *
  * Renders every crypto Algo Studio view and asserts each one:
  *   1. does not throw

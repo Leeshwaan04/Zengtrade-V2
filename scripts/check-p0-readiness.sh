@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Pre-flight for ./scripts/apply-p0-autopilot.sh — shows what's ready without printing secrets.
+# Pre-flight for ./scripts/apply-p0-autopilot.sh: shows what's ready without printing secrets.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

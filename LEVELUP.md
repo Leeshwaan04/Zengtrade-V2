@@ -1,27 +1,27 @@
-# TradePro — Level-Up & Optimization Backlog
+# TradePro: Level-Up & Optimization Backlog
 *Everywhere we can improve the end-to-end experience & user satisfaction. Private working doc.*
 
-**North-star theme (from the audits):** *every mode's #1 gap is "make the last mile real"* — the intelligence/analysis layer is genuinely real; most user **actions** are still simulated. The biggest satisfaction wins come from (1) converting honest-labelled demos into real capabilities, and (2) removing friction around connection, onboarding and feedback.
+**North-star theme (from the audits):** *every mode's #1 gap is "make the last mile real"*. The intelligence/analysis layer is genuinely real; most user **actions** are still simulated. The biggest satisfaction wins come from (1) converting honest-labelled demos into real capabilities, and (2) removing friction around connection, onboarding and feedback.
 
 **Legend:** Priority `P0` (do first / blocks trust) · `P1` (high value) · `P2` (nice) · Effort `S/M/L` · 🟢 safe · ⚠️ needs a decision/creds/live-token · 💰 real-money risk
 
 ---
 
 ## ⭐ Top 10 by satisfaction-per-effort (start here)
-1. ~~**Onboarding / first-run wizard** — guided "connect Kite + set up auto-login"~~ ✅ **DONE** *(2-step wizard: persona → connect Kite with live status, exact `login.py` command, reconnect & real/paper/demo legend)*
-2. **Real historical backtests** (UI → your Python engine) — P1 · M · 🟢 *(closes the credibility gap in your best mode)*
-3. **Real futures OI** (live Kite quote OI vs `dseed()`) — P2 · S · 🟢 *(kills the last synthetic data display)*
-4. **Price/indicator alerts** (server-side via the bot) — P1 · M · 🟢 *(the #1 retention feature in any trading app)*
-5. **Bot monitoring + alerting** (crash / kill-switch / token-down / unfilled) — P0 · M · ⚠️ *(can't run real money blind)*
-6. ~~**AI copilot → real tools/agent**~~ ✅ **DONE** *(6 real tools: get_portfolio / get_market / get_quote / search_instruments / run_backtest / get_option_chain + navigate; full tool_use→tool_result agentic loop; every number fetched live, honest connected:false offline — verified against live Kite data)*
-7. **Loading skeletons + perceived-speed polish** everywhere — P2 · S · 🟢 *(feels faster, more premium)*
-8. **Command palette (Cmd+K)** — jump to any instrument/mode/action — P2 · M · 🟢 *(power-user delight)*
-9. **Portfolio Analyser → real holdings** (drift/concentration/sector/overlap) — P1 · S · 🟢 *(makes Investing partly real, cheap)*
-10. **Real order execution** (gated order service → Kite + order book) — P0 · M · 💰 *(the terminal's whole point; needs a design pass)*
+1. ~~**Onboarding / first-run wizard**, guided "connect Kite + set up auto-login"~~ ✅ **DONE** *(2-step wizard: persona → connect Kite with live status, exact `login.py` command, reconnect & real/paper/demo legend)*
+2. **Real historical backtests** (UI → your Python engine), P1 · M · 🟢 *(closes the credibility gap in your best mode)*
+3. **Real futures OI** (live Kite quote OI vs `dseed()`): P2 · S · 🟢 *(kills the last synthetic data display)*
+4. **Price/indicator alerts** (server-side via the bot), P1 · M · 🟢 *(the #1 retention feature in any trading app)*
+5. **Bot monitoring + alerting** (crash / kill-switch / token-down / unfilled), P0 · M · ⚠️ *(can't run real money blind)*
+6. ~~**AI copilot → real tools/agent**~~ ✅ **DONE** *(6 real tools: get_portfolio / get_market / get_quote / search_instruments / run_backtest / get_option_chain + navigate; full tool_use→tool_result agentic loop; every number fetched live, honest connected:false offline: verified against live Kite data)*
+7. **Loading skeletons + perceived-speed polish** everywhere, P2 · S · 🟢 *(feels faster, more premium)*
+8. **Command palette (Cmd+K)** (jump to any instrument/mode/action) P2 · M · 🟢 *(power-user delight)*
+9. **Portfolio Analyser → real holdings** (drift/concentration/sector/overlap), P1 · S · 🟢 *(makes Investing partly real, cheap)*
+10. **Real order execution** (gated order service → Kite + order book). P0 · M · 💰 *(the terminal's whole point; needs a design pass)*
 
 ---
 
-## A. Make-it-real (stubbed → functional) — biggest trust/UX levers
+## A. Make-it-real (stubbed → functional), biggest trust/UX levers
 | Item | P | Effort | Notes |
 |---|---|---|---|
 | Real order execution + live order book + positions panel | P0 | M | 💰 needs a gated order-service design (don't break the read-only API) |
@@ -38,7 +38,7 @@
 - Order book + positions panel (pairs with real orders) · alerts · **multiple named watchlists** · inline instrument quick-stats (lot/expiry/OI) on search · **stream the option chain + indices** (currently 15s/30s REST) · always-real depth ladder.
 
 **💰 Investing**
-- Real Portfolio Analyser (drift/concentration/sector/overlap) · holdings-aware insights ("38% Banks — concentrated") · what-if allocation ("if I add ₹50k…") · HOLDING badges from real holdings (not seed) · drop/relabel remaining demo tools.
+- Real Portfolio Analyser (drift/concentration/sector/overlap) · holdings-aware insights ("38% Banks. Concentrated") · what-if allocation ("if I add ₹50k…") · HOLDING badges from real holdings (not seed) · drop/relabel remaining demo tools.
 
 **🤖 Algo**
 - ~~Real backtests~~ ✅ · Strategy Builder → an actually-runnable param strategy · **forward→go-live→live continuity in-UI** (no CLI cliff) · ~~strategy comparison / leaderboard by regime~~ ✅ *(Leaderboard tab: ranked + regime matrix)* · ~~per-trade analytics + OOS validation on backtests~~ ✅ · clearer regime-fit explainer.
@@ -57,32 +57,32 @@
 | Accessibility audit (contrast, full keyboard nav, screen-reader) | P1 | M | broadens reach; already partly strong |
 | Extend WebSocket to indices/VIX/chain/commodities | P2 | M | true real-time everywhere |
 | Perf: instrument-index memory, quote batching, render throttling | P2 | M | scale headroom |
-| ~~Auto cache-busting (`serve.py`)~~ | ✅ | — | **DONE** — run `python3 serve.py` |
+| ~~Auto cache-busting (`serve.py`)~~ | ✅ | (| **DONE**) run `python3 serve.py` |
 
-## D. Trust, safety & observability (the bot — gate to real money)
+## D. Trust, safety & observability (the bot, gate to real money)
 | Item | P | Effort | Why |
 |---|---|---|---|
 | Monitoring + push alerts (crash / kill-switch trip / token-down / unfilled order) | P0 | M | ⚠️ needs Telegram/email creds; can't run blind |
 | P&L reconciliation (internal vs `kite.positions()`) | P0 | M | 💰 silent drift = risk |
-| Live canary (1 strategy, tiny ₹, heavily monitored) | P0 | M | 💰 operational decision — the only honest path to trusting live execution |
+| Live canary (1 strategy, tiny ₹, heavily monitored) | P0 | M | 💰 operational decision, the only honest path to trusting live execution |
 | Structured logging + a small health/status dashboard | P1 | S | operability |
 
 ## E. Onboarding & education
 - In-app **"Connect Kite"** guide + **auto-login setup wizard** (TOTP seed, `--setup`, launchd) · a one-time guided tour · a visible **"what's real vs paper vs demo"** legend (we have the ethos; surface it once) · keep the strong info-icon tooltips.
 
 ## F. Delight & polish
-- More micro-interactions (the regime cascade is great — extend) · **undo** on destructive actions (delete watchlist/layout) · toast consistency · full UI-state persistence · day/night parity audit · friendlier API-offline state.
+- More micro-interactions (the regime cascade is great. Extend) · **undo** on destructive actions (delete watchlist/layout) · toast consistency · full UI-state persistence · day/night parity audit · friendlier API-offline state.
 
-## G. Monetization / product infra (when productizing — not before it's real)
+## G. Monetization / product infra (when productizing, not before it's real)
 - Accounts/auth → **Razorpay** subscriptions → **server-side** entitlement (gates can't be client-bypassed) · usage metering (AI credits, automation slots) · **B2B/white-label** packaging (the real revenue path) · the pricing **roadmap preview** doubles as public transparency.
 
-## ✅ End-user QA pass (2026-06-29) — found & fixed
+## ✅ End-user QA pass (2026-06-29), found & fixed
 Drove all 4 modes in-browser as an end user (token down → tested honest-offline states). **8 issues fixed, 0 JS errors:**
 1. `SEED_ORDERS` seeded 4 fabricated "EXECUTED" orders at fake prices (+ dead TATAMOTORS) → emptied; honest "No orders yet" state.
 2. Positions/Holdings tab badges showed a static "6" offline → hidden when no live session (body already said "connect").
 3. Breakout scanner showed fabricated setups + fake Chg% (not gated) → gated offline (`emptyConnect`).
 4. Context module: hardcoded trade ideas (fake ₹) + *simulated* sector heatmap offline → gated offline, keeps regime framing.
-5. Investor order pad divided by ₹0 offline → **"APPROX UNITS Infinity"** → honest "—"; placing offline blocked with a toast.
+5. Investor order pad divided by ₹0 offline → **"APPROX UNITS Infinity"** → honest ", "; placing offline blocked with a toast.
 6. AI `aiCardOptions` **crashed** offline (`buildChain` null → `pcr` reads `.rows`) → gated; no crash.
 7. AI hedge/portfolio/sectors/movers cards leaked seed `HOLDINGS`/`ALLOC`/`SECTORS` offline → all gated to "connect Kite, I won't invent" (these get *real* data in the AI-agent rebuild).
 8. Dead **TATAMOTORS** (demerged) purged from all displayed content (scanner, context, baskets, research call → MARUTI).

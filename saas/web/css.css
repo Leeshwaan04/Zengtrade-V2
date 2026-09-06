@@ -29,7 +29,7 @@ label{display:block;font:600 12px/1 var(--sans);color:var(--slate);margin:14px 0
 .msg.err{display:block;background:rgba(200,48,47,.09);border:1px solid rgba(200,48,47,.3);color:var(--red)}
 .msg.ok{display:block;background:var(--green-soft);border:1px solid var(--green-line);color:var(--green-d)}
 
-/* checkout-activating notice (pricing page — honest "opening soon") */
+/* checkout-activating notice (pricing page, honest "opening soon") */
 .soon-banner{display:flex;gap:11px;align-items:flex-start;max-width:760px;margin:0 auto 22px;padding:13px 16px;
   border-radius:var(--radius);background:color-mix(in srgb,var(--blue) 8%,var(--surface));
   border:1px solid color-mix(in srgb,var(--blue) 26%,var(--line));font-size:14px;line-height:1.5}

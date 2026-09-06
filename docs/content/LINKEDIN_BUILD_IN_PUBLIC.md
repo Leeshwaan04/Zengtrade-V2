@@ -1,4 +1,4 @@
-# LinkedIn — build in public (founder draft)
+# LinkedIn: build in public (founder draft)
 
 **Status:** READY TO POST (partial E2E green · `./scripts/check-parallel-growth.sh` ✅)  
 **Do not** claim forward P&L or closed trades until `./scripts/check-worker.sh` is green.
@@ -14,7 +14,7 @@
 ## Post copy
 
 ```
-Shipping zengtrade in public — paper trading on live Binance prices.
+Shipping zengtrade in public: paper trading on live Binance prices.
 
 Today on production: signup → Algo Studio → deploy is live (partial E2E steps 1–2).
 Post-deploy: evidence at /app#forward (yellow banner on /dashboard links View evidence; trades when worker is back).
@@ -32,7 +32,7 @@ Not investment advice. Paper only. No live execution.
 
 1. Note date + link in `docs/GROWTH_DASHBOARD.md` (Marketing section).
 2. Watch `/admin` for `signup_complete` / `deploy_click` with `utm_campaign=build_in_public`.
-3. Save first screenshot when forward trades exist — upgrade post with `docs/content/WEEKLY_PROOF.md`.
+3. Save first screenshot when forward trades exist, upgrade post with `docs/content/WEEKLY_PROOF.md`.
 
 ## Related
 

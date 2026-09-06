@@ -1,13 +1,13 @@
-/* zengtrade Studio shim v2 — the REAL terminal as a MULTI-USER crypto product.
+/* zengtrade Studio shim v2: the REAL terminal as a MULTI-USER crypto product.
  *
  * Loaded BEFORE app.js in the deployed /dashboard copy only (build.py injects it;
  * the operator's local terminal never loads this file).
  *
  * Data plane (crypto-global, no operator-Mac dependency in steady state):
- *   shared  : engine_state table in Supabase (regime, catalog, metrics) —
+ *   shared  : engine_state table in Supabase (regime, catalog, metrics), 
  *             published server-side, read by every client (RLS: public read).
  *             Falls back to /dashboard/data/*.json static seeds if a key is missing.
- *   per-user: deployment / book_state / trade rows under RLS — each customer
+ *   per-user: deployment / book_state / trade rows under RLS, each customer
  *             sees exactly their own book, overlaid onto the shared payloads.
  *   writes  : Deploy/Pause/Stop buttons upsert the user's own deployment rows;
  *             the 24/7 worker picks them up next cycle. Live mode stays locked.
@@ -133,7 +133,7 @@
       setTimeout(function () {
         var sub = workerUp
           ? "Trades appear in Evidence as the worker runs on live prices (usually within 15 min)."
-          : "Deploy saved. Trades will run when the paper worker is back online — check the banner above.";
+          : "Deploy saved. Trades will run when the paper worker is back online. Check the banner above.";
         ztToast({
           uniqueClass: "zt-forward-toast",
           icon: "check",
@@ -185,7 +185,7 @@
     el.id = "ztWorkerDown";
     el.className = "zt-banner-warn";
     el.setAttribute("role", "status");
-    el.innerHTML = "Paper worker offline — deploys save, but trades pause until the worker restarts. " +
+    el.innerHTML = "Paper worker offline: deploys save, but trades pause until the worker restarts. " +
       '<a href="/app#forward">View evidence</a> · ' +
       '<a href="/ops/worker">Worker status</a> · ' +
       '<a href="/ops/e2e">E2E status</a> · ' +
@@ -208,7 +208,7 @@
   var ORIG = window.fetch.bind(window);
 
   // BUG FIX (2026-09-06): this used to be called right after its definition, BEFORE the
-  // `var ORIG = ...` line below — ORIG was still undefined at that point (var hoisting only
+  // `var ORIG = ...` line below: ORIG was still undefined at that point (var hoisting only
   // hoists the declaration, not the assignment), so maybeWorkerBanner() threw "ORIG is not a
   // function" on every single /dashboard/ page load. That uncaught error silently skipped this
   // call, meaning the "paper worker is offline" banner never showed even while the worker was
@@ -375,7 +375,7 @@
     ".mkt-live", ".mkt-dot", ".he-stat.off", ".tix-offline",
     "#modeFab", "#personaGate"               // persona switcher removed: the Studio IS the product
   ].join(",") + "{display:none !important}" +
-    /* worker-down banner — same warn tokens as every other caution note in the terminal
+    /* worker-down banner: same warn tokens as every other caution note in the terminal
      * (.note-warn, .rdy-banner.no), just in the page flow instead of floating over it. */
     ".zt-banner-warn{padding:8px 14px;text-align:center;font:600 12.5px/1.4 var(--sans);" +
     "background:var(--tint-warn);color:var(--amber);border-bottom:1px solid var(--bd-warn)}" +
@@ -387,14 +387,14 @@
     setTimeout(function () {
       mine("deployment?select=strategy_key&status=eq.running&limit=1").then(function (rows) {
         if (rows && rows.length) return;
-        /* the CTA below is "Open Library" — showing it to someone already composing a custom
+        /* the CTA below is "Open Library", showing it to someone already composing a custom
          * strategy in Builder is exactly the noisy, badly-timed nudge this used to be. */
         if (document.querySelector(".ztb")) return;
         ztToast({
           uniqueClass: "zt-cold-nudge",
           icon: "send",
           title: "Deploy your first strategy",
-          body: "Paper-trade on live Binance prices — it takes under a minute, zero risk.",
+          body: "Paper-trade on live Binance prices: it takes under a minute, zero risk.",
           timeout: 9000,
           actions: [
             { key: "lib", cls: "primary", label: "Open Library", onClick: function () {
@@ -437,7 +437,7 @@
     if (!bar) return;
     var p = document.createElement("p");
     p.id = "zt-studio-blurb";
-    p.textContent = "Algo Studio — deploy paper strategies here. Evidence & billing live in /app.";
+    p.textContent = "Algo Studio: deploy paper strategies here. Evidence & billing live in /app.";
     p.style.cssText = "margin:0;padding:8px 16px 10px;font:500 12.5px/1.45 var(--sans,system-ui);" +
       "color:var(--slate,#64748b);background:var(--bg,#f8fafc);border-bottom:1px solid var(--line,#e2e8f0)";
     bar.parentNode.insertBefore(p, bar.nextSibling);
@@ -487,7 +487,7 @@
       .replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 24);
   }
 
-  /* Layout scaffolding only below — every actual control (inputs, selects, segmented toggles,
+  /* Layout scaffolding only below, every actual control (inputs, selects, segmented toggles,
    * pill chips, buttons, notes, errors) is drawn with the terminal's own component classes
    * (.flow-input, .seg/.seg-btn, .preset, .type-pill, .flow-note, .flow-err, .btn-ghost, .num)
    * so Builder looks and behaves like a tab the rest of the app actually shipped, not a bolt-on.
@@ -521,7 +521,7 @@
     ".ztb-sent{margin-top:11px;font-size:12.5px;color:var(--slate);background:var(--surface-2);border-radius:8px;padding:8px 11px;line-height:1.5}" +
     ".ztb-sent b{color:var(--navy)}" +
     /* Deploy is the page's one primary action, sized up from the standard .btn-primary the way
-     * a form's submit button reasonably is elsewhere in the app — but on the same --accent
+     * a form's submit button reasonably is elsewhere in the app, but on the same --accent
      * token, so it still tracks the regime color like every other primary CTA instead of a
      * hardcoded green that drifts from the rest of the UI the moment the regime isn't bull. */
     ".ztb-deploy{background:var(--accent);color:#fff;border:0;border-radius:11px;font:inherit;font-weight:800;font-size:14px;padding:12px 24px;cursor:pointer;box-shadow:var(--shadow);transition:.15s;align-self:flex-start}" +
@@ -682,7 +682,7 @@
       var el = document.getElementById("ztbList"); if (el) el.innerHTML = customList(rows);
     });
   }
-  /* create/remove, not hidden-attribute toggling — matches flowError()/clearFlowError() in
+  /* create/remove, not hidden-attribute toggling, matches flowError()/clearFlowError() in
    * app.js. (.flow-err sets display:flex, which as author CSS beats the UA [hidden] rule, so
    * toggling .hidden on a pre-rendered .flow-err leaves an empty bar visible when "hidden".) */
   function ztbShowError(msg) {
@@ -711,7 +711,7 @@
       else r.json().then(function (e) {
         var msg = (e && (e.message || e.details || e.hint)) || "Deploy failed - try again.";
         if (/FREE_LIMIT/i.test(msg)) {
-          ztbShowError("Free includes 1 strategy — upgrade at /app#pricing");
+          ztbShowError("Free includes 1 strategy: upgrade at /app#pricing");
           setTimeout(goUpgradeFromFreeLimit, 900);
           return;
         }

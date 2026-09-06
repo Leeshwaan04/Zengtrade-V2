@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Agent entry point — run each autopilot turn on main when pursuing P0.
+# Agent entry point: run each autopilot turn on main when pursuing P0.
 # Applies migration 0011 + deploys worker when DATABASE_URL is available (env or Railway).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

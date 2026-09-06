@@ -2,14 +2,14 @@
 # Apply migration 0011 + deploy paper worker when secrets are available in the environment.
 #
 # Required:
-#   DATABASE_URL       — Supabase Postgres URI (session pooler :5432)
-#   RAILWAY_API_TOKEN  — Account token from railway.com/account/tokens
+#   DATABASE_URL: Supabase Postgres URI (session pooler :5432)
+#   RAILWAY_API_TOKEN: Account token from railway.com/account/tokens
 #
 # Optional:
-#   RAILWAY_PROJECT_ID — default f5902ffd-5b3f-49ed-b87d-dad21568185b
-#   RAILWAY_ENV_ID     — default production env in that project
-#   RAILWAY_SERVICE_ID — default paper-worker service (0decae25-…)
-#   WORKER_INTERVAL    — default 300
+#   RAILWAY_PROJECT_ID: default f5902ffd-5b3f-49ed-b87d-dad21568185b
+#   RAILWAY_ENV_ID: default production env in that project
+#   RAILWAY_SERVICE_ID: default paper-worker service (0decae25-…)
+#   WORKER_INTERVAL: default 300
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

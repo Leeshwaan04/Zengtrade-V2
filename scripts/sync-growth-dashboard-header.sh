@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 GROWTH="$ROOT/docs/GROWTH_DASHBOARD.md"
 
-work=0 parallel=0 sales=0 qa=0 mig=0 partial=0 gsc=0 prod=0 db_auth="—"
+work=0 parallel=0 sales=0 qa=0 mig=0 partial=0 gsc=0 prod=0 db_auth="-"
 ./scripts/check-migrations.sh >/dev/null 2>&1 && mig=1
 ./scripts/check-worker.sh >/dev/null 2>&1 && work=1
 SITE=https://zengtrade.in ./scripts/check-production.sh >/dev/null 2>&1 && prod=1
@@ -75,10 +75,10 @@ def sub_row(label: str, today: str) -> None:
 
 sub_row("Worker status", os.environ["WORKER_TODAY"])
 if "| DATABASE_URL auth |" in text:
-    sub_row("DATABASE_URL auth", os.environ.get("DB_AUTH_TODAY", "—"))
+    sub_row("DATABASE_URL auth", os.environ.get("DB_AUTH_TODAY", "-"))
 else:
     needle = "| Worker status |"
-    insert = f"| DATABASE_URL auth | — | {os.environ.get('DB_AUTH_TODAY', '—')} | — |\n"
+    insert = f"| DATABASE_URL auth | — | {os.environ.get('DB_AUTH_TODAY', '-')} | — |\n"
     idx = text.find(needle)
     if idx >= 0:
         line_end = text.find("\n", idx)
@@ -123,7 +123,7 @@ for label, key in (
     ("Growth: CPO trades", "CPO_GOAL_TODAY"),
     ("Growth: CBO infra", "CBO_GOAL_TODAY"),
 ):
-    today = os.environ.get(key, "—")
+    today = os.environ.get(key, "-")
     if f"| {label} |" in text:
         sub_row(label, today)
     else:

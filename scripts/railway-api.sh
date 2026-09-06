@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Railway GraphQL helper — account tokens use RAILWAY_API_TOKEN (not RAILWAY_TOKEN).
+# Railway GraphQL helper: account tokens use RAILWAY_API_TOKEN (not RAILWAY_TOKEN).
 set -euo pipefail
 
 RAILWAY_API="${RAILWAY_API_TOKEN:-${RAILWAY_TOKEN:-}}"
@@ -52,7 +52,7 @@ railway_configure_worker_service() {
   echo "$service_id"
 }
 
-# Back-compat alias — configure only (deploy separately to avoid double deploy).
+# Back-compat alias: configure only (deploy separately to avoid double deploy).
 railway_ensure_worker_service() {
   railway_configure_worker_service
 }

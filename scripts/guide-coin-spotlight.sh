@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Marketing: coin spotlight post template (partial activation OK — no trade claims).
+# Marketing: coin spotlight post template (partial activation OK, no trade claims).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

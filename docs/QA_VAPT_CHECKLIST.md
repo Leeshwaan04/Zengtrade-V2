@@ -31,6 +31,6 @@
 
 | Level | Action |
 |-------|--------|
-| **P0** | Blocks launch / data leak — fix same day, CTO notified |
-| **P1** | Activation or billing integrity — fix before paid ads |
-| **P2** | Hardening / hygiene — schedule in backlog |
+| **P0** | Blocks launch / data leak, fix same day, CTO notified |
+| **P1** | Activation or billing integrity, fix before paid ads |
+| **P2** | Hardening / hygiene: schedule in backlog |

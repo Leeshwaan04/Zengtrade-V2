@@ -26,10 +26,10 @@ One-page map of CLI playbooks while the paper worker is blocked (or after P0 gre
 |------|--------|------|
 | **All** | `./scripts/guide-founder-growth-standup.sh` | Combined all-role standup incl. CTO P0 (worker blocked); add `--quick` or `ZT_QUICK_GROWTH_STANDUP=1` for probes + index only |
 | **CTO** | `./scripts/guide-cto-founder-standup.sh` | P0 worker recovery combined (check-p0-readiness + validate) |
-| **CTO** | `./scripts/guide-worker-recovery.sh` | P0 blocked — wrong Railway DB password |
+| **CTO** | `./scripts/guide-worker-recovery.sh` | P0 blocked: wrong Railway DB password |
 | **CPO** | `./scripts/guide-cpo-founder-standup.sh` | Partial activation combined (signup → deploy + Q9) |
 | **CPO** | `./scripts/guide-partial-e2e.sh` | Signup → deploy (steps 1–2); View evidence → `/app#forward` |
-| **CPO** | `./scripts/guide-free-tier-test.sh` | Q9 — second deploy blocked on Free |
+| **CPO** | `./scripts/guide-free-tier-test.sh` | Q9: second deploy blocked on Free |
 | **CBO / Sales** | `./scripts/guide-cbo-founder-standup.sh` | GSC + first Pro MRR combined (worker blocked) |
 | **CBO / SEO** | `./scripts/guide-gsc-founder.sh` | GSC verify + sitemap submit |
 | **SEO** | `./scripts/guide-seo-founder-standup.sh` | GSC + organic combined (worker blocked) |
@@ -61,7 +61,7 @@ One-page map of CLI playbooks while the paper worker is blocked (or after P0 gre
 ```bash
 ./scripts/post-p0-success.sh
 ./scripts/verify-activation-path.sh
-./scripts/guide-qa-rls-isolation.sh   # Q3 RLS — /ops/e2e step 5
+./scripts/guide-qa-rls-isolation.sh   # Q3 RLS, /ops/e2e step 5
 ./scripts/audit-growth-goal.sh
 ```
 
@@ -79,6 +79,6 @@ Full E2E: https://zengtrade.in/ops/e2e
 
 ## Related docs
 
-- `docs/FOUNDER_PARALLEL.md` — parallel work summary
-- `docs/WORKER_RECOVERY.md` — worker runbook
-- `docs/GROWTH_DASHBOARD.md` — agent daily log
+- `docs/FOUNDER_PARALLEL.md`: parallel work summary
+- `docs/WORKER_RECOVERY.md`: worker runbook
+- `docs/GROWTH_DASHBOARD.md`: agent daily log

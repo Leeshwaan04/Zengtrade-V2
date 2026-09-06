@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Report paper-worker Railway deploy status (requires RAILWAY_API_TOKEN).
-# Does not print secret values — only whether DATABASE_URL is configured.
+# Does not print secret values: only whether DATABASE_URL is configured.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=/dev/null
