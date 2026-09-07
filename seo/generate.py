@@ -113,9 +113,23 @@ CATEGORY_HUB_INTRO = {
 
 
 def get(path, **params):
-    r = requests.get(BASE + path, params=params, timeout=20)
-    r.raise_for_status()
-    return r.json()
+    """Fetched roughly 600 times per full build now (150 coins x 4 klines calls, up from 1 before
+    today's chart work) - a single transient timeout used to silently drop ALL 150 coin pages from
+    the build (caught by build.py's defensive try/except around the whole batch, so the site still
+    "succeeds" with the entire /coins/ section quietly missing, exactly what happened running this
+    locally: one 20s read-timeout against data-api.binance.vision, whole batch skipped). 3 tries
+    with a short backoff before actually giving up, so one blip doesn't cost 150 pages."""
+    last_err = None
+    for attempt in range(3):
+        try:
+            r = requests.get(BASE + path, params=params, timeout=20)
+            r.raise_for_status()
+            return r.json()
+        except Exception as ex:
+            last_err = ex
+            if attempt < 2:
+                time.sleep(2 * (attempt + 1))
+    raise last_err
 
 
 # Coin universe: the STABLE_BASES below are pegged assets (or gold-backed) that don't have a
@@ -223,21 +237,29 @@ def sparkline(closes, w=560, h=90):
 
 CHART_LIB_URL = "https://cdn.jsdelivr.net/npm/lightweight-charts@5.2.1/dist/lightweight-charts.standalone.production.js"
 _CHART_TABS = (("24h", "24H"), ("1w", "1W"), ("1m", "1M"), ("3m", "3M"), ("1y", "1Y"))
+_CHART_TYPES = (("area", "Area"), ("candles", "Candles"), ("bars", "Bars"), ("heikinashi", "Heikin Ashi"))
 
 
 def chart_block(sym, closes_1m, bars):
     """TradingView's open-source Lightweight Charts (~60KB gzip, not the heavy embeddable
-    widget/iframe) with 5 pre-fetched timeframe tabs. All bar data is embedded at build time
-    (fetch_coins already ran at build time), so switching timeframes is a pure client-side
-    series.setData() - no live API call needed, the page stays fast and doesn't depend on
-    Binance being reachable client-side just to redraw a chart. Falls back to a static SVG
-    sparkline (real content, not a spinner) if the CDN script fails to load."""
+    widget/iframe) with 5 pre-fetched timeframes x 4 chart types (Area/Candles/Bars/Heikin Ashi).
+    fetch_coins() already stores full OHLC per bar (not just close), so every type/timeframe
+    combination renders from data already fetched at build time - no new network calls needed for
+    this. Heikin Ashi has no native series type in the library (confirmed before building this -
+    it's the standard, well-established HA transform run client-side over the real OHLC, then fed
+    into a normal candlestick series, the conventional way every charting library does it).
+    Switching timeframe OR type is a pure client-side redraw, no live API call either way. Falls
+    back to a static SVG sparkline (real content, not a spinner) if the CDN script fails to load."""
     data_json = json.dumps({tf: bars[tf] for tf, _ in _CHART_TABS}, separators=(",", ":"))
-    tabs_html = "".join(
+    tf_tabs_html = "".join(
         f'<button type="button" class="chart-tab{" on" if tf == "1m" else ""}" data-tf="{tf}">{lbl}</button>'
         for tf, lbl in _CHART_TABS)
+    type_tabs_html = "".join(
+        f'<button type="button" class="chart-tab chart-tab-type{" on" if ty == "area" else ""}" data-ty="{ty}">{lbl}</button>'
+        for ty, lbl in _CHART_TYPES)
     return f"""<div class="chart-card">
-        <div class="chart-tabs" role="tablist" aria-label="Chart timeframe">{tabs_html}</div>
+        <div class="chart-tabs" role="tablist" aria-label="Chart timeframe">{tf_tabs_html}</div>
+        <div class="chart-tabs chart-tabs-type" role="tablist" aria-label="Chart type">{type_tabs_html}</div>
         <div class="chart-canvas" id="chart-{sym}">{sparkline(closes_1m)}</div>
       </div>
       <script src="{CHART_LIB_URL}"></script>
@@ -250,32 +272,61 @@ def chart_block(sym, closes_1m, bars):
         function baseOpts(){{return {{layout:{{background:{{color:"transparent"}},textColor:v("--slate")}},
           grid:{{vertLines:{{color:v("--line")}},horzLines:{{color:v("--line")}}}},
           rightPriceScale:{{borderColor:v("--line")}},timeScale:{{borderColor:v("--line")}}}};}}
+        // standard Heikin Ashi transform (no library-native series type for it): each HA bar
+        // depends on the PREVIOUS ha bar, so this always recomputes from the raw OHLC for
+        // whichever timeframe window is active, not incrementally.
+        function heikinAshi(rows){{
+          var out=[], prevOpen=null, prevClose=null;
+          rows.forEach(function(b){{
+            var c=(b.open+b.high+b.low+b.close)/4;
+            var o=(prevOpen===null)?(b.open+b.close)/2:(prevOpen+prevClose)/2;
+            out.push({{time:b.time, open:o, high:Math.max(b.high,o,c), low:Math.min(b.low,o,c), close:c}});
+            prevOpen=o; prevClose=c;
+          }});
+          return out;
+        }}
         el.innerHTML="";
         var chart=LightweightCharts.createChart(el, Object.assign({{width:el.clientWidth,height:220}}, baseOpts()));
-        var series=chart.addSeries(LightweightCharts.AreaSeries, {{lineWidth:2,priceLineVisible:false}});
-        function setTf(tf){{
-          var rows=data[tf]||[];
+        var series=null, curTf="1m", curTy="area";
+        function render(){{
+          var rows=data[curTf]||[];
           if(!rows.length) return;
+          if(series){{chart.removeSeries(series); series=null;}}
           var up=rows[rows.length-1].close>=rows[0].close;
-          var c=up?v("--green"):v("--red");
-          series.applyOptions({{lineColor:c,topColor:c+"33",bottomColor:"transparent"}});
-          series.setData(rows.map(function(b){{return {{time:b.time,value:b.close}};}}));
+          var upC=v("--green"), downC=v("--red");
+          if(curTy==="area"){{
+            var c=up?upC:downC;
+            series=chart.addSeries(LightweightCharts.AreaSeries, {{lineWidth:2,priceLineVisible:false,
+              lineColor:c,topColor:c+"33",bottomColor:"transparent"}});
+            series.setData(rows.map(function(b){{return {{time:b.time,value:b.close}};}}));
+          }} else if(curTy==="bars"){{
+            series=chart.addSeries(LightweightCharts.BarSeries, {{upColor:upC,downColor:downC}});
+            series.setData(rows);
+          }} else {{   // candles or heikinashi - both render as candlesticks, heikinashi transforms the data first
+            series=chart.addSeries(LightweightCharts.CandlestickSeries, {{upColor:upC,downColor:downC,
+              borderVisible:false,wickUpColor:upC,wickDownColor:downC}});
+            series.setData(curTy==="heikinashi"?heikinAshi(rows):rows);
+          }}
           chart.timeScale().fitContent();
         }}
-        setTf("1m");
-        var tabWrap=el.previousElementSibling;
-        if(tabWrap) tabWrap.querySelectorAll(".chart-tab").forEach(function(btn){{
+        render();
+        var wrap=el.parentElement;
+        wrap.querySelectorAll(".chart-tab[data-tf]").forEach(function(btn){{
           btn.onclick=function(){{
-            tabWrap.querySelectorAll(".chart-tab").forEach(function(b){{b.classList.remove("on")}});
-            btn.classList.add("on"); setTf(btn.dataset.tf);
+            wrap.querySelectorAll(".chart-tab[data-tf]").forEach(function(b){{b.classList.remove("on")}});
+            btn.classList.add("on"); curTf=btn.dataset.tf; render();
+          }};
+        }});
+        wrap.querySelectorAll(".chart-tab[data-ty]").forEach(function(btn){{
+          btn.onclick=function(){{
+            wrap.querySelectorAll(".chart-tab[data-ty]").forEach(function(b){{b.classList.remove("on")}});
+            btn.classList.add("on"); curTy=btn.dataset.ty; render();
           }};
         }});
         if(window.ResizeObserver) new ResizeObserver(function(){{chart.applyOptions({{width:el.clientWidth}});}}).observe(el);
         var surfaceToggle=document.getElementById("surfaceToggle");
         if(surfaceToggle) surfaceToggle.addEventListener("click", function(){{
-          setTimeout(function(){{chart.applyOptions(baseOpts());
-            var activeTf=(tabWrap&&tabWrap.querySelector(".chart-tab.on"))?tabWrap.querySelector(".chart-tab.on").dataset.tf:"1m";
-            setTf(activeTf);}}, 40);
+          setTimeout(function(){{chart.applyOptions(baseOpts()); render();}}, 40);
         }});
       }})();
       </script>"""
@@ -339,6 +390,9 @@ COIN_CSS = """
 .chart-tab{border:1px solid var(--line);background:var(--surface);color:var(--slate);font:inherit;font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:8px;cursor:pointer;transition:.15s}
 .chart-tab:hover{color:var(--navy)}
 .chart-tab.on{background:var(--green);border-color:var(--green);color:#fff}
+.chart-tabs-type{margin-bottom:10px}
+.chart-tab-type{font-size:10.5px;padding:4px 10px;background:var(--surface-2)}
+.chart-tab-type.on{background:var(--navy);border-color:var(--navy)}
 .chart-canvas{width:100%;min-height:220px;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:10px;overflow:hidden}
 .chart-canvas .spark{margin:0;border:0;padding:0;height:200px}
 .coin-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin:16px 0}
@@ -610,16 +664,26 @@ def fetch_coins(syms=None):
     reuses the existing 4h fetch, and 1m is a slice of the (now-larger) 3m daily fetch, so the
     3M/6mo-equivalent windows aren't fetched twice. Same bars also back the multi-timeframe regime
     read (short=1w's 4h closes, medium=1m's daily closes, long=last 26 of 1y's weekly closes),
-    so the chart and the regime-tilt text always agree with each other by construction."""
+    so the chart and the regime-tilt text always agree with each other by construction.
+
+    Paced deliberately (a short sleep between coins): this is ~600 sequential requests to Binance's
+    public data mirror per build now (150 coins x 4 klines calls), and firing them back-to-back
+    with no pacing at all was observed, not assumed, to trigger server-side throttling partway
+    through a run (one build silently produced ZERO coin pages after a read-timeout; a retry
+    build under the same unpaced burst pattern took 1h45m and still produced none - retries alone
+    don't fix a rate-limit, they just retry into the same throttle). A single isolated request
+    still succeeds instantly, confirming this is burst-triggered, not an outage."""
     syms = syms or list(COINS.keys())
     print("fetching 24h tickers…")
     all24 = {t["symbol"]: t for t in get("/api/v3/ticker/24hr")}
     out = []
-    for sym in syms:
+    for i, sym in enumerate(syms):
         name, slug, cat = COINS[sym]
         tk = all24.get(sym + "USDT")
         if not tk:
             print("  skip", sym, "(no ticker)"); continue
+        if i > 0:
+            time.sleep(0.25)
         kl_1h = get("/api/v3/klines", symbol=sym + "USDT", interval="1h", limit=24)   # 24H tab
         kl_4h = get("/api/v3/klines", symbol=sym + "USDT", interval="4h", limit=42)   # 1W tab (~1 week)
         kl_1d = get("/api/v3/klines", symbol=sym + "USDT", interval="1d", limit=90)   # 3M tab; sliced for 1M
