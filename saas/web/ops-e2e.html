@@ -19,7 +19,7 @@
   .gatebox.bad{color:var(--red-d)}.gatebox.ok{color:var(--green-d)}
   .back{font-size:13px;font-weight:600;color:var(--blue);text-decoration:none;display:inline-block;margin-bottom:14px}
   button{border:0;border-radius:10px;padding:10px 16px;font:700 13px var(--sans);cursor:pointer;background:var(--green);color:#04140a;margin-top:8px}
-</style></head><body>
+</style></head><body style="display:none">
 <div class="wrap">
   <a class="back" href="/ops">← Founder Ops</a>
   <h1>E2E activation test (CPO)</h1>
@@ -45,14 +45,21 @@
   <button type="button" id="recheck">Re-check P0 gates</button>
   <p style="font-size:13px;margin-top:16px;color:var(--slate)">CLI: <code>./scripts/guide-cpo-founder-standup.sh</code> · <code>./scripts/guide-partial-e2e.sh</code> · <code>./scripts/guide-free-tier-test.sh</code> · <code>./scripts/verify-activation-path.sh --partial</code></p>
 </div>
-<script>
+<script type="module">
+import { requireOpsAdmin } from "/js/ops-gate.js";
+if (!await requireOpsAdmin()) throw new Error("not admin");
+document.body.style.display = "";
+
 const SUPA="https://ponvarxeytfcntckczbn.supabase.co", ANON="sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";
 async function gates(){
   const pre=document.getElementById("pre");
   let mig=false, work=false;
   try{
     const h={apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"};
-    for(const name of ["signup_complete","deploy_click","deploy_success","checkout_click"]){
+    // BUG FIX (2026-09-09): used to insert all 4 real outcome-bearing event names on every load -
+    // migration 0011's RLS policy shares one whitelist across all 7 names, so pageview/signup_view
+    // prove the identical insert path without touching a counted conversion metric.
+    for(const name of ["pageview","signup_view"]){
       const r=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name,path:"/e2e-probe"})});
       if(r.status!==201){ mig=false; break; }
       mig=true;

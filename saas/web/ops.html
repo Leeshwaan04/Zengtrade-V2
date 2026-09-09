@@ -47,7 +47,7 @@
   .actions a{font:700 14px/1 var(--sans);text-decoration:none;padding:12px 18px;border-radius:12px}
   .actions a.primary{background:var(--green);color:#04140a}
   .actions a.secondary{background:var(--surface);border:1px solid var(--line);color:var(--navy)}
-</style></head><body>
+</style></head><body style="display:none">
 <div class="wrap">
   <div class="top">
     <div class="logo" aria-hidden="true">Z</div>
@@ -104,6 +104,11 @@
     <button type="button" id="enableNotify">Enable approval alerts</button></p>
 </div>
 <script type="module">
+import { requireOpsAdmin } from "/js/ops-gate.js";
+const authed = await requireOpsAdmin();
+if (!authed) throw new Error("not admin");    // requireOpsAdmin() already redirected to /login
+document.body.style.display = "";
+
 const SUPA = "https://ponvarxeytfcntckczbn.supabase.co";
 const ANON = "sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";
 const SITE = "https://zengtrade.in";
@@ -128,7 +133,12 @@ async function probeAuthJs() {
 async function probeMigration0011() {
   try {
     const h = { apikey: ANON, "Content-Type": "application/json", Prefer: "return=minimal" };
-    const events = ["signup_complete", "deploy_success", "checkout_click"];
+    // BUG FIX (2026-09-09): this used to insert real signup_complete/deploy_success/checkout_click
+    // rows on every page load and every 60s refresh - exactly the events /admin's MRR/conversion
+    // tiles count. The migration's RLS policy (0011_funnel_events_v2.sql) checks one shared
+    // whitelist for all 7 event names with no per-name distinction, so probing with pageview/
+    // signup_view proves the identical insert path works without inflating real funnel counts.
+    const events = ["pageview", "signup_view"];
     for (const name of events) {
       const r = await fetch(SUPA + "/rest/v1/event", {
         method: "POST",

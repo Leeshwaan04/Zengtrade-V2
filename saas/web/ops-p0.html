@@ -28,7 +28,7 @@
   .callout{background:#fff8e6;border:2px solid #f5d76e;border-radius:14px;padding:16px 18px;margin-bottom:18px;font-size:14px;line-height:1.55}
   .callout b{color:var(--navy)}
   .callout code{font-size:12px}
-</style></head><body>
+</style></head><body style="display:none">
 <div class="wrap">
   <a class="back" href="/ops">← Full Founder Ops</a>
   <h1>P0 checklist</h1>
@@ -88,12 +88,20 @@
   <p class="foot">Track progress: <a href="https://github.com/Leeshwaan04/Zengtrade-V2/issues/4" target="_blank" rel="noopener">GitHub issue #4</a> ·
     CLI: <code>./scripts/check-p0-readiness.sh</code> · <code>./scripts/guide-cto-founder-standup.sh</code> · <code>./scripts/guide-worker-recovery.sh</code> · <code>./scripts/status-report.sh</code> · Auto-refresh 30s</p>
 </div>
-<script>
+<script type="module">
+import { requireOpsAdmin } from "/js/ops-gate.js";
+if (!await requireOpsAdmin()) throw new Error("not admin");
+document.body.style.display = "";
+
 const SUPA="https://ponvarxeytfcntckczbn.supabase.co", ANON="sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";
 async function probeMig(){
   try{
     const h={apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"};
-    for(const name of ["signup_complete","deploy_click","deploy_success","checkout_click"]){
+    // BUG FIX (2026-09-09): used to insert all 4 real outcome-bearing event names on every probe
+    // (every load + 30s auto-refresh) - migration 0011's RLS policy shares one whitelist across
+    // all 7 names, so pageview/signup_view prove the identical insert path without touching a
+    // counted conversion metric.
+    for(const name of ["pageview","signup_view"]){
       const r=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name,path:"/p0-probe"})});
       if(r.status!==201) return false;
     }

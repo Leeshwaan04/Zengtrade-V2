@@ -21,7 +21,7 @@
   #status{font:600 13px;margin-top:8px;min-height:18px}
   #status.ok{color:var(--green-d)}#status.bad{color:var(--red-d)}
   .back{font-size:13px;margin-bottom:16px;display:inline-block;color:var(--blue);text-decoration:none;font-weight:600}
-</style></head><body>
+</style></head><body style="display:none">
 <div class="wrap">
   <a class="back" href="/ops">← Founder Ops</a>
   <h1>Apply migration 0011</h1>
@@ -65,7 +65,11 @@
   <p id="status"></p>
   <p id="growthGoals" style="display:none;background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:14px;font-size:14px;line-height:1.55;margin-top:14px"></p>
 </div>
-<script>
+<script type="module">
+import { requireOpsAdmin } from "/js/ops-gate.js";
+if (!await requireOpsAdmin()) throw new Error("not admin");
+document.body.style.display = "";
+
 const SUPA="https://ponvarxeytfcntckczbn.supabase.co", ANON="sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";
 fetch("/ops/migrate.sql").then(r=>r.text()).then(t=>{document.getElementById("sql").textContent=t;});
 document.getElementById("copy").onclick=()=>{
@@ -93,11 +97,14 @@ async function growthGoalsCard(){
 async function verifyMigration(){
   const st=document.getElementById("status");
   const h={apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"};
-  const r1=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"signup_complete",path:"/ops-verify"})});
-  const r2=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"deploy_success",path:"/ops-verify"})});
-  const r3=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"checkout_click",path:"/ops-verify"})});
-  if(r1.status===201&&r2.status===201&&r3.status===201){
-    st.textContent="✓ Migration 0011 is live (signup, deploy, checkout events).";
+  // BUG FIX (2026-09-09): this used to insert 3 real outcome-bearing events (signup_complete,
+  // deploy_success, checkout_click) on every load AND every 30s while this page stayed open -
+  // migration 0011's RLS policy shares one whitelist across all 7 event names, so pageview/
+  // signup_view prove the identical insert path without touching a counted conversion metric.
+  const r1=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"pageview",path:"/ops-verify"})});
+  const r2=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:h,body:JSON.stringify({name:"signup_view",path:"/ops-verify"})});
+  if(r1.status===201&&r2.status===201){
+    st.textContent="✓ Migration 0011 is live (funnel insert path verified).";
     st.className="ok";
     growthGoalsCard();
     const rows=await fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{headers:{apikey:ANON},cache:"no-store"}).then(r=>r.json()).catch(()=>[]);
@@ -107,7 +114,7 @@ async function verifyMigration(){
       if(pb) pb.style.display="block";
     }
   }else{
-    st.textContent="✗ Still blocked (signup "+r1.status+", deploy "+r2.status+", checkout "+r3.status+"). Run the SQL in Supabase first.";
+    st.textContent="✗ Still blocked (pageview "+r1.status+", signup_view "+r2.status+"). Run the SQL in Supabase first.";
     st.className="bad";
   }
 }

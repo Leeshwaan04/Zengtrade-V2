@@ -21,7 +21,7 @@
   #hb.ok{color:var(--green-d)}#hb.bad{color:var(--red-d)}
   pre.tpl{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:12px;font:12px/1.5 var(--mono);overflow:auto;margin:10px 0}
   .btn-copy{border:0;border-radius:8px;padding:8px 12px;font:700 12px var(--sans);cursor:pointer;background:var(--green);color:#04140a}
-</style></head><body>
+</style></head><body style="display:none">
 <div class="wrap">
   <a class="back" href="/ops">← Founder Ops</a>
   <h1>Deploy paper worker</h1>
@@ -153,7 +153,11 @@
     <p id="hb">Checking worker heartbeat…</p>
   </div>
 </div>
-<script>
+<script type="module">
+import { requireOpsAdmin } from "/js/ops-gate.js";
+if (!await requireOpsAdmin()) throw new Error("not admin");
+document.body.style.display = "";
+
 const SUPA="https://ponvarxeytfcntckczbn.supabase.co", ANON="sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";
 async function checkHb(){
   const el=document.getElementById("hb");
@@ -193,7 +197,10 @@ setInterval(checkHb,30000);
 // Stale heartbeat + migration green → likely wrong DATABASE_URL password on Railway
 (async function maybeBadPassword(){
   try{
-    const mig=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({name:"deploy_success",path:"/ops-worker-probe"})});
+    // BUG FIX (2026-09-09): used to insert a real deploy_success row on every load - migration
+    // 0011's RLS policy shares one whitelist across all 7 event names, so pageview proves the
+    // identical insert path without touching a counted conversion metric.
+    const mig=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({name:"pageview",path:"/ops-worker-probe"})});
     const rows=await fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{headers:{apikey:ANON},cache:"no-store"}).then(r=>r.json());
     const age=rows[0]?Math.round((Date.now()-new Date(rows[0].updated_at))/60000):99999;
     if(mig.status===201&&age>60) document.getElementById("badPw").hidden=false;

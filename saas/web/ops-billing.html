@@ -14,7 +14,7 @@
   .back{display:inline-block;margin-bottom:14px;font-size:13px;font-weight:600;color:var(--blue);text-decoration:none}
   .btn{display:inline-block;margin-top:10px;padding:10px 16px;background:var(--green);color:#04140a;border-radius:10px;font:700 13px;text-decoration:none}
   #bill.ok{color:var(--green-d);font-weight:700}#bill.bad{color:var(--red-d);font-weight:700}
-</style></head><body>
+</style></head><body style="display:none">
 <div class="wrap">
   <a class="back" href="/ops">← Founder Ops</a>
   <h1>Test Pro checkout (CBO / MRR)</h1>
@@ -61,7 +61,11 @@
 
   <p id="growthGoals" class="card" style="display:none;background:#eef2ff;border-color:#c7d2fe;font-size:14px;line-height:1.55"></p>
 </div>
-<script>
+<script type="module">
+import { requireOpsAdmin } from "/js/ops-gate.js";
+if (!await requireOpsAdmin()) throw new Error("not admin");
+document.body.style.display = "";
+
 const SUPA="https://ponvarxeytfcntckczbn.supabase.co", ANON="sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";
 async function foundingPricingVisible(site){
   for(let i=0;i<3;i++){
@@ -95,11 +99,15 @@ fetch("https://ponvarxeytfcntckczbn.supabase.co/functions/v1/nowpayments-create-
   if(r.ok){el.textContent="✓ Billing edge function reachable — safe to test checkout";el.className="ok";}
   else{el.textContent="✗ Billing not reachable (HTTP "+r.status+")";el.className="bad";}
 }).catch(()=>{document.getElementById("bill").textContent="✗ Could not reach billing function";document.getElementById("bill").className="bad";});
-fetch(SUPA+"/rest/v1/event",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({name:"checkout_click",path:"/ops-billing-probe"})})
+// BUG FIX (2026-09-09): this used to insert a real checkout_click row on every page load,
+// inflating the exact metric /admin's sales tiles count. Migration 0011's RLS policy checks one
+// shared name whitelist for all funnel events, so probing with pageview proves the identical
+// insert path works without touching a counted conversion metric.
+fetch(SUPA+"/rest/v1/event",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({name:"pageview",path:"/ops-billing-probe"})})
 .then(r=>{
   const el=document.getElementById("funnel");
-  if(r.status===201){el.innerHTML="✓ <code>checkout_click</code> funnel live — clicks will appear in <a href=\"/admin\">/admin</a>";}
-  else{el.innerHTML="⚠ <code>checkout_click</code> blocked (HTTP "+r.status+") — apply <a href=\"/ops/migrate\">migration 0011</a> first";}
+  if(r.status===201){el.innerHTML="✓ Funnel insert path live (migration 0011) — real <code>checkout_click</code> events will appear in <a href=\"/admin\">/admin</a>";}
+  else{el.innerHTML="⚠ Funnel insert blocked (HTTP "+r.status+") — apply <a href=\"/ops/migrate\">migration 0011</a> first";}
 });
 fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{headers:{apikey:ANON}})
 .then(r=>r.json()).then(async rows=>{
@@ -129,10 +137,10 @@ fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{h
       method:"OPTIONS",headers:{Origin:location.origin,"Access-Control-Request-Method":"POST"}
     });
     ok=ok&&r.ok;
-    const ev=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({name:"checkout_click",path:"/ops-billing-sales"})});
+    const ev=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({name:"pageview",path:"/ops-billing-sales"})});
     ok=ok&&ev.status===201;
   }catch(e){ok=false;}
-  el.textContent=ok?"✓ Sales-ready — founding $19 + NOWPayments + checkout_click · targets: Paying ≥ 1, MRR > $0 in /admin":"✗ Run ./scripts/check-sales-ready.sh";
+  el.textContent=ok?"✓ Sales-ready — founding $19 + NOWPayments + funnel insert path live · targets: Paying ≥ 1, MRR > $0 in /admin":"✗ Run ./scripts/check-sales-ready.sh";
   el.style.background=ok?"var(--green-soft)":"#fff5f5";
   el.style.borderColor=ok?"var(--green-line)":"#f0b4b4";
 })();
@@ -147,10 +155,10 @@ fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{h
       method:"OPTIONS",headers:{Origin:location.origin,"Access-Control-Request-Method":"POST"}
     });
     ok=ok&&r.ok;
-    const ev=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({name:"checkout_click",path:"/ops-billing-ready"})});
+    const ev=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({name:"pageview",path:"/ops-billing-ready"})});
     ok=ok&&ev.status===201;
   }catch(e){ok=false;}
-  el.textContent=ok?"✓ Billing-ready — founding $19 + NOWPayments + checkout_click funnel":"✗ Run ./scripts/check-billing-ready.sh (pricing, billing, migration 0011)";
+  el.textContent=ok?"✓ Billing-ready — founding $19 + NOWPayments + funnel insert path live":"✗ Run ./scripts/check-billing-ready.sh (pricing, billing, migration 0011)";
   el.style.background=ok?"var(--green-soft)":"#fff5f5";
   el.style.borderColor=ok?"var(--green-line)":"#f0b4b4";
 })();

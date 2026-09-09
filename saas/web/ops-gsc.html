@@ -13,7 +13,7 @@
   a{color:var(--blue);font-weight:700}
   .back{display:inline-block;margin-bottom:14px;font-size:13px;font-weight:600;color:var(--blue);text-decoration:none}
   .btn{display:inline-block;margin-top:10px;padding:10px 16px;background:var(--green);color:#04140a;border-radius:10px;font:700 13px;text-decoration:none}
-</style></head><body>
+</style></head><body style="display:none">
 <div class="wrap">
   <a class="back" href="/ops">← Founder Ops</a>
   <h1>Google Search Console & organic (CBO)</h1>
@@ -55,7 +55,11 @@
   <p>Track weekly in <a href="/admin">/admin</a> → pageviews, signups, MRR.</p>
   <p id="growthGoals" class="card" style="display:none;background:#eef2ff;border-color:#c7d2fe;font-size:14px;line-height:1.55;margin-top:14px"></p>
 </div>
-<script>
+<script type="module">
+import { requireOpsAdmin } from "/js/ops-gate.js";
+if (!await requireOpsAdmin()) throw new Error("not admin");
+document.body.style.display = "";
+
 const SUPA="https://ponvarxeytfcntckczbn.supabase.co", ANON="sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1";
 (async function growthGoals(){
   const el=document.getElementById("growthGoals");
