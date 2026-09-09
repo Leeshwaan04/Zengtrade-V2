@@ -325,7 +325,7 @@ async function refresh() {
 
   let workerDetail = worker.ts ? `${worker.ageMin}m ago · ${worker.deps} deps` : "no heartbeat";
   if (!worker.ok && migOk && data.gates?.railway_paper_worker === "FAILED" && data.gates?.database_url_auth_ok === false) {
-    workerDetail = "Railway deploy FAILED — wrong DB password · /ops/worker";
+    workerDetail = "Worker down — check Cloud Run/Scheduler · /ops/worker";
   }
 
   document.getElementById("gates").innerHTML = [

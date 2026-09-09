@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Deploy paper worker · zengtrade ops</title>
+<title>Paper worker · zengtrade ops</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css.css">
 <style>
@@ -24,130 +24,93 @@
 </style></head><body style="display:none">
 <div class="wrap">
   <a class="back" href="/ops">← Founder Ops</a>
-  <h1>Deploy paper worker</h1>
-  <p class="sub">Founder approval · ~10 min · Without this, <a href="/dashboard">deploys save</a> but <b>no trades run</b> on live Binance prices. See also <a href="/ops/p0">P0 checklist</a>.</p>
-
-  <div class="card" style="background:#fff0f0;border:2px solid #f5c2c2;margin-bottom:14px" id="badPw" hidden>
-    <h2>DATABASE_URL is set — password is wrong</h2>
-    <p style="font-size:14px;line-height:1.55;margin:0 0 10px">Railway has <code>DATABASE_URL</code> but Postgres auth fails (latest deploy <b>FAILED</b>). The variable name is correct — fix the <b>password</b>:</p>
-    <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.6">
-      <li><a href="https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings" target="_blank" rel="noopener">Supabase → Database</a> → <b>Reset database password</b></li>
-      <li><b>Connect</b> → URI → <b>Session</b> → port <code>5432</code> → copy full URI (use copy button — <b>no [brackets]</b> around password)</li>
-      <li><a href="https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b" target="_blank" rel="noopener">Railway paper-worker</a> → Variables → replace <code>DATABASE_URL</code> value → <b>Deploy</b></li>
-    </ol>
-    <p style="font-size:13px;margin:12px 0 0;padding:10px;background:#eef2ff;border-radius:8px;border:1px solid #c7d2fe"><b>Cloud Agent shortcut:</b> add secret <code>DATABASE_PASSWORD</code> only (after reset) — agent builds the URI and redeploys via <code>run-p0-if-ready.sh</code>.</p>
-    <p style="font-size:13px;margin:8px 0 0;color:var(--slate)">CLI recovery: <code>./scripts/guide-cto-founder-standup.sh</code> · <code>./scripts/guide-worker-recovery.sh</code> · verify: <code>./scripts/validate-database-credentials.sh</code></p>
-  </div>
+  <h1>Paper worker</h1>
+  <p class="sub">Runs every ACTIVE paper deployment on live Binance data. Without a fresh heartbeat, <a href="/dashboard">deploys save</a> but <b>no trades run</b>. See also <a href="/ops/p0">P0 checklist</a>.</p>
 
   <div class="card" style="background:var(--green-soft);border:2px solid var(--green-line)">
-    <h2>Railway Variables — what to add (you are here)</h2>
-    <p style="font-size:14px;line-height:1.55;margin:0 0 8px"><b>One variable required</b> on service <code>paper-worker</code>:</p>
-    <table style="font-size:14px;border-collapse:collapse;width:100%;margin:8px 0 12px">
-      <tr><td style="padding:6px 10px;border:1px solid var(--line);font-weight:700">VARIABLE_NAME</td><td style="padding:6px 10px;border:1px solid var(--line)"><code>DATABASE_URL</code></td></tr>
-      <tr><td style="padding:6px 10px;border:1px solid var(--line);font-weight:700">VALUE</td><td style="padding:6px 10px;border:1px solid var(--line)">Full Postgres URI from <a href="https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings" target="_blank" rel="noopener">Supabase</a> (Session · port 5432)</td></tr>
-    </table>
-    <p style="font-size:13px;margin:0 0 6px;color:var(--slate)">Template — replace <code>YOUR_PASSWORD</code> with your database password, then paste in <b>Raw Editor</b> or the VALUE field:</p>
-    <pre class="tpl" id="tpl">DATABASE_URL=postgresql://postgres.ponvarxeytfcntckczbn:YOUR_PASSWORD@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres</pre>
-    <button type="button" class="btn-copy" id="copyTpl">Copy template</button>
-    <span id="copyMsg" style="font-size:12px;margin-left:8px;color:var(--slate)"></span>
-    <ol style="margin-top:12px">
-      <li><a href="https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b" target="_blank" rel="noopener">Open paper-worker</a> → <b>Variables</b></li>
-      <li>Either: type name + value and click <b>Add</b> — or <b>Raw Editor</b> → paste line above → Save</li>
-      <li><b>Deployments</b> → Redeploy · logs must show <code>db: supabase</code></li>
-    </ol>
-    <p style="font-size:13px;margin:12px 0 0;padding:10px;background:#fff0f0;border-radius:8px;border:1px solid #f5c2c2"><b>No square brackets.</b> Supabase shows <code>[YOUR-PASSWORD]</code> as a placeholder — paste only the real password, not <code>[password]</code>.</p>
-    <p style="font-size:13px;margin:12px 0 0;padding:10px;background:#fff8e6;border-radius:8px;border:1px solid #f5d76e"><b>Wrong Supabase screen?</b> “Connection pooling → pool size” is <b>not</b> the URI. Use <b>Connect</b> (top of project) or <b>Project Settings → Database</b> → <b>Connection string</b> → URI → Session → 5432. Leave pool size at default (15).</p>
-  </div>
-
-  <div class="card" style="background:#eef2ff;border-color:#c7d2fe">
-    <h2>Option 0b — GitHub health-watch (every 6h)</h2>
-    <p style="font-size:14px;line-height:1.55;margin:0">Add <code>DATABASE_PASSWORD</code> (password only) or full <code>DATABASE_URL</code> + <code>RAILWAY_API_TOKEN</code> to <a href="https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions" target="_blank" rel="noopener">GitHub Secrets</a> →
-    <a href="https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/health-watch.yml" target="_blank" rel="noopener">health-watch</a> auto-runs <code>run-p0-if-ready.sh</code> on schedule (no manual APPLY needed).</p>
-  </div>
-
-  <div class="card" style="background:#eef2ff;border-color:#c7d2fe">
-    <h2>Option 0 — GitHub Action (recommended)</h2>
-    <p style="font-size:14px;line-height:1.55;margin:0">Add <code>DATABASE_PASSWORD</code> (password only) or full <code>DATABASE_URL</code> + <code>RAILWAY_API_TOKEN</code> to <a href="https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions" target="_blank" rel="noopener">GitHub Secrets</a> →
-    <a href="https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml" target="_blank" rel="noopener">Run “Apply P0”</a> → type <code>APPLY</code> (migration + paper-worker redeploy).</p>
-  </div>
-
-  <div class="card" style="background:#eef2ff;border-color:#c7d2fe">
-    <h2>Option 1 — Cloud Agent (password only)</h2>
-    <p style="font-size:14px;line-height:1.55;margin:0">Add Cloud Agent secret <code>DATABASE_PASSWORD</code> (database password only, not API keys). Agent runs <code>./scripts/run-p0-if-ready.sh</code> → builds session pooler URI → sets Railway <b>paper-worker</b> vars and redeploys. Also works: full <code>DATABASE_URL</code> + <code>RAILWAY_API_TOKEN</code>.</p>
-  </div>
-
-  <div class="card" style="background:#eef2ff;border-color:#c7d2fe">
-    <h2>Option 2 — Cloud Agent (full URI)</h2>
-    <p style="font-size:14px;line-height:1.55;margin:0">Agent runs <code>./scripts/run-p0-if-ready.sh</code> → builds session pooler URI → sets Railway <b>paper-worker</b> vars and redeploys. Works with <code>DATABASE_PASSWORD</code> only + <code>RAILWAY_API_TOKEN</code>.</p>
-  </div>
-
-  <div class="card" style="background:var(--green-soft);border-color:var(--green-line)">
-    <h2>Existing Railway service (fastest)</h2>
-    <p style="font-size:14px;line-height:1.55;margin:0 0 10px">Project <b>ravishing-tenderness</b> already has <code>paper-worker</code> configured for <code>saas/worker</code>. Add variable <code>DATABASE_URL</code> → redeploy.</p>
+    <h2>Current setup — Google Cloud Run Jobs + Cloud Scheduler</h2>
+    <p style="font-size:14px;line-height:1.55;margin:0 0 10px">Since 2026-09-09. Railway's <code>paper-worker</code> hit a persistent platform-side build failure (confirmed not a config, billing, or GitHub-connection issue — Railway's own diagnosis called it an "Infrastructure Error"), so the worker moved to GCP. Same code, same Supabase database — just a different, cheaper, more reliable host.</p>
     <ol>
-      <li>Open <a href="https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b" target="_blank" rel="noopener">Railway project</a> → service <b>paper-worker</b></li>
-      <li>Variables → <code>DATABASE_URL</code> = <a href="https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings" target="_blank" rel="noopener">Supabase session URI</a> (pooler <code>aws-0-ap-northeast-1.pooler.supabase.com</code>, port <code>5432</code>)</li>
-      <li>Redeploy → logs: <code>zengtrade worker</code> + <code>startup heartbeat ok</code></li>
+      <li><b>Cloud Run Job</b> <code>paper-worker</code> (project <code>zengtrade</code>, region <code>us-central1</code>) runs <code>python worker.py --once</code> — one cycle, then exits.</li>
+      <li><b>Cloud Scheduler</b> job <code>paper-worker-cycle</code> triggers a fresh execution every 5 minutes.</li>
+      <li><code>DATABASE_URL</code> lives in <b>Secret Manager</b> (encrypted, IAM-scoped) — not a plain environment variable.</li>
+      <li>Cost: scale-to-zero between runs, well inside Cloud Run's free tier. Expect <b>$0/month</b>.</li>
     </ol>
-    <div class="links"><a href="https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b" target="_blank" rel="noopener">Open paper-worker</a></div>
+    <div class="links">
+      <a href="https://console.cloud.google.com/run/jobs/details/us-central1/paper-worker?project=zengtrade" target="_blank" rel="noopener">Open Cloud Run job</a>
+      <a class="alt" href="https://console.cloud.google.com/cloudscheduler?project=zengtrade" target="_blank" rel="noopener">Open Cloud Scheduler</a>
+    </div>
   </div>
 
   <div class="card">
-    <h2>Option A — Railway (new service)</h2>
+    <h2>Diagnose</h2>
+    <p style="font-size:14px;line-height:1.55;margin:0 0 8px">No secrets printed by any of these:</p>
+    <pre class="tpl">gcloud run jobs executions list --job=paper-worker --region=us-central1 --project=zengtrade --limit=10
+gcloud scheduler jobs describe paper-worker-cycle --location=us-central1 --project=zengtrade
+gcloud logging read 'resource.type="cloud_run_job" AND resource.labels.job_name="paper-worker"' --project=zengtrade --limit=50</pre>
+    <p style="font-size:14px;line-height:1.55;margin:8px 0 0">Expected when healthy: an execution roughly every 5 minutes, each logging <code>startup heartbeat ok</code>; heartbeat below under 12 minutes old.</p>
+  </div>
+
+  <div class="card" style="background:#fff8e6;border:1px solid #f0d78a">
+    <h2>If it stops updating</h2>
     <ol>
-      <li><a href="https://railway.app/new" target="_blank" rel="noopener">Create Railway project</a> → Deploy from GitHub → <code>Leeshwaan04/Zengtrade-V2</code></li>
-      <li>Settings → <b>Root directory</b>: <code>saas/worker</code></li>
-      <li>Variables → <code>DATABASE_URL</code> = <a href="https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/settings/database" target="_blank" rel="noopener">Supabase Database URI</a> (pooler, port 5432)</li>
-      <li>Deploy → logs: <code>zengtrade worker · … featured strategies</code></li>
+      <li>Consecutive <b>FAILED</b> executions in the list above → check the logs command's output. Usual cause: wrong DB password (same symptoms as always — Postgres auth error) or wrong pooler port.</li>
+      <li>No executions appearing every 5 minutes at all → confirm the Scheduler job is <code>ENABLED</code> and its target URI uses the <b>v2</b> API path (<code>https://us-central1-run.googleapis.com/v2/projects/zengtrade/locations/us-central1/jobs/paper-worker:run</code>). The older <code>v1/namespaces/.../jobs/...:run</code> path accepts the request but silently never triggers a real execution — cost real debugging time once already.</li>
+      <li>Rotate the DB password (Supabase → Database settings → reset → copy the <b>session pooler</b> URI, port <code>5432</code>, not transaction <code>6543</code>):</li>
     </ol>
-    <div class="links"><a href="https://railway.app/new" target="_blank" rel="noopener">Open Railway</a></div>
+    <pre class="tpl">read -s -p "Paste the new DATABASE_URL: " DBURL && echo
+printf "%s" "$DBURL" | gcloud secrets versions add zengtrade-worker-db-url --data-file=- --project=zengtrade</pre>
+    <p style="font-size:13px;margin:0 0 10px;color:var(--slate)">No redeploy needed — every execution reads the <code>:latest</code> secret version fresh.</p>
+    <p style="font-size:14px;line-height:1.55;margin:0 0 8px"><b>Rebuild after a worker code change</b> (Docker isn't required locally — Cloud Build's <code>builds.create</code> API blocked this project as a new-account anti-fraud check; Cloud Shell's pre-installed Docker sidesteps it):</p>
+    <pre class="tpl">cd Zengtrade-V2/saas/worker   # git pull first if already cloned
+docker build -t us-central1-docker.pkg.dev/zengtrade/zengtrade/paper-worker:latest .
+docker push us-central1-docker.pkg.dev/zengtrade/zengtrade/paper-worker:latest</pre>
+    <p style="font-size:13px;margin:0;color:var(--slate)">If <code>docker push</code> fails with <code>connect: connection refused</code> to a googleapis.com IP, just retry — a transient Google network blip, not a config problem. The Cloud Run Job always pulls <code>:latest</code> on its next scheduled execution, no separate deploy step.</p>
   </div>
 
   <div class="card">
-    <h2>Option B — Render Blueprint</h2>
-    <ol>
-      <li><a href="https://dashboard.render.com/blueprint" target="_blank" rel="noopener">New Blueprint</a> → connect this repo (uses <code>render.yaml</code>)</li>
-      <li>Set <code>DATABASE_URL</code> when prompted</li>
-    </ol>
-    <div class="links"><a class="alt" href="https://dashboard.render.com/blueprint" target="_blank" rel="noopener">Open Render</a></div>
+    <h2>Manual test run</h2>
+    <p style="font-size:14px;line-height:1.55;margin:0 0 10px">Run one cycle immediately, without waiting for the next 5-minute tick:</p>
+    <pre class="tpl">gcloud run jobs execute paper-worker --region=us-central1 --project=zengtrade --wait</pre>
   </div>
 
   <div class="card" style="background:#f8fafc;border-color:#cbd5e1">
-    <h2>Meanwhile — parallel work (no worker)</h2>
-    <p style="font-size:14px;line-height:1.55;margin:0 0 8px">While you fix the password, CPO/CBO can still ship:</p>
+    <h2>Stop / pause (safe)</h2>
+    <p style="font-size:14px;line-height:1.55;margin:0 0 8px">Does not delete deployments or historical trades — users simply stop getting new paper fills until resumed.</p>
+    <pre class="tpl">gcloud scheduler jobs pause paper-worker-cycle --location=us-central1 --project=zengtrade   # stop
+gcloud scheduler jobs resume paper-worker-cycle --location=us-central1 --project=zengtrade  # resume</pre>
+  </div>
+
+  <div class="card" style="background:#f8fafc;border-color:#cbd5e1">
+    <h2>Legacy — Railway (superseded 2026-09-09)</h2>
+    <p style="font-size:14px;line-height:1.55;margin:0">The original <code>paper-worker</code> service in <a href="https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b" target="_blank" rel="noopener">this Railway project</a> is no longer the source of truth — its builds got permanently stuck on Railway's side. Left in place rather than deleted (costs nothing while failing to build); safe to remove whenever convenient. <code>saas/worker/Dockerfile</code> and <code>railway.toml</code> still describe how to redeploy there if ever needed as a fallback.</p>
+  </div>
+
+  <div class="card" style="background:#eef2ff;border-color:#c7d2fe">
+    <h2>Meanwhile — parallel work</h2>
+    <p style="font-size:14px;line-height:1.55;margin:0 0 8px">Independent of worker status:</p>
     <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.6">
-      <li><b>CPO</b> — partial E2E steps 1–2: <a href="/ops/e2e">/ops/e2e</a> · <code>./scripts/verify-activation-path.sh --partial</code></li>
+      <li><b>CPO</b> — full E2E: <a href="/ops/e2e">/ops/e2e</a> · <code>./scripts/verify-activation-path.sh</code></li>
       <li><b>Trust path</b> — <a href="/dashboard">deploy</a> → View evidence → <a href="/app#forward">/app#forward</a> before checkout</li>
       <li><b>CBO</b> — GSC verify + sitemap: <a href="/ops/gsc">/ops/gsc</a></li>
       <li><b>CBO</b> — Pro checkout smoke: <a href="/ops/billing">/ops/billing</a></li>
-      <li><b>CLI</b> — <code>./scripts/check-parallel-growth.sh</code></li>
     </ul>
-  </div>
-
-  <div class="card">
-    <h2>Troubleshooting</h2>
-    <ol>
-      <li><b>Wrong DATABASE_URL</b> — use Supabase <b>Session pooler</b> on port <code>5432</code>, not Transaction pooler (<code>6543</code>). Worker needs full SQL transactions.</li>
-      <li><b>Password special chars</b> — URL-encode <code>@</code>, <code>#</code>, etc. in the DB password.</li>
-      <li><b>Logs show <code>db connect retry</code></b> — wait ~30s; Railway DNS can lag on first deploy.</li>
-      <li><b>Heartbeat stale but logs look fine</b> — confirm <code>startup heartbeat ok</code> in logs; re-run <a href="/ops">/ops</a> gate check.</li>
-      <li><b>Full recovery runbook</b> — <a href="https://github.com/Leeshwaan04/Zengtrade-V2/blob/main/docs/WORKER_RECOVERY.md" target="_blank" rel="noopener">docs/WORKER_RECOVERY.md</a> (diagnose → fix → verify)</li>
-    </ol>
   </div>
 
   <div class="card" id="parallelGrowth" style="background:#eef2ff;border-color:#c7d2fe" hidden>
     <h2>Meanwhile — growth goals (no worker)</h2>
     <p id="growthGoals" style="font-size:14px;line-height:1.55;margin:0">Loading…</p>
-    <p style="font-size:13px;margin:10px 0 0"><a href="/ops/e2e">Partial E2E</a> · <a href="/dashboard">deploy</a> → <a href="/app#forward">evidence</a> · <a href="/ops/gsc">GSC</a> · <a href="/ops/billing">Pro checkout</a> · <code>./scripts/guide-founder-parallel.sh</code></p>
+    <p style="font-size:13px;margin:10px 0 0"><a href="/ops/e2e">Full E2E</a> · <a href="/dashboard">deploy</a> → <a href="/app#forward">evidence</a> · <a href="/ops/gsc">GSC</a> · <a href="/ops/billing">Pro checkout</a></p>
   </div>
 
   <div class="card">
-    <h2>After deploy — verify</h2>
+    <h2>Verify</h2>
     <ol>
       <li>Heartbeat below should show <b>&lt; 12 minutes</b></li>
       <li><a href="/ops">/ops</a> → Paper worker gate = ✓</li>
       <li>Test: <a href="/login?mode=signup">signup</a> → <a href="/dashboard">deploy</a> → wait ~5 min → <a href="/app#forward">trades</a></li>
       <li><a href="/admin">/admin</a> → Worker tile = <b>Live</b></li>
+      <li>Full runbook: <a href="https://github.com/Leeshwaan04/Zengtrade-V2/blob/main/docs/WORKER_RECOVERY.md" target="_blank" rel="noopener">docs/WORKER_RECOVERY.md</a></li>
     </ol>
     <button class="links" type="button" id="check" style="border:0;cursor:pointer"><a style="pointer-events:none">Check heartbeat now</a></button>
     <p id="hb">Checking worker heartbeat…</p>
@@ -167,15 +130,10 @@ async function checkHb(){
     const age=Math.round((Date.now()-new Date(rows[0].updated_at))/60000);
     const deps=rows[0].value?.deployments??0;
     if(age<=12){el.textContent=`✓ Worker live — ${age}m ago · ${deps} active deployments`;el.className="ok";}
-    else{el.textContent=`✗ Stale heartbeat — ${age}m ago (last ${rows[0].updated_at}). Worker not running.`;el.className="bad";}
+    else{el.textContent=`✗ Stale heartbeat — ${age}m ago (last ${rows[0].updated_at}). Check Cloud Run/Scheduler above.`;el.className="bad";}
   }catch(e){el.textContent="✗ Could not reach Supabase";el.className="bad";}
 }
 document.getElementById("check").onclick=checkHb;
-document.getElementById("copyTpl").onclick=()=>{
-  navigator.clipboard.writeText(document.getElementById("tpl").textContent).then(()=>{
-    document.getElementById("copyMsg").textContent="Copied — replace YOUR_PASSWORD, then Add or Raw Editor";
-  });
-};
 (async function loadGrowthGoals(){
   const box=document.getElementById("parallelGrowth");
   const el=document.getElementById("growthGoals");
@@ -194,16 +152,4 @@ document.getElementById("copyTpl").onclick=()=>{
 })();
 checkHb();
 setInterval(checkHb,30000);
-// Stale heartbeat + migration green → likely wrong DATABASE_URL password on Railway
-(async function maybeBadPassword(){
-  try{
-    // BUG FIX (2026-09-09): used to insert a real deploy_success row on every load - migration
-    // 0011's RLS policy shares one whitelist across all 7 event names, so pageview proves the
-    // identical insert path without touching a counted conversion metric.
-    const mig=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({name:"pageview",path:"/ops-worker-probe"})});
-    const rows=await fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{headers:{apikey:ANON},cache:"no-store"}).then(r=>r.json());
-    const age=rows[0]?Math.round((Date.now()-new Date(rows[0].updated_at))/60000):99999;
-    if(mig.status===201&&age>60) document.getElementById("badPw").hidden=false;
-  }catch(e){}
-})();
 </script></body></html>
