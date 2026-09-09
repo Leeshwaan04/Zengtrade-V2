@@ -649,6 +649,25 @@ def coin_hub_main(syms_present):
 </main>"""
 
 
+def coin_hub_schema(syms_present):
+    """JSON-LD for the /coins/ hub: a BreadcrumbList (Home -> Coins) plus a CollectionPage/ItemList
+    naming every real coin page the hub links to, so the hub itself carries structured data instead
+    of being the one page in the /coins/{slug}/ family with none (every page one level below it
+    already has BreadcrumbList + FAQPage via coin_parts())."""
+    crumb = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": "Home", "item": f"{SITE}/"},
+        {"@type": "ListItem", "position": 2, "name": "Coins", "item": f"{SITE}/coins/"}]}
+    item_list = {"@context": "https://schema.org", "@type": "CollectionPage",
+                 "name": "Crypto Trading Strategies by Coin",
+                 "url": f"{SITE}/coins/",
+                 "mainEntity": {"@type": "ItemList", "itemListElement": [
+                     {"@type": "ListItem", "position": i + 1, "name": COINS[s][0],
+                      "url": f"{SITE}/coins/{COINS[s][1]}/"}
+                     for i, s in enumerate(syms_present)]}}
+    return (f'<script type="application/ld+json">{json.dumps(crumb)}</script>'
+            f'<script type="application/ld+json">{json.dumps(item_list)}</script>')
+
+
 def _bars(kl):
     """Binance kline rows -> [{time, open, high, low, close}, ...] (unix seconds), the shape
     TradingView's Lightweight Charts expects for setData()."""

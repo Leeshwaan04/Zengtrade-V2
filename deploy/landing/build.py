@@ -452,7 +452,8 @@ if coins:
     emit("coins", shell(
         "Crypto Trading Strategies by Coin | zengtrade",
         "Paper-trade regime-aware strategies on 150+ coins, grouped by category. Live prices and a real regime read for each. Non-custodial.",
-        "https://zengtrade.in/coins/", G.coin_hub_main(present)), "https://zengtrade.in/coins/")
+        "https://zengtrade.in/coins/", G.coin_hub_main(present),
+        extra_head=G.coin_hub_schema(present)), "https://zengtrade.in/coins/")
     for sym, name, slug, cat, tk, bars in coins:
         title, desc, canon, cmain, extra = G.coin_parts(sym, name, slug, cat, tk, bars)
         emit(os.path.join("coins", slug), shell(title, desc, canon, cmain, extra_head=extra), canon)
@@ -463,7 +464,8 @@ if articles:
     emit("learn", shell(
         "Learn: Crypto Trading Guides & Explainers | zengtrade",
         "Plain-English guides on market regimes, paper trading, backtest costs, and non-custodial execution. No hype, no live-trading promises.",
-        "https://zengtrade.in/learn/", ART.articles_hub_main(articles, len(glossary_terms))), "https://zengtrade.in/learn/")
+        "https://zengtrade.in/learn/", ART.articles_hub_main(articles, len(glossary_terms)),
+        extra_head=ART.learn_hub_schema(articles, len(glossary_terms))), "https://zengtrade.in/learn/")
     for a in articles:
         title, desc, canon, amain, extra = ART.article_parts(a)
         emit(os.path.join("learn", a["slug"]), shell(title, desc, canon, amain, extra_head=extra), canon)

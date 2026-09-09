@@ -145,6 +145,26 @@ def article_parts(a):
     return title, a["description"], canonical, main, extra_head
 
 
+def learn_hub_schema(articles, glossary_count=0):
+    """JSON-LD for the /learn/ hub: a BreadcrumbList (Home -> Learn) plus a CollectionPage/ItemList
+    naming every article (and the glossary hub, if present) it links to, mirroring coin_hub_schema()
+    in seo/generate.py so both hub pages get the same structured-data treatment."""
+    crumb = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": "Home", "item": f"{SITE}/"},
+        {"@type": "ListItem", "position": 2, "name": "Learn", "item": f"{SITE}/learn/"}]}
+    items = [{"@type": "ListItem", "position": i + 1, "name": a["title"],
+              "url": f"{SITE}/learn/{a['slug']}/"} for i, a in enumerate(articles)]
+    if glossary_count:
+        items.append({"@type": "ListItem", "position": len(items) + 1,
+                      "name": "Trading & risk glossary", "url": f"{SITE}/learn/glossary/"})
+    item_list = {"@context": "https://schema.org", "@type": "CollectionPage",
+                 "name": "Learn: Crypto Trading Guides & Explainers",
+                 "url": f"{SITE}/learn/",
+                 "mainEntity": {"@type": "ItemList", "itemListElement": items}}
+    return (f'<script type="application/ld+json">{json.dumps(crumb)}</script>'
+            f'<script type="application/ld+json">{json.dumps(item_list)}</script>')
+
+
 def _truncate(text, limit=90):
     if len(text) <= limit:
         return text
