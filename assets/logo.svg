@@ -1,4 +1,4 @@
-<!-- zengtrade — "Enso Breakout": the zen circle (ensō), open at the top-right, with a trend
+<!-- zengtrade: "Enso Breakout", the zen circle (ensō), open at the top-right, with a trend
      breaking out through the gap. Standalone file (favicon / share image): static bull-green.
      The in-app mark is inlined in index.html so it recolours with the live regime. -->
 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">

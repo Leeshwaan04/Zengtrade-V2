@@ -175,7 +175,7 @@ function draw(){
     ctx.fillStyle=withA(cssv('--slate')||'#8a93a6',0.9);
     ctx.font='13px '+(cssv('--ui')||'system-ui');
     ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(S.loading?'Loading live chart…':(S.noData?'No live chart data — connect Kite (run login.py)':'No data'),S.W/2,S.H/2);
+    ctx.fillText(S.loading?'Loading live chart…':(S.noData?'No live chart data: connect Kite (run login.py)':'No data'),S.W/2,S.H/2);
     ctx.textAlign='left';
     return;
   }
@@ -455,7 +455,7 @@ function buildDOM(){
       <div class="ch-pop ch-pop-ind" id="chIndPop">${IND_DEFS.map(([k,l,t])=>`<label data-ind="${k}"><input type="checkbox" data-indc="${k}"><span>${l}</span><i class="ch-tag">${t==='pane'?'pane':'overlay'}</i></label>`).join('')}</div>
     </div>
     <button class="ch-pill" id="chRegimeStudies" title="Auto-apply the regime's signature studies">Regime auto</button>
-    <button class="ch-pill" id="chReplay" title="Bar replay — reveal price bar by bar">▶ Replay</button>
+    <button class="ch-pill" id="chReplay" title="Bar replay: reveal price bar by bar">▶ Replay</button>
     <span class="ch-flex"></span>
     <button class="ch-pill ch-reset" id="chReset" title="Reset zoom &amp; pan">Reset</button>
   </div>

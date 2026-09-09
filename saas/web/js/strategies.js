@@ -4,7 +4,7 @@
 export const STRATEGIES = [
   {
     key: "trend_follow", name: "Crypto Trend Follower", style: "Trend",
-    desc: "Rides big crypto trends — breakout entry, trailing stop. The flagship: robustly positive across every parameter setting.",
+    desc: "Rides big crypto trends: breakout entry, trailing stop. The flagship: robustly positive across every parameter setting.",
     bt: { trades: 51, win: 23.5, net: 2289, pf: 1.99 },
   },
   {

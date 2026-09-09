@@ -517,8 +517,8 @@ def coin_parts(sym, name, slug, cat, tk, bars):
     # here, dropped since search-snippet copy is evergreen value-prop text, not a place for a
     # number that's stale the moment it's crawled, price/regime are shown live on the page itself.
     title = f"{name} ({sym}) Trading Strategies | zengtrade"
-    desc = (f"Paper-trade regime-aware {sym} strategies on live {name} prices. "
-            f"Real backtests, honest costs, non-custodial. Not investment advice.")
+    desc = (f"Paper-trade regime-aware {sym} strategies on live {name} prices, backed by a "
+            f"multi-timeframe regime read. Honest costs, non-custodial. Not investment advice.")
     faq_html = "".join(
         f'<details class="faq"><summary>{e(q)}</summary><p>{e(a)}</p></details>' for q, a in faqs)
     rel_html = "".join(
@@ -569,7 +569,7 @@ def coin_parts(sym, name, slug, cat, tk, bars):
       <div class="lp-grid4">{rel_html}</div>
       <div class="lp-cta-row center" style="margin-top:20px">
       <a class="lp-cta primary" href="/login/?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=coin_{slug}">Start free, paper-trade {e(name)} strategies</a>
-      <a class="lp-cta ghost" href="/login/?mode=signup&amp;plan=pro&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=coin_{slug}_pro">Pro $19/mo — unlimited</a>
+      <a class="lp-cta ghost" href="/login/?mode=signup&amp;plan=pro&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=coin_{slug}_pro">Pro $19/mo, unlimited</a>
       </div>
       <p class="lp-fineprint">Live data · educational software, not investment advice · paper-first, non-custodial</p>
     </div>
@@ -632,6 +632,7 @@ def coin_hub_main(syms_present):
     return f"""<main id="main">
   <section class="lp-hero" aria-labelledby="h-hub">
     <div class="lp-wrap">
+      <nav class="coin-crumb" aria-label="Breadcrumb"><a href="/">Home</a> &rsaquo; Coins</nav>
       <div class="lp-eyebrow"><span class="dot"></span> trading strategies by coin</div>
       <h1 id="h-hub" class="lp-h1">Crypto strategies, <span class="hl">by coin</span></h1>
       <p class="lp-sub coin-hub-lead">Live prices, a current market-regime read, and paper-tradeable regime-aware strategies for each major coin, grouped by category. Honest about every cost, non-custodial.</p>
@@ -641,7 +642,7 @@ def coin_hub_main(syms_present):
   <section class="lp-sec" aria-label="Get started">
     <div class="lp-wrap">
       <div class="lp-cta-row center" style="margin-top:4px">
-      <a class="lp-cta primary" href="/login/?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=coins_hub">Start free — paper-trade any coin</a>
+      <a class="lp-cta primary" href="/login/?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=coins_hub">Start free, paper-trade any coin</a>
       <a class="lp-cta ghost" href="/login/?mode=signup&amp;plan=pro&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=coins_hub_pro">Founding Pro $19/mo</a>
       </div>
     </div>

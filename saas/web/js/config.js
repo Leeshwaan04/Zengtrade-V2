@@ -9,7 +9,7 @@ export const SUPABASE_ANON = window.__ZT_SUPABASE_ANON || "sb_publishable_w-pQMK
 export const AUTH_STORAGE_KEY = "sb-ponvarxeytfcntckczbn-auth-token";
 
 // GA4 property "zengtrade" (zengtrade.in), web stream 15728393601. A Measurement ID is meant to
-// ship in page source, same trust model as the anon key above — the Measurement Protocol API
+// ship in page source, same trust model as the anon key above, the Measurement Protocol API
 // secret used for SERVER-SIDE purchase events is a different, sensitive value and lives ONLY in
 // Supabase secrets (GA_MEASUREMENT_PROTOCOL_SECRET), never here. See js/ga.js.
 export const GA_MEASUREMENT_ID = "G-HTP82WBWMH";

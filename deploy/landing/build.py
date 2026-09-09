@@ -54,9 +54,14 @@ for a, b in navmap.items():
 
 # the crypto-tape JS lives in tail; keep it. (regime JS no-ops where mascots are absent.)
 
+_FONTS_URL = "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap"
+# Loaded non-blocking (preload, then swap the <link> into effect once fetched) so the fonts
+# stylesheet request no longer delays first paint; noscript keeps it working with JS disabled.
 FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
          '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-         '<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">')
+         f'<link rel="preload" as="style" href="{_FONTS_URL}">'
+         f'<link href="{_FONTS_URL}" rel="stylesheet" media="print" onload="this.media=\'all\'">'
+         f'<noscript><link rel="stylesheet" href="{_FONTS_URL}"></noscript>')
 
 # GA4 property "zengtrade" (zengtrade.in), web stream 15728393601. Measurement IDs are meant to
 # ship in page source (same trust model as the Supabase anon key already in this file's BEACON),
@@ -433,17 +438,17 @@ def emit(path, html_str, canon):
 
 emit("", shell(
     "zengtrade: Regime-Aware Crypto Trading Strategies",
-    "Paper-trade regime-aware crypto strategies on live prices before risking a dollar. Honest costs, non-custodial. Not investment advice.",
+    "Paper-trade regime-aware crypto strategies on live prices before risking a dollar. 18 systematic strategies, honest costs, non-custodial. Not investment advice.",
     "https://zengtrade.in/", HOME_MAIN, extra_head=HOME_SCHEMA), "https://zengtrade.in/")
 
 emit("how-it-works", shell(
     "How zengtrade Works: Regime Engine & Risk",
-    "How zengtrade reads Bull/Bear regimes, runs only proven-fit strategies, and protects capital first. Paper-first, non-custodial.",
+    "How zengtrade reads Bull/Bear regimes, runs only proven-fit strategies, and protects capital first with a real go-live bar. Paper-first, non-custodial.",
     "https://zengtrade.in/how-it-works/", main_hiw_paper, extra_head=HOWITWORKS_SCHEMA), "https://zengtrade.in/how-it-works/")
 
 emit("pricing", shell(
     "Pricing: Free Paper Trading, Pro from $19/mo",
-    "zengtrade pricing: free forever to paper-trade, Pro for unlimited strategies at $19/mo founding rate. Non-custodial, cancel anytime.",
+    "zengtrade pricing: free forever to paper-trade every strategy, Pro for unlimited deployments at $19/mo founding rate. Non-custodial, cancel anytime.",
     "https://zengtrade.in/pricing/", PRICING_MAIN, extra_head=PRICING_FAQ_SCHEMA), "https://zengtrade.in/pricing/")
 
 # ---- coin hub + per-coin pages (identical shell -> full design parity) -----------------
@@ -451,7 +456,7 @@ if coins:
     present = [c[0] for c in coins]
     emit("coins", shell(
         "Crypto Trading Strategies by Coin | zengtrade",
-        "Paper-trade regime-aware strategies on 150+ coins, grouped by category. Live prices and a real regime read for each. Non-custodial.",
+        "Paper-trade regime-aware strategies on 150+ coins, grouped by category: DeFi, layer-1, meme, and more. Live prices, a real regime read. Non-custodial.",
         "https://zengtrade.in/coins/", G.coin_hub_main(present),
         extra_head=G.coin_hub_schema(present)), "https://zengtrade.in/coins/")
     for sym, name, slug, cat, tk, bars in coins:
@@ -463,7 +468,7 @@ if coins:
 if articles:
     emit("learn", shell(
         "Learn: Crypto Trading Guides & Explainers | zengtrade",
-        "Plain-English guides on market regimes, paper trading, backtest costs, and non-custodial execution. No hype, no live-trading promises.",
+        "Plain-English guides on market regimes, paper trading, backtest costs, and non-custodial execution, plus a 46-term trading glossary. No hype, no promises.",
         "https://zengtrade.in/learn/", ART.articles_hub_main(articles, len(glossary_terms)),
         extra_head=ART.learn_hub_schema(articles, len(glossary_terms))), "https://zengtrade.in/learn/")
     for a in articles:
@@ -475,8 +480,9 @@ if articles:
 if glossary_terms:
     emit(os.path.join("learn", "glossary"), shell(
         "Trading & Risk Glossary | zengtrade",
-        "%d plain-English trading and risk terms — indicators, strategy types, cost mechanics, and zengtrade's own engine vocabulary." % len(glossary_terms),
-        "https://zengtrade.in/learn/glossary/", GL.glossary_hub_main()), "https://zengtrade.in/learn/glossary/")
+        "%d plain-English trading and risk terms: indicators, strategy types, cost mechanics, and zengtrade's own engine vocabulary, cross-linked to the full explainer." % len(glossary_terms),
+        "https://zengtrade.in/learn/glossary/", GL.glossary_hub_main(),
+        extra_head=GL.glossary_hub_schema(glossary_terms)), "https://zengtrade.in/learn/glossary/")
     for t in glossary_terms:
         title, desc, canon, gmain, extra = GL.term_parts(t)
         emit(os.path.join("learn", "glossary", t["slug"]), shell(title, desc, canon, gmain, extra_head=extra), canon)

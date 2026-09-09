@@ -524,6 +524,24 @@ def term_parts(t):
     return title, t["short"], canonical, main, extra_head
 
 
+def glossary_hub_schema(terms):
+    """JSON-LD for the /learn/glossary/ hub: a BreadcrumbList (Home -> Learn -> Glossary) plus a
+    CollectionPage/ItemList naming every term, mirroring coin_hub_schema()/learn_hub_schema()."""
+    crumb = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": "Home", "item": f"{SITE}/"},
+        {"@type": "ListItem", "position": 2, "name": "Learn", "item": f"{SITE}/learn/"},
+        {"@type": "ListItem", "position": 3, "name": "Glossary", "item": f"{SITE}/learn/glossary/"}]}
+    item_list = {"@context": "https://schema.org", "@type": "CollectionPage",
+                 "name": "Trading & Risk Glossary",
+                 "url": f"{SITE}/learn/glossary/",
+                 "mainEntity": {"@type": "ItemList", "itemListElement": [
+                     {"@type": "ListItem", "position": i + 1, "name": t["term"],
+                      "url": f"{SITE}/learn/glossary/{t['slug']}/"}
+                     for i, t in enumerate(terms)]}}
+    return (f'<script type="application/ld+json">{json.dumps(crumb)}</script>'
+            f'<script type="application/ld+json">{json.dumps(item_list)}</script>')
+
+
 def glossary_hub_main():
     e = html.escape
     by_cat = {}
@@ -541,6 +559,7 @@ def glossary_hub_main():
     return f"""<main id="main">
   <section class="lp-hero" aria-labelledby="h-glossary">
     <div class="lp-wrap">
+      <nav class="coin-crumb" aria-label="Breadcrumb"><a href="/">Home</a> &rsaquo; <a href="/learn/">Learn</a> &rsaquo; Glossary</nav>
       <div class="lp-eyebrow"><span class="dot"></span> reference</div>
       <h1 id="h-glossary" class="lp-h1">Trading &amp; risk <span class="hl">glossary</span></h1>
       <p class="lp-sub">{len(TERMS)} terms: indicators, risk mechanics, strategy types, and the vocabulary zengtrade's own engine uses (regime engine, cost gate, Risk Governor). Plain-English, no filler.</p>

@@ -184,6 +184,7 @@ def articles_hub_main(articles, glossary_count=0):
     return f"""<main id="main">
   <section class="lp-hero" aria-labelledby="h-learn">
     <div class="lp-wrap">
+      <nav class="coin-crumb" aria-label="Breadcrumb"><a href="/">Home</a> &rsaquo; Learn</nav>
       <div class="lp-eyebrow"><span class="dot"></span> guides &amp; explainers</div>
       <h1 id="h-learn" class="lp-h1">Learn <span class="hl">how zengtrade works</span></h1>
       <p class="lp-sub">Plain-English explainers on regimes, costs, and paper-first evidence. No hype, no live-trading promises.</p>

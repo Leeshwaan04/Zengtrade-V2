@@ -436,7 +436,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border:0;border-radiu
   /* below desktop: leave the fixed app-shell -> natural page scroll */
   body{height:auto;overflow-y:visible}
   .pane-left,.pane-center,.pane-right{height:auto;overflow:visible}
-  html .algo-view{height:auto}   /* narrow layout scrolls the whole page — `html` raises specificity so this beats the later unconditional `.algo-view{height:100%}` even inside this media query */
+  html .algo-view{height:auto}   /* narrow layout scrolls the whole page: `html` raises specificity so this beats the later unconditional `.algo-view{height:100%}` even inside this media query */
   .terminal,html[data-regime="bear"] .terminal{grid-template-columns:260px 1fr}
   .pane-right{grid-column:1 / -1;flex-direction:row}
   .pane-right > *{flex:1}
@@ -1166,7 +1166,7 @@ html[data-surface="night"] .rb-emo:has(.rb-mascot){filter:drop-shadow(0 0 10px v
 body.card-maxed .chart-resize{display:none}
 /* while a card is maxed, dissolve .terminal's z-index:1 stacking context so the
    fixed maxed card (z128) escapes ABOVE the body-level scrim (z120). Without this
-   the scrim paints over the maxed card — dimming it AND swallowing every click. */
+   the scrim paints over the maxed card, dimming it AND swallowing every click. */
 .terminal.has-max{z-index:auto}
 
 /* reduced-motion: kill the ambient + flourishes */
@@ -2957,7 +2957,7 @@ html[data-persona="ai"] #widgetBtn{display:none}
    MARKET-PULSE STRIP: live VIX / breadth / engine + session
    clock RELOCATED into the ticker row (they were crowding the top
    bar). The top bar now carries only identity · search · controls
-   · account, so it fits one clean row at every width — and NOTHING
+   · account, so it fits one clean row at every width, and NOTHING
    is hidden; the metrics simply live in the data row where they
    belong, beside the scrolling index tape.
    ============================================================ */
