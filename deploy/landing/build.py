@@ -155,7 +155,7 @@ HOME_MAIN = """<main id="main">
       <h1 id="h-hero" class="lp-h1">Trading that reads the market's <span class="hl">mood</span>, and refuses to lose your money.</h1>
       <p class="lp-sub">zengtrade runs battle-tested, regime-aware strategies on live data, 24/7. It's honest about every cost, allergic to hype, and paper-first: it proves an edge before a rupee or a dollar is at risk. Then run it on <b>your own exchange</b>, with your keys and your coins.</p>
       <div class="lp-cta-row">
-        <a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=landing">Start free, no card</a>
+        <a class="lp-cta primary" href="/login/?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=landing">Start free, no card</a>
         <a class="lp-cta ghost" href="/how-it-works/">See how it works →</a>
       </div>
       <p class="lp-fineprint">Free to start · paper trading only at launch · not investment advice</p>
@@ -195,7 +195,7 @@ HOME_MAIN = """<main id="main">
     <div class="lp-wrap home-final-in">
       <h2 class="lp-h2">Prove the edge before you risk a thing.</h2>
       <p class="lp-sub">Start free. Paper-trade every strategy on live data. Upgrade only when a strategy earns its place.</p>
-      <div class="lp-cta-row center"><a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=landing">Start free</a><a class="lp-cta ghost" href="/pricing/">See pricing</a></div>
+      <div class="lp-cta-row center"><a class="lp-cta primary" href="/login/?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=landing">Start free</a><a class="lp-cta ghost" href="/pricing/">See pricing</a></div>
     </div>
   </section>
 </main>"""
@@ -250,7 +250,7 @@ PRICING_MAIN = f"""<main id="main">
       <details class="faq"><summary>Why is live execution gated?</summary><p>A strategy only unlocks live once it clears the go-live bar in paper, enough closed trades, positive expectancy net of cost, across regimes. We'd rather you prove the edge than pay to lose money.</p></details>
     </div>
   </section>
-  <section class="lp-sec home-final"><div class="lp-wrap home-final-in"><h2 class="lp-h2">Start free. Upgrade only when it's earned.</h2><div class="lp-cta-row center"><a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=pricing">Start free, no card</a></div></div></section>
+  <section class="lp-sec home-final"><div class="lp-wrap home-final-in"><h2 class="lp-h2">Start free. Upgrade only when it's earned.</h2><div class="lp-cta-row center"><a class="lp-cta primary" href="/login/?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=pricing">Start free, no card</a></div></div></section>
 </main>"""
 
 # CBO: blog-quality paper loop section (how-it-works only, compounds SEO + activation clarity)
@@ -266,10 +266,10 @@ PAPER_LOOP_SEC = """
         <div class="home-card"><div class="hc-ic">3</div><b>Evidence in /app</b><span>Forward Test, accuracy, and activity tabs build an honest track record before you ever connect an exchange.</span></div>
       </div>
       <div class="lp-cta-row center" style="margin-top:18px">
-        <a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=paper_loop">Start paper trading free</a>
-        <a class="lp-cta ghost" href="/dashboard">Open Algo Studio</a>
+        <a class="lp-cta primary" href="/login/?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=paper_loop">Start paper trading free</a>
+        <a class="lp-cta ghost" href="/dashboard/">Open Algo Studio</a>
         <a class="lp-cta ghost" href="/coins/?utm_source=site&amp;utm_medium=organic&amp;utm_campaign=paper_loop_coins">Explore coin strategies →</a>
-        <a class="lp-cta ghost" href="/login?mode=signup&amp;plan=pro&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=paper_loop_pro">Founding Pro $19/mo</a>
+        <a class="lp-cta ghost" href="/login/?mode=signup&amp;plan=pro&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=paper_loop_pro">Founding Pro $19/mo</a>
       </div>
     </div>
   </section>

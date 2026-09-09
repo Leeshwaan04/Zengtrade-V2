@@ -136,8 +136,8 @@ def article_parts(a):
       {a['body_html']}
       <p class="lp-fineprint">Educational content, not investment advice. zengtrade is paper-first and non-custodial.</p>
       <div class="lp-cta-row center" style="margin-top:20px">
-      <a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=learn_{a['slug']}">Start free, paper-trade any coin</a>
-      <a class="lp-cta ghost" href="/login?mode=signup&amp;plan=pro&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=learn_{a['slug']}_pro">Founding Pro $19/mo</a>
+      <a class="lp-cta primary" href="/login/?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=learn_{a['slug']}">Start free, paper-trade any coin</a>
+      <a class="lp-cta ghost" href="/login/?mode=signup&amp;plan=pro&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=learn_{a['slug']}_pro">Founding Pro $19/mo</a>
       </div>
     </div>
   </section>

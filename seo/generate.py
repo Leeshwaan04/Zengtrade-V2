@@ -568,8 +568,8 @@ def coin_parts(sym, name, slug, cat, tk, bars):
       <h2 class="lp-h2">Related coins</h2>
       <div class="lp-grid4">{rel_html}</div>
       <div class="lp-cta-row center" style="margin-top:20px">
-      <a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=coin_{slug}">Start free, paper-trade {e(name)} strategies</a>
-      <a class="lp-cta ghost" href="/login?mode=signup&amp;plan=pro&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=coin_{slug}_pro">Pro $19/mo — unlimited</a>
+      <a class="lp-cta primary" href="/login/?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=coin_{slug}">Start free, paper-trade {e(name)} strategies</a>
+      <a class="lp-cta ghost" href="/login/?mode=signup&amp;plan=pro&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=coin_{slug}_pro">Pro $19/mo — unlimited</a>
       </div>
       <p class="lp-fineprint">Live data · educational software, not investment advice · paper-first, non-custodial</p>
     </div>
@@ -641,8 +641,8 @@ def coin_hub_main(syms_present):
   <section class="lp-sec" aria-label="Get started">
     <div class="lp-wrap">
       <div class="lp-cta-row center" style="margin-top:4px">
-      <a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=coins_hub">Start free — paper-trade any coin</a>
-      <a class="lp-cta ghost" href="/login?mode=signup&amp;plan=pro&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=coins_hub_pro">Founding Pro $19/mo</a>
+      <a class="lp-cta primary" href="/login/?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=coins_hub">Start free — paper-trade any coin</a>
+      <a class="lp-cta ghost" href="/login/?mode=signup&amp;plan=pro&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=coins_hub_pro">Founding Pro $19/mo</a>
       </div>
     </div>
   </section>

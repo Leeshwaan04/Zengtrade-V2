@@ -515,7 +515,7 @@ def term_parts(t):
       {related_html}
       <p class="lp-fineprint">Educational content, not investment advice. zengtrade is paper-first and non-custodial.</p>
       <div class="lp-cta-row center" style="margin-top:20px">
-      <a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=glossary_{e(t['slug'])}">Start free, paper-trade any coin</a>
+      <a class="lp-cta primary" href="/login/?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=glossary_{e(t['slug'])}">Start free, paper-trade any coin</a>
       <a class="lp-cta ghost" href="/learn/glossary/">Browse the full glossary</a>
       </div>
     </div>
