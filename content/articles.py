@@ -136,7 +136,7 @@ def article_parts(a):
       {a['body_html']}
       <p class="lp-fineprint">Educational content, not investment advice. zengtrade is paper-first and non-custodial.</p>
       <div class="lp-cta-row center" style="margin-top:20px">
-      <a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=learn_{a['slug']}">Start free — paper-trade any coin</a>
+      <a class="lp-cta primary" href="/login?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=learn_{a['slug']}">Start free, paper-trade any coin</a>
       <a class="lp-cta ghost" href="/login?mode=signup&amp;plan=pro&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=learn_{a['slug']}_pro">Founding Pro $19/mo</a>
       </div>
     </div>
@@ -152,11 +152,15 @@ def _truncate(text, limit=90):
     return cut + "…"
 
 
-def articles_hub_main(articles):
+def articles_hub_main(articles, glossary_count=0):
     e = html.escape
     cards = "".join(
         f'<a class="home-card" href="/learn/{e(a["slug"])}/"><b>{e(a["title"])}</b>'
         f'<span>{e(_truncate(a["description"]))}</span></a>' for a in articles)
+    glossary_card = ""
+    if glossary_count:
+        glossary_card = (f'<a class="home-card" href="/learn/glossary/"><b>Trading &amp; risk glossary</b>'
+                          f'<span>{glossary_count} terms: indicators, strategy types, cost mechanics, and zengtrade\'s own engine vocabulary.</span></a>')
     return f"""<main id="main">
   <section class="lp-hero" aria-labelledby="h-learn">
     <div class="lp-wrap">
@@ -166,6 +170,6 @@ def articles_hub_main(articles):
     </div>
   </section>
   <section class="lp-sec" aria-label="Articles">
-    <div class="lp-wrap"><div class="lp-grid4">{cards}</div></div>
+    <div class="lp-wrap"><div class="lp-grid4">{glossary_card}{cards}</div></div>
   </section>
 </main>"""

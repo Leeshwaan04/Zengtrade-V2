@@ -23,7 +23,7 @@
 <div class="wrap">
   <a class="back" href="/ops">← Founder Ops</a>
   <h1>E2E activation test (CPO)</h1>
-  <p class="sub">Run after <a href="/ops/p0">P0 checklist</a> shows worker green. When worker is blocked, steps <b>1–2</b> (signup → deploy) can still be tested — trades need a live worker.</p>
+  <p class="sub">Run after <a href="/ops/p0">P0 checklist</a> shows worker green. When worker is blocked, steps <b>1–2</b> (signup → deploy) can still be tested, trades need a live worker.</p>
   <p id="pre" class="gatebox">Checking P0 gates…</p>
   <p id="growthGoals" class="gatebox" style="display:none;background:#eef2ff;border-color:#c7d2fe;font-size:14px;line-height:1.55"></p>
 
@@ -35,11 +35,11 @@
     <p>~5 minutes. Heartbeat: <span id="hb">checking…</span></p></div>
   <div class="step" id="s4"><h2><span class="dot"></span>4 · Trades in evidence</h2>
     <p><a href="/app#forward">Forward Test</a> or <a href="/app#activity">Activity</a> shows closed trades (may take 10–15 min first time).</p></div>
-  <div class="step" id="s5"><h2><span class="dot"></span>5 · RLS isolation (QA&VAPT — required)</h2>
+  <div class="step" id="s5"><h2><span class="dot"></span>5 · RLS isolation (QA&VAPT, required)</h2>
     <p>Second incognito account must <b>not</b> see first account's trades in <a href="/app">/app</a>. CLI: <code>./scripts/guide-qa-rls-isolation.sh</code> · record in <code>docs/QA_VAPT_CHECKLIST.md</code> Q3.</p></div>
   <div class="step" id="s6"><h2><span class="dot"></span>6 · Admin funnel</h2>
     <p><a href="/admin">/admin</a> → deployers ↑, worker <b>Live</b>, funnel tiles moving.</p></div>
-  <div class="step" id="s7"><h2><span class="dot"></span>7 · Pro checkout (CBO) — parallel OK</h2>
+  <div class="step" id="s7"><h2><span class="dot"></span>7 · Pro checkout (CBO), parallel OK</h2>
     <p>Worker not required. <a href="/login?mode=signup&plan=pro">Sign up with Pro intent</a> (Google OAuth OK) → <a href="/ops/billing">Test Pro checkout</a> → confirm <b>Paying ≥ 1</b> and <b>MRR &gt; $0</b> in <a href="/admin">/admin</a>. CLI: <code>./scripts/guide-first-pro-checkout.sh</code></p></div>
 
   <button type="button" id="recheck">Re-check P0 gates</button>
@@ -77,7 +77,7 @@ async function gates(){
   }catch(e){document.getElementById("hb").textContent="error";}
   const ready=mig&&work;
   if(ready){
-    pre.innerHTML="✓ P0 ready — run the steps below";
+    pre.innerHTML="✓ P0 ready, run the steps below";
     pre.className="gatebox ok";
     document.getElementById("s1").classList.add("ok");
     document.getElementById("s2").classList.add("ok");
@@ -87,9 +87,9 @@ async function gates(){
     const ageMin=parseInt(ageTxt,10);
     const likelyBadPw=ageTxt==="none"||(!isNaN(ageMin)&&ageMin>60);
     if(likelyBadPw){
-      pre.innerHTML='✗ Migration 0011 live — <b>partial E2E: steps 1–2 OK</b> (signup + deploy). <b>Worker DB auth is failing</b>. <a href="/ops/worker">Check Cloud Run/Scheduler + rotate the DATABASE_URL secret</a>.<br><span style="font-size:12.5px">Growth: CPO partial ✅ · CBO parallel — <a href="/ops/billing">step 7 Pro checkout</a> → <a href="/admin">/admin</a> MRR</span>';
+      pre.innerHTML='✗ Migration 0011 live, <b>partial E2E: steps 1–2 OK</b> (signup + deploy). <b>Worker DB auth is failing</b>. <a href="/ops/worker">Check Cloud Run/Scheduler + rotate the DATABASE_URL secret</a>.<br><span style="font-size:12.5px">Growth: CPO partial ✅ · CBO parallel, <a href="/ops/billing">step 7 Pro checkout</a> → <a href="/admin">/admin</a> MRR</span>';
     }else{
-      pre.innerHTML='✗ Migration 0011 live — <b>partial E2E: steps 1–2 OK</b>. <a href="/ops/worker">Worker guide</a> — check the Cloud Run job/Scheduler for trades.';
+      pre.innerHTML='✗ Migration 0011 live, <b>partial E2E: steps 1–2 OK</b>. <a href="/ops/worker">Worker guide</a>, check the Cloud Run job/Scheduler for trades.';
     }
     pre.className="gatebox bad";
     document.getElementById("s1").classList.add("ok");
@@ -101,7 +101,7 @@ async function gates(){
     const parts=[];
     if(!mig) parts.push('<a href="/ops/migrate">migration 0011</a>');
     if(!work) parts.push('<a href="/ops/worker">paper worker</a>');
-    pre.innerHTML="✗ Complete "+parts.join(" + ")+" first — or run <a href=\"https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml\" target=\"_blank\" rel=\"noopener\">Apply P0</a> (GitHub Secrets + APPLY)";
+    pre.innerHTML="✗ Complete "+parts.join(" + ")+" first, or run <a href=\"https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml\" target=\"_blank\" rel=\"noopener\">Apply P0</a> (GitHub Secrets + APPLY)";
     pre.className="gatebox bad";
   }
   document.getElementById("s1").classList.toggle("bad",!mig);
@@ -120,7 +120,7 @@ async function growthGoalsCard(work){
     const data=await fetch("/ops/data.json?"+Date.now(),{cache:"no-store"}).then(r=>r.json());
     const gg=data.gates?.growth_goal||{};
     const cpo=gg.cpo_full_ok?"✅ trades":(gg.cpo_partial_ok?"partial ✅":"❌");
-    el.innerHTML="<b>Growth goals (worker offline):</b> CTO "+(gg.cto_ok?"✅":"❌")+" · CPO "+cpo+" · CBO "+(gg.cbo_infra_ok?"infra ✅ — step 7 <a href=\"/ops/billing\">Pro checkout</a> → <a href=\"/admin\">/admin</a>":"❌");
+    el.innerHTML="<b>Growth goals (worker offline):</b> CTO "+(gg.cto_ok?"✅":"❌")+" · CPO "+cpo+" · CBO "+(gg.cbo_infra_ok?"infra ✅, step 7 <a href=\"/ops/billing\">Pro checkout</a> → <a href=\"/admin\">/admin</a>":"❌");
     el.style.display="block";
   }catch(e){}
 }

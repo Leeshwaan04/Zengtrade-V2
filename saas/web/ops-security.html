@@ -24,18 +24,18 @@
   <div class="card">
     <h2 style="font-size:16px;margin:0 0 8px">Automated (CI / local)</h2>
     <ol>
-      <li><code>./scripts/security-smoke.sh</code> — client secret hygiene, IPN gate, admin RPC auth</li>
-      <li><code>./tests/e2e_smoke.sh</code> — build + auth modules + worker compile</li>
-      <li><code>./scripts/verify-activation-path.sh</code> — after P0 green</li>
-      <li><code>./scripts/check-plan-intent.sh</code> · <code>./scripts/check-seo-content.sh</code> — production funnel/SEO</li>
-      <li><code>./scripts/verify-activation-path.sh --partial</code> — signup → deploy (no worker)</li>
-      <li><code>./scripts/guide-partial-e2e.sh</code> — founder manual partial E2E steps</li>
+      <li><code>./scripts/security-smoke.sh</code>: client secret hygiene, IPN gate, admin RPC auth</li>
+      <li><code>./tests/e2e_smoke.sh</code>: build + auth modules + worker compile</li>
+      <li><code>./scripts/verify-activation-path.sh</code>: after P0 green</li>
+      <li><code>./scripts/check-plan-intent.sh</code> · <code>./scripts/check-seo-content.sh</code>: production funnel/SEO</li>
+      <li><code>./scripts/verify-activation-path.sh --partial</code>: signup → deploy (no worker)</li>
+      <li><code>./scripts/guide-partial-e2e.sh</code>: founder manual partial E2E steps</li>
       <li><code>./scripts/check-parallel-growth.sh</code> · <code>./scripts/check-sales-ready.sh</code></li>
-      <li><code>./scripts/check-qa-parallel.sh</code> — security + XSS + partial activation + sales (worker blocked)</li>
-      <li><code>./scripts/check-xss-hygiene.sh</code> — /app esc() patterns</li>
-      <li><code>./scripts/guide-qa-founder-standup.sh</code> — combined parallel QA playbook</li>
-      <li><code>./scripts/guide-founder-growth-standup.sh</code> — all role standups combined · quick: <code>ZT_QUICK_GROWTH_STANDUP=1</code></li>
-      <li><code>./scripts/guide-founder-parallel.sh</code> — all parallel playbooks</li>
+      <li><code>./scripts/check-qa-parallel.sh</code>: security + XSS + partial activation + sales (worker blocked)</li>
+      <li><code>./scripts/check-xss-hygiene.sh</code>: /app esc() patterns</li>
+      <li><code>./scripts/guide-qa-founder-standup.sh</code>: combined parallel QA playbook</li>
+      <li><code>./scripts/guide-founder-growth-standup.sh</code>: all role standups combined · quick: <code>ZT_QUICK_GROWTH_STANDUP=1</code></li>
+      <li><code>./scripts/guide-founder-parallel.sh</code>: all parallel playbooks</li>
     </ol>
     <p id="probe">Probing production IPN gate…</p>
   </div>
@@ -44,13 +44,13 @@
     <h2 style="font-size:16px;margin:0 0 8px">While worker is blocked</h2>
     <p style="font-size:14px;margin:0 0 8px">Automated QA you can run now (no trades required):</p>
     <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.7">
-      <li><code>./scripts/security-smoke.sh</code> — secrets, IPN gate, RLS anon probes</li>
-      <li><code>./scripts/verify-activation-path.sh --partial</code> — signup → deploy funnel</li>
-      <li><code>./scripts/guide-partial-e2e.sh</code> — manual steps 1–2 · View evidence → <a href="/app#forward">/app#forward</a></li>
-      <li><code>./scripts/check-free-tier-limit.sh</code> · <code>./scripts/guide-free-tier-test.sh</code> — Q9 second deploy blocked</li>
-      <li><code>./scripts/check-founder-parallel-ready.sh</code> — all parallel probes in one command</li>
-      <li><code>./scripts/guide-qa-rls-isolation.sh</code> — post-P0 manual RLS isolation (Q3)</li>
-      <li><code>./scripts/check-xss-hygiene.sh</code> — /app XSS hygiene</li>
+      <li><code>./scripts/security-smoke.sh</code>: secrets, IPN gate, RLS anon probes</li>
+      <li><code>./scripts/verify-activation-path.sh --partial</code>: signup → deploy funnel</li>
+      <li><code>./scripts/guide-partial-e2e.sh</code>: manual steps 1–2 · View evidence → <a href="/app#forward">/app#forward</a></li>
+      <li><code>./scripts/check-free-tier-limit.sh</code> · <code>./scripts/guide-free-tier-test.sh</code>: Q9 second deploy blocked</li>
+      <li><code>./scripts/check-founder-parallel-ready.sh</code>: all parallel probes in one command</li>
+      <li><code>./scripts/guide-qa-rls-isolation.sh</code>: post-P0 manual RLS isolation (Q3)</li>
+      <li><code>./scripts/check-xss-hygiene.sh</code>: /app XSS hygiene</li>
     </ul>
     <p style="font-size:13px;margin:12px 0 0">Trust path before checkout: <a href="/dashboard">deploy</a> → View evidence → <a href="/app#forward">/app#forward</a> · Index: <code>docs/FOUNDER_PARALLEL.md</code> · <code>./scripts/check-growth-goal.sh</code></p>
   </div>
@@ -59,10 +59,10 @@
 
   <div class="card">
     <ol>
-      <li><a href="/ops/e2e">E2E activation</a> — signup → deploy → trades (partial steps 1–2 OK while worker down; View evidence → <a href="/app#forward">/app#forward</a>)</li>
-      <li><b>RLS isolation</b> — second account must not see first user's trades (<a href="/app">/app</a>)</li>
-      <li><a href="/ops/billing">Pro checkout</a> — tier flip only via signed IPN</li>
-      <li>Review <code>docs/QA_VAPT_CHECKLIST.md</code> — mark Q1–V3</li>
+      <li><a href="/ops/e2e">E2E activation</a>, signup → deploy → trades (partial steps 1–2 OK while worker down; View evidence → <a href="/app#forward">/app#forward</a>)</li>
+      <li><b>RLS isolation</b>: second account must not see first user's trades (<a href="/app">/app</a>)</li>
+      <li><a href="/ops/billing">Pro checkout</a>, tier flip only via signed IPN</li>
+      <li>Review <code>docs/QA_VAPT_CHECKLIST.md</code>: mark Q1–V3</li>
     </ol>
   </div>
 </div>
@@ -82,7 +82,7 @@ const SUPA="https://ponvarxeytfcntckczbn.supabase.co", ANON="sb_publishable_w-pQ
     const data=await fetch("/ops/data.json?"+Date.now(),{cache:"no-store"}).then(r=>r.json());
     const gg=data.gates?.growth_goal||{};
     const cpo=gg.cpo_full_ok?"✅ trades":(gg.cpo_partial_ok?"partial ✅":"❌");
-    el.innerHTML="<b>Growth goals (worker offline):</b> CTO "+(gg.cto_ok?"✅":"❌")+" · CPO "+cpo+" · CBO "+(gg.cbo_infra_ok?"infra ✅ — <a href=\"/ops/e2e\">E2E</a> + <a href=\"/ops/billing\">Pro checkout</a>":"❌");
+    el.innerHTML="<b>Growth goals (worker offline):</b> CTO "+(gg.cto_ok?"✅":"❌")+" · CPO "+cpo+" · CBO "+(gg.cbo_infra_ok?"infra ✅, <a href=\"/ops/e2e\">E2E</a> + <a href=\"/ops/billing\">Pro checkout</a>":"❌");
     el.style.display="block";
   }catch(e){}
 })();
@@ -92,6 +92,6 @@ fetch("https://ponvarxeytfcntckczbn.supabase.co/functions/v1/nowpayments-ipn",{
   const el=document.getElementById("probe");
   const ok=r.status===401||r.status===403;
   if(ok){el.textContent="✓ IPN webhook rejects unsigned requests (HTTP "+r.status+")";el.className="ok";}
-  else{el.textContent="✗ IPN gate unexpected HTTP "+r.status+" — retry or review edge function";el.className="bad";}
+  else{el.textContent="✗ IPN gate unexpected HTTP "+r.status+", retry or review edge function";el.className="bad";}
 }).catch(()=>{document.getElementById("probe").textContent="✗ Could not reach IPN function";document.getElementById("probe").className="bad";});
 </script></body></html>

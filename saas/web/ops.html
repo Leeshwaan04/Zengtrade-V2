@@ -53,7 +53,7 @@
     <div class="logo" aria-hidden="true">Z</div>
     <div>
       <h1>Founder Ops</h1>
-      <p class="sub">CTO · CPO · CBO · SEO · Marketing · Sales · QA&VAPT — live autopilot progress</p>
+      <p class="sub">CTO · CPO · CBO · SEO · Marketing · Sales · QA&VAPT: live autopilot progress</p>
     </div>
     <span class="sp"></span>
     <span id="notifyPill" class="pill warn" hidden>Notifications off</span>
@@ -66,15 +66,15 @@
   </div>
   <div id="shipBanner" class="alert urgent" hidden style="background:#eef2ff;border-color:#c7d2fe;color:#1e3a5f">
     <h2>Deploy pending</h2>
-    <p style="margin:0;font-size:14px"><a href="/ops/p0">/ops/p0</a> is not on production yet — push <code>main</code> and wait for <a href="https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/pages.yml" target="_blank" rel="noopener">GitHub Pages</a> to finish.</p>
+    <p style="margin:0;font-size:14px"><a href="/ops/p0">/ops/p0</a> is not on production yet, push <code>main</code> and wait for <a href="https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/pages.yml" target="_blank" rel="noopener">GitHub Pages</a> to finish.</p>
   </div>
   <div id="allClear" class="alert ok" hidden>
     <h2>✓ All P0 gates green</h2>
     <ul style="margin:0;padding-left:18px;font-size:14px;line-height:1.55">
-      <li><b>CPO</b> — <a href="/ops/e2e">Full E2E</a> signup → deploy → trades · <code>./scripts/verify-activation-path.sh</code></li>
-      <li><b>CBO / Sales</b> — <a href="/ops/billing">First Pro MRR</a> · <code>./scripts/guide-first-pro-checkout.sh</code></li>
-      <li><b>SEO</b> — <a href="/ops/gsc">GSC sitemap</a> · <code>./scripts/guide-gsc-founder.sh</code></li>
-      <li><b>QA</b> — <a href="/ops/security">Security smoke</a> · run <code>./scripts/post-p0-success.sh</code></li>
+      <li><b>CPO</b>: <a href="/ops/e2e">Full E2E</a> signup → deploy → trades · <code>./scripts/verify-activation-path.sh</code></li>
+      <li><b>CBO / Sales</b>: <a href="/ops/billing">First Pro MRR</a> · <code>./scripts/guide-first-pro-checkout.sh</code></li>
+      <li><b>SEO</b>: <a href="/ops/gsc">GSC sitemap</a> · <code>./scripts/guide-gsc-founder.sh</code></li>
+      <li><b>QA</b>: <a href="/ops/security">Security smoke</a> · run <code>./scripts/post-p0-success.sh</code></li>
     </ul>
   </div>
 
@@ -90,7 +90,7 @@
   </div>
 
   <div id="parallelBox" class="alert ok" hidden style="background:#eef2ff;border-color:#c7d2fe;color:#1e3a5f">
-    <h2>Meanwhile — worker blocked</h2>
+    <h2>Meanwhile: worker blocked</h2>
     <ul id="parallelList"></ul>
   </div>
 
@@ -247,7 +247,7 @@ function renderApprovals(staticActions, live) {
   const fmt = a => {
     let links = `<a href="${a.url}" target="_blank" rel="noopener">${a.title}</a>`;
     if (a.alt_url) links += ` · <a href="${a.alt_url}" target="_blank" rel="noopener">alt</a>`;
-    return `<li><b>${a.title}</b> — ${a.detail}<br>${links}</li>`;
+    return `<li><b>${a.title}</b>: ${a.detail}<br>${links}</li>`;
   };
   if (urgent.length || parallel.length) {
     box.hidden = false;
@@ -274,7 +274,7 @@ function maybeNotify(count) {
   if (count === lastApprovalCount) return;
   lastApprovalCount = count;
   if (count > 0 && Notification.permission === "granted") {
-    new Notification("zengtrade — action required", {
+    new Notification("zengtrade: action required", {
       body: `${count} founder approval(s) pending. Open zengtrade.in/ops`,
       icon: "/assets/logo.svg",
     });
@@ -325,7 +325,7 @@ async function refresh() {
 
   let workerDetail = worker.ts ? `${worker.ageMin}m ago · ${worker.deps} deps` : "no heartbeat";
   if (!worker.ok && migOk && data.gates?.railway_paper_worker === "FAILED" && data.gates?.database_url_auth_ok === false) {
-    workerDetail = "Worker down — check Cloud Run/Scheduler · /ops/worker";
+    workerDetail = "Worker down, check Cloud Run/Scheduler · /ops/worker";
   }
 
   document.getElementById("gates").innerHTML = [
@@ -359,7 +359,7 @@ async function refresh() {
     document.getElementById("gates").innerHTML += gate(
       "Goal: CPO trades",
       gg.cpo_full_ok === true,
-      gg.cpo_full_ok ? "signup → trades" : (gg.cpo_partial_ok ? "partial — needs worker" : "blocked")
+      gg.cpo_full_ok ? "signup → trades" : (gg.cpo_partial_ok ? "partial, needs worker" : "blocked")
     );
     document.getElementById("gates").innerHTML += gate(
       "Goal: CBO infra",
@@ -372,20 +372,20 @@ async function refresh() {
   const parallelList = document.getElementById("parallelList");
   if (!worker.ok && migOk && parallel && parallelList) {
     const items = [];
-    if (activationOk) items.push(`<li><b>CPO</b> — <a href="/ops/e2e">partial E2E</a> steps 1–2 · <code>./scripts/guide-cpo-founder-standup.sh</code></li>`);
-    if (activationOk) items.push(`<li><b>Trust path</b> — <a href="/dashboard">deploy</a> → View evidence → <a href="/app#forward">/app#forward</a> before <a href="/ops/billing">checkout</a></li>`);
-    if (billingReadyOk) items.push(`<li><b>CBO / Sales</b> — <a href="/ops/billing">first Pro checkout</a> · <code>./scripts/guide-sales-founder-standup.sh</code></li>`);
-    if (gscReadyOk) items.push(`<li><b>CBO / SEO</b> — <a href="/ops/gsc">GSC sitemap</a> · <code>./scripts/guide-seo-founder-standup.sh</code></li>`);
+    if (activationOk) items.push(`<li><b>CPO</b>: <a href="/ops/e2e">partial E2E</a> steps 1–2 · <code>./scripts/guide-cpo-founder-standup.sh</code></li>`);
+    if (activationOk) items.push(`<li><b>Trust path</b>: <a href="/dashboard">deploy</a> → View evidence → <a href="/app#forward">/app#forward</a> before <a href="/ops/billing">checkout</a></li>`);
+    if (billingReadyOk) items.push(`<li><b>CBO / Sales</b>: <a href="/ops/billing">first Pro checkout</a> · <code>./scripts/guide-sales-founder-standup.sh</code></li>`);
+    if (gscReadyOk) items.push(`<li><b>CBO / SEO</b>: <a href="/ops/gsc">GSC sitemap</a> · <code>./scripts/guide-seo-founder-standup.sh</code></li>`);
     if (parallelOk) {
-      items.push(`<li><b>All</b> — <code>./scripts/guide-founder-growth-standup.sh</code> (all roles) · quick: <code>ZT_QUICK_GROWTH_STANDUP=1</code></li>`);
-      items.push(`<li><b>Hub</b> — <a href="/ops/migrate">/ops/migrate</a> parallel playbooks · <code>./scripts/guide-founder-parallel.sh</code></li>`);
-      items.push(`<li><b>Marketing</b> — <code>./scripts/guide-linkedin-bip.sh</code> · <code>./scripts/guide-coin-spotlight.sh</code></li>`);
-      items.push(`<li><b>QA&VAPT</b> — <a href="/ops/security">security</a> · <code>./scripts/guide-qa-founder-standup.sh</code></li>`);
-      items.push(`<li><b>CLI</b> — <code>./scripts/guide-founder-parallel.sh</code> · <code>./scripts/check-parallel-growth.sh</code></li>`);
+      items.push(`<li><b>All</b>: <code>./scripts/guide-founder-growth-standup.sh</code> (all roles) · quick: <code>ZT_QUICK_GROWTH_STANDUP=1</code></li>`);
+      items.push(`<li><b>Hub</b>: <a href="/ops/migrate">/ops/migrate</a> parallel playbooks · <code>./scripts/guide-founder-parallel.sh</code></li>`);
+      items.push(`<li><b>Marketing</b>: <code>./scripts/guide-linkedin-bip.sh</code> · <code>./scripts/guide-coin-spotlight.sh</code></li>`);
+      items.push(`<li><b>QA&VAPT</b>: <a href="/ops/security">security</a> · <code>./scripts/guide-qa-founder-standup.sh</code></li>`);
+      items.push(`<li><b>CLI</b>: <code>./scripts/guide-founder-parallel.sh</code> · <code>./scripts/check-parallel-growth.sh</code></li>`);
     }
     const gg = g.growth_goal || {};
     if (gg.cto_ok === false) {
-      items.push(`<li><b>Growth</b> — CTO blocked: <a href="/ops/worker">fix DATABASE_URL</a> · CPO ${gg.cpo_partial_ok ? "partial ✅" : "❌"} · CBO ${gg.cbo_infra_ok ? "infra ✅ · MRR founder" : "❌"}</li>`);
+      items.push(`<li><b>Growth</b>: CTO blocked: <a href="/ops/worker">fix DATABASE_URL</a> · CPO ${gg.cpo_partial_ok ? "partial ✅" : "❌"} · CBO ${gg.cbo_infra_ok ? "infra ✅ · MRR founder" : "❌"}</li>`);
     }
     if (items.length) {
       parallel.hidden = false;

@@ -327,12 +327,22 @@ try:
 except Exception as ex:
     print("  ! /learn/ articles skipped (marketing site still builds):", ex)
 
+# ---- /learn/glossary/ reference terms live in content/glossary.py (same shell(), sibling to
+# articles.py but embedded data instead of one file per term - see its module docstring) --------
+glossary_css, glossary_terms = "", []
+try:
+    import glossary as GL
+    glossary_css = GL.GLOSSARY_CSS
+    glossary_terms = GL.TERMS
+except Exception as ex:
+    print("  ! /learn/glossary/ skipped (marketing site still builds):", ex)
+
 # ---- write everything -----------------------------------------------------------------
 if os.path.exists(DIST):
     shutil.rmtree(DIST)
 os.makedirs(DIST)
 shutil.copytree(os.path.join(HERE, "assets"), os.path.join(DIST, "assets"))
-open(os.path.join(DIST, "site.css"), "w").write(css + HOME_CSS + coin_css + article_css)   # ONE stylesheet for every page
+open(os.path.join(DIST, "site.css"), "w").write(css + HOME_CSS + coin_css + article_css + glossary_css)   # ONE stylesheet for every page
 
 # ---- bundle the Supabase auth app onto the SAME origin (login / dashboard / legal) -----
 # Written as FOLDERS (login/index.html) so clean URLs work on GitHub Pages, which has no
@@ -453,11 +463,22 @@ if articles:
     emit("learn", shell(
         "Learn: Crypto Trading Guides & Explainers | zengtrade",
         "Plain-English guides on market regimes, paper trading, backtest costs, and non-custodial execution. No hype, no live-trading promises.",
-        "https://zengtrade.in/learn/", ART.articles_hub_main(articles)), "https://zengtrade.in/learn/")
+        "https://zengtrade.in/learn/", ART.articles_hub_main(articles, len(glossary_terms))), "https://zengtrade.in/learn/")
     for a in articles:
         title, desc, canon, amain, extra = ART.article_parts(a)
         emit(os.path.join("learn", a["slug"]), shell(title, desc, canon, amain, extra_head=extra), canon)
         print("  ✓ /learn/%s/" % a["slug"])
+
+# ---- /learn/glossary/ hub + terms ------------------------------------------------------
+if glossary_terms:
+    emit(os.path.join("learn", "glossary"), shell(
+        "Trading & Risk Glossary | zengtrade",
+        "%d plain-English trading and risk terms — indicators, strategy types, cost mechanics, and zengtrade's own engine vocabulary." % len(glossary_terms),
+        "https://zengtrade.in/learn/glossary/", GL.glossary_hub_main()), "https://zengtrade.in/learn/glossary/")
+    for t in glossary_terms:
+        title, desc, canon, gmain, extra = GL.term_parts(t)
+        emit(os.path.join("learn", "glossary", t["slug"]), shell(title, desc, canon, gmain, extra_head=extra), canon)
+    print("  ✓ /learn/glossary/ (%d terms)" % len(glossary_terms))
 
 # Product routes (auth-gated but indexable landing/signup entry points for GSC)
 urls.extend([

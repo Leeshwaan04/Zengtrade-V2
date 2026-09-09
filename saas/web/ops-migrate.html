@@ -27,7 +27,7 @@
   <h1>Apply migration 0011</h1>
   <p class="sub">Founder approval · ~2 min · Enables funnel v2 events in <a href="/admin">/admin</a> (signup_complete, deploy_success, checkout_click).</p>
   <div id="parallelBox" class="card" style="display:none;background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:14px;margin-bottom:16px">
-    <b>Migration 0011 live — parallel work while worker is down:</b>
+    <b>Migration 0011 live, parallel work while worker is down:</b>
     <p style="font-size:14px;margin:8px 0 0;line-height:1.6">
       <a href="/ops/e2e">Partial E2E</a> steps 1–2 ·
       <a href="/dashboard">deploy</a> → View evidence → <a href="/app#forward">/app#forward</a> ·
@@ -36,7 +36,7 @@
       <code>./scripts/guide-founder-growth-standup.sh</code> (all roles) ·
       <code>./scripts/guide-founder-parallel.sh</code>
     </p>
-    <p style="font-size:13px;margin:8px 0 0;color:var(--slate)">Next P0: <a href="/ops/worker">paper worker</a> — Cloud Agent secret <code>DATABASE_PASSWORD</code> or <a href="/ops/p0">full checklist</a></p>
+    <p style="font-size:13px;margin:8px 0 0;color:var(--slate)">Next P0: <a href="/ops/worker">paper worker</a>, Cloud Agent secret <code>DATABASE_PASSWORD</code> or <a href="/ops/p0">full checklist</a></p>
   </div>
   <div class="card" style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:14px;margin-bottom:12px">
     <b>Full P0 (recommended):</b> Add <code>DATABASE_URL</code> + <code>RAILWAY_API_TOKEN</code> to <a href="https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions" target="_blank" rel="noopener">GitHub repo Secrets</a>,
@@ -44,7 +44,7 @@
   </div>
   <div class="card" style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:14px;margin-bottom:12px">
     <b>Cloud Agent:</b> Add full <code>DATABASE_URL</code> Postgres URI to Cursor secrets → <code>./scripts/run-p0-if-ready.sh</code>.
-    Pooler host for this project: <code>aws-0-ap-northeast-1.pooler.supabase.com</code> (not us-east-1). Use database password — not <code>sb_secret</code> API keys.
+    Pooler host for this project: <code>aws-0-ap-northeast-1.pooler.supabase.com</code> (not us-east-1). Use database password, not <code>sb_secret</code> API keys.
   </div>
   <div class="card" style="background:var(--green-soft);border:1px solid var(--green-line);border-radius:12px;padding:14px;margin-bottom:16px">
     <b>GitHub Action option:</b> Add <code>DATABASE_URL</code> to <a href="https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions" target="_blank" rel="noopener">GitHub repo Secrets</a>,
@@ -54,8 +54,8 @@
   <ol class="steps">
     <li>Open <a href="https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/sql/new" target="_blank" rel="noopener">Supabase SQL Editor</a></li>
     <li>Click <b>Copy SQL</b> below → paste → <b>Run</b></li>
-    <li>Click <b>Verify on zengtrade</b> — should turn green</li>
-    <li>Return to <a href="/ops">/ops</a> — Migration 0011 gate should show ✓</li>
+    <li>Click <b>Verify on zengtrade</b>: should turn green</li>
+    <li>Return to <a href="/ops">/ops</a>, Migration 0011 gate should show ✓</li>
   </ol>
   <div class="bar">
     <button class="btn primary" type="button" id="copy">Copy SQL</button>
@@ -74,7 +74,7 @@ const SUPA="https://ponvarxeytfcntckczbn.supabase.co", ANON="sb_publishable_w-pQ
 fetch("/ops/migrate.sql").then(r=>r.text()).then(t=>{document.getElementById("sql").textContent=t;});
 document.getElementById("copy").onclick=()=>{
   navigator.clipboard.writeText(document.getElementById("sql").textContent).then(()=>{
-    document.getElementById("status").textContent="Copied — paste into Supabase SQL Editor and Run.";
+    document.getElementById("status").textContent="Copied, paste into Supabase SQL Editor and Run.";
     document.getElementById("status").className="";
   });
 };
@@ -88,7 +88,7 @@ async function growthGoalsCard(){
     const data=await fetch("/ops/data.json?"+Date.now(),{cache:"no-store"}).then(r=>r.json());
     const gg=data.gates?.growth_goal||{};
     const cpo=gg.cpo_full_ok?"✅ trades":(gg.cpo_partial_ok?"partial ✅":"❌");
-    el.innerHTML="<b>Migration live — next P0:</b> <a href=\"/ops/worker\">paper worker</a> (DATABASE_URL).<br><b>Growth goals:</b> CTO "+(gg.cto_ok?"✅":"❌")+" · CPO "+cpo+" · CBO "+(gg.cbo_infra_ok?"infra ✅ — <a href=\"/ops/gsc\">GSC</a> + <a href=\"/ops/billing\">Pro checkout</a>":"❌");
+    el.innerHTML="<b>Migration live, next P0:</b> <a href=\"/ops/worker\">paper worker</a> (DATABASE_URL).<br><b>Growth goals:</b> CTO "+(gg.cto_ok?"✅":"❌")+" · CPO "+cpo+" · CBO "+(gg.cbo_infra_ok?"infra ✅, <a href=\"/ops/gsc\">GSC</a> + <a href=\"/ops/billing\">Pro checkout</a>":"❌");
     el.style.display="block";
     const pb=document.getElementById("parallelBox");
     if(pb) pb.style.display="block";

@@ -28,12 +28,12 @@
   <p class="sub">Runs every ACTIVE paper deployment on live Binance data. Without a fresh heartbeat, <a href="/dashboard">deploys save</a> but <b>no trades run</b>. See also <a href="/ops/p0">P0 checklist</a>.</p>
 
   <div class="card" style="background:var(--green-soft);border:2px solid var(--green-line)">
-    <h2>Current setup — Google Cloud Run Jobs + Cloud Scheduler</h2>
-    <p style="font-size:14px;line-height:1.55;margin:0 0 10px">Since 2026-09-09. Railway's <code>paper-worker</code> hit a persistent platform-side build failure (confirmed not a config, billing, or GitHub-connection issue — Railway's own diagnosis called it an "Infrastructure Error"), so the worker moved to GCP. Same code, same Supabase database — just a different, cheaper, more reliable host.</p>
+    <h2>Current setup: Google Cloud Run Jobs + Cloud Scheduler</h2>
+    <p style="font-size:14px;line-height:1.55;margin:0 0 10px">Since 2026-09-09. Railway's <code>paper-worker</code> hit a persistent platform-side build failure (confirmed not a config, billing, or GitHub-connection issue, Railway's own diagnosis called it an "Infrastructure Error"), so the worker moved to GCP. Same code, same Supabase database, just a different, cheaper, more reliable host.</p>
     <ol>
-      <li><b>Cloud Run Job</b> <code>paper-worker</code> (project <code>zengtrade</code>, region <code>us-central1</code>) runs <code>python worker.py --once</code> — one cycle, then exits.</li>
+      <li><b>Cloud Run Job</b> <code>paper-worker</code> (project <code>zengtrade</code>, region <code>us-central1</code>) runs <code>python worker.py --once</code>: one cycle, then exits.</li>
       <li><b>Cloud Scheduler</b> job <code>paper-worker-cycle</code> triggers a fresh execution every 5 minutes.</li>
-      <li><code>DATABASE_URL</code> lives in <b>Secret Manager</b> (encrypted, IAM-scoped) — not a plain environment variable.</li>
+      <li><code>DATABASE_URL</code> lives in <b>Secret Manager</b> (encrypted, IAM-scoped), not a plain environment variable.</li>
       <li>Cost: scale-to-zero between runs, well inside Cloud Run's free tier. Expect <b>$0/month</b>.</li>
     </ol>
     <div class="links">
@@ -54,18 +54,18 @@ gcloud logging read 'resource.type="cloud_run_job" AND resource.labels.job_name=
   <div class="card" style="background:#fff8e6;border:1px solid #f0d78a">
     <h2>If it stops updating</h2>
     <ol>
-      <li>Consecutive <b>FAILED</b> executions in the list above → check the logs command's output. Usual cause: wrong DB password (same symptoms as always — Postgres auth error) or wrong pooler port.</li>
-      <li>No executions appearing every 5 minutes at all → confirm the Scheduler job is <code>ENABLED</code> and its target URI uses the <b>v2</b> API path (<code>https://us-central1-run.googleapis.com/v2/projects/zengtrade/locations/us-central1/jobs/paper-worker:run</code>). The older <code>v1/namespaces/.../jobs/...:run</code> path accepts the request but silently never triggers a real execution — cost real debugging time once already.</li>
+      <li>Consecutive <b>FAILED</b> executions in the list above → check the logs command's output. Usual cause: wrong DB password (same symptoms as always, Postgres auth error) or wrong pooler port.</li>
+      <li>No executions appearing every 5 minutes at all → confirm the Scheduler job is <code>ENABLED</code> and its target URI uses the <b>v2</b> API path (<code>https://us-central1-run.googleapis.com/v2/projects/zengtrade/locations/us-central1/jobs/paper-worker:run</code>). The older <code>v1/namespaces/.../jobs/...:run</code> path accepts the request but silently never triggers a real execution, cost real debugging time once already.</li>
       <li>Rotate the DB password (Supabase → Database settings → reset → copy the <b>session pooler</b> URI, port <code>5432</code>, not transaction <code>6543</code>):</li>
     </ol>
     <pre class="tpl">read -s -p "Paste the new DATABASE_URL: " DBURL && echo
 printf "%s" "$DBURL" | gcloud secrets versions add zengtrade-worker-db-url --data-file=- --project=zengtrade</pre>
-    <p style="font-size:13px;margin:0 0 10px;color:var(--slate)">No redeploy needed — every execution reads the <code>:latest</code> secret version fresh.</p>
-    <p style="font-size:14px;line-height:1.55;margin:0 0 8px"><b>Rebuild after a worker code change</b> (Docker isn't required locally — Cloud Build's <code>builds.create</code> API blocked this project as a new-account anti-fraud check; Cloud Shell's pre-installed Docker sidesteps it):</p>
+    <p style="font-size:13px;margin:0 0 10px;color:var(--slate)">No redeploy needed: every execution reads the <code>:latest</code> secret version fresh.</p>
+    <p style="font-size:14px;line-height:1.55;margin:0 0 8px"><b>Rebuild after a worker code change</b> (Docker isn't required locally, Cloud Build's <code>builds.create</code> API blocked this project as a new-account anti-fraud check; Cloud Shell's pre-installed Docker sidesteps it):</p>
     <pre class="tpl">cd Zengtrade-V2/saas/worker   # git pull first if already cloned
 docker build -t us-central1-docker.pkg.dev/zengtrade/zengtrade/paper-worker:latest .
 docker push us-central1-docker.pkg.dev/zengtrade/zengtrade/paper-worker:latest</pre>
-    <p style="font-size:13px;margin:0;color:var(--slate)">If <code>docker push</code> fails with <code>connect: connection refused</code> to a googleapis.com IP, just retry — a transient Google network blip, not a config problem. The Cloud Run Job always pulls <code>:latest</code> on its next scheduled execution, no separate deploy step.</p>
+    <p style="font-size:13px;margin:0;color:var(--slate)">If <code>docker push</code> fails with <code>connect: connection refused</code> to a googleapis.com IP, just retry: a transient Google network blip, not a config problem. The Cloud Run Job always pulls <code>:latest</code> on its next scheduled execution, no separate deploy step.</p>
   </div>
 
   <div class="card">
@@ -76,29 +76,29 @@ docker push us-central1-docker.pkg.dev/zengtrade/zengtrade/paper-worker:latest</
 
   <div class="card" style="background:#f8fafc;border-color:#cbd5e1">
     <h2>Stop / pause (safe)</h2>
-    <p style="font-size:14px;line-height:1.55;margin:0 0 8px">Does not delete deployments or historical trades — users simply stop getting new paper fills until resumed.</p>
+    <p style="font-size:14px;line-height:1.55;margin:0 0 8px">Does not delete deployments or historical trades: users simply stop getting new paper fills until resumed.</p>
     <pre class="tpl">gcloud scheduler jobs pause paper-worker-cycle --location=us-central1 --project=zengtrade   # stop
 gcloud scheduler jobs resume paper-worker-cycle --location=us-central1 --project=zengtrade  # resume</pre>
   </div>
 
   <div class="card" style="background:#f8fafc;border-color:#cbd5e1">
-    <h2>Legacy — Railway (superseded 2026-09-09)</h2>
-    <p style="font-size:14px;line-height:1.55;margin:0">The original <code>paper-worker</code> service in <a href="https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b" target="_blank" rel="noopener">this Railway project</a> is no longer the source of truth — its builds got permanently stuck on Railway's side. Left in place rather than deleted (costs nothing while failing to build); safe to remove whenever convenient. <code>saas/worker/Dockerfile</code> and <code>railway.toml</code> still describe how to redeploy there if ever needed as a fallback.</p>
+    <h2>Legacy: Railway (superseded 2026-09-09)</h2>
+    <p style="font-size:14px;line-height:1.55;margin:0">The original <code>paper-worker</code> service in <a href="https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b" target="_blank" rel="noopener">this Railway project</a> is no longer the source of truth: its builds got permanently stuck on Railway's side. Left in place rather than deleted (costs nothing while failing to build); safe to remove whenever convenient. <code>saas/worker/Dockerfile</code> and <code>railway.toml</code> still describe how to redeploy there if ever needed as a fallback.</p>
   </div>
 
   <div class="card" style="background:#eef2ff;border-color:#c7d2fe">
-    <h2>Meanwhile — parallel work</h2>
+    <h2>Meanwhile: parallel work</h2>
     <p style="font-size:14px;line-height:1.55;margin:0 0 8px">Independent of worker status:</p>
     <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.6">
-      <li><b>CPO</b> — full E2E: <a href="/ops/e2e">/ops/e2e</a> · <code>./scripts/verify-activation-path.sh</code></li>
-      <li><b>Trust path</b> — <a href="/dashboard">deploy</a> → View evidence → <a href="/app#forward">/app#forward</a> before checkout</li>
-      <li><b>CBO</b> — GSC verify + sitemap: <a href="/ops/gsc">/ops/gsc</a></li>
-      <li><b>CBO</b> — Pro checkout smoke: <a href="/ops/billing">/ops/billing</a></li>
+      <li><b>CPO</b>: full E2E: <a href="/ops/e2e">/ops/e2e</a> · <code>./scripts/verify-activation-path.sh</code></li>
+      <li><b>Trust path</b>: <a href="/dashboard">deploy</a> → View evidence → <a href="/app#forward">/app#forward</a> before checkout</li>
+      <li><b>CBO</b>: GSC verify + sitemap: <a href="/ops/gsc">/ops/gsc</a></li>
+      <li><b>CBO</b>: Pro checkout smoke: <a href="/ops/billing">/ops/billing</a></li>
     </ul>
   </div>
 
   <div class="card" id="parallelGrowth" style="background:#eef2ff;border-color:#c7d2fe" hidden>
-    <h2>Meanwhile — growth goals (no worker)</h2>
+    <h2>Meanwhile: growth goals (no worker)</h2>
     <p id="growthGoals" style="font-size:14px;line-height:1.55;margin:0">Loading…</p>
     <p style="font-size:13px;margin:10px 0 0"><a href="/ops/e2e">Full E2E</a> · <a href="/dashboard">deploy</a> → <a href="/app#forward">evidence</a> · <a href="/ops/gsc">GSC</a> · <a href="/ops/billing">Pro checkout</a></p>
   </div>
@@ -126,11 +126,11 @@ async function checkHb(){
   const el=document.getElementById("hb");
   try{
     const rows=await fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at,value",{headers:{apikey:ANON},cache:"no-store"}).then(r=>r.json());
-    if(!rows[0]){el.textContent="✗ No heartbeat row — check DATABASE_URL and worker logs";el.className="bad";return;}
+    if(!rows[0]){el.textContent="✗ No heartbeat row: check DATABASE_URL and worker logs";el.className="bad";return;}
     const age=Math.round((Date.now()-new Date(rows[0].updated_at))/60000);
     const deps=rows[0].value?.deployments??0;
-    if(age<=12){el.textContent=`✓ Worker live — ${age}m ago · ${deps} active deployments`;el.className="ok";}
-    else{el.textContent=`✗ Stale heartbeat — ${age}m ago (last ${rows[0].updated_at}). Check Cloud Run/Scheduler above.`;el.className="bad";}
+    if(age<=12){el.textContent=`✓ Worker live, ${age}m ago · ${deps} active deployments`;el.className="ok";}
+    else{el.textContent=`✗ Stale heartbeat, ${age}m ago (last ${rows[0].updated_at}). Check Cloud Run/Scheduler above.`;el.className="bad";}
   }catch(e){el.textContent="✗ Could not reach Supabase";el.className="bad";}
 }
 document.getElementById("check").onclick=checkHb;

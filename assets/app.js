@@ -259,23 +259,23 @@ const PERSONA_KEYS=['trader','investor','algo','ai'];
 const PLAY={
   trader:{
     bull:`Opportunity-capture mode. Leads with <b>breakout scans &amp; long entries</b>; watchlist sorted by momentum and the order pad defaults to BUY with a bracket stop.`,
-    neutral:`Signals are mixed. <b>BUY and SELL stay equally weighted</b> — trade the range and keep size light until a decisive break.`,
-    bear:`Capital-preservation mode. Leads with <b>portfolio risk, hedges &amp; stops</b> — losers surface first and the order pad defaults to PROTECT/SELL.`,
+    neutral:`Signals are mixed. <b>BUY and SELL stay equally weighted</b>: trade the range and keep size light until a decisive break.`,
+    bear:`Capital-preservation mode. Leads with <b>portfolio risk, hedges &amp; stops</b>: losers surface first and the order pad defaults to PROTECT/SELL.`,
   },
   investor:{
-    bull:`Stay-disciplined mode. Markets look extended — <b>rebalance &amp; book partial profits</b>, don't chase highs. Keep your SIPs running.`,
-    neutral:`Keep compounding. A range is <b>ideal for rupee-cost averaging</b> — continue SIPs and accumulate quality on dips.`,
-    bear:`Accumulation mode. Lower prices are a chance to <b>step up SIPs &amp; average down</b> quality names. Tilt to defensives — don't panic-sell.`,
+    bull:`Stay-disciplined mode. Markets look extended, <b>rebalance &amp; book partial profits</b>, don't chase highs. Keep your SIPs running.`,
+    neutral:`Keep compounding. A range is <b>ideal for rupee-cost averaging</b>: continue SIPs and accumulate quality on dips.`,
+    bear:`Accumulation mode. Lower prices are a chance to <b>step up SIPs &amp; average down</b> quality names. Tilt to defensives, don't panic-sell.`,
   },
   algo:{
-    bull:`Momentum regime — <b>trend-following algos lead</b>. Breakout &amp; momentum strategies are favoured; keep stops trailing.`,
-    neutral:`Choppy regime — <b>mean-reversion algos lead</b>. Range &amp; RSI strategies suit; throttle trend systems and cut size.`,
-    bear:`Risk-off regime — <b>defensive &amp; short algos lead</b>. Tighten max-drawdown limits; the kill-switch is one tap away.`,
+    bull:`Momentum regime, <b>trend-following algos lead</b>. Breakout &amp; momentum strategies are favoured; keep stops trailing.`,
+    neutral:`Choppy regime, <b>mean-reversion algos lead</b>. Range &amp; RSI strategies suit; throttle trend systems and cut size.`,
+    bear:`Risk-off regime, <b>defensive &amp; short algos lead</b>. Tighten max-drawdown limits; the kill-switch is one tap away.`,
   },
   ai:{
-    bull:`AI copilot is watching momentum &amp; breadth — ask for <b>fresh ideas, screeners or a hedge</b>. Confidence is shown on every signal.`,
-    neutral:`AI copilot sees a balanced tape — ask it to <b>scan ranges, compare names or explain your portfolio</b>.`,
-    bear:`AI copilot is flagging risk — ask for <b>hedges, downside screens or a portfolio health check</b>. Nothing trades without your confirm.`,
+    bull:`AI copilot is watching momentum &amp; breadth, ask for <b>fresh ideas, screeners or a hedge</b>. Confidence is shown on every signal.`,
+    neutral:`AI copilot sees a balanced tape, ask it to <b>scan ranges, compare names or explain your portfolio</b>.`,
+    bear:`AI copilot is flagging risk, ask for <b>hedges, downside screens or a portfolio health check</b>. Nothing trades without your confirm.`,
   },
 };
 
@@ -409,7 +409,7 @@ function renderTopIndex(){
   // NO FAKE PRICES: when Kite isn't connected, show an honest banner instead of synthetic ticks.
   if(!BOT.live){
     track.classList.remove('rolling'); const vp0=track.parentElement; if(vp0) vp0.classList.add('static');
-    track.innerHTML=`<div class="tb-seq"><div class="tix tix-offline">${icon('shield',12)}<span>Live market data off — run <b>python3 login.py</b> to connect Kite</span></div></div>`;
+    track.innerHTML=`<div class="tb-seq"><div class="tix tix-offline">${icon('shield',12)}<span>Live market data off, run <b>python3 login.py</b> to connect Kite</span></div></div>`;
     track.dataset.tsig='off';
     return;
   }
@@ -428,7 +428,7 @@ function renderTopIndex(){
     return `<div class="tix" data-tname="${esc(name)}"><span class="tix-name">${esc(name)}</span><div class="tix-row">
       <span class="tix-val num">${rq.ltp.toLocaleString('en-IN',{maximumFractionDigits:dec})}</span>
       <span class="tix-chg ${cls(rq.chg||0)} num">${pct(rq.chg||0)}</span></div></div>`;
-  }).join('') || `<div class="tix tix-empty">No instruments — add some from ticker settings ▸</div>`;
+  }).join('') || `<div class="tix tix-empty">No instruments, add some from ticker settings ▸</div>`;
   const roll=!!state.ticker.rolling && items.length>1;
   track.classList.toggle('rolling',roll);
   const vp=track.parentElement; if(vp) vp.classList.toggle('static',!roll);
@@ -492,7 +492,7 @@ function patchCryptoTape(){
     if(chgEl){ chgEl.hidden=false; chgEl.textContent=pct(q.chg); chgEl.className='tix-chg '+cls(q.chg)+' num'; }
   });
   const src=$('tbCryptoSrc');
-  if(src) src.textContent=CRYPTO.live?'● Live · Binance · 24h':(CRYPTO.error?'Binance unreachable — retrying':'Connecting to Binance…');
+  if(src) src.textContent=CRYPTO.live?'● Live · Binance · 24h':(CRYPTO.error?'Binance unreachable, retrying':'Connecting to Binance…');
 }
 function applyTickerSpeed(){
   const track=$('topIndex'); if(!track) return;
@@ -503,10 +503,10 @@ function applyTickerSpeed(){
 }
 /* ---- REALTIME ROLLING TAPE ------------------------------------------------------------
    The index tape used to refresh ONLY via loadMarket(), every 30s, and /api/market is itself
-   30s-cached server-side — so it sat frozen between cycles while the watchlist ticked every
+   30s-cached server-side, so it sat frozen between cycles while the watchlist ticked every
    second. Here we stream the index LTPs from the WebSocket-fed /api/ticks cache (the SAME
    sub-second feed the watchlist uses) on the existing 2s poll and patch the tape values
-   IN PLACE — no innerHTML swap, so the scroll never resets/jumps. Commodities (MCX) have no
+   IN PLACE, no innerHTML swap, so the scroll never resets/jumps. Commodities (MCX) have no
    cheap realtime source (need the resolved futures symbol) and stay on the 30s loadMarket cycle. */
 const TAPE_LIVE={'NSE:NIFTY 50':['indices','NIFTY 50'],'NSE:NIFTY BANK':['indices','NIFTY BANK'],
   'NSE:NIFTY FIN SERVICE':['indices','NIFTY FIN SERVICE'],'BSE:SENSEX':['indices','SENSEX'],
@@ -554,7 +554,7 @@ function tickerEsc(e){ if(e.key==='Escape'){openTickerSettings(false); const g=$
 let tkQuery='', tkActive=-1, tkRefocus=false; // ticker instrument search: query text, keyboard cursor, refocus-after-add flag
 function renderTickerSettings(){
   const p=$('tickerSettings'); if(!p) return; const t=state.ticker, has=new Set(t.items);
-  const chips=t.items.map(n=>`<span class="tk-chip"><span>${esc(n)}</span><button class="tk-chip-x" data-tkremove="${esc(n)}" aria-label="Remove ${esc(n)} from ticker">${icon('close',11)}</button></span>`).join('')||`<span class="tk-none">No instruments yet — search below to add one.</span>`;
+  const chips=t.items.map(n=>`<span class="tk-chip"><span>${esc(n)}</span><button class="tk-chip-x" data-tkremove="${esc(n)}" aria-label="Remove ${esc(n)} from ticker">${icon('close',11)}</button></span>`).join('')||`<span class="tk-none">No instruments yet, search below to add one.</span>`;
   p.innerHTML=`
     <div class="tk-head"><b>Ticker settings</b><button class="icon-btn" id="tkClose" aria-label="Close ticker settings">${icon('close',14)}</button></div>
     <div class="tk-row tk-toggle-row"><label id="tkRollLab">Rolling tape</label>
@@ -591,7 +591,7 @@ function renderTickerSettings(){
     const groups={}; m.forEach(x=>{(groups[x.grp]=groups[x.grp]||[]).push(x);});
     results.innerHTML=Object.keys(groups).map(g=>`<div class="tk-res-grp">${esc(g)}</div>`+groups[g].map(x=>{const dec=x.base>=20000?0:1;
       return `<button type="button" class="tk-res" role="option" data-tkadd="${esc(x.name)}"><span class="tk-res-nm">${hlite(x.name,q)}</span><span class="tk-res-px num">${x.base.toLocaleString('en-IN',{maximumFractionDigits:dec})}</span><span class="tk-res-add">${icon('plus',12)}</span></button>`;}).join('')).join('')
-      + (total>m.length?`<div class="tk-res-more">+${total-m.length} more — keep typing to narrow</div>`:'');
+      + (total>m.length?`<div class="tk-res-more">+${total-m.length} more, keep typing to narrow</div>`:'');
     results.hidden=false; search.setAttribute('aria-expanded','true');
     results.querySelectorAll('[data-tkadd]').forEach(b=>{b.onmousedown=e=>e.preventDefault();b.onclick=()=>addInstr(b.dataset.tkadd);});
     setActive(0);
@@ -615,14 +615,14 @@ function renderRegimeBar(r){
   const cfg={
     bull:{kick:'Risk-on · Momentum',title:'Markets trending up',
       read:`Opportunity-capture mode. The terminal leads with <b>breakout scans &amp; long entries</b>; risk tools stay one tap away. Your watchlist is sorted by momentum and the order pad defaults to BUY.`},
-    neutral:{kick:'Neutral · Rangebound',title:'Markets rangebound — wait for clarity',
+    neutral:{kick:'Neutral · Rangebound',title:'Markets rangebound, wait for clarity',
       read:`Signals are mixed. <b>BUY and SELL stay equally weighted</b> and the engine waits for a decisive break before committing to a regime.`},
     bear:{kick:'Risk-off · Defensive',title:'Markets under pressure',
-      read:`Capital-preservation mode. The terminal now leads with <b>portfolio risk, hedges &amp; stops</b> — the risk pane widens, losers surface first and the order pad defaults to PROTECT/SELL.`},
+      read:`Capital-preservation mode. The terminal now leads with <b>portfolio risk, hedges &amp; stops</b>: the risk pane widens, losers surface first and the order pad defaults to PROTECT/SELL.`},
   }[r];
   const read=(PLAY[state.persona||'trader']||PLAY.trader)[r]||cfg.read;
   const pTag=isInvestor()?'Investing':'Trading';
-  if(state.regimeCollapsed===undefined) state.regimeCollapsed=true;   // compact by default — engine stats live in the header now
+  if(state.regimeCollapsed===undefined) state.regimeCollapsed=true;   // compact by default, engine stats live in the header now
   const collapsed=state.regimeCollapsed;
   // Guard: the bar's content is purely regime + persona + collapsed. When none changed, skip the
   // rebuild so the 30s poll (and recompute, called every poll) don't flicker the banner.
@@ -674,7 +674,7 @@ function renderWatchlist(r){
     ? `<span>${SYMS.length} instruments · custom order</span><button class="wl-reset" id="wlReset">Reset sort</button>`
     : inv ? `<span>Quality &amp; your holdings</span><span>LTP · Chg%</span>`
     : `<span>${list.length} · ${bear?'Weakest first':'Top movers first'}</span><span>LTP · Chg%</span>`;
-  if(!list.length){ $('wlRows').innerHTML=`<div class="wl-empty">${icon('search',16)}<span>No instruments in this tab — use search or “Add scrip” to add any instrument (stocks, futures, options, indices, MCX).</span></div>`; return; }
+  if(!list.length){ $('wlRows').innerHTML=`<div class="wl-empty">${icon('search',16)}<span>No instruments in this tab, use search or “Add scrip” to add any instrument (stocks, futures, options, indices, MCX).</span></div>`; return; }
   $('wlRows').innerHTML=list.map(s=>{
     const lv = s.live!==false && BOT.live;   // real Kite quote present for THIS instrument
     const eq=isEq(s); let badge='';
@@ -684,7 +684,7 @@ function renderWatchlist(r){
     const sub = `<span>${esc(instSub(s))}</span>${(bear&&eq&&s.beta!=null)?`<span class="beta">β ${s.beta}</span>`:''}${badge}`;
     const ltpCell = lv
       ? `<div class="wl-ltp num">${(+s.ltp).toLocaleString('en-IN')}</div><div class="wl-chg ${cls(s.chg)} num">${pct(s.chg)}</div>`
-      : `<div class="wl-ltp num muted" title="No live quote — connect Kite">—</div><div class="wl-chg num muted">·</div>`;
+      : `<div class="wl-ltp num muted" title="No live quote, connect Kite">—</div><div class="wl-chg num muted">·</div>`;
     const _selRow=(itemKey(s)===effSel||s.sym===effSel);
     return `<div class="wl-row${_selRow?' sel':''}" draggable="true" data-sym="${esc(s.sym)}" data-key="${esc(itemKey(s))}" role="button" tabindex="0" aria-label="Select ${esc(s.sym)}${eq?'':' '+esc(s.type||'')}"${_selRow?' aria-current="true"':''}>
       <span class="wl-grip">${icon('grip',12)}</span>
@@ -748,7 +748,7 @@ function tradeFromChart(p){
   state.orderSide=p.side; state.orderQty=null;
   renderOrder(state.displayed);
   const pad=$('orderPad'); if(pad){pad.classList.remove('flash-pad');void pad.offsetWidth;pad.classList.add('flash-pad');}
-  announce(`Chart bracket sent — ${p.side==='buy'?'long':'short'} ${p.sym}, SL ${p.sl}, target ${p.target}`);
+  announce(`Chart bracket sent, ${p.side==='buy'?'long':'short'} ${p.sym}, SL ${p.sl}, target ${p.target}`);
   saveState();
 }
 
@@ -789,7 +789,7 @@ function liveHoldings(){
   return (BOT.live && BOT.holdings && Array.isArray(BOT.holdings.holdings)) ? BOT.holdings.holdings : null;
 }
 function emptyConnect(what){
-  return `<div class="empty-state">${icon('alert',16)} <span>Connect Kite for live ${what} — run <code>python3 login.py</code>.</span></div>`;
+  return `<div class="empty-state">${icon('alert',16)} <span>Connect Kite for live ${what}, run <code>python3 login.py</code>.</span></div>`;
 }
 
 /* ============================================================
@@ -806,7 +806,7 @@ const PANELS={
     }
     if(r==='neutral'){
       const rows=[['HDFCBANK','Coiling in range','b-warn','RANGE',0.4],['ICICIBANK','At mid-band','b-warn','NEUTRAL',0.9],['ITC','Low volatility','b-warn','QUIET',-0.3]];
-      return tbl(['Scrip','Setup','','LTP','Chg%'],rows.map(x=>scanRow(x)).join(""))+note('info','Awaiting the breakout that resolves the range — no decisive edge yet.');
+      return tbl(['Scrip','Setup','','LTP','Chg%'],rows.map(x=>scanRow(x)).join(""))+note('info','Awaiting the breakout that resolves the range, no decisive edge yet.');
     }
     const rows=[['MARUTI','Volume thrust · 2.4× avg','b-up','BREAKOUT',3.4],['INFY','Flag breakout','b-up','52W HIGH',2.1],['SBIN','Cup &amp; handle','b-up','VOL ↑',1.6]];
     return tbl(['Scrip','Setup','','LTP','Chg%'],rows.map(x=>scanRow(x)).join(""))+note('go','Surfacing momentum, fresh 52-wk highs &amp; volume thrust to ride the trend.');
@@ -814,7 +814,7 @@ const PANELS={
   positions(r){
     const hs=liveHoldings();
     if(!hs) return emptyConnect('positions & P&L');
-    if(!hs.length) return '<div class="empty-state">No holdings in your Zerodha account yet — fund it and buy to see positions here.</div>';
+    if(!hs.length) return '<div class="empty-state">No holdings in your Zerodha account yet, fund it and buy to see positions here.</div>';
     const day=BOT.holdings.dayPnl||0, total=BOT.holdings.totalPnl||0;
     const exposure=hs.reduce((a,h)=>a+(h.ltp||0)*(h.qty||0),0);
     if(r==='bear'){
@@ -828,7 +828,7 @@ const PANELS={
         <td class="num">${h.qty}</td><td class="num">${(h.ltp||0).toLocaleString('en-IN')}</td>
         <td class="num ${cls(h.pnl)}">${h.pnl>=0?'+':''}${inr(h.pnl)}</td>
         <td><span class="badge ${(h.dayChangePct||0)<0?'b-down':'b-warn'}">${pct(h.dayChangePct||0)}</span></td></tr>`).join('');
-      return cards+tbl(['Scrip','Qty','LTP','P&L','Day'],body)+note('warn','Weakest holdings by today’s move shown first — review risk on the red names.');
+      return cards+tbl(['Scrip','Qty','LTP','P&L','Day'],body)+note('warn','Weakest holdings by today’s move shown first, review risk on the red names.');
     }
     const winners=[...hs].sort((a,b)=>(b.pnl||0)-(a.pnl||0));
     const body=winners.map(h=>`<tr><td><span class="t-sym">${esc(h.sym)}</span></td>
@@ -862,9 +862,9 @@ const PANELS={
     const tot=SIPS.reduce((a,s)=>a+s.amt,0);
     const body=SIPS.map(s=>`<tr><td><span class="t-sym">${s.name}</span></td><td class="num">${inr(s.amt)}</td>
       <td class="num">${s.day}th</td><td class="num up">${s.xirr.toFixed(1)}%</td><td class="num">${inrL(s.val)}</td></tr>`).join('');
-    const tip=r==='bear'?'Markets are lower — a strong time to <b>step up SIPs</b>; each rupee buys more units.'
-      :r==='bull'?'Markets extended — <b>keep SIPs running</b> but avoid lump-sum chasing at highs.'
-      :'Range-bound is ideal — <b>rupee-cost averaging</b> works best here.';
+    const tip=r==='bear'?'Markets are lower, a strong time to <b>step up SIPs</b>; each rupee buys more units.'
+      :r==='bull'?'Markets extended, <b>keep SIPs running</b> but avoid lump-sum chasing at highs.'
+      :'Range-bound is ideal, <b>rupee-cost averaging</b> works best here.';
     return tbl(['Fund / Scrip','Monthly','Date','XIRR','Value'],body)+note(r==='bear'?'go':'info',`Total <b>${inr(tot)}/mo</b> across ${SIPS.length} SIPs. ${tip}`);
   },
   goals(){
@@ -872,15 +872,15 @@ const PANELS={
       return `<div class="goal-card"><div class="goal-h"><span class="ctx-ico ic-info">${icon(g.icon,15)}</span><b>${g.name}</b><span class="num">${p}%</span></div>
         <div class="goal-bar"><span style="width:${p}%"></span></div>
         <div class="goal-sub"><span>${inrL(g.cur)}</span><span>of ${inrL(g.target)}</span></div></div>`;}).join('');
-    return `<div class="goals-wrap">${cards}</div>`+note('info','On track for 2 of 3 goals — stepping up SIPs ~10% closes the retirement gap about 3 years sooner.');
+    return `<div class="goals-wrap">${cards}</div>`+note('info','On track for 2 of 3 goals, stepping up SIPs ~10% closes the retirement gap about 3 years sooner.');
   },
   alloc(r){
     const body=ALLOC.map(a=>{const d=a.cur-a.tgt;return `<tr><td><span class="t-sym">${a.a}</span></td>
       <td class="num">${a.cur}%</td><td class="num">${a.tgt}%</td>
       <td><span class="badge ${Math.abs(d)>=5?'b-warn':'b-up'}">${d>0?'+':''}${d}%</span></td></tr>`;}).join('');
-    const tip=r==='bear'?'Equity has slipped under target — <b>deploy cash to rebalance</b> back to 60% while valuations are lower.'
-      :r==='bull'?'Equity is <b>4% over target</b> — book partial profits and top up debt / gold.'
-      :'Allocation is near target — small top-ups keep you balanced.';
+    const tip=r==='bear'?'Equity has slipped under target, <b>deploy cash to rebalance</b> back to 60% while valuations are lower.'
+      :r==='bull'?'Equity is <b>4% over target</b>: book partial profits and top up debt / gold.'
+      :'Allocation is near target, small top-ups keep you balanced.';
     return tbl(['Asset','Current','Target','Drift'],body)+note(r==='bull'?'warn':'go',tip);
   },
   events(){
@@ -888,7 +888,7 @@ const PANELS={
       return `<tr><td><span class="t-sym">${e.co}</span></td>
         <td><span class="badge ${bc}">${e.type}</span></td>
         <td style="text-align:left;color:var(--slate)">${e.detail}</td><td class="num">${e.date}</td></tr>`;}).join('');
-    return tbl(['Company','Event','Details','Date'],body)+note('info','Corporate actions across your watchlist &amp; holdings — dividends, bonuses and board meetings.');
+    return tbl(['Company','Event','Details','Date'],body)+note('info','Corporate actions across your watchlist &amp; holdings, dividends, bonuses and board meetings.');
   },
   news(){
     return `<div class="news-wrap">${NEWS_FEED.map(n=>`<div class="news-item">
@@ -951,17 +951,17 @@ function renderOrder(r){
   const typePills=types.map((tp,i)=>`<span class="type-pill ${i===0?'on':''} ${tp.startsWith('Margin')&&r==='bear'?'disabled':''}">${tp}</span>`).join('');
   const ctaCls=m.side==='buy'?(r==='neutral'?'cta-navy':'cta-buy'):'cta-sell';
   const ctaTxt=m.side==='buy'?'BUY '+m.sym:(r==='bear'?'PROTECT / SELL '+m.sym:'SELL '+m.sym);
-  const note=m.fromChart?`<div class="order-note note-info">${icon('target',14)}<span>Levels pulled from your chart bracket — entry, SL &amp; target are live on the chart.</span></div>`
-    :r==='bear'?`<div class="order-note note-warn">${icon('alert',14)}<span>High VIX — qty trimmed, SL tightened. Consider a protective put.</span></div>`
-    :r==='neutral'?`<div class="order-note note-info">${icon('swap',14)}<span>Rangebound — wait for a breakout before sizing up.</span></div>`
-    :`<div class="order-note note-go">${icon('check',14)}<span>Trend intact — trail SL, let winners run.</span></div>`;
+  const note=m.fromChart?`<div class="order-note note-info">${icon('target',14)}<span>Levels pulled from your chart bracket, entry, SL &amp; target are live on the chart.</span></div>`
+    :r==='bear'?`<div class="order-note note-warn">${icon('alert',14)}<span>High VIX, qty trimmed, SL tightened. Consider a protective put.</span></div>`
+    :r==='neutral'?`<div class="order-note note-info">${icon('swap',14)}<span>Rangebound, wait for a breakout before sizing up.</span></div>`
+    :`<div class="order-note note-go">${icon('check',14)}<span>Trend intact, trail SL, let winners run.</span></div>`;
   const rr=(m.fromChart&&m.target!=null)?Math.abs(m.target-m.entry)/Math.max(1,Math.abs(m.entry-m.sl)):0;
   const entryFld=m.fromChart?`<div class="fld"><label>Entry <i>chart bracket</i></label><div class="inp">${Math.round(m.entry).toLocaleString('en-IN')}</div></div>`:'';
   const ladder=(m.fromChart&&m.target!=null)
     ? `<div class="fld"><label>Target <i>from chart · R:R ${rr.toFixed(2)}</i></label><div class="inp">${Math.round(m.target).toLocaleString('en-IN')}</div></div>`
     : (r==='bull'&&m.priced)?`<div class="fld"><label>Target ladder</label><div class="inp">T1 ${Math.round(m.px*1.022).toLocaleString('en-IN')} · T2 ${Math.round(m.px*1.046).toLocaleString('en-IN')} · T3 ${Math.round(m.px*1.073).toLocaleString('en-IN')}</div></div>`:'';
   $('orderPad').innerHTML=`<div class="order-card">
-    <div class="order-head"><span class="oh-sym">${esc(m.sym)} <i class="paper-tag" title="Orders here are simulated — no real order is placed. Real execution is on the roadmap.">PAPER</i></span><span class="oh-px ${cls(m.s.chg)} num"><span id="ordLtp">${m.priced?m.px.toLocaleString('en-IN'):'-'}</span> ${m.s.live!==false?pct(m.s.chg):''}</span>${cardCtl('order')}</div>
+    <div class="order-head"><span class="oh-sym">${esc(m.sym)} <i class="paper-tag" title="Orders here are simulated, no real order is placed. Real execution is on the roadmap.">PAPER</i></span><span class="oh-px ${cls(m.s.chg)} num"><span id="ordLtp">${m.priced?m.px.toLocaleString('en-IN'):'-'}</span> ${m.s.live!==false?pct(m.s.chg):''}</span>${cardCtl('order')}</div>
     <div class="order-body">
       <div class="side-tabs"><div class="side-tab buy ${m.side==='buy'?'active':''}" data-side="buy">BUY</div><div class="side-tab sell ${m.side==='sell'?'active':''}" data-side="sell">${r==='bear'?'SELL / HEDGE':'SELL'}</div></div>
       <div class="type-row">${typePills}</div>
@@ -977,7 +977,7 @@ function renderOrder(r){
   $('orderPad').querySelectorAll('[data-side]').forEach(b=>b.onclick=()=>{state.orderSide=b.dataset.side;state.tradeFromChart=null;renderOrder(state.displayed);});
   $('orderPad').querySelectorAll('[data-qty]').forEach(b=>b.onclick=()=>{const d=+b.dataset.qty;state.orderQty=Math.max(1,(state.orderQty!=null?state.orderQty:m.qty)+d);renderOrder(state.displayed);});
   const qi=$('ordQty'); if(qi) qi.oninput=()=>{const v=parseInt(qi.value)||0;state.orderQty=Math.max(0,v);const vv=$('ordVal');if(vv)vv.textContent=m.priced?inr(state.orderQty*m.entry):'-';};
-  $('placeBtn').onclick=()=>openOrderModal(r);   // paper/simulated order — honest, no real execution
+  $('placeBtn').onclick=()=>openOrderModal(r);   // paper/simulated order, honest, no real execution
   updateCardBtns();
 }
 /* ---------- order confirmation modal + placement ---------- */
@@ -1031,15 +1031,15 @@ function flowModal(o){
 }
 function placeOrder(o){
   const status=o.type.startsWith('SL')?'Pending':(o.type==='MARKET'||o.type==='BRACKET')?'Filled':'Open';
-  state.orders.unshift({id:++ORDER_ID,...o,status,paper:true});   // SIMULATED — no real order is placed
+  state.orders.unshift({id:++ORDER_ID,...o,status,paper:true});   // SIMULATED, no real order is placed
   state.panelTab='orders'; renderPanel(state.displayed);
   successToast(o,status);
-  announce(`Paper ${o.side} order (simulated) — ${o.qty} ${o.sym} at ${o.price}`);
+  announce(`Paper ${o.side} order (simulated), ${o.qty} ${o.sym} at ${o.price}`);
 }
 function cancelOrder(id){const o=state.orders.find(x=>x.id===id);if(o&&(o.status==='Pending'||o.status==='Open')){o.status='Cancelled';renderPanel(state.displayed);}}
 function successToast(o,status){
   const t=document.createElement('div');t.className='toast';
-  t.innerHTML=`<div class="toast-ico">${icon('check',22)}</div><div class="toast-body"><b>Paper ${o.side==='buy'?'buy':'sell'} order — ${o.sym}</b><span>${o.qty} qty @ ${o.price.toLocaleString('en-IN')} · ${o.type} · ${status} · simulated, no real order</span></div><div class="toast-acts"><button class="tbtn ghost" data-act="ok">Dismiss</button></div>`;
+  t.innerHTML=`<div class="toast-ico">${icon('check',22)}</div><div class="toast-body"><b>Paper ${o.side==='buy'?'buy':'sell'} order, ${o.sym}</b><span>${o.qty} qty @ ${o.price.toLocaleString('en-IN')} · ${o.type} · ${status} · simulated, no real order</span></div><div class="toast-acts"><button class="tbtn ghost" data-act="ok">Dismiss</button></div>`;
   $('toastWrap').appendChild(t);
   t.querySelector('[data-act=ok]').onclick=()=>dismiss(t);
   t._timer=setTimeout(()=>{if(document.body.contains(t))dismiss(t);},4500);
@@ -1082,7 +1082,7 @@ function renderContext(r){
   // fabricated setups/prices or a simulated heatmap. Live: real ideas + real sector heat from the watchlist.
   const offline=!BOT.live;
   const body=offline
-    ? `<div class="empty-state" style="margin:8px 12px">${icon('alert',15)} <span>Connect Kite for live ${r==='bear'?'hedge ideas':r==='neutral'?'market internals':'breakout setups'} &amp; sector heat — run <code>python3 login.py</code>.</span></div>`
+    ? `<div class="empty-state" style="margin:8px 12px">${icon('alert',15)} <span>Connect Kite for live ${r==='bear'?'hedge ideas':r==='neutral'?'market internals':'breakout setups'} &amp; sector heat, run <code>python3 login.py</code>.</span></div>`
     : `${rows}
        <div class="ctx-head" style="border-top:1px solid var(--line)"><b>Sector Heatmap</b><span class="ctx-pill">${r==='bear'?'Defense':'Strength'}</span></div>
        <div class="heat">${heat}</div>`;
@@ -1107,7 +1107,7 @@ function applyRegime(regime){
   renderChart(regime); renderPanel(regime); renderOrder(regime); renderContext(regime); renderInvestHub(); renderWidgetStack(); renderDeskBar(); renderDeskView(); renderAlgo(); renderAI();
   applyPaneWidths(); // keep any manual resize across regime switches
   flashRegime();
-  announce(`${regime.charAt(0).toUpperCase()+regime.slice(1)} regime — ${regime==='bull'?'markets trending up':regime==='bear'?'markets under pressure':'markets rangebound'}`);
+  announce(`${regime.charAt(0).toUpperCase()+regime.slice(1)} regime, ${regime==='bull'?'markets trending up':regime==='bear'?'markets under pressure':'markets rangebound'}`);
   saveState();
 }
 function flashRegime(){const s=$('regimeSweep');if(!s)return;s.classList.remove('go');void s.offsetWidth;s.classList.add('go');}
@@ -1264,7 +1264,7 @@ function updateClock(){const el=$('mktStatus');if(!el)return;const d=new Date();
     } else {
       const showRe = BOT.loaded && BOT.connected===false && !BOT.error;
       el.innerHTML=`<span class="mkt-dot off" title="Kite not connected"></span><span class="mkt-live">OFFLINE</span>`
-        +(showRe?`<button class="mkt-relogin" data-relogin title="Reconnect to Kite — refreshes the daily token">${BOT.reconnecting?'Reconnecting…':'Reconnect'}</button>`:'')
+        +(showRe?`<button class="mkt-relogin" data-relogin title="Reconnect to Kite, refreshes the daily token">${BOT.reconnecting?'Reconnecting…':'Reconnect'}</button>`:'')
         +`<span class="mkt-time num">${t}</span>`;
     }
   } else {
@@ -1317,7 +1317,7 @@ function applyPersona(p,opts){
   const r=state.displayed;
   renderRegimeBar(r); renderWatchlist(r); renderPanel(r); renderOrder(r); renderContext(r); renderInvestHub(); renderWidgetStack(); renderDeskBar(); renderDeskView(); renderAlgo(); renderAI();
   if(opts.user){
-    announce(`${PERSONA[p].label} mode — terminal retuned for ${p==='investor'?'long-term investing':'active trading'}`);
+    announce(`${PERSONA[p].label} mode, terminal retuned for ${p==='investor'?'long-term investing':'active trading'}`);
     const t=document.querySelector('.terminal'); if(t){t.classList.remove('persona-morph');void t.offsetWidth;t.classList.add('persona-morph');setTimeout(function(){t.classList.remove('persona-morph');},480);}
   }
   saveState();
@@ -1327,7 +1327,7 @@ function openPersonaGate(){const g=$('personaGate'); if(g) g.classList.add('show
 /* ============================================================
    FIRST-RUN ONBOARDING WIZARD
    Step 1: pick a persona (tailors the terminal)
-   Step 2: connect Kite — live status, the exact command, reconnect, and the
+   Step 2: connect Kite, live status, the exact command, reconnect, and the
            real/paper/demo honesty legend. Removes the cold-start cliff.
    ============================================================ */
 function startOnboarding(){
@@ -1369,10 +1369,10 @@ function renderOnboardConnect(){
     const legend=`<div class="ob-legend">
       <span><span class="ob-tag live">● LIVE</span> real Binance prices</span>
       <span><span class="ob-tag paper">PAPER</span> simulated fills, honest costs</span>
-      <p>zengtrade never fabricates numbers — prove your edge forward before going live.</p></div>`;
+      <p>zengtrade never fabricates numbers, prove your edge forward before going live.</p></div>`;
     el.innerHTML=`
       <h2 class="pg-title">Welcome to zengtrade Crypto</h2>
-      <p class="pg-sub">Backtest, forward-test, and paper-trade systematic strategies on live crypto prices — 24/7.</p>
+      <p class="pg-sub">Backtest, forward-test, and paper-trade systematic strategies on live crypto prices, 24/7.</p>
       ${statusCard}${action}${legend}
       <div class="ob-foot">
         <button class="tbtn primary ob-start" data-obfinish type="button">Open Algo Studio ▶</button>
@@ -1388,7 +1388,7 @@ function renderOnboardConnect(){
   let statusCard, action='';
   if(connected){
     statusCard=`<div class="ob-status ok"><span class="live-dot live"></span><div><b>Connected to Kite${user?' · '+user:''}</b>
-      <span>Live market data is flowing.${BOT.paperMode?' Orders run in <b>PAPER</b> mode — nothing real is placed until you choose to go live.':''}</span></div></div>`;
+      <span>Live market data is flowing.${BOT.paperMode?' Orders run in <b>PAPER</b> mode, nothing real is placed until you choose to go live.':''}</span></div></div>`;
   } else if(botOff){
     statusCard=`<div class="ob-status off">${icon('shield',16)}<div><b>Bot service isn’t running</b>
       <span>Start it once in your bot folder, then tap Retry.</span></div></div>`;
@@ -1398,11 +1398,11 @@ function renderOnboardConnect(){
   } else {
     statusCard=`<div class="ob-status warn">${running?'<span class="live-dot warn pulse"></span>':icon('shield',16)}<div>
       <b>${running?'Connecting to Kite…':'Kite isn’t connected yet'}</b>
-      <span>${running?'Refreshing your daily session token.':'Zerodha expires the access token every morning (a SEBI rule) — refresh it once to see live prices, holdings &amp; signals.'}</span></div></div>`;
+      <span>${running?'Refreshing your daily session token.':'Zerodha expires the access token every morning (a SEBI rule), refresh it once to see live prices, holdings &amp; signals.'}</span></div></div>`;
     action=`<div class="ob-cmd"><span class="ob-cmd-l">Get a fresh token</span><code id="obCmd">cd ~/kite-mean-reversion-bot &amp;&amp; python3 login.py</code>
         <button class="ob-copy" data-obcopy type="button">Copy</button></div>
       <div class="ob-actions"><button class="tbtn primary" data-relogin ${running?'disabled':''} type="button">${running?'Reconnecting…':(auto?'Reconnect now':'Retry connection')}</button>
-        ${auto?'<span class="ob-hint">Auto-login is set up — mornings refresh themselves.</span>'
+        ${auto?'<span class="ob-hint">Auto-login is set up, mornings refresh themselves.</span>'
               :'<span class="ob-hint">Tip: run <b>python3 auto_login.py --setup</b> once to skip this every morning.</span>'}</div>`;
   }
 
@@ -1410,7 +1410,7 @@ function renderOnboardConnect(){
     <span><span class="ob-tag live">● LIVE</span> real Kite data</span>
     <span><span class="ob-tag paper">PAPER</span> simulated orders, real prices</span>
     <span><span class="ob-tag demo">DEMO</span> clearly-labelled sample</span>
-    <p>zengtrade never fabricates numbers — anything not live simply shows “—”.</p></div>`;
+    <p>zengtrade never fabricates numbers, anything not live simply shows “—”.</p></div>`;
 
   el.innerHTML=`
     <h2 class="pg-title">Connect your Kite account</h2>
@@ -1418,7 +1418,7 @@ function renderOnboardConnect(){
     ${statusCard}${action}${legend}
     <div class="ob-foot">
       <button class="pg-skip" data-obback type="button">← Back</button>
-      <button class="tbtn ${connected?'primary':''} ob-start" data-obfinish type="button">${connected?'Start trading ▶':'Enter terminal — I’ll connect later'}</button>
+      <button class="tbtn ${connected?'primary':''} ob-start" data-obfinish type="button">${connected?'Start trading ▶':'Enter terminal, I’ll connect later'}</button>
     </div>`;
 }
 
@@ -1445,9 +1445,9 @@ function renderOrderInvestor(r){
   const typePills=types.map(([k,l])=>`<span class="type-pill ${k===type?'on':''}" data-itype="${k}">${l}</span>`).join('');
   const ctaCls=side==='invest'?'cta-buy':'cta-sell';
   const ctaTxt=side==='invest'?(type==='sip'?'START SIP · '+sym:'INVEST '+inr(amt)+' · '+sym):'REDEEM · '+sym;
-  const note=r==='bear'?`<div class="order-note note-go">${icon('sprout',14)}<span>Accumulation zone — averaging down quality at lower prices. No leverage, no stop-loss.</span></div>`
-    :r==='bull'?`<div class="order-note note-warn">${icon('scale',14)}<span>Markets extended — invest steadily, don't chase. Consider rebalancing instead of adding.</span></div>`
-    :`<div class="order-note note-info">${icon('repeat',14)}<span>Range-bound — ideal for rupee-cost averaging via SIP.</span></div>`;
+  const note=r==='bear'?`<div class="order-note note-go">${icon('sprout',14)}<span>Accumulation zone, averaging down quality at lower prices. No leverage, no stop-loss.</span></div>`
+    :r==='bull'?`<div class="order-note note-warn">${icon('scale',14)}<span>Markets extended, invest steadily, don't chase. Consider rebalancing instead of adding.</span></div>`
+    :`<div class="order-note note-info">${icon('repeat',14)}<span>Range-bound, ideal for rupee-cost averaging via SIP.</span></div>`;
   $('orderPad').innerHTML=`<div class="order-card">
     <div class="order-head"><span class="oh-sym">${sym}</span><span class="oh-px ${live?cls(s.chg):'muted'} num"><span id="ordLtp">${pxTxt}</span> ${live?pct(s.chg):''}</span>${cardCtl('order')}</div>
     <div class="order-body">
@@ -1494,7 +1494,7 @@ function openInvestModal(r){
       ${type==='sip'?`<div><span>Annual outlay</span><b class="num">${inr(amt*12)}</b></div>`:''}
       <div><span>Regime context</span><b style="text-transform:capitalize;color:var(--accent-d)">${r}</b></div>
     </div>
-    <div class="modal-note">${icon('sprout',13)}<span>${side==='invest'?'Long-term delivery order — no leverage, no stop-loss. Pause or stop a SIP anytime.':'Redemption request against your delivery holding.'}</span></div>`;
+    <div class="modal-note">${icon('sprout',13)}<span>${side==='invest'?'Long-term delivery order, no leverage, no stop-loss. Pause or stop a SIP anytime.':'Redemption request against your delivery holding.'}</span></div>`;
   const cf=$('modalConfirm');
   cf.style.display='';
   cf.className='tbtn '+(side==='invest'?'primary':'danger');
@@ -1504,7 +1504,7 @@ function openInvestModal(r){
   setTimeout(()=>{const c=$('modalConfirm');if(c)c.focus();},40);
 }
 function placeInvest(o){
-  const title=o.side==='invest'?(o.type==='sip'?'SIP started — '+o.sym:'Investment placed — '+o.sym):'Redemption placed — '+o.sym;
+  const title=o.side==='invest'?(o.type==='sip'?'SIP started, '+o.sym:'Investment placed, '+o.sym):'Redemption placed, '+o.sym;
   const sub=o.type==='sip'?`${inr(o.amt)}/month · ~${o.units} units @ ${o.price.toLocaleString('en-IN')}`
     :`${inr(o.amt)} · ~${o.units} units @ ${o.price.toLocaleString('en-IN')} · Delivery`;
   const t=document.createElement('div');t.className='toast';
@@ -1534,7 +1534,7 @@ function renderContextInvestor(r){
     head='Stay the Course';pill='Compound';
     rows=ctxRow('info','repeat','Continue SIPs','Rupee-cost averaging in the range','₹15.5k/mo')
         +ctxRow('info','target','Add quality on dips','Build core long-term holdings','watch')
-        +ctxRow('info','pie','Review allocation','Near target — minor top-ups','balanced');
+        +ctxRow('info','pie','Review allocation','Near target, minor top-ups','balanced');
   }
   const bars=ALLOC.map(a=>`<div class="alloc-row"><span class="alloc-a">${a.a}</span>
     <span class="alloc-track"><span class="alloc-fill al-${a.col}" style="width:${a.cur}%"></span><i style="left:${a.tgt}%"></i></span>
@@ -1557,8 +1557,8 @@ const INVEST_TOOLS=[
   {key:'ipo',      label:'IPO',                icon:'wallet',  tag:'5 open',    desc:'Apply to mainboard &amp; SME IPOs via UPI / ASBA.'},
   {key:'algo',     label:'IB Algo',            icon:'bolt',    tag:'New',       desc:'Rule-based strategies that execute for you.'},
   {key:'basket',   label:'Smart Basket',       icon:'shield',  tag:'12 themes', desc:'Curated, theme-based stock baskets in one tap.'},
-  {key:'analyser', label:'Portfolio Analyser', icon:'pie',     tag:'Live',      real:true, desc:'X-ray your real holdings — value, concentration, sector mix &amp; P&amp;L.'},
-  {key:'mf',       label:'Mutual Funds',       icon:'droplet', tag:'2,000+',    desc:'Direct funds — explore, compare &amp; invest.'},
+  {key:'analyser', label:'Portfolio Analyser', icon:'pie',     tag:'Live',      real:true, desc:'X-ray your real holdings, value, concentration, sector mix &amp; P&amp;L.'},
+  {key:'mf',       label:'Mutual Funds',       icon:'droplet', tag:'2,000+',    desc:'Direct funds, explore, compare &amp; invest.'},
   {key:'sip',      label:'Stock SIP',          icon:'repeat',  tag:'',          desc:'Automate recurring investments in stocks.'},
   {key:'research', label:'Research',           icon:'search',  tag:'Daily',     desc:'Ideas, calls &amp; deep-dive reports.'},
 ];
@@ -1615,13 +1615,13 @@ function renderPortfolioHero(){
         <div class="pf-main"><span class="pf-lbl">Current value</span><b class="pf-val num muted">—</b><span class="pf-sub">${BOT.live?'No equity holdings in your account':'Live portfolio appears once connected'}</span></div>
         <div class="pf-stat"><span class="pf-lbl">Overall P&amp;L</span><b class="num muted">—</b></div>
         <div class="pf-stat"><span class="pf-lbl">Today's P&amp;L</span><b class="num muted">—</b></div></div>
-      ${BOT.live?'':`<p class="pf-connect">${icon('shield',13)}<span>Your real holdings, value &amp; P&amp;L from Kite appear here once connected — nothing is simulated. <button class="pf-relogin" data-relogin>Reconnect</button></span></p>`}</div>`;
+      ${BOT.live?'':`<p class="pf-connect">${icon('shield',13)}<span>Your real holdings, value &amp; P&amp;L from Kite appear here once connected, nothing is simulated. <button class="pf-relogin" data-relogin>Reconnect</button></span></p>`}</div>`;
   }
   // MF tab → honest (this terminal only reads equity from Kite; no MF feed)
   if(tab==='mf'){
     return `<div class="pf-hero">${head}
       <div class="pf-row"><div class="pf-main"><span class="pf-lbl">Mutual funds</span><b class="pf-val num muted">—</b><span class="pf-sub">Not linked to this terminal</span></div></div>
-      <p class="pf-connect">${icon('shield',13)}<span>This terminal reads your <b>equity</b> holdings live from Kite. Mutual-fund data isn’t available here — shown as — rather than estimated.</span></p></div>`;
+      <p class="pf-connect">${icon('shield',13)}<span>This terminal reads your <b>equity</b> holdings live from Kite. Mutual-fund data isn’t available here, shown as, rather than estimated.</span></p></div>`;
   }
   // STOCKS / ALL → real equity holdings
   return `<div class="pf-hero">${head}
@@ -1634,7 +1634,7 @@ function renderPortfolioHero(){
   </div>`;
 }
 function fundsAction(kind){
-  const map={add:['Add funds','UPI / netbanking — funds reflect instantly for trading & SIPs.'],
+  const map={add:['Add funds','UPI / netbanking, funds reflect instantly for trading & SIPs.'],
              pledge:['Pledge holdings','Pledge eligible holdings for instant margin up to ₹6.01K.']};
   const m=map[kind]||map.add; quickToast(m[0],m[1]);
 }
@@ -1654,7 +1654,7 @@ function renderInvestHub(){
     hub.innerHTML=`<div class="ih-scroll">
       ${renderPortfolioHero()}
       <div class="ih-welcome">
-        <div class="ihw-head"><b>Invest &amp; Trade</b> <span class="ih-demo">Demo tools · sample data</span><span>Illustrative product flows (IPO, baskets, SIP, MF, research) — they don’t place real orders. Your portfolio above is real.</span></div>
+        <div class="ihw-head"><b>Invest &amp; Trade</b> <span class="ih-demo">Demo tools · sample data</span><span>Illustrative product flows (IPO, baskets, SIP, MF, research), they don’t place real orders. Your portfolio above is real.</span></div>
         <div class="ihw-chips">${chips}</div>
       </div>
     </div>`;
@@ -1667,7 +1667,7 @@ function renderInvestHub(){
     hub.innerHTML=`<div class="ih-scroll sec-scroll">
       <div class="ih-head"><button class="ih-back" id="ihBack" aria-label="Back to all tools"><span>All tools</span></button>
         <b class="ih-secttl" id="ihSecTtl" tabindex="-1"><span class="ih-ic sm">${icon(t.icon,16)}</span>${t.label}</b>
-        ${t.tag?`<span class="ih-secttag">${t.tag}</span>`:''}${t.real?`<span class="ih-live" title="Live — computed from your real Kite account.">${icon('check',11)} Live data</span>`:`<span class="ih-demo" title="Illustrative — this tool uses sample data and doesn’t place real orders or invest real money.">Demo · sample data</span>`}</div>
+        ${t.tag?`<span class="ih-secttag">${t.tag}</span>`:''}${t.real?`<span class="ih-live" title="Live, computed from your real Kite account.">${icon('check',11)} Live data</span>`:`<span class="ih-demo" title="Illustrative, this tool uses sample data and doesn’t place real orders or invest real money.">Demo · sample data</span>`}</div>
       <div class="sec-body">${view?view.render():''}</div>
     </div>`;
     const bk=$('ihBack'); if(bk) bk.onclick=exitTool;
@@ -1753,10 +1753,10 @@ let CALLS=[
   {sym:'ITC',        action:'Hold', cmp:439,  tgt:470,  sl:410,  horizon:'6–12 mo', conv:'Low',    rationale:'Steady FMCG compounding, but cigarette-tax overhang caps near-term upside.'},
 ];
 let REPORTS=[
-  {title:'India Strategy — H2 FY26 Outlook', tag:'Strategy', date:'19 Jun', pages:24},
-  {title:'Banking — Q1 Earnings Preview',    tag:'Sector',   date:'18 Jun', pages:14},
-  {title:'Auto — Monthly Volume Tracker',    tag:'Sector',   date:'17 Jun', pages:9},
-  {title:'Tata Motors — Initiating Coverage',tag:'Company',  date:'16 Jun', pages:31},
+  {title:'India Strategy, H2 FY26 Outlook', tag:'Strategy', date:'19 Jun', pages:24},
+  {title:'Banking, Q1 Earnings Preview',    tag:'Sector',   date:'18 Jun', pages:14},
+  {title:'Auto, Monthly Volume Tracker',    tag:'Sector',   date:'17 Jun', pages:9},
+  {title:'Tata Motors, Initiating Coverage',tag:'Company',  date:'16 Jun', pages:31},
 ];
 const CAP_LARGE=new Set(['RELIANCE','HDFCBANK','TCS','INFY','SBIN','ICICIBANK','ITC','BAJFINANCE']);
 const symName=s=>{const x=bySym(s);return x?x.name:s;};
@@ -1804,7 +1804,7 @@ ipo:{
   wire(hub){
     wireSecTabs(hub);
     hub.querySelectorAll('[data-ipoapply]').forEach(b=>b.onclick=()=>ipoApply(IPOS[+b.dataset.ipoapply]));
-    hub.querySelectorAll('[data-ipremind]').forEach(b=>b.onclick=()=>{const i=IPOS[+b.dataset.ipremind];quickToast('Reminder set — '+i.co,'We’ll notify you when the issue opens on '+i.open+'.');});
+    hub.querySelectorAll('[data-ipremind]').forEach(b=>b.onclick=()=>{const i=IPOS[+b.dataset.ipremind];quickToast('Reminder set, '+i.co,'We’ll notify you when the issue opens on '+i.open+'.');});
   }
 },
 
@@ -1873,8 +1873,8 @@ analyser:{
     // NO real holdings → honest connect state, never a fabricated score
     if(!BOT.live || !rp || !held.length){
       return secEmpty('pie','X-ray your real portfolio',
-        BOT.live ? 'No equity holdings in your Kite account to analyse yet — buy a stock and it appears here.'
-                 : 'Connect Kite (run <b>python3 login.py</b>) to X-ray your real holdings — value, concentration, sector mix &amp; P&amp;L computed live from your account. Nothing is simulated.');
+        BOT.live ? 'No equity holdings in your Kite account to analyse yet, buy a stock and it appears here.'
+                 : 'Connect Kite (run <b>python3 login.py</b>) to X-ray your real holdings, value, concentration, sector mix &amp; P&amp;L computed live from your account. Nothing is simulated.');
     }
     const cur=rp.cur||1;
     const items=held.map(x=>({sym:x.sym,val:(+x.ltp||0)*(+x.qty||0),pnl:+x.pnl||0,qty:+x.qty||0,sector:sectorOf(x.sym)}))
@@ -1903,12 +1903,12 @@ analyser:{
     const holdBlock=`<div class="anl-card"><div class="anl-ttl">Your holdings · weight &amp; P&amp;L</div>${holdRows}</div>`;
     const secBlock=`<div class="anl-card"><div class="anl-ttl">Sector exposure ${known<div?`<i class="anl-note">(${div-known} unmapped → “Other”)</i>`:''}</div>${secRows.map(([s,v])=>{const w=Math.round(v/cur*100);return `<div class="anl-row"><span class="anl-s">${esc(s)}</span><span class="anl-track"><span class="anl-fill" style="width:${w}%"></span></span><b class="num">${w}%</b></div>`;}).join('')}</div>`;
     const flags=[];
-    if(topW>25) flags.push({t:'warn',ic:'alert',b:esc(top.sym)+' is '+Math.round(topW)+'% of your equity',s:'Above the 25% single-stock guardrail — a sharp move here swings the whole book.'});
-    if(div<5) flags.push({t:'warn',ic:'scale',b:'Only '+div+' holding'+(div===1?'':'s'),s:'Thin diversification — concentrated in a few names. More positions spread single-stock risk.'});
-    const topSec=secRows[0]; if(topSec){const sw=Math.round(topSec[1]/cur*100); if(sw>40&&topSec[0]!=='Other') flags.push({t:'info',ic:'pie',b:topSec[0]+' is '+sw+'% of your equity',s:'A heavy sector tilt — concentrated to '+topSec[0]+'.'});}
+    if(topW>25) flags.push({t:'warn',ic:'alert',b:esc(top.sym)+' is '+Math.round(topW)+'% of your equity',s:'Above the 25% single-stock guardrail, a sharp move here swings the whole book.'});
+    if(div<5) flags.push({t:'warn',ic:'scale',b:'Only '+div+' holding'+(div===1?'':'s'),s:'Thin diversification, concentrated in a few names. More positions spread single-stock risk.'});
+    const topSec=secRows[0]; if(topSec){const sw=Math.round(topSec[1]/cur*100); if(sw>40&&topSec[0]!=='Other') flags.push({t:'info',ic:'pie',b:topSec[0]+' is '+sw+'% of your equity',s:'A heavy sector tilt, concentrated to '+topSec[0]+'.'});}
     if(!flags.length) flags.push({t:'info',ic:'check',b:'Well-spread book',s:'No single stock above the 25% guardrail and reasonably diversified.'});
     const flagBlock=`<div class="anl-flags">${flags.map(f=>`<div class="anl-flag ${f.t}"><span class="af-ic">${icon(f.ic,15)}</span><div class="af-b"><b>${f.b}</b><span>${f.s}</span></div></div>`).join('')}</div>`;
-    const note=`<p class="sec-hint">${icon('shield',12)}<span>Computed live from your real Kite holdings. Sector is mapped where known (Kite doesn’t supply it). No targets/“drift” are shown — that needs a goal you set, which isn’t simulated here.</span></p>`;
+    const note=`<p class="sec-hint">${icon('shield',12)}<span>Computed live from your real Kite holdings. Sector is mapped where known (Kite doesn’t supply it). No targets/“drift” are shown, that needs a goal you set, which isn’t simulated here.</span></p>`;
     return hero+metrics+flagBlock+holdBlock+secBlock+note;
   },
   wire(){}
@@ -2035,7 +2035,7 @@ function mfBindInvest(hub){hub.querySelectorAll('[data-mfbuy]').forEach(b=>b.onc
 function ipoApply(ipo){
   let lots=1; const price=ipo.band[1];
   const calc=()=>{const sh=lots*ipo.lot;return {sh,amt:sh*price};};
-  flowModal({title:'Apply — '+ipo.co, confirm:'Confirm application',
+  flowModal({title:'Apply, '+ipo.co, confirm:'Confirm application',
     body:`<div class="flow-top"><div><b>${ipo.co}</b><span class="flow-sub">${ipo.type} IPO · cut-off ₹${price}</span></div><span class="badge ${ipo.type==='SME'?'b-warn':'b-up'}">${ipo.type}</span></div>
       <div class="flow-field"><label id="lotsLbl">Lots <i>(1 lot = ${ipo.lot} shares)</i></label>
         <div class="stepper" role="group" aria-labelledby="lotsLbl">
@@ -2059,21 +2059,21 @@ function ipoApply(ipo){
     onConfirm(body){const upi=body.querySelector('#upiId').value.trim();
       if(!/^[\w.\-]+@[\w.\-]+$/.test(upi)){flowError(body,'#upiId','Enter a valid UPI ID (e.g. name@bank).');return false;}
       ipo.applied=true; ipo.appliedLots=lots; refreshTool();
-      quickToast('Application submitted — '+ipo.co, lots+' lot(s) · '+inr(calc().amt)+' blocked via UPI mandate.');}
+      quickToast('Application submitted, '+ipo.co, lots+' lot(s) · '+inr(calc().amt)+' blocked via UPI mandate.');}
   });
 }
 
 function algoDeploy(a){
-  if(!a.wired){ quickToast('Not deployable yet', `${a.name} has no live engine — backtest/validate it first.`); return; }
+  if(!a.wired){ quickToast('Not deployable yet', `${a.name} has no live engine, backtest/validate it first.`); return; }
   const isCrypto=CRYPTO_ONLY||(state.algo&&state.algo.market==='crypto');
-  flowModal({title:'Deploy in Paper — '+a.name, confirm:'Deploy in Paper',
+  flowModal({title:'Deploy in Paper, '+a.name, confirm:'Deploy in Paper',
     body:`<div class="flow-top"><div><b>${esc(a.name)}</b><span class="flow-sub">${esc(a.cat)} · ${esc(a.risk)}</span></div><span class="badge ${a.risk==='Aggressive'?'b-warn':a.risk==='Conservative'?'b-up':'b-neu'}">${esc(a.risk)}</span></div>
       <div class="flow-rows">
         <div><span>Best regime</span><b class="num">${esc(a.bestRegime||'-')}</b></div>
         <div><span>Validation</span><b class="num ${a.vstatus==='validated'?'up':''}">${a.vstatus==='validated'?'Validated':'Candidate'}</b></div>
       </div>
-      <p class="flow-note">${icon('shield',13)}<span><b>Risk-free.</b> Paper deploy runs this strategy on <b>${isCrypto?'live Binance data':'live Kite data'} with simulated fills</b> — no real orders, no money at risk. Your bot harness starts trading it; closed-trade P&amp;L builds toward the Go-Live gate (≥${BOT.nudgeMin||10} profitable trades). You can Pause or Stop anytime.</span></p>`,
-    onConfirm(){ setStrategyState(a.id,'paper','Deployed — '+a.name); }
+      <p class="flow-note">${icon('shield',13)}<span><b>Risk-free.</b> Paper deploy runs this strategy on <b>${isCrypto?'live Binance data':'live Kite data'} with simulated fills</b>: no real orders, no money at risk. Your bot harness starts trading it; closed-trade P&amp;L builds toward the Go-Live gate (≥${BOT.nudgeMin||10} profitable trades). You can Pause or Stop anytime.</span></p>`,
+    onConfirm(){ setStrategyState(a.id,'paper','Deployed, '+a.name); }
   });
 }
 // BUG FIX (2026-09-09): this used to look bid up in ALGOS (assets/app.js:1706 / loadBotData) -
@@ -2087,7 +2087,7 @@ function algoDeploy(a){
 function cryptoLibDeploy(bid){
   const c=CRYPTO_STRATEGIES.find(x=>x.bid===bid);
   if(!c){ quickToast('Engine loading','Wait for the strategy catalog to load from the API.'); return; }
-  if(!c.wired){ quickToast('Not deployable yet', `${c.name} has no live engine on the cloud worker yet — backtest/validate it first.`); return; }
+  if(!c.wired){ quickToast('Not deployable yet', `${c.name} has no live engine on the cloud worker yet, backtest/validate it first.`); return; }
   const m=((CRYPTOMON.data&&CRYPTOMON.data.strategies)||[]).find(x=>x.id===bid);
   if(!CRYPTOMON.loaded&&!CRYPTOMON.busy) loadCryptoMonitor();
   const a={ id:bid, name:c.name, cat:c.cat+' · '+c.pair, risk:c.risk, wired:true,
@@ -2116,18 +2116,18 @@ async function setStrategyState(id, stateVal, title){
   }catch(e){ quickToast('Action failed','Is the bot API running on :8756?'); }
 }
 function lcMsg(s){
-  return s==='paper'?'Live data, simulated fills — no real money. Building forward evidence.'
-    : s==='paused'?'Paused — no new entries; open paper positions are kept.'
-    : (s===null||s==='off')?'Stopped — open paper positions square off next cycle; nothing else trades it.'
+  return s==='paper'?'Live data, simulated fills, no real money. Building forward evidence.'
+    : s==='paused'?'Paused, no new entries; open paper positions are kept.'
+    : (s===null||s==='off')?'Stopped, open paper positions square off next cycle; nothing else trades it.'
     : 'Updated.';
 }
 function lcStop(a){
   const flatten=a.sub==='live';
-  flowModal({title:(flatten?'Stop & Flatten — ':'Stop — ')+a.name, confirm:flatten?'Stop & Flatten':'Stop', danger:true,
+  flowModal({title:(flatten?'Stop & Flatten, ':'Stop, ')+a.name, confirm:flatten?'Stop & Flatten':'Stop', danger:true,
     body:`<p class="flow-note">${icon('alert',13)}<span>${flatten
-      ? `This <b>squares off real positions</b> and stops the strategy. Real-money action — confirm you want to exit now.`
+      ? `This <b>squares off real positions</b> and stops the strategy. Real-money action, confirm you want to exit now.`
       : `Stops paper-trading <b>${esc(a.name)}</b>. Any open paper positions are squared off next cycle. You can redeploy anytime.`}</span></p>`,
-    onConfirm(){ setStrategyState(a.id,'off','Stopped — '+a.name); }});
+    onConfirm(){ setStrategyState(a.id,'off','Stopped, '+a.name); }});
 }
 
 function basketInvest(b){
@@ -2142,7 +2142,7 @@ function basketInvest(b){
     onConfirm(body){const v=Math.round(+body.querySelector('#bskAmt').value||0);
       if(v<b.minInv){flowError(body,'#bskAmt','Minimum investment is '+inr(b.minInv)+'.');return false;}
       b.invested=true; refreshTool();
-      quickToast('Basket purchased — '+b.name, inr(v)+' across '+b.stocks.length+' stocks.');}
+      quickToast('Basket purchased, '+b.name, inr(v)+' across '+b.stocks.length+' stocks.');}
   });
 }
 
@@ -2155,15 +2155,15 @@ function mfInvest(fn){
     </div>
     <div class="flow-field"><label for="mfAmt">${mode==='sip'?'Monthly amount':'Amount'}</label><input class="flow-input num" id="mfAmt" type="number" inputmode="numeric" value="${mode==='sip'?5000:25000}" min="${mode==='sip'?500:5000}" step="500"></div>
     <div class="flow-rows"><div><span>1Y return</span><b class="num up">${fn.r1}%</b></div><div><span>3Y return</span><b class="num up">${fn.r3}%</b></div>${mode==='sip'?`<div><span>Annual outlay</span><b class="num" id="mfYr">${inr(5000*12)}</b></div>`:''}</div>
-    <p class="flow-note">${icon('sprout',13)}<span>Direct plan — zero commission. ${mode==='sip'?'Pause or stop your SIP anytime.':'Units allotted at the next NAV.'}</span></p>`;
-  const open=()=>flowModal({title:'Invest — '+fn.cat, confirm:mode==='sip'?'Start SIP':'Confirm investment', body:render(), focus:'#mfAmt',
+    <p class="flow-note">${icon('sprout',13)}<span>Direct plan, zero commission. ${mode==='sip'?'Pause or stop your SIP anytime.':'Units allotted at the next NAV.'}</span></p>`;
+  const open=()=>flowModal({title:'Invest, '+fn.cat, confirm:mode==='sip'?'Start SIP':'Confirm investment', body:render(), focus:'#mfAmt',
     wire(body){
       body.querySelectorAll('[data-mfmode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mfmode;flowModalReplace(open);});
       const ai=body.querySelector('#mfAmt'); ai.oninput=()=>{clearFlowError(body,ai);const yr=body.querySelector('#mfYr');if(yr)yr.textContent=inr((+ai.value||0)*12);};
     },
     onConfirm(body){const min=mode==='sip'?500:5000,v=Math.round(+body.querySelector('#mfAmt').value||0);
       if(v<min){flowError(body,'#mfAmt','Minimum is '+inr(min)+'.');return false;}
-      quickToast(mode==='sip'?'SIP started — '+fn.name:'Investment placed — '+fn.name, (mode==='sip'?inr(v)+'/month':inr(v))+' · direct plan.');}
+      quickToast(mode==='sip'?'SIP started, '+fn.name:'Investment placed, '+fn.name, (mode==='sip'?inr(v)+'/month':inr(v))+' · direct plan.');}
   });
   open();
 }
@@ -2173,7 +2173,7 @@ function flowModalReplace(openFn){ openFn(); }
 function sipForm(existing){
   const editing=!!existing;
   const draft=existing?{...existing}:{sym:'RELIANCE',amt:2000,freq:'Monthly',day:5};
-  flowModal({title:editing?'Edit SIP — '+draft.sym:'New stock SIP', confirm:editing?'Save changes':'Start SIP',
+  flowModal({title:editing?'Edit SIP, '+draft.sym:'New stock SIP', confirm:editing?'Save changes':'Start SIP',
     body:`<div class="flow-field"><label for="sipSym">Stock</label>
         <select class="flow-input" id="sipSym" ${editing?'disabled':''}>${SYMS.map(s=>`<option value="${s.sym}" ${s.sym===draft.sym?'selected':''}>${s.sym} · ${s.name}</option>`).join('')}</select></div>
       <div class="flow-2col">
@@ -2189,15 +2189,15 @@ function sipForm(existing){
     onConfirm(body){const amt=Math.round(+body.querySelector('#sipAmt').value||0);
       if(amt<500){flowError(body,'#sipAmt','Minimum SIP amount is ₹500.');return false;}
       const sym=body.querySelector('#sipSym').value, freq=body.querySelector('#sipFreq').value, day=freq==='Weekly'?1:Math.max(1,Math.min(28,+body.querySelector('#sipDay').value||5));
-      if(editing){Object.assign(existing,{amt,freq,day});quickToast('SIP updated — '+sym, inr(amt)+' · '+freq+'.');}
-      else{STOCK_SIPS.push({id:++SIP_ID,sym,amt,freq,day,status:'active'});quickToast('SIP started — '+sym, inr(amt)+' · '+freq+'.');}
+      if(editing){Object.assign(existing,{amt,freq,day});quickToast('SIP updated, '+sym, inr(amt)+' · '+freq+'.');}
+      else{STOCK_SIPS.push({id:++SIP_ID,sym,amt,freq,day,status:'active'});quickToast('SIP started, '+sym, inr(amt)+' · '+freq+'.');}
       refreshTool();}
   });
 }
 function sipDelete(s){
   flowModal({title:'Delete SIP?', confirm:'Delete', danger:true,
     body:`<p class="flow-confirm">Stop and remove your <b>${s.sym}</b> SIP of <b>${inr(s.amt)}</b> (${s.freq})? This can’t be undone.</p>`,
-    onConfirm(){STOCK_SIPS=STOCK_SIPS.filter(x=>x.id!==s.id);refreshTool();quickToast('SIP deleted — '+s.sym,'The recurring investment has been removed.');}
+    onConfirm(){STOCK_SIPS=STOCK_SIPS.filter(x=>x.id!==s.id);refreshTool();quickToast('SIP deleted, '+s.sym,'The recurring investment has been removed.');}
   });
 }
 
@@ -2212,7 +2212,7 @@ function callThesis(c){
         <div><span>Conviction</span><b>${c.conv}</b></div>
       </div>
       <p class="flow-thesis">${c.rationale}</p>
-      <p class="flow-note">${icon('alert',13)}<span>Research view from IB Research. Not personalised advice — size positions to your own risk.</span></p>`
+      <p class="flow-note">${icon('alert',13)}<span>Research view from IB Research. Not personalised advice, size positions to your own risk.</span></p>`
   });
 }
 function reportOpen(r){
@@ -2220,7 +2220,7 @@ function reportOpen(r){
     body:`<div class="flow-top"><div><b>${r.title}</b><span class="flow-sub">${r.tag} · ${r.date} · ${r.pages} pages</span></div><span class="rep-ic">${icon('search',16)}</span></div>
       <p class="flow-thesis">A deep-dive covering the demand outlook, key risks, valuation and our preferred picks in the ${r.tag.toLowerCase()} space. Full charts and tables in the PDF.</p>
       <p class="flow-note">${icon('shield',13)}<span>For information only. Read the disclaimers on the final page.</span></p>`,
-    onConfirm(){quickToast('Downloading — '+r.title, r.pages+'-page PDF saved to your reports.');}
+    onConfirm(){quickToast('Downloading, '+r.title, r.pages+'-page PDF saved to your reports.');}
   });
 }
 
@@ -2393,7 +2393,7 @@ function openLayoutMenu(){
   const cl=customLayouts();
   html+= cl.length? cl.map(L=>item(state.layout==='build'&&state.activeCustom===L.id,L.name,layoutCardCount(L)+' widget'+(layoutCardCount(L)===1?'':'s'),`data-lmcustom="${L.id}"`,
       `<span class="lm-acts"><span class="lm-mini" role="button" tabindex="0" data-lmrename="${L.id}" aria-label="Rename ${esc(L.name)}">${icon('sliders',12)}</span><span class="lm-mini danger" role="button" tabindex="0" data-lmdelete="${L.id}" aria-label="Delete ${esc(L.name)}">${icon('close',12)}</span></span>`)).join('')
-    : `<div class="lm-empty">No saved workspaces yet — build your own.</div>`;
+    : `<div class="lm-empty">No saved workspaces yet, build your own.</div>`;
   html+=`<button class="lm-new" role="menuitem" data-lmnew>${icon('plus',14)} New workspace…</button>`;
   m.innerHTML=html; m.hidden=false; if(btn)btn.setAttribute('aria-expanded','true');
   m.querySelectorAll('[data-lmpreset]').forEach(b=>b.onclick=()=>{selectPreset(b.dataset.lmpreset);});
@@ -2426,7 +2426,7 @@ function createLayout(tplKey){
   const id=newLayoutId(), tid=newTabId();
   a.push({id,name,activeTab:tid,tabs:[{id:tid,name:'Main',cards:tpl?tpl.cards.map(c=>({key:c.key,span:c.span})):[],sync:{A:0,B:1}}]});
   setLayout('build',id);
-  quickToast('Workspace created — '+name, tpl?tpl.cards.length+' widgets added · customise freely':'Empty canvas — add the widgets you want.');
+  quickToast('Workspace created, '+name, tpl?tpl.cards.length+' widgets added · customise freely':'Empty canvas, add the widgets you want.');
 }
 function renameLayout(id){
   const L=customLayouts().find(x=>x.id===id); if(!L)return;
@@ -2443,7 +2443,7 @@ function deleteLayout(id){
     onConfirm(){ state.customLayouts=customLayouts().filter(x=>x.id!==id);
       if(state.activeCustom===id){ const nx=state.customLayouts[0]; if(nx){state.activeCustom=nx.id;setLayout('build',nx.id);} else {state.activeCustom=null;setLayout('originals');} }
       else { renderDeskBar(); saveState(); }
-      quickToast('Workspace deleted — '+L.name,'Removed from your workspaces.'); }
+      quickToast('Workspace deleted, '+L.name,'Removed from your workspaces.'); }
   });
 }
 // Shared Dext-style setup tiles, used by the modal gallery, the empty-canvas state, and the empty-workspace landing.
@@ -2516,9 +2516,9 @@ function layoutGallery(){
   closeLayoutMenu();
   const regimeWord={bull:'bullish',neutral:'range-bound',bear:'bearish'}[state.displayed]||'live';
   flowModal({title:'Build your workspace', hideConfirm:true,
-    body:`<p class="cv-pick-note">Tuned to today's <b>${regimeWord}</b> market — <span class="lg-hint">${icon('check',10)} marks our pick</span>. Hover any setup to preview its layout.</p>
+    body:`<p class="cv-pick-note">Tuned to today's <b>${regimeWord}</b> market, <span class="lg-hint">${icon('check',10)} marks our pick</span>. Hover any setup to preview its layout.</p>
       ${scratchBar('lgtpl')}
-      ${lgSection('Quick layouts','Ready-to-trade terminals — fixed panes, one click.',quickTiles('lgquick'))}
+      ${lgSection('Quick layouts','Ready-to-trade terminals, fixed panes, one click.',quickTiles('lgquick'))}
       ${lgSection('Build your own','Pick a template to customise, or reopen a saved workspace.',savedTiles('lgsaved')+setupTiles('lgtpl'))}`,
     wire(body){
       body.querySelectorAll('[data-lgquick]').forEach(b=>b.onclick=()=>{closeModal();pickQuickLayout(b.dataset.lgquick);});
@@ -2530,20 +2530,20 @@ function layoutGallery(){
 /* full-canvas "pick a setup" landing shown when the workspace is emptied (all core panes closed) */
 let wsRestoreDismissed=false; // session opt-out: hide the restore prompt until the next pane is closed
 function restorePanels(){ if(!state.cards)state.cards={}; Object.keys(CARD_EL).forEach(k=>{if(state.cards[k]==='hidden')state.cards[k]='normal';}); applyCardStates(); applyPaneWidths(); saveState(); announce('Panels restored'); }
-function dismissRestore(){ wsRestoreDismissed=true; updateWorkspaceEmpty(); announce('Restore dismissed — closed panels stay closed'); }
+function dismissRestore(){ wsRestoreDismissed=true; updateWorkspaceEmpty(); announce('Restore dismissed, closed panels stay closed'); }
 function lgSection(title,sub,inner){ return `<section class="lg-section"><div class="lg-sec-head"><b>${title}</b><span>${sub}</span></div><div class="lg-grid lg-inline">${inner}</div></section>`; }
 function renderWsEmpty(el){
   const hidden=Object.keys(CARD_EL).filter(k=>state.cards&&state.cards[k]==='hidden').length;
   const showRestore=hidden && !wsRestoreDismissed;
   el.innerHTML=`<div class="ws-empty-inner">
-    <div class="ws-empty-head"><b>Build your workspace</b><span>Pick a ready-made terminal, design your own, or bring back a panel you closed — hover any setup to preview its layout.</span>
+    <div class="ws-empty-head"><b>Build your workspace</b><span>Pick a ready-made terminal, design your own, or bring back a panel you closed, hover any setup to preview its layout.</span>
       ${showRestore?`<span class="ws-restore-row">
         <button class="btn-primary sm ws-restore" data-wsrestore>${icon('layout',13)} Restore ${hidden} closed panel${hidden>1?'s':''}</button>
-        <button class="btn-ghost sm ws-dismiss" data-wsdismiss aria-label="Dismiss — keep panels closed">${icon('close',12)} Dismiss</button>
+        <button class="btn-ghost sm ws-dismiss" data-wsdismiss aria-label="Dismiss, keep panels closed">${icon('close',12)} Dismiss</button>
       </span>`:''}
     </div>
     ${scratchBar('wstpl')}
-    ${lgSection('Quick layouts','Ready-to-trade terminals — fixed panes, one click.',quickTiles('wsquick'))}
+    ${lgSection('Quick layouts','Ready-to-trade terminals, fixed panes, one click.',quickTiles('wsquick'))}
     ${lgSection('Build your own','Pick a template to customise, or reopen a saved workspace.',savedTiles('wssaved')+setupTiles('wstpl'))}
   </div>`;
   el.querySelectorAll('[data-wsquick]').forEach(b=>b.onclick=()=>pickQuickLayout(b.dataset.wsquick));
@@ -2606,7 +2606,7 @@ function chainEmptyBody(){
   const u=(UNDERLYINGS[state.desk.under]||UNDERLYINGS[0]).label;
   return `<div class="desk-scroll">${BOT.live
     ? secEmpty('scale','Loading live chain…',`Fetching ${u} strikes, open interest, LTP and IV from Kite.`)
-    : secEmpty('shield','Live option chain unavailable',`Connect your Kite session (run <b>python3 login.py</b> in the bot folder) to load the real ${u} option chain — strikes, live OI, LTP and computed IV. No synthetic data is shown.`)}</div>`;
+    : secEmpty('shield','Live option chain unavailable',`Connect your Kite session (run <b>python3 login.py</b> in the bot folder) to load the real ${u} option chain, strikes, live OI, LTP and computed IV. No synthetic data is shown.`)}</div>`;
 }
 function wireDeskControls(v){
   const u=v.querySelector('#dcUnder'); if(u)u.onchange=()=>{state.desk.under=+u.value;state.desk.exp=0;state.desk.legs=[];renderDeskView();};
@@ -2628,18 +2628,18 @@ function deskChain(c){
     <thead><tr><th colspan="3" class="ch-grp call">CALLS</th><th class="ch-grp k">Strike · IV</th><th colspan="3" class="ch-grp put">PUTS</th></tr>
     <tr class="ch-sub"><th>OI</th><th>OI Chg</th><th>LTP</th><th></th><th>LTP</th><th>OI Chg</th><th>OI</th></tr></thead>
     <tbody>${rows}</tbody></table>
-    <p class="desk-hint">${icon('bolt',12)}<span>Live OI &amp; premiums from Kite${c.e&&c.e.d?' · '+c.e.d+' expiry':''}. Tap any premium to add it to your strategy. Green = ITM. ATM strike ${c.atm.toLocaleString('en-IN')} highlighted. (Intraday OI-change isn’t in the live quote — shown as —.)</span></p></div>`;
+    <p class="desk-hint">${icon('bolt',12)}<span>Live OI &amp; premiums from Kite${c.e&&c.e.d?' · '+c.e.d+' expiry':''}. Tap any premium to add it to your strategy. Green = ITM. ATM strike ${c.atm.toLocaleString('en-IN')} highlighted. (Intraday OI-change isn’t in the live quote, shown as —.)</span></p></div>`;
 }
 function wireChain(v){ v.querySelectorAll('[data-leg]').forEach(b=>b.onclick=()=>{const p=b.dataset.leg.split(':');addLeg(p[0],+p[1],'B');}); }
 function addLeg(type,K,side){
   const c=buildChain(state.desk.under,state.desk.exp); if(!c) return;
   const R=c.rows.find(r=>r.K===K); if(!R) return;
   const raw=type==='CE'?R.callLtp:R.putLtp;
-  if(raw==null){ quickToast('No live quote','That strike isn’t trading right now — pick a nearer strike.'); return; }
+  if(raw==null){ quickToast('No live quote','That strike isn’t trading right now, pick a nearer strike.'); return; }
   const ltp=Math.round(raw*100)/100;
   state.desk.legs.push({type,side:side||'B',K,ltp,lot:c.u.lot,qty:1});
   const nm=(side==='S'?'Sell':'Buy')+' '+K+' '+(type==='CE'?'Call':'Put');
-  quickToast('Leg added — '+nm, '₹'+ltp.toFixed(1)+' × '+c.u.lot+' (1 lot) · open the Strategy tab');
+  quickToast('Leg added, '+nm, '₹'+ltp.toFixed(1)+' × '+c.u.lot+' (1 lot) · open the Strategy tab');
   renderDeskView(); announce(nm+' added to strategy, '+state.desk.legs.length+' legs');
 }
 function deskOI(c){
@@ -2657,10 +2657,10 @@ function deskOI(c){
 function deskStrategy(c){
   const legs=state.desk.legs;
   const presetBar=`<div class="strat-presets" role="group" aria-label="Strategy presets">${STRAT_PRESETS.map(p=>`<button class="strat-preset" data-preset="${p.key}">${p.name}</button>`).join('')}<button class="strat-preset clear" data-clearlegs ${legs.length?'':'disabled'}>${icon('close',12)} Clear</button></div>`;
-  if(!legs.length) return presetBar+secEmpty('scale','Build a strategy','Tap any premium in the Option Chain, or pick a ready-made strategy above — we’ll chart the payoff, max profit, max loss and breakevens.');
+  if(!legs.length) return presetBar+secEmpty('scale','Build a strategy','Tap any premium in the Option Chain, or pick a ready-made strategy above, we’ll chart the payoff, max profit, max loss and breakevens.');
   const st=stratStats(legs,c.u);
   const legRows=legs.map((l,i)=>`<div class="leg-row">
-    <button class="leg-side ${l.side==='B'?'buy':'sell'}" data-legside="${i}" aria-label="${l.side==='B'?'Buy':'Sell'} — tap to flip side">${l.side==='B'?'BUY':'SELL'}</button>
+    <button class="leg-side ${l.side==='B'?'buy':'sell'}" data-legside="${i}" aria-label="${l.side==='B'?'Buy':'Sell'}, tap to flip side">${l.side==='B'?'BUY':'SELL'}</button>
     <span class="leg-desc"><b class="num">${l.K}</b> <i class="leg-type ${l.type==='CE'?'ce':'pe'}">${l.type}</i></span>
     <span class="leg-ltp num">₹${l.ltp.toFixed(1)}</span>
     <div class="leg-qty"><button data-legqty="${i}:-1" aria-label="Decrease lots">${icon('minus',12)}</button><b class="num" aria-label="${l.qty} lots">${l.qty}</b><button data-legqty="${i}:1" aria-label="Increase lots">${icon('plus',12)}</button></div>
@@ -2681,7 +2681,7 @@ function deskStrategy(c){
         </div>
         ${payoffSVG(st,c.u)}
         <div class="pf-axis"><span>${Math.round(c.u.spot*0.82).toLocaleString('en-IN')}</span><span class="pf-spotlab">Spot ${c.u.spot.toLocaleString('en-IN')}</span><span>${Math.round(c.u.spot*1.18).toLocaleString('en-IN')}</span></div>
-        <p class="desk-hint">${st.maxLUnlimited?icon('alert',12)+'<span>Unlimited loss potential — naked option leg.</span>':icon('shield',12)+'<span>Defined-risk: maximum loss is capped at expiry.</span>'}</p>
+        <p class="desk-hint">${st.maxLUnlimited?icon('alert',12)+'<span>Unlimited loss potential, naked option leg.</span>':icon('shield',12)+'<span>Defined-risk: maximum loss is capped at expiry.</span>'}</p>
       </div></div></div>`;
 }
 function payoffSVG(st,u){
@@ -2699,7 +2699,7 @@ function payoffSVG(st,u){
     <line class="pf-spot" x1="${spotX}" y1="${padT}" x2="${spotX}" y2="${H-padB}"/>${polys}${be}</svg>`;
 }
 function wireStrategy(v){
-  v.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const c=buildChain(state.desk.under,state.desk.exp); if(!c)return; const p=STRAT_PRESETS.find(x=>x.key===b.dataset.preset);if(p){state.desk.legs=p.build(c);renderDeskView();announce(p.name+' loaded — '+state.desk.legs.length+' legs');}});
+  v.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const c=buildChain(state.desk.under,state.desk.exp); if(!c)return; const p=STRAT_PRESETS.find(x=>x.key===b.dataset.preset);if(p){state.desk.legs=p.build(c);renderDeskView();announce(p.name+' loaded, '+state.desk.legs.length+' legs');}});
   const cl=v.querySelector('[data-clearlegs]'); if(cl)cl.onclick=()=>{state.desk.legs=[];renderDeskView();announce('Strategy cleared');};
   v.querySelectorAll('[data-legside]').forEach(b=>b.onclick=()=>{const l=state.desk.legs[+b.dataset.legside];l.side=l.side==='B'?'S':'B';renderDeskView();});
   v.querySelectorAll('[data-legqty]').forEach(b=>b.onclick=()=>{const p=b.dataset.legqty.split(':'),l=state.desk.legs[+p[0]];l.qty=Math.max(1,Math.min(10,l.qty+(+p[1])));renderDeskView();});
@@ -2712,12 +2712,12 @@ function execStrategy(){
   const st=stratStats(legs,c.u);
   const rows=legs.map(l=>`<div class="wg-row"><span class="leg-side sm ${l.side==='B'?'buy':'sell'}">${l.side==='B'?'BUY':'SELL'}</span><span class="wg-grow">${c.u.sym} ${l.K} ${l.type}</span><b class="num">${l.qty}×${l.lot}</b></div>`).join('');
   const margin=Math.round(Math.abs(st.netPrem)*1.4+c.u.spot*c.u.lot*0.12);
-  flowModal({title:'Place strategy — '+c.u.sym, confirm:'Place '+legs.length+'-leg order',
+  flowModal({title:'Place strategy, '+c.u.sym, confirm:'Place '+legs.length+'-leg order',
     body:`<div class="flow-top"><div><b>${c.u.label} · ${c.e.d}</b><span class="flow-sub">${legs.length}-leg options basket</span></div></div>
       <div class="strat-confirm">${rows}</div>
       <div class="flow-rows"><div><span>${st.netPrem>=0?'Net credit':'Net debit'}</span><b class="num">${inr(Math.abs(st.netPrem))}</b></div><div><span>Margin (est.)</span><b class="num">${inr(margin)}</b></div></div>
-      <p class="flow-note">${icon('shield',13)}<span><b>Paper basket (simulated)</b> — no real order is placed. ${st.maxLUnlimited?'⚠ Naked leg: unlimited risk if this were live.':'Defined-risk position.'}</span></p>`,
-    onConfirm(){quickToast('Paper basket — '+c.u.sym, legs.length+' legs · '+c.e.d+' · simulated, no real order placed.');state.desk.legs=[];renderDeskView();}
+      <p class="flow-note">${icon('shield',13)}<span><b>Paper basket (simulated)</b>: no real order is placed. ${st.maxLUnlimited?'⚠ Naked leg: unlimited risk if this were live.':'Defined-risk position.'}</span></p>`,
+    onConfirm(){quickToast('Paper basket, '+c.u.sym, legs.length+' legs · '+c.e.d+' · simulated, no real order placed.');state.desk.legs=[];renderDeskView();}
   });
 }
 // REAL stock-futures buildup from Kite (/api/futures). No synthetic OI.
@@ -2739,7 +2739,7 @@ function deskFutures(){
   const fr=BOT.live&&BOT.futures&&BOT.futures.rows;
   if(!fr) return `<div class="desk-scroll">${BOT.live
     ? secEmpty('bolt','Loading live futures…','Fetching stock-futures price, basis, OI &amp; buildup from Kite.')
-    : secEmpty('shield','Live futures unavailable','Connect Kite (run <b>python3 login.py</b>) for live stock-futures buildup — price, basis, OI &amp; long/short buildup from real OI change. No synthetic data is shown.')}</div>`;
+    : secEmpty('shield','Live futures unavailable','Connect Kite (run <b>python3 login.py</b>) for live stock-futures buildup, price, basis, OI &amp; long/short buildup from real OI change. No synthetic data is shown.')}</div>`;
   const body=futStocks().map(sym=>{const R=fr[sym]; if(!R)return '';const b=R.basis;
     return `<tr>
       <td><span class="t-sym">${esc(sym)}</span></td>
@@ -2812,13 +2812,13 @@ function cvRenameTab(id){ const cl=activeCustom(); if(!cl)return; const t=tabsOf
 function cvDeleteTab(id){ const cl=activeCustom(); if(!cl)return; const ts=tabsOf(cl); if(ts.length<=1)return; const t=ts.find(x=>x.id===id); if(!t)return;
   flowModal({title:'Delete tab?', confirm:'Delete', danger:true,
     body:`<p class="flow-confirm">Delete tab <b>${esc(t.name)}</b> and its ${t.cards.length} widget${t.cards.length===1?'':'s'}? This can’t be undone.</p>`,
-    onConfirm(){ cl.tabs=ts.filter(x=>x.id!==id); if(cl.activeTab===id)cl.activeTab=cl.tabs[0].id; saveState(); renderDeskView(); quickToast('Tab deleted — '+t.name,'Removed from this workspace.'); }});
+    onConfirm(){ cl.tabs=ts.filter(x=>x.id!==id); if(cl.activeTab===id)cl.activeTab=cl.tabs[0].id; saveState(); renderDeskView(); quickToast('Tab deleted, '+t.name,'Removed from this workspace.'); }});
 }
 function renderCanvasInto(v){
   const cl=activeCustom();
   if(!cl){ // build layout selected but no custom layouts exist → full-canvas setup picker
     v.innerHTML=`<div class="desk-wrap"><div class="desk-scroll"><div class="ws-empty-inner">
-      <div class="ws-empty-head"><b>Build your workspace</b><span>Start from a blank canvas, or pick a template — you can rearrange everything later.</span></div>
+      <div class="ws-empty-head"><b>Build your workspace</b><span>Start from a blank canvas, or pick a template, you can rearrange everything later.</span></div>
       ${scratchBar('lgtpl')}
       ${lgSection('Build your own','Pick a template to customise.',setupTiles('lgtpl'))}</div></div></div>`;
     v.querySelectorAll('[data-lgtpl]').forEach(b=>b.onclick=()=>createLayout(b.dataset.lgtpl)); return;
@@ -2831,13 +2831,13 @@ function renderCanvasInto(v){
   let body;
   if(!cards.length){
     body=`<div class="desk-scroll"><div class="ws-empty-inner">
-      <div class="ws-empty-head"><b>Build out “${esc(tab.name)}”</b><span>Add widgets one by one, or seed this tab from a template — everything stays editable.</span></div>
+      <div class="ws-empty-head"><b>Build out “${esc(tab.name)}”</b><span>Add widgets one by one, or seed this tab from a template, everything stays editable.</span></div>
       <button class="lg-scratch-bar" data-cvadd>
         <span class="lsb-ic">${icon('plus',20)}</span>
         <span class="lsb-tx"><b>Add widgets manually</b><span>Open the widget picker and choose exactly what you want, one by one.</span></span>
         <em class="lsb-go">Open picker →</em>
       </button>
-      ${lgSection('Start from a template','Seed this tab instantly — then rearrange, resize & save.',setupTiles('cvtpl'))}
+      ${lgSection('Start from a template','Seed this tab instantly, then rearrange, resize & save.',setupTiles('cvtpl'))}
     </div></div>`;
   }else{
     body=`<div class="desk-scroll"><div class="cv-grid">${cards.map((c,i)=>canvasCard(c,i,tab)).join('')}</div></div>`;
@@ -2857,7 +2857,7 @@ function canvasCard(c,i,tab){
   return `<div class="cv-card span-${span}${grp?' grp-'+grp.toLowerCase():''}" data-cvi="${i}" draggable="true">
     <div class="cv-head"><span class="cv-ic">${icon(w.icon,13)}</span><b>${w.name}</b>${symSel}${grpCtl}
       <span class="cv-grip" title="Drag to reorder" aria-hidden="true">${icon('grip',13)}</span>
-      <button class="cv-span" data-cvspan="${i}" aria-label="Cycle width of ${w.name} (now ${span} of 3)" title="Width ${span}/3 — click to change">${span}</button>
+      <button class="cv-span" data-cvspan="${i}" aria-label="Cycle width of ${w.name} (now ${span} of 3)" title="Width ${span}/3, click to change">${span}</button>
       <button class="cv-x" data-cvremove="${i}" aria-label="Remove ${w.name}">${icon('close',12)}</button></div>
     <div class="cv-body">${w.render(uIdx)}</div>
     <span class="cv-resize" data-cvresize="${i}" aria-hidden="true" title="Drag to resize"></span></div>`;
@@ -2940,11 +2940,11 @@ document.addEventListener('error', function(e){
 /* ===== LIVE BOT INTEGRATION: kite-mean-reversion-bot API (:8756) =====
    Origin-aware so ONE build works everywhere: served from localhost → talk to the local bot;
    served from app.zengtrade.in → talk to the Cloudflare-tunnelled bot (Access-gated, HTTPS).
-   The bot itself still binds 127.0.0.1 only — the tunnel dials OUT, so no inbound port is ever opened. */
+   The bot itself still binds 127.0.0.1 only, the tunnel dials OUT, so no inbound port is ever opened. */
 const BOT_API=(()=>{
   const h=location.hostname;
   if(h==='localhost'||h==='127.0.0.1'||h==='::1'||h==='') return 'http://localhost:8756';
-  return '';   // production: SAME-ORIGIN — the tunnel routes /api/* to the bot, so the Cloudflare
+  return '';   // production: SAME-ORIGIN, the tunnel routes /api/* to the bot, so the Cloudflare
                // Access cookie rides along automatically. No CORS, no CSP change, no secret in JS.
 })();
 let BOT={loaded:false,connected:false,status:null,paperMode:true,error:false,chains:{},chainExp:{},futures:null};
@@ -3050,7 +3050,7 @@ async function loadMarket(){
    sort and selection survive). Self-gates on live + visible tab. ---- */
 /* ===== Sub-second PUSH via Server-Sent Events (bot→browser stream) =====
    The bot holds one Kite WebSocket and pushes each tick to the browser over /api/stream
-   (EventSource) the instant it lands — no 2s polling lag. The 2s poll below stays as an
+   (EventSource) the instant it lands, no 2s polling lag. The 2s poll below stays as an
    automatic fallback: it only fires when the stream isn't actively delivering (first paint,
    stream dropped, or EventSource unsupported), so prices are never stale and never doubled. */
 const STREAM={es:null, syms:'', on:false, last:0};
@@ -3126,7 +3126,7 @@ async function loadDepth(sym){
   const body=document.querySelector('.wg-card[data-wkey="depth"] .wg-body');
   if(body && BOT.depth.symbol===(state.selected||'RELIANCE')){
     body.innerHTML = BOT.depth.error
-      ? `<div class="wg-empty">No depth for ${esc(BOT.depth.symbol)} — ${esc(BOT.depth.error)}.</div>`
+      ? `<div class="wg-empty">No depth for ${esc(BOT.depth.symbol)}, ${esc(BOT.depth.error)}.</div>`
       : depthLadderHtml(BOT.depth);
   }
 }
@@ -3210,17 +3210,17 @@ function realQuote(name){
 }
 function botBanner(){
   if(!BOT.loaded) return `<div class="bot-banner">${icon('cpu',13)}<span>Connecting to your trading bot…</span></div>`;
-  if(BOT.error) return `<div class="bot-banner off">${icon('shield',13)}<span>Bot API offline — run <b>python3 bot_api.py</b> in the bot folder, then reopen Algo.</span></div>`;
+  if(BOT.error) return `<div class="bot-banner off">${icon('shield',13)}<span>Bot API offline, run <b>python3 bot_api.py</b> in the bot folder, then reopen Algo.</span></div>`;
   if(!BOT.connected){
     const auto=BOT.status&&BOT.status.autoLogin, running=(BOT.status&&BOT.status.reloginRunning)||BOT.reconnecting;
-    const msg=running?'Session expired — reconnecting to Kite…'
+    const msg=running?'Session expired, reconnecting to Kite…'
       :auto?'Session expired (daily token). Tap reconnect or it will auto-refresh shortly.'
-      :'Kite session expired — the daily token. Run <b>python3 auto_login.py</b> (or <b>login.py</b>), or set up auto-login.';
+      :'Kite session expired, the daily token. Run <b>python3 auto_login.py</b> (or <b>login.py</b>), or set up auto-login.';
     return `<div class="bot-banner off">${running?'<span class="live-dot warn pulse"></span>':icon('shield',13)}<span>${msg}</span>
       <button class="bot-relogin" data-relogin ${running?'disabled':''}>${running?'Reconnecting…':'Reconnect'}</button></div>`;
   }
   const u=BOT.status&&BOT.status.user?esc(BOT.status.user):'-';
-  return `<div class="bot-banner on"><span class="live-dot live"></span><span>Kite connected · ${u} · <b>${BOT.paperMode?'PAPER mode — no real orders':'LIVE'}</b>${BOT.status&&BOT.status.subscription?' · '+esc(BOT.status.subscription):''}</span></div>`;
+  return `<div class="bot-banner on"><span class="live-dot live"></span><span>Kite connected · ${u} · <b>${BOT.paperMode?'PAPER mode, no real orders':'LIVE'}</b>${BOT.status&&BOT.status.subscription?' · '+esc(BOT.status.subscription):''}</span></div>`;
 }
 // Manual reconnect: trigger the headless TOTP re-login, then refresh everything.
 async function botReconnect(){
@@ -3249,7 +3249,7 @@ function patchAlgoLive(){
   const brk={equity:0,options:0,futures:0}; let overall=0;   // per-class + combined (all classes) for the Monitor breakdown
   ALGOS.forEach(a=>{
     const v=exec==='live'?(a.livePnl||0):(a.paperPnl||0);
-    if(a.live && inScope(a)){ total+=v; totalR+=(a.realisedPnl||0); totalU+=(a.openPnl||0); }   // scoped to the Equity/Options/Futures toggle — matches the list shown
+    if(a.live && inScope(a)){ total+=v; totalR+=(a.realisedPnl||0); totalU+=(a.openPnl||0); }   // scoped to the Equity/Options/Futures toggle, matches the list shown
     if(a.deployed) depTotal+=v;
     if(a.deployed){ const ik=algoInstr(a); if(brk[ik]!=null) brk[ik]+=v; overall+=v; }
     document.querySelectorAll('[data-live-pnl="'+a.id+'"]').forEach(el=>setNum(el,v));
@@ -3298,35 +3298,35 @@ const STRAT_FAMILIES=[
   ['trend',      'Trend / Momentum',     'trendUp', 'Ride a move that has already started; lose small when it reverses.'],
   ['meanrev',    'Mean Reversion',       'repeat',  'Fade a stretched price back to its average. Wins often, must cap the rare big loss.'],
   ['breakout',   'Breakout / Volatility','bolt',    'Enter as price escapes a range on expanding volume.'],
-  ['time',       'Time / Calendar',      'clock',   'The clock is the signal — time-of-day, expiry, day-of-week, auto square-off.'],
+  ['time',       'Time / Calendar',      'clock',   'The clock is the signal, time-of-day, expiry, day-of-week, auto square-off.'],
   ['statarb',    'Stat-Arb / Pairs',     'swap',    'Trade the spread between two related instruments, not the market direction.'],
-  ['event',      'Event-Driven',         'flag',    'Position around a scheduled catalyst — results, rebalances, news.'],
-  ['sentiment',  'Sentiment / OI / Flow','spark',   'Read positioning — open interest, PCR, max-pain, FII/DII flows.'],
-  ['factor',     'Factor / Rotation',    'pie',     'Rotate a basket by a persistent edge — momentum, low-vol, quality, sector.'],
+  ['event',      'Event-Driven',         'flag',    'Position around a scheduled catalyst, results, rebalances, news.'],
+  ['sentiment',  'Sentiment / OI / Flow','spark',   'Read positioning, open interest, PCR, max-pain, FII/DII flows.'],
+  ['factor',     'Factor / Rotation',    'pie',     'Rotate a basket by a persistent edge, momentum, low-vol, quality, sector.'],
   ['ml',         'ML / Regime',          'cpu',     'A model picks the signal or switches the active strategy by regime.'],
   ['opt_dir',    'Options · Directional','target',  'Express a view with limited, known risk using long options or debit spreads.'],
-  ['opt_income', 'Options · Income',     'wallet',  'Sell premium for steady credit — capped upside, must defend the tails.'],
-  ['opt_vol',    'Options · Volatility', 'scale',   'Trade volatility itself — straddles, calendars, delta-neutral theta.'],
+  ['opt_income', 'Options · Income',     'wallet',  'Sell premium for steady credit, capped upside, must defend the tails.'],
+  ['opt_vol',    'Options · Volatility', 'scale',   'Trade volatility itself, straddles, calendars, delta-neutral theta.'],
   ['arb',        'Cash-Futures / Arb',   'scissors','Lock a near-riskless spread between cash & futures or across expiries.'],
 ];
 const SEG_LABEL={equity:'Equity',index:'Index F&O',fno:'Stock F&O',options:'Options',any:'Any market'};
 /* ── Instrument × holding-style bifurcation (Library navigation) ──────────────
    Primary class is DERIVED from the catalog seg (equity→Equity, options→Options,
-   index|fno→Futures). Holding style is an explicit per-strategy tag — a judgement
+   index|fno→Futures). Holding style is an explicit per-strategy tag, a judgement
    call about how the strategy is actually held; retune freely in STRAT_HOLD. */
 const INSTR_LABEL={equity:'Equity',options:'Options',futures:'Futures'};
 const INSTR_TABS=[
-  ['equity', 'Equity',  'layers',  'Cash stocks — delivery & intraday'],
-  ['options','Options', 'target',  'Defined-risk & premium — calls & puts'],
+  ['equity', 'Equity',  'layers',  'Cash stocks, delivery & intraday'],
+  ['options','Options', 'target',  'Defined-risk & premium, calls & puts'],
   ['futures','Futures', 'trendUp', 'Leveraged index & stock F&O'],
 ];
 const HOLD_LABEL={carry:'Carry-forward',intraday:'Intraday',swing:'Swing',expiry:'Expiry',scalper:'Scalper'};
 const HOLD_DESC={
-  carry:'Positional — held overnight to multi-day (CNC / carried F&O).',
+  carry:'Positional, held overnight to multi-day (CNC / carried F&O).',
   intraday:'Entered and squared off within the same session.',
   swing:'Held a few days on a directional or volatility view.',
-  expiry:'Anchored to the options expiry cycle — theta, pin, expiry-day.',
-  scalper:'Very short intraday — many small, fast trades.',
+  expiry:'Anchored to the options expiry cycle, theta, pin, expiry-day.',
+  scalper:'Very short intraday, many small, fast trades.',
 };
 // per-instrument holding-style tabs (order as the user mapped them)
 const HOLD_TABS={
@@ -3404,28 +3404,28 @@ const STRAT_LIBRARY=[
   {id:'lib_macross',name:'Moving-Average Crossover',fam:'trend',risk:'Moderate',seg:'index',best:'Bull',
    what:'Goes long when a fast MA crosses above a slow MA; flat/short when it crosses below.',
    rule:'BUY when price/fast-MA crosses above the slow MA (e.g. 50 over 200); exit on the opposite cross.',
-   works:'Sustained, trending markets — it catches the meat of a directional move.',
-   fails:'Choppy, sideways markets — it gets whipsawed, buying high and selling low repeatedly.',
+   works:'Sustained, trending markets, it catches the meat of a directional move.',
+   fails:'Choppy, sideways markets, it gets whipsawed, buying high and selling low repeatedly.',
    guard:'Add a regime filter (only take longs in Bull) and a hard stop; stand aside in Choppy.',
    params:[['Fast MA','50'],['Slow MA','200'],['Stop','ATR×2']]},
   {id:'lib_ema921',name:'EMA 9/21 Momentum',fam:'trend',risk:'Aggressive',seg:'index',best:'Bull',
    what:'Faster intraday version of the crossover for momentum bursts.',
    rule:'Long when EMA9 > EMA21 and price holds above both; exit when EMA9 crosses back below EMA21.',
    works:'Strong intraday trends and momentum days with a clear direction.',
-   fails:'Range-bound, low-volume sessions — frequent small losses pile up.',
+   fails:'Range-bound, low-volume sessions, frequent small losses pile up.',
    guard:'Cap trades/day, trade only the trending session window, square off by close.',
    params:[['Fast EMA','9'],['Slow EMA','21'],['Max trades/day','3']]},
   {id:'lib_supertrend',name:'Supertrend Follow',fam:'trend',risk:'Moderate',seg:'fno',best:'Bull',
    what:'Trails an ATR-based band; flips long/short as price closes through it.',
    rule:'Long when price closes above the Supertrend line; reverse/flat when it closes below.',
-   works:'Clean trends with steady volatility — the band trails the move well.',
+   works:'Clean trends with steady volatility, the band trails the move well.',
    fails:'Sharp volatility spikes flip it repeatedly (false reversals).',
    guard:'Use a longer ATR period in High-Vol; size down when VIX is elevated.',
    params:[['ATR period','10'],['Multiplier','3']]},
   {id:'lib_adx',name:'ADX Trend Filter',fam:'trend',risk:'Conservative',seg:'equity',best:'Bull',
    what:'Only trades when trend strength (ADX) confirms a real trend exists.',
    rule:'Take trend entries only when ADX > 25 and rising; otherwise stay flat.',
-   works:'As a filter on top of any trend system — it cuts the worst chop trades.',
+   works:'As a filter on top of any trend system, it cuts the worst chop trades.',
    fails:'Lags at trend births and ends; can keep you out of early moves.',
    guard:'Pair with a momentum trigger so you are not late; never trade ADX < 20.',
    params:[['ADX threshold','25'],['Lookback','14']]},
@@ -3433,14 +3433,14 @@ const STRAT_LIBRARY=[
    what:'Holds the strongest stocks in a universe, drops the laggards.',
    rule:'Rank a universe by 3–6 month return; hold the top decile, rebalance monthly.',
    works:'Trending broad markets where leadership persists.',
-   fails:'Sharp reversals/crashes — last month’s winners fall hardest.',
+   fails:'Sharp reversals/crashes, last month’s winners fall hardest.',
    guard:'Add a market-trend filter (go to cash below the 200-DMA of the index).',
    params:[['Lookback','6mo'],['Top N','10'],['Rebalance','Monthly']]},
   // ---- Mean Reversion ----
   {id:'lib_rsi2',name:'RSI(2) Pullback',fam:'meanrev',risk:'Moderate',seg:'equity',best:'Bull',
    what:'Buys short, sharp dips inside an established uptrend.',
    rule:'In an uptrend (price > 200-DMA), buy when RSI(2) < 10; exit when RSI(2) > 70 or on a time stop.',
-   works:'Uptrending markets that pull back and resume — high win rate.',
+   works:'Uptrending markets that pull back and resume, high win rate.',
    fails:'Catches a falling knife if the uptrend has actually broken.',
    guard:'Never fade without the trend filter; hard time-stop so a loser can’t compound.',
    params:[['RSI period','2'],['Entry','<10'],['Exit','>70']]},
@@ -3448,21 +3448,21 @@ const STRAT_LIBRARY=[
    what:'Fades touches of the outer band back toward the mean.',
    rule:'Buy a close below the lower band, exit at the middle band; mirror for shorts.',
    works:'Range-bound, mean-reverting names with stable volatility.',
-   fails:'Trending breakouts — “cheap” keeps getting cheaper.',
+   fails:'Trending breakouts, “cheap” keeps getting cheaper.',
    guard:'Skip when bands are expanding fast (volatility regime change); stop beyond the band.',
    params:[['Period','20'],['StdDev','2']]},
   {id:'lib_vwaprev',name:'VWAP Reversion',fam:'meanrev',risk:'Aggressive',seg:'index',best:'Choppy',
    what:'Intraday fade of price stretched far from VWAP back to it.',
    rule:'Fade when price is >N stdev from VWAP with no fresh news; target VWAP.',
    works:'Liquid intraday instruments on balanced, two-sided days.',
-   fails:'Trend days — price rides far from VWAP and never returns.',
+   fails:'Trend days, price rides far from VWAP and never returns.',
    guard:'Detect trend-day early (opening drive) and disable; tight per-trade stop.',
    params:[['Band','2σ'],['Target','VWAP']]},
   {id:'lib_gapfill',name:'Gap-Fill Fade',fam:'meanrev',risk:'Aggressive',seg:'equity',best:'Choppy',
    what:'Fades an overnight gap betting it fills toward the prior close.',
    rule:'On a moderate gap with no catalyst, fade toward the prior close; stop beyond the gap extreme.',
    works:'Emotion-driven gaps with no real news behind them.',
-   fails:'News/results gaps that run — fading those is how accounts blow up.',
+   fails:'News/results gaps that run, fading those is how accounts blow up.',
    guard:'Never fade an earnings/news gap; cap gap size; hard stop at the day extreme.',
    params:[['Max gap','2%'],['Stop','Day extreme']]},
   // ---- Breakout / Volatility ----
@@ -3474,7 +3474,7 @@ const STRAT_LIBRARY=[
    guard:'Require a volume/ATR expansion to confirm; one re-entry max; square off intraday.',
    params:[['Range','First 15m'],['Confirm','Volume>avg']]},
   {id:'lib_donchian',name:'20-Day High Breakout',fam:'breakout',risk:'Moderate',seg:'equity',best:'Bull',
-   what:'The classic Turtle breakout — buy new highs, ride the trend.',
+   what:'The classic Turtle breakout, buy new highs, ride the trend.',
    rule:'Buy a close above the 20-day high; trail with the 10-day low; exit on the trail.',
    works:'Strong, persistent trends and momentum regimes.',
    fails:'Whipsaws at range edges in sideways markets.',
@@ -3491,7 +3491,7 @@ const STRAT_LIBRARY=[
    what:'Buys breakouts from tightening bases (contracting volatility).',
    rule:'Identify successively tighter pullbacks on declining volume; buy the pivot breakout.',
    works:'Leading stocks in bull markets forming clean bases.',
-   fails:'Late-stage bases and bear markets — most breakouts fail.',
+   fails:'Late-stage bases and bear markets, most breakouts fail.',
    guard:'Tight stop under the pivot; only in confirmed uptrends.',
    params:[['Base','Tightening'],['Stop','Under pivot']]},
   // ---- Time / Calendar ----
@@ -3503,38 +3503,38 @@ const STRAT_LIBRARY=[
    guard:'Predefined SL/target, one shot per day, hard square-off time.',
    params:[['Entry','09:20'],['Square-off','15:15']]},
   {id:'lib_eodsq',name:'Intraday Auto Square-off',fam:'time',risk:'Conservative',seg:'any',best:'Any',
-   what:'A discipline overlay — flatten everything before the close, no overnight risk.',
+   what:'A discipline overlay, flatten everything before the close, no overnight risk.',
    rule:'Force-exit all intraday positions at a set time (e.g. 15:15) regardless of P&L.',
-   works:'Every intraday strategy — removes gap risk and emotional holding.',
+   works:'Every intraday strategy, removes gap risk and emotional holding.',
    fails:'Can exit a winner early; that is the price of zero overnight risk.',
-   guard:'This IS the guard — pair with any intraday system.',
+   guard:'This IS the guard, pair with any intraday system.',
    params:[['Square-off','15:15']]},
   {id:'lib_btst',name:'BTST Momentum',fam:'time',risk:'Aggressive',seg:'equity',best:'Bull',
    what:'Buy strong-closing stocks today, sell tomorrow on follow-through.',
    rule:'Buy names closing at day highs on volume; exit next morning on strength or a stop.',
    works:'Strong-trend markets with overnight continuation.',
-   fails:'Overnight gap-downs on negative global cues — full overnight risk.',
+   fails:'Overnight gap-downs on negative global cues, full overnight risk.',
    guard:'Small size; avoid event nights; predefined gap-down exit.',
    params:[['Hold','1 night'],['Exit','Next open']]},
   {id:'lib_expiry',name:'Expiry-Day Theta',fam:'time',risk:'Aggressive',seg:'options',best:'Choppy',
    what:'Sells options on expiry day to harvest the fastest time decay.',
    rule:'Sell ATM/OTM options near the open on expiry; manage with a stop-loss on premium.',
    works:'Pinned, low-movement expiry sessions.',
-   fails:'A trending expiry day — short options can lose multiples of the credit fast.',
+   fails:'A trending expiry day, short options can lose multiples of the credit fast.',
    guard:'Hard premium SL, defined-risk spreads not naked, size for the worst case.',
    params:[['Day','Expiry'],['Stop','2× credit']]},
   {id:'lib_dow',name:'Day-of-Week / Seasonality',fam:'time',risk:'Conservative',seg:'index',best:'Any',
    what:'Exploits recurring calendar tendencies (e.g. monthly expiry, turn-of-month).',
    rule:'Take positions only on statistically favourable calendar days from backtests.',
    works:'When a seasonal edge is statistically robust out-of-sample.',
-   fails:'Overfitting — many “seasonal” edges are noise that vanish live.',
+   fails:'Overfitting, many “seasonal” edges are noise that vanish live.',
    guard:'Demand a large sample + OOS proof before trusting; tiny size.',
    params:[['Edge','Calendar'],['Proof','OOS required']]},
   // ---- Stat-Arb / Pairs ----
   {id:'lib_pairs',name:'Pairs Trading',fam:'statarb',risk:'Moderate',seg:'equity',best:'Choppy',
    what:'Long one stock, short a correlated one when their spread stretches.',
    rule:'When the spread z-score > 2, short the rich / long the cheap; exit at mean reversion.',
-   works:'Stable, cointegrated pairs in range-bound markets — market-neutral.',
+   works:'Stable, cointegrated pairs in range-bound markets, market-neutral.',
    fails:'When the relationship breaks (a fundamental change in one name).',
    guard:'Re-test cointegration regularly; stop if the spread keeps diverging.',
    params:[['Entry','z>2'],['Exit','z→0']]},
@@ -3543,7 +3543,7 @@ const STRAT_LIBRARY=[
    rule:'Mean-revert the historical ratio band between two related contracts.',
    works:'Structurally linked instruments with a stable ratio.',
    fails:'Regime shifts that permanently re-rate one leg.',
-   guard:'Hard spread stop; cap leverage — spreads still blow out.',
+   guard:'Hard spread stop; cap leverage, spreads still blow out.',
    params:[['Band','Historical'],['Hedge','β-weighted']]},
   {id:'lib_idxarb',name:'Index Arbitrage',fam:'statarb',risk:'Conservative',seg:'index',best:'Any',
    what:'Captures mispricing between an index and its futures/constituents.',
@@ -3564,7 +3564,7 @@ const STRAT_LIBRARY=[
    what:'Front-runs forced index-fund buying/selling on add/drop announcements.',
    rule:'Buy confirmed index additions / sell deletions ahead of the effective date.',
    works:'Large, predictable passive flows around rebalance dates.',
-   fails:'Crowded trade — much of the move is already priced in.',
+   fails:'Crowded trade, much of the move is already priced in.',
    guard:'Enter early on the announcement, exit into the rebalance-day flow.',
    params:[['Trigger','Add/Drop'],['Exit','Effective date']]},
   {id:'lib_news',name:'News-Catalyst Momentum',fam:'event',risk:'Aggressive',seg:'equity',best:'High-Vol',
@@ -3614,21 +3614,21 @@ const STRAT_LIBRARY=[
   {id:'lib_mompf',name:'Momentum Factor Portfolio',fam:'factor',risk:'Moderate',seg:'equity',best:'Bull',
    what:'Systematic long basket of the highest-momentum names.',
    rule:'Hold top-momentum decile, equal-weight, monthly rebalance, market-trend filter.',
-   works:'Persistent bull trends — momentum is a durable long-run factor.',
+   works:'Persistent bull trends, momentum is a durable long-run factor.',
    fails:'Momentum crashes at sharp market turns.',
    guard:'De-risk to cash below the index 200-DMA; cap volatility per name.',
    params:[['Factor','12-1 mom'],['Filter','Index 200-DMA']]},
   {id:'lib_lowvol',name:'Low-Volatility Factor',fam:'factor',risk:'Conservative',seg:'equity',best:'Bear',
    what:'Holds the lowest-volatility names for smoother, defensive returns.',
    rule:'Rank universe by realised volatility; hold the lowest-vol basket, rebalance quarterly.',
-   works:'Choppy/bear markets — it draws down far less.',
+   works:'Choppy/bear markets, it draws down far less.',
    fails:'Lags badly in roaring bull markets.',
    guard:'Use as the defensive sleeve; combine with momentum for balance.',
    params:[['Factor','Low vol'],['Rebalance','Quarterly']]},
   {id:'lib_quality',name:'Quality / Value Tilt',fam:'factor',risk:'Conservative',seg:'equity',best:'Any',
    what:'Owns financially strong, reasonably-priced companies for the long run.',
    rule:'Screen for high ROE/low debt + sensible valuation; hold long-term, rebalance yearly.',
-   works:'Long horizons — quality compounds and survives downturns.',
+   works:'Long horizons, quality compounds and survives downturns.',
    fails:'Can underperform for long stretches when junk rallies.',
    guard:'Diversify; this is a survive-and-compound sleeve, not a trade.',
    params:[['Screen','ROE/Debt/Val'],['Horizon','Years']]},
@@ -3636,15 +3636,15 @@ const STRAT_LIBRARY=[
   {id:'lib_regimeswitch',name:'Regime-Switching Meta',fam:'ml',risk:'Moderate',seg:'index',best:'Any',
    what:'A meta-strategy that turns sub-strategies on/off by the live regime.',
    rule:'Detect regime (trend/chop/high-vol); run only the sub-strategy validated for that regime.',
-   works:'Across full market cycles — it stands aside when nothing fits.',
+   works:'Across full market cycles, it stands aside when nothing fits.',
    fails:'Regime detection lags at turning points; transitions are costly.',
-   guard:'This is the survival engine — when uncertain, it goes to cash.',
+   guard:'This is the survival engine, when uncertain, it goes to cash.',
    params:[['Detector','VIX+breadth+trend'],['Default','Stand aside']]},
   {id:'lib_mlsignal',name:'ML Predictive Signal',fam:'ml',risk:'Aggressive',seg:'equity',best:'Any',
    what:'A trained model outputs a directional probability used to size trades.',
    rule:'Enter when model confidence clears a threshold; size proportional to confidence.',
    works:'When the model has a genuine, walk-forward-validated edge.',
-   fails:'Overfitting and regime drift — the model decays as markets change.',
+   fails:'Overfitting and regime drift, the model decays as markets change.',
    guard:'Strict walk-forward validation, live monitoring, kill-switch on decay.',
    params:[['Validation','Walk-forward'],['Sizing','Confidence']]},
   // ---- Options · Directional ----
@@ -3658,7 +3658,7 @@ const STRAT_LIBRARY=[
   {id:'lib_debit',name:'Vertical Debit Spread',fam:'opt_dir',risk:'Moderate',seg:'options',best:'Bull',
    what:'Directional bet with lower cost and lower time-decay drag than a naked long.',
    rule:'Buy a near option, sell a further one in the same direction; defined risk & reward.',
-   works:'Moderate directional moves — cheaper and less IV-sensitive.',
+   works:'Moderate directional moves, cheaper and less IV-sensitive.',
    fails:'Capped upside; still loses if the move doesn’t come.',
    guard:'Risk = net debit, known up front; pick expiries with room for the move.',
    params:[['Structure','Buy+Sell'],['Risk','Net debit']]},
@@ -3667,11 +3667,11 @@ const STRAT_LIBRARY=[
    what:'Sell an OTM call and put to collect premium when price stays in a range.',
    rule:'Sell OTM call + put; profit if price stays between strikes through expiry.',
    works:'Range-bound, falling-volatility markets.',
-   fails:'A big move on either side — losses are theoretically unlimited if naked.',
+   fails:'A big move on either side, losses are theoretically unlimited if naked.',
    guard:'Prefer the defined-risk Iron Condor; hard SL on premium; never naked + unhedged.',
    params:[['Strikes','OTM C+P'],['Defend','SL on premium']]},
   {id:'lib_condor',name:'Iron Condor',fam:'opt_income',risk:'Moderate',seg:'options',best:'Choppy',
-   what:'A defined-risk strangle — sells a range, buys wings to cap the tails.',
+   what:'A defined-risk strangle, sells a range, buys wings to cap the tails.',
    rule:'Sell an OTM call & put spread; max loss is capped by the long wings.',
    works:'Range-bound markets with elevated IV to sell into.',
    fails:'Trending/break-out moves push price through a short strike.',
@@ -3693,14 +3693,14 @@ const STRAT_LIBRARY=[
    params:[['Need','Own stock'],['Strike','OTM call']]},
   // ---- Options · Volatility / Neutral ----
   {id:'lib_straddle',name:'Long Straddle',fam:'opt_vol',risk:'Aggressive',seg:'options',best:'High-Vol',
-   what:'Buy a call AND a put — profits from a big move either direction.',
+   what:'Buy a call AND a put, profits from a big move either direction.',
    rule:'Buy ATM call + put before an expected volatility event; profit on a large move.',
    works:'Pre-event when a large move is likely and IV is still cheap.',
-   fails:'IV crush after the event + a small move — both legs bleed.',
+   fails:'IV crush after the event + a small move, both legs bleed.',
    guard:'Enter before IV ramps; exit fast post-event; cap premium at risk.',
    params:[['Strikes','ATM C+P'],['Edge','Cheap IV']]},
   {id:'lib_calendar',name:'Calendar Spread',fam:'opt_vol',risk:'Moderate',seg:'options',best:'Choppy',
-   what:'Sell a near-dated option, buy a far-dated one — harvest faster near-term decay.',
+   what:'Sell a near-dated option, buy a far-dated one, harvest faster near-term decay.',
    rule:'Same strike, sell front expiry / buy back expiry; profit from differential theta.',
    works:'Stable price near the strike with a favourable term structure.',
    fails:'A large directional move away from the strike hurts both legs.',
@@ -3710,7 +3710,7 @@ const STRAT_LIBRARY=[
    what:'Hold a net-zero-delta option book and earn time decay, re-hedging as it drifts.',
    rule:'Sell premium, keep delta near zero by adjusting hedges as price moves.',
    works:'Range-bound, mean-reverting volatility with active management.',
-   fails:'Gamma risk — fast moves force costly re-hedging (negative gamma bleed).',
+   fails:'Gamma risk, fast moves force costly re-hedging (negative gamma bleed).',
    guard:'Continuous monitoring + adjustment; cap gamma exposure; size small.',
    params:[['Target','Δ≈0'],['Risk','Gamma']]},
   // ---- Cash-Futures / Arb ----
@@ -3735,9 +3735,9 @@ const LIB_RISK_CLASS={Conservative:'b-up',Moderate:'b-neu',Aggressive:'b-warn'};
    CRYPTO MARKET LAYER: the Algo Studio can scope to Indian (Kite)
    or Crypto (Binance). REAL prices only, no fake fallback: Binance's
    public data mirror (no API key, read-only). Strategy EXECUTION is
-   preview/paper — honestly flagged. Real crypto orders would route via
+   preview/paper, honestly flagged. Real crypto orders would route via
    the Binance Algo API (TWAP/POV), which needs server-side key signing
-   — that's the roadmap engine, never the browser.
+  , that's the roadmap engine, never the browser.
    ============================================================ */
 const CRYPTO_API='https://data-api.binance.vision';   // public market-data mirror: CORS-ok, not geo-fenced, no key
 const CRYPTO_UNIVERSE=[
@@ -3757,19 +3757,19 @@ const CRYPTO_STRATEGIES=[
   {id:'cx_btc_trend',bid:'macross',name:'BTC Trend (MA200)',cat:'Trend',risk:'Moderate',pair:'BTCUSDT',wired:true,
    what:'Long BTC while it holds above its long-term moving average; flat below.',
    rule:'BUY when price closes above the 200-period MA; exit on a close back below.',
-   works:'Strong, sustained bull legs — crypto trends long and hard.',
+   works:'Strong, sustained bull legs, crypto trends long and hard.',
    fails:'Chop around the MA whipsaws you in and out at small losses repeatedly.',
    guard:'Only long above the MA; ATR-sized stop; one position; stand aside in chop.'},
   {id:'cx_grid',bid:'bollinger',name:'Range Grid (ETH)',cat:'Mean-Reversion',risk:'Aggressive',pair:'ETHUSDT',wired:true,
    what:'A ladder of staggered buys & sells across a defined band, harvesting oscillation.',
    rule:'Buy each rung down, sell each rung up within a set price band.',
-   works:'Sideways, high-volatility ranges — it monetises the wiggle.',
+   works:'Sideways, high-volatility ranges, it monetises the wiggle.',
    fails:'A clean breakout leaves you holding the whole ladder against the move.',
    guard:'Hard band-exit if price leaves the range; cap total grid exposure & leverage.'},
   {id:'cx_funding',bid:'perp_funding',name:'Funding-Rate Carry',cat:'Income',risk:'Moderate',pair:'BTC spot vs perp',
-   what:'Delta-neutral: long spot, short perpetual — collect funding each interval.',
+   what:'Delta-neutral: long spot, short perpetual, collect funding each interval.',
    rule:'When funding is positive, hold spot + short perp; pocket the funding payments.',
-   works:'Calm, positive-funding regimes — steady market-neutral yield.',
+   works:'Calm, positive-funding regimes, steady market-neutral yield.',
    fails:'Funding flips negative or the basis blows out in a liquidation cascade.',
    guard:'Watch funding + basis; unwind on negative funding; respect exchange limits.'},
   {id:'cx_rsi2',bid:'rsi2',name:'RSI-2 Dip (Alts)',cat:'Mean-Reversion',risk:'Aggressive',pair:'SOLUSDT',wired:true,
@@ -3785,13 +3785,13 @@ const CRYPTO_STRATEGIES=[
    fails:'False breakouts in thin liquidity hours snap straight back.',
    guard:'Require volume confirmation; trade liquid majors; trail, don’t fix a target.'},
   {id:'cx_pairs',bid:'pairs',name:'ETH/BTC Ratio Pairs',cat:'Stat-Arb',risk:'Moderate',pair:'ETH vs BTC',
-   what:'Trades the ETH/BTC ratio back to its mean — neutral to overall crypto beta.',
+   what:'Trades the ETH/BTC ratio back to its mean, neutral to overall crypto beta.',
    rule:'Short the rich leg, long the cheap leg when the ratio z-score is stretched.',
    works:'When ETH & BTC stay cointegrated and the spread mean-reverts.',
    fails:'A narrative regime-shift breaks the relationship and the spread runs.',
    guard:'Z-score entry/exit bands; stop if the spread breaks its historical range.'},
   {id:'cx_dca',name:'Disciplined DCA',cat:'Time / Calendar',risk:'Conservative',pair:'BTCUSDT',
-   what:'Cost-averages a fixed amount on a fixed schedule — accumulation, not timing.',
+   what:'Cost-averages a fixed amount on a fixed schedule, accumulation, not timing.',
    rule:'Buy a fixed notional every interval regardless of price; optional dip boosts.',
    works:'Long-horizon accumulation through full cycles; removes timing risk.',
    fails:'Prolonged bear markets test conviction; capital sits in drawdown.',
@@ -3802,6 +3802,42 @@ const CRYPTO_STRATEGIES=[
    works:'Persistent momentum regimes where winners keep winning.',
    fails:'Sharp momentum crashes reverse and gut the whole basket at once.',
    guard:'Cap per-name weight; vol-target the basket; kill-switch on a drawdown limit.'},
+  // These 5 were live on the worker (REGISTRY, featured:true - the same "proven net of costs" bar
+  // as the cards above) with no customer-facing card at all until now. The other 8 REGISTRY entries
+  // (orb, vwap_rev, vwap_mom, ema_scalp, bb_breakout, supertrend, vwap_pull, rsi_intraday) stay
+  // deliberately uncarded: strategies.py's own comments mark them "non-featured until validated" or
+  // "fail after costs so far" - surfacing those as Deploy-worthy would recommend strategies the
+  // team's own testing found unprofitable, with no disclosure.
+  {id:'cx_trendfollow',bid:'trend_follow',name:'Trend Rider (20/100)',cat:'Trend',risk:'Moderate',pair:'ETHUSDT',wired:true,
+   what:'Longs a fresh 20-day high while price holds above its 100-day trend average, then rides the move with a trailing stop.',
+   rule:'BUY when price makes a new 20-bar high AND price is above the 100-bar average; trail-stop exit, no fixed target.',
+   works:'Sustained trends with room to run, a slower, wider-net breakout system.',
+   fails:'Choppy, range-bound markets whipsaw the 20-bar high trigger with no follow-through.',
+   guard:'ATR-sized trailing stop; only long above the 100-bar average; one position at a time.'},
+  {id:'cx_emacross',bid:'ema_cross',name:'EMA Cross (20/50)',cat:'Trend',risk:'Moderate',pair:'BNBUSDT',wired:true,
+   what:'A faster trend-follower than the 200-day golden cross, reacts to shifts in weeks, not months.',
+   rule:'BUY when the 20-EMA crosses above the 50-EMA and price holds above the 50-EMA; exit on the cross back down.',
+   works:'Medium-length trends where a 200-day filter reacts too slowly.',
+   fails:'Sideways chop triggers repeated false crossovers, each one a small loss.',
+   guard:'ATR stop; exits immediately on the EMA cross-down, no waiting for confirmation.'},
+  {id:'cx_adxtrend',bid:'adx_trend',name:'ADX Trend Filter',cat:'Trend',risk:'Conservative',pair:'SOLUSDT',wired:true,
+   what:'Only trades when the trend-strength indicator (ADX) confirms a real trend is underway, sits out everything else.',
+   rule:'BUY when ADX ≥ 25, +DI leads -DI, and price is above its 50-bar average; exit when the trend fades (DI flips or ADX drops).',
+   works:'Clean, strongly-trending markets, the ADX filter is built specifically to reject chop.',
+   fails:'Regime transitions, where ADX confirms a trend just as it is about to end.',
+   guard:'ADX floor before any entry; exits fast on trend fade, not just full reversal.'},
+  {id:'cx_zscore',bid:'zscore',name:'Z-Score Snapback (10-bar)',cat:'Mean-Reversion',risk:'Aggressive',pair:'XRPUSDT',wired:true,
+   what:'A faster, shallower dip-buyer than the Bollinger reversion card, reacts to smaller, quicker stretches.',
+   rule:'BUY when price is 1.5+ standard deviations below its 10-bar average inside an uptrend; exit on reversion to the mean.',
+   works:'Quick, sharp dips inside an established uptrend that snap back within days.',
+   fails:'A real trend break, buying every shallow dip on the way down.',
+   guard:'Only trades inside a 200-bar uptrend filter; ATR stop; exits on mean-reversion, not a fixed target.'},
+  {id:'cx_nr7',bid:'nr7',name:'NR7 Coil Breakout',cat:'Breakout',risk:'Aggressive',pair:'BTCUSDT',wired:true,
+   what:'Waits for the tightest daily range in 7 days, a coiled spring, then buys the break above it.',
+   rule:'BUY on a close above the narrowest-7-day bar\'s high, only inside a 50-bar uptrend; exit below the trend average.',
+   works:'The volatility contraction genuinely precedes an expansion move (a real breakout, not a fakeout).',
+   fails:'A quiet coil that just stays quiet, or breaks and immediately reverses.',
+   guard:'Uptrend filter before any entry; ATR stop; exits on a trend-average break, not just a stall.'},
 ];
 async function loadCrypto(){
   if(CRYPTO.busy) return; CRYPTO.busy=true;
@@ -3888,8 +3924,8 @@ function cryptoStatusBar(){
   const live=CRYPTO.live, t=CRYPTO.t?new Date(CRYPTO.t).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'';
   const cells=[
     `<div class="asb-cell"><span class="asb-l">Venue${infoI('Binance public market data (read-only, no API key). Real prices, never simulated.')}</span><span class="asb-v"><span class="live-dot ${live?'live':''}"></span>Binance</span></div>`,
-    `<div class="asb-cell"><span class="asb-l">Data</span><span class="asb-v">${live?`● LIVE${t?` · ${t}`:''}`:(CRYPTO.error?'Unreachable — retrying':'Connecting…')}</span></div>`,
-    `<div class="asb-cell"><span class="asb-l">Mode${infoI('Live 24/7 paper engine on real Binance data — simulated fills, no real crypto orders are placed. Live execution (Binance Algo API, server-signed) is on the roadmap.')}</span><span class="asb-v"><span class="mode-badge paper">PAPER · live</span></span></div>`,
+    `<div class="asb-cell"><span class="asb-l">Data</span><span class="asb-v">${live?`● LIVE${t?` · ${t}`:''}`:(CRYPTO.error?'Unreachable, retrying':'Connecting…')}</span></div>`,
+    `<div class="asb-cell"><span class="asb-l">Mode${infoI('Live 24/7 paper engine on real Binance data, simulated fills, no real crypto orders are placed. Live execution (Binance Algo API, server-signed) is on the roadmap.')}</span><span class="asb-v"><span class="mode-badge paper">PAPER · live</span></span></div>`,
     `<div class="asb-cell asb-grow"><span class="asb-l">Market</span><span class="asb-v">Crypto · USDT spot</span></div>`
   ].join('<span class="asb-div"></span>');
   return `<div class="algo-statusbar${live?'':' off'}">${cells}</div>`;
@@ -3901,7 +3937,7 @@ function cryptoPriceStrip(){
       <div class="cx-px"><span class="cx-ltp num"${q?` data-raw="${q.ltp}"`:''}>${q?cryptoFmt(q.ltp):'-'}</span>
         <span class="cx-chg num ${cls(ch)}" data-cchg>${ch==null?'·':pct(ch)+' · 24h'}</span></div></div>`; }).join('');
   const note=CRYPTO.live?`<span class="cx-src live">● Live · Binance · 24h change</span>`
-    :(CRYPTO.error?`<span class="cx-src off">Can’t reach Binance — retrying…</span>`:`<span class="cx-src off">Connecting to Binance…</span>`);
+    :(CRYPTO.error?`<span class="cx-src off">Can’t reach Binance, retrying…</span>`:`<span class="cx-src off">Connecting to Binance…</span>`);
   return `<div class="cx-strip-wrap"><div class="cx-strip-head">${icon('spark',13)}<b>Live crypto prices</b>${note}</div><div class="cx-strip">${tiles}</div></div>`;
 }
 function patchCryptoPrices(){
@@ -3911,7 +3947,7 @@ function patchCryptoPrices(){
       l.textContent=txt; l.dataset.raw=q.ltp; if(dir){ l.classList.remove('tick-up','tick-dn'); void l.offsetWidth; l.classList.add(dir>0?'tick-up':'tick-dn'); } } }
     if(c){ c.textContent=pct(q.chg)+' · 24h'; c.className='cx-chg num '+cls(q.chg); c.setAttribute('data-cchg',''); } });
   const note=document.querySelector('.cx-strip-head .cx-src');
-  if(note){ note.className='cx-src '+(CRYPTO.live?'live':'off'); note.textContent=CRYPTO.live?'● Live · Binance · 24h change':(CRYPTO.error?'Can’t reach Binance — retrying…':'Connecting to Binance…'); }
+  if(note){ note.className='cx-src '+(CRYPTO.live?'live':'off'); note.textContent=CRYPTO.live?'● Live · Binance · 24h change':(CRYPTO.error?'Can’t reach Binance, retrying…':'Connecting to Binance…'); }
 }
 function cryptoStratCard(s){
   const rk=LIB_RISK_CLASS[s.risk]||'b-neu';
@@ -3942,7 +3978,7 @@ function cryptoMarket(){
   if(!CRYPTOMON.loaded&&!CRYPTOMON.busy) loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='library') renderAlgo(); });
   // Honest framing: the crypto paper engine IS live 24/7 (not "preview/roadmap"), real Binance prices,
   // simulated fills, no real orders. Live execution unlocks per strategy once proven + connected + armed.
-  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Live crypto paper book — 24/7.</b> Prices are <b>real</b> (Binance), fills are <b>simulated</b> — <b>no real orders are placed</b>. These strategies run continuously in paper; watch them live on <b>Monitor</b>. Live execution unlocks <i>per strategy</i> only once it clears the Go-Live bar, you connect Binance, and arm ALLOW_LIVE.</span></div>`;
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Live crypto paper book, 24/7.</b> Prices are <b>real</b> (Binance), fills are <b>simulated</b>: <b>no real orders are placed</b>. These strategies run continuously in paper; watch them live on <b>Monitor</b>. Live execution unlocks <i>per strategy</i> only once it clears the Go-Live bar, you connect Binance, and arm ALLOW_LIVE.</span></div>`;
   const stat=secStats([
     {l:'Instruments',v:String(CRYPTO_UNIVERSE.length),s:'USDT majors'},
     {l:'Strategies',v:String(CRYPTO_STRATEGIES.length),s:'running in paper'},
@@ -3968,12 +4004,12 @@ function cryptoOpportunity(){
   const n=Math.min(5,Math.ceil(m.length/2)), lead=m.slice(0,n), lag=m.slice(-n).reverse();
   const row=r=>`<div class="cx-mv-row"><div class="cx-mv-tk"><b>${esc(r.tk)}</b><span>${esc(r.name)}</span></div><span class="cx-mv-px num">${cryptoFmt(r.q.ltp)}</span><span class="cx-mv-chg num ${cls(r.q.chg)}">${pct(r.q.chg)}</span></div>`;
   const col=(title,arr,ic)=>`<div class="cx-mv-col"><div class="cx-mv-h">${icon(ic,12)} ${title}</div>${arr.map(row).join('')||'<div class="cx-mv-empty">—</div>'}</div>`;
-  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Honest scan.</b> These are <b>real 24h moves</b> from Binance — relative leaders vs laggards, a momentum snapshot and <b>not a validated signal</b>. The explainable, scored crypto opportunity engine arrives with the strategy engine; nothing is traded.</span></div>`;
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Honest scan.</b> These are <b>real 24h moves</b> from Binance, relative leaders vs laggards, a momentum snapshot and <b>not a validated signal</b>. The explainable, scored crypto opportunity engine arrives with the strategy engine; nothing is traded.</span></div>`;
   return note+`<div class="cx-movers">${col('Leaders · 24h',lead,'trendUp')}${col('Laggards · 24h',lag,'alert')}</div>`;
 }
 // Templates grouped by family: no fabricated track record; real ranking unlocks with the engine.
 function cryptoLeaderboard(){
-  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>No fabricated track record.</b> Crypto strategies are templates — there's no live performance to rank yet, so we won't invent one. They're grouped by family below; a real, forward-tested leaderboard unlocks with the crypto paper engine.</span></div>`;
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>No fabricated track record.</b> Crypto strategies are templates, there's no live performance to rank yet, so we won't invent one. They're grouped by family below; a real, forward-tested leaderboard unlocks with the crypto paper engine.</span></div>`;
   const byCat={}; CRYPTO_STRATEGIES.forEach(s=>{(byCat[s.cat]=byCat[s.cat]||[]).push(s);});
   const groups=Object.keys(byCat).map(cat=>`<div class="cx-lb-grp"><div class="cx-lb-h">${esc(cat)} <i>${byCat[cat].length}</i></div>${byCat[cat].map(s=>`<div class="cx-lb-row"><b>${esc(s.name)}</b><span class="cx-cat">${esc(s.pair)}</span><span class="badge ${LIB_RISK_CLASS[s.risk]||'b-neu'}">${esc(s.risk)}</span></div>`).join('')}</div>`).join('');
   return note+`<div class="cx-lb">${groups}</div>`;
@@ -4012,7 +4048,7 @@ function cryptoScopeBar(){
       <span class="lii-top">${icon(ic,15)}<b>${lab}</b><i class="lii-n">${c.n}</i></span>
       <span class="lii-desc">${c.n?esc(desc)+' · <span data-cxseg="'+id+'">'+cxMoney(c.pnl)+'</span>':esc(desc)+' · coming online'}</span>${dep}</button>`; }).join('');
   const totBook=by.spot.book+by.perps.book+by.options.book;
-  const note=totBook>0?`<div class="av-scope-note">${icon('shield',12)}<span><b>Deployed</b> = capital-at-risk against the ${pool?cxAbs(pool)+' ':''}governed pool${pool?` (≈${(totBook/pool*100).toFixed(1)}% total exposure — matches the Risk Score)`:''}. Perps book only <b>20% margin</b>; options premium-selling ties up <b>~no notional</b>, so their margin/tail risk isn't reflected here.</span></div>`:'';
+  const note=totBook>0?`<div class="av-scope-note">${icon('shield',12)}<span><b>Deployed</b> = capital-at-risk against the ${pool?cxAbs(pool)+' ':''}governed pool${pool?` (≈${(totBook/pool*100).toFixed(1)}% total exposure, matches the Risk Score)`:''}. Perps book only <b>20% margin</b>; options premium-selling ties up <b>~no notional</b>, so their margin/tail risk isn't reflected here.</span></div>`:'';
   return `<div class="av-scope"><div class="lib-instr" role="tablist" aria-label="Crypto instrument class">${bar}</div>${note}</div>`;
 }
 // shared chip renderer (used by full render AND the in-place patch), one source of truth
@@ -4052,17 +4088,17 @@ function cryptoMonitor(){
   const d=CRYPTOMON.data;
   if(!d){ if(!CRYPTOMON.busy) loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); });
     return secEmpty('cpu','Loading crypto book…','Fetching the live crypto paper P&L from the bot on :8756.'); }
-  if(CRYPTOMON.err && !d.running){ return secEmpty('cpu','Bot API unreachable','Start the dashboard API + crypto harness in the bot folder — <b>python3 bot_api.py</b> then <b>python3 paper_trade_crypto.py</b>. Prices are real Binance; the book is paper.'); }
-  if(d.running===false){ return secEmpty('cpu','Crypto harness not running','Start it with <b>python3 paper_trade_crypto.py</b> in the bot folder — it runs 24/7 on live Binance data, paper only.'); }
+  if(CRYPTOMON.err && !d.running){ return secEmpty('cpu','Bot API unreachable','Start the dashboard API + crypto harness in the bot folder, <b>python3 bot_api.py</b> then <b>python3 paper_trade_crypto.py</b>. Prices are real Binance; the book is paper.'); }
+  if(d.running===false){ return secEmpty('cpu','Crypto harness not running','Start it with <b>python3 paper_trade_crypto.py</b> in the bot folder, it runs 24/7 on live Binance data, paper only.'); }
   const cur=state.algo.cinstr||'spot', g=d.governor||{};
   const scoped=(d.strategies||[]).filter(s=>(s.instr||'spot')===cur);
   const t=scoped.reduce((a,s)=>{a.realised+=s.realisedPnl||0;a.unreal+=s.openPnl||0;a.pnl+=s.paperPnl||0;a.open+=s.openPositions||0;return a;},{realised:0,unreal:0,pnl:0,open:0});
   const clsLabel=(CX_INSTR.find(x=>x[0]===cur)||[,'Spot'])[1];
   const upd=d.updated?new Date(d.updated).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'';
   const gate=cur==='perps'?' Perps can go long OR short and harvest funding.':cur==='options'?' Premium selling, regime-gated (never sold into a strong trend).':' Long-only on spot majors.';
-  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Live crypto paper book — ${esc(clsLabel)}.</b> Real Binance prices, simulated fills — <b>no crypto orders are placed</b>.${gate} Same survival-first Governor as the Indian book. P&L is USDT on a $${Math.round((d.capital||1e6)/1000)}K sizing sandbox.</span></div>`;
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Live crypto paper book, ${esc(clsLabel)}.</b> Real Binance prices, simulated fills, <b>no crypto orders are placed</b>.${gate} Same survival-first Governor as the Indian book. P&L is USDT on a $${Math.round((d.capital||1e6)/1000)}K sizing sandbox.</span></div>`;
   if(cur==='options' && !scoped.length){
-    return note+cryptoScopeBar()+secEmpty('layers','Crypto options — coming online','The crypto options desk (USDT-settled premium selling on Binance, regime-gated like the Indian iron-condor/strangle) is being wired next. Spot & Perpetuals are live now — switch the toggle above.'); }
+    return note+cryptoScopeBar()+secEmpty('layers','Crypto options, coming online','The crypto options desk (USDT-settled premium selling on Binance, regime-gated like the Indian iron-condor/strangle) is being wired next. Spot & Perpetuals are live now, switch the toggle above.'); }
   const stat=secStats([
     {l:'Realised',v:cxMoney(t.realised),s:'booked',tone:t.realised>0?'up':(t.realised<0?'down':''),id:'cxRealised'},
     {l:'Unrealised',v:cxMoney(t.unreal),s:'open · live',tone:t.unreal>0?'up':(t.unreal<0?'down':''),id:'cxUnreal'},
@@ -4103,13 +4139,13 @@ function cryptoMonitor(){
     const allocCtl=`<div class="mon-alloc"><div class="ma-h"><span>${icon('sliders',12)} Capital allocation</span><b class="ma-val" data-cxallocval="${esc(s.id)}">${wpct}%</b></div>
       <input class="ma-slider" type="range" min="0" max="100" step="5" value="${wpct}" data-cxalloc="${esc(s.id)}" aria-label="Allocation for ${esc(s.name)}">
       <div class="ma-scale"><span>Off</span><span>Full size</span></div>
-      <p class="ma-note">Caps how much of its normal size this strategy may use — <b>0% = paused</b> (no new trades; open ones still managed). The Governor's concentration caps still apply on top. Honoured by the engine next cycle.</p></div>`;
+      <p class="ma-note">Caps how much of its normal size this strategy may use, <b>0% = paused</b> (no new trades; open ones still managed). The Governor's concentration caps still apply on top. Honoured by the engine next cycle.</p></div>`;
     // "on deck": for a strategy stood down in THIS regime, which regimes it's PROVEN to win in
     // (why it's kept: it's your bench for those regimes). Answers "how are inactive strategies useful?"
     const curCell=fitMap[s.id], benched=curCell&&curCell.verdict==='unfit';
     const fitRegs=Object.entries(fitAllMap[s.id]||{}).filter(([r,c])=>c&&c.verdict==='fit').map(([r])=>r);
-    const onDeck=benched?`<div class="mon-ondeck">${icon('repeat',12)}<span><b>Stood down in ${esc(curReg)}</b> — it loses here, so the engine holds its capital in cash. ${fitRegs.length?`It's your bench for <b>${fitRegs.map(esc).join(' · ')}</b> — proven to win there, ready to redeploy the moment the regime turns.`:`No regime has cleared it yet — it stays benched, still gathering evidence.`}</span></div>`:'';
-    const expInner=(onDeck+posBlock+accLine+allocCtl)||`<div class="mon-exp-empty">No open positions or closed trades yet — this strategy trades only when its setup appears.</div>`;
+    const onDeck=benched?`<div class="mon-ondeck">${icon('repeat',12)}<span><b>Stood down in ${esc(curReg)}</b>: it loses here, so the engine holds its capital in cash. ${fitRegs.length?`It's your bench for <b>${fitRegs.map(esc).join(' · ')}</b>: proven to win there, ready to redeploy the moment the regime turns.`:`No regime has cleared it yet, it stays benched, still gathering evidence.`}</span></div>`:'';
+    const expInner=(onDeck+posBlock+accLine+allocCtl)||`<div class="mon-exp-empty">No open positions or closed trades yet, this strategy trades only when its setup appears.</div>`;
     const badge=cxStratBadge(s, fitMap[s.id], curReg, allocMap[s.id]===0);
     return `<div class="mon-card${open?' open':''}" data-cxrow="${esc(s.id)}">
       <div class="mon-row live mon-head" data-monexp="${esc(s.id)}" role="button" tabindex="0" aria-expanded="${open}" title="Show positions &amp; forward accuracy"><div class="mon-l"><span class="live-dot live"></span><div><b>${esc(s.name)} <span class="cxf-cls">${esc(s.instr||'spot')}</span>${badge}</b><span class="mon-cat">${s.openPositions||0} open${dep>0?` · <b class="mc-dep">${cxMoney(dep)}</b> deployed`:''} · ${f.closed||0} closed</span></div></div>
@@ -4118,11 +4154,11 @@ function cryptoMonitor(){
       <div class="mon-exp">${expInner}</div></div>`;
   }).join('');
   const act=scoped.filter(s=>s.openPositions>0||s.realisedPnl!==0).length;
-  const listHtml=rows||`<div class="mon-exp-empty" style="padding:14px">No strategies match this filter — <button class="mon-clearfilt" data-monfilter="all">show all</button>.</div>`;
-  const _xt=execToggle(scoped.length, 0);   // Paper | Live toggle — unified with the Indian book (crypto live is locked)
+  const listHtml=rows||`<div class="mon-exp-empty" style="padding:14px">No strategies match this filter, <button class="mon-clearfilt" data-monfilter="all">show all</button>.</div>`;
+  const _xt=execToggle(scoped.length, 0);   // Paper | Live toggle, unified with the Indian book (crypto live is locked)
   if((state.algo.exec||'paper')==='live') return note+cryptoScopeBar()+_xt+liveLockedPanel();
   CRYPTOMON._sig=cryptoMonSig();   // remember the structure so the next poll can patch-in-place (no flicker)
-  const brk=cxClassStrip();   // P&L by instrument class (Spot / Perps / Options) — like the Indian mon-brk
+  const brk=cxClassStrip();   // P&L by instrument class (Spot / Perps / Options), like the Indian mon-brk
   const engine=cxLiveEnginePanel(scoped, fitMap, curReg, allocMap);   // honest "what's working now" transparency
   return note+cryptoScopeBar()+_xt+engine+stat+brk+ctrlBar+`<div class="cxm-tbl-h">${icon('activity',13)}<b>${esc(clsLabel)} strategies</b><span>${act} active · ${scoped.length} running${upd?` · updated ${upd}`:''}</span></div><div class="mon-list">${listHtml}</div>`;
 }
@@ -4132,13 +4168,13 @@ function cryptoMonitor(){
 function cxStratBadge(s, cell, regime, paused){
   const active=(s.openPositions||0)>0;
   const act=active?`<span class="cxb reg-live"><i class="cxb-dot"></i>LIVE</span>`:'';
-  if(paused){   // YOU set this to 0% — distinct from the engine standing it down for the regime
-    return act+`<span class="cxb reg-paused" title="You paused this strategy (allocation 0%) — it takes no new trades until you raise it. Open positions are still managed.">${icon('lock',10)} PAUSED BY YOU</span>`;
+  if(paused){   // YOU set this to 0%, distinct from the engine standing it down for the regime
+    return act+`<span class="cxb reg-paused" title="You paused this strategy (allocation 0%), it takes no new trades until you raise it. Open positions are still managed.">${icon('lock',10)} PAUSED BY YOU</span>`;
   }
   const v=cell&&cell.verdict;
   let reg='';
-  if(v==='fit') reg=`<span class="cxb reg-fit" title="Proven to WIN in ${esc(regime)} (net of cost, ${cell.n} trades) — the engine keeps it running">FIT · ${esc(regime)}</span>`;
-  else if(v==='unfit') reg=`<span class="cxb reg-unfit" title="Proven to LOSE in ${esc(regime)} (${cell.n} trades, ${cell.expectancy!=null?cxMoney(cell.expectancy)+'/trade':''}) — stood down to cash">STOOD DOWN</span>`;
+  if(v==='fit') reg=`<span class="cxb reg-fit" title="Proven to WIN in ${esc(regime)} (net of cost, ${cell.n} trades), the engine keeps it running">FIT · ${esc(regime)}</span>`;
+  else if(v==='unfit') reg=`<span class="cxb reg-unfit" title="Proven to LOSE in ${esc(regime)} (${cell.n} trades, ${cell.expectancy!=null?cxMoney(cell.expectancy)+'/trade':''}), stood down to cash">STOOD DOWN</span>`;
   else if(cell&&cell.n) reg=`<span class="cxb reg-gath" title="Gathering evidence for ${esc(regime)} (${cell.n} trades so far)">GATHERING</span>`;
   return act+reg;
 }
@@ -4162,7 +4198,7 @@ function cxLiveEnginePanel(scoped, fitMap, regime, allocMap){
   const fit=[], unfit=[];
   scoped.forEach(s=>{ const c=fitMap[s.id]; if(!c) return; if(c.verdict==='fit') fit.push({s,c}); else if(c.verdict==='unfit') unfit.push({s,c}); });
   const paused=scoped.filter(s=>allocMap[s.id]===0);   // strategies YOU turned off (distinct from regime stand-down)
-  if(!fit.length && !unfit.length && !paused.length) return '';   // no learned verdicts yet — don't invent a story
+  if(!fit.length && !unfit.length && !paused.length) return '';   // no learned verdicts yet, don't invent a story
   const N=fit.reduce((a,x)=>a+(x.c.n||0),0);
   const wWin=N?fit.reduce((a,x)=>a+(x.c.n||0)*(x.c.winPct||0),0)/N:null;      // trade-weighted win-rate
   const wExp=N?fit.reduce((a,x)=>a+(x.c.n||0)*(x.c.expectancy||0),0)/N:null;  // trade-weighted expectancy
@@ -4173,7 +4209,7 @@ function cxLiveEnginePanel(scoped, fitMap, regime, allocMap){
   // running chips: the proven winners for this regime, with their REAL edge
   const runChips=fit.sort((a,b)=>(b.c.expectancy||0)-(a.c.expectancy||0)).slice(0,6).map(x=>
     `<span class="cxe-chip${(x.s.openPositions||0)>0?' on':''}" title="${esc(x.s.name)} in ${esc(regime)}: ${x.c.winPct}% win · PF ${x.c.pf} · ${cxMoney(x.c.expectancy)}/trade over ${x.c.n} trades">${esc(x.s.name)} <i class="${cls(x.c.expectancy)}">${cxMoney(x.c.expectancy)}</i></span>`).join('')
-    || `<span class="cxe-chip muted">No strategy has cleared the ${esc(regime)} bar yet — the book stays in cash.</span>`;
+    || `<span class="cxe-chip muted">No strategy has cleared the ${esc(regime)} bar yet, the book stays in cash.</span>`;
   const edge=N?`<div class="cxe-edge">
     <div class="cxe-metric"><span>Historical win-rate</span><b class="${wWin>=50?'up':'down'}">${Math.round(wWin)}%</b><i>of trades, running set</i></div>
     <div class="cxe-metric"><span>Edge per trade</span><b class="num ${cls(wExp)}">${cxMoney(wExp)}</b><i>net of 135bps cost</i></div>
@@ -4182,9 +4218,9 @@ function cxLiveEnginePanel(scoped, fitMap, regime, allocMap){
   </div>`:'';
   const verdict=good
     ? `<span class="cxe-tag ok">${icon('check',13)} Positive edge, net of cost</span>`
-    : (N?`<span class="cxe-tag warn">${icon('alert',13)} Edge not yet proven positive — trading small / mostly cash</span>`:'');
-  const stood=unfit.length?`<div class="cxe-stood">${icon('shield',13)}<span><b>${unfit.length} strateg${unfit.length===1?'y':'ies'} stood down</b> — proven to lose in ${esc(regime)}${unfitExp!=null?` (avg <b class="down">${cxMoney(unfitExp)}</b>/trade)`:''}. Their capital is held in <b>cash</b> by design — this is the engine refusing to trade a losing setup, not idleness. <a class="mon-acc-link" data-algogoto="analytics">see the damage they did →</a></span></div>`:'';
-  const pausedLine=paused.length?`<div class="cxe-stood cxe-paused">${icon('lock',13)}<span><b>${paused.length} paused by you</b> — allocation set to 0% (${paused.slice(0,4).map(s=>esc(s.name)).join(', ')}${paused.length>4?` +${paused.length-4}`:''}). These take no new trades until you raise them — <b>your choice, not the engine's</b>. Expand a row to adjust.</span></div>`:'';
+    : (N?`<span class="cxe-tag warn">${icon('alert',13)} Edge not yet proven positive, trading small / mostly cash</span>`:'');
+  const stood=unfit.length?`<div class="cxe-stood">${icon('shield',13)}<span><b>${unfit.length} strateg${unfit.length===1?'y':'ies'} stood down</b>: proven to lose in ${esc(regime)}${unfitExp!=null?` (avg <b class="down">${cxMoney(unfitExp)}</b>/trade)`:''}. Their capital is held in <b>cash</b> by design, this is the engine refusing to trade a losing setup, not idleness. <a class="mon-acc-link" data-algogoto="analytics">see the damage they did →</a></span></div>`:'';
+  const pausedLine=paused.length?`<div class="cxe-stood cxe-paused">${icon('lock',13)}<span><b>${paused.length} paused by you</b>: allocation set to 0% (${paused.slice(0,4).map(s=>esc(s.name)).join(', ')}${paused.length>4?` +${paused.length-4}`:''}). These take no new trades until you raise them, <b>your choice, not the engine's</b>. Expand a row to adjust.</span></div>`:'';
   return `<div class="cxe-panel ${good?'ok':'warn'}">
     <div class="cxe-head"><div class="cxe-ic">${icon('cpu',18)}</div>
       <div class="cxe-hx"><b>Live engine · ${esc(regime)} regime</b><span>What's <b>cleared to run right now</b>, net of cost. The engine learned from the losses: the strategies that bled are benched below; what's running here has real evidence behind it.</span></div>
@@ -4193,14 +4229,14 @@ function cxLiveEnginePanel(scoped, fitMap, regime, allocMap){
     <div class="cxe-run"><span class="cxe-run-l">Running now</span><div class="cxe-chips">${runChips}</div></div>
     ${stood}
     ${pausedLine}
-    <p class="cxe-foot">${icon('shield',12)}<span>Win-rate and edge are the <b>real forward record</b> of these strategies in ${esc(regime)} (net of 135bps) — evidence, <b>not a promise</b>. Markets can still hand any single trade a loss; the edge is a long-run average.</span></p>
+    <p class="cxe-foot">${icon('shield',12)}<span>Win-rate and edge are the <b>real forward record</b> of these strategies in ${esc(regime)} (net of 135bps), evidence, <b>not a promise</b>. Markets can still hand any single trade a loss; the edge is a long-run average.</span></p>
   </div>`;
 }
 // P&L by instrument class for the crypto Monitor, mirrors the Indian mon-brk strip; each cell
 // switches the scope (data-cinstr wiring already exists). Counts/P&L from cxScopeCounts().
 function cxClassStrip(){
   const by=cxScopeCounts(), cur=state.algo.cinstr||'spot';
-  const cell=(k,lab)=>`<span class="mb-cell${cur===k?' on':''}" data-cinstr="${k}" role="button" tabindex="0" title="${lab} — net ${cxMoney(by[k].pnl)} · ${by[k].n} strategies. Click to scope."><i>${esc(lab)}</i><b class="num ${cls(by[k].pnl)}">${cxMoney(by[k].pnl)}</b></span>`;
+  const cell=(k,lab)=>`<span class="mb-cell${cur===k?' on':''}" data-cinstr="${k}" role="button" tabindex="0" title="${lab}, net ${cxMoney(by[k].pnl)} · ${by[k].n} strategies. Click to scope."><i>${esc(lab)}</i><b class="num ${cls(by[k].pnl)}">${cxMoney(by[k].pnl)}</b></span>`;
   const overall=by.spot.pnl+by.perps.pnl+by.options.pnl;
   return `<div class="mon-brk"><span class="mb-lead">P&amp;L by class</span>${cell('spot','Spot')}${cell('perps','Perps')}${cell('options','Options')}<span class="mb-cell mb-all"><i>Overall</i><b class="num ${cls(overall)}">${cxMoney(overall)}</b></span></div>`;
 }
@@ -4209,12 +4245,12 @@ function cxClassStrip(){
 // live stays locked (browser can't arm ALLOW_LIVE + the book must clear the net-of-cost bar).
 function cryptoGoLiveCheck(id){
   const s=((CRYPTOMON.data&&CRYPTOMON.data.strategies)||[]).find(x=>x.id===id)||{name:id};
-  flowModal({title:'Go-Live readiness — '+(s.name||id), hideConfirm:true,
+  flowModal({title:'Go-Live readiness, '+(s.name||id), hideConfirm:true,
     body:`<div class="gl-load">${icon('cpu',16)}<span>Scoring ${esc(s.name||id)} against the go-live bar (net of 135bps costs)…</span></div>`,
     wire(body){
       fetch(BOT_API+'/api/readiness/book?market=crypto').then(r=>r.json())
         .then(d=>{ body.innerHTML=cryptoGoLiveHTML(d,id); })
-        .catch(()=>{ body.innerHTML=`<p class="flow-note">${icon('shield',13)}<span>Bot API offline — run <b>python3 bot_api.py</b>, then retry.</span></p>`; });
+        .catch(()=>{ body.innerHTML=`<p class="flow-note">${icon('shield',13)}<span>Bot API offline, run <b>python3 bot_api.py</b>, then retry.</span></p>`; });
     }});
 }
 function cryptoGoLiveHTML(d,id){
@@ -4230,7 +4266,7 @@ function cryptoGoLiveHTML(d,id){
     ${gate(g2,'Profit factor clears the bar',`PF ${pf!=null?(+pf).toFixed(2):'-'} vs ≥ ${bar.minProfitFactor||1.3}`)}
     ${gate(g3,'Proven across regimes',`${regs} of ${bar.minRegimes||2} regimes with a real sample`)}
     ${gate(g4,'Positive expectancy after cost',`${exp!=null?cxMoney(exp):'-'} per trade`)}</div>`;
-  const foot=`<div class="gl-blocked">${icon('lock',14)}<div><b>Crypto live is locked — by design, twice over.</b><span>1) A browser can <b>never</b> arm real orders — it needs <b>ALLOW_LIVE</b> set on the machine running the bot (a two-key OS gate). 2) The whole crypto book must clear the net-of-cost bar first, and today it is negative after the 1% TDS. ${passed===4?'This strategy has cleared the <b>evidence</b> gates — the capital/cost gate remains.':`This strategy still has <b>${4-passed}</b> evidence gate(s) open.`}</span></div></div>`;
+  const foot=`<div class="gl-blocked">${icon('lock',14)}<div><b>Crypto live is locked, by design, twice over.</b><span>1) A browser can <b>never</b> arm real orders, it needs <b>ALLOW_LIVE</b> set on the machine running the bot (a two-key OS gate). 2) The whole crypto book must clear the net-of-cost bar first, and today it is negative after the 1% TDS. ${passed===4?'This strategy has cleared the <b>evidence</b> gates, the capital/cost gate remains.':`This strategy still has <b>${4-passed}</b> evidence gate(s) open.`}</span></div></div>`;
   return head+gates+foot;
 }
 // ---- crypto Positions: Position Intelligence, at parity with the Indian book ----
@@ -4238,17 +4274,17 @@ function cryptoGoLiveHTML(d,id){
 // Positions tab uses, fed by the crypto engine's live position_intel (health/action/reason/gainPct).
 function cryptoPositions(){
   const hero=`<div class="pi-hero"><div class="pi-hero-ic">${icon('shield',20)}</div>
-    <div class="pi-hero-tx"><b>Position Intelligence</b><span>Every open crypto position, managed live by the same survival-first engine as the Indian book. Health = is the original thesis still valid? Profit is protected as gains grow; exits fire only on <b>persistent</b> decay — never a single down-tick, so winners run.</span></div></div>`;
+    <div class="pi-hero-tx"><b>Position Intelligence</b><span>Every open crypto position, managed live by the same survival-first engine as the Indian book. Health = is the original thesis still valid? Profit is protected as gains grow; exits fire only on <b>persistent</b> decay, never a single down-tick, so winners run.</span></div></div>`;
   const d=CRYPTOMON.data;
   if(!d){ if(!CRYPTOMON.busy) loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); });
     return hero+`<div class="opp-load">${icon('cpu',16)}<span>Reading open crypto positions…</span></div>`; }
-  if(CRYPTOMON.err && !d.running) return hero+`<div class="opp-offline">${icon('shield',14)}<span>Bot API unreachable — start it with <b>python3 bot_api.py</b>.</span></div>`;
-  if(d.running===false) return hero+`<div class="opp-offline">${icon('shield',14)}<span>Crypto harness not running — start <b>python3 paper_trade_crypto.py</b>.</span></div>`;
+  if(CRYPTOMON.err && !d.running) return hero+`<div class="opp-offline">${icon('shield',14)}<span>Bot API unreachable, start it with <b>python3 bot_api.py</b>.</span></div>`;
+  if(d.running===false) return hero+`<div class="opp-offline">${icon('shield',14)}<span>Crypto harness not running, start <b>python3 paper_trade_crypto.py</b>.</span></div>`;
   const cur=state.algo.cinstr||'spot';
   const {curReg, fitMap}=cxRegimeFit();
   const scoped=(d.strategies||[]).filter(s=>(s.instr||'spot')===cur);
   const ps=[]; scoped.forEach(s=>(s.positions||[]).forEach(p=>ps.push(Object.assign({strat:s.name,stratId:s.id},p))));
-  if(!ps.length) return hero+cryptoScopeBar()+secEmpty('check','No open positions',`Nothing to manage right now — in this regime the survival-first engine is largely in cash. As strategies enter, each position appears here with a live health score and a recommended action.`);
+  if(!ps.length) return hero+cryptoScopeBar()+secEmpty('check','No open positions',`Nothing to manage right now, in this regime the survival-first engine is largely in cash. As strategies enter, each position appears here with a live health score and a recommended action.`);
   ps.sort((a,b)=>(a.health==null?999:a.health)-(b.health==null?999:b.health));   // weakest first
   const withH=ps.filter(p=>p.health!=null);
   const avgH=withH.length?Math.round(withH.reduce((s,p)=>s+p.health,0)/withH.length):null;
@@ -4257,7 +4293,7 @@ function cryptoPositions(){
     const tone=posTone(p.health), act=POS_ACT[p.action]||null, hv=p.health==null?'-':p.health;
     const gain=p.gainPct!=null?p.gainPct:(p.pnlPct!=null?p.pnlPct:null);
     const dir=p.side!=null?(p.side<0?'SHORT ':'LONG '):'', sym=(p.sym||'').replace(/USDT/g,'');
-    const fc=fitMap[p.stratId], fitB=fc&&fc.verdict==='fit'?`<span class="cxb reg-fit" title="Its strategy is proven to win in ${esc(curReg)} — a healthy live position">FIT · ${esc(curReg)}</span>`:fc&&fc.verdict==='unfit'?`<span class="cxb reg-unfit" title="Its strategy is stood down in ${esc(curReg)} — this is a legacy position being wound down, not a fresh entry">WINDING DOWN</span>`:'';
+    const fc=fitMap[p.stratId], fitB=fc&&fc.verdict==='fit'?`<span class="cxb reg-fit" title="Its strategy is proven to win in ${esc(curReg)}, a healthy live position">FIT · ${esc(curReg)}</span>`:fc&&fc.verdict==='unfit'?`<span class="cxb reg-unfit" title="Its strategy is stood down in ${esc(curReg)}, this is a legacy position being wound down, not a fresh entry">WINDING DOWN</span>`:'';
     return `<div class="pi-card ${tone}">
       <div class="pi-h"><div class="pi-sym"><b>${esc(dir+sym)}</b><span>${esc(p.strat||'')}${fitB}</span></div>
         <div class="pi-score ${tone}"><b>${hv}</b><span>health</span></div></div>
@@ -4285,14 +4321,14 @@ function cxRiskBar(p,limit,label){ const w=Math.min(100,(p/limit)*100), over=p>l
 function cryptoRisk(){
   const d=CRYPTORISK.data;
   if(!d){ if(!CRYPTORISK.busy) loadCryptoRisk().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); return secEmpty('shield','Loading crypto risk…','Reading the crypto Governor state from the bot.'); }
-  if(d.running===false){ return secEmpty('shield','Crypto Governor offline','Start the crypto harness (python3 paper_trade_crypto.py) — it publishes the Governor state each cycle.'); }
+  if(d.running===false){ return secEmpty('shield','Crypto Governor offline','Start the crypto harness (python3 paper_trade_crypto.py), it publishes the Governor state each cycle.'); }
   // BUG FIX (2026-09-09): real per-user Governor state (health score, drawdown ladder, kill-switch,
   // trade audit) only exists inside the worker's Python process and isn't published per user yet.
   // This used to fall through to shared platform numbers instead - every signed-in user saw the
   // same $971K equity. Honest unavailable state until the worker publishes real per-user risk data.
-  if(d.available===false){ return secEmpty('shield','Risk Governor — not available yet for your book','Deploy a strategy in the Algo Studio: once the worker runs your positions, your own exposure, drawdown, and crowding appear here.'); }
+  if(d.available===false){ return secEmpty('shield','Risk Governor: not available yet for your book','Deploy a strategy in the Algo Studio: once the worker runs your positions, your own exposure, drawdown, and crowding appear here.'); }
   const lim=d.limits||{};
-  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Crypto Risk Governor.</b> The same portfolio control layer as the Indian book — symbol/sector concentration, a crowding cap (max ${lim.botsPerSymbol||2} bots/name), total-exposure ceiling + a drawdown kill-switch. Crypto is grouped into Major / L1 / Alt sub-sectors so correlated coins can't quietly become one bet.</span></div>`;
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Crypto Risk Governor.</b> The same portfolio control layer as the Indian book, symbol/sector concentration, a crowding cap (max ${lim.botsPerSymbol||2} bots/name), total-exposure ceiling + a drawdown kill-switch. Crypto is grouped into Major / L1 / Alt sub-sectors so correlated coins can't quietly become one bet.</span></div>`;
   const stat=secStats([
     {l:'Health score',v:String(d.score),s:esc(d.mode||'normal'),tone:d.score>=70?'up':(d.score<40?'down':'')},
     {l:'Mode',v:esc(d.mode||'normal'),s:d.killSwitch?'KILL-SWITCH':'live',tone:d.killSwitch?'down':''},
@@ -4303,11 +4339,11 @@ function cryptoRisk(){
   ]);
   const secBars=Object.entries(d.sectors||{}).map(([s,p])=>cxRiskBar(p,lim.sector||35,s)).join('')||'<div class="cxr-empty">No sector exposure</div>';
   const symBars=Object.entries(d.symbols||{}).slice(0,8).map(([s,p])=>cxRiskBar(p,lim.symbol||18,s.replace('USDT',''))).join('')||'<div class="cxr-empty">No open positions</div>';
-  const crowd=Object.entries(d.crowding||{}).filter(([s,n])=>n>1).map(([s,n])=>`<span class="cxm-chip${n>=(lim.botsPerSymbol||2)?' down':''}">${esc(s.replace('USDT',''))} · ${n} bots</span>`).join('')||'<span class="cxr-empty">No crowding — every name held by ≤1 bot</span>';
+  const crowd=Object.entries(d.crowding||{}).filter(([s,n])=>n>1).map(([s,n])=>`<span class="cxm-chip${n>=(lim.botsPerSymbol||2)?' down':''}">${esc(s.replace('USDT',''))} · ${n} bots</span>`).join('')||'<span class="cxr-empty">No crowding, every name held by ≤1 bot</span>';
   // risk-mode banner: the Governor is actively de-risking (kill-switch or reduced sizing)
   const modeBanner=d.killSwitch
-    ?`<div class="rk-kill">${icon('alert',16)}<div><b>KILL-SWITCH ACTIVE — ${esc((d.mode||'').toUpperCase())}</b><span>Portfolio drawdown ${d.drawdownPct}% — new entries are blocked across all crypto bots until it recovers.</span></div></div>`
-    :(d.mode&&d.mode!=='normal')?`<div class="rk-warn">${icon('alert',13)}<span>Risk-reduction mode <b>${esc(d.mode)}</b> — new positions sized to <b>${Math.round((d.sizeMult||1)*100)}%</b> (drawdown ${d.drawdownPct}%). Bots keep managing open positions; only new risk is throttled.</span></div>`:'';
+    ?`<div class="rk-kill">${icon('alert',16)}<div><b>KILL-SWITCH ACTIVE, ${esc((d.mode||'').toUpperCase())}</b><span>Portfolio drawdown ${d.drawdownPct}%, new entries are blocked across all crypto bots until it recovers.</span></div></div>`
+    :(d.mode&&d.mode!=='normal')?`<div class="rk-warn">${icon('alert',13)}<span>Risk-reduction mode <b>${esc(d.mode)}</b>: new positions sized to <b>${Math.round((d.sizeMult||1)*100)}%</b> (drawdown ${d.drawdownPct}%). Bots keep managing open positions; only new risk is throttled.</span></div>`:'';
   // drawdown kill-switch ladder (real ddTiers from the Governor, current mode highlighted)
   const tiers=(d.ddTiers||[]).slice().reverse();
   const ladder=tiers.length?`<div class="cxm-tbl-h">${icon('shield',13)}<b>Drawdown kill-switch ladder</b><span>current: ${esc(d.mode||'normal')} at ${d.drawdownPct||0}%</span></div>
@@ -4317,9 +4353,9 @@ function cryptoRisk(){
     </div>`:'';
   // trade audit: every proposal the Governor approved or vetoed (real, honest empty-state when quiet)
   const audit=(d.audit||[]);
-  const aud=audit.length?`<div class="cxm-tbl-h">${icon('flag',13)}<b>Trade audit</b><span>every proposal — approved or vetoed</span></div>
+  const aud=audit.length?`<div class="cxm-tbl-h">${icon('flag',13)}<b>Trade audit</b><span>every proposal, approved or vetoed</span></div>
     <div class="rk-audit rk-card">${audit.slice(0,20).map(a=>`<div class="rk-arow ${a.approved?'ok':'veto'}"><span class="rk-atag ${a.approved?'ok':'veto'}">${a.approved?'PASS':'VETO'}</span><span class="rk-amain"><b>${esc(a.bot||'')}</b> ${esc((a.symbol||'').replace('USDT',''))}</span><span class="rk-areason">${esc(a.reason||'')}</span><span class="rk-awhen">${a.ts?timeAgo(a.ts):''}</span></div>`).join('')}</div>`
-    :`<div class="cxm-tbl-h">${icon('flag',13)}<b>Trade audit</b><span>every proposal — approved or vetoed</span></div><div class="cxr-empty" style="padding:11px 13px">No proposals reviewed since the last restart — each bot entry appears here with the Governor's verdict as the book trades.</div>`;
+    :`<div class="cxm-tbl-h">${icon('flag',13)}<b>Trade audit</b><span>every proposal, approved or vetoed</span></div><div class="cxr-empty" style="padding:11px 13px">No proposals reviewed since the last restart, each bot entry appears here with the Governor's verdict as the book trades.</div>`;
   return note+modeBanner+stat+
     `<div class="cxm-tbl-h">${icon('layout',13)}<b>Sector concentration</b><span>limit ${lim.sector||35}%</span></div><div class="cxr-bars">${secBars}</div>`+
     `<div class="cxm-tbl-h">${icon('activity',13)}<b>Symbol concentration</b><span>limit ${lim.symbol||18}%</span></div><div class="cxr-bars">${symBars}</div>`+
@@ -4348,7 +4384,7 @@ function cryptoBacktest(){
   const sPick=CX_BT_STRATS.map(([id,l])=>`<button class="cxbt-chip${strat===id?' on':''}" data-cbtstrat="${id}">${esc(l)}</button>`).join('');
   const pPick=CX_BT_PERIODS.map(p=>`<button class="cxbt-chip${period===p?' on':''}" data-cbtperiod="${p}">${p}</button>`).join('');
   const picker=`<div class="cxbt-pick"><div class="cxbt-pick-r">${sPick}</div><div class="cxbt-pick-r cxbt-per">${pPick}</div></div>`;
-  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Real crypto backtest.</b> The same Backtester as the Indian book, on historical Binance daily klines for the 10 majors (equal-weight portfolio, ${period} + warmup, 15bps costs). Past performance isn't a promise — it's evidence a rule had an edge, honestly measured.</span></div>`;
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Real crypto backtest.</b> The same Backtester as the Indian book, on historical Binance daily klines for the 10 majors (equal-weight portfolio, ${period} + warmup, 15bps costs). Past performance isn't a promise, it's evidence a rule had an edge, honestly measured.</span></div>`;
   let body;
   if(CRYPTOBT.busy || CRYPTOBT.key!==key){ body=secEmpty('activity','Backtesting…',`Running ${esc(strat)} over the crypto majors on Binance history.`); }
   else{ const d=CRYPTOBT.data;
@@ -4371,12 +4407,12 @@ function cryptoBacktest(){
       const curveBlock=curve?`<div class="cxm-tbl-h">${icon('activity',13)}<b>Equity curve</b><span>base 100 · vs buy & hold</span></div>${legend}<div class="cxbt-chart">${curve}</div>`:'';
       // ---- validation: in-sample vs out-of-sample (the honest cut) ----
       const o=d.oos||{}, held=(o.oos_ret||0)>=0 && (o.oos_avg||0)>=-0.1, thin=(d.trades||0)<30;
-      const vr=(o.is_trades!=null||o.oos_trades!=null)?`<div class="bt-vr"><div class="bt-vrh">${icon('shield',13)} Validation — the honest cut</div>
+      const vr=(o.is_trades!=null||o.oos_trades!=null)?`<div class="bt-vr"><div class="bt-vrh">${icon('shield',13)} Validation, the honest cut</div>
         <div class="bt-vrgrid">
           <div class="bt-vrcol"><span>In-sample (70%)</span><b class="num ${tone(o.is_ret)}">${pct(o.is_ret||0)}</b><i>${o.is_trades||0} trades · avg ${pct(o.is_avg||0)}/trade</i></div>
           <div class="bt-vrcol"><span>Out-of-sample (30%)</span><b class="num ${tone(o.oos_ret)}">${pct(o.oos_ret||0)}</b><i>${o.oos_trades||0} trades · avg ${pct(o.oos_avg||0)}/trade</i></div>
         </div>
-        <p class="bt-vrverdict ${held?'ok':'warn'}">${icon(held?'check':'alert',12)}<span>${held?'Edge <b>persisted out-of-sample</b> — held up on data it never trained on.':'Edge <b>weakened out-of-sample</b> — strong in-sample but faded on unseen data. Treat with caution.'} Costs: <b>${d.costBps||15} bps/leg applied</b>.${thin?' <b>Thin sample</b> ('+(d.trades||0)+' trades, &lt;30) — a hint, not proof.':''}</span></p></div>`:'';
+        <p class="bt-vrverdict ${held?'ok':'warn'}">${icon(held?'check':'alert',12)}<span>${held?'Edge <b>persisted out-of-sample</b>: held up on data it never trained on.':'Edge <b>weakened out-of-sample</b>: strong in-sample but faded on unseen data. Treat with caution.'} Costs: <b>${d.costBps||15} bps/leg applied</b>.${thin?' <b>Thin sample</b> ('+(d.trades||0)+' trades, &lt;30), a hint, not proof.':''}</span></p></div>`:'';
       // ---- vs buy & hold ----
       const beat=bh&&bh.totalRet!=null&&d.totalRet>=bh.totalRet;
       const benchBlock=(bh&&bh.totalRet!=null)?`<div class="bt-bench"><div class="bt-anh">${icon('scale',13)} vs Buy &amp; hold <i>same ${d.universe||10} coins, dashed on the curve</i></div>
@@ -4386,22 +4422,22 @@ function cryptoBacktest(){
           <div class="bt-bc"><span>Alpha · ann.${infoI('Annualised return the strategy added beyond just holding these coins. Positive = real edge; negative = the timing cost more than it added.')}</span><b class="num ${tone(bh.alpha)}">${bh.alpha!=null?pct(bh.alpha):'-'}</b></div>
           <div class="bt-bc"><span>Beta${infoI('Sensitivity to simply holding the basket. ~1 moves with it, <1 less exposed, ~0 market-neutral.')}</span><b class="num">${bh.beta!=null?bh.beta.toFixed(2):'-'}</b></div>
         </div>
-        <p class="bt-bverdict ${beat?'ok':'warn'}">${icon(beat?'check':'alert',12)}<span>${beat?'The strategy <b>beat</b> simply holding these coins.':'The strategy <b>underperformed</b> buy &amp; hold over this window — an honest result, shown anyway.'}</span></p></div>`:'';
+        <p class="bt-bverdict ${beat?'ok':'warn'}">${icon(beat?'check':'alert',12)}<span>${beat?'The strategy <b>beat</b> simply holding these coins.':'The strategy <b>underperformed</b> buy &amp; hold over this window, an honest result, shown anyway.'}</span></p></div>`:'';
       // ---- drawdown / underwater ----
-      const ddBlock=(Array.isArray(d.dd)&&d.dd.length>1)?`<div class="bt-dd"><div class="bt-anh">${icon('trendDown',13)} Drawdown — underwater <i>worst −${Math.abs(d.maxDD||0).toFixed(1)}% · time in market ${d.timeInMarket!=null?d.timeInMarket+'%':'-'}</i></div>${ddCurveSVG(d.dd)}<p class="bt-ddcap">${icon('shield',11)}<span>How deep and how long the strategy sat below its prior peak — the pain you'd have had to sit through.</span></p></div>`:'';
+      const ddBlock=(Array.isArray(d.dd)&&d.dd.length>1)?`<div class="bt-dd"><div class="bt-anh">${icon('trendDown',13)} Drawdown, underwater <i>worst −${Math.abs(d.maxDD||0).toFixed(1)}% · time in market ${d.timeInMarket!=null?d.timeInMarket+'%':'-'}</i></div>${ddCurveSVG(d.dd)}<p class="bt-ddcap">${icon('shield',11)}<span>How deep and how long the strategy sat below its prior peak, the pain you'd have had to sit through.</span></p></div>`:'';
       // ---- Monte-Carlo robustness ----
       const mc=d.montecarlo, robust=mc&&mc.profitableShare>=60;
       const mcBlock=mc?`<div class="bt-bench"><div class="bt-anh">${icon('shield',13)} Monte-Carlo robustness <i>${mc.runs} resamples of the trades</i></div>
         <div class="bt-bgrid">
-          <div class="bt-bc"><span>Worst 5%${infoI('5th-percentile outcome across the bootstrap resamples of the real trades — a bad-luck draw.')}</span><b class="num down">${pct(mc.p5)}</b></div>
+          <div class="bt-bc"><span>Worst 5%${infoI('5th-percentile outcome across the bootstrap resamples of the real trades, a bad-luck draw.')}</span><b class="num down">${pct(mc.p5)}</b></div>
           <div class="bt-bc"><span>Median</span><b class="num ${tone(mc.p50)}">${pct(mc.p50)}</b></div>
           <div class="bt-bc"><span>Best 5%</span><b class="num up">${pct(mc.p95)}</b></div>
           <div class="bt-bc"><span>Profitable${infoI('Share of resampled runs that ended in profit. >60% = a robust edge; near 50% = a coin-flip.')}</span><b class="num ${mc.profitableShare>=60?'up':mc.profitableShare<50?'down':''}">${mc.profitableShare}%</b></div>
         </div>
-        <p class="bt-bverdict ${robust?'ok':'warn'}">${icon(robust?'check':'alert',12)}<span>${robust?'<b>Robust</b> — '+mc.profitableShare+'% of resampled runs profited, so the edge isn’t one lucky sequence.':'<b>Fragile</b> — only '+mc.profitableShare+'% of resampled runs profited; the result leans on a few trades. Treat with caution.'} Across draws, returns spanned <b>${pct(mc.p5)}</b> to <b>${pct(mc.p95)}</b>.</span></p></div>`:'';
+        <p class="bt-bverdict ${robust?'ok':'warn'}">${icon(robust?'check':'alert',12)}<span>${robust?'<b>Robust</b>: '+mc.profitableShare+'% of resampled runs profited, so the edge isn’t one lucky sequence.':'<b>Fragile</b>: only '+mc.profitableShare+'% of resampled runs profited; the result leans on a few trades. Treat with caution.'} Across draws, returns spanned <b>${pct(mc.p5)}</b> to <b>${pct(mc.p95)}</b>.</span></p></div>`:'';
       // ---- edge decay ----
       const ed=d.edgeDecay;
-      const decayLine=ed?`<p class="bt-ddcap">${icon('clock',11)}<span><b>${ed.posMonths}%</b> of ${ed.totalMonths} months positive.${ed.fading!=null?(ed.fading?' Edge is <b>fading</b> — recent months ('+pct(ed.secondHalfAvg)+'/mo) weaker than earlier ('+pct(ed.firstHalfAvg)+'/mo).':' Edge is <b>holding</b> — recent ('+pct(ed.secondHalfAvg)+'/mo) ≈ earlier ('+pct(ed.firstHalfAvg)+'/mo).'):''}</span></p>`:'';
+      const decayLine=ed?`<p class="bt-ddcap">${icon('clock',11)}<span><b>${ed.posMonths}%</b> of ${ed.totalMonths} months positive.${ed.fading!=null?(ed.fading?' Edge is <b>fading</b>: recent months ('+pct(ed.secondHalfAvg)+'/mo) weaker than earlier ('+pct(ed.firstHalfAvg)+'/mo).':' Edge is <b>holding</b>: recent ('+pct(ed.secondHalfAvg)+'/mo) ≈ earlier ('+pct(ed.firstHalfAvg)+'/mo).'):''}</span></p>`:'';
       // ---- trade analytics ----
       const an=d.analytics||{}, pf=an.profitFactor!=null?an.profitFactor.toFixed(2):'∞';
       const analytics=(an.wins!=null||an.losses!=null)?`<div class="bt-an"><div class="bt-anh">${icon('trendUp',13)} Trade analytics <i>${an.wins||0}W / ${an.losses||0}L</i></div>
@@ -4433,8 +4469,8 @@ function cxSetAlloc(id, w){
   w=Math.max(0,Math.min(1,w));
   const rec=((CRYPTOALLOC.data&&CRYPTOALLOC.data.strategies)||[]).find(x=>x.id===id); if(rec) rec.weight=w;   // optimistic
   fetch(`${BOT_API}/api/crypto/allocation`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,weight:w})})
-    .then(r=>r.json()).then(res=>{ if(res&&res.ok) announce(`Allocation for ${id} set to ${Math.round(w*100)}% — the engine sizes within this cap next cycle.`); })
-    .catch(()=>announce('Could not save allocation — bot API unreachable.'));
+    .then(r=>r.json()).then(res=>{ if(res&&res.ok) announce(`Allocation for ${id} set to ${Math.round(w*100)}%, the engine sizes within this cap next cycle.`); })
+    .catch(()=>announce('Could not save allocation, bot API unreachable.'));
 }
 async function loadCryptoFwd(){ if(CRYPTOFWD.busy) return; CRYPTOFWD.busy=true;
   try{ CRYPTOFWD.data=await fetch(`${BOT_API}/api/crypto/forward`).then(r=>r.json()); }catch(e){ CRYPTOFWD.data={running:false}; }
@@ -4443,9 +4479,9 @@ function cryptoForward(mode){   // mode: 'forward' | 'accuracy'
   const d=CRYPTOFWD.data;
   if(!d){ if(!CRYPTOFWD.busy) loadCryptoFwd().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); return secEmpty('activity','Loading track record…','Reading closed crypto trades from the harness log.'); }
   const rows=d.strategies||[], t=d.totals||{};
-  if(!rows.length){ return secEmpty('activity','No closed trades yet',`The 24/7 crypto harness books this as it runs — win%, profit factor and expectancy appear once positions close. Open positions are on the <b>Monitor</b> tab.`); }
+  if(!rows.length){ return secEmpty('activity','No closed trades yet',`The 24/7 crypto harness books this as it runs, win%, profit factor and expectancy appear once positions close. Open positions are on the <b>Monitor</b> tab.`); }
   const acc=mode==='accuracy';
-  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>${acc?'Forward accuracy':'Forward test'} — real out-of-sample.</b> Every metric below is from <b>closed</b> paper trades on live Binance data (not a backtest, not fabricated). ${acc?'Win% and profit factor are the honest edge measure.':'This is the live track record the go-live gate would judge.'}</span></div>`;
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>${acc?'Forward accuracy':'Forward test'}, real out-of-sample.</b> Every metric below is from <b>closed</b> paper trades on live Binance data (not a backtest, not fabricated). ${acc?'Win% and profit factor are the honest edge measure.':'This is the live track record the go-live gate would judge.'}</span></div>`;
   const stat=secStats([
     {l:'Closed trades',v:String(t.closed||0),s:`${t.wins||0}W / ${t.losses||0}L`},
     {l:'Win rate',v:t.winPct==null?'-':t.winPct+'%',s:'across all strategies',tone:(t.winPct>=50)?'up':(t.winPct<45?'down':'')},
@@ -4453,7 +4489,7 @@ function cryptoForward(mode){   // mode: 'forward' | 'accuracy'
     {l:'Net P&L',v:cxMoney(t.netPnl),s:'realised, closed',tone:(t.netPnl>0)?'up':(t.netPnl<0?'down':'')},
   ]);
   const {curReg:reg, fitMap}=cxRegimeFit();
-  const regBanner=reg&&reg!=='-'?`<div class="ft-regime"><div class="ft-regime-ic">${icon('activity',15)}</div><div><b>Live regime: ${esc(reg)}</b><span>The go-live gate judges each strategy net of costs. Strategies proven <b>fit for this regime</b> (green) carry the edge; the rest are stood down to cash — that's survival-first, not idle.</span></div></div>`:'';
+  const regBanner=reg&&reg!=='-'?`<div class="ft-regime"><div class="ft-regime-ic">${icon('activity',15)}</div><div><b>Live regime: ${esc(reg)}</b><span>The go-live gate judges each strategy net of costs. Strategies proven <b>fit for this regime</b> (green) carry the edge; the rest are stood down to cash, that's survival-first, not idle.</span></div></div>`:'';
   const GRAD=50;   // go-live sample bar: ≥50 closed trades to be judged
   const head=`<div class="cxm-row cxf-row cxm-head"><div class="cxm-name">Strategy · go-live progress</div><span class="cxm-n">Trades</span><span class="cxm-n">Win%</span><span class="cxm-n">PF</span><span class="cxm-n">Expectancy</span><span class="cxm-n">Net</span></div>`;
   const body=rows.map(s=>{const g=Math.min(100,Math.round((s.closed/GRAD)*100)),cleared=s.closed>=GRAD;
@@ -4500,8 +4536,8 @@ function cxTradesCSV(){
 function cryptoAnalytics(){
   const d=CRYPTOAN.data;
   if(!d){ if(!CRYPTOAN.busy) loadCryptoAn().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); return secEmpty('activity','Loading analytics…','Attributing the crypto P&L by instrument, strategy, regime, symbol, exit-reason and hour.'); }
-  if(d.running===false){ return secEmpty('activity','Analytics offline','Start the crypto harness — analytics attributes its live book once it is running.'); }
-  const t=d.totals||{}, st=d.stats||{}, note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>P&L attribution — real, from the closed-trade log.</b> Every realised figure below is computed from actual closed paper trades (not estimated): the equity curve, and the splits by regime, symbol, exit-reason and hour. Open P&L is marked live. Nothing here is synthesised.</span></div>`;
+  if(d.running===false){ return secEmpty('activity','Analytics offline','Start the crypto harness, analytics attributes its live book once it is running.'); }
+  const t=d.totals||{}, st=d.stats||{}, note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>P&L attribution, real, from the closed-trade log.</b> Every realised figure below is computed from actual closed paper trades (not estimated): the equity curve, and the splits by regime, symbol, exit-reason and hour. Open P&L is marked live. Nothing here is synthesised.</span></div>`;
   // live-book summary (open + realised), the running picture
   const stat=secStats([
     {l:'Realised',v:cxMoney(t.realised),s:'booked',tone:t.realised>0?'up':(t.realised<0?'down':'')},
@@ -4559,8 +4595,8 @@ function cryptoAnalytics(){
     <span class="cxm-n num ${cls(r.pnl)}"><b>${cxMoney(r.pnl)}</b></span></div>`).join('')+`</div>`:'<div class="cxr-empty" style="padding:11px 13px">No closed trades yet</div>';
   return note+stat+qual+eqBlock+
     `<div class="cxm-tbl-h">${icon('layout',13)}<b>By instrument class</b><span>Spot / Perps / Options</span></div><div class="cxm-tbl">${instHead}${inst}</div>`+
-    `<div class="cxm-tbl-h">${icon('cpu',13)}<b>By exit reason</b><span>where P&L is made & lost — worst first</span></div>${bkTable(d.byReason,null,true)}`+
-    `<div class="cxm-tbl-h">${icon('activity',13)}<b>By symbol</b><span>net per coin — worst first</span></div>${bkTable(d.bySymbol,k=>k.replace('USDT',''),true)}`+
+    `<div class="cxm-tbl-h">${icon('cpu',13)}<b>By exit reason</b><span>where P&L is made & lost, worst first</span></div>${bkTable(d.byReason,null,true)}`+
+    `<div class="cxm-tbl-h">${icon('activity',13)}<b>By symbol</b><span>net per coin, worst first</span></div>${bkTable(d.bySymbol,k=>k.replace('USDT',''),true)}`+
     (hrBars?`<div class="cxm-tbl-h">${icon('activity',13)}<b>By hour of day</b><span>net per hour (UTC clock)</span></div>${hrBars}`:'')+
     `<div class="cxm-tbl-h">${icon('cpu',13)}<b>By regime</b><span>realised, from closed trades</span></div><div class="cxm-pos">${regChips}</div>`+
     `<div class="cxm-tbl-h">${icon('activity',13)}<b>Strategy contributors</b><span>top by total P&L</span></div><div class="cxm-tbl">${contrib}</div>`+
@@ -4575,13 +4611,13 @@ function readinessView(mkt){
   const d=READY.data[mkt];
   const money=mkt==='crypto'?cxMoney:(v=>(v==null||!isFinite(v))?'-':(v<0?'−':'+')+'₹'+Math.abs(Math.round(v)).toLocaleString('en-IN'));
   if(!d){ if(!READY.busy[mkt]) loadReadiness(mkt).then(()=>{ if(isAlgo()) renderAlgo(); }); return secEmpty('shield','Assessing go-live readiness…','Scoring each strategy against the bar.'); }
-  if(d.err){ return secEmpty('shield','Readiness unavailable','Bot API unreachable on :8756 — start bot_api.py.'); }
+  if(d.err){ return secEmpty('shield','Readiness unavailable','Bot API unreachable on :8756, start bot_api.py.'); }
   const s=d.summary||{}, bar=d.bar||{};
-  const verdict=d.goLive?'READY':(s.ready>0?'PARTIAL — not all clear':'NOT READY');
+  const verdict=d.goLive?'READY':(s.ready>0?'PARTIAL, not all clear':'NOT READY');
   const banner=`<div class="rdy-banner ${d.goLive?'ok':'no'}">${icon(d.goLive?'check':'shield',22)}
-    <div><b>Go-live: ${verdict}</b><span>${s.ready||0} ready · ${s.gathering||0} gathering · ${s.cull||0} to cull — of ${s.total||0} strategies with closed trades.</span></div>
+    <div><b>Go-live: ${verdict}</b><span>${s.ready||0} ready · ${s.gathering||0} gathering · ${s.cull||0} to cull, of ${s.total||0} strategies with closed trades.</span></div>
     <span class="rdy-bar">Bar: ≥${bar.minTrades} trades · PF ≥ ${bar.minProfitFactor} · ≥${bar.minRegimes} regimes · +expectancy after costs</span></div>`;
-  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Honest go-live gate.</b> Every number is <b>net of realistic costs</b> (brokerage + STT/fees + slippage) from CLOSED paper trades. A strategy is <b>READY</b> only with a real sample across multiple regimes — a few lucky trades read as <b>gathering</b>. <b>CULL</b> = auto-benched for negative expectancy.</span></div>`;
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Honest go-live gate.</b> Every number is <b>net of realistic costs</b> (brokerage + STT/fees + slippage) from CLOSED paper trades. A strategy is <b>READY</b> only with a real sample across multiple regimes, a few lucky trades read as <b>gathering</b>. <b>CULL</b> = auto-benched for negative expectancy.</span></div>`;
   const rows=(d.strategies||[]).map(r=>{
     const vlbl=r.verdict==='ready'?'READY':r.verdict==='cull'?'CULL':'GATHERING';
     const regimes=(r.regimes||[]).length?`<div class="cxm-pos">${r.regimes.map(g=>`<span class="cxm-chip">${esc(g)}</span>`).join('')}</div>`:'';
@@ -4592,7 +4628,7 @@ function readinessView(mkt){
       <span class="cxm-n num ${cls(r.expectancy)}">${money(r.expectancy)}</span></div>`;
   }).join('');
   const head=`<div class="cxm-row rdy-row cxm-head"><div class="cxm-name">Strategy · verdict</div><span class="cxm-n">Trades</span><span class="cxm-n">Win%</span><span class="cxm-n">PF</span><span class="cxm-n">Expectancy</span></div>`;
-  return banner+note+`<div class="cxm-tbl-h">${icon('activity',13)}<b>Per-strategy verdict</b><span>ranked: ready → gathering → cull</span></div><div class="cxm-tbl">${head}${rows||'<div class="cxr-empty" style="padding:11px 13px">No closed trades yet — the gate fills as the harness runs</div>'}</div>`;
+  return banner+note+`<div class="cxm-tbl-h">${icon('activity',13)}<b>Per-strategy verdict</b><span>ranked: ready → gathering → cull</span></div><div class="cxm-tbl">${head}${rows||'<div class="cxr-empty" style="padding:11px 13px">No closed trades yet, the gate fills as the harness runs</div>'}</div>`;
 }
 // ---- Strategy × regime fit matrix (learned, drives live selection) ----
 const RFIT={data:{},busy:{}};
@@ -4604,13 +4640,13 @@ function regimeFitMatrix(mkt){
   if(!d){ if(!RFIT.busy[mkt]) loadRegimeFit(mkt).then(()=>{ if(isAlgo())renderAlgo(); }); return ''; }
   if(d.err||!(d.strategies||[]).length) return '';
   const regs=d.regimes||[], cur=d.currentRegime;
-  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Regime fit — learned, not assumed.</b> Each cell is a strategy's <b>net-of-cost</b> edge in that regime (needs ${d.minTrades}+ trades to call it). In the live regime (<b>${esc(cur)}</b> ●) the book <b>benches proven losers and deploys proven winners</b>; the safe default stands where evidence is thin — so we run the right strategies for the conditions.</span></div>`;
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Regime fit, learned, not assumed.</b> Each cell is a strategy's <b>net-of-cost</b> edge in that regime (needs ${d.minTrades}+ trades to call it). In the live regime (<b>${esc(cur)}</b> ●) the book <b>benches proven losers and deploys proven winners</b>; the safe default stands where evidence is thin, so we run the right strategies for the conditions.</span></div>`;
   const head=`<div class="rf-row rf-head"><span class="rf-name">Strategy</span>${regs.map(r=>`<span class="rf-col${r===cur?' cur':''}">${esc(r)}${r===cur?' ●':''}</span>`).join('')}</div>`;
   const cell=c=>{ if(!c||!c.n) return '<span class="rf-cell rf-none">·</span>';
     const lbl=c.verdict==='fit'?'FIT':c.verdict==='unfit'?'UNFIT':'…';
     return `<span class="rf-cell rf-${esc(c.verdict)}" title="${c.n} trades · win ${c.winPct}% · PF ${c.pf} · expectancy ${c.expectancy}">${lbl} <i>${c.n}</i></span>`; };
   const rows=d.strategies.map(s=>`<div class="rf-row"><span class="rf-name"><b>${esc(s.name)}</b></span>${regs.map(r=>cell((s.cells||{})[r])).join('')}</div>`).join('');
-  return `<div class="cxm-tbl-h">${icon('cpu',13)}<b>Strategy × regime fit</b><span>green FIT · red UNFIT · grey gathering — drives live selection</span></div>`+note+`<div class="rf-grid" style="grid-template-columns:1.6fr repeat(${regs.length},1fr)">${head}${rows}</div>`;
+  return `<div class="cxm-tbl-h">${icon('cpu',13)}<b>Strategy × regime fit</b><span>green FIT · red UNFIT · grey gathering, drives live selection</span></div>`+note+`<div class="rf-grid" style="grid-template-columns:1.6fr repeat(${regs.length},1fr)">${head}${rows}</div>`;
 }
 // Crypto-scoped router: every Algo Studio tab stays in sync with the crypto market (no Indian content leaks).
 function cryptoBody(view,label){
@@ -4716,9 +4752,9 @@ function renderAlgo(){
   v.querySelectorAll('[data-algodep]').forEach(b=>b.onclick=()=>algoDeploy(ALGOS[+b.dataset.algodep]));
   v.querySelectorAll('[data-cxdep]').forEach(b=>b.onclick=()=>cryptoLibDeploy(b.dataset.cxdep));
   v.querySelectorAll('[data-fwgoto]').forEach(b=>b.onclick=()=>algoDeploy(ALGOS[+b.dataset.fwgoto]));
-  v.querySelectorAll('[data-algogl]').forEach(b=>b.onclick=()=>{const a=ALGOS[+b.dataset.algogl]; if(b.classList.contains('is-locked')){quickToast('Go-Live locked','Keep paper-trading — unlocks after the forward-test gate (≥'+(BOT.nudgeMin||10)+' profitable closed trades).');return;} goLiveChecklist(a);});
-  v.querySelectorAll('[data-lcpause]').forEach(b=>b.onclick=()=>{const a=ALGOS[+b.dataset.lcpause];setStrategyState(a.id,'paused','Paused — '+a.name);});
-  v.querySelectorAll('[data-lcresume]').forEach(b=>b.onclick=()=>{const a=ALGOS[+b.dataset.lcresume];setStrategyState(a.id,'paper','Resumed — '+a.name);});
+  v.querySelectorAll('[data-algogl]').forEach(b=>b.onclick=()=>{const a=ALGOS[+b.dataset.algogl]; if(b.classList.contains('is-locked')){quickToast('Go-Live locked','Keep paper-trading, unlocks after the forward-test gate (≥'+(BOT.nudgeMin||10)+' profitable closed trades).');return;} goLiveChecklist(a);});
+  v.querySelectorAll('[data-lcpause]').forEach(b=>b.onclick=()=>{const a=ALGOS[+b.dataset.lcpause];setStrategyState(a.id,'paused','Paused, '+a.name);});
+  v.querySelectorAll('[data-lcresume]').forEach(b=>b.onclick=()=>{const a=ALGOS[+b.dataset.lcresume];setStrategyState(a.id,'paper','Resumed, '+a.name);});
   v.querySelectorAll('[data-lcstop]').forEach(b=>b.onclick=()=>lcStop(ALGOS[+b.dataset.lcstop]));
   const sa=v.querySelector('[data-stopall]'); if(sa)sa.onclick=stopAll;
   // Monitor accordion: click a strategy to reveal its positions + forward accuracy.
@@ -4763,35 +4799,35 @@ function renderAlgo(){
 /* ===== Info icons + plain-English definitions for every metric/strategy ===== */
 function infoI(tip){return tip?`<span class="info-i" title="${esc(tip)}" role="img" aria-label="${esc(tip)}" tabindex="0">i</span>`:'';}
 const ALGO_DEFS={
-  'OOS Sharpe':'Out-of-sample Sharpe — risk-adjusted return on data the strategy was NOT tuned on. Above ~1 is good, ~0 means no edge, below 0 loses money.',
+  'OOS Sharpe':'Out-of-sample Sharpe, risk-adjusted return on data the strategy was NOT tuned on. Above ~1 is good, ~0 means no edge, below 0 loses money.',
   'Return':'Average return per trade in the backtest, after realistic costs.',
-  'Win':'Win rate — share of trades that closed in profit. High win rate alone does NOT mean profitable: a few large losses can outweigh many small wins.',
+  'Win':'Win rate, share of trades that closed in profit. High win rate alone does NOT mean profitable: a few large losses can outweigh many small wins.',
   'Trades':'Number of closed trades in the backtest. More trades = more reliable; under ~30 is thin, treat as a hint not proof.',
-  'Paper P&L':'Net = Realised + Unrealised. Live paper P&L from forward-trading (simulated, no real money) since the bot started — booked closed-trade P&L plus mark-to-market on open positions.',
+  'Paper P&L':'Net = Realised + Unrealised. Live paper P&L from forward-trading (simulated, no real money) since the bot started, booked closed-trade P&L plus mark-to-market on open positions.',
   'Status':'Validation status. Validated = passed the regime backtest with a real, positive edge. Candidate = a recognised strategy that has NOT been backtested yet.',
   'Best regime':'The market condition where this strategy showed its strongest edge in testing.',
   'Min cap':'Minimum capital suggested to trade this strategy given lot sizes / margin.',
-  'Needs':'What this strategy requires to trade — product or segment (e.g. stock futures, index options, MCX).',
+  'Needs':'What this strategy requires to trade, product or segment (e.g. stock futures, index options, MCX).',
   'Strategies':'How many strategies are available in this segment.',
   'Validated':'How many strategies in this segment passed the regime backtest with a real edge (the rest are unproven candidates).',
-  'Live regime':'The market regime zengtrade is detecting right now — it decides which strategy is the active engine.',
+  'Live regime':'The market regime zengtrade is detecting right now, it decides which strategy is the active engine.',
   'Mode':'Paper = simulated, zero real orders. Live = real money. Always paper-trade first.'};
 const REGIME_DEFS={
-  Bull:'Bull — index above its 200-day average and trending up. Momentum / trend strategies are favoured.',
-  Bear:'Bear — index below its 200-day average, trending down. Most long-equity edges disappear; best to stand aside.',
-  Choppy:'Choppy / rangebound — no clear trend. Mean-reversion works; trend strategies get whipsawed.',
-  'High-Vol':'High volatility — India VIX elevated. Sharp moves and snap-backs; dip-buying (RSI-2) historically works, trend-following struggles.'};
+  Bull:'Bull, index above its 200-day average and trending up. Momentum / trend strategies are favoured.',
+  Bear:'Bear, index below its 200-day average, trending down. Most long-equity edges disappear; best to stand aside.',
+  Choppy:'Choppy / rangebound, no clear trend. Mean-reversion works; trend strategies get whipsawed.',
+  'High-Vol':'High volatility, India VIX elevated. Sharp moves and snap-backs; dip-buying (RSI-2) historically works, trend-following struggles.'};
 const STRAT_DEFS={
   momentum:'Momentum / breakout (trend-following): buys strength as price breaks its recent high and rides the trend. Wins in trends, bleeds in chop.',
-  orb:'Opening Range Breakout: trades the break of the first 15-minute range — a classic intraday breakout play, squared off by close.',
+  orb:'Opening Range Breakout: trades the break of the first 15-minute range, a classic intraday breakout play, squared off by close.',
   meanrev:'Mean reversion: fades extremes, betting price snaps back to its average. Works in rangebound markets, dangerous in trends.',
-  rsi2:'Connors RSI(2): buys deep short-term oversold dips inside a long uptrend — a counter-trend swing edge that shines when volatility spikes.',
+  rsi2:'Connors RSI(2): buys deep short-term oversold dips inside a long uptrend, a counter-trend swing edge that shines when volatility spikes.',
   macross:'Golden Cross: slow positional trend-following on the 50/200-day moving-average crossover.',
   supertrend:'Supertrend: an ATR-band trend follower that flips long/short as price crosses the band.',
-  pairs:'Pairs / statistical arbitrage: trades the spread between two correlated stocks — long one, short the other. Market-neutral, so it profits regardless of market direction.',
-  strangle:'Options premium selling: sells out-of-the-money calls & puts to collect time-decay (theta). High win rate but real tail risk — wings cap it.',
+  pairs:'Pairs / statistical arbitrage: trades the spread between two correlated stocks, long one, short the other. Market-neutral, so it profits regardless of market direction.',
+  strangle:'Options premium selling: sells out-of-the-money calls & puts to collect time-decay (theta). High win rate but real tail risk, wings cap it.',
   fut_trend:'Index futures trend-following with a regime filter and ATR-based position sizing.',
-  mcx_trend:'Commodity trend-following on MCX futures (gold / silver / crude) — commodities trend more strongly than equities.',
+  mcx_trend:'Commodity trend-following on MCX futures (gold / silver / crude), commodities trend more strongly than equities.',
   goldsilver:'Gold–Silver ratio: mean-reverts the price ratio between the two metals via MCX futures.'};
 function lbl(t){return ALGO_DEFS[t]?t+infoI(ALGO_DEFS[t]):t;}
 function simRegime(){
@@ -4823,9 +4859,9 @@ function algoStatusBar(){
       <div class="asb-prow"><span>India VIX</span><b class="num ${er.vix>18?'down':'up'}">${er.vix.toFixed(1)} ${er.vix>=20?'Fear':er.vix>=15?'Caution':'Calm'}</b></div>
       <div class="asb-prow"><span>Breadth A/D</span><b class="num ${er.ad>=1?'up':'down'}">${er.ad.toFixed(2)} ${er.ad>=1.5?'Strong':er.ad>=1?'Firm':'Weak'}</b></div>
       <div class="asb-prow"><span>Engine Score</span><b class="num ${er.score>=0?'up':'down'}">${er.score>=0?'+':''}${er.score} ${esc(lr)}</b></div>
-      <div class="asb-popf">${er.real?('● Live from Kite · '+new Date(er.asOf).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})):'⚠ Simulated — connect Kite for live data'}</div></div>`:'';
+      <div class="asb-popf">${er.real?('● Live from Kite · '+new Date(er.asOf).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})):'⚠ Simulated, connect Kite for live data'}</div></div>`:'';
   const cells=[
-    `<div class="asb-cell"><span class="asb-l">Broker${infoI('Your Kite Connect link — green means market data and orders are authorised.')}</span><span class="asb-v"><span class="live-dot ${conn?'live':''}"></span>${conn?'Connected':'Offline'}</span></div>`,
+    `<div class="asb-cell"><span class="asb-l">Broker${infoI('Your Kite Connect link, green means market data and orders are authorised.')}</span><span class="asb-v"><span class="live-dot ${conn?'live':''}"></span>${conn?'Connected':'Offline'}</span></div>`,
     (conn&&BOT.status&&BOT.status.user)?`<div class="asb-cell"><span class="asb-l">Account</span><span class="asb-v">${esc(String(BOT.status.user).split(' ')[0])}</span></div>`:'',
     `<div class="asb-cell asb-click" data-execjump="${BOT.paperMode?'paper':'live'}" role="button" tabindex="0" title="See which strategies run in paper vs live"><span class="asb-l">Mode${infoI(ALGO_DEFS['Mode'])}</span><span class="asb-v"><span class="mode-badge ${BOT.paperMode?'paper':'live'}">${BOT.paperMode?'PAPER':'LIVE'}</span><span class="asb-caret">▸</span></span></div>`,
     `<div class="asb-cell asb-pop-host"${er?' tabindex="0"':''}><span class="asb-l">Live regime${infoI((REGIME_DEFS[lr]||'')+' Hover for the live India VIX, breadth & engine score behind this call.')}</span><span class="asb-v"><span class="seg-dot ${rdot}"></span>${lr}${scoreTag}</span>${pop}</div>`,
@@ -4839,9 +4875,9 @@ function harnessRunning(){ return !!(BOT.status && BOT.status.harnessRunning); }
 function harnessCta(){
   const busy=BOT.harnessBusy;
   if(harnessRunning())
-    return `<div class="harness-on">${icon('check',13)}<span><b>Paper engine running</b> — forward-testing every validated strategy on live data. First trades appear within a few minutes.</span><button class="btn-ghost sm" data-harness="stop" ${busy?'disabled':''}>${busy?'…':'Stop'}</button></div>`;
+    return `<div class="harness-on">${icon('check',13)}<span><b>Paper engine running</b>: forward-testing every validated strategy on live data. First trades appear within a few minutes.</span><button class="btn-ghost sm" data-harness="stop" ${busy?'disabled':''}>${busy?'…':'Stop'}</button></div>`;
   return `<div class="harness-cta"><button class="btn-primary harness-start" data-harness="start" ${busy?'disabled':''}>${icon('bolt',14)} ${busy?'Starting…':'Start paper testing'}</button>
-    <p class="harness-hint">${icon('shield',11)}<span>One click — no terminal. Runs every validated strategy on <b>live</b> data at <b>zero risk</b>.</span></p></div>`;
+    <p class="harness-hint">${icon('shield',11)}<span>One click, no terminal. Runs every validated strategy on <b>live</b> data at <b>zero risk</b>.</span></p></div>`;
 }
 function toggleHarness(action){
   if(BOT.harnessBusy) return;
@@ -4849,7 +4885,7 @@ function toggleHarness(action){
   fetch(BOT_API+'/api/harness',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action})})
     .then(r=>r.json()).then(res=>{
       if(res&&res.ok) quickToast(action==='start'?'Paper testing started':'Paper testing stopped',
-        action==='start'?'Forward-testing live strategies at zero risk — give it a few minutes for the first signals.':'The forward paper engine was stopped.');
+        action==='start'?'Forward-testing live strategies at zero risk, give it a few minutes for the first signals.':'The forward paper engine was stopped.');
       else quickToast('Couldn’t '+(action==='start'?'start':'stop')+' paper testing',(res&&res.error)||'Is the bot API running?');
     }).catch(()=>quickToast('Bot API offline',CRYPTO_ONLY?'Run python3 crypto_api.py in the backend folder.':'Run python3 bot_api.py in the bot folder.'))
     .then(()=>{ setTimeout(()=>{ BOT.harnessBusy=false; loadBotData().then(()=>{ if(isAlgo())renderAlgo(); }); }, action==='start'?1800:600); });
@@ -4858,14 +4894,14 @@ function toggleHarness(action){
 // Where does THIS strategy stand in the live regime, RIGHT NOW? Uses the real
 // per-regime backtested edge (regimeFit), never a guess.
 function regimeVerdict(a,lr){
-  if(a.bestRegime==='Market-neutral') return {st:'fav',lab:'Market-neutral',cls:'fit-fav',ic:'◆',why:'Market-neutral — profits from the spread regardless of which way the market moves.'};
+  if(a.bestRegime==='Market-neutral') return {st:'fav',lab:'Market-neutral',cls:'fit-fav',ic:'◆',why:'Market-neutral, profits from the spread regardless of which way the market moves.'};
   const f=a.regimeFit&&a.regimeFit[lr];
   if(!f) return {st:'neu',lab:'No regime read',cls:'fit-neu',ic:'•',why:'No backtested sample in the current '+lr+' regime yet.'};
   const avg=f[0],n=f[1],tone=f[2];
   const base=`${avg>0?'+':''}${avg}% avg over ${n} backtested ${lr} trades.`;
-  if(tone==='good') return {st:'fav',lab:'Favoured now',cls:'fit-fav',ic:'▲',avg,n,why:'In its element — '+base+' This is the regime where its edge is strongest.'};
-  if(tone==='bad')  return {st:'hostile',lab:'Fighting the tape',cls:'fit-bad',ic:'▼',avg,n,why:'Hostile regime — '+base+' Historically loses money here.'};
-  return {st:'neu',lab:'Neutral',cls:'fit-neu',ic:'■',avg,n,why:'Marginal edge — '+base+' It works here, but this isn’t its best regime.'};
+  if(tone==='good') return {st:'fav',lab:'Favoured now',cls:'fit-fav',ic:'▲',avg,n,why:'In its element, '+base+' This is the regime where its edge is strongest.'};
+  if(tone==='bad')  return {st:'hostile',lab:'Fighting the tape',cls:'fit-bad',ic:'▼',avg,n,why:'Hostile regime, '+base+' Historically loses money here.'};
+  return {st:'neu',lab:'Neutral',cls:'fit-neu',ic:'■',avg,n,why:'Marginal edge, '+base+' It works here, but this isn’t its best regime.'};
 }
 // REAL per-strategy cumulative forward paper-P&L curve, parsed from the live trade
 // log (BOT.analytics.trades). Returns null when there aren’t enough closed trades
@@ -4902,8 +4938,8 @@ function adaptSave(){ try{localStorage.setItem('tp_adapt',JSON.stringify(adaptSt
 async function applyAdapt(a){
   if(!a||!a.deployed||a.sub==='live') return null;          // never auto-touch real-money strategies
   const lr=liveRegime(), st=adaptStore(), v=regimeVerdict(a,lr);
-  if(v.st==='hostile' && a.sub==='paper'){ st.paused[a.id]=true; adaptSave(); await setStrategyState(a.id,'paused','Standing aside — '+a.name); return 'aside'; }
-  if(v.st!=='hostile' && a.sub==='paused' && st.paused[a.id]){ delete st.paused[a.id]; adaptSave(); await setStrategyState(a.id,'paper','Re-engaging — '+a.name); return 'engaged'; }
+  if(v.st==='hostile' && a.sub==='paper'){ st.paused[a.id]=true; adaptSave(); await setStrategyState(a.id,'paused','Standing aside, '+a.name); return 'aside'; }
+  if(v.st!=='hostile' && a.sub==='paused' && st.paused[a.id]){ delete st.paused[a.id]; adaptSave(); await setStrategyState(a.id,'paper','Re-engaging, '+a.name); return 'engaged'; }
   return null;
 }
 // Re-check every adapt-enabled strategy (called when the live regime flips).
@@ -4913,17 +4949,17 @@ function toggleAdapt(i){
   const st=adaptStore(), now=!st.on[a.id]; st.on[a.id]=now; if(!now) delete st.paused[a.id]; adaptSave();
   const lr=liveRegime(), v=regimeVerdict(a,lr);
   if(!now){ quickToast('Adapt off', esc(a.name)+' runs on its own rules again, regardless of the regime.'); renderAlgo(); return; }
-  if(a.sub==='live'){ quickToast('Adapt is advisory for live', esc(a.name)+' trades real money, so Adapt won’t auto-pause it. It will flag when the regime turns hostile — you stay in control.'); renderAlgo(); return; }
+  if(a.sub==='live'){ quickToast('Adapt is advisory for live', esc(a.name)+' trades real money, so Adapt won’t auto-pause it. It will flag when the regime turns hostile, you stay in control.'); renderAlgo(); return; }
   applyAdapt(a).then(act=>{
     if(act==='aside') quickToast('Adapt on · standing aside', esc(a.name)+' stops taking new entries in the '+lr+' regime, where it loses'+(v.avg!=null?' ('+(v.avg>0?'+':'')+v.avg+'% avg)':'')+'. It re-engages automatically when the tape turns favourable.');
-    else quickToast('Adapt on · engaged', esc(a.name)+' keeps trading — the live '+lr+' regime '+(v.st==='fav'?'favours its edge':'is acceptable')+'. It will auto stand-aside if the regime turns hostile.');
+    else quickToast('Adapt on · engaged', esc(a.name)+' keeps trading, the live '+lr+' regime '+(v.st==='fav'?'favours its edge':'is acceptable')+'. It will auto stand-aside if the regime turns hostile.');
     renderAlgo();
   });
 }
 function algoForward(){
   const {instr,hold}=studioScope();
   const shown=ALGOS.filter(a=>a.deployed&&inScope(a));    // paper + paused (standing aside) + live, scoped to the active class
-  if(!shown.length) return scopeEmpty('cpu','No forward test in this class','No deployed bot in this class is forward-testing yet — switch the scope above (Equity holds the live book), or deploy one from the Marketplace.',harnessCta());
+  if(!shown.length) return scopeEmpty('cpu','No forward test in this class','No deployed bot in this class is forward-testing yet, switch the scope above (Equity holds the live book), or deploy one from the Marketplace.',harnessCta());
   ensureAnalytics();                                     // real per-strategy equity curves for the sparklines
   const lr=liveRegime();
   const total=shown.reduce((s,a)=>s+(a.paperPnl||0),0);
@@ -4941,7 +4977,7 @@ function algoForward(){
       <div class="ft-bcol"><span class="ft-bl up">▲ Working with the tape</span><div class="ft-bpills">${fav.length?fav.map(x=>`<span class="ft-pill fav" title="${esc(x.v.why)}">${esc(x.a.name)}</span>`).join(''):'<span class="ft-bnone">none of your running strategies are in their best regime right now</span>'}</div></div>
       <div class="ft-bcol"><span class="ft-bl down">▼ Fighting the tape</span><div class="ft-bpills">${hostile.length?hostile.map(x=>`<span class="ft-pill bad" title="${esc(x.v.why)}">${esc(x.a.name)}</span>`).join(''):'<span class="ft-bnone">nothing is trading against the regime</span>'}</div></div>
     </div>
-    ${hostile.length?`<div class="ft-btip">${icon('shield',12)}<span><b>Cut the drag:</b> turn on <b>Adapt</b> for ${hostile.length===1?'this strategy':'these'} — ${hostile.length===1?'it':'they'} will stand aside in the ${lr} regime and re-engage automatically when conditions turn favourable.</span></div>`:''}
+    ${hostile.length?`<div class="ft-btip">${icon('shield',12)}<span><b>Cut the drag:</b> turn on <b>Adapt</b> for ${hostile.length===1?'this strategy':'these'}, ${hostile.length===1?'it':'they'} will stand aside in the ${lr} regime and re-engage automatically when conditions turn favourable.</span></div>`:''}
   </div>`;
   // ---- per-strategy cards: fit badge · real sparkline · risk stats · graduation · adapt ----
   const min=BOT.nudgeMin||10;
@@ -4951,16 +4987,16 @@ function algoForward(){
     const curve=stratCurve(a), sparkEl=curve?ftSparkSVG(curve):`<span class="ft-nospark">curve builds as trades close</span>`;
     const pf=a.fwdProfitFactor, exp=a.fwdExpectancy, win=a.fwdWinPct;
     const stats=`<div class="ft-stats">
-      <div title="Forward win rate — closed paper trades that finished in profit. Win rate alone isn’t edge; read it with profit factor."><span>Win</span><b class="${win!=null?(win>=50?'up':'down'):''}">${win!=null?win+'%':'-'}</b></div>
-      <div title="Profit factor — gross profit ÷ gross loss on forward trades. Above 1 makes money out-of-sample, above 1.5 is strong."><span>PF</span><b class="${pf!=null?(pf>=1?'up':'down'):''}">${pf!=null?(pf>=99?'∞':pf):'-'}</b></div>
-      <div title="Expectancy — average P&L per closed forward trade. Positive = the edge pays per trade."><span>Exp</span><b class="num ${cls(exp||0)}">${exp!=null?sgn(exp):'-'}</b></div>
-      <div title="OOS Sharpe — risk-adjusted return from the backtest. Above ~1 is good."><span>Sharpe</span><b class="${a.sharpe!=null?(a.sharpe>0?'up':'down'):''}">${a.sharpe!=null?a.sharpe.toFixed(2):'-'}</b></div>
+      <div title="Forward win rate, closed paper trades that finished in profit. Win rate alone isn’t edge; read it with profit factor."><span>Win</span><b class="${win!=null?(win>=50?'up':'down'):''}">${win!=null?win+'%':'-'}</b></div>
+      <div title="Profit factor, gross profit ÷ gross loss on forward trades. Above 1 makes money out-of-sample, above 1.5 is strong."><span>PF</span><b class="${pf!=null?(pf>=1?'up':'down'):''}">${pf!=null?(pf>=99?'∞':pf):'-'}</b></div>
+      <div title="Expectancy, average P&L per closed forward trade. Positive = the edge pays per trade."><span>Exp</span><b class="num ${cls(exp||0)}">${exp!=null?sgn(exp):'-'}</b></div>
+      <div title="OOS Sharpe, risk-adjusted return from the backtest. Above ~1 is good."><span>Sharpe</span><b class="${a.sharpe!=null?(a.sharpe>0?'up':'down'):''}">${a.sharpe!=null?a.sharpe.toFixed(2):'-'}</b></div>
     </div>`;
     const pct=Math.min(100,Math.round(n/min*100)), eligible=!!a.nudge;
     const grad=isLive?`<div class="ft-grad"><span class="ft-glive">● LIVE · trading real money</span></div>`
       :`<div class="ft-grad"><div class="ft-gh"><span>${eligible?'Ready for live':'Proving for live'}${infoI('Go-Live unlocks after ≥'+min+' CLOSED, profitable forward trades on a funded, armed account. Proof, not hope.')}</span><span class="ft-gn">${Math.min(n,min)}/${min} trades</span></div><div class="lc-bar"><i style="width:${pct}%"></i></div></div>`;
     const on=adaptOn(a);
-    const adaptBtn=`<button class="ft-adapt${on?' on':''}" data-adapt="${i}" role="switch" aria-checked="${on}" title="${on?'Adapt is ON — auto stand-aside in hostile regimes, auto re-engage when favourable.':'Turn on Adapt — the strategy steps aside in regimes where it loses and re-engages when conditions favour its edge. Honest risk control, not a profit guarantee.'}"><span class="ft-aknob"></span><span class="ft-alab">${on?'Adapt ON':'Adapt'}</span></button>`;
+    const adaptBtn=`<button class="ft-adapt${on?' on':''}" data-adapt="${i}" role="switch" aria-checked="${on}" title="${on?'Adapt is ON, auto stand-aside in hostile regimes, auto re-engage when favourable.':'Turn on Adapt, the strategy steps aside in regimes where it loses and re-engages when conditions favour its edge. Honest risk control, not a profit guarantee.'}"><span class="ft-aknob"></span><span class="ft-alab">${on?'Adapt ON':'Adapt'}</span></button>`;
     const adaptState=on?`<span class="ft-astate ${paused?'aside':'eng'}">${paused?'standing aside in '+lr:isLive?'advisory (live)':'engaged · watching regime'}</span>`:'';
     const subTxt=(a.fwdTrades||a.openPositions||a.realisedPnl||a.openPnl)?`R ${sgn(a.realisedPnl||0)} · U ${sgn(a.openPnl||0)}`:'no trades yet';   // realised & unrealised both visible
     const subEl=paused?`<span class="ft-asidetag">standing aside</span>`:`<span data-live-sub="${a.id}">${subTxt}</span>`;
@@ -4972,13 +5008,13 @@ function algoForward(){
         <div class="ft-id"><span class="live-dot ${paused?'warn':'live'}"></span><div><b>${esc(a.name)}${infoI(STRAT_DEFS[a.id]||'')}</b><span class="ft-cat">${esc(a.cat)} · ${(a.openPositions||0)} open · ${n} closed</span></div></div>
         <div class="ft-pnl"><b class="num ${cls(pnl)}" data-live-pnl="${a.id}">${sgn(pnl)}</b>${subEl}</div>
       </div>
-      <div class="ft-mid"><span class="ft-fit ${v.cls}" title="${esc(v.why)}">${v.ic} ${v.lab}</span><div class="ft-sparkwrap" title="Realised (cumulative) — running total of CLOSED forward paper trades only. Open positions aren't in this curve; the R · U split is shown above.">${sparkEl}</div></div>
+      <div class="ft-mid"><span class="ft-fit ${v.cls}" title="${esc(v.why)}">${v.ic} ${v.lab}</span><div class="ft-sparkwrap" title="Realised (cumulative), running total of CLOSED forward paper trades only. Open positions aren't in this curve; the R · U split is shown above.">${sparkEl}</div></div>
       ${stats}${grad}
       <div class="ft-foot"><div class="ft-adaptwrap">${adaptBtn}${adaptState}</div>${cta}</div>
     </div>`;
   }).join('');
-  const feed=(BOT.trades&&BOT.trades.length)?`<div class="ft-feed"><div class="ft-feedh">Recent forward trades${infoI('Live entries & exits from the forward paper-trading harness — genuine out-of-sample evidence, no real money.')}</div>${BOT.trades.slice(0,12).map(t=>`<div class="ft-trade">${esc(t)}</div>`).join('')}</div>`:`<p class="sec-hint">${icon('cpu',12)}<span>No forward trades yet — they stream in here as the paper harness runs during market hours.</span></p>`;
-  return (harnessRunning()?harnessCta():'')+stat+banner+`<div class="ft-grid">${cards}</div>`+feed+`<p class="sec-hint">${icon('shield',12)}<span>Forward test = real out-of-sample evidence on live data at zero risk. <b>Adapt</b> only stands a strategy aside in regimes where it has historically lost — it manages risk, it does not promise profit.</span></p>`;
+  const feed=(BOT.trades&&BOT.trades.length)?`<div class="ft-feed"><div class="ft-feedh">Recent forward trades${infoI('Live entries & exits from the forward paper-trading harness, genuine out-of-sample evidence, no real money.')}</div>${BOT.trades.slice(0,12).map(t=>`<div class="ft-trade">${esc(t)}</div>`).join('')}</div>`:`<p class="sec-hint">${icon('cpu',12)}<span>No forward trades yet, they stream in here as the paper harness runs during market hours.</span></p>`;
+  return (harnessRunning()?harnessCta():'')+stat+banner+`<div class="ft-grid">${cards}</div>`+feed+`<p class="sec-hint">${icon('shield',12)}<span>Forward test = real out-of-sample evidence on live data at zero risk. <b>Adapt</b> only stands a strategy aside in regimes where it has historically lost, it manages risk, it does not promise profit.</span></p>`;
 }
 function algoCard(a,i,lr,cap){
   cap=cap==null?algoPlanCapital():cap;
@@ -4986,7 +5022,7 @@ function algoCard(a,i,lr,cap){
   const validated=a.vstatus==='validated', neutral=a.bestRegime==='Market-neutral';
   const isActive=validated&&(a.bestRegime===lr||neutral);
   const afford=cap>=a.minCap;
-  const affChip=cap>0?(afford?`<span class="aff-chip ok" title="Your ${inr(cap)} clears the ${inr(a.minCap)} minimum.">✓ Fits your capital</span>`:`<span class="aff-chip no" title="Needs ${inr(a.minCap)} — add ${inr(a.minCap-cap)}.">${icon('lock',10)} +${inr(a.minCap-cap)} needed</span>`):'';
+  const affChip=cap>0?(afford?`<span class="aff-chip ok" title="Your ${inr(cap)} clears the ${inr(a.minCap)} minimum.">✓ Fits your capital</span>`:`<span class="aff-chip no" title="Needs ${inr(a.minCap)}, add ${inr(a.minCap-cap)}.">${icon('lock',10)} +${inr(a.minCap-cap)} needed</span>`):'';
   const chip=lcChip(a);
   const sbadge=validated?'<span class="vbadge ok">Validated</span>':'<span class="vbadge cand">Candidate</span>';
   const tag=a.bestRegime?(neutral?'<span class="rg-tag">Market-neutral</span>':`<span class="rg-tag">Best in ${esc(a.bestRegime)}</span>`):'';
@@ -5042,9 +5078,9 @@ function lcActions(a,i){
     if(validated){
       const n=a.fwdTrades||0, pct=Math.min(100,Math.round(n/min*100)), eligible=!!a.nudge;   // unlocks only on the strict forward-test gate
       const prog=`<div class="lc-prog"><div class="lc-prog-h"><span>Proving for live${infoI('Go-Live unlocks after ≥'+min+' CLOSED, profitable forward paper trades + funded account + ALLOW_LIVE armed. Proof, not hope.')}</span><span class="lc-prog-n">${n}/${min} trades</span></div><div class="lc-bar"><i style="width:${pct}%"></i></div></div>`;
-      primary=`${prog}<button class="btn-go sm wide${eligible?'':' is-locked'}" data-algogl="${i}"${eligible?'':' aria-disabled="true" title="Locked until the forward-test gate is met"'}>${icon('shield',12)} ${eligible?'Go Live →':`Go Live — locked`}</button>`;
+      primary=`${prog}<button class="btn-go sm wide${eligible?'':' is-locked'}" data-algogl="${i}"${eligible?'':' aria-disabled="true" title="Locked until the forward-test gate is met"'}>${icon('shield',12)} ${eligible?'Go Live →':`Go Live, locked`}</button>`;
     } else {
-      primary=`<div class="lc-note">${icon('shield',11)}<span>Gathering forward evidence — candidate, not eligible for live yet.</span></div>`;
+      primary=`<div class="lc-note">${icon('shield',11)}<span>Gathering forward evidence, candidate, not eligible for live yet.</span></div>`;
     }
     return {primary, controls:`<button class="btn-ghost sm" data-lcpause="${i}">Pause</button><button class="btn-ghost sm" data-lcstop="${i}">Stop</button>`};
   }
@@ -5066,7 +5102,7 @@ function algoNudge(){
   const cards=prov.map(a=>{
     const i=ALGOS.indexOf(a);
     return `<div class="nudge-card go"><span class="nudge-ic">${icon('bolt',16)}</span>
-      <div class="nudge-b"><b>${esc(a.name)} — ready to consider live</b><span>${esc(a.nudgeMsg||'')}</span></div>
+      <div class="nudge-b"><b>${esc(a.name)}, ready to consider live</b><span>${esc(a.nudgeMsg||'')}</span></div>
       <button class="btn-go sm" data-algogl="${i}">${icon('shield',12)} Review go-live checklist</button></div>`;
   }).join('');
   return `<div class="nudge-wrap">${cards}</div>`;
@@ -5075,7 +5111,7 @@ function algoNudge(){
    a global kill-switch. Spans all segments so nothing you've deployed is hidden. */
 function myStrategiesBar(){
   const dep=ALGOS.filter(a=>a.deployed);
-  if(!dep.length) return `<div class="mystrat empty">${icon('cpu',15)}<span>No strategies deployed yet — pick one below and <b>Deploy in Paper</b> to start risk-free.</span></div>`;
+  if(!dep.length) return `<div class="mystrat empty">${icon('cpu',15)}<span>No strategies deployed yet, pick one below and <b>Deploy in Paper</b> to start risk-free.</span></div>`;
   const paper=dep.filter(a=>a.sub!=='live'), live=dep.filter(a=>a.sub==='live');
   const totPnl=dep.reduce((s,a)=>s+(a.paperPnl||0),0);
   const totR=dep.reduce((s,a)=>s+(a.realisedPnl||0),0), totU=dep.reduce((s,a)=>s+(a.openPnl||0),0);
@@ -5083,9 +5119,9 @@ function myStrategiesBar(){
   const chips=dep.map(a=>{const i=ALGOS.indexOf(a), st=a.sub==='live'?'live':a.sub==='paused'?'paused':'paper';
     // compact go-live progress, folded in from the old nudge banner
     let prog='';
-    if(a.nudge) prog=`<span class="ms-prog ready" title="Cleared the forward-test gate — open its card to review go-live">✓ go-live ready</span>`;
+    if(a.nudge) prog=`<span class="ms-prog ready" title="Cleared the forward-test gate, open its card to review go-live">✓ go-live ready</span>`;
     else if(a.vstatus==='validated'&&st==='paper'){const n=Math.min(a.fwdTrades||0,min),pc=Math.round(n/min*100);   // mirror the card's "Proving for live" gate (every validated paper strategy)
-      prog=`<span class="ms-prog" title="${n}/${min} closed forward trades toward the go-live gate — proof, not hope"><i class="ms-mini"><b style="width:${pc}%"></b></i>${n}/${min}</span>`;}
+      prog=`<span class="ms-prog" title="${n}/${min} closed forward trades toward the go-live gate, proof, not hope"><i class="ms-mini"><b style="width:${pc}%"></b></i>${n}/${min}</span>`;}
     return `<span class="ms-chip ${st}"><i class="ms-dot"></i><b>${esc(a.name)}</b><span class="ms-pnl num ${cls(a.paperPnl||0)}">${sgn(a.paperPnl||0)}</span>${prog}<button class="ms-x" data-lcstop="${i}" aria-label="Stop ${esc(a.name)}" title="Stop ${esc(a.name)}">${icon('close',10)}</button></span>`;}).join('');
   return `<div class="mystrat">
     <div class="ms-head"><b>${icon('cpu',14)} My strategies</b>
@@ -5097,7 +5133,7 @@ async function stopAll(){
   const dep=ALGOS.filter(a=>a.deployed); if(!dep.length) return;
   const hasLive=dep.some(a=>a.sub==='live');
   flowModal({title:'Stop all strategies', confirm:'Stop all ('+dep.length+')', danger:true,
-    body:`<p class="flow-note">${icon('alert',13)}<span>Stops <b>${dep.length}</b> deployed ${dep.length===1?'strategy':'strategies'}. Paper positions square off next cycle.${hasLive?' <b>Includes LIVE strategies — real positions will be flattened.</b>':''} You can redeploy anytime.</span></p>`,
+    body:`<p class="flow-note">${icon('alert',13)}<span>Stops <b>${dep.length}</b> deployed ${dep.length===1?'strategy':'strategies'}. Paper positions square off next cycle.${hasLive?' <b>Includes LIVE strategies, real positions will be flattened.</b>':''} You can redeploy anytime.</span></p>`,
     onConfirm(){ Promise.all(dep.map(a=>fetch(BOT_API+'/api/strategy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:a.id,state:'off'})}).catch(()=>{})))
       .then(()=>loadBotData()).then(()=>{ if(typeof renderAlgo==='function')renderAlgo(); quickToast('All stopped','Every strategy stopped; paper positions square off next cycle.'); }); }});
 }
@@ -5106,22 +5142,22 @@ async function stopAll(){
 function funnelGuide(){
   if(BOT.algoGuideDone) return '';
   try{ if(localStorage.getItem('tp.algoGuide')==='1'){ BOT.algoGuideDone=true; return ''; } }catch(e){}
-  const steps=[['cpu','Discover','Browse strategies — each shows its validated edge &amp; best regime.'],
-    ['trendUp','Prove','Backtest on real history — vs buy-&amp;-hold, drawdown, monthly returns. No invented numbers.'],
+  const steps=[['cpu','Discover','Browse strategies, each shows its validated edge &amp; best regime.'],
+    ['trendUp','Prove','Backtest on real history, vs buy-&amp;-hold, drawdown, monthly returns. No invented numbers.'],
     ['bolt','Paper','One click forward-tests on live data at zero risk.'],
     ['shield','Monitor','Real P&amp;L, exposure &amp; a live kill-switch as it runs.'],
-    ['check','Go-Live','Only after 16 safety gates pass — money never moves on a click.']];
+    ['check','Go-Live','Only after 16 safety gates pass, money never moves on a click.']];
   return `<div class="funnel-guide"><button class="fg-x" data-fgdismiss aria-label="Dismiss guide" title="Dismiss">${icon('close',13)}</button>
     <div class="fg-h">${icon('cpu',15)}<b>How Algo Studio works</b><span>a transparent path from idea to live</span></div>
     <div class="fg-steps">${steps.map(([ic,t,d],i)=>`${i?'<span class="fg-arrow">→</span>':''}<div class="fg-step"><span class="fg-ic">${icon(ic,15)}</span><b>${i+1} · ${t}</b><span>${d}</span></div>`).join('')}</div></div>`;
 }
 /* ===== capital + risk + style line shown on every strategy card ===== */
 const STYLE_DESC={
-  'Trend':'Rides persistence — wins when moves continue, bleeds in chop.',
-  'Reversion':'Fades overreaction — wins in ranges, hurt by strong trends.',
-  'Relative-value':'Market-neutral spreads — regime-agnostic, low directional beta.',
-  'Carry':'Harvests theta / basis premium — steady income, tail-risk to manage.',
-  'Defensive':'Low-vol / quality — the sleeve that holds up in bear & high-vol.',
+  'Trend':'Rides persistence, wins when moves continue, bleeds in chop.',
+  'Reversion':'Fades overreaction, wins in ranges, hurt by strong trends.',
+  'Relative-value':'Market-neutral spreads, regime-agnostic, low directional beta.',
+  'Carry':'Harvests theta / basis premium, steady income, tail-risk to manage.',
+  'Defensive':'Low-vol / quality, the sleeve that holds up in bear & high-vol.',
 };
 const styleSlug=s=>(s||'').toLowerCase().replace(/[^a-z]/g,'');
 function styleChip(s){ return s?`<span class="sty-chip sty-${styleSlug(s)}" title="${esc(STYLE_DESC[s]||'')}">${esc(s)}</span>`:''; }
@@ -5132,7 +5168,7 @@ function algoMeta(a){
   return `<div class="algo-meta">
     ${styleChip(a.style)}
     <span class="mt-cap" title="Minimum capital to deploy one unit. For F&amp;O this is the lot-size margin estimate (not a live broker quote).">${icon('wallet',11)} Min to deploy <b>${inr(md)}</b></span>
-    <span class="mt-risk" title="Risk appetite — worst backtested drawdown ~${dd!=null?dd+'%':'-'}; about ${rpt!=null?rpt+'%':'-'} of deployed capital at risk per position.">${icon('shield',11)} ${esc(a.risk||'-')} · DD ~${dd!=null?dd+'%':'-'} · ${rpt!=null?rpt+'%':'-'}/trade</span>
+    <span class="mt-risk" title="Risk appetite, worst backtested drawdown ~${dd!=null?dd+'%':'-'}; about ${rpt!=null?rpt+'%':'-'} of deployed capital at risk per position.">${icon('shield',11)} ${esc(a.risk||'-')} · DD ~${dd!=null?dd+'%':'-'} · ${rpt!=null?rpt+'%':'-'}/trade</span>
   </div>`;
 }
 
@@ -5151,7 +5187,7 @@ function frameworkBand(lr,cap){
   const styleCells=FW_STYLES.map(st=>{
     const n=ALGOS.filter(a=>a.style===st).length, fit=fwFit(st,pref);
     const fl=fit==='favored'?'Favoured':fit==='avoid'?'Stand aside':'Neutral';
-    return `<div class="fw-sty ${fit}" title="${esc(STYLE_DESC[st]||'')} — ${fl.toLowerCase()} in a ${lr} market.">
+    return `<div class="fw-sty ${fit}" title="${esc(STYLE_DESC[st]||'')}, ${fl.toLowerCase()} in a ${lr} market.">
       <b>${st}</b><i>${fl}</i><span class="fw-sty-n">${n}</span></div>`;
   }).join('');
   const rec=ALGOS.filter(a=>a.vstatus==='validated'&&(a.bestRegime===lr||a.bestRegime==='Market-neutral'));
@@ -5165,17 +5201,17 @@ function frameworkBand(lr,cap){
   }).join('');
   const recBlock=rec.length
     ? `<div class="fw-rec-grid">${recCards}</div>`
-    : `<div class="fw-rec-empty">${icon('shield',12)}<span>No <b>validated</b> strategy fits a ${lr} market right now — favour the ${(pref.favor||[]).join(' / ')||'market-neutral'} styles below; their candidates are still gathering forward evidence.</span></div>`;
+    : `<div class="fw-rec-empty">${icon('shield',12)}<span>No <b>validated</b> strategy fits a ${lr} market right now, favour the ${(pref.favor||[]).join(' / ')||'market-neutral'} styles below; their candidates are still gathering forward evidence.</span></div>`;
   const dep=ALGOS.filter(a=>a.deployed), depStyles=[...new Set(dep.map(a=>a.style).filter(Boolean))];
   const missing=FW_STYLES.filter(s=>!depStyles.includes(s)&&(s==='Carry'||s==='Defensive'));
   const divNote=dep.length
     ? `You're running ${depStyles.length} style${depStyles.length===1?'':'s'}${depStyles.length?` (${depStyles.join(', ')})`:''}. ${missing.length?`Adding a <b>${missing[0]}</b> sleeve cuts drawdown more than another correlated bet.`:'Good spread across styles.'}`
-    : `Diversification only works across LOW-correlated styles — spread capital across a few, don't stack three Trend bets.`;
+    : `Diversification only works across LOW-correlated styles, spread capital across a few, don't stack three Trend bets.`;
   return `<div class="fw-band">
-    <div class="fw-head"><div><b>${icon('sliders',14)} Strategy Framework</b><span>what to run in a <b>${lr}</b> market — the studio tilts by style as conditions change</span></div>
+    <div class="fw-head"><div><b>${icon('sliders',14)} Strategy Framework</b><span>what to run in a <b>${lr}</b> market, the studio tilts by style as conditions change</span></div>
       <span class="fw-regime">● ${lr}</span></div>
     <div class="fw-styles">${styleCells}</div>
-    <div class="fw-rec"><div class="fw-rec-h">Recommended now${cap>0?` · suggested split of ${inr(cap)}`:''}${infoI('Validated strategies whose best regime matches the live market (or are market-neutral). The split is inverse-risk — a calmer strategy gets a bigger slice. Diversify across these rather than picking one.')}</div>${recBlock}</div>
+    <div class="fw-rec"><div class="fw-rec-h">Recommended now${cap>0?` · suggested split of ${inr(cap)}`:''}${infoI('Validated strategies whose best regime matches the live market (or are market-neutral). The split is inverse-risk, a calmer strategy gets a bigger slice. Diversify across these rather than picking one.')}</div>${recBlock}</div>
     <p class="fw-note">${icon('shield',12)}<span>${divNote}</span></p></div>`;
 }
 
@@ -5211,7 +5247,7 @@ function algoLibrary(){
   const hero=`<div class="lib-hero">
     <div class="lib-hero-ic">${icon('shield',20)}</div>
     <div class="lib-hero-tx"><b>Survive first, profit second.</b>
-      <span>Every strategy type, explained plainly. We lead with how each one <b>loses</b> and the guard that keeps you in the game — then match what fits <b>today’s</b> market. When nothing fits, the right move is to stand aside.</span></div>
+      <span>Every strategy type, explained plainly. We lead with how each one <b>loses</b> and the guard that keeps you in the game, then match what fits <b>today’s</b> market. When nothing fits, the right move is to stand aside.</span></div>
   </div>`;
 
   // ---- "Favoured right now" regime strip (auto-switch intelligence) ----
@@ -5222,13 +5258,13 @@ function algoLibrary(){
     const tag=hv?`High-Vol${regLabel?' · '+regLabel:''}`:regLabel;
     favStrip=`<div class="lib-fav">
       <div class="lib-fav-h"><span class="lib-live"><span class="live-dot live"></span>Live regime: <b>${esc(tag)}</b></span>
-        <span class="lib-fav-sub">${favs.length} strategy types favour this regime${infoI('Auto-matched to the regime zengtrade detects from live Kite data (trend, breadth & VIX). Markets shift — this set updates the moment the regime flips.')}</span>
+        <span class="lib-fav-sub">${favs.length} strategy types favour this regime${infoI('Auto-matched to the regime zengtrade detects from live Kite data (trend, breadth & VIX). Markets shift, this set updates the moment the regime flips.')}</span>
         <button class="lib-fav-btn${l.favOnly?' on':''}" data-libfav>${icon(l.favOnly?'check':'spark',12)} ${l.favOnly?'Showing favoured only':'Show favoured only'}</button></div>
       <div class="lib-fav-pills">${fams.map(fk=>{const fm=famMeta(fk);return `<button class="lib-fav-pill" data-libfam="${fk}">${icon(fm[2],12)} ${esc(fm[1])}</button>`;}).join('')}</div>
-      ${hv?`<p class="lib-fav-warn">${icon('alert',12)}<span>Volatility is elevated — favour <b>defined-risk</b> structures and smaller size. This is when accounts get hurt.</span></p>`:''}
+      ${hv?`<p class="lib-fav-warn">${icon('alert',12)}<span>Volatility is elevated, favour <b>defined-risk</b> structures and smaller size. This is when accounts get hurt.</span></p>`:''}
     </div>`;
   } else {
-    favStrip=`<div class="lib-fav offline">${icon('shield',14)}<span><b>${CRYPTO_ONLY?'Start the crypto API to auto-match strategies to the live regime.':'Connect Kite to auto-match strategies to the live regime.'}</b> ${CRYPTO_ONLY?'Run <code>python3 crypto_api.py</code> and <code>python3 paper_trade_crypto.py</code>':'Run <code>python3 login.py</code>'} — until then, browse and learn freely; we won’t guess today’s regime.</span></div>`;
+    favStrip=`<div class="lib-fav offline">${icon('shield',14)}<span><b>${CRYPTO_ONLY?'Start the crypto API to auto-match strategies to the live regime.':'Connect Kite to auto-match strategies to the live regime.'}</b> ${CRYPTO_ONLY?'Run <code>python3 crypto_api.py</code> and <code>python3 paper_trade_crypto.py</code>':'Run <code>python3 login.py</code>'}, until then, browse and learn freely; we won’t guess today’s regime.</span></div>`;
   }
 
   // ---- filters (family + risk + search), instrument & holding handled by the studio scope toggle (chrome) ----
@@ -5239,7 +5275,7 @@ function algoLibrary(){
   const riskChips=['all','Conservative','Moderate','Aggressive'].map(r=>`<button class="lib-mini${l.risk===r?' on':''}" data-librisk="${r}">${r==='all'?'Any risk':r}</button>`).join('');
   const filterActive=l.fam!=='all'||l.risk!=='all'||q||l.favOnly;
   const filters=`<div class="lib-filters">
-    <div class="lib-search"><span class="lib-search-ic">${icon('search',14)}</span><input id="libSearch" class="lib-search-in" type="text" placeholder="Search strategies — e.g. straddle, breakout, theta…" value="${esc(l.q||'')}"></div>
+    <div class="lib-search"><span class="lib-search-ic">${icon('search',14)}</span><input id="libSearch" class="lib-search-in" type="text" placeholder="Search strategies, e.g. straddle, breakout, theta…" value="${esc(l.q||'')}"></div>
     <div class="lib-chiprow">${famChips}</div>
     <div class="lib-minirow"><span class="lib-minilbl">Risk</span>${riskChips}${filterActive?`<button class="lib-clear" data-libclear>${icon('close',11)} Clear</button>`:''}</div>
   </div>`;
@@ -5247,7 +5283,7 @@ function algoLibrary(){
   // ---- grid ----
   const grid=rows.length
     ? `<div class="lib-grid">${rows.map(s=>libCard(s,regLabel,hv)).join('')}</div>`
-    : secEmpty('search','No strategies match','Loosen the filters or clear the search — or switch holding style / instrument above.');
+    : secEmpty('search','No strategies match','Loosen the filters or clear the search, or switch holding style / instrument above.');
   const count=`<p class="sec-hint">${icon('cpu',12)}<span>Showing <b>${rows.length}</b> ${esc(INSTR_LABEL[instr])} strateg${rows.length===1?'y':'ies'}${hold!=='all'?` · <b>${esc(HOLD_LABEL[hold])}</b>`:''} of ${instrCount(instr)} in this class. Each is a <b>candidate</b> until a real engine backtest graduates it to <b>Validated</b>.</span></p>`;
   return hero+favStrip+filters+count+grid;
 }
@@ -5261,7 +5297,7 @@ function libCard(s,regLabel,hv){
   const hostile=BOT.live&&libHostile(s,regLabel);
   const rk=LIB_RISK_CLASS[s.risk]||'b-neu';
   const ribbon=fav?`<div class="lib-rib fav">${icon('spark',11)} Favoured in the live regime</div>`
-    :hostile?`<div class="lib-rib bad">${icon('alert',11)} Fights today’s regime — stand aside</div>`:'';
+    :hostile?`<div class="lib-rib bad">${icon('alert',11)} Fights today’s regime, stand aside</div>`:'';
   const sbadge=validated?'<span class="vbadge ok">Validated</span>':'<span class="vbadge cand" title="Recognised strategy, not yet engine-backtested. Browse & learn; validate before deploying.">Candidate</span>';
   const meta=`<div class="lib-meta">
     <span class="lib-mtag">${icon(fm[2],11)} ${esc(fm[1])}</span>
@@ -5287,7 +5323,7 @@ function libCard(s,regLabel,hv){
     ${meta}
     <p class="lib-what">${esc(s.what)}</p>
     ${riskline}
-    <button class="lib-learn" data-libexpand="${s.id}" aria-expanded="${open}">${icon(open?'compress':'expand',12)} ${open?'Hide details':'Learn — how it works, params & more'}</button>
+    <button class="lib-learn" data-libexpand="${s.id}" aria-expanded="${open}">${icon(open?'compress':'expand',12)} ${open?'Hide details':'Learn, how it works, params & more'}</button>
     ${detail}
   </div>`;
 }
@@ -5333,7 +5369,7 @@ function missionBanner(){
     <div class="msn-track"><div class="msn-fill" data-live="msnFill" style="width:${prog.toFixed(4)}%"></div>${ticks}</div>
     <div class="msn-foot">
       <span class="msn-prog" data-live="msnProg">${prog.toFixed(prog<1?4:2)}% of the way (log scale)</span>
-      <span class="msn-honest">${icon('shield',11)} 10,000,000× to target — ~57 yrs even at a stellar 50%/yr. Markets are probabilistic; this maximises compounding, it doesn't promise the moon.</span>
+      <span class="msn-honest">${icon('shield',11)} 10,000,000× to target, ~57 yrs even at a stellar 50%/yr. Markets are probabilistic; this maximises compounding, it doesn't promise the moon.</span>
       <span class="msn-cta">${cta}</span>
     </div>
   </div>`;
@@ -5343,12 +5379,12 @@ function algoOpportunity(){
   const a=ALGOS.find(x=>x.id==='opportunity');
   const {instr}=studioScope();
   // engine-level tab: not filtered by instrument: flag it when the scope isn't Equity (where it runs)
-  const sNote=instr!=='equity'?scopeNote(`The Opportunity Engine &amp; Moonshot run on the <b>Equity</b> book — they aren't scoped to ${esc(INSTR_LABEL[instr])}. Switch the scope to <b>Equity</b> to act on these.`):'';
+  const sNote=instr!=='equity'?scopeNote(`The Opportunity Engine &amp; Moonshot run on the <b>Equity</b> book, they aren't scoped to ${esc(INSTR_LABEL[instr])}. Switch the scope to <b>Equity</b> to act on these.`):'';
   // ---- hero / explainer ----
   const hero=sNote+`<div class="opp-hero">
     <div class="opp-hero-ic">${icon('cpu',20)}</div>
-    <div class="opp-hero-tx"><b>Opportunity Engine — the strict judge.</b>
-      <span>Not another strategy. It detects the regime, lets only regime-appropriate specialists <b>vote</b> (weighted), scores every setup <b>0–100</b> on 8 confirmations, and <b>refuses</b> anything that isn't high-conviction. The goal isn't to win every trade — it's to never take a low-quality one.</span></div>
+    <div class="opp-hero-tx"><b>Opportunity Engine, the strict judge.</b>
+      <span>Not another strategy. It detects the regime, lets only regime-appropriate specialists <b>vote</b> (weighted), scores every setup <b>0–100</b> on 8 confirmations, and <b>refuses</b> anything that isn't high-conviction. The goal isn't to win every trade, it's to never take a low-quality one.</span></div>
   </div>`;
   // ---- pipeline diagram ----
   const pipe=`<div class="opp-pipe">${['Market data','Indicators','Regime','Weighted vote','Confidence 0–100','Risk filters','Execute'].map((s,i,arr)=>`<span class="opp-pstep${i===arr.length-1?' last':''}">${esc(s)}</span>${i<arr.length-1?'<span class="opp-parrow">→</span>':''}`).join('')}</div>`;
@@ -5359,7 +5395,7 @@ function algoOpportunity(){
     const chip=a.sub==='live'?'<span class="lc-chip live">● LIVE · real money</span>':a.sub==='paper'?`<span class="lc-chip paper">${icon('bolt',10)} Paper · running</span>`:a.sub==='paused'?'<span class="lc-chip paused">❚❚ Paused</span>':'';
     const i=ALGOS.indexOf(a);
     const gate=a.sub==='live'?`<button class="btn-go sm" data-algogl="${i}">${icon('shield',12)} Manage live</button>`
-      :`<div class="opp-gate"><div class="opp-gate-h"><span>Go-Live gate${infoI('The engine earns real-money execution after ≥'+min+' profitable CLOSED forward paper trades + funded account + ALLOW_LIVE armed.')}</span><span>${n}/${min} profitable paper trades</span></div><div class="lc-bar"><i style="width:${pc}%"></i></div>${a.nudge?`<button class="btn-go sm wide" data-algogl="${i}">${icon('shield',12)} Go Live →</button>`:`<button class="btn-go sm wide is-locked" data-algogl="${i}" aria-disabled="true">${icon('lock',12)} Go Live — locked until ${min} profitable trades</button>`}</div>`;
+      :`<div class="opp-gate"><div class="opp-gate-h"><span>Go-Live gate${infoI('The engine earns real-money execution after ≥'+min+' profitable CLOSED forward paper trades + funded account + ALLOW_LIVE armed.')}</span><span>${n}/${min} profitable paper trades</span></div><div class="lc-bar"><i style="width:${pc}%"></i></div>${a.nudge?`<button class="btn-go sm wide" data-algogl="${i}">${icon('shield',12)} Go Live →</button>`:`<button class="btn-go sm wide is-locked" data-algogl="${i}" aria-disabled="true">${icon('lock',12)} Go Live, locked until ${min} profitable trades</button>`}</div>`;
     life=`<div class="opp-life">
       <div class="opp-life-l"><b>${esc(a.name)}</b>${chip}<span class="opp-pnl ${a.paperPnl>0?'up':a.paperPnl<0?'down':''}">${a.paperPnl>=0?'+':'−'}₹${Math.abs(Math.round(a.paperPnl||0)).toLocaleString('en-IN')} paper P&L</span></div>
       ${a.sub?gate:`<button class="btn-primary sm" data-algodep="${i}">${icon('bolt',12)} Deploy in Paper</button>`}
@@ -5369,21 +5405,21 @@ function algoOpportunity(){
   const d=OPPS.data;
   if(!OPPS.loaded){ loadOpps(); return missionBanner()+hero+pipe+life+`<div class="opp-load">${icon('cpu',16)}<span>Scoring the universe against the live regime…</span></div>`; }
   if(OPPS.error || !d || d.real===false){
-    return missionBanner()+hero+pipe+life+`<div class="opp-offline">${icon('shield',14)}<span><b>Connect Kite for the live decision scan.</b> ${esc((d&&d.error)||'')||'Run python3 login.py — the engine scores real setups only; it never invents an opportunity.'}</span></div>`;
+    return missionBanner()+hero+pipe+life+`<div class="opp-offline">${icon('shield',14)}<span><b>Connect Kite for the live decision scan.</b> ${esc((d&&d.error)||'')||'Run python3 login.py, the engine scores real setups only; it never invents an opportunity.'}</span></div>`;
   }
   // regime + enabled specialists with weights
   const reg=d.regime, w=d.weights||{};
   const specs=(d.specialists||[]);
   const weightChips=specs.map(s=>{const wt=w[s.style]||0;const tone=wt>=8?'hi':wt>=4?'mid':'lo';return `<span class="opp-wchip ${tone}" title="${esc(s.style)} carries weight ${wt} in a ${esc(reg)} regime">${esc(s.key)} <i>${wt}</i></span>`;}).join('');
   const regBar=`<div class="opp-regime">
-    <div class="opp-reg-h"><span class="lib-live"><span class="live-dot live"></span>Live regime: <b>${esc(reg)}</b></span><span class="opp-reg-sub">specialist vote weights this regime — the regime decides who gets a say${infoI('In each regime the engine up-weights the specialists that historically work and mutes the rest. Trend names lead in Bull; reversion in Choppy/High-Vol.')}</span></div>
+    <div class="opp-reg-h"><span class="lib-live"><span class="live-dot live"></span>Live regime: <b>${esc(reg)}</b></span><span class="opp-reg-sub">specialist vote weights this regime, the regime decides who gets a say${infoI('In each regime the engine up-weights the specialists that historically work and mutes the rest. Trend names lead in Bull; reversion in Choppy/High-Vol.')}</span></div>
     <div class="opp-wchips">${weightChips}</div></div>`;
   // bands legend
   const bands=`<div class="opp-legend">${[['exec','90–100 Execute'],['execif','75–89 Execute if filters'],['watch','60–74 Watchlist'],['ign','&lt;60 Ignore']].map(([k,l])=>`<span class="opp-lg ${k}">${l}</span>`).join('')}</div>`;
   const opps=d.opportunities||[];
   const top=opps.filter(o=>o.confidence>=60);
   const feed=opps.length?`<div class="opp-grid">${opps.slice(0,12).map(oppCard).join('')}</div>`
-    :secEmpty('shield','Nothing clears the bar right now',`The engine scored ${opps.length} names and none reached the watchlist threshold in this ${esc(reg)} regime — so it stands aside. That's the engine working: no low-quality trades.`);
+    :secEmpty('shield','Nothing clears the bar right now',`The engine scored ${opps.length} names and none reached the watchlist threshold in this ${esc(reg)} regime, so it stands aside. That's the engine working: no low-quality trades.`);
   const summ=`<p class="sec-hint">${icon('cpu',12)}<span>Scored <b>${opps.length}</b> names · <b>${top.length}</b> on the watchlist+ · <b>${opps.filter(o=>o.confidence>=75).length}</b> in an execute band. Refreshed ${OPPS.at?timeAgo(new Date(OPPS.at).toISOString()):'now'}. <button class="opp-refresh" data-oppref>↻ Rescan</button></span></p>`;
   return missionBanner()+hero+pipe+life+regBar+bands+summ+feed+allocationPanel()+learningPanel()+decisionLog();
 }
@@ -5398,7 +5434,7 @@ function oppCard(o){
   const s=o.sub||{};
   const SUBS=[['trendQuality','Trend'],['momentum','Mom'],['volume','Vol'],['volatility','Volat'],['liquidity','Liq']];
   const subBars=SUBS.map(([k,l])=>{const v=s[k]||0;const t=v>=70?'hi':v>=40?'mid':'lo';return `<div class="opp-sub"><span>${l}</span><div class="opp-sbar"><i class="${t}" style="width:${v}%"></i></div><b>${v}</b></div>`;}).join('');
-  const ev=s.expReturnPct!=null?`<span title="Estimated favourable move (~1.5×ATR) — an estimate, not a promise">Exp +${s.expReturnPct}%</span>`:'';
+  const ev=s.expReturnPct!=null?`<span title="Estimated favourable move (~1.5×ATR), an estimate, not a promise">Exp +${s.expReturnPct}%</span>`:'';
   const hold=s.expDurationDays?`<span>~${s.expDurationDays}d hold</span>`:'';
   const risk=s.risk!=null?`<span class="opp-risk ${s.risk<=30?'lo':s.risk<=60?'mid':'hi'}">Risk ${s.risk}</span>`:'';
   const reasons=(o.reasons||[]);
@@ -5410,7 +5446,7 @@ function oppCard(o){
     <div class="opp-bar"><i class="${tone}" style="width:${o.confidence}%"></i></div>
     <div class="opp-c-meta"><span>${o.agree}/${votes.length} agree</span>${ev}${hold}${risk}${o.mtfOk===false?'<span class="opp-mtf">⚠ higher-TF</span>':''}</div>
     <div class="opp-subs">${subBars}</div>
-    <details class="opp-det"><summary>Why — reasons, components & votes</summary>
+    <details class="opp-det"><summary>Why, reasons, components & votes</summary>
       ${reasonList}
       <div class="opp-det-h">Confirmations</div><div class="opp-comps">${compChips}</div>
       <div class="opp-det-h">Specialist votes</div><div class="opp-votes">${voteChips}</div></details>
@@ -5430,8 +5466,8 @@ function loadDecisions(force){
 function decisionLog(){
   loadDecisions();
   const recs=(DECS.data&&DECS.data.decisions)||[];
-  const head=`<div class="dlog-h">${icon('flag',13)}<b>Decision Log</b><span>every entry & exit, with the reasoning — fully auditable</span></div>`;
-  if(!recs.length) return `<div class="dlog">${head}<p class="sec-hint" style="margin-top:8px">${icon('cpu',12)}<span>No decisions logged yet — the Moonshot records each trade here with regime, confidence, sub-scores and rationale the moment it acts.</span></p></div>`;
+  const head=`<div class="dlog-h">${icon('flag',13)}<b>Decision Log</b><span>every entry & exit, with the reasoning, fully auditable</span></div>`;
+  if(!recs.length) return `<div class="dlog">${head}<p class="sec-hint" style="margin-top:8px">${icon('cpu',12)}<span>No decisions logged yet, the Moonshot records each trade here with regime, confidence, sub-scores and rationale the moment it acts.</span></p></div>`;
   const rows=recs.slice(0,30).map(r=>{
     const isE=r.action==='ENTER';
     const when=r.ts?timeAgo(r.ts):'';
@@ -5469,15 +5505,15 @@ function allocationPanel(){
   const fund=funded.length?funded.map(f=>`<div class="alc-row fund">
       <span class="alc-tag fund">FUND</span>
       <div class="alc-main"><b>${esc(f.symbol)}</b> <span class="alc-meta">${esc(f.sector)} · conf ${Math.round(f.confidence)} · score ${f.score}</span></div>
-      <span class="alc-alloc">${f.allocPct}%<i>${f.qty} sh</i></span></div>`).join(''):'<p class="sec-hint" style="margin:6px 0">Nothing funded this round — no proposal cleared conviction + the Governor.</p>';
+      <span class="alc-alloc">${f.allocPct}%<i>${f.qty} sh</i></span></div>`).join(''):'<p class="sec-hint" style="margin:6px 0">Nothing funded this round, no proposal cleared conviction + the Governor.</p>';
   const skip=skipped.slice(0,8).map(s=>`<div class="alc-row skip">
       <span class="alc-tag skip">SKIP</span>
       <div class="alc-main"><b>${esc(s.symbol)}</b> <span class="alc-meta">${esc(s.sector||'')} · conf ${Math.round(s.confidence||0)}</span></div>
       <span class="alc-reason">${esc(s.reason)}</span></div>`).join('');
   return `<div class="alc">${head}
     <div class="alc-summ">Competed <b>${d.ranked||0}</b> proposals · funded <b class="up">${funded.length}</b> · deployed <b>${inrShort(d.deployed||0)}</b> of ${inrShort(d.budget||0)} budget</div>
-    <div class="alc-cols"><div class="alc-col"><div class="alc-ch up">Funded — won capital</div>${fund}</div>
-    <div class="alc-col"><div class="alc-ch">Skipped — and why</div>${skip||'<p class="sec-hint" style="margin:6px 0">—</p>'}</div></div></div>`;
+    <div class="alc-cols"><div class="alc-col"><div class="alc-ch up">Funded, won capital</div>${fund}</div>
+    <div class="alc-col"><div class="alc-ch">Skipped, and why</div>${skip||'<p class="sec-hint" style="margin:6px 0">—</p>'}</div></div></div>`;
 }
 
 /* ===== Learning Engine panel: what the system has learned from the decision log ===== */
@@ -5509,7 +5545,7 @@ function learningPanel(){
   }).join('');
   return `<div class="lrn">
     <div class="lrn-h">${icon('cpu',13)}<b>Learning Engine</b>${chip}</div>
-    <p class="lrn-note">${icon('shield',11)}<span>Scoring weights update from <b>real closed-trade outcomes</b> — each signal shrunk toward its prior by sample size, then renormalised so the 0–100 scale &amp; bands stay fixed. Nothing moves until ${d.minTrades} closed trades. ${active?'It now up-weights the signals that have preceded winners and mutes the noise.':'Priors stay in use until the evidence is robust — no overfitting to a handful of trades.'}</span></p>
+    <p class="lrn-note">${icon('shield',11)}<span>Scoring weights update from <b>real closed-trade outcomes</b>: each signal shrunk toward its prior by sample size, then renormalised so the 0–100 scale &amp; bands stay fixed. Nothing moves until ${d.minTrades} closed trades. ${active?'It now up-weights the signals that have preceded winners and mutes the noise.':'Priors stay in use until the evidence is robust, no overfitting to a handful of trades.'}</span></p>
     <div class="lrn-rows"><div class="lrn-row lrn-head"><span>Signal</span><span>prior → learned weight</span><span></span><span>evidence</span></div>${rows}</div>
   </div>`;
 }
@@ -5539,9 +5575,9 @@ function rebalancePanel(){
   const d=REBAL.data; if(!d || d.real===false) return '';
   const en=d.enabled||[], st=d.stoodDown||[];
   const enChips=en.length?en.map(x=>`<span class="rb2-chip on">${esc(x.name)}<i>${esc(x.style)}</i></span>`).join(''):'<span class="sec-hint">—</span>';
-  const stChips=st.length?st.map(x=>`<span class="rb2-chip off">${esc(x.name)}<i>${esc(x.style)}</i></span>`).join(''):'<span class="sec-hint">none — all styles fit this regime</span>';
+  const stChips=st.length?st.map(x=>`<span class="rb2-chip off">${esc(x.name)}<i>${esc(x.style)}</i></span>`).join(''):'<span class="sec-hint">none, all styles fit this regime</span>';
   return `<div class="rb2">
-    <div class="rb2-h">${icon('repeat',13)}<b>Strategy Rebalancing</b><span>capital rotates to the regime-fit strategies — the rest stand down to cash (capital-preservation)</span></div>
+    <div class="rb2-h">${icon('repeat',13)}<b>Strategy Rebalancing</b><span>capital rotates to the regime-fit strategies, the rest stand down to cash (capital-preservation)</span></div>
     <div class="rb2-summ"><span class="rb2-live"><span class="live-dot live"></span>${esc(d.regime||'-')}</span>
       <span>Cash target <b>${d.cashPct}%</b></span><span>Conviction floor <b>${d.convictionFloor}</b></span>
       ${d.preservation?'<span class="rb2-pres">🛡 preservation</span>':''}<span class="rb2-note">${esc(d.note||'')}</span></div>
@@ -5553,15 +5589,15 @@ function rebalancePanel(){
 
 function algoRisk(){
   loadRisk();
-  const hero=scopeNote('Portfolio-wide — the Governor spans <b>every</b> instrument class at once, regardless of the scope above. Risk is managed across the whole book.')+`<div class="rk-hero"><div class="rk-hero-ic">${icon('shield',20)}</div>
-    <div class="rk-hero-tx"><b>Portfolio Risk Governor</b><span>Every trade passes through here — no exceptions. It caps concentration, governs exposure, and trips a portfolio-wide kill-switch on drawdown. Bots propose; the Governor disposes.</span></div></div>`;
+  const hero=scopeNote('Portfolio-wide, the Governor spans <b>every</b> instrument class at once, regardless of the scope above. Risk is managed across the whole book.')+`<div class="rk-hero"><div class="rk-hero-ic">${icon('shield',20)}</div>
+    <div class="rk-hero-tx"><b>Portfolio Risk Governor</b><span>Every trade passes through here, no exceptions. It caps concentration, governs exposure, and trips a portfolio-wide kill-switch on drawdown. Bots propose; the Governor disposes.</span></div></div>`;
   const d=RISK.data;
   if(!RISK.loaded) return hero+`<div class="opp-load">${icon('cpu',16)}<span>Reading the live book…</span></div>`;
   if(!d || d.real===false) return hero+`<div class="opp-offline">${icon('shield',14)}<span><b>Governor publishes during market hours.</b> ${esc((d&&d.error)||'')||'Start the paper harness while the market is open to see live portfolio risk.'}</span></div>`;
   const grade=d.score>=80?['Excellent','up']:d.score>=60?['Healthy','']:d.score>=40?['Caution','down']:['Critical','down'];
   const killed=d.killSwitch;
-  const kill=killed?`<div class="rk-kill">${icon('alert',16)}<div><b>KILL-SWITCH ACTIVE — ${esc(d.mode).toUpperCase()}</b><span>Portfolio drawdown ${d.drawdownPct}% — new entries are blocked across all bots until it recovers.</span></div></div>`
-    :d.mode!=='normal'?`<div class="rk-warn">${icon('alert',13)}<span>Risk-reduction mode <b>${esc(d.mode)}</b> — new positions sized to ${Math.round((d.sizeMult||1)*100)}% (drawdown ${d.drawdownPct}%).</span></div>`:'';
+  const kill=killed?`<div class="rk-kill">${icon('alert',16)}<div><b>KILL-SWITCH ACTIVE, ${esc(d.mode).toUpperCase()}</b><span>Portfolio drawdown ${d.drawdownPct}%, new entries are blocked across all bots until it recovers.</span></div></div>`
+    :d.mode!=='normal'?`<div class="rk-warn">${icon('alert',13)}<span>Risk-reduction mode <b>${esc(d.mode)}</b>: new positions sized to ${Math.round((d.sizeMult||1)*100)}% (drawdown ${d.drawdownPct}%).</span></div>`:'';
   const health=`<div class="rk-health">
     <div class="rk-score ${grade[1]}"><b>${d.score}</b><span>/100</span></div>
     <div class="rk-grade"><b class="${grade[1]}">${grade[0]}</b><span>portfolio health</span></div>
@@ -5573,7 +5609,7 @@ function algoRisk(){
     </div></div>`;
   const bar=(label,pct,lim)=>{const over=pct>lim;return `<div class="rk-cbar"><span class="rk-cl">${esc(label)}</span><div class="rk-ctrack"><i class="${over?'over':''}" style="width:${Math.min(100,pct)}%"></i><span class="rk-clim" style="left:${Math.min(100,lim)}%" title="limit ${lim}%"></span></div><b class="${over?'down':''}">${Math.round(pct)}%</b></div>`;};
   const secs=Object.entries(d.sectors||{});
-  const secBars=secs.length?secs.map(([s,p])=>bar(s,p,d.limits.sector)).join(''):'<p class="sec-hint">No open positions — book is flat.</p>';
+  const secBars=secs.length?secs.map(([s,p])=>bar(s,p,d.limits.sector)).join(''):'<p class="sec-hint">No open positions, book is flat.</p>';
   const symBars=Object.entries(d.symbols||{}).slice(0,8).map(([s,p])=>bar(s,p,d.limits.symbol)).join('');
   const conc=`<div class="rk-grid2">
     <div class="rk-card"><div class="rk-ch">${icon('pie',13)} Sector concentration <i>limit ${d.limits.sector}%</i></div>${secBars}</div>
@@ -5586,7 +5622,7 @@ function algoRisk(){
     <p class="rk-cur">Currently: <b class="${d.mode==='normal'?'up':'down'}">${esc(d.mode)}</b> at ${d.drawdownPct}% drawdown</p></div>`;
   // audit
   const audit=(d.audit||[]);
-  const aud=audit.length?`<div class="rk-card"><div class="rk-ch">${icon('flag',13)} Trade audit — every proposal, approved or vetoed</div><div class="rk-audit">${audit.slice(0,20).map(a=>`<div class="rk-arow ${a.approved?'ok':'veto'}"><span class="rk-atag ${a.approved?'ok':'veto'}">${a.approved?'PASS':'VETO'}</span><span class="rk-amain"><b>${esc(a.bot)}</b> ${esc(a.symbol||'')}</span><span class="rk-areason">${esc(a.reason)}</span><span class="rk-awhen">${a.ts?timeAgo(a.ts):''}</span></div>`).join('')}</div></div>`:`<div class="rk-card"><div class="rk-ch">${icon('flag',13)} Trade audit</div><p class="sec-hint">No proposals reviewed yet — every bot entry will appear here with the Governor's verdict.</p></div>`;
+  const aud=audit.length?`<div class="rk-card"><div class="rk-ch">${icon('flag',13)} Trade audit, every proposal, approved or vetoed</div><div class="rk-audit">${audit.slice(0,20).map(a=>`<div class="rk-arow ${a.approved?'ok':'veto'}"><span class="rk-atag ${a.approved?'ok':'veto'}">${a.approved?'PASS':'VETO'}</span><span class="rk-amain"><b>${esc(a.bot)}</b> ${esc(a.symbol||'')}</span><span class="rk-areason">${esc(a.reason)}</span><span class="rk-awhen">${a.ts?timeAgo(a.ts):''}</span></div>`).join('')}</div></div>`:`<div class="rk-card"><div class="rk-ch">${icon('flag',13)} Trade audit</div><p class="sec-hint">No proposals reviewed yet, every bot entry will appear here with the Governor's verdict.</p></div>`;
   return hero+kill+health+rebalancePanel()+conc+ladder+aud;
 }
 
@@ -5600,19 +5636,19 @@ function loadPositions(force){
     if(typeof isAlgo==='function'&&isAlgo()&&state.algo&&state.algo.view==='positions') renderAlgo();
   }).catch(()=>{ POSNS.loaded=true; POSNS.loading=false; });
 }
-const POS_ACT={hold:['Hold','hold'],protect:['Protect profit','protect'],watch:['Watch','watch'],exit:['Exit — thesis decayed','exit']};
+const POS_ACT={hold:['Hold','hold'],protect:['Protect profit','protect'],watch:['Watch','watch'],exit:['Exit, thesis decayed','exit']};
 function posTone(h){ return (h==null)?'na':h>=70?'hi':h>=50?'mid':'lo'; }
 function algoPositions(){
   loadPositions();
   const hero=`<div class="pi-hero"><div class="pi-hero-ic">${icon('shield',20)}</div>
-    <div class="pi-hero-tx"><b>Position Intelligence</b><span>Every open position, managed live. Health = is the original thesis still valid? It protects profit as gains grow and exits only on <b>persistent</b> thesis decay — never on a single down-tick, so winners are let run.</span></div></div>`;
+    <div class="pi-hero-tx"><b>Position Intelligence</b><span>Every open position, managed live. Health = is the original thesis still valid? It protects profit as gains grow and exits only on <b>persistent</b> thesis decay, never on a single down-tick, so winners are let run.</span></div></div>`;
   const d=POSNS.data;
   if(!POSNS.loaded) return hero+`<div class="opp-load">${icon('cpu',16)}<span>Reading open positions…</span></div>`;
   if(!d||d.real===false) return hero+`<div class="opp-offline">${icon('shield',14)}<span>${esc((d&&d.error)||'')||'Connect the harness to manage live positions.'}</span></div>`;
   const allPs=d.positions||[];
   const ps=allPs.filter(p=>inScope(ALGOS.find(x=>x.id===(p.bot))||{id:p.bot}));   // scope to the active instrument class
-  if(!allPs.length) return hero+`<div class="opp-offline">${icon('check',14)}<span><b>No open positions</b> — nothing to manage right now. As the bots enter, each position appears here with a live health score and a recommended action.</span></div>`;
-  if(!ps.length) return hero+scopeEmpty('check','No open positions in this class',`${allPs.length} position(s) are open in other classes — switch the scope above (Equity holds the live book) to manage them.`);
+  if(!allPs.length) return hero+`<div class="opp-offline">${icon('check',14)}<span><b>No open positions</b>: nothing to manage right now. As the bots enter, each position appears here with a live health score and a recommended action.</span></div>`;
+  if(!ps.length) return hero+scopeEmpty('check','No open positions in this class',`${allPs.length} position(s) are open in other classes, switch the scope above (Equity holds the live book) to manage them.`);
   const summ=`<p class="sec-hint">${icon('cpu',12)}<span><b>${ps.length}</b> open position(s)${d.avgHealth!=null?` · avg health <b>${d.avgHealth}</b>`:''} · weakest first. Health updates every cycle from the live thesis.</span></p>`;
   const cards=ps.map(p=>{
     const tone=posTone(p.health), act=POS_ACT[p.action]||['-','na'];
@@ -5646,9 +5682,9 @@ function algoMarket(){
   const quick=[[50000,'₹50K'],[100000,'₹1L'],[500000,'₹5L'],[1000000,'₹10L']];
   const capQuick=`<div class="cap-quick" role="group" aria-label="Quick capital presets">${quick.map(([qv,ql])=>`<button class="cap-chip${cap===qv?' on':''}" data-capset="${qv}">${ql}</button>`).join('')}</div>`;
   const capStrip=`<div class="cap-strip">
-    <div class="cap-field"><label for="algoPlanCap">Plan with capital${infoI('Set the money you intend to deploy. Each card then shows whether you can actually run that strategy at this size — driven by real lot-size & margin minimums, not guesswork.')}</label>
+    <div class="cap-field"><label for="algoPlanCap">Plan with capital${infoI('Set the money you intend to deploy. Each card then shows whether you can actually run that strategy at this size, driven by real lot-size & margin minimums, not guesswork.')}</label>
       <div class="cap-row"><div class="cap-input-wrap"><span>₹</span><input id="algoPlanCap" class="cap-input num" type="number" inputmode="numeric" value="${cap}" min="0" step="5000" placeholder="e.g. 100000"></div>${capQuick}</div></div>
-    <div class="cap-sum">${cap>0?`<b class="up">${affordN}</b> of ${inSeg.length} affordable · <b>${matchN}</b> also match the live <b>${lr}</b> regime`:'Pick a preset or type the capital you plan to deploy — each card then shows exactly what you can run.'}</div>
+    <div class="cap-sum">${cap>0?`<b class="up">${affordN}</b> of ${inSeg.length} affordable · <b>${matchN}</b> also match the live <b>${lr}</b> regime`:'Pick a preset or type the capital you plan to deploy, each card then shows exactly what you can run.'}</div>
     <label class="cap-toggle"><input type="checkbox" id="algoOnlyRun" ${onlyRun?'checked':''}><span>Only what I can run now</span></label>
   </div>`;
   const valid=inSeg.filter(a=>a.vstatus==='validated').length;
@@ -5657,11 +5693,11 @@ function algoMarket(){
   const stat=secStats([
     {l:lbl('Strategies'),v:String(inSeg.length),s:'in '+esc(segLabel)},
     {l:lbl('Validated'),v:String(valid),s:'passed validation',tone:valid?'up':''},
-    {l:'Fit '+esc(lr)+infoI('Validated strategies whose best regime matches the current live regime — the ones the engine can deploy right now.'),v:String(regimeReady),s:'match the live regime'},
+    {l:'Fit '+esc(lr)+infoI('Validated strategies whose best regime matches the current live regime, the ones the engine can deploy right now.'),v:String(regimeReady),s:'match the live regime'},
     {l:'Runnable now'+infoI('Validated strategies that BOTH fit the live regime AND clear your planned capital’s lot-size / margin minimum.'),v:cap>0?String(matchN):'-',s:cap>0?'fit '+inr(cap):'set your capital',tone:cap>0&&matchN>0?'up':''}
   ]);
   const emptyMsg=inSeg.length===0
-    ? `No deployable <b>${esc(segLabel)}</b> bot exists yet — this class is in the Library as candidates. As options/futures engines come online they appear here. Switch the scope above to <b>Equity</b> for the live book.`
+    ? `No deployable <b>${esc(segLabel)}</b> bot exists yet, this class is in the Library as candidates. As options/futures engines come online they appear here. Switch the scope above to <b>Equity</b> for the live book.`
     : `No <b>${esc(segLabel)}</b> strategy both fits ${inr(cap)} and matches the live ${lr} regime. Add capital, switch off the filter, or wait for the regime to favour a validated edge.`;
   const cards=shown.length?shown.map(a=>algoCard(a,ALGOS.indexOf(a),lr,cap)).join(''):secEmpty('shield',inSeg.length===0?'Nothing deployable in this class yet':'Nothing runnable at this size',emptyMsg);
   const build=onlyRun?'':`<button class="algo-build" data-algobuild>${icon('plus',20)}<b>Build a strategy</b><span>Define your own entry &amp; exit rules</span></button>`;
@@ -5669,12 +5705,12 @@ function algoMarket(){
 }
 /* ===== Go-Live readiness: the hard checklist that gates Paper→Live ===== */
 function goLiveChecklist(a){
-  flowModal({title:'Go-Live readiness — '+a.name, hideConfirm:true,
+  flowModal({title:'Go-Live readiness, '+a.name, hideConfirm:true,
     body:`<div class="gl-load">${icon('cpu',16)}<span>Running the go-live audit across strategy, account, risk &amp; security…</span></div>`,
     wire(body){
       fetch(BOT_API+'/api/readiness?strategy='+encodeURIComponent(a.id))
         .then(r=>r.json()).then(d=>{ body.innerHTML=readinessHTML(d,a); wireReadiness(body,d,a); })
-        .catch(()=>{ body.innerHTML=`<p class="flow-note">${icon('shield',13)}<span>Bot API offline — run <b>python3 bot_api.py</b> in the bot folder, then retry.</span></p>`; });
+        .catch(()=>{ body.innerHTML=`<p class="flow-note">${icon('shield',13)}<span>Bot API offline, run <b>python3 bot_api.py</b> in the bot folder, then retry.</span></p>`; });
     }});
 }
 function readinessHTML(d,a){
@@ -5695,7 +5731,7 @@ function readinessHTML(d,a){
   const open=d.gates.filter(g=>g.critical&&!g.ok);
   const foot=d.ready
     ? `<button class="tbtn primary gl-go" id="glGo">${icon('bolt',13)} Arm &amp; switch ${esc(a.name)} to LIVE</button>
-       <p class="gl-fnote">${icon('shield',12)}<span>Even here, a real order is impossible unless <b>ALLOW_LIVE</b> is set in the bot’s own environment — a UI click can never place money on its own.</span></p>`
+       <p class="gl-fnote">${icon('shield',12)}<span>Even here, a real order is impossible unless <b>ALLOW_LIVE</b> is set in the bot’s own environment, a UI click can never place money on its own.</span></p>`
     : `<div class="gl-blocked">${icon('lock',14)}<div><b>Live is locked.</b><span>Clears automatically once every critical gate is green${open.length?': '+open.map(g=>esc(g.label)).join(' · '):''}.</span></div></div>`;
   return head+`<div class="gl-list">${groups}</div>`+foot;
 }
@@ -5707,7 +5743,7 @@ function wireReadiness(body,d,a){
         if(res.locked){ go.disabled=false; go.innerHTML=icon('bolt',13)+' Arm &amp; switch '+esc(a.name)+' to LIVE';
           quickToast('Live still locked','ALLOW_LIVE is not set in the bot environment, so the switch was refused. Set it on the machine running the bot, then retry.'); }
         else { BOT.paperMode=false; closeModal(); if(typeof renderAlgo==='function')renderAlgo();
-          quickToast('LIVE armed — '+a.name,'Real orders are now enabled. Start small and watch the first fills.'); }
+          quickToast('LIVE armed, '+a.name,'Real orders are now enabled. Start small and watch the first fills.'); }
       }).catch(()=>{ go.disabled=false; go.textContent='Retry'; quickToast('Could not reach the bot','Switch was not applied.'); });
   };
 }
@@ -5783,7 +5819,7 @@ function ensureBacktest(id,period,uniCsv){
 function algoBacktest(){
   const period=state.algo.bt.period;
   const pick=ALGOS.map((x,i)=>({x,i})).filter(o=>inScope(o.x));   // strategies in the active class
-  if(!pick.length) return scopeEmpty('cpu','No backtestable strategy in this class','Switch the scope above — Equity holds the single-symbol backtests. Switch instrument/holding to see another class.');
+  if(!pick.length) return scopeEmpty('cpu','No backtestable strategy in this class','Switch the scope above, Equity holds the single-symbol backtests. Switch instrument/holding to see another class.');
   let ai=Math.min(state.algo.bt.algo,ALGOS.length-1);
   if(!pick.some(o=>o.i===ai)) ai=pick[0].i;                       // selected fell out of scope → first in-scope
   const a=ALGOS[ai];
@@ -5794,12 +5830,12 @@ function algoBacktest(){
   // Custom (user-built) strategies map to a real engine, let them backtest. Other candidates
   // (not yet through validation) stay gated so we don't imply a proven edge.
   if(a.real&&a.vstatus!=='validated'&&!a.custom)
-    return ctrl+secEmpty('cpu','Candidate — not yet validated',esc(a.name)+' is a realistic strategy but hasn’t passed the regime-segmented validation. '+(a.requires?('Needs '+esc(a.requires)+' data. '):'')+'Backtest numbers appear once it’s validated.');
+    return ctrl+secEmpty('cpu','Candidate, not yet validated',esc(a.name)+' is a realistic strategy but hasn’t passed the regime-segmented validation. '+(a.requires?('Needs '+esc(a.requires)+' data. '):'')+'Backtest numbers appear once it’s validated.');
   if(a.id==='pairs')
-    return ctrl+secEmpty('scale','Pairs is a 2-leg strategy',esc(a.name)+' is market-neutral (long one stock future, short another) — it isn’t a single-symbol backtest. See its live forward-test results under Forward Test / Monitor.');
+    return ctrl+secEmpty('scale','Pairs is a 2-leg strategy',esc(a.name)+' is market-neutral (long one stock future, short another), it isn’t a single-symbol backtest. See its live forward-test results under Forward Test / Monitor.');
   // REAL backtest (Kite history). Honest connect/loading state: no simulated projection.
   if(!BOT.live)
-    return ctrl+secEmpty('cpu','Connect Kite to run a real backtest',esc(a.name)+' backtests on real Kite daily history across a 14-stock universe (using the same engine that validated it). Connect — <b>python3 login.py</b> — to run it. No simulated numbers are shown.');
+    return ctrl+secEmpty('cpu','Connect Kite to run a real backtest',esc(a.name)+' backtests on real Kite daily history across a 14-stock universe (using the same engine that validated it). Connect, <b>python3 login.py</b>: to run it. No simulated numbers are shown.');
   // universe selector: default 14 / your watchlist / a custom symbol list
   const uni=(state.algo.bt&&state.algo.bt.uni)||'default', wlN=Math.min(SYMS.filter(s=>isEq(s)).length,20);
   const uniSel=`<div class="bt-uni"><span class="bt-unil">Backtest on</span>
@@ -5813,7 +5849,7 @@ function algoBacktest(){
   ensureBacktest(a.id,period,uniCsv);
   const rec=(BOT.backtests||{})[btKey(a.id,period,uniCsv)];
   if(!rec || rec.loading || !rec.p)
-    return ctrl+uniSel+secEmpty('cpu', (rec&&rec.err)?'Backtest unavailable':'Running real backtest…', (rec&&rec.err)?esc(rec.err):'Running '+esc(a.name)+' on real Kite history — a few seconds.');
+    return ctrl+uniSel+secEmpty('cpu', (rec&&rec.err)?'Backtest unavailable':'Running real backtest…', (rec&&rec.err)?esc(rec.err):'Running '+esc(a.name)+' on real Kite history, a few seconds.');
   const bt=rec.p;
   const endEq=Math.round(bt.pts[bt.pts.length-1]||100), peakEq=Math.round(Math.max(...bt.pts));
   const eqCap=`<div class="eq-cap">
@@ -5825,12 +5861,12 @@ function algoBacktest(){
   // VALIDATION REPORT: the honest in-sample vs out-of-sample cut (the moat)
   const o=bt.oos||{}, held=(o.oos_ret||0)>=0 && (o.oos_avg||0)>=-0.1;
   const thin=bt.trades<30;
-  const vr=`<div class="bt-vr"><div class="bt-vrh">${icon('shield',13)} Validation — the honest cut</div>
+  const vr=`<div class="bt-vr"><div class="bt-vrh">${icon('shield',13)} Validation, the honest cut</div>
     <div class="bt-vrgrid">
       <div class="bt-vrcol"><span>In-sample (70%)</span><b class="num ${tone(o.is_ret)}">${pct(o.is_ret||0)}</b><i>${o.is_trades||0} trades · avg ${pct(o.is_avg||0)}/trade</i></div>
       <div class="bt-vrcol"><span>Out-of-sample (30%)</span><b class="num ${tone(o.oos_ret)}">${pct(o.oos_ret||0)}</b><i>${o.oos_trades||0} trades · avg ${pct(o.oos_avg||0)}/trade</i></div>
     </div>
-    <p class="bt-vrverdict ${held?'ok':'warn'}">${icon(held?'check':'alert',12)}<span>${held?'Edge <b>persisted out-of-sample</b> — held up on data it never trained on.':'Edge <b>weakened out-of-sample</b> — strong in-sample but faded on unseen data. Treat with caution.'} Costs: <b>${bt.costBps} bps/leg applied</b>.${thin?' <b>Thin sample</b> ('+bt.trades+' trades, &lt;30) — a hint, not proof.':''}</span></p></div>`;
+    <p class="bt-vrverdict ${held?'ok':'warn'}">${icon(held?'check':'alert',12)}<span>${held?'Edge <b>persisted out-of-sample</b>: held up on data it never trained on.':'Edge <b>weakened out-of-sample</b>: strong in-sample but faded on unseen data. Treat with caution.'} Costs: <b>${bt.costBps} bps/leg applied</b>.${thin?' <b>Thin sample</b> ('+bt.trades+' trades, &lt;30), a hint, not proof.':''}</span></p></div>`;
   const log=`<table class="tbl bt-log"><thead><tr><th>#</th><th>Entry</th><th>Exit</th><th>Hold</th><th>Return</th></tr></thead><tbody>${bt.log.map((t,i)=>`<tr><td>${i+1}</td><td class="num">${t.entry.toLocaleString('en-IN')}</td><td class="num">${t.exit.toLocaleString('en-IN')}</td><td class="num">${t.days}d</td><td class="num ${cls(t.ret)}">${pct(t.ret)}</td></tr>`).join('')}</tbody></table>`;
   const an=bt.analytics||{}, pf=an.profitFactor!=null?an.profitFactor.toFixed(2):'∞';
   const analytics=`<div class="bt-an"><div class="bt-anh">${icon('trendUp',13)} Trade analytics <i>${an.wins||0}W / ${an.losses||0}L</i></div>
@@ -5852,24 +5888,24 @@ function algoBacktest(){
       <div class="bt-bc"><span>Alpha · ann.${infoI('Annualised return the strategy added beyond just holding these stocks. Positive = real edge; negative = the timing cost more than it added.')}</span><b class="num ${tone(bm.alpha)}">${bm.alpha!=null?pct(bm.alpha):'-'}</b></div>
       <div class="bt-bc"><span>Beta${infoI('Sensitivity to the benchmark. ~1 moves with it, <1 is less exposed, ~0 is market-neutral.')}</span><b class="num">${bm.beta!=null?bm.beta.toFixed(2):'-'}</b></div>
     </div>
-    <p class="bt-bverdict ${beat?'ok':'warn'}">${icon(beat?'check':'alert',12)}<span>${beat?'The strategy <b>beat</b> simply holding these stocks.':'The strategy <b>underperformed</b> buy &amp; hold over this window — the timing cost more than it added. An honest result, shown anyway.'}</span></p></div>`:'';
+    <p class="bt-bverdict ${beat?'ok':'warn'}">${icon(beat?'check':'alert',12)}<span>${beat?'The strategy <b>beat</b> simply holding these stocks.':'The strategy <b>underperformed</b> buy &amp; hold over this window, the timing cost more than it added. An honest result, shown anyway.'}</span></p></div>`:'';
   // ---- drawdown / underwater + time in market ----
-  const ddBlock=(Array.isArray(bt.dd)&&bt.dd.length>1)?`<div class="bt-dd"><div class="bt-anh">${icon('trendDown',13)} Drawdown — underwater <i>worst −${bt.maxDD.toFixed(1)}% · time in market ${bt.timeInMarket!=null?bt.timeInMarket+'%':'-'}</i></div>${ddCurveSVG(bt.dd)}<p class="bt-ddcap">${icon('shield',11)}<span>How deep and how long the strategy sat below its prior peak — the pain you'd have had to sit through.</span></p></div>`:'';
+  const ddBlock=(Array.isArray(bt.dd)&&bt.dd.length>1)?`<div class="bt-dd"><div class="bt-anh">${icon('trendDown',13)} Drawdown, underwater <i>worst −${bt.maxDD.toFixed(1)}% · time in market ${bt.timeInMarket!=null?bt.timeInMarket+'%':'-'}</i></div>${ddCurveSVG(bt.dd)}<p class="bt-ddcap">${icon('shield',11)}<span>How deep and how long the strategy sat below its prior peak, the pain you'd have had to sit through.</span></p></div>`:'';
   const uniTag=bt.customUniverse?`<span class="bt-unitag">${esc((bt.symbols||[]).slice(0,4).join(', '))}${(bt.symbols||[]).length>4?' +'+((bt.symbols||[]).length-4):''}</span>`:'';
   // ---- Monte-Carlo robustness (bootstrap of the real trades) ----
   const mc=bt.montecarlo;
   const robust=mc&&mc.profitableShare>=60;
   const mcBlock=mc?`<div class="bt-bench"><div class="bt-anh">${icon('shield',13)} Monte-Carlo robustness <i>${mc.runs} resamples of your trades</i></div>
     <div class="bt-bgrid">
-      <div class="bt-bc"><span>Worst 5%${infoI('5th-percentile outcome across 1000 bootstrap resamples of your trades — a bad-luck draw.')}</span><b class="num down">${pct(mc.p5)}</b></div>
+      <div class="bt-bc"><span>Worst 5%${infoI('5th-percentile outcome across 1000 bootstrap resamples of your trades, a bad-luck draw.')}</span><b class="num down">${pct(mc.p5)}</b></div>
       <div class="bt-bc"><span>Median</span><b class="num ${tone(mc.p50)}">${pct(mc.p50)}</b></div>
       <div class="bt-bc"><span>Best 5%</span><b class="num up">${pct(mc.p95)}</b></div>
       <div class="bt-bc"><span>Profitable${infoI('Share of the 1000 resampled runs that ended in profit. >60% = a robust edge; near 50% = close to a coin-flip.')}</span><b class="num ${mc.profitableShare>=60?'up':mc.profitableShare<50?'down':''}">${mc.profitableShare}%</b></div>
     </div>
-    <p class="bt-bverdict ${robust?'ok':'warn'}">${icon(robust?'check':'alert',12)}<span>${robust?'<b>Robust</b> — '+mc.profitableShare+'% of resampled runs profited, so the edge isn’t one lucky sequence.':'<b>Fragile</b> — only '+mc.profitableShare+'% of resampled runs profited; the result leans on a few trades. Treat with caution.'} Across draws, returns spanned <b>${pct(mc.p5)}</b> to <b>${pct(mc.p95)}</b>.</span></p></div>`:'';
+    <p class="bt-bverdict ${robust?'ok':'warn'}">${icon(robust?'check':'alert',12)}<span>${robust?'<b>Robust</b>: '+mc.profitableShare+'% of resampled runs profited, so the edge isn’t one lucky sequence.':'<b>Fragile</b>: only '+mc.profitableShare+'% of resampled runs profited; the result leans on a few trades. Treat with caution.'} Across draws, returns spanned <b>${pct(mc.p5)}</b> to <b>${pct(mc.p95)}</b>.</span></p></div>`:'';
   // ---- edge consistency over time (folds into the monthly section) ----
   const ed=bt.edgeDecay;
-  const decayLine=ed?`<p class="bt-ddcap">${icon('clock',11)}<span><b>${ed.posMonths}%</b> of ${ed.totalMonths} months positive.${ed.fading!=null?(ed.fading?' Edge is <b>fading</b> — recent months ('+pct(ed.secondHalfAvg)+'/mo) weaker than earlier ('+pct(ed.firstHalfAvg)+'/mo).':' Edge is <b>holding</b> — recent ('+pct(ed.secondHalfAvg)+'/mo) ≈ earlier ('+pct(ed.firstHalfAvg)+'/mo).'):''}</span></p>`:'';
+  const decayLine=ed?`<p class="bt-ddcap">${icon('clock',11)}<span><b>${ed.posMonths}%</b> of ${ed.totalMonths} months positive.${ed.fading!=null?(ed.fading?' Edge is <b>fading</b>: recent months ('+pct(ed.secondHalfAvg)+'/mo) weaker than earlier ('+pct(ed.firstHalfAvg)+'/mo).':' Edge is <b>holding</b>: recent ('+pct(ed.secondHalfAvg)+'/mo) ≈ earlier ('+pct(ed.firstHalfAvg)+'/mo).'):''}</span></p>`:'';
   return ctrl+uniSel+uniTag+card+benchBlock+metrics+vr+ddBlock+monthlyHeat(bt.monthly)+decayLine+mcBlock+analytics+`<div class="bt-logwrap"><div class="bt-logttl">Recent trades</div>${log}</div>`;
 }
 /* ===== Strategy Leaderboard: rank validated strategies + edge-by-regime matrix (real catalog) ===== */
@@ -5880,13 +5916,13 @@ function algoLeaderboard(){
   const sort=state.algo.lbSort||'ret';
   const validated=ALGOS.filter(a=>a.vstatus==='validated'&&inScope(a));
   const cands=ALGOS.filter(a=>a.vstatus!=='validated'&&inScope(a));
-  if(!validated.length) return scopeEmpty('cpu','No validated strategies in this class','No bot in this class has passed regime-segmented validation yet — switch the scope above (Equity holds most validated edges), or see candidates in the Marketplace & Library.');
+  if(!validated.length) return scopeEmpty('cpu','No validated strategies in this class','No bot in this class has passed regime-segmented validation yet, switch the scope above (Equity holds most validated edges), or see candidates in the Marketplace & Library.');
   const haveSharpe=validated.some(a=>a.sharpe!=null);
   const metric={sharpe:a=>(a.sharpe!=null?a.sharpe:-Infinity), ret:a=>a.totalRet||0, win:a=>a.win||0, dd:a=>-(a.dd||99), paper:a=>a.paperPnl||0};
   const ranked=[...validated].sort((x,y)=>metric[sort](y)-metric[sort](x));
   const sorts=[['sharpe','Sharpe'],['ret','Return'],['win','Win %'],['dd','Drawdown'],['paper','Net']];
   const ctrl=`<div class="lb-ctrl"><span class="lb-lab">Rank by</span><div class="lb-sorts" role="tablist" aria-label="Rank strategies by">${sorts.map(([k,l])=>`<button class="lb-sort${k===sort?' on':''}" data-lbsort="${k}" role="tab" aria-selected="${k===sort}">${l}</button>`).join('')}</div></div>`;
-  const sharpeNote=(sort==='sharpe'&&!validated.every(a=>a.sharpe!=null))?`<p class="sec-hint">${icon('shield',12)}<span>Sharpe is shown only where validation computed it — strategies without it rank last (never a guessed value). Run a <b>Backtest</b> to compute a real Sharpe on live history.</span></p>`:'';
+  const sharpeNote=(sort==='sharpe'&&!validated.every(a=>a.sharpe!=null))?`<p class="sec-hint">${icon('shield',12)}<span>Sharpe is shown only where validation computed it, strategies without it rank last (never a guessed value). Run a <b>Backtest</b> to compute a real Sharpe on live history.</span></p>`:'';
   const rows=ranked.map((a,i)=>{const active=a.bestRegime===lr||a.bestRegime==='Market-neutral';
     return `<div class="lb-row${active?' active':''}">
       <span class="lb-rank">${i+1}</span>
@@ -5900,11 +5936,11 @@ function algoLeaderboard(){
       <button class="btn-ghost sm lb-bt" data-algobt="${ALGOS.indexOf(a)}">${icon('trendUp',12)} Backtest</button>
     </div>`;}).join('');
   const regs=['Bull','Bear','Choppy','High-Vol'];
-  const matrix=`<div class="lb-matrix"><div class="lb-mh">Edge by regime — who works when${infoI('Average trade return per market regime from the backtest. Green = a positive edge, amber = weak/thin, red = loses. The outlined column is the live regime. No strategy wins in every regime — that’s why the engine switches.')}</div>
+  const matrix=`<div class="lb-matrix"><div class="lb-mh">Edge by regime, who works when${infoI('Average trade return per market regime from the backtest. Green = a positive edge, amber = weak/thin, red = loses. The outlined column is the live regime. No strategy wins in every regime, that’s why the engine switches.')}</div>
     <div class="lb-mscroll"><table class="lb-mtbl"><thead><tr><th>Strategy</th>${regs.map(r=>`<th class="${r===lr?'live':''}">${r==='High-Vol'?'HV':r}</th>`).join('')}</tr></thead>
     <tbody>${validated.map(a=>`<tr><td class="lb-mname">${esc(a.name)}</td>${regs.map(r=>{const f=a.regimeFit&&a.regimeFit[r];if(!f)return '<td class="lb-mcell">—</td>';const tn=f[2]==='good'?'rg-good':f[2]==='weak'?'rg-weak':'rg-bad';return `<td class="lb-mcell ${tn}${r===lr?' live':''}" title="${esc(a.name)} in ${r}: ${f[0]>0?'+':''}${f[0]}% over ${f[1]} trades">${f[0]>0?'+':''}${f[0]}</td>`;}).join('')}</tr>`).join('')}</tbody></table></div>
-    <p class="lb-mnote">${icon('shield',12)}<span>The honest takeaway: <b>no strategy wins everywhere</b>. The live regime is <b>${esc(lr)}</b> — the engine favours strategies validated for it and stands aside otherwise.</span></p></div>`;
-  const candNote=cands.length?`<p class="sec-hint">${icon('cpu',12)}<span>${cands.length} candidate strateg${cands.length===1?'y is':'ies are'} not ranked — they haven’t passed validation (see Marketplace). We rank proof, not promises.</span></p>`:'';
+    <p class="lb-mnote">${icon('shield',12)}<span>The honest takeaway: <b>no strategy wins everywhere</b>. The live regime is <b>${esc(lr)}</b>: the engine favours strategies validated for it and stands aside otherwise.</span></p></div>`;
+  const candNote=cands.length?`<p class="sec-hint">${icon('cpu',12)}<span>${cands.length} candidate strateg${cands.length===1?'y is':'ies are'} not ranked, they haven’t passed validation (see Marketplace). We rank proof, not promises.</span></p>`:'';
   return ctrl+sharpeNote+`<div class="lb-list">${rows}</div>${matrix}${corrSection()}${candNote}`;
 }
 /* Strategy correlation: lazy-loaded real correlation of validated strategies' daily returns,
@@ -5922,13 +5958,13 @@ function corrSection(){
   if(!BOT.live) return '';
   ensureCorrelation();
   const rec=BOT.correlation;
-  if(!rec||rec.loading) return `<div class="lb-matrix"><div class="lb-mh">${icon('scale',13)} Strategy correlation — are these the same bet?</div><p class="sec-hint">${icon('cpu',12)}<span>Computing correlation across validated strategies on real history… (a few seconds)</span></p></div>`;
+  if(!rec||rec.loading) return `<div class="lb-matrix"><div class="lb-mh">${icon('scale',13)} Strategy correlation, are these the same bet?</div><p class="sec-hint">${icon('cpu',12)}<span>Computing correlation across validated strategies on real history… (a few seconds)</span></p></div>`;
   if(!rec.p) return '';
   const c=rec.p;
   const cell=v=>{const tn=v>=0.7?'rg-bad':v>=0.4?'rg-weak':'rg-good';return `<td class="lb-mcell ${v===1?'':tn}" title="correlation ${v}">${v.toFixed(2)}</td>`;};
   const mc=c.mostCorrelated;
-  const note=mc?`<p class="lb-mnote">${icon('shield',12)}<span>${mc.r>=0.7?'<b>'+esc(mc.a)+'</b> &amp; <b>'+esc(mc.b)+'</b> move together ('+mc.r+') — running both adds little diversification.':'Your validated strategies are <b>weakly correlated</b> (max '+mc.r+') — they diversify each other well, so running them together spreads risk.'}</span></p>`:'';
-  return `<div class="lb-matrix"><div class="lb-mh">${icon('scale',13)} Strategy correlation — are these the same bet?${infoI('Correlation of the strategies’ daily returns on real history. Green = complementary (diversifies), red = the same bet. Don’t stack highly-correlated strategies.')}</div>
+  const note=mc?`<p class="lb-mnote">${icon('shield',12)}<span>${mc.r>=0.7?'<b>'+esc(mc.a)+'</b> &amp; <b>'+esc(mc.b)+'</b> move together ('+mc.r+'), running both adds little diversification.':'Your validated strategies are <b>weakly correlated</b> (max '+mc.r+'), they diversify each other well, so running them together spreads risk.'}</span></p>`:'';
+  return `<div class="lb-matrix"><div class="lb-mh">${icon('scale',13)} Strategy correlation, are these the same bet?${infoI('Correlation of the strategies’ daily returns on real history. Green = complementary (diversifies), red = the same bet. Don’t stack highly-correlated strategies.')}</div>
     <div class="lb-mscroll"><table class="lb-mtbl"><thead><tr><th></th>${c.names.map(n=>`<th>${esc(String(n).split(' ')[0])}</th>`).join('')}</tr></thead>
     <tbody>${c.matrix.map((row,i)=>`<tr><td class="lb-mname">${esc(c.names[i])}</td>${row.map(cell).join('')}</tr>`).join('')}</tbody></table></div>${note}</div>`;
 }
@@ -5943,15 +5979,15 @@ function riskPanel(){
     <div class="rp-grid">
       <div class="rp-c"><span>Exposure${infoI('Total market value of all open paper positions across strategies, marked to live price.')}</span><b class="num">${inrL(r.exposure||0)}</b><i>${r.openPositions||0} open · ${r.activeStrategies||0} active</i></div>
       <div class="rp-c"><span>Positions vs cap${infoI('Open positions against the bot’s hard cap ('+r.maxPositionsPerStrategy+' per strategy). Prevents over-exposure.')}</span><b class="num ${posPct>=80?'down':''}">${r.openPositions||0} / ${cap}</b><div class="rp-bar"><i class="${posPct>=80?'hot':''}" style="width:${posPct}%"></i></div></div>
-      <div class="rp-c"><span>Daily-loss halt${infoI('The bot auto-halts a strategy if its day loss exceeds this — a circuit breaker, enforced in the engine.')}</span><b class="num down">−${r.dailyLossLimitPct}%</b><i>≈ −${inr(r.dailyLossLimitPerStrategy||0)}/strategy</i></div>
-      <div class="rp-c rp-kill ${armed?'armed':'safe'}"><span>Kill switch${infoI('ALLOW_LIVE is the hard arming key. SAFE = paper only, real orders are impossible. ARMED = real orders enabled on the bot machine.')}</span><b>${armed?'● ARMED':'● SAFE'}</b><i>${armed?'real orders enabled':'paper only — real orders blocked'}</i></div>
+      <div class="rp-c"><span>Daily-loss halt${infoI('The bot auto-halts a strategy if its day loss exceeds this, a circuit breaker, enforced in the engine.')}</span><b class="num down">−${r.dailyLossLimitPct}%</b><i>≈ −${inr(r.dailyLossLimitPerStrategy||0)}/strategy</i></div>
+      <div class="rp-c rp-kill ${armed?'armed':'safe'}"><span>Kill switch${infoI('ALLOW_LIVE is the hard arming key. SAFE = paper only, real orders are impossible. ARMED = real orders enabled on the bot machine.')}</span><b>${armed?'● ARMED':'● SAFE'}</b><i>${armed?'real orders enabled':'paper only, real orders blocked'}</i></div>
     </div></div>`;
 }
 /* Honest scaffold for live-only safety features, reconciliation (C2) is active once a strategy
    goes live; alerts (C4) need a Telegram token. We state this plainly rather than fake either. */
 function liveSafetyNote(){
   const tg=BOT.status&&BOT.status.telegram;
-  return `<div class="exec-ready" style="margin-top:10px">${icon('shield',13)}<div><b>Live-mode safety</b><span>When a strategy goes live, the bot <b>reconciles</b> its positions against your Kite account each cycle (flagging any drift), and the daily-loss circuit-breaker + kill-switch stay enforced. Entry/exit &amp; risk <b>alerts</b> ${tg?'are configured.':'need a Telegram bot token on the bot machine — <b>not set up</b>, so the studio never pretends to notify you.'}</span></div></div>`;
+  return `<div class="exec-ready" style="margin-top:10px">${icon('shield',13)}<div><b>Live-mode safety</b><span>When a strategy goes live, the bot <b>reconciles</b> its positions against your Kite account each cycle (flagging any drift), and the daily-loss circuit-breaker + kill-switch stay enforced. Entry/exit &amp; risk <b>alerts</b> ${tg?'are configured.':'need a Telegram bot token on the bot machine, <b>not set up</b>, so the studio never pretends to notify you.'}</span></div></div>`;
 }
 // ---- Paper | Live execution mode, honest + unified across Indian and crypto ----
 // A browser can NEVER arm live trading: ALLOW_LIVE is an OS-level two-key lock on the bot machine.
@@ -5962,21 +5998,21 @@ function execToggle(paperN,liveN){
   const exec=state.algo.exec||'paper', armed=liveArmed();
   return `<div class="exec-toggle" role="tablist" aria-label="Execution mode">`
     +`<button class="exec-tab${exec==='paper'?' on':''}" data-execmode="paper" role="tab" aria-selected="${exec==='paper'}"><span class="exec-dot paper"></span>Paper<i>${paperN||0}</i></button>`
-    +`<button class="exec-tab${exec==='live'?' on':''}${armed?'':' locked'}" data-execmode="live" role="tab" aria-selected="${exec==='live'}" title="${armed?'Live — placing real orders':'Live is locked — a browser can never arm real trading'}"><span class="exec-dot ${armed&&liveN?'live':'off'}"></span>Live${armed?`<i>${liveN||0}</i>`:'<span class="exec-lock" aria-hidden="true">🔒</span>'}</button>`
+    +`<button class="exec-tab${exec==='live'?' on':''}${armed?'':' locked'}" data-execmode="live" role="tab" aria-selected="${exec==='live'}" title="${armed?'Live, placing real orders':'Live is locked, a browser can never arm real trading'}"><span class="exec-dot ${armed&&liveN?'live':'off'}"></span>Live${armed?`<i>${liveN||0}</i>`:'<span class="exec-lock" aria-hidden="true">🔒</span>'}</button>`
     +`</div>`;
 }
 function liveLockedPanel(){
   const crypto=state.algo.market==='crypto';
   return `<div class="exec-locked">${icon('shield',15)}<div><b>Live trading is locked</b>`
     +`<span>Nothing places real orders yet. Live turns on only when <b>all three</b> are true:</span>`
-    +`<ol class="exec-req"><li>A strategy has <b>cleared the Go-Live bar</b> — proven forward, net of costs</li>`
+    +`<ol class="exec-req"><li>A strategy has <b>cleared the Go-Live bar</b>: proven forward, net of costs</li>`
     +`<li>Your <b>${crypto?'exchange (Binance)':'broker (Zerodha Kite)'}</b> is connected with <b>trade-only</b> keys</li>`
-    +`<li><b>ALLOW_LIVE</b> is armed at the OS level on the bot machine — <b>a browser can never do this</b></li></ol>`
-    +`<span class="exec-req-foot">Everything runs in paper until then. This is deliberate — it's what keeps your money safe.</span></div></div>`;
+    +`<li><b>ALLOW_LIVE</b> is armed at the OS level on the bot machine, <b>a browser can never do this</b></li></ol>`
+    +`<span class="exec-req-foot">Everything runs in paper until then. This is deliberate, it's what keeps your money safe.</span></div></div>`;
 }
 function algoMonitor(){
   const exec=state.algo.exec||'paper';
-  const paperRun=ALGOS.filter(a=>a.deployed&&inScope(a));      // deployed (paper/paused/live) in the active class — the engine's live book
+  const paperRun=ALGOS.filter(a=>a.deployed&&inScope(a));      // deployed (paper/paused/live) in the active class, the engine's live book
   const liveRun=ALGOS.filter(a=>a.execLive&&inScope(a));       // actually placing REAL orders (none until the live runner trades it)
   const ready=ALGOS.filter(a=>a.readyExceptCapital&&inScope(a));
   const toggle=execToggle(paperRun.length, liveRun.length);
@@ -5993,7 +6029,7 @@ function algoMonitor(){
     return toggle+riskPanel()+`<div class="mon-list">${lrows}</div>`+readyNote+liveSafetyNote();
   }
   // ---- PAPER view ----
-  if(!paperRun.length) return toggle+secEmpty('cpu','No paper strategies running','Start the paper engine to run every validated strategy live in paper mode — zero real-money risk, no terminal.',harnessCta());
+  if(!paperRun.length) return toggle+secEmpty('cpu','No paper strategies running','Start the paper engine to run every validated strategy live in paper mode, zero real-money risk, no terminal.',harnessCta());
   const total=paperRun.reduce((s,a)=>s+(a.paperPnl||0),0);   // scoped to the active class
   const totalR=paperRun.reduce((s,a)=>s+(a.realisedPnl||0),0), totalU=paperRun.reduce((s,a)=>s+(a.openPnl||0),0);   // realised/unrealised split of the scoped book
   const {instr}=studioScope();
@@ -6009,11 +6045,11 @@ function algoMonitor(){
   const stat=secStats([
     {l:'Running',v:String(paperRun.length),s:'strategies'},
     {l:'Capital deployed'+infoI('Open-position notional across every deployed strategy, marked to live price (reconciles with the engine exposure). F&O legs are shown at notional, not margin.'),v:inrC(totalDep),s:'open notional'},
-    {l:'Realised'+infoI('Booked P&L from CLOSED '+esc(INSTR_LABEL[instr])+' paper trades — money already made or lost, no longer moving.'),v:sgn(totalR),s:'booked',tone:tone(totalR),id:'monReal'},
-    {l:'Unrealised'+infoI('Mark-to-market on OPEN '+esc(INSTR_LABEL[instr])+' positions — moves with live price until the trade closes.'),v:sgn(totalU),s:'open · live',tone:tone(totalU),id:'monUnreal'},
+    {l:'Realised'+infoI('Booked P&L from CLOSED '+esc(INSTR_LABEL[instr])+' paper trades, money already made or lost, no longer moving.'),v:sgn(totalR),s:'booked',tone:tone(totalR),id:'monReal'},
+    {l:'Unrealised'+infoI('Mark-to-market on OPEN '+esc(INSTR_LABEL[instr])+' positions, moves with live price until the trade closes.'),v:sgn(totalU),s:'open · live',tone:tone(totalU),id:'monUnreal'},
     {l:'Net'+infoI('Realised + Unrealised for the '+esc(INSTR_LABEL[instr])+' strategies shown below. Combined across all classes is in the P&L-by-class strip.'),v:sgn(total),s:'realised + unrealised',tone:tone(total),id:'monNet'},
     {l:'Mode',v:'Paper'}]);
-  const mbCell=(k,lab)=>`<span class="mb-cell${instr===k?' on':''}" data-algoinstr="${k}" role="button" tabindex="0" title="${lab} — Realised ${sgn(brkR[k])} · Unrealised ${sgn(brkU[k])} (Net ${sgn(brk[k])}). Click to scope."><i>${esc(lab)}</i><b class="num ${cls(brk[k])}" data-live="brk${k.charAt(0).toUpperCase()+k.slice(1)}">${sgn(brk[k])}</b></span>`;
+  const mbCell=(k,lab)=>`<span class="mb-cell${instr===k?' on':''}" data-algoinstr="${k}" role="button" tabindex="0" title="${lab}, Realised ${sgn(brkR[k])} · Unrealised ${sgn(brkU[k])} (Net ${sgn(brk[k])}). Click to scope."><i>${esc(lab)}</i><b class="num ${cls(brk[k])}" data-live="brk${k.charAt(0).toUpperCase()+k.slice(1)}">${sgn(brk[k])}</b></span>`;
   const brkStrip=`<div class="mon-brk"><span class="mb-lead">P&L by class</span>${mbCell('equity','Equity')}${mbCell('options','Options')}${mbCell('futures','Futures')}<span class="mb-cell mb-all"><i>Overall</i><b class="num ${cls(overall)}" data-live="monOverall">${sgn(overall)}</b></span></div>`;
   const depCell=(k,lab)=>`<span class="mon-dep-cell"><i>${esc(lab)}</i><b class="num">${inrC(depBrk[k])}</b></span>`;
   const depStrip=`<div class="mon-dep"><span class="mb-lead">Deployed now</span>${depCell('equity','Equity')}${depCell('options','Options')}${depCell('futures','Futures')}<span class="mon-dep-cell mon-dep-all"><i>Total</i><b class="num">${inrC(totalDep)}</b></span><span class="mon-dep-hint">open notional · F&amp;O at notional, not margin</span></div>`;
@@ -6023,25 +6059,25 @@ function algoMonitor(){
   const me=state.algo.monExpand=state.algo.monExpand||{};
   const rows=sortedRun.map(a=>{const i=ALGOS.indexOf(a);
     const open=!!me[a.id];
-    const sub=(a.fwdTrades||a.openPositions||a.realisedPnl||a.openPnl)?`R ${sgn(a.realisedPnl||0)} · U ${sgn(a.openPnl||0)}`:'no trades yet';   // show BOTH realised & unrealised — never hide one
+    const sub=(a.fwdTrades||a.openPositions||a.realisedPnl||a.openPnl)?`R ${sgn(a.realisedPnl||0)} · U ${sgn(a.openPnl||0)}`:'no trades yet';   // show BOTH realised & unrealised, never hide one
     const pos=(a.positions||[]).map(p=>p.entry!=null
       ? `<div class="mon-posrow"><span class="mp-sym">${esc(p.sym)}</span><span class="mp-q">${p.qty} qty</span><span class="mp-x num">entry ${p.entry.toLocaleString('en-IN')}</span><span class="mp-x num">LTP <span data-live-ltp="${a.id}::${esc(p.sym)}">${p.ltp!=null?p.ltp.toLocaleString('en-IN'):'-'}</span></span><b class="mp-pnl num ${cls(p.unreal)}" data-live-upnl="${a.id}::${esc(p.sym)}">${sgn(p.unreal)}${p.chgPct!=null?` · ${p.chgPct>=0?'+':''}${p.chgPct}%`:''}</b></div>`
       : `<div class="mon-posrow"><span class="mp-sym">${esc(p.sym)}</span><span class="mp-q">spread ${p.spread>0?'long':'short'}</span><span class="mp-x">marks on close</span></div>`).join('');
     const posBlock=pos?`<div class="mon-pos">${pos}</div>`:'';
     const accLine=a.fwdTrades?`<div class="mon-acc"><span>Forward accuracy</span><b class="${a.fwdWinPct!=null&&a.fwdWinPct>=50?'up':'down'}">${a.fwdWinPct!=null?a.fwdWinPct+'% win':'-'}</b><i>·</i>PF <b class="${a.fwdProfitFactor!=null&&a.fwdProfitFactor>=1?'up':'down'}">${a.fwdProfitFactor!=null?(a.fwdProfitFactor>=99?'∞':a.fwdProfitFactor):'-'}</b><i>·</i>exp <b class="num ${cls(a.fwdExpectancy||0)}">${a.fwdExpectancy!=null?sgn(a.fwdExpectancy):'-'}</b><i>·</i>${a.fwdTrades} closed <a class="mon-acc-link" data-algogoto="accuracy">full accuracy →</a></div>`:'';
-    const expInner=(posBlock+accLine)||`<div class="mon-exp-empty">No open positions or closed trades yet — this strategy trades only when its setup appears.</div>`;
+    const expInner=(posBlock+accLine)||`<div class="mon-exp-empty">No open positions or closed trades yet, this strategy trades only when its setup appears.</div>`;
     return `<div class="mon-card${open?' open':''}">
       <div class="mon-row live mon-head" data-monexp="${a.id}" role="button" tabindex="0" aria-expanded="${open}" title="Show positions &amp; accuracy"><div class="mon-l"><span class="live-dot live"></span><div><b>${esc(a.name)}${a.vstatus==='validated'?'<span class="vbadge ok" style="margin-left:6px">Validated</span>':''}</b><span class="mon-cat">${esc(a.cat)} · ${(a.openPositions||0)} open${algoDeployed(a)>0?` · <b class="mc-dep">${inrC(algoDeployed(a))}</b> deployed`:''} · ${a.fwdTrades||0} closed</span></div></div>
       <div class="mon-pnl"><b class="num ${cls(a.paperPnl||0)}" data-live-pnl="${a.id}">${sgn(a.paperPnl||0)}</b><span data-live-sub="${a.id}" title="Open positions are marked to live market price; closed-trade P&L drives the go-live nudge.">${sub}</span></div>
       <div class="mon-ctrls"><button class="btn-ghost sm" data-algogl="${i}">${icon('shield',12)} Go-Live check</button><span class="mon-chev">▾</span></div></div>
       <div class="mon-exp">${expInner}</div></div>`;}).join('');
   if(!paperRun.length)
-    return toggle+(harnessRunning()?harnessCta():'')+riskPanel()+scopeEmpty('cpu','No deployed bots in this class','Nothing is forward-trading in this class right now — switch the scope above (Equity holds the live book) or deploy one from the Marketplace.')+stoppedPanel();
+    return toggle+(harnessRunning()?harnessCta():'')+riskPanel()+scopeEmpty('cpu','No deployed bots in this class','Nothing is forward-trading in this class right now, switch the scope above (Equity holds the live book) or deploy one from the Marketplace.')+stoppedPanel();
   const note=paperRun.some(a=>!a.openPositions&&!a.fwdTrades)
-    ? `Strategies at ₹0 simply haven’t triggered an entry signal yet — they only trade when their setup appears. P&L moves as positions open and close.`
+    ? `Strategies at ₹0 simply haven’t triggered an entry signal yet, they only trade when their setup appears. P&L moves as positions open and close.`
     : `Open positions are marked to live market price; the go-live nudge needs ≥${BOT.nudgeMin||10} <b>closed</b> profitable trades.`;
-  const listHtml=rows||`<div class="mon-exp-empty" style="padding:14px">No strategies match this filter — <button class="mon-clearfilt" data-monfilter="all">show all</button>.</div>`;
-  return toggle+(harnessRunning()?harnessCta():'')+riskPanel()+stat+brkStrip+depStrip+ctrlBar+`<div class="mon-list">${listHtml}</div>`+stoppedPanel()+`<p class="sec-hint">${icon('shield',12)}<span>${note} All run in <b>PAPER</b> — zero real-money risk.</span></p>`;
+  const listHtml=rows||`<div class="mon-exp-empty" style="padding:14px">No strategies match this filter, <button class="mon-clearfilt" data-monfilter="all">show all</button>.</div>`;
+  return toggle+(harnessRunning()?harnessCta():'')+riskPanel()+stat+brkStrip+depStrip+ctrlBar+`<div class="mon-list">${listHtml}</div>`+stoppedPanel()+`<p class="sec-hint">${icon('shield',12)}<span>${note} All run in <b>PAPER</b>: zero real-money risk.</span></p>`;
 }
 /* When you STOP a strategy, the harness squares off its open paper book at the live mark and
    files the liquidation here: deliberately OUT of any strategy's P&L (a stop isn't a signal),
@@ -6058,10 +6094,10 @@ function stoppedPanel(){
 }
 /* ===== ACCURACY: backtest edge vs LIVE forward results: can you trust it? ===== */
 function algoAccuracy(){
-  if(!BOT.live) return secEmpty('shield','Connect Kite to measure accuracy','Accuracy pits each strategy’s backtested edge against its LIVE forward-test results — real out-of-sample proof. Reconnect to load it.');
+  if(!BOT.live) return secEmpty('shield','Connect Kite to measure accuracy','Accuracy pits each strategy’s backtested edge against its LIVE forward-test results, real out-of-sample proof. Reconnect to load it.');
   const MIN=BOT.nudgeMin||10, lr=liveRegime();
   const list=ALGOS.filter(a=>(a.vstatus==='validated'||a.deployed)&&inScope(a));   // validated + deployed, scoped to the active class
-  if(!list.length) return scopeEmpty('cpu','No strategies to measure in this class','Accuracy compares each strategy’s backtest edge with its LIVE forward results — switch the scope above (Equity holds the validated/forward book).');
+  if(!list.length) return scopeEmpty('cpu','No strategies to measure in this class','Accuracy compares each strategy’s backtest edge with its LIVE forward results, switch the scope above (Equity holds the validated/forward book).');
   const vset=list.filter(a=>a.vstatus==='validated');
   const avgBt=vset.length?Math.round(vset.reduce((s,a)=>s+(a.win||0),0)/vset.length):0;
   const totClosed=list.reduce((s,a)=>s+(a.fwdTrades||0),0);
@@ -6070,12 +6106,12 @@ function algoAccuracy(){
   const holding=vset.filter(a=>(a.fwdTrades||0)>=MIN&&(a.fwdExpectancy||0)>0).length;
   const stat=secStats([
     {l:'Backtested win'+infoI('Average out-of-sample win rate across validated strategies (from the regime backtest).'),v:avgBt+'%'},
-    {l:'Forward win'+infoI('Live paper win rate from CLOSED forward trades — the real out-of-sample hit rate. Win rate alone isn’t edge — see profit factor.'),v:fwdWin!=null?fwdWin+'%':'-',tone:fwdWin!=null?(fwdWin>=50?'up':'down'):''},
-    {l:'Forward trades'+infoI('Total closed forward paper trades. Accuracy needs sample size — under ~'+MIN+' is a hint, not proof.'),v:String(totClosed)},
+    {l:'Forward win'+infoI('Live paper win rate from CLOSED forward trades, the real out-of-sample hit rate. Win rate alone isn’t edge, see profit factor.'),v:fwdWin!=null?fwdWin+'%':'-',tone:fwdWin!=null?(fwdWin>=50?'up':'down'):''},
+    {l:'Forward trades'+infoI('Total closed forward paper trades. Accuracy needs sample size, under ~'+MIN+' is a hint, not proof.'),v:String(totClosed)},
     {l:'Edge holding'+infoI('Validated strategies whose LIVE forward results are still profitable (positive expectancy) on ≥'+MIN+' trades.'),v:holding+' / '+vset.length,tone:holding>0?'up':''}
   ]);
-  const rows=list.length?list.map(accRow).join(''):secEmpty('cpu','No strategies to measure yet','Accuracy compares each strategy’s backtest edge with its LIVE forward results. Start the paper engine to gather that out-of-sample evidence — one click, zero risk.',harnessCta());
-  const legend=`<p class="sec-hint">${icon('shield',12)}<span><b>Edge status</b> judges LIVE profitability (expectancy + profit factor), not win rate alone — a 33%-win strategy can be a strong edge when its wins are bigger than its losses. Every forward number is real out-of-sample, zero real money.</span></p>`;
+  const rows=list.length?list.map(accRow).join(''):secEmpty('cpu','No strategies to measure yet','Accuracy compares each strategy’s backtest edge with its LIVE forward results. Start the paper engine to gather that out-of-sample evidence, one click, zero risk.',harnessCta());
+  const legend=`<p class="sec-hint">${icon('shield',12)}<span><b>Edge status</b> judges LIVE profitability (expectancy + profit factor), not win rate alone, a 33%-win strategy can be a strong edge when its wins are bigger than its losses. Every forward number is real out-of-sample, zero real money.</span></p>`;
   return stat+`<div class="acc-list">${rows}</div>`+legend;
 }
 function accRow(a){
@@ -6084,12 +6120,12 @@ function accRow(a){
   const bt=a.win!=null?a.win:null, n=a.fwdTrades||0, fw=a.fwdWinPct;
   const pf=a.fwdProfitFactor, exp=a.fwdExpectancy;
   let badge,btone,note;
-  if(!validated){ badge='Candidate'; btone='cand'; note='Not validated — no proven backtest edge yet.'; }
+  if(!validated){ badge='Candidate'; btone='cand'; note='Not validated, no proven backtest edge yet.'; }
   else if(n===0){ badge='Awaiting first trade'; btone='early'; note='Validated in backtest; no closed forward trades yet.'; }
-  else if(n<MIN){ badge='Building · '+n+'/'+MIN; btone='early'; note='Gathering out-of-sample evidence — too few trades to judge.'; }
-  else if((exp||0)>0&&(pf||0)>=1.2){ badge='✓ Edge holding'; btone='ok'; note='Profitable out-of-sample — the backtest edge is showing up live.'; }
-  else if((exp||0)>=0){ badge='≈ Marginal'; btone='warn'; note='Roughly break-even live — watch before committing capital.'; }
-  else { badge='▾ Degrading'; btone='bad'; note='Losing out-of-sample — the edge is not holding live.'; }
+  else if(n<MIN){ badge='Building · '+n+'/'+MIN; btone='early'; note='Gathering out-of-sample evidence, too few trades to judge.'; }
+  else if((exp||0)>0&&(pf||0)>=1.2){ badge='✓ Edge holding'; btone='ok'; note='Profitable out-of-sample, the backtest edge is showing up live.'; }
+  else if((exp||0)>=0){ badge='≈ Marginal'; btone='warn'; note='Roughly break-even live, watch before committing capital.'; }
+  else { badge='▾ Degrading'; btone='bad'; note='Losing out-of-sample, the edge is not holding live.'; }
   const bar=(pct,c)=>`<div class="acc-bar"><i class="${c}" style="width:${Math.max(0,Math.min(100,pct||0))}%"></i></div>`;
   const cmp=`<div class="acc-cmp">
     <div class="acc-metric"><span>Backtest win</span><b class="num">${bt!=null?bt+'%':'-'}</b>${bar(bt,'bt')}</div>
@@ -6097,14 +6133,14 @@ function accRow(a){
   </div>`;
   const wl=(a.fwdAvgWin&&a.fwdAvgLoss&&a.fwdAvgLoss>0)?(a.fwdAvgWin/a.fwdAvgLoss).toFixed(2)+' : 1':(a.fwdAvgWin&&!a.fwdAvgLoss?'∞':'-');
   const q=n>0?`<div class="acc-q">
-    <div><span>Profit factor${infoI('Gross profit ÷ gross loss on forward trades. >1 makes money, >1.5 is strong — the honest "is it profitable" number, independent of win rate.')}</span><b class="num ${pf!=null?(pf>=1?'up':'down'):''}">${pf!=null?(pf>=99?'∞':pf):'-'}</b></div>
+    <div><span>Profit factor${infoI('Gross profit ÷ gross loss on forward trades. >1 makes money, >1.5 is strong, the honest "is it profitable" number, independent of win rate.')}</span><b class="num ${pf!=null?(pf>=1?'up':'down'):''}">${pf!=null?(pf>=99?'∞':pf):'-'}</b></div>
     <div><span>Expectancy / trade${infoI('Average P&L per closed forward trade. Positive = the edge pays per trade.')}</span><b class="num ${cls(exp||0)}">${exp!=null?sgn(exp):'-'}</b></div>
-    <div><span>Avg win : loss${infoI('Average winning trade vs average losing trade. >1 means wins are bigger than losses — lets a low win-rate still profit.')}</span><b class="num">${wl}</b></div>
+    <div><span>Avg win : loss${infoI('Average winning trade vs average losing trade. >1 means wins are bigger than losses, lets a low win-rate still profit.')}</span><b class="num">${wl}</b></div>
     <div><span>Wins : losses</span><b class="num"><span class="up">${a.fwdWins||0}</span> : <span class="down">${a.fwdLosses||0}</span></b></div>
   </div>`:'';
   let rgrid='';
   if(a.regimeFit){
-    rgrid='<div class="rg-head">Per-regime edge'+infoI('Backtested avg trade return by regime. The outlined cell is the live regime now — where this strategy should be accurate today.')+'</div><div class="rg-grid">'+['Bull','Bear','Choppy','High-Vol'].map(r=>{const f=a.regimeFit[r];if(!f)return '';const tone=f[2]==='good'?'rg-good':f[2]==='weak'?'rg-weak':'rg-bad';const on=r===lr?' rg-live':'';return `<span class="rg-cell ${tone}${on}" title="${r}: ${f[0]>0?'+':''}${f[0]}% avg over ${f[1]} trades.">${r==='High-Vol'?'HV':r}<b>${f[0]>0?'+':''}${f[0]}</b></span>`;}).join('')+'</div>';
+    rgrid='<div class="rg-head">Per-regime edge'+infoI('Backtested avg trade return by regime. The outlined cell is the live regime now, where this strategy should be accurate today.')+'</div><div class="rg-grid">'+['Bull','Bear','Choppy','High-Vol'].map(r=>{const f=a.regimeFit[r];if(!f)return '';const tone=f[2]==='good'?'rg-good':f[2]==='weak'?'rg-weak':'rg-bad';const on=r===lr?' rg-live':'';return `<span class="rg-cell ${tone}${on}" title="${r}: ${f[0]>0?'+':''}${f[0]}% avg over ${f[1]} trades.">${r==='High-Vol'?'HV':r}<b>${f[0]>0?'+':''}${f[0]}</b></span>`;}).join('')+'</div>';
   }
   const i=ALGOS.indexOf(a);
   return `<div class="acc-card${validated?'':' cand'}">
@@ -6143,7 +6179,7 @@ function exportAnalyticsCSV(){
   quickToast&&quickToast('Exported','Forward trade log saved as CSV.');
 }
 function algoAnalytics(){
-  if(!BOT.live) return secEmpty('shield','Connect Kite for analytics','Strategy analytics aggregate your REAL forward paper-trade history — equity curve, risk & quality, contribution, activity, exit reasons & insights. Reconnect to load it.');
+  if(!BOT.live) return secEmpty('shield','Connect Kite for analytics','Strategy analytics aggregate your REAL forward paper-trade history, equity curve, risk & quality, contribution, activity, exit reasons & insights. Reconnect to load it.');
   if(!BOT.analytics){ ensureAnalytics(true); return secEmpty('spark','Loading analytics…','Crunching your forward trade log.'); }
   const d=BOT.analytics, t=d.totals||{};
   // P&L totals come from the SAME live ALGOS data Monitor uses (a.deployed) → identical numbers, patched every 2s
@@ -6156,8 +6192,8 @@ function algoAnalytics(){
   const stat=secStats([
     {l:'Closed trades'+infoI('Total CLOSED forward paper trades across all strategies.'),v:String(t.trades||0)},
     {l:'Win rate',v:t.winPct!=null?t.winPct+'%':'-',tone:t.winPct!=null?(t.winPct>=50?'up':'down'):''},
-    {l:'Realised'+infoI('Cumulative CLOSED-trade P&L (paper) — booked, no longer moving. In sync with Monitor.'),v:sgn(realised),s:'booked',tone:tone(realised),id:'anRealised'},
-    {l:'Unrealised'+infoI(openPos+' open position(s), marked to live price — not yet booked, moves with the market.'),v:openPos?sgn(open):'-',s:'open · live',tone:tone(open),id:'anOpen'},
+    {l:'Realised'+infoI('Cumulative CLOSED-trade P&L (paper), booked, no longer moving. In sync with Monitor.'),v:sgn(realised),s:'booked',tone:tone(realised),id:'anRealised'},
+    {l:'Unrealised'+infoI(openPos+' open position(s), marked to live price, not yet booked, moves with the market.'),v:openPos?sgn(open):'-',s:'open · live',tone:tone(open),id:'anOpen'},
     {l:'Net'+infoI('Realised + Unrealised = your full live paper book.'),v:sgn(bookTotal),s:'realised + unrealised',tone:tone(bookTotal),id:'anBook'}
   ]);
   const eqPts=(d.equity&&d.equity.length>1)?d.equity:[0,0];
@@ -6167,7 +6203,7 @@ function algoAnalytics(){
   const wl=(d.avgWin&&d.avgLoss&&d.avgLoss>0)?(d.avgWin/d.avgLoss).toFixed(2)+' : 1':(d.avgWin&&!d.avgLoss?'∞':'-');
   const st=d.streaks||{};
   const riskCard=`<div class="an-card"><div class="an-h">${icon('shield',13)}<b>Risk &amp; quality</b><span>is the book actually good?</span></div><div class="an-q">
-    <div><span>Profit factor${infoI('Gross profit ÷ gross loss. >1 makes money — the honest edge metric, independent of win rate.')}</span><b class="num ${d.profitFactor!=null?(d.profitFactor>=1?'up':'down'):''}">${d.profitFactor!=null?(d.profitFactor>=99?'∞':d.profitFactor):'-'}</b></div>
+    <div><span>Profit factor${infoI('Gross profit ÷ gross loss. >1 makes money, the honest edge metric, independent of win rate.')}</span><b class="num ${d.profitFactor!=null?(d.profitFactor>=1?'up':'down'):''}">${d.profitFactor!=null?(d.profitFactor>=99?'∞':d.profitFactor):'-'}</b></div>
     <div><span>Expectancy / trade${infoI('Average P&L per closed trade. Positive = the edge pays.')}</span><b class="num ${cls(d.expectancy||0)}">${d.expectancy!=null?sgn(d.expectancy):'-'}</b></div>
     <div><span>Avg win : loss${infoI('Average winning trade vs average losing trade. >1 lets a low win-rate still profit.')}</span><b class="num">${wl}</b></div>
     <div><span>Max drawdown${infoI('Largest peak-to-trough drop in the cumulative forward equity curve.')}</span><b class="num down">${d.maxDrawdown?'−'+inr(d.maxDrawdown):'-'}</b></div>
@@ -6190,18 +6226,18 @@ function algoAnalytics(){
   const reasonCard=`<div class="an-card"><div class="an-h">${icon('flag',13)}<b>How trades close</b><span>exit reason breakdown</span></div><div class="an-rows">${reasons}</div></div>`;
   const rgMax=Math.max(1,...(d.byRegime||[]).map(r=>Math.abs(r.pnl)));
   const rgReal=(d.byRegime||[]).filter(r=>r.regime&&r.regime!=='-');
-  const regimes=rgReal.length?(d.byRegime||[]).map(r=>`<div class="an-row"><span class="an-nm">${esc(r.regime)}</span><div class="an-track"><i class="${r.pnl>=0?'pos':'neg'}" style="width:${Math.abs(r.pnl)/rgMax*100}%"></i></div><b class="num ${cls(r.pnl)}">${sgn(r.pnl)}</b><span class="an-sub">${r.trades} tr · ${r.winPct!=null?r.winPct+'%':'-'}</span></div>`).join(''):`<p class="an-empty">Regime tagging is now live — closed trades will attribute to Bull / Bear / Choppy / High-Vol from here on (earlier trades show as “—”).</p>`;
+  const regimes=rgReal.length?(d.byRegime||[]).map(r=>`<div class="an-row"><span class="an-nm">${esc(r.regime)}</span><div class="an-track"><i class="${r.pnl>=0?'pos':'neg'}" style="width:${Math.abs(r.pnl)/rgMax*100}%"></i></div><b class="num ${cls(r.pnl)}">${sgn(r.pnl)}</b><span class="an-sub">${r.trades} tr · ${r.winPct!=null?r.winPct+'%':'-'}</span></div>`).join(''):`<p class="an-empty">Regime tagging is now live, closed trades will attribute to Bull / Bear / Choppy / High-Vol from here on (earlier trades show as “—”).</p>`;
   const regimeCard=`<div class="an-card"><div class="an-h">${icon('cpu',13)}<b>P&L by regime</b><span>which market conditions pay</span></div><div class="an-rows">${regimes}</div></div>`;
   const wp=t.trades?Math.round((t.wins||0)/t.trades*100):0;
   const distCard=`<div class="an-card"><div class="an-h">${icon('scale',13)}<b>Win / loss split</b><span>${t.wins||0} wins · ${t.losses||0} losses</span></div>
     <div class="an-split">${wp>0?`<i class="w" style="width:${wp}%">${t.wins||''}</i>`:''}${wp<100?`<i class="l" style="width:${100-wp}%">${t.losses||''}</i>`:''}</div>
-    <p class="an-note">${icon('shield',11)}<span>Win rate alone isn’t edge — see profit factor per strategy in <a class="mon-acc-link" data-algogoto="accuracy">Accuracy →</a></span></p></div>`;
+    <p class="an-note">${icon('shield',11)}<span>Win rate alone isn’t edge, see profit factor per strategy in <a class="mon-acc-link" data-algogoto="accuracy">Accuracy →</a></span></p></div>`;
   const insCard=(d.insights&&d.insights.length)?`<div class="an-card an-insights"><div class="an-h">${icon('spark',13)}<b>Insights</b><span>auto-generated from your forward log</span></div><ul class="an-ins">${d.insights.map(i=>`<li>${esc(i)}</li>`).join('')}</ul></div>`:'';
   const tr=(d.trades||[]).slice().reverse().slice(0,20).map(x=>`<tr><td class="num">${esc(x.time)}</td><td>${esc(x.strategy)}</td><td>${esc(x.sym)}</td><td class="num ${cls(x.pnl)}">${sgn(x.pnl)}</td><td>${esc(x.reason)}</td></tr>`).join('');
   const tbl=(d.trades||[]).length?`<div class="an-card"><div class="an-h">${icon('repeat',13)}<b>Recent forward trades</b><span>${t.trades} total</span><button class="btn-ghost sm an-export" data-anexport>${icon('send',12)} Export CSV</button></div>
     <table class="tbl an-tbl"><thead><tr><th>Time</th><th>Strategy</th><th>Symbol</th><th>P&L</th><th>Exit</th></tr></thead><tbody>${tr}</tbody></table></div>`:'';
-  const sNote=studioScope().instr!=='equity'?scopeNote(`Analytics are <b>portfolio-wide</b> (all instrument classes) — not scoped to ${esc(INSTR_LABEL[studioScope().instr])}. The book is currently equity-led.`):'';
-  return sNote+stat+eq+`<div class="an-grid">${riskCard}${reasonCard}${regimeCard}${contribCard}${actCard}${symCard}${distCard}</div>`+insCard+tbl+`<p class="sec-hint">${icon('shield',12)}<span>All analytics are from real forward PAPER trades — zero real money. Reports refresh as trades open &amp; close.</span></p>`;
+  const sNote=studioScope().instr!=='equity'?scopeNote(`Analytics are <b>portfolio-wide</b> (all instrument classes), not scoped to ${esc(INSTR_LABEL[studioScope().instr])}. The book is currently equity-led.`):'';
+  return sNote+stat+eq+`<div class="an-grid">${riskCard}${reasonCard}${regimeCard}${contribCard}${actCard}${symCard}${distCard}</div>`+insCard+tbl+`<p class="sec-hint">${icon('shield',12)}<span>All analytics are from real forward PAPER trades, zero real money. Reports refresh as trades open &amp; close.</span></p>`;
 }
 function algoBuilder(){
   flowModal({title:'Build a strategy', confirm:'Create strategy',
@@ -6212,7 +6248,7 @@ function algoBuilder(){
       <div class="flow-2col">
         <div class="flow-field"><label for="abRisk">Risk profile</label><select class="flow-input" id="abRisk"><option>Conservative</option><option selected>Moderate</option><option>Aggressive</option></select></div>
         <div class="flow-field"><label for="abCap">Min capital</label><input class="flow-input num" id="abCap" type="number" inputmode="numeric" value="25000" min="5000" step="5000"></div></div>
-      <p class="flow-note">${icon('cpu',13)}<span>Paper-traded first — backtest before you deploy real capital.</span></p>`,
+      <p class="flow-note">${icon('cpu',13)}<span>Paper-traded first, backtest before you deploy real capital.</span></p>`,
     focus:'#abName',
     onConfirm(body){const name=body.querySelector('#abName').value.trim()||'My Strategy';
       const risk=body.querySelector('#abRisk').value, cap=Math.max(5000,Math.round(+body.querySelector('#abCap').value||25000));
@@ -6225,7 +6261,7 @@ function algoBuilder(){
       ALGOS.push({id:engKey,name,cat:'Custom · candidate',minCap:cap,risk,status:'idle',vstatus:'candidate',
         real:true,custom:true,product:'CNC',desc:entry+' → '+exit+'. Backtests on the '+engLabel+' engine.'});
       state.algo.bt={algo:ALGOS.length-1,period:'1Y'}; state.algo.view='backtest'; renderAlgo();
-      quickToast('Strategy created — '+name,'Running a real backtest on the '+engLabel+' engine — no invented numbers.');}
+      quickToast('Strategy created, '+name,'Running a real backtest on the '+engLabel+' engine, no invented numbers.');}
   });
 }
 
@@ -6233,7 +6269,7 @@ function algoBuilder(){
    AI MODE: copilot chat + AI signals (XSS-safe via esc())
    ============================================================ */
 const AI_PROMPTS=['Top movers right now','Find me oversold ideas','Hedge my portfolio','Explain my portfolio health','Best option strategy now'];
-function aiWelcome(){return `<b>Hi, I’m your market copilot.</b> ${aiLive()?'I read your <b>real</b> holdings, live prices, the market regime &amp; option chains and can run real backtests — every number I give you is fetched live, never invented.':'Ask me for ideas, a hedge, an option strategy, or a read on your portfolio.'} Try a suggestion below 👇`;}
+function aiWelcome(){return `<b>Hi, I’m your market copilot.</b> ${aiLive()?'I read your <b>real</b> holdings, live prices, the market regime &amp; option chains and can run real backtests, every number I give you is fetched live, never invented.':'Ask me for ideas, a hedge, an option strategy, or a read on your portfolio.'} Try a suggestion below 👇`;}
 function renderAI(){
   const v=$('aiView'); if(!v) return;
   if(!isAI()){ v.innerHTML=''; return; }
@@ -6247,7 +6283,7 @@ function renderAI(){
     <div class="ai-main">
       <div class="ai-head"><div class="ai-title"><span class="ai-ic">${icon('spark',16)}</span><div><b>AI Copilot</b><span>Ask about markets, ideas, hedges or your portfolio</span></div></div>
         <div class="ai-head-acts">
-          <span class="ai-mode ${aiLive()?'live':''}" title="${aiLive()?'Connected to a live Claude model via your proxy':'Scripted demo responses — connect a Claude proxy in settings'}">${aiLive()?'<span class="ai-dot"></span>Live · '+esc(aiModelName()):'Demo mode'}</span>
+          <span class="ai-mode ${aiLive()?'live':''}" title="${aiLive()?'Connected to a live Claude model via your proxy':'Scripted demo responses, connect a Claude proxy in settings'}">${aiLive()?'<span class="ai-dot"></span>Live · '+esc(aiModelName()):'Demo mode'}</span>
           <button class="icon-mini" data-aisettings aria-label="AI connection settings" title="Connect a live Claude model">${icon('sliders',13)}</button>
           <button class="btn-ghost sm" data-aiclear>${icon('close',12)} Clear</button>
         </div></div>
@@ -6285,52 +6321,52 @@ function aiRespond(q){
   return aiCardFallback();
 }
 function aiCardMovers(){
-  if(!BOT.live) return `I can only show <b>real</b> movers when Kite is connected — run <code>python3 login.py</code>. I won't invent prices.${aiChips([['go-research','See research calls']])}`;
+  if(!BOT.live) return `I can only show <b>real</b> movers when Kite is connected, run <code>python3 login.py</code>. I won't invent prices.${aiChips([['go-research','See research calls']])}`;
   const g=[...SYMS].filter(s=>s.live!==false).sort((a,b)=>b.chg-a.chg);
   const row=s=>`<div class="ais-row"><span class="t-sym">${s.sym}</span><span class="num">${s.ltp.toLocaleString('en-IN')}</span><span class="num ${cls(s.chg)}">${pct(s.chg)}</span></div>`;
   return `Here are today’s biggest movers:<div class="ai-data"><div class="ai-col"><div class="ai-coln up">Top gainers</div>${g.slice(0,3).map(row).join('')}</div><div class="ai-col"><div class="ai-coln down">Top losers</div>${g.slice(-3).reverse().map(row).join('')}</div></div>${aiChips([['open-chain','Open option chain'],['go-research','See research calls']])}`;}
 function aiCardIdeas(){const ideas=[...SYMS].filter(s=>s.live!==false&&s.chg>0).sort((a,b)=>b.chg-a.chg).slice(0,3);
   return `Screening momentum + breadth, these stand out right now:<div class="ai-data2">${ideas.map(s=>`<div class="ais-row"><span class="t-sym">${s.sym}</span><span class="ais-tag">${s.chg>2?'Strong momentum':'Building'}</span><span class="num ${cls(s.chg)}">${pct(s.chg)}</span></div>`).join('')}</div><span class="ai-conf">Confidence: medium · ideas, not advice.</span>${aiChips([['go-research','Deep-dive research'],['go-analyser','Check overlap']])}`;}
 function aiCardHedge(){const hs=liveHoldings();
-  if(!hs||!hs.length){ return `To size a hedge I need your <b>real</b> holdings from Kite — connect with <code>python3 login.py</code> and I'll value your book and propose a defined-risk <b>NIFTY put</b> or bear put spread. I won't guess your exposure.${aiChips([['go-analyser','Open analyser']])}`; }
+  if(!hs||!hs.length){ return `To size a hedge I need your <b>real</b> holdings from Kite, connect with <code>python3 login.py</code> and I'll value your book and propose a defined-risk <b>NIFTY put</b> or bear put spread. I won't guess your exposure.${aiChips([['go-analyser','Open analyser']])}`; }
   const h=hs.reduce((a,x)=>a+(x.ltp||0)*(x.qty||0),0);
-  return `To protect your <b>${inrL(h)}</b> equity book against a drop, a simple hedge is a <b>NIFTY put</b> or a bear put spread — defined cost, defined protection. I can set it up in the strategy builder.${aiChips([['open-strategy','Build the hedge'],['go-analyser','Assess my risk']])}`;}
+  return `To protect your <b>${inrL(h)}</b> equity book against a drop, a simple hedge is a <b>NIFTY put</b> or a bear put spread, defined cost, defined protection. I can set it up in the strategy builder.${aiChips([['open-strategy','Build the hedge'],['go-analyser','Assess my risk']])}`;}
 function aiCardPortfolio(){const hs=liveHoldings();
-  if(!hs||!hs.length){ return `I read your <b>real</b> holdings from Kite to score concentration, drift &amp; overlap — connect with <code>python3 login.py</code> and I'll X-ray your actual book. I never analyse a fake portfolio.${aiChips([['go-analyser','Open analyser']])}`; }
+  if(!hs||!hs.length){ return `I read your <b>real</b> holdings from Kite to score concentration, drift &amp; overlap, connect with <code>python3 login.py</code> and I'll X-ray your actual book. I never analyse a fake portfolio.${aiChips([['go-analyser','Open analyser']])}`; }
   const exp=hs.reduce((a,h)=>a+(h.ltp||0)*(h.qty||0),0)||1, top=[...hs].sort((a,b)=>((b.ltp||0)*(b.qty||0))-((a.ltp||0)*(a.qty||0)))[0], topW=Math.round((top.ltp||0)*(top.qty||0)/exp*100);
   const score=Math.max(40,Math.min(95,Math.round(95-Math.max(0,topW-25)*1.6)));
-  return `Your portfolio health is <b>${score}/100</b>. <b>${top.sym}</b> is <b>${topW}%</b> of your equity${topW>25?' — above the 25% guardrail, worth trimming':' — well balanced'}.${aiChips([['go-analyser','Full X-ray'],['go-sip','Rebalance via SIP']])}`;}
+  return `Your portfolio health is <b>${score}/100</b>. <b>${top.sym}</b> is <b>${topW}%</b> of your equity${topW>25?', above the 25% guardrail, worth trimming':', well balanced'}.${aiChips([['go-analyser','Full X-ray'],['go-sip','Rebalance via SIP']])}`;}
 function aiCardOptions(){const c=buildChain(0,0),r=state.displayed;
-  if(!c||!c.rows){ return `I can only read a <b>real</b> option chain when Kite is connected — run <code>python3 login.py</code>. I won't invent PCR or strikes.${aiChips([['open-chain','Open option chain']])}`; }
+  if(!c||!c.rows){ return `I can only read a <b>real</b> option chain when Kite is connected, run <code>python3 login.py</code>. I won't invent PCR or strikes.${aiChips([['open-chain','Open option chain']])}`; }
   const p=pcr(c);
   const sug=r==='bull'?'a Bull Call Spread (defined-risk, directional up)':r==='bear'?'a Bear Put Spread (defined-risk, directional down)':'an Iron Condor (range-bound, theta-positive)';
   return `With PCR at <b>${p.toFixed(2)}</b> and a <b>${r}</b> regime, consider <b>${sug}</b>. I can load it into the strategy builder with one tap.${aiChips([['open-strategy','Open strategy builder'],['open-chain','View option chain']])}`;}
 function aiCardSIP(){const tot=SIPS.reduce((a,s)=>a+s.amt,0);
-  return `For long-term wealth, stay systematic — you’re running <b>${inr(tot)}/mo</b> across ${SIPS.length} SIPs. In this regime, keep them running and add quality on dips.${aiChips([['go-sip','Manage SIPs'],['go-research','Find quality names']])}`;}
+  return `For long-term wealth, stay systematic, you’re running <b>${inr(tot)}/mo</b> across ${SIPS.length} SIPs. In this regime, keep them running and add quality on dips.${aiChips([['go-sip','Manage SIPs'],['go-research','Find quality names']])}`;}
 function aiCardSectors(){
-  if(!BOT.live){ return `Sector rotation needs <b>live</b> prices — connect Kite with <code>python3 login.py</code> and I'll rank today's real sector leaders and laggards from your watchlist. No invented moves.${aiChips([['go-research','Sector research']])}`; }
+  if(!BOT.live){ return `Sector rotation needs <b>live</b> prices, connect Kite with <code>python3 login.py</code> and I'll rank today's real sector leaders and laggards from your watchlist. No invented moves.${aiChips([['go-research','Sector research']])}`; }
   // real sector performance from the live watchlist
   const m={}; SYMS.filter(s=>isEq(s)&&s.sector&&s.live!==false).forEach(s=>{(m[s.sector]=m[s.sector]||[]).push(s.chg);});
   const top=Object.entries(m).map(([s,a])=>({s,c:a.reduce((x,y)=>x+y,0)/a.length})).sort((a,b)=>b.c-a.c);
-  if(top.length<2){ return `I don't have enough live sector coverage in your watchlist yet — add a few names across sectors and I'll rank the rotation.${aiChips([['go-research','Sector research']])}`; }
-  return `Sector rotation today — leaders: <b>${top[0].s}</b>, ${top[1].s}. Laggards: <b>${top[top.length-1].s}</b>. Money is rotating toward ${top[0].c>0?'risk-on':'defensives'}.${aiChips([['go-research','Sector research'],['open-chain','Trade the leaders']])}`;}
+  if(top.length<2){ return `I don't have enough live sector coverage in your watchlist yet, add a few names across sectors and I'll rank the rotation.${aiChips([['go-research','Sector research']])}`; }
+  return `Sector rotation today, leaders: <b>${top[0].s}</b>, ${top[1].s}. Laggards: <b>${top[top.length-1].s}</b>. Money is rotating toward ${top[0].c>0?'risk-on':'defensives'}.${aiChips([['go-research','Sector research'],['open-chain','Trade the leaders']])}`;}
 function aiCardFallback(){return `I can help with: <b>top movers</b>, <b>oversold ideas</b>, <b>hedging</b>, an <b>option strategy</b>, or a read on <b>your portfolio</b>. Pick one below or type your own.${aiChips([['go-research','Research'],['open-strategy','Option strategy'],['go-analyser','Portfolio X-ray']])}`;}
 function aiSignals(){
   // OFFLINE → honest, never fabricated stock scores/anomalies/portfolio numbers
   if(!BOT.live){
     return `<div class="ais-card ais-off"><div class="ais-h">Live AI signals</div>
-      <p class="ais-note">${icon('shield',12)}<span>Ranked ideas, options anomalies &amp; your portfolio read appear here once Kite is connected — no simulated signals are shown. <button class="ais-relogin" data-relogin>Reconnect</button></span></p></div>`;
+      <p class="ais-note">${icon('shield',12)}<span>Ranked ideas, options anomalies &amp; your portfolio read appear here once Kite is connected, no simulated signals are shown. <button class="ais-relogin" data-relogin>Reconnect</button></span></p></div>`;
   }
   const pool=SYMS.filter(s=>s.live!==false && isEq(s));
-  if(!pool.length) return `<div class="ais-card"><div class="ais-h">AI-ranked ideas</div><p class="ais-note"><span>No live equity quotes yet — they populate during market hours.</span></p></div>`;
+  if(!pool.length) return `<div class="ais-card"><div class="ais-h">AI-ranked ideas</div><p class="ais-note"><span>No live equity quotes yet, they populate during market hours.</span></p></div>`;
   const ranked=[...pool].map(s=>({s,score:Math.round(Math.max(20,Math.min(98,55+(s.chg||0)*6+(dseed(s.ltp)*16-8))))})).sort((a,b)=>b.score-a.score).slice(0,4);
   const ideas=ranked.map(r=>`<div class="ais-row"><span class="t-sym">${esc(r.s.sym)}</span><span class="ais-score">${r.score}</span><span class="num ${cls(r.s.chg)}">${pct(r.s.chg)}</span></div>`).join('');
   const rp=realPortfolio();
   const pulse=rp
     ? `<p class="ais-note">${icon('shield',12)}<span>${rp.n} equity holding${rp.n===1?'':'s'} · P&amp;L <b class="${rp.pnl>=0?'up':'down'}">${rp.pnl>=0?'+':'−'}₹${Math.abs(Math.round(rp.pnl)).toLocaleString('en-IN')}</b> live from Kite.</span></p><button class="ai-act" data-aiact="go-analyser">Open X-ray</button>`
-    : `<p class="ais-note">${icon('shield',12)}<span>No equity holdings linked — your portfolio read appears here when you hold stocks.</span></p>`;
+    : `<p class="ais-note">${icon('shield',12)}<span>No equity holdings linked, your portfolio read appears here when you hold stocks.</span></p>`;
   return `<div class="ais-card"><div class="ais-h">AI-ranked ideas <i class="ais-sub">live momentum</i></div>${ideas}</div>
-    <div class="ais-card"><div class="ais-h">Anomaly alert</div><p class="ais-note">${icon('alert',12)}<span>Unusual options activity in <b>${esc(ranked[0].s.sym)}</b> — call OI building near ATM.</span></p></div>
+    <div class="ais-card"><div class="ais-h">Anomaly alert</div><p class="ais-note">${icon('alert',12)}<span>Unusual options activity in <b>${esc(ranked[0].s.sym)}</b>: call OI building near ATM.</span></p></div>
     <div class="ais-card"><div class="ais-h">Portfolio pulse</div>${pulse}</div>`;
 }
 function aiAction(key){
@@ -6353,9 +6389,9 @@ const AI_ACTIONS={'open-chain':'Open option chain','open-strategy':'Open strateg
    The DATA tools below fetch REAL data from the local bot API (Kite). aiCallClaude runs a
    genuine tool_use → tool_result agentic loop, so Claude fetches live numbers instead of
    guessing. Every tool returns honest {connected:false,...} when Kite is offline. */
-const AI_TOOL={name:'navigate',description:'Offer the user a one-tap shortcut to a relevant part of the zengtrade app (option chain, strategy builder, research, portfolio analyser, SIP manager, or algo studio). Call this in addition to a normal text answer whenever your reply points the user toward one of these tools. Calling navigate does NOT move the user — it renders a button they tap to confirm. Use it when it genuinely helps; never invent destinations outside the enum.',input_schema:{type:'object',properties:{destination:{type:'string',enum:Object.keys(AI_ACTIONS),description:'Where to send the user: '+Object.entries(AI_ACTIONS).map(([k,v])=>k+' = '+v).join('; ')+'.'},reason:{type:'string',description:'A short 2–4 word label for the shortcut button, e.g. "Build the hedge" or "See research".'}},required:['destination']}};
+const AI_TOOL={name:'navigate',description:'Offer the user a one-tap shortcut to a relevant part of the zengtrade app (option chain, strategy builder, research, portfolio analyser, SIP manager, or algo studio). Call this in addition to a normal text answer whenever your reply points the user toward one of these tools. Calling navigate does NOT move the user, it renders a button they tap to confirm. Use it when it genuinely helps; never invent destinations outside the enum.',input_schema:{type:'object',properties:{destination:{type:'string',enum:Object.keys(AI_ACTIONS),description:'Where to send the user: '+Object.entries(AI_ACTIONS).map(([k,v])=>k+' = '+v).join('; ')+'.'},reason:{type:'string',description:'A short 2–4 word label for the shortcut button, e.g. "Build the hedge" or "See research".'}},required:['destination']}};
 const AI_DATA_TOOLS=[
-  {name:'get_portfolio',description:"Fetch the user's REAL equity holdings, open positions and P&L from their connected Zerodha Kite account. Use for any question about my portfolio / holdings / positions / P&L / exposure / concentration / what do I own. Returns connected:false when Kite is not connected, and an empty list if the account is unfunded — never invent holdings.",input_schema:{type:'object',properties:{}}},
+  {name:'get_portfolio',description:"Fetch the user's REAL equity holdings, open positions and P&L from their connected Zerodha Kite account. Use for any question about my portfolio / holdings / positions / P&L / exposure / concentration / what do I own. Returns connected:false when Kite is not connected, and an empty list if the account is unfunded, never invent holdings.",input_schema:{type:'object',properties:{}}},
   {name:'get_market',description:'Fetch the live market snapshot: detected regime (bull/bear/neutral) with a composite score, India VIX, advance/decline breadth, and key index levels. Use for "how is the market / what is the regime / VIX / breadth".',input_schema:{type:'object',properties:{}}},
   {name:'get_quote',description:'Fetch the live last price and day change for specific instruments by symbol. Use for "price of X", "how is X doing", or to rank movers. Resolve names to symbols with search_instruments first if unsure.',input_schema:{type:'object',properties:{symbols:{type:'array',items:{type:'string'},description:'Exchange:symbol or plain NSE symbols, e.g. ["RELIANCE","INFY","NSE:TCS"]. Max 15.'}},required:['symbols']}},
   {name:'search_instruments',description:'Resolve a company/instrument name or partial symbol to exact tradable symbols across all segments (equity, F&O, indices, MCX). Works even when Kite is disconnected (static instrument master). Use to find the right symbol before get_quote.',input_schema:{type:'object',properties:{query:{type:'string',description:'Name or partial symbol, e.g. "infosys" or "bank nifty".'}},required:['query']}},
@@ -6377,7 +6413,7 @@ async function aiExecTool(name,input){
     if(name==='get_portfolio'){
       const d=await get('/api/holdings');
       const hs=(d&&d.holdings)||[];
-      if(!d||!d.real||(d.error&&!hs.length)) return JSON.stringify({connected:false,note:'Kite not connected — no real holdings. Ask the user to run python3 login.py. Do not invent holdings.'});
+      if(!d||!d.real||(d.error&&!hs.length)) return JSON.stringify({connected:false,note:'Kite not connected, no real holdings. Ask the user to run python3 login.py. Do not invent holdings.'});
       if(!hs.length) return JSON.stringify({connected:true,holdings:[],note:'Account connected but holds no equity yet.'});
       const exposure=hs.reduce((a,h)=>a+(h.ltp||0)*(h.qty||0),0);
       return JSON.stringify({connected:true,holdingsCount:hs.length,exposure:Math.round(exposure),dayPnl:Math.round(d.dayPnl||0),totalPnl:Math.round(d.totalPnl||0),
@@ -6385,7 +6421,7 @@ async function aiExecTool(name,input){
     }
     if(name==='get_market'){
       const d=await get('/api/market');
-      if(!d||!d.real||!d.engine) return JSON.stringify({connected:false,note:'Kite not connected — no live market data. Ask the user to run python3 login.py.'});
+      if(!d||!d.real||!d.engine) return JSON.stringify({connected:false,note:'Kite not connected, no live market data. Ask the user to run python3 login.py.'});
       const idx=(k)=>{const o=d[k];return o&&o.ltp!=null?{ltp:o.ltp,chgPct:o.chgPct}:null;};
       return JSON.stringify({connected:true,regime:d.engine.regime,score:d.engine.score,vix:d.vix&&d.vix.ltp,breadthAD:d.breadth&&d.breadth.ad,
         nifty:idx('nifty'),banknifty:idx('banknifty'),sensex:idx('sensex')});
@@ -6395,7 +6431,7 @@ async function aiExecTool(name,input){
       if(!syms.length) return JSON.stringify({error:'no symbols given'});
       const d=await get('/api/uquotes?keys='+encodeURIComponent(syms.join(',')));
       const q=(d&&d.quotes)||{};
-      if(!Object.keys(q).length) return JSON.stringify({connected:false,note:'No live quotes — Kite not connected. Ask the user to run python3 login.py.'});
+      if(!Object.keys(q).length) return JSON.stringify({connected:false,note:'No live quotes, Kite not connected. Ask the user to run python3 login.py.'});
       return JSON.stringify({connected:true,quotes:Object.entries(q).map(([k,v])=>({sym:k,ltp:v.ltp,chgPct:v.chg!=null?v.chg:v.chgPct}))});
     }
     if(name==='search_instruments'){
@@ -6423,15 +6459,15 @@ async function aiExecTool(name,input){
 
 function aiSystemPrompt(){
   const r=state.displayed;
-  const conn=BOT.live?('CONNECTED to Kite ('+((BOT.status&&BOT.status.user)||'user')+'), live data available'):'NOT connected to Kite right now — data tools will return connected:false';
+  const conn=BOT.live?('CONNECTED to Kite ('+((BOT.status&&BOT.status.user)||'user')+'), live data available'):'NOT connected to Kite right now, data tools will return connected:false';
   return [
     'You are the in-app AI copilot for zengtrade, a real trading & investing terminal wired to the user\'s Zerodha Kite account via local tools.',
-    'CRITICAL — never invent numbers. For anything about prices, the market/regime/VIX, the user\'s holdings/P&L, option chains, or backtests, you MUST call the relevant tool and answer from what it returns. If a tool returns connected:false or empty, say so plainly and tell the user to run python3 login.py — do NOT guess or fabricate figures. This product\'s whole promise is that every number is real.',
+    'CRITICAL, never invent numbers. For anything about prices, the market/regime/VIX, the user\'s holdings/P&L, option chains, or backtests, you MUST call the relevant tool and answer from what it returns. If a tool returns connected:false or empty, say so plainly and tell the user to run python3 login.py, do NOT guess or fabricate figures. This product\'s whole promise is that every number is real.',
     'You can call multiple tools and chain them (e.g. search_instruments → get_quote). Resolve ambiguous names with search_instruments first.',
-    'Be concise and direct — a few sentences, no preamble. Plain text only; **bold** for key numbers is fine. No markdown headers, tables, or code blocks.',
+    'Be concise and direct, a few sentences, no preamble. Plain text only; **bold** for key numbers is fine. No markdown headers, tables, or code blocks.',
     'Detected market regime right now: '+r+'. Connection: '+conn+'.',
-    'When your answer points the user toward a specific part of the app, ALSO call the `navigate` tool to offer a one-tap shortcut (the user must tap it — navigate never moves them on its own). Never reply with only a tool call; always include a helpful text answer.',
-    'You are informational only — never claim to place trades; nothing is executed without the user\'s explicit confirmation. This is not financial advice.'
+    'When your answer points the user toward a specific part of the app, ALSO call the `navigate` tool to offer a one-tap shortcut (the user must tap it, navigate never moves them on its own). Never reply with only a tool call; always include a helpful text answer.',
+    'You are informational only, never claim to place trades; nothing is executed without the user\'s explicit confirmation. This is not financial advice.'
   ].join('\n');
 }
 function aiHistory(){
@@ -6523,14 +6559,14 @@ function aiSendLive(text){
     }
   ).catch(err=>{
     const last=state.ai.msgs[state.ai.msgs.length-1];
-    last.html='<span class="ai-warn">'+icon('alert',13)+' Couldn’t reach the Claude proxy ('+esc(String(err.message||err))+'). Falling back to demo answers — check AI settings.</span>';
+    last.html='<span class="ai-warn">'+icon('alert',13)+' Couldn’t reach the Claude proxy ('+esc(String(err.message||err))+'). Falling back to demo answers, check AI settings.</span>';
     last.text=''; delete last.streaming; state.ai.busy=false; renderAI();
   });
 }
 function aiSettings(){
   const c=aiCfg();
   flowModal({title:'Connect a live Claude model', confirm:'Save',
-    body:`<p class="cv-pick-note">For security, the browser never holds your Anthropic API key. Run the bundled <b>proxy</b> (see <code>proxy/README.md</code>) — it keeps the key server-side and streams Claude’s responses back. Leave the endpoint blank to use scripted demo answers.</p>
+    body:`<p class="cv-pick-note">For security, the browser never holds your Anthropic API key. Run the bundled <b>proxy</b> (see <code>proxy/README.md</code>), it keeps the key server-side and streams Claude’s responses back. Leave the endpoint blank to use scripted demo answers.</p>
       <div class="flow-field"><label for="aiEp">Proxy endpoint URL</label><input class="flow-input" id="aiEp" type="text" inputmode="url" placeholder="http://localhost:8787/v1/messages" value="${esc(c.endpoint||'')}" autocomplete="off" spellcheck="false"></div>
       <div class="flow-field"><label for="aiModel">Model</label><select class="flow-input" id="aiModel">${['claude-opus-4-8','claude-sonnet-4-6','claude-haiku-4-5'].map(m=>`<option ${m===aiModelName()?'selected':''}>${m}</option>`).join('')}</select></div>
       <div id="aiTestRow"><button class="btn-ghost sm" type="button" id="aiTest">${icon('bolt',12)} Test connection</button> <span id="aiTestMsg" class="ai-test-msg"></span></div>
@@ -6566,7 +6602,7 @@ function powerOn(){ const f=$('floorSweep'); if(!f)return; f.classList.remove('g
 /* ---------- day/night CASCADE: trading floor powers on/off, pane by pane ----------
    Freeze each visible pane in the OLD theme (inline CSS vars inherit to the whole
    subtree), flip the global theme so the canvas changes at once, then release the
-   panes in a ripple outward from the toggle — each flipping with an accent flash. */
+   panes in a ripple outward from the toggle, each flipping with an accent flash. */
 const THEME_VARS=['--bg','--surface','--surface-2','--white','--line','--line-2','--navy','--slate','--slate-2','--green','--green-d','--red','--red-d','--blue','--amber','--tint-down','--tint-warn','--tint-info','--bd-down','--bd-warn','--up-flash','--down-flash','--topbar-bg','--glass','--glass-hi','--shadow','--shadow-hover','--shadow-lg','--accent','--accent-d','--accent-soft','--accent-line'];
 const CASCADE_SEL=['.topbar','.ticker-bar','.regime-bar','.pane-left','.chart-card','#investHub','.panel','.order-card','.ctx-card','#modeFab',
   /* algo / ai / trader-desk takeover panes. So day↔night powers on in EVERY persona, not just the 3-pane floor */
@@ -6604,7 +6640,7 @@ function doTick(){
   // movement on top of them. This synthetic tape only animates the offline demo.
   // (BOT is a module-scoped `let`, NOT on window, reference it directly.)
   if(typeof BOT!=='undefined' && BOT.live) return;
-  if(state.algo && state.algo.market==='crypto') return;   // crypto tape is fed by real Binance data — never synth-tick it
+  if(state.algo && state.algo.market==='crypto') return;   // crypto tape is fed by real Binance data, never synth-tick it
   const vix=+$('sVix').value, vol=clamp((vix-8)/27,0,1), night=state.surface==='night'?1.4:1;
   const upd=(el,dec)=>{const base=parseFloat(el.textContent.replace(/,/g,''))||0; if(!base)return;
     const mv=(Math.random()-0.5)*base*0.0007*(0.4+vol*3.2)*night;
@@ -6640,7 +6676,7 @@ const WIDGET_CATALOG={
   trader:[
     {key:'movers',name:'Top Movers',icon:'trendUp',desc:'Biggest gainers & losers right now',render(){
       if(!BOT.live) return `<div class="wg-empty">${icon('shield',13)} Connect Kite for live movers.</div>`;
-      const live=SYMS.filter(s=>s.live!==false);   // exclude symbols with no real quote — never a stale price
+      const live=SYMS.filter(s=>s.live!==false);   // exclude symbols with no real quote, never a stale price
       if(!live.length) return `<div class="wg-empty">No live quotes yet.</div>`;
       const g=[...live].sort((a,b)=>b.chg-a.chg), row=s=>`<div class="wg-row"><span class="t-sym">${s.sym}</span><span class="num">${s.ltp.toLocaleString('en-IN')}</span><span class="num ${cls(s.chg)}">${pct(s.chg)}</span></div>`;
       return `<div class="wg-split"><div><div class="wg-cap up">Gainers</div>${g.slice(0,3).map(row).join('')}</div><div><div class="wg-cap down">Losers</div>${g.slice(-3).reverse().map(row).join('')}</div></div>`;}},
@@ -6653,7 +6689,7 @@ const WIDGET_CATALOG={
     {key:'pnl',name:'Day P&L',icon:'bolt',desc:'Today’s real P&L across your Kite holdings',render(){
       if(!BOT.live||!BOT.holdings) return `<div class="wg-big muted">—</div><div class="wg-empty">Connect Kite for live Day P&amp;L.</div>`;
       const hs=BOT.holdings.holdings||[];
-      if(!hs.length) return `<div class="wg-big">₹0</div><div class="wg-empty">No holdings yet — your real Day P&amp;L shows here once you hold positions.</div>`;
+      if(!hs.length) return `<div class="wg-big">₹0</div><div class="wg-empty">No holdings yet, your real Day P&amp;L shows here once you hold positions.</div>`;
       const day=BOT.holdings.dayPnl||0, byPct=[...hs].map(h=>({sym:h.sym,chg:h.dayChangePct||0}));
       const best=[...byPct].sort((a,b)=>b.chg-a.chg)[0], worst=[...byPct].sort((a,b)=>a.chg-b.chg)[0];
       return `<div class="wg-big ${cls(day)}">${sgn(day)}</div><div class="wg-row"><span>Best</span><span class="t-sym">${esc(best.sym)}</span><span class="num ${cls(best.chg)}">${pct(best.chg)}</span></div><div class="wg-row"><span>Worst</span><span class="t-sym">${esc(worst.sym)}</span><span class="num ${cls(worst.chg)}">${pct(worst.chg)}</span></div><div class="wg-foot">${hs.length} holdings · total ${sgn(BOT.holdings.totalPnl||0)}</div>`;}},
@@ -6661,10 +6697,10 @@ const WIDGET_CATALOG={
       if(!BOT.live) return `<div class="wg-empty">${icon('shield',13)} Connect Kite for live market depth.</div>`;
       const sel=state.selected||'RELIANCE', d=BOT.depth;
       if(!d||d.symbol!==sel){ loadDepth(sel); return `<div class="wg-empty">Loading live depth for ${esc(sel)}…</div>`; }
-      if(d.error) return `<div class="wg-empty">No depth for ${esc(sel)} — ${esc(d.error)}.</div>`;
+      if(d.error) return `<div class="wg-empty">No depth for ${esc(sel)}, ${esc(d.error)}.</div>`;
       return depthLadderHtml(d);}},
     {key:'oi',name:'Option Chain OI',icon:'scale',desc:'Call / Put open interest near spot',render(){
-      return `<div class="wg-empty">${icon('shield',13)} Open the Option Analyser for live chain OI — no synthetic OI shown here.</div>`;}},
+      return `<div class="wg-empty">${icon('shield',13)} Open the Option Analyser for live chain OI, no synthetic OI shown here.</div>`;}},
     {key:'margin',name:'Margin & Funds',icon:'wallet',desc:'Available margin & exposure',render(){
       if(!BOT.live||!BOT.market) return `<div class="wg-empty">${icon('shield',13)} Connect Kite for live margin & funds.</div>`;
       const avail=BOT.market.funds||0;
@@ -6718,7 +6754,7 @@ function renderWidgetGallery(){
   const paneHtml=`<div class="wgl-sec">Layout panels</div>`+panes.map(([k,ic])=>{const on=paneVisible(k),nm=CARD_LABEL[k]||k;
     return `<button class="wgl-item ${on?'on':''}" data-ptoggle="${k}" aria-pressed="${on}">
       <span class="wgl-ic">${icon(ic,17)}</span>
-      <span class="wgl-tb"><b>${nm}</b><span>${on?'Showing':'Hidden — tap to restore'}</span></span>
+      <span class="wgl-tb"><b>${nm}</b><span>${on?'Showing':'Hidden, tap to restore'}</span></span>
       <span class="wgl-add">${icon(on?'check':'plus',15)}</span></button>`;}).join('');
   body.innerHTML=`<div class="wgl-note">Tailored for <b>${inv?'Investing':'Trading'}</b> · your picks are saved per mode</div>`
     +paneHtml+`<div class="wgl-sec">Widgets</div>`
@@ -6746,7 +6782,7 @@ function cardCtl(key){ const nm=CARD_LABEL[key]||key;
   return `<div class="card-ctl" data-cardgrp="${key}">
     <button class="cc-btn cc-min" data-cardbtn="min" data-cardkey="${key}" title="Minimize / restore" aria-label="Minimize ${nm}">${icon('minus',13)}</button>
     <button class="cc-btn cc-max" data-cardbtn="max" data-cardkey="${key}" title="Maximize / restore" aria-label="Maximize ${nm}">${icon('expand',13)}</button>
-    <button class="cc-btn cc-close" data-cardbtn="close" data-cardkey="${key}" title="Close ${nm} — restore from + Widgets" aria-label="Close ${nm}">${icon('close',13)}</button>
+    <button class="cc-btn cc-close" data-cardbtn="close" data-cardkey="${key}" title="Close ${nm}, restore from + Widgets" aria-label="Close ${nm}">${icon('close',13)}</button>
   </div>`;
 }
 function mountStableCardCtls(){
@@ -6834,7 +6870,7 @@ function recompute(opts={}){
   const hard=state.forceHard||vixROC>0.15;state.forceHard=false;
   const mismatch=newEngine!==state.displayed;
   if(state.mode==='auto'){
-    if(opts.silent){ if(mismatch) applyRegime(newEngine); }     // quiet adoption (boot / first live sync) — no toast/cinematic
+    if(opts.silent){ if(mismatch) applyRegime(newEngine); }     // quiet adoption (boot / first live sync), no toast/cinematic
     else if(mismatch&&!state.suggesting){
       if(hard){applyRegime(newEngine);infoToast(newEngine,S,conf,sc,true,label);}
       else if(conf>=65){suggestToast(newEngine,S,conf,sc,false,label);}
@@ -6873,7 +6909,7 @@ function renderEngineSrc(){
     el.innerHTML=`<span class="es-dot live"></span><span class="es-txt"><b>● LIVE from Kite</b> · ${esc(reg)}${t?` · ${t}`:''} · updates every 30s</span>`;
   } else {
     el.className='eng-src off';
-    el.innerHTML=`<span class="es-dot"></span><span class="es-txt"><b>Simulated</b> · connect Kite for the live regime — drag to explore</span>`;
+    el.innerHTML=`<span class="es-dot"></span><span class="es-txt"><b>Simulated</b> · connect Kite for the live regime, drag to explore</span>`;
   }
   const rb=$('esReset'); if(rb) rb.onclick=resyncLive;
 }
@@ -6897,7 +6933,7 @@ function infoToast(regime,S,conf,sc,hard,label){
   state.suggesting=true;
   const L=(label||regime).toUpperCase();
   const t=document.createElement('div');t.className='toast'+(hard?' hard':'');
-  t.innerHTML=`<div class="toast-ico">${icon(hard?'bolt':regime,22)}</div><div class="toast-body"><b>${hard?'Hard signal — switched to '+L:'Switched to '+L}</b>
+  t.innerHTML=`<div class="toast-ico">${icon(hard?'bolt':regime,22)}</div><div class="toast-body"><b>${hard?'Hard signal, switched to '+L:'Switched to '+L}</b>
     <span>Composite ${S>=0?'+':''}${S} · ${conf}% · ${reasonText(regime,sc)}. No orders were changed.</span></div>
     <div class="toast-acts"><button class="tbtn ghost" data-act="keep">Override</button><button class="tbtn primary" data-act="ok">Got it</button></div>`;
   $('toastWrap').appendChild(t);
@@ -7063,7 +7099,7 @@ function init(){
     loadMarket(); setInterval(loadMarket, 30000);   // Kite market data (Indian edition only)
   }
   if(!CRYPTO_ONLY) setInterval(()=>{ loadTicks();                  // Kite WebSocket (Indian edition only)
-    loadTape();                                   // real-time index tape (WS-fed) — patched in place, no scroll reset
+    loadTape();                                   // real-time index tape (WS-fed), patched in place, no scroll reset
     // desk movers/P&L/heatmap are live-data cards but the 30s cascade gate skips them between
     // structural changes → refresh them on the tick ONLY when the desk is the visible center view
     // (localised rebuild, not the whole screen, so no global flicker).
@@ -7245,18 +7281,18 @@ function initAddScrip(){   // watchlist "Add scrip…" box → add any instrumen
    MONETIZATION: tiers, entitlements & in-app storefront.
    Real entitlement model + feature-gating + a pricing storefront. Payment is a
    LABELLED DEMO: selecting a plan switches your in-app tier so you can experience
-   it; real checkout (Razorpay) + user accounts aren't wired — nothing is charged.
+   it; real checkout (Razorpay) + user accounts aren't wired, nothing is charged.
    ============================================================ */
 // each feature = [label, liveToday?]  → storefront shows ✓ available now vs ○ on the roadmap (honest)
 const PLANS=[
   {id:'free',name:'Paper',tag:'Free forever',mo:0,yr:0,accent:'#64748b',
-   blurb:'The honest core — analyse real markets &amp; paper-trade, free.',
+   blurb:'The honest core, analyse real markets &amp; paper-trade, free.',
    feats:[['Full terminal + all-segment search',1],['Real charts &amp; option chain',1],['Real portfolio (read-only)',1],['Paper trading + forward-test',1],['Regime engine',1],['AI copilot (demo; live via your proxy)',1]]},
   {id:'trader',name:'Trader',tag:'Active trader',mo:349,yr:2990,accent:'#0ea5e9',
    blurb:'A real cockpit on top of your Zerodha account.',
    feats:[['Everything in Paper',1],['Streaming chain + indices',1],['Portfolio analytics (drift/concentration)',0],['Real order execution',0],['Price/indicator alerts',0],['Multiple named watchlists',0]]},
   {id:'algopro',name:'Algo Pro',tag:'Automation',star:true,mo:749,yr:5990,accent:'#10b981',
-   blurb:'Run validated strategies live — pay only when it’s proven.',
+   blurb:'Run validated strategies live, pay only when it’s proven.',
    feats:[['Everything in Trader',1],['16-gate go-live audit',1],['Real historical backtests',0],['Run strategies live (in-UI)',0],['Deploy / pause from the UI',0],['AI copilot (higher limits)',1]]},
   {id:'quant',name:'Quant',tag:'Power user / HNI',mo:1799,yr:14990,accent:'#8b5cf6',
    blurb:'Unlimited automation, API access &amp; priority compute.',
@@ -7264,7 +7300,7 @@ const PLANS=[
 ];
 const ADDONS=[
   {id:'copilot',name:'Copilot',mo:249,note:'150 msgs + credits at cost +15%',blurb:'The AI agent: reads real holdings, runs backtests, drafts gated orders.'},
-  {id:'slot',name:'Extra live slot',mo:199,note:'per strategy / mo',blurb:'Scale automation — pay only for what you run.'},
+  {id:'slot',name:'Extra live slot',mo:199,note:'per strategy / mo',blurb:'Scale automation, pay only for what you run.'},
 ];
 const TIER_RANK={free:0,trader:1,algopro:2,quant:3};
 // NB: feature entitlement ENFORCEMENT is intentionally NOT done client-side (it's bypassable), 
@@ -7272,7 +7308,7 @@ const TIER_RANK={free:0,trader:1,algopro:2,quant:3};
 function curPlan(){ return PLANS.find(p=>p.id===state.plan)||PLANS[0]; }
 function renderPlanChip(){ const el=$('planChip'); if(!el) return; const p=curPlan();
   el.innerHTML=`${p.star?icon('bolt',12):icon('spark',12)}<span>${esc(p.name)}</span>`;
-  el.title='Your plan: '+p.name+' — view pricing'; el.onclick=openPricing; }
+  el.title='Your plan: '+p.name+', view pricing'; el.onclick=openPricing; }
 let _pxEsc;
 function closePricing(){ const o=$('pricingOv'); if(o)o.remove(); if(_pxEsc)document.removeEventListener('keydown',_pxEsc); }
 function openPricing(){
@@ -7296,15 +7332,15 @@ function openPricing(){
   const addons=ADDONS.map(a=>`<div class="pc-addon"><div class="pc-an"><b>${esc(a.name)}</b><span>₹${a.mo}/mo · ${esc(a.note)}</span></div><p>${esc(a.blurb)}</p></div>`).join('');
   const ov=document.createElement('div'); ov.className='pricing-ov'; ov.id='pricingOv';
   ov.innerHTML=`<div class="pricing-panel" role="dialog" aria-modal="true" aria-label="Pricing">
-    <div class="pricing-top"><div><h2>Pricing — roadmap preview</h2>
-      <p>Our planned model. <b class="leg-now">✓ available today</b> · <b class="leg-soon">○ on the roadmap</b>. We only charge for what’s real — nothing here is billed yet.</p></div>
+    <div class="pricing-top"><div><h2>Pricing, roadmap preview</h2>
+      <p>Our planned model. <b class="leg-now">✓ available today</b> · <b class="leg-soon">○ on the roadmap</b>. We only charge for what’s real, nothing here is billed yet.</p></div>
       <button class="pricing-x" data-pxclose aria-label="Close pricing">${icon('close',18)}</button></div>
-    <div class="pricing-founder">${icon('bolt',14)}<span><b>Founder Lifetime</b> — first 250 users: <b>₹4,999 once</b> = lifetime Algo Pro. <i>60-day launch offer.</i></span></div>
+    <div class="pricing-founder">${icon('bolt',14)}<span><b>Founder Lifetime</b>: first 250 users: <b>₹4,999 once</b> = lifetime Algo Pro. <i>60-day launch offer.</i></span></div>
     <div class="pricing-toggle"><button class="pt-opt${!annual?' on':''}" data-cycle="mo">Monthly</button><button class="pt-opt${annual?' on':''}" data-cycle="yr">Annual <i>save ~30%</i></button></div>
     <div class="pricing-grid">${cards}</div>
     <div class="pricing-addons"><div class="pc-addons-h">Add-ons</div>${addons}</div>
-    <div class="pricing-b2b">${icon('shield',15)}<div><b>White-label / B2B</b> — license the honest-algo + safety + terminal stack to sub-brokers, RIAs &amp; PMS who hold the advice licenses. The cleanest path, highest ACV. <button class="pc-link" data-pxb2b>Talk to us →</button></div></div>
-    <p class="pricing-demo">${icon('shield',12)}<span><b>Roadmap preview — nothing is charged.</b> ✓ = working today · ○ = planned. Choosing a plan just previews the tier in-app; real checkout (Razorpay) &amp; accounts aren’t built. We won’t sell a feature until it’s real.</span></p>
+    <div class="pricing-b2b">${icon('shield',15)}<div><b>White-label / B2B</b>: license the honest-algo + safety + terminal stack to sub-brokers, RIAs &amp; PMS who hold the advice licenses. The cleanest path, highest ACV. <button class="pc-link" data-pxb2b>Talk to us →</button></div></div>
+    <p class="pricing-demo">${icon('shield',12)}<span><b>Roadmap preview, nothing is charged.</b> ✓ = working today · ○ = planned. Choosing a plan just previews the tier in-app; real checkout (Razorpay) &amp; accounts aren’t built. We won’t sell a feature until it’s real.</span></p>
   </div>`;
   document.body.appendChild(ov);
   ov.addEventListener('click',e=>{
@@ -7319,7 +7355,7 @@ function pickPlan(id){
   if(!PLANS.find(p=>p.id===id)) return;
   state.plan=id; saveState(); closePricing(); renderPlanChip();
   if(typeof applyPersona==='function') applyPersona(state.persona);
-  quickToast('Previewing '+curPlan().name,'Roadmap preview — nothing is charged. ✓ features work today; ○ features are planned.');
+  quickToast('Previewing '+curPlan().name,'Roadmap preview, nothing is charged. ✓ features work today; ○ features are planned.');
 }
 
 document.addEventListener('DOMContentLoaded',init);

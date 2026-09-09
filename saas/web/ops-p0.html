@@ -35,7 +35,7 @@
   <p class="sub">~15 minutes · Unblocks signup → deploy → trades and CBO growth. Site + billing are already live.</p>
   <p id="overall" class="pill bad">Checking gates…</p>
   <div id="workerOnly" class="callout" hidden>
-    <b>Migration 0011 is live.</b> Sole blocker: paper worker — add or fix <code>DATABASE_URL</code> on Railway <code>paper-worker</code> and redeploy.
+    <b>Migration 0011 is live.</b> Sole blocker: paper worker, add or fix <code>DATABASE_URL</code> on Railway <code>paper-worker</code> and redeploy.
     Pooler: <code>aws-0-ap-northeast-1.pooler.supabase.com</code> · session mode · port <code>5432</code>.
     <a href="https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings" target="_blank" rel="noopener">Copy URI from Supabase</a>
   </div>
@@ -45,7 +45,7 @@
   </div>
 
   <div id="parallelBox" class="callout" style="background:#eef2ff;border-color:#c7d2fe" hidden>
-    <b>Meanwhile — parallel work (no worker):</b>
+    <b>Meanwhile, parallel work (no worker):</b>
     <a href="/ops/e2e">Partial E2E</a> steps 1–2 ·
     <a href="/dashboard">deploy</a> → <a href="/app#forward">View evidence</a> ·
     <code>./scripts/verify-activation-path.sh --partial</code> ·
@@ -63,7 +63,7 @@
     <p>Enables funnel v2 events (<code>signup_complete</code>, <code>deploy_success</code>, <code>checkout_click</code>) in <a href="/admin">/admin</a>.<br>
     <b>One-shot (recommended):</b> add <code>DATABASE_PASSWORD</code> (password only) or <code>DATABASE_URL</code> + <code>RAILWAY_API_TOKEN</code> to <a href="https://github.com/Leeshwaan04/Zengtrade-V2/settings/secrets/actions" target="_blank" rel="noopener">GitHub Secrets</a> → <a href="https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml" target="_blank" rel="noopener">Run “Apply P0”</a> → type <code>APPLY</code> (validates credentials, migration + worker + post-P0).<br>
     <b>Cloud Agent:</b> add secret <code>DATABASE_PASSWORD</code> (after Supabase reset) or full <code>DATABASE_URL</code> → agent runs <code>./scripts/run-p0-if-ready.sh</code> on <code>main</code>.<br>
-    <b>Railway:</b> set <code>DATABASE_URL</code> on <code>paper-worker</code> — agent auto-resolves from Railway.<br>
+    <b>Railway:</b> set <code>DATABASE_URL</code> on <code>paper-worker</code>: agent auto-resolves from Railway.<br>
     <b>URI:</b> <a href="https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings" target="_blank" rel="noopener">Supabase → Database → Connection string</a> (session pooler, port <code>5432</code>).</p>
     <a class="btn" href="/ops/migrate">Open migration guide</a>
     <a class="alt" href="https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/apply-p0.yml" target="_blank" rel="noopener">Apply P0 (GitHub)</a>
@@ -119,9 +119,9 @@ async function probeWorker(){
 async function refresh(){
   const mig=await probeMig();
   const w=await probeWorker();
-  document.getElementById("g1").textContent=mig?"✓ Migration 0011 live (signup + deploy + checkout events)":"✗ Migration 0011 pending — run step 1";
+  document.getElementById("g1").textContent=mig?"✓ Migration 0011 live (signup + deploy + checkout events)":"✗ Migration 0011 pending, run step 1";
   document.getElementById("g1").className="gate "+(mig?"ok":"bad");
-  document.getElementById("g2").textContent=w.ok?"✓ Worker live ("+w.detail+")":"✗ Worker stale ("+w.detail+") — run step 2";
+  document.getElementById("g2").textContent=w.ok?"✓ Worker live ("+w.detail+")":"✗ Worker stale ("+w.detail+"), run step 2";
   document.getElementById("g2").className="gate "+(w.ok?"ok":"bad");
   document.getElementById("step1").classList.toggle("done",mig);
   document.getElementById("step2").classList.toggle("done",w.ok);
@@ -150,11 +150,11 @@ async function refresh(){
   const partial=mig&&!w.ok;
   const pill=document.getElementById("overall");
   if(likelyBadPw){
-    pill.textContent="Step 2 — fix DATABASE_URL password on Railway";
+    pill.textContent="Step 2, fix DATABASE_URL password on Railway";
   } else if(mig&&!w.ok){
-    pill.textContent="Step 2 only — add DATABASE_URL + deploy worker";
+    pill.textContent="Step 2 only, add DATABASE_URL + deploy worker";
   } else {
-    pill.textContent=all?"✓ All P0 green — run E2E":"Action required — complete steps below";
+    pill.textContent=all?"✓ All P0 green, run E2E":"Action required, complete steps below";
   }
   pill.className="pill "+(all?"ok":"bad");
   const s3=document.getElementById("step3");
@@ -164,7 +164,7 @@ async function refresh(){
   btn.style.opacity=(all||partial)?"1":"0.5";
   const g3=document.getElementById("g3");
   if(g3){
-    g3.textContent=all?"Ready — run E2E + post-p0-success.sh":(partial?"Partial E2E (steps 1–2) + parallel Pro checkout at /ops/billing":"Locked until migration 0011");
+    g3.textContent=all?"Ready, run E2E + post-p0-success.sh":(partial?"Partial E2E (steps 1–2) + parallel Pro checkout at /ops/billing":"Locked until migration 0011");
     g3.className="gate "+(all?"ok":(partial?"ok":"bad"));
   }
 }

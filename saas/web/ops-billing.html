@@ -29,7 +29,7 @@
       <li>Optional: deploy first in <a href="/dashboard">Algo Studio</a> → post-deploy hint → <a href="/app#forward">/app#forward</a> (builds trust before checkout). While worker is down, yellow banner offers <b>View evidence</b> → <a href="/app#forward">/app#forward</a>.</li>
       <li>Organic alt: <a href="/pricing/">/pricing/</a> → <b>Get Pro</b> (<code>pricing_pro</code> UTM) · <a href="/login">/login</a> → <code>signup_coins</code></li>
       <li>Choose <b>Pro</b> → complete NOWPayments invoice (test or real)</li>
-      <li>Return to <a href="/app?paid=1">/app?paid=1</a> — tier should flip within minutes</li>
+      <li>Return to <a href="/app?paid=1">/app?paid=1</a>, tier should flip within minutes</li>
       <li>Confirm in <a href="/admin">/admin</a> → Paying / MRR tiles</li>
     </ol>
     <a class="btn" href="/app#pricing">Open Pro checkout</a>
@@ -38,7 +38,7 @@
   </div>
 
   <div class="card" style="background:var(--green-soft);border-color:var(--green-line)">
-    <h2 style="font-size:16px;margin:0 0 8px">After checkout — verify in /admin</h2>
+    <h2 style="font-size:16px;margin:0 0 8px">After checkout, verify in /admin</h2>
     <ol>
       <li><b>Paying</b> tile ≥ 1 (your test account counts)</li>
       <li><b>MRR</b> tile &gt; $0 (founding Pro $19/mo)</li>
@@ -53,9 +53,9 @@
     <h2 style="font-size:16px;margin:0 0 8px">Upgrade attribution (checkout_click path)</h2>
     <p style="font-size:14px;margin:0 0 10px">After checkout, inspect <code>event.path</code> in Supabase or watch <code>checkout_clicks_7d</code> in <a href="/admin">/admin</a>:</p>
     <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.7">
-      <li><code>free_limit_upgrade</code> — deploy a 2nd strategy on Free (<a href="/dashboard">Algo Studio</a>)</li>
-      <li><code>deploy_success_pro</code> — post-deploy “Pro $19/mo” CTA</li>
-      <li><code>forward_empty_pro</code> — Forward Test empty state → Pro button</li>
+      <li><code>free_limit_upgrade</code>: deploy a 2nd strategy on Free (<a href="/dashboard">Algo Studio</a>)</li>
+      <li><code>deploy_success_pro</code>: post-deploy “Pro $19/mo” CTA</li>
+      <li><code>forward_empty_pro</code>: Forward Test empty state → Pro button</li>
     </ul>
   </div>
 
@@ -96,7 +96,7 @@ fetch("https://ponvarxeytfcntckczbn.supabase.co/functions/v1/nowpayments-create-
   method:"OPTIONS",headers:{Origin:location.origin,"Access-Control-Request-Method":"POST"}
 }).then(r=>{
   const el=document.getElementById("bill");
-  if(r.ok){el.textContent="✓ Billing edge function reachable — safe to test checkout";el.className="ok";}
+  if(r.ok){el.textContent="✓ Billing edge function reachable, safe to test checkout";el.className="ok";}
   else{el.textContent="✗ Billing not reachable (HTTP "+r.status+")";el.className="bad";}
 }).catch(()=>{document.getElementById("bill").textContent="✗ Could not reach billing function";document.getElementById("bill").className="bad";});
 // BUG FIX (2026-09-09): this used to insert a real checkout_click row on every page load,
@@ -106,8 +106,8 @@ fetch("https://ponvarxeytfcntckczbn.supabase.co/functions/v1/nowpayments-create-
 fetch(SUPA+"/rest/v1/event",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({name:"pageview",path:"/ops-billing-probe"})})
 .then(r=>{
   const el=document.getElementById("funnel");
-  if(r.status===201){el.innerHTML="✓ Funnel insert path live (migration 0011) — real <code>checkout_click</code> events will appear in <a href=\"/admin\">/admin</a>";}
-  else{el.innerHTML="⚠ Funnel insert blocked (HTTP "+r.status+") — apply <a href=\"/ops/migrate\">migration 0011</a> first";}
+  if(r.status===201){el.innerHTML="✓ Funnel insert path live (migration 0011), real <code>checkout_click</code> events will appear in <a href=\"/admin\">/admin</a>";}
+  else{el.innerHTML="⚠ Funnel insert blocked (HTTP "+r.status+"), apply <a href=\"/ops/migrate\">migration 0011</a> first";}
 });
 fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{headers:{apikey:ANON}})
 .then(r=>r.json()).then(async rows=>{
@@ -120,10 +120,10 @@ fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{h
     try{
       const data=await fetch("/ops/data.json?"+Date.now(),{cache:"no-store"}).then(r=>r.json());
       if(data.gates?.growth_goal?.cbo_infra_ok){
-        cbo=" <b>CBO goal:</b> infra ✅ — target Paying ≥ 1 + MRR &gt; $0 in <a href=\"/admin\">/admin</a>.";
+        cbo=" <b>CBO goal:</b> infra ✅, target Paying ≥ 1 + MRR &gt; $0 in <a href=\"/admin\">/admin</a>.";
       }
     }catch(e){}
-    el.innerHTML="<b>Note:</b> Paper worker is offline — checkout still works. Partial activation: <a href=\"/ops/e2e\">/ops/e2e</a> steps 1–2. Trades need <a href=\"/ops/worker\">worker live</a>."+cbo;
+    el.innerHTML="<b>Note:</b> Paper worker is offline, checkout still works. Partial activation: <a href=\"/ops/e2e\">/ops/e2e</a> steps 1–2. Trades need <a href=\"/ops/worker\">worker live</a>."+cbo;
   }
 }).catch(()=>{});
 (async function(){
@@ -140,7 +140,7 @@ fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{h
     const ev=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({name:"pageview",path:"/ops-billing-sales"})});
     ok=ok&&ev.status===201;
   }catch(e){ok=false;}
-  el.textContent=ok?"✓ Sales-ready — founding $19 + NOWPayments + funnel insert path live · targets: Paying ≥ 1, MRR > $0 in /admin":"✗ Run ./scripts/check-sales-ready.sh";
+  el.textContent=ok?"✓ Sales-ready, founding $19 + NOWPayments + funnel insert path live · targets: Paying ≥ 1, MRR > $0 in /admin":"✗ Run ./scripts/check-sales-ready.sh";
   el.style.background=ok?"var(--green-soft)":"#fff5f5";
   el.style.borderColor=ok?"var(--green-line)":"#f0b4b4";
 })();
@@ -158,7 +158,7 @@ fetch(SUPA+"/rest/v1/engine_state?key=eq._worker_heartbeat&select=updated_at",{h
     const ev=await fetch(SUPA+"/rest/v1/event",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({name:"pageview",path:"/ops-billing-ready"})});
     ok=ok&&ev.status===201;
   }catch(e){ok=false;}
-  el.textContent=ok?"✓ Billing-ready — founding $19 + NOWPayments + funnel insert path live":"✗ Run ./scripts/check-billing-ready.sh (pricing, billing, migration 0011)";
+  el.textContent=ok?"✓ Billing-ready, founding $19 + NOWPayments + funnel insert path live":"✗ Run ./scripts/check-billing-ready.sh (pricing, billing, migration 0011)";
   el.style.background=ok?"var(--green-soft)":"#fff5f5";
   el.style.borderColor=ok?"var(--green-line)":"#f0b4b4";
 })();
