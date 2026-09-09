@@ -297,6 +297,109 @@
     });
   }
 
+  /* ---- real per-user closed trades: the system of record (mirrors saas/web/js/app.js's
+   * metrics()/perStrategy() exactly, so /dashboard and /app never disagree on a number). ---- */
+  function myTrades() {
+    return mine("trade?select=strategy_key,symbol,pnl,cost,entry,exit,closed_at,regime" +
+                "&closed_at=not.is.null&order=closed_at.asc");
+  }
+  function tradeStats(trades) {
+    var n = trades.length, net = 0, wins = 0, grossW = 0, grossL = 0;
+    trades.forEach(function (t) {
+      var p = Number(t.pnl || 0);
+      net += p;
+      if (p > 0) { wins++; grossW += p; } else { grossL += -p; }
+    });
+    return { n: n, net: net, wins: wins, losses: n - wins,
+             winPct: n ? +(100 * wins / n).toFixed(1) : null,
+             profitFactor: grossL ? +(grossW / grossL).toFixed(2) : (grossW ? 99 : null),
+             expectancy: n ? net / n : null };
+  }
+  function groupBy(list, keyFn) {
+    var map = {};
+    list.forEach(function (x) { var k = keyFn(x); (map[k] = map[k] || []).push(x); });
+    return map;
+  }
+
+  /* BUG FIX (2026-09-09): Forward Test, Accuracy(*), and Analytics used to render the SHARED
+   * engine_state payload verbatim - a brand-new, zero-deployment account saw the same
+   * platform-wide numbers (145 closed trades, -$28,170 net) as every other user. These three
+   * overlay functions replace that with each user's own rows from the `trade` table (RLS-scoped,
+   * the same source /app already reads correctly). Users with no closed trades naturally fall
+   * through to the product's existing "No closed trades yet" empty states - no code change
+   * needed there, since an empty strategies/trades array already renders that path.
+   * (*Accuracy is the go-live readiness bar, a platform-wide gate by design - that one was fixed
+   * separately by the query-string cache-key fix above, which stopped it reading India's book.) */
+  function cryptoForwardOverlay() {
+    return Promise.all([engineGet("api_crypto_monitor"), myTrades()]).then(function (all) {
+      var catalog = (all[0] && all[0].strategies) || [], trades = all[1] || [];
+      var byStrat = groupBy(trades, function (t) { return t.strategy_key; });
+      var strategies = catalog.filter(function (s) { return byStrat[s.id]; }).map(function (s) {
+        var st = tradeStats(byStrat[s.id]);
+        return { id: s.id, name: s.name, instr: s.instr || "spot", closed: st.n,
+                 winPct: st.winPct, profitFactor: st.profitFactor,
+                 expectancy: st.expectancy, netPnl: st.net };
+      });
+      var t = tradeStats(trades);
+      return { running: true, strategies: strategies,
+               totals: { closed: t.n, wins: t.wins, losses: t.losses, winPct: t.winPct,
+                         profitFactor: t.profitFactor, netPnl: t.net } };
+    });
+  }
+  function cryptoAnalyticsOverlay() {
+    return Promise.all([
+      engineGet("api_crypto_monitor"),
+      myTrades(),
+      mine("book_state?select=strategy_key,positions"),
+    ]).then(function (all) {
+      var catalog = (all[0] && all[0].strategies) || [], trades = all[1] || [], books = all[2] || [];
+      var nameOf = {}; catalog.forEach(function (s) { nameOf[s.id] = s.name; });
+      var openPos = 0; books.forEach(function (b) { openPos += Object.keys((b && b.positions) || {}).length; });
+      var t = tradeStats(trades);
+      var eq = 0, equity = trades.map(function (x) { eq += Number(x.pnl || 0); return { cum: +eq.toFixed(2) }; });
+      var totalCost = trades.reduce(function (a, x) { return a + Number(x.cost || 0); }, 0);
+      var wins = trades.filter(function (x) { return Number(x.pnl) > 0; });
+      var losses = trades.filter(function (x) { return Number(x.pnl) <= 0; });
+      var avgWin = wins.length ? wins.reduce(function (a, x) { return a + Number(x.pnl); }, 0) / wins.length : 0;
+      var avgLoss = losses.length ? losses.reduce(function (a, x) { return a + Number(x.pnl); }, 0) / losses.length : 0;
+      var peak = 0, run = 0, maxDD = 0;
+      trades.forEach(function (x) { run += Number(x.pnl || 0); if (run > peak) peak = run; maxDD = Math.max(maxDD, peak - run); });
+      var mkBucket = function () { return { n: 0, wins: 0, net: 0 }; };
+      var bySymbol = {}, byRegime = {}, byHour = {}, byStratRaw = {};
+      trades.forEach(function (x) {
+        var p = Number(x.pnl || 0), win = p > 0;
+        [ [bySymbol, x.symbol], [byRegime, x.regime || "-"], [byStratRaw, x.strategy_key],
+          [byHour, x.closed_at ? (new Date(x.closed_at).getUTCHours() + "").padStart(2, "0") + ":00" : "-"],
+        ].forEach(function (pair) {
+          var m = pair[0][pair[1]] || (pair[0][pair[1]] = mkBucket());
+          m.n++; if (win) m.wins++; m.net += p;
+        });
+      });
+      var byStrategy = Object.keys(byStratRaw).map(function (k) {
+        return { name: nameOf[k] || k, instr: "spot", pnl: byStratRaw[k].net };
+      }).sort(function (a, b) { return b.pnl - a.pnl; });
+      var byInstrument = t.n ? { spot: { n: Object.keys(byStratRaw).length, openPos: openPos, realised: t.net, open: 0, pnl: t.net } } : {};
+      var recent = trades.slice().reverse().slice(0, 40).map(function (x) {
+        return { time: x.closed_at ? x.closed_at.slice(5, 16).replace("T", " ") : "",
+                 strat: nameOf[x.strategy_key] || x.strategy_key, sym: x.symbol,
+                 pnl: Number(x.pnl || 0), cost: Number(x.cost || 0), reason: "", regime: x.regime || "-" };
+      });
+      return { running: true, regime: (all[0] && all[0].regime) || null,
+               totals: { realised: t.net, unreal: 0, pnl: t.net },
+               stats: { n: t.n, winRate: t.winPct, profitFactor: t.profitFactor, avgWin: avgWin,
+                        avgLoss: avgLoss, maxDrawdown: -Math.abs(maxDD), totalCost: totalCost, net: t.net },
+               equity: equity, byInstrument: byInstrument, byReason: {}, bySymbol: bySymbol,
+               byHour: byHour, byRegime: byRegime, byStrategy: byStrategy, recent: recent };
+    });
+  }
+  /* Risk Governor needs live state (health score, drawdown ladder, kill-switch, trade audit)
+   * that only exists inside the worker's Python process and isn't published per user yet -
+   * rather than fabricate those numbers client-side (or keep showing the shared platform book),
+   * this reports itself unavailable until the worker publishes real per-user risk state. */
+  function cryptoRiskOverlay() {
+    return Promise.resolve({ running: true, available: false });
+  }
+
   /* ---- deploy / pause / stop -> the user's own deployment rows ---- */
   function strategyPost(body) {
     var id = body.id, want = body.state;
@@ -354,8 +457,18 @@
     var u = typeof input === "string" ? input : (input && input.url) || "";
     if (!isEngine(u)) return ORIG(input, init);
     var method = ((init && init.method) || "GET").toUpperCase();
-    var path = u.replace(/^https?:\/\/[^/]+/, "").split("?")[0].replace(/^\//, "");
+    var noOrigin = u.replace(/^https?:\/\/[^/]+/, "").replace(/^\//, "");
+    var qIdx = noOrigin.indexOf("?");
+    var path = qIdx === -1 ? noOrigin : noOrigin.slice(0, qIdx);
+    var query = qIdx === -1 ? "" : noOrigin.slice(qIdx + 1);
     var fileKey = path.replace(/\//g, "_");
+    // BUG FIX (2026-09-09): query params (market, strategy, period, ...) used to be stripped
+    // before computing the cache key, so ?market=crypto and ?market=in collapsed onto the same
+    // engine_state row / static seed file - Indian-equity strategy names (Iron Condor NIFTY, etc.)
+    // leaked into the crypto Accuracy tab, and switching backtest strategy/period re-fetched the
+    // identical cached response every time. Folding the query into the key (matching the
+    // api_readiness_book_market_crypto.json naming convention already on disk) fixes both.
+    if (query) fileKey += "_" + query.replace(/[^a-zA-Z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 
     if (method === "POST" && path === "api/strategy") {
       var body = {};
@@ -366,6 +479,12 @@
       return Promise.resolve(jresp({ ok: false, error: "Not available in the customer Studio." }, 403));
     if (fileKey === "api_crypto_monitor")
       return cryptoMonitor().then(function (payload) { return jresp(payload); });
+    if (fileKey === "api_crypto_forward")
+      return cryptoForwardOverlay().then(function (payload) { return jresp(payload); });
+    if (fileKey === "api_crypto_analytics")
+      return cryptoAnalyticsOverlay().then(function (payload) { return jresp(payload); });
+    if (fileKey === "api_crypto_risk")
+      return cryptoRiskOverlay().then(function (payload) { return jresp(payload); });
     return engineGet(fileKey).then(function (payload) { return jresp(payload); });
   };
 
@@ -389,7 +508,13 @@
     ".funds-chip", "[data-relogin]", ".mkt-relogin", ".pf-relogin", ".bot-relogin",
     ".ais-relogin", "[data-harness]", "#glGo", "[data-stopall]", '[data-algomkt="in"]',
     ".mkt-live", ".mkt-dot", ".he-stat.off", ".tix-offline",
-    "#modeFab", "#personaGate"               // persona switcher removed: the Studio IS the product
+    "#modeFab", "#personaGate",              // persona switcher removed: the Studio IS the product
+    /* BUG FIX (2026-09-09): the "Regime Detection Engine" what-if simulator (Nifty trend vs
+     * 20/50/200 DMA, India VIX, Advance/Decline sliders) is entirely India-equity content with no
+     * crypto equivalent - hide its trigger (and the panel/scrim themselves, belt-and-suspenders)
+     * rather than let a curious customer open it and see an Indian-market simulator on a crypto
+     * product. */
+    "#engineBtn", "#engine", "#engineScrim"
   ].join(",") + "{display:none !important}" +
     /* worker-down banner: same warn tokens as every other caution note in the terminal
      * (.note-warn, .rdy-banner.no), just in the page flow instead of floating over it. */

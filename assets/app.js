@@ -291,6 +291,13 @@ function saveChart(){saveState();}   // persist callback for the chart engine
 function loadState(){
   let s; try{s=JSON.parse(localStorage.getItem(LS_KEY));}catch(e){return null;}
   if(!s||typeof s!=='object') return null;
+  // BUG FIX (2026-09-09): everything below reconstructs `out` from a persisted snapshot that could
+  // be anything (an old schema, a partially-written value, a future field). It used to have no
+  // enclosing try/catch, and neither does the caller at boot (line ~6976) - one unexpected shape
+  // anywhere in here threw uncaught and aborted the whole boot sequence mid-way, leaving the header
+  // chrome mounted but everything after it (including the Algo Studio) never rendered, with no
+  // in-app recovery. Any failure now clears the corrupted snapshot and boots fresh instead.
+  try{
   const oneOf=(v,arr,d)=>arr.indexOf(v)>=0?v:d;
   const numIn=(v,lo,hi)=>typeof v==='number'&&isFinite(v)&&v>=lo&&v<=hi?v:null;
   const out={
@@ -351,6 +358,10 @@ function loadState(){
     if(l!=null&&rr!=null) out.paneW={left:l,right:rr};
   }
   return out;
+  }catch(e){
+    try{ localStorage.removeItem(LS_KEY); }catch(e2){}
+    return null;
+  }
 }
 
 /* ---------- a11y live announcer ---------- */
@@ -2065,11 +2076,23 @@ function algoDeploy(a){
     onConfirm(){ setStrategyState(a.id,'paper','Deployed — '+a.name); }
   });
 }
+// BUG FIX (2026-09-09): this used to look bid up in ALGOS (assets/app.js:1706 / loadBotData) -
+// the OPERATOR's own catalog, replaced wholesale by whatever /api/strategies returns. On the
+// crypto path that shared payload falls back to the Indian-equity static seed, which happens to
+// reuse the same short ids ("macross", "bollinger" - real indicator names, not unique to crypto).
+// Deploy/Stop on a crypto card could open a completely different (India) strategy's dialog.
+// CRYPTO_STRATEGIES is the crypto Library's own real catalog (name/cat/risk/pair, keyed by the
+// same bid used to deploy) - look strategies up there instead, and only fall back to the shared
+// catalog for this bid's CURRENT run state via the already-correct, per-user cryptoMonitor data.
 function cryptoLibDeploy(bid){
-  const a=ALGOS.find(x=>x.id===bid);
-  if(!a){ quickToast('Engine loading','Wait for the strategy catalog to load from the API.'); return; }
+  const c=CRYPTO_STRATEGIES.find(x=>x.bid===bid);
+  if(!c){ quickToast('Engine loading','Wait for the strategy catalog to load from the API.'); return; }
+  if(!c.wired){ quickToast('Not deployable yet', `${c.name} has no live engine on the cloud worker yet — backtest/validate it first.`); return; }
+  const m=((CRYPTOMON.data&&CRYPTOMON.data.strategies)||[]).find(x=>x.id===bid);
+  if(!CRYPTOMON.loaded&&!CRYPTOMON.busy) loadCryptoMonitor();
+  const a={ id:bid, name:c.name, cat:c.cat+' · '+c.pair, risk:c.risk, wired:true,
+            bestRegime:null, vstatus:'validated', sub:(m&&m.deployed)?'paper':null };
   if(a.sub==='paper') lcStop(a);
-  else if(a.sub==='paused') setStrategyState(a.id,'paper','Resumed — '+a.name);
   else algoDeploy(a);
 }
 async function setStrategyState(id, stateVal, title){
@@ -2082,7 +2105,13 @@ async function setStrategyState(id, stateVal, title){
     }
     if(r&&r.locked){ quickToast('Live locked '+'🔒', r.reason||'Arm ALLOW_LIVE on the bot machine to go live.'); }
     else { quickToast(title||'Updated', lcMsg(stateVal)); }
-    await loadBotData(); if(typeof renderAlgo==='function') renderAlgo();
+    // BUG FIX (2026-09-09): loadBotData() alone refreshes ALGOS (the shared, unscoped catalog the
+    // Library card no longer reads for its own state - see cryptoStratCard). Without also
+    // refreshing this user's own CRYPTOMON snapshot here, Stop showed a success toast and the card
+    // still read the pre-stop state until the next unrelated poll.
+    const isCrypto=CRYPTO_ONLY||(state.algo&&state.algo.market==='crypto');
+    await Promise.all([loadBotData(), isCrypto?loadCryptoMonitor():Promise.resolve()]);
+    if(typeof renderAlgo==='function') renderAlgo();
     return r;
   }catch(e){ quickToast('Action failed','Is the bot API running on :8756?'); }
 }
@@ -3721,14 +3750,17 @@ const CRYPTO_UNIVERSE=[
 const CRYPTO={loaded:false,live:false,error:false,quotes:{},t:0,busy:false};
 function cryptoSyms(){ return CRYPTO_UNIVERSE.map(c=>c.sym); }
 // Risk-first strategy TEMPLATES (educational, preview/paper), same survival-first ethos as the Indian library.
+// wired: true only for bids the cloud worker actually runs (mirrors studio.js's DEPLOYABLE set
+// for the crypto/customer path - keep the two in sync). The rest render normally but are honest
+// about not having a live engine yet, instead of the old permanently-stuck "Engine loading" toast.
 const CRYPTO_STRATEGIES=[
-  {id:'cx_btc_trend',bid:'macross',name:'BTC Trend (MA200)',cat:'Trend',risk:'Moderate',pair:'BTCUSDT',
+  {id:'cx_btc_trend',bid:'macross',name:'BTC Trend (MA200)',cat:'Trend',risk:'Moderate',pair:'BTCUSDT',wired:true,
    what:'Long BTC while it holds above its long-term moving average; flat below.',
    rule:'BUY when price closes above the 200-period MA; exit on a close back below.',
    works:'Strong, sustained bull legs — crypto trends long and hard.',
    fails:'Chop around the MA whipsaws you in and out at small losses repeatedly.',
    guard:'Only long above the MA; ATR-sized stop; one position; stand aside in chop.'},
-  {id:'cx_grid',bid:'bollinger',name:'Range Grid (ETH)',cat:'Mean-Reversion',risk:'Aggressive',pair:'ETHUSDT',
+  {id:'cx_grid',bid:'bollinger',name:'Range Grid (ETH)',cat:'Mean-Reversion',risk:'Aggressive',pair:'ETHUSDT',wired:true,
    what:'A ladder of staggered buys & sells across a defined band, harvesting oscillation.',
    rule:'Buy each rung down, sell each rung up within a set price band.',
    works:'Sideways, high-volatility ranges — it monetises the wiggle.',
@@ -3740,13 +3772,13 @@ const CRYPTO_STRATEGIES=[
    works:'Calm, positive-funding regimes — steady market-neutral yield.',
    fails:'Funding flips negative or the basis blows out in a liquidation cascade.',
    guard:'Watch funding + basis; unwind on negative funding; respect exchange limits.'},
-  {id:'cx_rsi2',bid:'rsi2',name:'RSI-2 Dip (Alts)',cat:'Mean-Reversion',risk:'Aggressive',pair:'SOLUSDT',
+  {id:'cx_rsi2',bid:'rsi2',name:'RSI-2 Dip (Alts)',cat:'Mean-Reversion',risk:'Aggressive',pair:'SOLUSDT',wired:true,
    what:'Buys very short-term oversold dips inside a higher-timeframe uptrend.',
    rule:'In an uptrend, BUY when RSI(2) < 5; exit when RSI(2) > 70 or after N bars.',
    works:'Pullbacks within an established alt uptrend.',
    fails:'Catching a falling knife once the trend has actually broken.',
    guard:'Only above the 200-MA; time-stop + hard stop; small size on alts.'},
-  {id:'cx_breakout',bid:'momentum',name:'Volatility Breakout',cat:'Breakout',risk:'Aggressive',pair:'BTCUSDT',
+  {id:'cx_breakout',bid:'momentum',name:'Volatility Breakout',cat:'Breakout',risk:'Aggressive',pair:'BTCUSDT',wired:true,
    what:'Enters as price escapes a tight range on expanding volume.',
    rule:'BUY on a close above the N-day high with above-average volume; trail a stop.',
    works:'The start of a fresh expansion leg after compression.',
@@ -3883,10 +3915,16 @@ function patchCryptoPrices(){
 }
 function cryptoStratCard(s){
   const rk=LIB_RISK_CLASS[s.risk]||'b-neu';
-  const algo=s.bid?ALGOS.find(a=>a.id===s.bid):null;
-  const dep=algo&&algo.sub==='paper', paused=algo&&algo.sub==='paused';
+  // BUG FIX (2026-09-09): this used to read ALGOS (the shared, unscoped /api/strategies payload -
+  // same platform-wide data every user sees, unrelated to their own deploy/stop actions) instead of
+  // CRYPTOMON's per-user overlay. That's why Stop showed a success toast and the card still said
+  // "running" right after - the badge was never looking at this user's own state to begin with.
+  // Crypto deployment status is running|stopped only (no distinct "paused" in the deployment table).
+  const m=s.bid?((CRYPTOMON.data&&CRYPTOMON.data.strategies)||[]).find(x=>x.id===s.bid):null;
+  const dep=!!(m&&m.deployed), paused=false;
   let cta;
   if(!s.bid) cta=`<span class="cx-tag">Learn only</span>`;
+  else if(!s.wired) cta=`<span class="cx-tag">Backtest only</span>`;
   else if(dep||paused) cta=`<span class="cx-tag live">${paused?'Paused':'Paper · running'}</span><button class="btn-ghost sm" data-cxdep="${esc(s.bid)}">${paused?'Resume':'Stop'}</button>`;
   else cta=`<button class="btn-primary sm" data-cxdep="${esc(s.bid)}">${icon('bolt',12)} Deploy in Paper</button>`;
   return `<div class="cx-card">
@@ -3899,6 +3937,9 @@ function cryptoStratCard(s){
     <div class="cx-card-f">${cta}</div></div>`;
 }
 function cryptoMarket(){
+  // Library cards need this user's own running/stopped state (cryptoStratCard reads CRYPTOMON.data) -
+  // load it even if the user opens Library before ever visiting Monitor.
+  if(!CRYPTOMON.loaded&&!CRYPTOMON.busy) loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='library') renderAlgo(); });
   // Honest framing: the crypto paper engine IS live 24/7 (not "preview/roadmap"), real Binance prices,
   // simulated fills, no real orders. Live execution unlocks per strategy once proven + connected + armed.
   const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Live crypto paper book — 24/7.</b> Prices are <b>real</b> (Binance), fills are <b>simulated</b> — <b>no real orders are placed</b>. These strategies run continuously in paper; watch them live on <b>Monitor</b>. Live execution unlocks <i>per strategy</i> only once it clears the Go-Live bar, you connect Binance, and arm ALLOW_LIVE.</span></div>`;
@@ -4245,6 +4286,11 @@ function cryptoRisk(){
   const d=CRYPTORISK.data;
   if(!d){ if(!CRYPTORISK.busy) loadCryptoRisk().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); return secEmpty('shield','Loading crypto risk…','Reading the crypto Governor state from the bot.'); }
   if(d.running===false){ return secEmpty('shield','Crypto Governor offline','Start the crypto harness (python3 paper_trade_crypto.py) — it publishes the Governor state each cycle.'); }
+  // BUG FIX (2026-09-09): real per-user Governor state (health score, drawdown ladder, kill-switch,
+  // trade audit) only exists inside the worker's Python process and isn't published per user yet.
+  // This used to fall through to shared platform numbers instead - every signed-in user saw the
+  // same $971K equity. Honest unavailable state until the worker publishes real per-user risk data.
+  if(d.available===false){ return secEmpty('shield','Risk Governor — not available yet for your book','Deploy a strategy in the Algo Studio: once the worker runs your positions, your own exposure, drawdown, and crowding appear here.'); }
   const lim=d.limits||{};
   const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Crypto Risk Governor.</b> The same portfolio control layer as the Indian book — symbol/sector concentration, a crowding cap (max ${lim.botsPerSymbol||2} bots/name), total-exposure ceiling + a drawdown kill-switch. Crypto is grouped into Major / L1 / Alt sub-sectors so correlated coins can't quietly become one bet.</span></div>`;
   const stat=secStats([
@@ -4306,7 +4352,11 @@ function cryptoBacktest(){
   let body;
   if(CRYPTOBT.busy || CRYPTOBT.key!==key){ body=secEmpty('activity','Backtesting…',`Running ${esc(strat)} over the crypto majors on Binance history.`); }
   else{ const d=CRYPTOBT.data;
-    if(!d||d.real===false){ body=secEmpty('alert','Backtest unavailable',esc((d&&d.error)||'No result')); }
+    // BUG FIX (2026-09-09): an empty {} (no cached result for this strategy/period combo) used to
+    // slip past this check - d.real===false is only set on an actual fetch failure - and fall into
+    // the render path below, showing a confusing "0 trades, +0.00% drawdown" result instead of an
+    // honest "unavailable" message. Catch the no-data case explicitly.
+    if(!d||d.real===false||(d.totalRet==null&&!(d.pts&&d.pts.length))){ body=secEmpty('alert','Backtest unavailable',esc((d&&d.error)||'No cached result for this strategy/period yet.')); }
     else{ const tone=v=>v>0?'up':(v<0?'down':'');
       const stat=secStats([
         {l:'Total return',v:pct(d.totalRet),s:esc(d.period||period),tone:tone(d.totalRet)},
@@ -6940,7 +6990,7 @@ function init(){
     state.wlCustom=!!saved.wlCustom;
     state.selected=(typeof saved.selected==='string'&&bySym(saved.selected))?saved.selected:null;  // validate vs rebuilt list
     state.paneW=saved.paneW||null; state.chartH=saved.chartH||null;
-    if(saved.chart && window.TPChart) TPChart.restore(saved.chart); }
+    if(saved.chart && window.TPChart){ try{ TPChart.restore(saved.chart); }catch(e){} } }
   if(saved&&saved.cards) state.cards=saved.cards;
   if(saved&&saved.ticker) state.ticker=saved.ticker;
   if(saved&&typeof saved.regimeCollapsed==='boolean') state.regimeCollapsed=saved.regimeCollapsed;
