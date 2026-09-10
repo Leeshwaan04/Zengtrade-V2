@@ -9,7 +9,7 @@ A strategy may be considered for **live execution** (future Pro feature) only wh
 | Profit factor | ≥ 1.1 |
 | Regime coverage | Positive expectancy in ≥ 2 of Bull / Bear / Choppy / High-Vol |
 | User tier | Pro or Elite |
-| Technical | Live execution rail shipped per `backend/LIVE_EXECUTION_SPEC.md` |
+| Technical | Live execution rail shipped per `docs/LIVE_EXECUTION_SPEC.md` |
 
 Until the live rail exists, the UI shows **locked** with this checklist (read-only).
 

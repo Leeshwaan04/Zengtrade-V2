@@ -1,10 +1,9 @@
-"""Crypto market-data adapter — a drop-in for the Kite `DataFeed` interface, backed by
+"""Crypto market-data adapter: the DataFeed the strategy engine expects, backed by
 Binance's PUBLIC REST API (no key, no auth, spot data only).
 
-WHY this exists: the entire strategy library (compute / _entry_long / _exit_long) is
-market-agnostic — it only ever touches high/low/close/volume on a DatetimeIndex frame.
-So the SAME engines that trade NSE cash can trade crypto unchanged; they just need a feed
-that speaks the same four methods. This class IS that feed:
+WHY this shape: the entire strategy library (compute / _entry_long / _exit_long) is
+market-agnostic — it only ever touches high/low/close/volume on a DatetimeIndex frame,
+it just needs a feed that speaks four methods. This class IS that feed:
 
     token_for(sym)               -> the symbol itself (crypto needs no instrument token)
     historical(sym, interval, n) -> DatetimeIndex DataFrame[open,high,low,close,volume]
@@ -34,7 +33,7 @@ log = logging.getLogger("crypto")
 BASES = ["https://api.binance.com", "https://data-api.binance.vision", "https://api.binance.us"]
 _HEADERS = {"User-Agent": "tradepro-paper/1.0"}
 
-# Kite interval string -> Binance interval string
+# engine interval string -> Binance interval string
 _IVL = {"minute": "1m", "3minute": "3m", "5minute": "5m", "15minute": "15m",
         "30minute": "30m", "60minute": "1h", "hour": "1h", "day": "1d", "week": "1w"}
 
@@ -63,7 +62,6 @@ class CryptoDataFeed:
     """Binance-backed feed exposing the exact surface the paper engines call."""
 
     def __init__(self, quote: str = "USDT"):
-        self.kite = None                  # options/futures engines check this; crypto has none
         self.quote = quote
         self._cache: dict[tuple, tuple] = {}   # (sym, binance_ivl) -> (fetched_ts, df)
 
@@ -118,7 +116,7 @@ class CryptoDataFeed:
         return out
 
     def ohlc(self, keys: list[str]) -> dict:
-        """Kite-shaped ohlc() for parity: {key: {last_price}}. Keys may be 'BTCUSDT' or 'X:BTCUSDT'."""
+        """ohlc()-shaped result: {key: {last_price}}. Keys may be 'BTCUSDT' or 'X:BTCUSDT'."""
         syms = [k.split(":", 1)[1] if ":" in k else k for k in keys]
         prices = self.ltp(syms)
         out = {}

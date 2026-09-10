@@ -4,9 +4,6 @@ Only strategies that EARNED their place on real out-of-sample-style testing are 
 users. The crypto-native trend follower is the flagship: robustly positive net of global costs
 across every parameter setting on ~2 years of daily data (PF ~2).
 """
-import os, sys
-BOT = os.path.expanduser("~/kite-mean-reversion-bot")
-if BOT not in sys.path: sys.path.insert(0, BOT)
 from bot import strategies_lib as S
 import bot.indicators as IND
 import pandas as pd

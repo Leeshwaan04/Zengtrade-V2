@@ -5,7 +5,7 @@ users, writing trades + book_state back to Supabase. This is what makes deployed
 actually *trade*: the site is inert without it running.
 
 Self-contained: the needed `bot/` modules (crypto_data, strategies_lib, indicators) are vendored
-here, so it has no dependency on the kite repo.
+here, no external repo dependency.
 
 ## Run modes
 ```

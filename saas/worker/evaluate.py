@@ -9,10 +9,8 @@ prove honestly that none do yet.
   python evaluate.py --sweep KEY     # sweep cooldown x edge_mult for one strategy
 """
 from __future__ import annotations
-import os, sys, argparse, warnings
+import argparse, warnings
 warnings.filterwarnings("ignore")
-BOT = os.path.expanduser("~/kite-mean-reversion-bot")
-if BOT not in sys.path: sys.path.insert(0, BOT)
 
 from bot.crypto_data import CryptoDataFeed
 from bot import strategies_lib as S

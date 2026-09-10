@@ -8,17 +8,21 @@ Systematic crypto trading on **live Binance spot prices**. Paper-first, regime-a
 # Install deps
 .cursor/scripts/install.sh
 
-# Terminal 1: crypto API (port 8756)
-cd backend && python3 crypto_api.py
-
-# Terminal 2: 24/7 paper harness
-cd backend && python3 paper_trade_crypto.py
-
-# Terminal 3: frontend (port 8011)
+# Frontend (port 8011): the Algo Studio terminal shell, zero deps
 python3 serve.py
 ```
 
-Open http://localhost:8011: Algo Studio loads in crypto-only mode.
+Open http://localhost:8011 for the terminal UI itself. Live crypto data (Monitor, Forward Test,
+Analytics) is published by the 24/7 worker, not a local API server, run it against the real
+Supabase backend to see live data locally:
+
+```bash
+cd saas/worker && python3 worker.py --interval 300
+```
+
+This writes to the same `engine_state`/`trade`/`book_state` tables the deployed `/dashboard`
+reads, so the fastest way to see it end-to-end is the deployed site itself
+(https://zengtrade.in/dashboard) rather than the bare local terminal shell.
 
 ## What it does
 
@@ -33,15 +37,15 @@ See [docs/CRYPTO_PRODUCT.md](docs/CRYPTO_PRODUCT.md) for the full product vision
 ## Tests
 
 ```bash
-cd backend
-python3 tests/test_indicators.py
-python3 tests/test_crypto_guards.py
-python3 demo_backtest.py
+python3 saas/tests/rls_isolation.py
+node saas/tests/nowpayments_signature.mjs
 ```
 
-## Indian market (removed)
+## Indian market
 
-NSE/Kite/Zerodha integration has been archived to `archive/indian/`. This repository targets crypto markets only.
+This product is crypto-only, trading via Binance's public API. The prior NSE/Kite/Zerodha
+integration and its local dev harness (`backend/`, `archive/indian/`) have been removed entirely,
+not just archived.
 
 ## Production launch (zengtrade.in)
 

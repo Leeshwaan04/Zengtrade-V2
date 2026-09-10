@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 """Publish read-only snapshots of the LOCAL engine for the customer Algo Studio.
 
+LEGACY (2026-09-10): this pipeline needed backend/bot_api.py (localhost:8756), which has been
+removed along with the rest of the Indian-market local dev harness. The live worker
+(saas/worker/worker.py) now writes engine_state directly to Supabase every cycle, so studio.js's
+engineGet() almost always reads that live row and only falls back to these static JSON files if a
+key is ever missing. Kept as a documented fallback-refresh path, not currently runnable without a
+new crypto-only local API server, not rebuilt here since production no longer depends on it.
+
 Run on the operator's Mac while bot_api (localhost:8756) is up:
 
     python3 deploy/landing/snapshot.py
@@ -11,7 +18,7 @@ serves these files wherever the terminal would have called the local engine.
 
 SAFETY: this is the wall between the operator's account and the public product.
  - Only the endpoints listed below are captured (no holdings, no quotes/candles/
-   depth/chain: personal data and licensed NSE market data never leave the Mac).
+   depth/chain: personal data never leaves the Mac).
  - strip() removes any key that smells like money/identity, recursively, from
    every payload (funds, margin, cash, balance, token, email, user...).
 """
