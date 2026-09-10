@@ -195,7 +195,7 @@ function regime4(theme3,vix,prevLabel){
 }
 function confidence(S,sc){const sign=Math.sign(S)||1;const agree=[sc.trend,sc.vix,sc.ad,sc.mom,sc.pers].filter(v=>Math.sign(v)===sign).length/5;return Math.round((0.6*Math.min(Math.abs(S)/50,1)+0.4*agree)*100);}
 function reasonText(regime,sc){
-  const map=[[sc.trend,'Nifty '+(sc.trend>0?'above stacked MAs':'broke below key MAs')],[sc.vix,sc.vix>0?'VIX cooling':'VIX spiking'],[sc.ad,sc.ad>0?'breadth strong':'breadth collapsing'],[sc.mom,sc.mom>0?'momentum up':'momentum weak'],[sc.pers,sc.pers>0?'your P&L rising':'your portfolio drawing down']];
+  const map=[[sc.trend,'BTC '+(sc.trend>0?'above stacked MAs':'broke below key MAs')],[sc.vix,sc.vix>0?'volatility cooling':'volatility spiking'],[sc.ad,sc.ad>0?'breadth strong':'breadth collapsing'],[sc.mom,sc.mom>0?'momentum up':'momentum weak'],[sc.pers,sc.pers>0?'your P&L rising':'your portfolio drawing down']];
   const want=regime==='bull'?1:-1;
   return map.filter(m=>Math.sign(m[0])===want).sort((a,b)=>Math.abs(b[0])-Math.abs(a[0])).slice(0,2).map(m=>m[1]).join(', ')||'signals balanced';
 }
@@ -980,7 +980,6 @@ function renderOrder(r){
   $('placeBtn').onclick=()=>openOrderModal(r);   // paper/simulated order, honest, no real execution
   updateCardBtns();
 }
-/* ---------- order confirmation modal + placement ---------- */
 function openOrderModal(r){
   const m=orderModel(r);
   const qty=state.orderQty!=null?state.orderQty:m.qty;
@@ -1014,8 +1013,19 @@ function openOrderModal(r){
 function showModal(o){$('orderModal').classList.toggle('show',o);$('modalScrim').classList.toggle('show',o);$('orderModal').setAttribute('aria-hidden',String(!o));}
 function closeModal(){showModal(false);if(state.lastFocus&&state.lastFocus.focus)state.lastFocus.focus();}
 function setModalTitle(t){const el=$('modalTitle');if(el)el.textContent=t;$('orderModal').setAttribute('aria-label',t);}
-/* generic, accessible confirm flow, reuses the order dialog (role=dialog, Esc-to-close, focus restore).
-   onConfirm() returning false keeps the dialog open (for inline validation). */
+function successToast(o,status){
+  const t=document.createElement('div');t.className='toast';
+  t.innerHTML=`<div class="toast-ico">${icon('check',22)}</div><div class="toast-body"><b>Paper ${o.side==='buy'?'buy':'sell'} order, ${o.sym}</b><span>${o.qty} qty @ ${o.price.toLocaleString('en-IN')} · ${o.type} · ${status} · simulated, no real order</span></div><div class="toast-acts"><button class="tbtn ghost" data-act="ok">Dismiss</button></div>`;
+  $('toastWrap').appendChild(t);
+  t.querySelector('[data-act=ok]').onclick=()=>dismiss(t);
+  t._timer=setTimeout(()=>{if(document.body.contains(t))dismiss(t);},4500);
+}
+function placeOrder(o){
+  const status=o.type.startsWith('SL')?'Pending':(o.type==='MARKET'||o.type==='BRACKET')?'Filled':'Open';
+  state.orders.unshift({id:++ORDER_ID,...o,status,paper:true});   // SIMULATED, no real order is placed
+  state.panelTab='orders'; renderPanel(state.displayed);
+  successToast(o,status);
+}
 function flowModal(o){
   setModalTitle(o.title||'Confirm');
   $('modalBody').innerHTML=o.body||'';
@@ -1029,73 +1039,7 @@ function flowModal(o){
   state.lastFocus=document.activeElement; showModal(true);
   setTimeout(()=>{ const first=$('modalBody').querySelector(o.focus||'input:not([disabled]),select,button,[tabindex="0"]'); (first||$('modalConfirm')).focus(); },50);
 }
-function placeOrder(o){
-  const status=o.type.startsWith('SL')?'Pending':(o.type==='MARKET'||o.type==='BRACKET')?'Filled':'Open';
-  state.orders.unshift({id:++ORDER_ID,...o,status,paper:true});   // SIMULATED, no real order is placed
-  state.panelTab='orders'; renderPanel(state.displayed);
-  successToast(o,status);
-  announce(`Paper ${o.side} order (simulated), ${o.qty} ${o.sym} at ${o.price}`);
-}
 function cancelOrder(id){const o=state.orders.find(x=>x.id===id);if(o&&(o.status==='Pending'||o.status==='Open')){o.status='Cancelled';renderPanel(state.displayed);}}
-function successToast(o,status){
-  const t=document.createElement('div');t.className='toast';
-  t.innerHTML=`<div class="toast-ico">${icon('check',22)}</div><div class="toast-body"><b>Paper ${o.side==='buy'?'buy':'sell'} order, ${o.sym}</b><span>${o.qty} qty @ ${o.price.toLocaleString('en-IN')} · ${o.type} · ${status} · simulated, no real order</span></div><div class="toast-acts"><button class="tbtn ghost" data-act="ok">Dismiss</button></div>`;
-  $('toastWrap').appendChild(t);
-  t.querySelector('[data-act=ok]').onclick=()=>dismiss(t);
-  t._timer=setTimeout(()=>{if(document.body.contains(t))dismiss(t);},4500);
-}
-
-/* ============================================================
-   RENDER: CONTEXT MODULE (right, under order)
-   ============================================================ */
-function renderContext(r){
-  if(isInvestor()) return renderContextInvestor(r);
-  const ctxRow=(ic, in_,b,s,val)=>`<div class="ctx-row"><div class="ctx-ico ic-${ic}">${icon(in_,15)}</div><div><div class="ct-b">${b}</div><div class="ct-s">${s}</div></div><div class="ct-val">${val||''}</div></div>`;
-  let head,pill,rows;
-  if(r==='bear'){
-    head='Hedge &amp; Protect';pill='Defensive';
-    rows=ctxRow('down','shield','Buy 23400 PE','Protective put · PCR 1.42','₹90.8')
-        +ctxRow('warn','scale','Short NIFTY fut','Index hedge for portfolio β','−1 lot')
-        +ctxRow('down','scissors','Trim ADANIENT 50%','Cuts ~30% of book risk','4 qty')
-        +ctxRow('info','droplet','Park in liquid fund','Raise cash buffer to 75%',inrL(CASH));
-  }else if(r==='neutral'){
-    head='Market Internals';pill='Watch';
-    rows=ctxRow('info','target','Advance / Decline','Balanced breadth','1.00')
-        +ctxRow('info','swap','PCR','Neutral positioning','0.98')
-        +ctxRow('warn','clock','Volatility squeeze','Breakout likely 2–3 sessions','');
-  }else{
-    head='Breakout Signals';pill='Momentum';
-    rows=ctxRow('up','trendUp','MARUTI','Volume thrust 2.4× · BUY zone','1,078')
-        +ctxRow('up','link','23500/23600 CE','Bull-call-spread quick build','net ₹38')
-        +ctxRow('up','target','SBIN cup &amp; handle','Entry on close > 845','842');
-  }
-  const bias=r==='bull'?1.5:r==='bear'?-3.0:0;
-  // real sector performance from the live watchlist when connected; simulated otherwise
-  const heatSrc=BOT.live
-    ? (()=>{const m={};SYMS.filter(s=>isEq(s)&&s.sector&&s.live!==false).forEach(s=>{(m[s.sector]=m[s.sector]||[]).push(s.chg);});
-        return Object.entries(m).map(([s,a])=>({s,c:a.reduce((x,y)=>x+y,0)/a.length})).sort((x,y)=>y.c-x.c);})()
-    : SECTORS.map(sec=>({s:sec.s,c:sec.base+bias+(sec.def&&r==='bear'?2.2:0),def:sec.def&&r==='bear'}));
-  const heat=heatSrc.map(sec=>{const c=sec.c;const g=c>=0;const a=clamp(Math.abs(c)/4,.1,.45);
-    return `<div class="hc ${sec.def?'def':''}" style="background:${g?`rgba(0,171,78,${a})`:`rgba(229,56,59,${a})`}">
-      <div class="hc-s">${sec.s}${sec.def?' ·D':''}</div><div class="hc-c ${g?'up':'down'}">${pct(c)}</div></div>`;}).join('');
-  // Offline: keep the regime framing (honest, derived from the live regime state) but never show
-  // fabricated setups/prices or a simulated heatmap. Live: real ideas + real sector heat from the watchlist.
-  const offline=!BOT.live;
-  const body=offline
-    ? `<div class="empty-state" style="margin:8px 12px">${icon('alert',15)} <span>Connect Kite for live ${r==='bear'?'hedge ideas':r==='neutral'?'market internals':'breakout setups'} &amp; sector heat, run <code>python3 login.py</code>.</span></div>`
-    : `${rows}
-       <div class="ctx-head" style="border-top:1px solid var(--line)"><b>Sector Heatmap</b><span class="ctx-pill">${r==='bear'?'Defense':'Strength'}</span></div>
-       <div class="heat">${heat}</div>`;
-  $('contextModule').innerHTML=`<div class="ctx-card">
-    <div class="ctx-head"><b><span class="ctx-rico">${icon(r,16)}</span> ${head}</b><span class="ctx-pill">${pill}</span>${cardCtl('context')}</div>
-    ${body}
-  </div>`;
-  updateCardBtns();
-}
-
-/* ============================================================
-   APPLY REGIME (full re-render)
-   ============================================================ */
 function applyRegime(regime){
   state.displayed=regime;
   document.documentElement.dataset.regime=regime;
@@ -1104,17 +1048,13 @@ function applyRegime(regime){
   $('fundsVal').textContent=fundsText();
   state.panelTab=null; // reset to regime default
   renderTopIndex(); renderRegimeBar(regime); renderWatchlist(regime);
-  renderChart(regime); renderPanel(regime); renderOrder(regime); renderContext(regime); renderInvestHub(); renderWidgetStack(); renderDeskBar(); renderDeskView(); renderAlgo(); renderAI();
+  renderChart(regime); renderPanel(regime); renderOrder(regime); renderWidgetStack(); renderDeskView(); renderAlgo();
   applyPaneWidths(); // keep any manual resize across regime switches
   flashRegime();
   announce(`${regime.charAt(0).toUpperCase()+regime.slice(1)} regime, ${regime==='bull'?'markets trending up':regime==='bear'?'markets under pressure':'markets rangebound'}`);
   saveState();
 }
 function flashRegime(){const s=$('regimeSweep');if(!s)return;s.classList.remove('go');void s.offsetWidth;s.classList.add('go');}
-
-/* ============================================================
-   CINEMATIC TRANSITIONS: card vanish · motion-graphic mascot · smoky return
-   ============================================================ */
 const RV_SEL='.regime-bar,.pane-left,.chart-card,.panel,#orderPad,#contextModule';
 const RV_META={
   bull:   {word:'BULL',    tag:'Risk-on · Momentum'},
@@ -1247,53 +1187,11 @@ function cinematicPersona(p){
     },230);
   }
 }
-function updateClock(){const el=$('mktStatus');if(!el)return;const d=new Date();const p=n=>String(n).padStart(2,'0');
-  const t=`${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
-  const mk=BOT.live&&BOT.market&&BOT.market.market;
-  // Only rebuild the strip when its NON-time content changes; otherwise just tick the clock text in
-  // place. Rebuilding the whole strip (and the VIX/breadth chips) every second was a subtle flicker.
-  const csig=mk?('m|'+(mk.open?1:0)+'|'+mk.status+'|'+mk.openTime+'|'+mk.closeTime)
-              :('o|'+(BOT.loaded&&BOT.connected===false&&!BOT.error?1:0)+'|'+(BOT.reconnecting?1:0));
-  if(el.dataset.csig!==csig){
-    el.dataset.csig=csig;
-    if(mk){
-      el.innerHTML=`<span class="mkt-dot ${mk.open?'open':'closed'}" title="NSE equity session"></span>`
-        +`<span class="mkt-live">${mk.open?'MARKET OPEN':esc(mk.status.toUpperCase())}</span>`
-        +`<span class="mkt-sess" title="NSE equity trading hours">${mk.openTime}–${mk.closeTime} IST</span>`
-        +`<span class="mkt-time num">${t}</span>`;
-    } else {
-      const showRe = BOT.loaded && BOT.connected===false && !BOT.error;
-      el.innerHTML=`<span class="mkt-dot off" title="Kite not connected"></span><span class="mkt-live">OFFLINE</span>`
-        +(showRe?`<button class="mkt-relogin" data-relogin title="Reconnect to Kite, refreshes the daily token">${BOT.reconnecting?'Reconnecting…':'Reconnect'}</button>`:'')
-        +`<span class="mkt-time num">${t}</span>`;
-    }
-  } else {
-    const tn=el.querySelector('.mkt-time'); if(tn) tn.textContent=t;   // steady state → just tick the clock
-  }
-  renderHdrEngine();}
-function renderHdrEngine(){
-  const el=$('hdrEngine'); if(!el) return;
-  const live=BOT.live&&BOT.market&&BOT.market.engine;
-  if(!live){ if(el.dataset.hsig!=='off'){ el.dataset.hsig='off'; el.innerHTML=`<span class="he-stat off">${icon('shield',11)} engine offline</span>`; } return; }
-  const vix=(BOT.market.vix&&BOT.market.vix.ltp)||0, ad=(BOT.market.breadth&&BOT.market.breadth.ad)||0, score=BOT.market.engine.score, reg=BOT.market.engine.regime;
-  // Called every 1s by updateClock, only rebuild when a DISPLAYED value actually changed.
-  const hsig='on|'+vix.toFixed(1)+'|'+ad.toFixed(2)+'|'+score+'|'+reg;
-  if(el.dataset.hsig===hsig) return;
-  el.dataset.hsig=hsig;
-  el.innerHTML=
-    `<div class="he-stat"><span class="he-l">India VIX<span class="he-live" title="Live from Kite">● LIVE</span></span><b class="num ${vix>18?'down':'up'}">${vix.toFixed(1)}</b></div>`
-   +`<span class="he-div"></span>`
-   +`<div class="he-stat"><span class="he-l">Breadth A/D</span><b class="num ${ad>=1?'up':'down'}">${ad.toFixed(2)}</b></div>`
-   +`<span class="he-div"></span>`
-   +`<div class="he-stat"><span class="he-l">Engine · ${esc(reg)}</span><b class="num" style="color:var(--accent-d)">${score>=0?'+':''}${score}</b></div>`;
-}
-
-/* ============================================================
-   PERSONA: Investor vs Trader (orthogonal to regime)
-   ============================================================ */
+// Crypto trades 24/7, no NSE-style market-hours/Kite-connection status to show, so the header
+// clock strip stays hidden here. Live status is the Binance ticker banner (cryptoStatusBar()).
+function updateClock(){const el=$('mktStatus');if(el)el.hidden=true;const eng=$('hdrEngine');if(eng)eng.hidden=true;}
 const isInvestor=()=>state.persona==='investor';
 const isAlgo=()=>state.persona==='algo';
-const isAI=()=>state.persona==='ai';
 function syncFab(){const p=CRYPTO_ONLY?'algo':(state.persona||'trader');
   let active=null;
   document.querySelectorAll('#modeFab [data-persona]').forEach(b=>{const on=b.dataset.persona===p;b.classList.toggle('on',on);b.setAttribute('aria-selected',on);if(on)active=b;});
@@ -1315,29 +1213,19 @@ function applyPersona(p,opts){
   $('fundsLabel').textContent=PERSONA[p].fundsLabel(state.displayed);
   if(opts.user && changed && window.TPChart && TPChart.setTimeframe) TPChart.setTimeframe(PERSONA[p].chartTf);
   const r=state.displayed;
-  renderRegimeBar(r); renderWatchlist(r); renderPanel(r); renderOrder(r); renderContext(r); renderInvestHub(); renderWidgetStack(); renderDeskBar(); renderDeskView(); renderAlgo(); renderAI();
+  renderRegimeBar(r); renderWatchlist(r); renderPanel(r); renderOrder(r); renderWidgetStack(); renderDeskView(); renderAlgo();
   if(opts.user){
     announce(`${PERSONA[p].label} mode, terminal retuned for ${p==='investor'?'long-term investing':'active trading'}`);
     const t=document.querySelector('.terminal'); if(t){t.classList.remove('persona-morph');void t.offsetWidth;t.classList.add('persona-morph');setTimeout(function(){t.classList.remove('persona-morph');},480);}
   }
   saveState();
 }
-function openPersonaGate(){const g=$('personaGate'); if(g) g.classList.add('show');}
-
-/* ============================================================
-   FIRST-RUN ONBOARDING WIZARD
-   Step 1: pick a persona (tailors the terminal)
-   Step 2: connect Kite, live status, the exact command, reconnect, and the
-           real/paper/demo honesty legend. Removes the cold-start cliff.
-   ============================================================ */
 function startOnboarding(){
   onboarding=true;
   const g=$('personaGate'); if(!g) return;
   if(CRYPTO_ONLY){ applyPersona('algo',{user:true}); obStep(2); g.classList.add('show'); return; }
   obStep(1); g.classList.add('show');
 }
-window.startOnboarding=startOnboarding;   // re-runnable later (e.g. a "redo setup" affordance)
-
 function obStep(n){
   const g=$('personaGate'); if(!g) return;
   g.dataset.step=String(n);
@@ -1349,87 +1237,33 @@ function obStep(n){
     const f=$('pgStep2').querySelector('[data-obfinish]'); if(f) f.focus();
   }
 }
-// persona pick during onboarding: retune the terminal underneath, then advance to Connect
 function onboardPick(p){ applyPersona(p,{user:true}); obStep(2); }
-
 function renderOnboardConnect(){
   const el=$('pgStep2'); if(!el) return;
-  if(CRYPTO_ONLY){
-    const botOff=!BOT.loaded||BOT.error;
-    const running=BOT.status&&BOT.status.harnessRunning;
-    const statusCard=botOff
-      ?`<div class="ob-status off">${icon('shield',16)}<div><b>Bot API offline</b><span>Start the crypto API and paper harness, then tap Retry.</span></div></div>`
-      :`<div class="ob-status ok"><span class="live-dot live"></span><div><b>Crypto engine ${running?'running':'ready'}</b>
-      <span>Live Binance spot prices · 24/7 paper book · no exchange keys required.</span></div></div>`;
-    const action=botOff?`<div class="ob-cmd"><span class="ob-cmd-l">Run these</span>
-      <code>cd backend &amp;&amp; python3 crypto_api.py</code>
-      <code>cd backend &amp;&amp; python3 paper_trade_crypto.py</code>
-      <button class="ob-copy" data-obcopy type="button">Copy</button></div>
-      <div class="ob-actions"><button class="tbtn primary" data-obretry type="button">Retry connection</button></div>`:'';
-    const legend=`<div class="ob-legend">
-      <span><span class="ob-tag live">● LIVE</span> real Binance prices</span>
-      <span><span class="ob-tag paper">PAPER</span> simulated fills, honest costs</span>
-      <p>zengtrade never fabricates numbers, prove your edge forward before going live.</p></div>`;
-    el.innerHTML=`
-      <h2 class="pg-title">Welcome to zengtrade Crypto</h2>
-      <p class="pg-sub">Backtest, forward-test, and paper-trade systematic strategies on live crypto prices, 24/7.</p>
-      ${statusCard}${action}${legend}
-      <div class="ob-foot">
-        <button class="tbtn primary ob-start" data-obfinish type="button">Open Algo Studio ▶</button>
-      </div>`;
-    return;
-  }
-  const botOff   = !BOT.loaded || BOT.error;
-  const connected= BOT.loaded && BOT.connected && BOT.live;
-  const running  = (BOT.status&&BOT.status.reloginRunning)||BOT.reconnecting;
-  const auto     = BOT.status&&BOT.status.autoLogin;
-  const user     = (BOT.status&&BOT.status.user)?esc(BOT.status.user):'';
-
-  let statusCard, action='';
-  if(connected){
-    statusCard=`<div class="ob-status ok"><span class="live-dot live"></span><div><b>Connected to Kite${user?' · '+user:''}</b>
-      <span>Live market data is flowing.${BOT.paperMode?' Orders run in <b>PAPER</b> mode, nothing real is placed until you choose to go live.':''}</span></div></div>`;
-  } else if(botOff){
-    statusCard=`<div class="ob-status off">${icon('shield',16)}<div><b>Bot service isn’t running</b>
-      <span>Start it once in your bot folder, then tap Retry.</span></div></div>`;
-    action=`<div class="ob-cmd"><span class="ob-cmd-l">Run this</span><code id="obCmd">cd ~/kite-mean-reversion-bot &amp;&amp; python3 bot_api.py</code>
-        <button class="ob-copy" data-obcopy type="button">Copy</button></div>
-      <div class="ob-actions"><button class="tbtn primary" data-obretry type="button">Retry connection</button></div>`;
-  } else {
-    statusCard=`<div class="ob-status warn">${running?'<span class="live-dot warn pulse"></span>':icon('shield',16)}<div>
-      <b>${running?'Connecting to Kite…':'Kite isn’t connected yet'}</b>
-      <span>${running?'Refreshing your daily session token.':'Zerodha expires the access token every morning (a SEBI rule), refresh it once to see live prices, holdings &amp; signals.'}</span></div></div>`;
-    action=`<div class="ob-cmd"><span class="ob-cmd-l">Get a fresh token</span><code id="obCmd">cd ~/kite-mean-reversion-bot &amp;&amp; python3 login.py</code>
-        <button class="ob-copy" data-obcopy type="button">Copy</button></div>
-      <div class="ob-actions"><button class="tbtn primary" data-relogin ${running?'disabled':''} type="button">${running?'Reconnecting…':(auto?'Reconnect now':'Retry connection')}</button>
-        ${auto?'<span class="ob-hint">Auto-login is set up, mornings refresh themselves.</span>'
-              :'<span class="ob-hint">Tip: run <b>python3 auto_login.py --setup</b> once to skip this every morning.</span>'}</div>`;
-  }
-
+  const botOff=!BOT.loaded||BOT.error;
+  const running=BOT.status&&BOT.status.harnessRunning;
+  const statusCard=botOff
+    ?`<div class="ob-status off">${icon('shield',16)}<div><b>Setting up your paper account</b><span>Live prices and the paper book connect automatically, no action needed.</span></div></div>`
+    :`<div class="ob-status ok"><span class="live-dot live"></span><div><b>Crypto engine ${running?'running':'ready'}</b>
+    <span>Live Binance spot prices · 24/7 paper book · no exchange keys required.</span></div></div>`;
   const legend=`<div class="ob-legend">
-    <span><span class="ob-tag live">● LIVE</span> real Kite data</span>
-    <span><span class="ob-tag paper">PAPER</span> simulated orders, real prices</span>
-    <span><span class="ob-tag demo">DEMO</span> clearly-labelled sample</span>
-    <p>zengtrade never fabricates numbers, anything not live simply shows “—”.</p></div>`;
-
+    <span><span class="ob-tag live">● LIVE</span> real Binance prices</span>
+    <span><span class="ob-tag paper">PAPER</span> simulated fills, honest costs</span>
+    <p>zengtrade never fabricates numbers, prove your edge forward before going live.</p></div>`;
   el.innerHTML=`
-    <h2 class="pg-title">Connect your Kite account</h2>
-    <p class="pg-sub">zengtrade reads live data straight from your Zerodha Kite session. It never simulates prices or holdings.</p>
-    ${statusCard}${action}${legend}
+    <h2 class="pg-title">Welcome to zengtrade Crypto</h2>
+    <p class="pg-sub">Backtest, forward-test, and paper-trade systematic strategies on live crypto prices, 24/7.</p>
+    ${statusCard}${legend}
     <div class="ob-foot">
-      <button class="pg-skip" data-obback type="button">← Back</button>
-      <button class="tbtn ${connected?'primary':''} ob-start" data-obfinish type="button">${connected?'Start trading ▶':'Enter terminal, I’ll connect later'}</button>
+      <button class="tbtn primary ob-start" data-obfinish type="button">Open Algo Studio ▶</button>
     </div>`;
 }
-
 function finishOnboarding(){
   onboarding=false;
   const g=$('personaGate'); if(g) g.classList.remove('show');
   saveState();                       // persona was already saved on pick; this also persists post-onboarding state
   if(state.lastFocus&&state.lastFocus.focus) try{state.lastFocus.focus();}catch(e){}
 }
-
-/* ---------- investor order pad ---------- */
 function renderOrderInvestor(r){
   const sym=state.selected||REGIME_SYM[r], s=bySym(sym);
   const side=state.orderSide==='sell'?'redeem':'invest';
@@ -1477,7 +1311,7 @@ function openInvestModal(r){
   const type=state.investType||'cnc';
   const live=!!BOT.live && s && s.live!==false;
   const px=(live&&typeof s.ltp==='number'&&isFinite(s.ltp)&&s.ltp>0)?s.ltp:0;
-  if(px<=0){ quickToast&&quickToast('No live price for '+sym,'Connect Kite (python3 login.py) to invest at a real price.'); return; }
+  if(px<=0){ quickToast&&quickToast('No live price for '+sym,'Connect the exchange to invest at a real price.'); return; }
   const units=Math.max(0,Math.floor(amt/px));
   if(!amt){const ai=$('ordAmt');if(ai)ai.focus();return;}
   setModalTitle(side==='invest'?(type==='sip'?'Start SIP':'Confirm investment'):'Confirm redemption');
@@ -1515,44 +1349,6 @@ function placeInvest(o){
   state.panelTab=o.type==='sip'?'sips':'holdings'; renderPanel(state.displayed);
   announce(title);
 }
-/* ---------- investor context module ---------- */
-function renderContextInvestor(r){
-  const ctxRow=(ic,in_,b,s,val)=>`<div class="ctx-row"><div class="ctx-ico ic-${ic}">${icon(in_,15)}</div><div><div class="ct-b">${b}</div><div class="ct-s">${s}</div></div><div class="ct-val">${val||''}</div></div>`;
-  let head,pill,rows;
-  if(r==='bear'){
-    head='Accumulate &amp; Average';pill='Opportunity';
-    rows=ctxRow('up','repeat','Step up monthly SIP','More units per rupee at lower prices','₹16k/mo')
-        +ctxRow('up','trendDown','Average down HDFCBANK','Quality below its 200-DMA','add 10')
-        +ctxRow('info','droplet','Tilt to defensives','FMCG / Pharma for stability','')
-        +ctxRow('info','scale','Rebalance to target','Deploy cash into equity 60%',inrL(CASH));
-  }else if(r==='bull'){
-    head='Rebalance &amp; Harvest';pill='Discipline';
-    rows=ctxRow('warn','scale','Book partial profits','Trim names over target weight','3 names')
-        +ctxRow('info','repeat','Keep SIPs running','Avoid chasing highs with lump sums','₹15.5k/mo')
-        +ctxRow('info','pie','Top up debt / gold','Equity is 4% over target','rebalance');
-  }else{
-    head='Stay the Course';pill='Compound';
-    rows=ctxRow('info','repeat','Continue SIPs','Rupee-cost averaging in the range','₹15.5k/mo')
-        +ctxRow('info','target','Add quality on dips','Build core long-term holdings','watch')
-        +ctxRow('info','pie','Review allocation','Near target, minor top-ups','balanced');
-  }
-  const bars=ALLOC.map(a=>`<div class="alloc-row"><span class="alloc-a">${a.a}</span>
-    <span class="alloc-track"><span class="alloc-fill al-${a.col}" style="width:${a.cur}%"></span><i style="left:${a.tgt}%"></i></span>
-    <span class="alloc-v num">${a.cur}%</span></div>`).join('');
-  $('contextModule').innerHTML=`<div class="ctx-card">
-    <div class="ctx-head"><b><span class="ctx-rico">${icon('sprout',16)}</span> ${head}</b><span class="ctx-pill">${pill}</span>${cardCtl('context')}</div>
-    ${rows}
-    <div class="ctx-head" style="border-top:1px solid var(--line)"><b>Asset Allocation</b><span class="ctx-pill">vs target</span></div>
-    <div class="alloc">${bars}</div>
-  </div>`;
-  updateCardBtns();
-}
-
-/* ============================================================
-   INVESTING MODE: "Invest & Trade" tool hub (center pane)
-   Mirrors the panelTab router: state.investSection drives the view.
-   Investor-only; trader mode never renders or shows this.
-   ============================================================ */
 const INVEST_TOOLS=[
   {key:'ipo',      label:'IPO',                icon:'wallet',  tag:'5 open',    desc:'Apply to mainboard &amp; SME IPOs via UPI / ASBA.'},
   {key:'algo',     label:'IB Algo',            icon:'bolt',    tag:'New',       desc:'Rule-based strategies that execute for you.'},
@@ -1562,81 +1358,12 @@ const INVEST_TOOLS=[
   {key:'sip',      label:'Stock SIP',          icon:'repeat',  tag:'',          desc:'Automate recurring investments in stocks.'},
   {key:'research', label:'Research',           icon:'search',  tag:'Daily',     desc:'Ideas, calls &amp; deep-dive reports.'},
 ];
-/* portfolio overview model: equity (from holdings) + mutual funds */
 function portfolio(){
   const eqInv=HOLDINGS.reduce((a,h)=>a+h.hold.qty*h.hold.avg,0), eqCur=EXPOSURE;
   const eqToday=HOLDINGS.reduce((a,h)=>a+h.val*h.chg/100,0);
   const mfInv=MF_HELD.reduce((a,m)=>a+m.inv,0), mfCur=MF_HELD.reduce((a,m)=>a+m.cur,0);
   const mk=(inv,cur,today)=>({inv,cur,pnl:cur-inv,pct:inv?(cur-inv)/inv*100:0,today,todayPct:cur?today/cur*100:0});
   return {all:mk(eqInv+mfInv,eqCur+mfCur,eqToday),stocks:mk(eqInv,eqCur,eqToday),mf:mk(mfInv,mfCur,0),eqCur,mfCur};
-}
-// Real equity portfolio from the live Kite account (/api/holdings), or null when not connected.
-// sym → sector (Kite holdings don't carry sector). Best-effort map; ETFs detected; else "Other".
-const SECTOR_MAP={RELIANCE:'Energy',ONGC:'Energy',BPCL:'Energy',IOC:'Energy',GAIL:'Energy',
-  TCS:'IT',INFY:'IT',WIPRO:'IT',HCLTECH:'IT',TECHM:'IT',LTIM:'IT',
-  HDFCBANK:'Banks',ICICIBANK:'Banks',AXISBANK:'Banks',KOTAKBANK:'Banks',INDUSINDBK:'Banks',
-  SBIN:'PSU Bank',BANKBARODA:'PSU Bank',PNB:'PSU Bank',CANBK:'PSU Bank',
-  ITC:'FMCG',HINDUNILVR:'FMCG',NESTLEIND:'FMCG',BRITANNIA:'FMCG',DABUR:'FMCG',
-  MARUTI:'Auto',TATAMOTORS:'Auto','M&M':'Auto',BAJAJ_AUTO:'Auto',EICHERMOT:'Auto',HEROMOTOCO:'Auto',
-  TATASTEEL:'Metals',JSWSTEEL:'Metals',HINDALCO:'Metals',VEDL:'Metals',COALINDIA:'Metals',
-  SUNPHARMA:'Pharma',DRREDDY:'Pharma',CIPLA:'Pharma',DIVISLAB:'Pharma',
-  BAJFINANCE:'NBFC',BAJAJFINSV:'NBFC',CHOLAFIN:'NBFC',
-  LT:'Infra',ADANIENT:'Conglomerate',ADANIPORTS:'Infra',BHARTIARTL:'Telecom',
-  ASIANPAINT:'Materials',ULTRACEMCO:'Cement',GRASIM:'Cement',TITAN:'Consumer',
-  POWERGRID:'Power',NTPC:'Power',ITC:'FMCG',ETERNAL:'New-age',GROWW:'New-age',RELIANCE:'Energy'};
-function sectorOf(sym){
-  const u=(sym||'').toUpperCase();
-  const s=bySym(sym); if(s&&s.sector) return s.sector;
-  if(SECTOR_MAP[u]) return SECTOR_MAP[u];
-  if(/BEES|ETF|NIFTY|SENSEX|GOLD|SILVER|LIQUID/.test(u)) return 'ETF / Index';
-  return 'Other';
-}
-function realPortfolio(){
-  if(!(BOT.live && BOT.holdings && Array.isArray(BOT.holdings.holdings) && BOT.holdings.holdings.length)) return null;
-  const h=BOT.holdings.holdings;
-  const inv=h.reduce((a,x)=>a+(+x.avg||0)*(+x.qty||0),0);
-  const cur=h.reduce((a,x)=>a+(+x.ltp||0)*(+x.qty||0),0);
-  const pnl=(typeof BOT.holdings.totalPnl==='number')?BOT.holdings.totalPnl:(cur-inv);
-  const today=(typeof BOT.holdings.dayPnl==='number')?BOT.holdings.dayPnl:0;
-  return {n:h.length,inv,cur,pnl,pct:inv?(cur-inv)/inv*100:0,today,todayPct:cur?today/cur*100:0};
-}
-function renderPortfolioHero(){
-  const sinr=n=>(n>=0?'+':'−')+'₹'+Math.abs(Math.round(n)).toLocaleString('en-IN');
-  const tabs=[['all','All'],['stocks','Stocks'],['mf','Mutual Funds']];
-  const tab=(['all','stocks','mf'].indexOf(state.portfolioTab)>=0?state.portfolioTab:'all');
-  const head=`<div class="pf-top">
-      <div class="pf-tabs">${tabs.map(([k,l])=>`<button class="pf-tab ${k===tab?'on':''}" data-pftab="${k}">${l}</button>`).join('')}</div>
-      <div class="pf-acts"><button class="pf-act" data-fund="add">+ Add Funds</button><button class="pf-act ghost" data-fund="pledge">Pledge</button></div></div>`;
-  const rp=realPortfolio();
-  // NO real holdings → honest state. NEVER a fabricated value/P&L (was the biggest mock leak).
-  if(!rp){
-    return `<div class="pf-hero">${head}
-      <div class="pf-row pf-offline">
-        <div class="pf-main"><span class="pf-lbl">Current value</span><b class="pf-val num muted">—</b><span class="pf-sub">${BOT.live?'No equity holdings in your account':'Live portfolio appears once connected'}</span></div>
-        <div class="pf-stat"><span class="pf-lbl">Overall P&amp;L</span><b class="num muted">—</b></div>
-        <div class="pf-stat"><span class="pf-lbl">Today's P&amp;L</span><b class="num muted">—</b></div></div>
-      ${BOT.live?'':`<p class="pf-connect">${icon('shield',13)}<span>Your real holdings, value &amp; P&amp;L from Kite appear here once connected, nothing is simulated. <button class="pf-relogin" data-relogin>Reconnect</button></span></p>`}</div>`;
-  }
-  // MF tab → honest (this terminal only reads equity from Kite; no MF feed)
-  if(tab==='mf'){
-    return `<div class="pf-hero">${head}
-      <div class="pf-row"><div class="pf-main"><span class="pf-lbl">Mutual funds</span><b class="pf-val num muted">—</b><span class="pf-sub">Not linked to this terminal</span></div></div>
-      <p class="pf-connect">${icon('shield',13)}<span>This terminal reads your <b>equity</b> holdings live from Kite. Mutual-fund data isn’t available here, shown as, rather than estimated.</span></p></div>`;
-  }
-  // STOCKS / ALL → real equity holdings
-  return `<div class="pf-hero">${head}
-    <div class="pf-row">
-      <div class="pf-main"><span class="pf-lbl">Current value</span><b class="pf-val num">${inr(rp.cur)}</b><span class="pf-sub">Invested ${inr(rp.inv)} · ${rp.n} holding${rp.n===1?'':'s'}</span></div>
-      <div class="pf-stat"><span class="pf-lbl">Overall P&amp;L</span><b class="num ${cls(rp.pnl)}">${sinr(rp.pnl)}</b><span class="pf-pct num ${cls(rp.pct)}">${pct(rp.pct)}</span></div>
-      <div class="pf-stat"><span class="pf-lbl">Today's P&amp;L</span><b class="num ${cls(rp.today)}">${sinr(rp.today)}</b><span class="pf-pct num ${cls(rp.todayPct)}">${pct(rp.todayPct)}</span></div>
-    </div>
-    <div class="pf-breakup"><p class="pf-connect"><span class="live-dot live"></span><span>Live equity holdings from Kite · ${rp.n} stock${rp.n===1?'':'s'}. Deployable cash <b>${fundsText()}</b>.</span></p></div>
-  </div>`;
-}
-function fundsAction(kind){
-  const map={add:['Add funds','UPI / netbanking, funds reflect instantly for trading & SIPs.'],
-             pledge:['Pledge holdings','Pledge eligible holdings for instant margin up to ₹6.01K.']};
-  const m=map[kind]||map.add; quickToast(m[0],m[1]);
 }
 function quickToast(title,sub){
   const t=document.createElement('div');t.className='toast';
@@ -1645,455 +1372,14 @@ function quickToast(title,sub){
   t.querySelector('[data-act=ok]').onclick=()=>dismiss(t);
   t._timer=setTimeout(()=>{if(document.body.contains(t))dismiss(t);},4000);
 }
-function renderInvestHub(){
-  const hub=$('investHub'); if(!hub) return;
-  if(!isInvestor()){ hub.innerHTML=''; return; }   // never paint in trader mode
-  if(!state.investSection){
-    // tools live in the persistent bottom bar now. Overview shows the portfolio dashboard + a pointer to the bar
-    const chips=INVEST_TOOLS.slice(0,4).map(t=>`<button class="ihw-chip" data-tool="${t.key}">${icon(t.icon,14)}${t.label}${t.tag?`<i>${t.tag}</i>`:''}</button>`).join('');
-    hub.innerHTML=`<div class="ih-scroll">
-      ${renderPortfolioHero()}
-      <div class="ih-welcome">
-        <div class="ihw-head"><b>Invest &amp; Trade</b> <span class="ih-demo">Demo tools · sample data</span><span>Illustrative product flows (IPO, baskets, SIP, MF, research), they don’t place real orders. Your portfolio above is real.</span></div>
-        <div class="ihw-chips">${chips}</div>
-      </div>
-    </div>`;
-    hub.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>enterTool(b.dataset.tool));
-    hub.querySelectorAll('[data-pftab]').forEach(b=>b.onclick=()=>{state.portfolioTab=b.dataset.pftab;renderInvestHub();});
-    hub.querySelectorAll('[data-fund]').forEach(b=>b.onclick=()=>fundsAction(b.dataset.fund));
-  } else {
-    const t=INVEST_TOOLS.find(x=>x.key===state.investSection)||INVEST_TOOLS[0];
-    const view=INVEST_VIEWS[t.key];
-    hub.innerHTML=`<div class="ih-scroll sec-scroll">
-      <div class="ih-head"><button class="ih-back" id="ihBack" aria-label="Back to all tools"><span>All tools</span></button>
-        <b class="ih-secttl" id="ihSecTtl" tabindex="-1"><span class="ih-ic sm">${icon(t.icon,16)}</span>${t.label}</b>
-        ${t.tag?`<span class="ih-secttag">${t.tag}</span>`:''}${t.real?`<span class="ih-live" title="Live, computed from your real Kite account.">${icon('check',11)} Live data</span>`:`<span class="ih-demo" title="Illustrative, this tool uses sample data and doesn’t place real orders or invest real money.">Demo · sample data</span>`}</div>
-      <div class="sec-body">${view?view.render():''}</div>
-    </div>`;
-    const bk=$('ihBack'); if(bk) bk.onclick=exitTool;
-    if(view&&view.wire) view.wire(hub);
-  }
-  updateCardBtns();
-}
-/* tool navigation: enter steals focus to the section title + announces; refresh re-renders without stealing focus */
-function enterTool(k){ state.investSection=k; state.toolState={}; renderInvestHub(); renderWsBar(); saveState();
-  const t=INVEST_TOOLS.find(x=>x.key===k)||{}; announce((t.label||'Tool')+' opened');
-  const ttl=$('ihSecTtl'); if(ttl) setTimeout(()=>{try{ttl.focus();}catch(e){}},40); }
-function exitTool(){ state.investSection=null; state.toolState={}; renderInvestHub(); renderWsBar(); saveState(); announce('Back to all tools'); }
-function refreshTool(){ renderInvestHub(); }
-/* per-tool ui state helpers (sub-tab / filter / form draft) */
 function ts(k,def){ return (state.toolState[k]!==undefined)?state.toolState[k]:def; }
-function setTs(k,v){ state.toolState[k]=v; }
-
-/* ============================================================
-   INVEST & TRADE: live tool sections (each tool = render()+wire())
-   Shared atoms keep every tool consistent & accessible.
-   ============================================================ */
-/* ---- shared section atoms ---- */
-function secTabs(tabs,active,label){return `<div class="sec-tabs" role="tablist" aria-label="${label||'Views'}">${tabs.map(t=>{const k=t[0],l=t[1],n=t[2];return `<button class="sec-tab${k===active?' on':''}" role="tab" aria-selected="${k===active}" data-sectab="${k}">${l}${n!=null?` <i class="sec-tn">${n}</i>`:''}</button>`;}).join('')}</div>`;}
 function secStats(items){return `<div class="sec-stats">${items.map(s=>`<div class="sec-stat"><span class="ss-l">${s.l}</span><b class="ss-v num ${s.tone||''}"${s.id?` data-live="${s.id}"`:''}>${s.v}</b>${s.s?`<span class="ss-s">${s.s}</span>`:''}</div>`).join('')}</div>`;}
 function secEmpty(ic,title,msg,cta){return `<div class="sec-empty"><span class="se-ic">${icon(ic,28)}</span><b>${title}</b><p>${msg}</p>${cta||''}</div>`;}
-function stars(n){let h='';for(let i=1;i<=5;i++)h+=`<span class="star${i<=n?' on':''}">${icon('star',11)}</span>`;return `<span class="rating" aria-label="${n} out of 5">${h}</span>`;}
-function wireSecTabs(hub){hub.querySelectorAll('[data-sectab]').forEach(b=>b.onclick=()=>{setTs('tab',b.dataset.sectab);refreshTool();});}
-function flowError(body,sel,msg){
-  let el=body.querySelector('.flow-err'); if(!el){el=document.createElement('div');el.className='flow-err';el.setAttribute('role','alert');body.appendChild(el);}
-  el.innerHTML=`${icon('alert',13)}<span>${msg}</span>`;
-  const f=sel&&body.querySelector(sel); if(f){f.classList.add('inval');f.focus();}
-}
-function clearFlowError(body,f){const e=body.querySelector('.flow-err');if(e)e.remove();if(f)f.classList.remove('inval');}
-
-/* ---- tool data (mutable: actions update these in-session) ---- */
-let IPOS=[
-  {co:'Tata Capital',        biz:'Diversified NBFC',          type:'Mainboard', band:[310,326], lot:46,   close:'24 Jun', subx:18.4, gmp:9,  status:'open'},
-  {co:'Sahasra Electronics', biz:'Electronics manufacturing', type:'SME',       band:[269,283], lot:400,  close:'24 Jun', subx:11.6, gmp:22, status:'open'},
-  {co:'Aequs',               biz:'Precision components',      type:'Mainboard', band:[118,124], lot:121,  close:'23 Jun', subx:6.2,  gmp:14, status:'open'},
-  {co:'Vikran Engineering',  biz:'EPC · power & rail',        type:'SME',       band:[92,97],   lot:1200, close:'25 Jun', subx:2.1,  gmp:5,  status:'open'},
-  {co:'Indogulf Crop',       biz:'Agri inputs',               type:'Mainboard', band:[105,111], lot:135,  close:'26 Jun', subx:0.8,  gmp:3,  status:'open'},
-  {co:'HDB Financial',       biz:'Retail lending',            type:'Mainboard', band:[700,740], lot:20,   open:'27 Jun', status:'upcoming'},
-  {co:'NSDL',                biz:'Market infrastructure',     type:'Mainboard', band:[760,800], lot:18,   open:'30 Jun', status:'upcoming'},
-  {co:'Belrise Industries',  biz:'Auto components',           type:'Mainboard', band:[85,90],   lot:166,  listGain:11.5, status:'listed'},
-  {co:'Borana Weaves',       biz:'Textiles',                  type:'SME',       band:[205,216], lot:69,   listGain:-3.2, status:'listed'},
-];
-let ALGOS=[
-  {name:'Momentum Breakout', cat:'Equity intraday', cagr:24.6, win:62, dd:14.2, minCap:50000,  risk:'Aggressive',  status:'idle', desc:'Buys 20-day breakouts with volume confirmation; trailing-stop exit.'},
-  {name:'RSI Mean Reversion',cat:'Equity swing',    cagr:18.1, win:68, dd:9.4,  minCap:25000,  risk:'Moderate',    status:'idle', desc:'Fades oversold RSI(2) inside uptrends; time + target exit.'},
-  {name:'Golden Crossover',  cat:'Positional',      cagr:15.3, win:55, dd:11.0, minCap:30000,  risk:'Moderate',    status:'idle', desc:'50/200-DMA crossover gated by the market regime filter.'},
-  {name:'Index Trend Rider', cat:'Index futures',   cagr:13.8, win:71, dd:7.2,  minCap:100000, risk:'Conservative',status:'idle', desc:'Rides the Nifty trend with ATR-based position sizing.'},
-  {name:'Gap & Go',          cat:'Equity intraday', cagr:29.2, win:48, dd:22.5, minCap:75000,  risk:'Aggressive',  status:'idle', desc:'Trades opening-range gaps; hard stop at the day extreme.'},
-];
-let BASKETS=[
-  {name:'EV Revolution',      theme:'Thematic',   stocks:['MARUTI','RELIANCE','ADANIENT'],           minInv:8500,  ret1y:31.2, vol:'High',   desc:'Pure-play & ancillary beneficiaries of India’s EV transition.'},
-  {name:'Banking Leaders',    theme:'Sectoral',   stocks:['HDFCBANK','ICICIBANK','SBIN'],            minInv:12000, ret1y:18.4, vol:'Medium', desc:'Largest private & PSU lenders by market share.'},
-  {name:'Defensive Dividend', theme:'Factor',     stocks:['ITC','TCS','INFY'],                       minInv:6000,  ret1y:11.0, vol:'Low',    desc:'High-yield, low-beta compounders for stability.'},
-  {name:'Digital India',      theme:'Thematic',   stocks:['INFY','TCS','RELIANCE'],                  minInv:9500,  ret1y:22.7, vol:'Medium', desc:'IT services & platform plays riding digitisation.'},
-  {name:'All-Weather Core',   theme:'Allocation', stocks:['HDFCBANK','RELIANCE','ITC','TCS'],        minInv:15000, ret1y:14.6, vol:'Low',    desc:'A balanced large-cap core to anchor any portfolio.'},
-  {name:'High Beta Movers',   theme:'Factor',     stocks:['ADANIENT','BAJFINANCE','MARUTI'],         minInv:7000,  ret1y:27.9, vol:'High',   desc:'Momentum names for aggressive, risk-tolerant investors.'},
-];
-let FUNDS=[
-  {name:'Parag Parikh Flexi Cap',   cat:'Flexi Cap', grp:'Equity', nav:78.42, r1:18.6, r3:21.2, r5:19.8, rating:5, aum:'82,400', held:true},
-  {name:'Nifty 50 Index Fund',      cat:'Index',     grp:'Index',  nav:24.10, r1:14.2, r3:15.1, r5:14.0, rating:4, aum:'14,900', held:true},
-  {name:'ICICI Pru Corporate Bond', cat:'Debt',      grp:'Debt',   nav:28.55, r1:7.8,  r3:7.1,  r5:7.4,  rating:4, aum:'27,300', held:true},
-  {name:'SBI Gold Fund',            cat:'Gold',      grp:'Gold',   nav:22.18, r1:11.1, r3:13.6, r5:12.2, rating:3, aum:'2,640',  held:true},
-  {name:'Quant Small Cap',          cat:'Small Cap', grp:'Equity', nav:265.7, r1:34.1, r3:28.4, r5:32.7, rating:4, aum:'25,100'},
-  {name:'Mirae Asset Large Cap',    cat:'Large Cap', grp:'Equity', nav:108.3, r1:13.9, r3:14.6, r5:15.2, rating:4, aum:'38,700'},
-  {name:'Axis Midcap',              cat:'Mid Cap',   grp:'Equity', nav:98.62, r1:24.5, r3:22.1, r5:23.4, rating:4, aum:'29,800'},
-  {name:'HDFC Balanced Advantage',  cat:'Hybrid',    grp:'Hybrid', nav:512.9, r1:16.2, r3:18.0, r5:16.8, rating:5, aum:'95,200'},
-];
-let STOCK_SIPS=[
-  {id:1, sym:'RELIANCE', amt:3000, freq:'Monthly', day:15, status:'active'},
-  {id:2, sym:'INFY',     amt:2500, freq:'Monthly', day:5,  status:'active'},
-  {id:3, sym:'HDFCBANK', amt:2000, freq:'Weekly',  day:1,  status:'paused'},
-];
-let SIP_ID=10;
-let CALLS=[
-  {sym:'SBIN',       action:'Buy',  cmp:842,  tgt:980,  sl:790,  horizon:'3–6 mo',  conv:'High',   rationale:'Credit growth plus improving asset quality; cheapest large PSU bank on P/B.'},
-  {sym:'MARUTI',     action:'Buy',  cmp:12450, tgt:14200, sl:11600, horizon:'3–6 mo', conv:'High',   rationale:'Richer SUV mix and a rural recovery are lifting volumes; softer input costs aid margins.'},
-  {sym:'INFY',       action:'Buy',  cmp:1846, tgt:2150, sl:1720, horizon:'6–12 mo', conv:'Medium', rationale:'Deal pipeline recovering; margin levers intact into FY27.'},
-  {sym:'ADANIENT',   action:'Sell', cmp:2456, tgt:2100, sl:2560, horizon:'1–3 mo',  conv:'Medium', rationale:'Stretched valuations and momentum rolling over below the 50-DMA.'},
-  {sym:'ITC',        action:'Hold', cmp:439,  tgt:470,  sl:410,  horizon:'6–12 mo', conv:'Low',    rationale:'Steady FMCG compounding, but cigarette-tax overhang caps near-term upside.'},
-];
-let REPORTS=[
-  {title:'India Strategy, H2 FY26 Outlook', tag:'Strategy', date:'19 Jun', pages:24},
-  {title:'Banking, Q1 Earnings Preview',    tag:'Sector',   date:'18 Jun', pages:14},
-  {title:'Auto, Monthly Volume Tracker',    tag:'Sector',   date:'17 Jun', pages:9},
-  {title:'Tata Motors, Initiating Coverage',tag:'Company',  date:'16 Jun', pages:31},
-];
-const CAP_LARGE=new Set(['RELIANCE','HDFCBANK','TCS','INFY','SBIN','ICICIBANK','ITC','BAJFINANCE']);
-const symName=s=>{const x=bySym(s);return x?x.name:s;};
-
-/* ============================================================
-   THE 7 LIVE TOOLS
-   ============================================================ */
-const INVEST_VIEWS={
-
-/* ---------- 1) IPO ---------- */
-ipo:{
-  render(){
-    const tab=ts('tab','open');
-    const groups={open:IPOS.filter(i=>i.status==='open'),upcoming:IPOS.filter(i=>i.status==='upcoming'),listed:IPOS.filter(i=>i.status==='listed')};
-    const list=groups[tab];
-    let cards;
-    if(!list.length){ cards=secEmpty('wallet','Nothing here yet','No IPOs in this category right now. Check the other tabs.'); }
-    else cards=`<div class="ipo-list">${list.map((i,idx)=>{
-      const min=i.band[1]*i.lot, estGain=i.gmp?((i.gmp/i.band[1])*100):0, gi=IPOS.indexOf(i);
-      if(tab==='open'){const subClass=i.subx>=1?'up':'down', subW=Math.min(100,i.subx/20*100);
-        return `<div class="ipo-card">
-          <div class="ipo-h"><div><b>${i.co}</b><span class="ipo-biz">${i.biz}</span></div><span class="badge ${i.type==='SME'?'b-warn':'b-up'}">${i.type}</span></div>
-          <div class="ipo-grid">
-            <div><span>Price band</span><b class="num">₹${i.band[0]}–${i.band[1]}</b></div>
-            <div><span>Min invest</span><b class="num">${inr(min)}</b><i class="ipo-sub2">${i.lot} sh / lot</i></div>
-            <div><span>GMP</span><b class="num ${i.gmp>0?'up':''}">₹${i.gmp}</b><i class="ipo-sub2">${estGain>0?'≈+'+estGain.toFixed(0)+'%':'-'}</i></div>
-          </div>
-          <div class="ipo-sub-bar"><div class="ipo-sub-top"><span>Subscribed <b class="${subClass}">${i.subx}×</b></span><span class="ipo-close">Closes ${i.close}</span></div>
-            <div class="wg-bar-track"><span style="width:${subW}%"></span></div></div>
-          <div class="ipo-act">${i.applied
-            ? `<span class="applied-badge">${icon('check',13)} Applied · ${i.appliedLots} lot(s)</span>`
-            : `<button class="btn-primary" data-ipoapply="${gi}">Apply via UPI</button>`}</div>
-        </div>`;}
-      if(tab==='upcoming') return `<div class="ipo-card">
-        <div class="ipo-h"><div><b>${i.co}</b><span class="ipo-biz">${i.biz}</span></div><span class="badge b-neu">${i.type}</span></div>
-        <div class="ipo-grid"><div><span>Price band</span><b class="num">₹${i.band[0]}–${i.band[1]}</b></div><div><span>Lot size</span><b class="num">${i.lot}</b></div><div><span>Opens</span><b class="num">${i.open}</b></div></div>
-        <div class="ipo-act"><button class="btn-ghost" data-ipremind="${gi}">${icon('clock',13)} Remind me</button></div></div>`;
-      // listed
-      return `<div class="ipo-card">
-        <div class="ipo-h"><div><b>${i.co}</b><span class="ipo-biz">${i.biz}</span></div><span class="badge b-neu">${i.type}</span></div>
-        <div class="ipo-grid"><div><span>Issue price</span><b class="num">₹${i.band[1]}</b></div><div><span>Listing gain</span><b class="num ${cls(i.listGain)}">${pct(i.listGain)}</b></div><div><span>Status</span><b>Listed</b></div></div></div>`;
-    }).join('')}</div>`;
-    return secTabs([['open','Open',groups.open.length],['upcoming','Upcoming',groups.upcoming.length],['listed','Recently listed',groups.listed.length]],tab,'IPO categories')+cards;
-  },
-  wire(hub){
-    wireSecTabs(hub);
-    hub.querySelectorAll('[data-ipoapply]').forEach(b=>b.onclick=()=>ipoApply(IPOS[+b.dataset.ipoapply]));
-    hub.querySelectorAll('[data-ipremind]').forEach(b=>b.onclick=()=>{const i=IPOS[+b.dataset.ipremind];quickToast('Reminder set, '+i.co,'We’ll notify you when the issue opens on '+i.open+'.');});
-  }
-},
-
-/* ---------- 2) IB Algo ---------- */
-algo:{
-  render(){
-    const live=ALGOS.filter(a=>a.status!=='idle'), cap=live.reduce((s,a)=>s+(a.cap||0),0);
-    const estMo=live.filter(a=>a.status==='live').reduce((s,a)=>s+(a.cap||0)*a.cagr/100/12,0);
-    const stat=secStats([
-      {l:'Deployed',v:String(live.length),s:'strategies'},
-      {l:'Capital allocated',v:inr(cap)},
-      {l:'Est. monthly',v:sgn(estMo),tone:estMo>0?'up':''},
-    ]);
-    const cards=`<div class="algo-list">${ALGOS.map((a,i)=>{
-      const rk=a.risk==='Aggressive'?'b-warn':a.risk==='Conservative'?'b-up':'b-neu';
-      const ctrl=a.status==='idle'
-        ? `<button class="btn-primary" data-algodeploy="${i}">Deploy</button>`
-        : `<span class="live-pill ${a.status==='paused'?'paused':''}">${icon(a.status==='paused'?'clock':'bolt',12)} ${a.status==='paused'?'Paused':'Live'} · ${inr(a.cap)}</span>
-           <div class="algo-ctrls">${a.status==='live'?`<button class="btn-ghost sm" data-algopause="${i}">Pause</button>`:`<button class="btn-ghost sm" data-algoresume="${i}">Resume</button>`}<button class="btn-ghost sm danger" data-algostop="${i}">Stop</button></div>`;
-      return `<div class="algo-card${a.status!=='idle'?' is-live':''}">
-        <div class="algo-h"><div><b>${esc(a.name)}</b><span class="algo-cat">${esc(a.cat)}</span></div><span class="badge ${rk}">${esc(a.risk)}</span></div>
-        <p class="algo-desc">${esc(a.desc)}</p>
-        <div class="algo-stats">
-          <div><span>CAGR</span><b class="num up">${a.cagr}%</b></div>
-          <div><span>Win rate</span><b class="num">${a.win}%</b></div>
-          <div><span>Max DD</span><b class="num down">−${a.dd}%</b></div>
-          <div><span>Min capital</span><b class="num">${inr(a.minCap)}</b></div>
-        </div>
-        <div class="algo-act">${ctrl}</div>
-      </div>`;}).join('')}</div>`;
-    return stat+`<p class="sec-hint">${icon('shield',12)}<span>Backtested on 5 years of data. Past performance doesn’t guarantee future returns.</span></p>`+cards;
-  },
-  wire(hub){
-    hub.querySelectorAll('[data-algodeploy]').forEach(b=>b.onclick=()=>algoDeploy(ALGOS[+b.dataset.algodeploy]));
-    hub.querySelectorAll('[data-algopause]').forEach(b=>b.onclick=()=>{ALGOS[+b.dataset.algopause].status='paused';refreshTool();quickToast('Strategy paused','No new entries will be taken; open positions are kept.');});
-    hub.querySelectorAll('[data-algoresume]').forEach(b=>b.onclick=()=>{ALGOS[+b.dataset.algoresume].status='live';refreshTool();quickToast('Strategy resumed','The algo is live and scanning for entries again.');});
-    hub.querySelectorAll('[data-algostop]').forEach(b=>b.onclick=()=>{const a=ALGOS[+b.dataset.algostop];a.status='idle';a.cap=0;refreshTool();quickToast('Strategy stopped','Capital released back to your funds.');});
-  }
-},
-
-/* ---------- 3) Smart Basket ---------- */
-basket:{
-  render(){
-    const cards=`<div class="bsk-grid">${BASKETS.map((b,i)=>{
-      const vk=b.vol==='High'?'b-warn':b.vol==='Low'?'b-up':'b-neu';
-      return `<div class="bsk-card">
-        <div class="bsk-h"><b>${b.name}</b><span class="badge b-neu">${b.theme}</span></div>
-        <p class="bsk-desc">${b.desc}</p>
-        <div class="bsk-meta">
-          <div><span>1Y return</span><b class="num up">${pct(b.ret1y)}</b></div>
-          <div><span>Volatility</span><span class="vol-chip ${vk}">${b.vol}</span></div>
-          <div><span>Stocks</span><b class="num">${b.stocks.length}</b></div>
-        </div>
-        <div class="bsk-foot"><span class="bsk-min">Min ${inr(b.minInv)}</span>
-          ${b.invested?`<span class="applied-badge">${icon('check',13)} Invested</span>`:`<button class="btn-primary sm" data-bskbuy="${i}">View &amp; invest</button>`}</div>
-      </div>`;}).join('')}</div>`;
-    return `<p class="sec-hint">${icon('shield',12)}<span>Curated baskets rebalanced quarterly. One tap buys every constituent in the right weight.</span></p>`+cards;
-  },
-  wire(hub){ hub.querySelectorAll('[data-bskbuy]').forEach(b=>b.onclick=()=>basketInvest(BASKETS[+b.dataset.bskbuy])); }
-},
-
-/* ---------- 4) Portfolio Analyser, REAL: computed from your live Kite holdings ---------- */
-analyser:{
-  render(){
-    const rp=realPortfolio(), held=(BOT.holdings&&BOT.holdings.holdings)||[];
-    // NO real holdings → honest connect state, never a fabricated score
-    if(!BOT.live || !rp || !held.length){
-      return secEmpty('pie','X-ray your real portfolio',
-        BOT.live ? 'No equity holdings in your Kite account to analyse yet, buy a stock and it appears here.'
-                 : 'Connect Kite (run <b>python3 login.py</b>) to X-ray your real holdings, value, concentration, sector mix &amp; P&amp;L computed live from your account. Nothing is simulated.');
-    }
-    const cur=rp.cur||1;
-    const items=held.map(x=>({sym:x.sym,val:(+x.ltp||0)*(+x.qty||0),pnl:+x.pnl||0,qty:+x.qty||0,sector:sectorOf(x.sym)}))
-      .filter(it=>it.val>0).sort((a,b)=>b.val-a.val);
-    const top=items[0]||{sym:'-',val:0}, topW=cur?top.val/cur*100:0;
-    const div=items.length, conc=Math.max(0,topW-25);
-    let score=Math.round(92 - conc*1.4 - Math.max(0,6-div)*4.5); score=Math.max(35,Math.min(98,score));
-    const grade=score>=80?['Strong','up']:score>=62?['Healthy','']:['Concentrated','down'];
-    const bySec={}; items.forEach(it=>{bySec[it.sector]=(bySec[it.sector]||0)+it.val;});
-    const secRows=Object.entries(bySec).sort((a,b)=>b[1]-a[1]);
-    const known=items.filter(it=>it.sector!=='Other').length;
-    const hero=`<div class="anl-hero">
-      <div class="anl-score"><svg viewBox="0 0 36 36" class="anl-ring" aria-hidden="true"><path class="anl-bg" d="M18 2a16 16 0 1 1 0 32 16 16 0 0 1 0-32"/><path class="anl-fg" stroke-dasharray="${score},100" d="M18 2a16 16 0 1 1 0 32 16 16 0 0 1 0-32"/></svg>
-        <div class="anl-score-c"><b class="num">${score}</b><span>/100</span></div></div>
-      <div class="anl-grade"><b class="${grade[1]}">${grade[0]}</b><span>Concentration &amp; diversification</span>
-        <div class="anl-mini"><span><span class="live-dot live"></span>${div} holding${div===1?'':'s'} · live from Kite</span></div></div>
-    </div>`;
-    const metrics=secStats([
-      {l:'Current value',v:inr(rp.cur)},
-      {l:'Overall P&L',v:(rp.pnl>=0?'+':'−')+'₹'+Math.abs(Math.round(rp.pnl)).toLocaleString('en-IN'),tone:rp.pnl>=0?'up':'down'},
-      {l:'Top holding',v:Math.round(topW)+'%',s:esc(top.sym),tone:topW>25?'down':''},
-      {l:'Diversification',v:div>=6?'Good':div>=3?'Fair':'Thin',tone:div>=6?'up':div<3?'down':''},
-    ]);
-    const holdRows=items.map(it=>{const w=Math.round(it.val/cur*100);
-      return `<div class="anl-row"><span class="anl-s">${esc(it.sym)} <i class="anl-sec">${esc(it.sector)}</i></span><span class="anl-track"><span class="anl-fill" style="width:${w}%"></span></span><b class="num">${w}%</b><b class="num ${cls(it.pnl)} anl-pnl">${it.pnl>=0?'+':'−'}₹${Math.abs(Math.round(it.pnl)).toLocaleString('en-IN')}</b></div>`;}).join('');
-    const holdBlock=`<div class="anl-card"><div class="anl-ttl">Your holdings · weight &amp; P&amp;L</div>${holdRows}</div>`;
-    const secBlock=`<div class="anl-card"><div class="anl-ttl">Sector exposure ${known<div?`<i class="anl-note">(${div-known} unmapped → “Other”)</i>`:''}</div>${secRows.map(([s,v])=>{const w=Math.round(v/cur*100);return `<div class="anl-row"><span class="anl-s">${esc(s)}</span><span class="anl-track"><span class="anl-fill" style="width:${w}%"></span></span><b class="num">${w}%</b></div>`;}).join('')}</div>`;
-    const flags=[];
-    if(topW>25) flags.push({t:'warn',ic:'alert',b:esc(top.sym)+' is '+Math.round(topW)+'% of your equity',s:'Above the 25% single-stock guardrail, a sharp move here swings the whole book.'});
-    if(div<5) flags.push({t:'warn',ic:'scale',b:'Only '+div+' holding'+(div===1?'':'s'),s:'Thin diversification, concentrated in a few names. More positions spread single-stock risk.'});
-    const topSec=secRows[0]; if(topSec){const sw=Math.round(topSec[1]/cur*100); if(sw>40&&topSec[0]!=='Other') flags.push({t:'info',ic:'pie',b:topSec[0]+' is '+sw+'% of your equity',s:'A heavy sector tilt, concentrated to '+topSec[0]+'.'});}
-    if(!flags.length) flags.push({t:'info',ic:'check',b:'Well-spread book',s:'No single stock above the 25% guardrail and reasonably diversified.'});
-    const flagBlock=`<div class="anl-flags">${flags.map(f=>`<div class="anl-flag ${f.t}"><span class="af-ic">${icon(f.ic,15)}</span><div class="af-b"><b>${f.b}</b><span>${f.s}</span></div></div>`).join('')}</div>`;
-    const note=`<p class="sec-hint">${icon('shield',12)}<span>Computed live from your real Kite holdings. Sector is mapped where known (Kite doesn’t supply it). No targets/“drift” are shown, that needs a goal you set, which isn’t simulated here.</span></p>`;
-    return hero+metrics+flagBlock+holdBlock+secBlock+note;
-  },
-  wire(){}
-},
-
-/* ---------- 5) Mutual Funds ---------- */
-mf:{
-  render(){
-    const groups=['All','Equity','Index','Debt','Hybrid','Gold'], f=ts('fmFilter','All'), q=ts('fmQuery','');
-    const chips=`<div class="mf-chips" role="tablist" aria-label="Fund categories">${groups.map(g=>`<button class="mf-chip${g===f?' on':''}" role="tab" aria-selected="${g===f}" data-fmfilter="${g}">${g}</button>`).join('')}</div>`;
-    const search=`<div class="mf-search"><span class="mf-sic">${icon('search',15)}</span><input id="fmSearch" class="mf-input" type="text" placeholder="Search funds" aria-label="Search mutual funds" value="${esc(q)}"><button class="mf-clear${q?'':' hide'}" id="fmClear" aria-label="Clear search">${icon('close',13)}</button></div>`;
-    return `<div class="mf-bar">${search}${chips}</div><div id="fmList">${mfListHTML()}</div>`;
-  },
-  wire(hub){
-    hub.querySelectorAll('[data-fmfilter]').forEach(b=>b.onclick=()=>{setTs('fmFilter',b.dataset.fmfilter);refreshTool();});
-    const si=hub.querySelector('#fmSearch'), cl=hub.querySelector('#fmClear');
-    if(si){ si.oninput=()=>{setTs('fmQuery',si.value);if(cl)cl.classList.toggle('hide',!si.value);mfRefreshList(hub);};
-      si.onkeydown=e=>{if(e.key==='Escape'){si.value='';setTs('fmQuery','');if(cl)cl.classList.add('hide');mfRefreshList(hub);}}; }
-    if(cl) cl.onclick=()=>{setTs('fmQuery','');if(si){si.value='';si.focus();}cl.classList.add('hide');mfRefreshList(hub);};
-    mfBindInvest(hub);
-  }
-},
-
-/* ---------- 6) Stock SIP ---------- */
-sip:{
-  render(){
-    const active=STOCK_SIPS.filter(s=>s.status==='active');
-    const monthly=active.reduce((a,s)=>a+s.amt*(s.freq==='Weekly'?4:s.freq==='Fortnightly'?2:1),0);
-    const next=active.length?Math.min(...active.filter(s=>s.freq!=='Weekly').map(s=>s.day).concat([99])):0;
-    const stat=secStats([
-      {l:'Monthly outlay',v:inr(monthly)},
-      {l:'Active SIPs',v:String(active.length),s:'of '+STOCK_SIPS.length},
-      {l:'Next debit',v:next&&next<99?next+' '+monthName():'-'},
-    ]);
-    const newBtn=`<button class="btn-primary block" data-sipnew>${icon('plus',14)} New stock SIP</button>`;
-    if(!STOCK_SIPS.length) return stat+secEmpty('repeat','No SIPs yet','Automate disciplined, rupee-cost-averaged investing in your favourite stocks.',newBtn);
-    const rows=`<div class="sip-list">${STOCK_SIPS.map(s=>{const nm=symName(s.sym);
-      return `<div class="sip-card ${s.status}">
-        <div class="sip-l"><span class="sip-day">${s.freq==='Weekly'?icon('repeat',14):s.day}</span>
-          <div><b>${s.sym}</b><span class="sip-nm">${nm}</span></div></div>
-        <div class="sip-m"><b class="num">${inr(s.amt)}</b><span>${s.freq}${s.freq!=='Weekly'?' · '+ordinal(s.day):''}</span></div>
-        <div class="sip-r"><span class="sip-status ${s.status}">${s.status==='active'?'Active':'Paused'}</span>
-          <div class="sip-acts">
-            <button class="icon-mini" data-siptoggle="${s.id}" aria-label="${s.status==='active'?'Pause':'Resume'} SIP for ${s.sym}" title="${s.status==='active'?'Pause':'Resume'}">${icon(s.status==='active'?'clock':'bolt',13)}</button>
-            <button class="icon-mini" data-sipedit="${s.id}" aria-label="Edit SIP for ${s.sym}" title="Edit">${icon('sliders',13)}</button>
-            <button class="icon-mini danger" data-sipdel="${s.id}" aria-label="Delete SIP for ${s.sym}" title="Delete">${icon('close',13)}</button>
-          </div></div>
-      </div>`;}).join('')}</div>`;
-    return stat+rows+newBtn;
-  },
-  wire(hub){
-    const bn=hub.querySelector('[data-sipnew]'); if(bn) bn.onclick=()=>sipForm(null);
-    hub.querySelectorAll('[data-siptoggle]').forEach(b=>b.onclick=()=>{const s=STOCK_SIPS.find(x=>x.id==b.dataset.siptoggle);s.status=s.status==='active'?'paused':'active';refreshTool();quickToast('SIP '+s.status,(s.status==='active'?'Resumed':'Paused')+' your '+s.sym+' SIP of '+inr(s.amt)+'.');});
-    hub.querySelectorAll('[data-sipedit]').forEach(b=>b.onclick=()=>sipForm(STOCK_SIPS.find(x=>x.id==b.dataset.sipedit)));
-    hub.querySelectorAll('[data-sipdel]').forEach(b=>b.onclick=()=>{const s=STOCK_SIPS.find(x=>x.id==b.dataset.sipdel);sipDelete(s);});
-  }
-},
-
-/* ---------- 7) Research ---------- */
-research:{
-  render(){
-    const tab=ts('tab','calls');
-    if(tab==='reports'){
-      const cards=`<div class="rep-list">${REPORTS.map((r,i)=>`<div class="rep-card" data-repopen="${i}" role="button" tabindex="0" aria-label="Open report ${r.title}">
-        <span class="rep-ic">${icon('search',16)}</span>
-        <div class="rep-b"><b>${r.title}</b><span>${r.tag} · ${r.date} · ${r.pages} pages</span></div>
-        <span class="rep-go" aria-hidden="true">${icon('trendUp',14)}</span></div>`).join('')}</div>`;
-      return secTabs([['calls','Calls',CALLS.length],['reports','Reports',REPORTS.length]],tab,'Research views')+cards;
-    }
-    const af=ts('cf','All'), filt=af==='All'?CALLS:CALLS.filter(c=>c.action===af);
-    const chips=`<div class="mf-chips" role="tablist" aria-label="Call type">${['All','Buy','Sell','Hold'].map(a=>`<button class="mf-chip${a===af?' on':''}" role="tab" aria-selected="${a===af}" data-cf="${a}">${a}</button>`).join('')}</div>`;
-    let body;
-    if(!filt.length) body=secEmpty('search','No '+af.toLowerCase()+' calls','There are no active '+af.toLowerCase()+' calls right now.');
-    else body=`<div class="call-list">${filt.map((c)=>{const ci=CALLS.indexOf(c),up=((c.tgt-c.cmp)/c.cmp*100),ak=c.action==='Buy'?'b-up':c.action==='Sell'?'b-down':'b-neu',ck=c.conv==='High'?'up':c.conv==='Low'?'down':'';
-      return `<div class="call-card">
-        <div class="call-h"><div class="t-sym">${c.sym}<span class="call-nm">${symName(c.sym)}</span></div><span class="badge ${ak}">${c.action}</span></div>
-        <div class="call-grid">
-          <div><span>CMP</span><b class="num">₹${c.cmp}</b></div>
-          <div><span>Target</span><b class="num up">₹${c.tgt}</b><i class="ipo-sub2 ${cls(up)}">${pct(up)}</i></div>
-          <div><span>Stop</span><b class="num down">₹${c.sl}</b></div>
-          <div><span>Conviction</span><b class="${ck}">${c.conv}</b></div>
-        </div>
-        <p class="call-why">${c.rationale}</p>
-        <div class="call-foot"><span class="call-hz">${icon('clock',12)} ${c.horizon}</span><button class="btn-ghost sm" data-callview="${ci}">View thesis</button></div>
-      </div>`;}).join('')}</div>`;
-    return secTabs([['calls','Calls',CALLS.length],['reports','Reports',REPORTS.length]],tab,'Research views')+chips+body;
-  },
-  wire(hub){
-    wireSecTabs(hub);
-    hub.querySelectorAll('[data-cf]').forEach(b=>b.onclick=()=>{setTs('cf',b.dataset.cf);refreshTool();});
-    hub.querySelectorAll('[data-callview]').forEach(b=>b.onclick=()=>callThesis(CALLS[+b.dataset.callview]));
-    hub.querySelectorAll('[data-repopen]').forEach(b=>{const open=()=>reportOpen(REPORTS[+b.dataset.repopen]);b.onclick=open;b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}};});
-  }
-},
-
-};
-
-/* ---- small format helpers for tools ---- */
-function monthName(){return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][new Date().getMonth()];}
-function ordinal(n){const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
-
-/* ---- MF list (re-renders in place so the search box keeps focus) ---- */
-function mfFiltered(){const f=ts('fmFilter','All'),q=ts('fmQuery','').trim().toLowerCase();
-  return FUNDS.filter(fn=>(f==='All'||fn.grp===f)&&(!q||fn.name.toLowerCase().includes(q)||fn.cat.toLowerCase().includes(q)));}
-function mfListHTML(){
-  const list=mfFiltered();
-  if(!list.length) return secEmpty('search','No funds found','Try a different category or search term.');
-  return `<div class="mf-head"><span class="mf-hn">Fund</span><span>1Y</span><span>3Y</span><span>5Y</span><span></span></div>
-    <div class="mf-list">${list.map(fn=>{const fi=FUNDS.indexOf(fn);
-    return `<div class="mf-card">
-      <div class="mf-fn"><b>${fn.name}${fn.held?' <i class="held-tag">Holding</i>':''}</b><span class="mf-cat">${fn.cat} · ${stars(fn.rating)} · NAV ₹${fn.nav}</span></div>
-      <div class="mf-ret"><b class="num up">${fn.r1}%</b></div>
-      <div class="mf-ret"><b class="num up">${fn.r3}%</b></div>
-      <div class="mf-ret"><b class="num up">${fn.r5}%</b></div>
-      <div class="mf-inv"><button class="btn-primary sm" data-mfbuy="${fi}">Invest</button></div>
-    </div>`;}).join('')}</div>`;
-}
-function mfRefreshList(hub){const c=hub.querySelector('#fmList');if(c){c.innerHTML=mfListHTML();mfBindInvest(hub);}}
-function mfBindInvest(hub){hub.querySelectorAll('[data-mfbuy]').forEach(b=>b.onclick=()=>mfInvest(FUNDS[+b.dataset.mfbuy]));}
-
-/* ============================================================
-   TOOL FLOWS (modals): all reuse the accessible flowModal
-   ============================================================ */
-function ipoApply(ipo){
-  let lots=1; const price=ipo.band[1];
-  const calc=()=>{const sh=lots*ipo.lot;return {sh,amt:sh*price};};
-  flowModal({title:'Apply, '+ipo.co, confirm:'Confirm application',
-    body:`<div class="flow-top"><div><b>${ipo.co}</b><span class="flow-sub">${ipo.type} IPO · cut-off ₹${price}</span></div><span class="badge ${ipo.type==='SME'?'b-warn':'b-up'}">${ipo.type}</span></div>
-      <div class="flow-field"><label id="lotsLbl">Lots <i>(1 lot = ${ipo.lot} shares)</i></label>
-        <div class="stepper" role="group" aria-labelledby="lotsLbl">
-          <button class="step-btn" type="button" data-step="-1" aria-label="Decrease lots">${icon('minus',14)}</button>
-          <b class="step-val num" id="lotsVal" aria-live="polite">${lots}</b>
-          <button class="step-btn" type="button" data-step="1" aria-label="Increase lots">${icon('plus',14)}</button>
-        </div></div>
-      <div class="flow-rows">
-        <div><span>Shares</span><b class="num" id="ipoSh">${calc().sh}</b></div>
-        <div><span>Cut-off price</span><b class="num">₹${price}</b></div>
-        <div><span>Amount blocked</span><b class="num" id="ipoAmt">${inr(calc().amt)}</b></div>
-      </div>
-      <div class="flow-field"><label for="upiId">UPI ID for ASBA mandate</label><input class="flow-input" id="upiId" type="text" value="sumit@okhdfc" autocomplete="off" spellcheck="false"></div>
-      <p class="flow-note">${icon('shield',13)}<span>Funds stay in your bank, blocked via a UPI mandate until allotment. Cancel anytime before ${ipo.close}.</span></p>`,
-    wire(body){
-      const upd=()=>{const c=calc();body.querySelector('#lotsVal').textContent=lots;body.querySelector('#ipoSh').textContent=c.sh;body.querySelector('#ipoAmt').textContent=inr(c.amt);
-        body.querySelector('[data-step="-1"]').disabled=lots<=1;body.querySelector('[data-step="1"]').disabled=lots>=5;};
-      body.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{lots=Math.max(1,Math.min(5,lots+(+b.dataset.step)));upd();});
-      const upi=body.querySelector('#upiId'); upi.oninput=()=>clearFlowError(body,upi); upd();
-    },
-    onConfirm(body){const upi=body.querySelector('#upiId').value.trim();
-      if(!/^[\w.\-]+@[\w.\-]+$/.test(upi)){flowError(body,'#upiId','Enter a valid UPI ID (e.g. name@bank).');return false;}
-      ipo.applied=true; ipo.appliedLots=lots; refreshTool();
-      quickToast('Application submitted, '+ipo.co, lots+' lot(s) · '+inr(calc().amt)+' blocked via UPI mandate.');}
-  });
-}
-
-function algoDeploy(a){
-  if(!a.wired){ quickToast('Not deployable yet', `${a.name} has no live engine, backtest/validate it first.`); return; }
-  const isCrypto=CRYPTO_ONLY||(state.algo&&state.algo.market==='crypto');
-  flowModal({title:'Deploy in Paper, '+a.name, confirm:'Deploy in Paper',
-    body:`<div class="flow-top"><div><b>${esc(a.name)}</b><span class="flow-sub">${esc(a.cat)} · ${esc(a.risk)}</span></div><span class="badge ${a.risk==='Aggressive'?'b-warn':a.risk==='Conservative'?'b-up':'b-neu'}">${esc(a.risk)}</span></div>
-      <div class="flow-rows">
-        <div><span>Best regime</span><b class="num">${esc(a.bestRegime||'-')}</b></div>
-        <div><span>Validation</span><b class="num ${a.vstatus==='validated'?'up':''}">${a.vstatus==='validated'?'Validated':'Candidate'}</b></div>
-      </div>
-      <p class="flow-note">${icon('shield',13)}<span><b>Risk-free.</b> Paper deploy runs this strategy on <b>${isCrypto?'live Binance data':'live Kite data'} with simulated fills</b>: no real orders, no money at risk. Your bot harness starts trading it; closed-trade P&amp;L builds toward the Go-Live gate (≥${BOT.nudgeMin||10} profitable trades). You can Pause or Stop anytime.</span></p>`,
-    onConfirm(){ setStrategyState(a.id,'paper','Deployed, '+a.name); }
-  });
-}
-// BUG FIX (2026-09-09): this used to look bid up in ALGOS (assets/app.js:1706 / loadBotData) -
-// the OPERATOR's own catalog, replaced wholesale by whatever /api/strategies returns. On the
-// crypto path that shared payload falls back to a static seed file, which happens to
-// reuse the same short ids ("macross", "bollinger" - real indicator names, not unique to crypto).
-// Deploy/Stop on a crypto card could open a completely different (India) strategy's dialog.
-// CRYPTO_STRATEGIES is the crypto Library's own real catalog (name/cat/risk/pair, keyed by the
-// same bid used to deploy) - look strategies up there instead, and only fall back to the shared
-// catalog for this bid's CURRENT run state via the already-correct, per-user cryptoMonitor data.
-function cryptoLibDeploy(bid){
-  const c=CRYPTO_STRATEGIES.find(x=>x.bid===bid);
-  if(!c){ quickToast('Engine loading','Wait for the strategy catalog to load from the API.'); return; }
-  if(!c.wired){ quickToast('Not deployable yet', `${c.name} has no live engine on the cloud worker yet, backtest/validate it first.`); return; }
-  const m=((CRYPTOMON.data&&CRYPTOMON.data.strategies)||[]).find(x=>x.id===bid);
-  if(!CRYPTOMON.loaded&&!CRYPTOMON.busy) loadCryptoMonitor();
-  const a={ id:bid, name:c.name, cat:c.cat+' · '+c.pair, risk:c.risk, wired:true,
-            bestRegime:null, vstatus:'validated', sub:(m&&m.deployed)?'paper':null };
-  if(a.sub==='paper') lcStop(a);
-  else algoDeploy(a);
+function lcMsg(s){
+  return s==='paper'?'Live data, simulated fills, no real money. Building forward evidence.'
+    : s==='paused'?'Paused, no new entries; open paper positions are kept.'
+    : (s===null||s==='off')?'Stopped, open paper positions square off next cycle; nothing else trades it.'
+    : 'Updated.';
 }
 async function setStrategyState(id, stateVal, title){
   try{
@@ -2105,21 +1391,24 @@ async function setStrategyState(id, stateVal, title){
     }
     if(r&&r.locked){ quickToast('Live locked '+'🔒', r.reason||'Arm ALLOW_LIVE on the bot machine to go live.'); }
     else { quickToast(title||'Updated', lcMsg(stateVal)); }
-    // BUG FIX (2026-09-09): loadBotData() alone refreshes ALGOS (the shared, unscoped catalog the
-    // Library card no longer reads for its own state - see cryptoStratCard). Without also
-    // refreshing this user's own CRYPTOMON snapshot here, Stop showed a success toast and the card
-    // still read the pre-stop state until the next unrelated poll.
-    const isCrypto=CRYPTO_ONLY||(state.algo&&state.algo.market==='crypto');
-    await Promise.all([loadBotData(), isCrypto?loadCryptoMonitor():Promise.resolve()]);
+    // refresh both the shared catalog and this user's own crypto monitor snapshot, so a Stop/Deploy
+    // toast is never followed by a card that still shows the pre-action state until the next poll.
+    await Promise.all([loadBotData(), loadCryptoMonitor()]);
     if(typeof renderAlgo==='function') renderAlgo();
     return r;
   }catch(e){ quickToast('Action failed','Is the bot API running on :8756?'); }
 }
-function lcMsg(s){
-  return s==='paper'?'Live data, simulated fills, no real money. Building forward evidence.'
-    : s==='paused'?'Paused, no new entries; open paper positions are kept.'
-    : (s===null||s==='off')?'Stopped, open paper positions square off next cycle; nothing else trades it.'
-    : 'Updated.';
+function algoDeploy(a){
+  if(!a.wired){ quickToast('Not deployable yet', `${a.name} has no live engine, backtest/validate it first.`); return; }
+  flowModal({title:'Deploy in Paper, '+a.name, confirm:'Deploy in Paper',
+    body:`<div class="flow-top"><div><b>${esc(a.name)}</b><span class="flow-sub">${esc(a.cat)} · ${esc(a.risk)}</span></div><span class="badge ${a.risk==='Aggressive'?'b-warn':a.risk==='Conservative'?'b-up':'b-neu'}">${esc(a.risk)}</span></div>
+      <div class="flow-rows">
+        <div><span>Best regime</span><b class="num">${esc(a.bestRegime||'-')}</b></div>
+        <div><span>Validation</span><b class="num ${a.vstatus==='validated'?'up':''}">${a.vstatus==='validated'?'Validated':'Candidate'}</b></div>
+      </div>
+      <p class="flow-note">${icon('shield',13)}<span><b>Risk-free.</b> Paper deploy runs this strategy on <b>live Binance data with simulated fills</b>: no real orders, no money at risk. Your bot harness starts trading it; closed-trade P&amp;L builds toward the Go-Live gate (≥${BOT.nudgeMin||10} profitable trades). You can Pause or Stop anytime.</span></p>`,
+    onConfirm(){ setStrategyState(a.id,'paper','Deployed, '+a.name); }
+  });
 }
 function lcStop(a){
   const flatten=a.sub==='live';
@@ -2129,198 +1418,20 @@ function lcStop(a){
       : `Stops paper-trading <b>${esc(a.name)}</b>. Any open paper positions are squared off next cycle. You can redeploy anytime.`}</span></p>`,
     onConfirm(){ setStrategyState(a.id,'off','Stopped, '+a.name); }});
 }
-
-function basketInvest(b){
-  let amt=b.minInv; const w=Math.round(100/b.stocks.length);
-  flowModal({title:b.name, confirm:'Invest '+inr(b.minInv),
-    body:`<div class="flow-top"><div><b>${b.name}</b><span class="flow-sub">${b.theme} · ${b.stocks.length} stocks · 1Y ${pct(b.ret1y)}</span></div><span class="vol-chip ${b.vol==='High'?'b-warn':b.vol==='Low'?'b-up':'b-neu'}">${b.vol} vol</span></div>
-      <div class="bsk-const">${b.stocks.map(s=>{const x=bySym(s);return `<div class="bc-row"><span class="t-sym">${s}<i class="bc-nm">${x?x.name:''}</i></span><span class="bc-w num">${w}%</span><span class="num">₹${x?x.ltp.toLocaleString('en-IN'):'-'}</span></div>`;}).join('')}</div>
-      <div class="flow-field"><label for="bskAmt">Amount to invest</label><input class="flow-input num" id="bskAmt" type="number" inputmode="numeric" value="${b.minInv}" min="${b.minInv}" step="500"></div>
-      <p class="flow-note">${icon('sprout',13)}<span>We’ll buy all ${b.stocks.length} stocks in the shown weights. Minimum ${inr(b.minInv)}.</span></p>`,
-    focus:'#bskAmt',
-    wire(body){const ai=body.querySelector('#bskAmt');ai.oninput=()=>{clearFlowError(body,ai);const v=Math.round(+ai.value||0);const cf=$('modalConfirm');cf.textContent='Invest '+inr(v>=b.minInv?v:b.minInv);};},
-    onConfirm(body){const v=Math.round(+body.querySelector('#bskAmt').value||0);
-      if(v<b.minInv){flowError(body,'#bskAmt','Minimum investment is '+inr(b.minInv)+'.');return false;}
-      b.invested=true; refreshTool();
-      quickToast('Basket purchased, '+b.name, inr(v)+' across '+b.stocks.length+' stocks.');}
-  });
+function cryptoLibDeploy(bid){
+  const c=CRYPTO_STRATEGIES.find(x=>x.bid===bid);
+  if(!c){ quickToast('Engine loading','Wait for the strategy catalog to load from the API.'); return; }
+  if(!c.wired){ quickToast('Not deployable yet', `${c.name} has no live engine on the cloud worker yet, backtest/validate it first.`); return; }
+  const m=((CRYPTOMON.data&&CRYPTOMON.data.strategies)||[]).find(x=>x.id===bid);
+  if(!CRYPTOMON.loaded&&!CRYPTOMON.busy) loadCryptoMonitor();
+  const a={ id:bid, name:c.name, cat:c.cat+' · '+c.pair, risk:c.risk, wired:true,
+            bestRegime:null, vstatus:'validated', sub:(m&&m.deployed)?'paper':null };
+  if(a.sub==='paper') lcStop(a);
+  else algoDeploy(a);
 }
-
-function mfInvest(fn){
-  let mode='lumpsum';
-  const render=()=>`<div class="flow-top"><div><b>${fn.name}</b><span class="flow-sub">${fn.cat} · ${stars(fn.rating)} · NAV ₹${fn.nav}</span></div></div>
-    <div class="seg flow-seg" role="tablist" aria-label="Investment type">
-      <button class="seg-btn${mode==='lumpsum'?' on':''}" role="tab" aria-selected="${mode==='lumpsum'}" data-mfmode="lumpsum">One-time</button>
-      <button class="seg-btn${mode==='sip'?' on':''}" role="tab" aria-selected="${mode==='sip'}" data-mfmode="sip">Monthly SIP</button>
-    </div>
-    <div class="flow-field"><label for="mfAmt">${mode==='sip'?'Monthly amount':'Amount'}</label><input class="flow-input num" id="mfAmt" type="number" inputmode="numeric" value="${mode==='sip'?5000:25000}" min="${mode==='sip'?500:5000}" step="500"></div>
-    <div class="flow-rows"><div><span>1Y return</span><b class="num up">${fn.r1}%</b></div><div><span>3Y return</span><b class="num up">${fn.r3}%</b></div>${mode==='sip'?`<div><span>Annual outlay</span><b class="num" id="mfYr">${inr(5000*12)}</b></div>`:''}</div>
-    <p class="flow-note">${icon('sprout',13)}<span>Direct plan, zero commission. ${mode==='sip'?'Pause or stop your SIP anytime.':'Units allotted at the next NAV.'}</span></p>`;
-  const open=()=>flowModal({title:'Invest, '+fn.cat, confirm:mode==='sip'?'Start SIP':'Confirm investment', body:render(), focus:'#mfAmt',
-    wire(body){
-      body.querySelectorAll('[data-mfmode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mfmode;flowModalReplace(open);});
-      const ai=body.querySelector('#mfAmt'); ai.oninput=()=>{clearFlowError(body,ai);const yr=body.querySelector('#mfYr');if(yr)yr.textContent=inr((+ai.value||0)*12);};
-    },
-    onConfirm(body){const min=mode==='sip'?500:5000,v=Math.round(+body.querySelector('#mfAmt').value||0);
-      if(v<min){flowError(body,'#mfAmt','Minimum is '+inr(min)+'.');return false;}
-      quickToast(mode==='sip'?'SIP started, '+fn.name:'Investment placed, '+fn.name, (mode==='sip'?inr(v)+'/month':inr(v))+' · direct plan.');}
-  });
-  open();
-}
-/* re-open the modal in place (for segmented toggles inside a flow) without flashing the scrim */
-function flowModalReplace(openFn){ openFn(); }
-
-function sipForm(existing){
-  const editing=!!existing;
-  const draft=existing?{...existing}:{sym:'RELIANCE',amt:2000,freq:'Monthly',day:5};
-  flowModal({title:editing?'Edit SIP, '+draft.sym:'New stock SIP', confirm:editing?'Save changes':'Start SIP',
-    body:`<div class="flow-field"><label for="sipSym">Stock</label>
-        <select class="flow-input" id="sipSym" ${editing?'disabled':''}>${SYMS.map(s=>`<option value="${s.sym}" ${s.sym===draft.sym?'selected':''}>${s.sym} · ${s.name}</option>`).join('')}</select></div>
-      <div class="flow-2col">
-        <div class="flow-field"><label for="sipAmt">Amount</label><input class="flow-input num" id="sipAmt" type="number" inputmode="numeric" value="${draft.amt}" min="500" step="500"></div>
-        <div class="flow-field"><label for="sipFreq">Frequency</label><select class="flow-input" id="sipFreq">${['Weekly','Fortnightly','Monthly'].map(f=>`<option ${f===draft.freq?'selected':''}>${f}</option>`).join('')}</select></div>
-      </div>
-      <div class="flow-field" id="sipDayWrap"><label for="sipDay">Debit day of month</label><input class="flow-input num" id="sipDay" type="number" inputmode="numeric" value="${typeof draft.day==='number'?draft.day:5}" min="1" max="28"></div>
-      <p class="flow-note">${icon('repeat',13)}<span>Auto-invests on the chosen schedule. Minimum ₹500. Pause or stop anytime.</span></p>`,
-    focus:editing?'#sipAmt':'#sipSym',
-    wire(body){const ai=body.querySelector('#sipAmt');ai.oninput=()=>clearFlowError(body,ai);
-      const fr=body.querySelector('#sipFreq'),dw=body.querySelector('#sipDayWrap');
-      const sync=()=>{dw.style.display=fr.value==='Weekly'?'none':'';};fr.onchange=sync;sync();},
-    onConfirm(body){const amt=Math.round(+body.querySelector('#sipAmt').value||0);
-      if(amt<500){flowError(body,'#sipAmt','Minimum SIP amount is ₹500.');return false;}
-      const sym=body.querySelector('#sipSym').value, freq=body.querySelector('#sipFreq').value, day=freq==='Weekly'?1:Math.max(1,Math.min(28,+body.querySelector('#sipDay').value||5));
-      if(editing){Object.assign(existing,{amt,freq,day});quickToast('SIP updated, '+sym, inr(amt)+' · '+freq+'.');}
-      else{STOCK_SIPS.push({id:++SIP_ID,sym,amt,freq,day,status:'active'});quickToast('SIP started, '+sym, inr(amt)+' · '+freq+'.');}
-      refreshTool();}
-  });
-}
-function sipDelete(s){
-  flowModal({title:'Delete SIP?', confirm:'Delete', danger:true,
-    body:`<p class="flow-confirm">Stop and remove your <b>${s.sym}</b> SIP of <b>${inr(s.amt)}</b> (${s.freq})? This can’t be undone.</p>`,
-    onConfirm(){STOCK_SIPS=STOCK_SIPS.filter(x=>x.id!==s.id);refreshTool();quickToast('SIP deleted, '+s.sym,'The recurring investment has been removed.');}
-  });
-}
-
-function callThesis(c){
-  const up=((c.tgt-c.cmp)/c.cmp*100);
-  flowModal({title:c.sym+'-'+c.action+' idea', confirm:'Got it',
-    body:`<div class="flow-top"><div><b>${c.sym}</b><span class="flow-sub">${symName(c.sym)} · ${c.horizon}</span></div><span class="badge ${c.action==='Buy'?'b-up':c.action==='Sell'?'b-down':'b-neu'}">${c.action}</span></div>
-      <div class="flow-rows">
-        <div><span>CMP</span><b class="num">₹${c.cmp}</b></div>
-        <div><span>Target</span><b class="num up">₹${c.tgt} <i class="${cls(up)}">(${pct(up)})</i></b></div>
-        <div><span>Stop-loss</span><b class="num down">₹${c.sl}</b></div>
-        <div><span>Conviction</span><b>${c.conv}</b></div>
-      </div>
-      <p class="flow-thesis">${c.rationale}</p>
-      <p class="flow-note">${icon('alert',13)}<span>Research view from IB Research. Not personalised advice, size positions to your own risk.</span></p>`
-  });
-}
-function reportOpen(r){
-  flowModal({title:r.title, confirm:'Download PDF',
-    body:`<div class="flow-top"><div><b>${r.title}</b><span class="flow-sub">${r.tag} · ${r.date} · ${r.pages} pages</span></div><span class="rep-ic">${icon('search',16)}</span></div>
-      <p class="flow-thesis">A deep-dive covering the demand outlook, key risks, valuation and our preferred picks in the ${r.tag.toLowerCase()} space. Full charts and tables in the PDF.</p>
-      <p class="flow-note">${icon('shield',13)}<span>For information only. Read the disclaimers on the final page.</span></p>`,
-    onConfirm(){quickToast('Downloading, '+r.title, r.pages+'-page PDF saved to your reports.');}
-  });
-}
-
-/* ============================================================
-   TRADING MODE: Layout presets + Derivatives Desk
-   Mirrors investHub: a center-pane takeover driven by state.layout.
-   ============================================================ */
-const UNDERLYINGS=[
-  {sym:'NIFTY',     label:'NIFTY 50',   spot:23450, step:50,  lot:50},
-  {sym:'BANKNIFTY', label:'BANK NIFTY', spot:51200, step:100, lot:15},
-  {sym:'RELIANCE',  label:'Reliance',   spot:2945,  step:20,  lot:250},
-];
-const EXPIRIES=[{d:'26 Jun',days:4,tag:'Weekly'},{d:'03 Jul',days:11,tag:'Weekly'},{d:'31 Jul',days:39,tag:'Monthly'}];
-const dseed=x=>{const s=Math.sin(x*12.9898)*43758.5453;return s-Math.floor(s);}; // deterministic 0..1
-const oiFmt=n=>{n=Math.round(Math.abs(n));return n>=100000?(n/100000).toFixed(1)+'L':n>=1000?(n/1000).toFixed(0)+'K':String(n);};
-
-/* ===== Option chain: 100% REAL from Kite (/api/chain). No synthetic chain: when the
-   token is down the desk shows an honest "connect Kite" state, mirroring the live chart. ===== */
-function chainKey(uIdx,eIdx){ return (UNDERLYINGS[uIdx]||UNDERLYINGS[0]).sym+'|'+(eIdx||0); }
-function ensureChain(uIdx,eIdx){
-  if(!BOT.live) return;
-  const key=chainKey(uIdx,eIdx), rec=BOT.chains[key];
-  if(rec && (rec.loading || Date.now()-rec.t < 15000)) return;   // fresh or already in-flight
-  BOT.chains[key]={p:rec&&rec.p,err:null,loading:true,t:rec?rec.t:0};
-  const u=(UNDERLYINGS[uIdx]||UNDERLYINGS[0]).sym;
-  fetch(`${BOT_API}/api/chain?underlying=${encodeURIComponent(u)}&expiry=${eIdx||0}`).then(r=>r.json()).then(p=>{
-    BOT.chains[key]={p:(p&&p.real)?p:null, err:(p&&!p.real)?p.error:null, loading:false, t:Date.now()};
-    if(p&&p.real&&Array.isArray(p.expiries)&&p.expiries.length) BOT.chainExp[u]=p.expiries;
-    if(typeof isCenterTakeover==='function' && isCenterTakeover()) renderDeskView();
-    if(typeof renderWidgetStack==='function') renderWidgetStack();
-  }).catch(()=>{ BOT.chains[key]={p:null,err:'fetch failed',loading:false,t:Date.now()}; });
-}
-function chainRec(uIdx,eIdx){ return BOT.live ? BOT.chains[chainKey(uIdx,eIdx)] : null; }
-function chainLoading(uIdx,eIdx){ const r=chainRec(uIdx,eIdx); return !!(r&&r.loading&&!r.p); }
-/* Adapt the real /api/chain payload into the row shape the desk/widgets consume.
-   Returns null when there's no live chain yet → callers render an honest empty state. */
-function buildChain(uIdx,eIdx){
-  const rec=chainRec(uIdx,eIdx); if(!(rec&&rec.p)) return null;
-  const base=UNDERLYINGS[uIdx]||UNDERLYINGS[0], p=rec.p, el=p.expiryLabel||{d:'-',days:p.days,tag:''};
-  const u={sym:p.underlying,label:base.label,spot:p.spot,step:p.step,lot:p.lot};
-  const rows=p.rows.map(R=>({K:R.K,iv:R.iv,callLtp:R.callLtp,putLtp:R.putLtp,callOI:R.callOI,putOI:R.putOI,
-    callVol:R.callVol,putVol:R.putVol,callChg:null,putChg:null,atm:!!R.atm})); // OI-day-change not in the live quote → honest "-"
-  return {u,e:{d:el.d,days:el.days,tag:el.tag},atm:p.atm,rows,live:true,asOf:p.asOf};
-}
-function expiriesFor(uIdx){ const s=(UNDERLYINGS[uIdx]||UNDERLYINGS[0]).sym, r=BOT.live&&BOT.chainExp[s]; return (r&&r.length)?r:EXPIRIES; }
-function cvChainOff(){ return `<div class="cvch-off">${icon('shield',13)}<span>${BOT.live?'Loading live chain…':'Connect Kite for live option data'}</span></div>`; }
-const num1=(x,d)=>x==null?'-':(+x).toFixed(d==null?1:d);            // null-safe LTP/IV
-const oiTxt=x=>x==null?'-':oiFmt(x);                                 // null-safe OI
-function maxPain(c){let best=c.atm,bv=Infinity;c.rows.forEach(R=>{const S=R.K;let pain=0;c.rows.forEach(o=>{pain+=(o.callOI||0)*Math.max(0,S-o.K)+(o.putOI||0)*Math.max(0,o.K-S);});if(pain<bv){bv=pain;best=S;}});return best;}
-function pcr(c){const cs=c.rows.reduce((a,r)=>a+(r.callOI||0),0),ps=c.rows.reduce((a,r)=>a+(r.putOI||0),0);return cs?ps/cs:0;}
-function srLevels(c){let sup=c.rows[0],res=c.rows[0];c.rows.forEach(r=>{if((r.putOI||0)>(sup.putOI||0))sup=r;if((r.callOI||0)>(res.callOI||0))res=r;});return {support:sup.K,resist:res.K};}
-
-function legPayoff(l,P){const intr=l.type==='CE'?Math.max(0,P-l.K):Math.max(0,l.K-P);return (l.side==='B'?1:-1)*(intr-l.ltp)*l.lot*l.qty;}
-function stratPayoff(legs,P){return legs.reduce((a,l)=>a+legPayoff(l,P),0);}
-function stratStats(legs,u){
-  const lo=u.spot*0.82,hi=u.spot*1.18,N=140,xs=[];let maxP=-Infinity,minP=Infinity,prevY=null,prevX=null,bes=[];
-  for(let i=0;i<=N;i++){const P=lo+(hi-lo)*i/N,y=stratPayoff(legs,P);xs.push({P,y});if(y>maxP)maxP=y;if(y<minP)minP=y;
-    if(prevY!=null&&((prevY<0)!==(y<0))){const t=(0-prevY)/(y-prevY);bes.push(prevX+(P-prevX)*t);}prevY=y;prevX=P;}
-  const netPrem=legs.reduce((a,l)=>a+(l.side==='B'?-1:1)*l.ltp*l.lot*l.qty,0);
-  const rS=xs[N].y-xs[N-1].y,lS=xs[0].y-xs[1].y,tiny=Math.abs(maxP-minP)*0.01+1;
-  const maxPUnlimited=(rS>tiny&&xs[N].y>=maxP-tiny)||(lS>tiny&&xs[0].y>=maxP-tiny);
-  const maxLUnlimited=(rS<-tiny&&xs[N].y<=minP+tiny)||(lS<-tiny&&xs[0].y<=minP+tiny);
-  return {xs,maxP,minP,bes,netPrem,maxPUnlimited,maxLUnlimited};
-}
-function mkLeg(c,type,side,off){
-  const ai=c.rows.findIndex(r=>r.atm), px=r=>type==='CE'?r.callLtp:r.putLtp;
-  let idx=Math.max(0,Math.min(c.rows.length-1,ai+off));
-  if(px(c.rows[idx])==null){ // nearest strike with a real live quote (skip illiquid far wings)
-    for(let d=1;d<c.rows.length;d++){const a=idx-d,b=idx+d;
-      if(a>=0&&px(c.rows[a])!=null){idx=a;break;} if(b<c.rows.length&&px(c.rows[b])!=null){idx=b;break;}}}
-  const r=c.rows[idx]; return {type,side,K:r.K,ltp:Math.round((px(r)||0)*100)/100,lot:c.u.lot,qty:1};}
-const STRAT_PRESETS=[
-  {key:'longcall', name:'Long Call',        build:c=>[mkLeg(c,'CE','B',0)]},
-  {key:'longput',  name:'Long Put',         build:c=>[mkLeg(c,'PE','B',0)]},
-  {key:'straddle', name:'Long Straddle',    build:c=>[mkLeg(c,'CE','B',0),mkLeg(c,'PE','B',0)]},
-  {key:'strangle', name:'Long Strangle',    build:c=>[mkLeg(c,'CE','B',2),mkLeg(c,'PE','B',-2)]},
-  {key:'bullcall', name:'Bull Call Spread', build:c=>[mkLeg(c,'CE','B',0),mkLeg(c,'CE','S',2)]},
-  {key:'bearput',  name:'Bear Put Spread',  build:c=>[mkLeg(c,'PE','B',0),mkLeg(c,'PE','S',-2)]},
-  {key:'condor',   name:'Iron Condor',      build:c=>[mkLeg(c,'PE','S',-2),mkLeg(c,'PE','B',-4),mkLeg(c,'CE','S',2),mkLeg(c,'CE','B',4)]},
-];
-
-/* ---- layout system: 5 preset workspaces + unlimited user-built named layouts ---- */
-const PRESET_LAYOUTS=[['originals','Originals','grip'],['charts','Charts','trendUp'],['watchlist','Watchlist','star'],['options','Option Analyser','scale'],['futures','Future Analyser','bolt']];
-const PRESET_DESC={originals:'Chart + tabs (default)',charts:'Maximised chart',watchlist:'Wide watchlist + chart',options:'Option chain · OI · strategy',futures:'Futures buildup desk'};
-// "Quick layouts": fixed-pane terminals (instant, opinionated). `panes` drives the hover wireframe; `suggest` ties to today's regime.
-const QUICK_LAYOUTS=[
-  {key:'originals',name:'Originals',      tag:'Balanced terminal',  accent:'#10b981', icon:'layout',  desc:'Watchlist, chart & orders side by side', panes:['rail','chart','panel'], suggest:'neutral'},
-  {key:'charts',   name:'Charts',         tag:'Chart-first',        accent:'#3b82f6', icon:'trendUp', desc:'Maximised chart for focused analysis',   panes:['chart']},
-  {key:'watchlist',name:'Watchlist',      tag:'Scan & track',       accent:'#0ea5e9', icon:'star',    desc:'Wide watchlist beside your chart',       panes:['wrail','chart']},
-  {key:'options',  name:'Option Analyser',tag:'Derivatives desk',   accent:'#8b5cf6', icon:'scale',   desc:'Chain, OI & strategy builder',           panes:['deskchain'], suggest:'bear'},
-  {key:'futures',  name:'Future Analyser',tag:'Futures desk',       accent:'#f59e0b', icon:'bolt',    desc:'Futures buildup & basis tracker',        panes:['deskfut']},
-];
-// pane type → relative width + skeleton, for the quick-layout pane schematic
-const PWIRE={rail:{f:0.8,s:'quotes'},wrail:{f:1.5,s:'quotes'},chart:{f:2.2,s:'candles'},panel:{f:1.1,s:'list'},deskchain:{f:2,s:'chain'},deskfut:{f:2,s:'candles'}};
-let _lid=0;
 const newLayoutId=()=>'L'+Date.now().toString(36)+(_lid++);
 function customLayouts(){ if(!Array.isArray(state.customLayouts))state.customLayouts=[]; return state.customLayouts; }
 function activeCustom(){ const a=customLayouts(); let cl=a.find(l=>l.id===state.activeCustom); if(!cl){cl=a[0]||null; state.activeCustom=cl?cl.id:null;} return cl; }
-/* P3 data model: a custom layout holds named TABS, each with its own cards + sync groups.
-   Old single-`cards` layouts are migrated to one "Main" tab the first time they're touched. */
 function newTabId(){ return 't'+Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-3); }
 function tabsOf(cl){ if(!cl) return [];
   if(!Array.isArray(cl.tabs)){ cl.tabs=[{id:newTabId(),name:'Main',cards:Array.isArray(cl.cards)?cl.cards:[],sync:{A:0,B:1}}]; cl.activeTab=cl.tabs[0].id; }
@@ -2331,623 +1442,21 @@ function tabsOf(cl){ if(!cl) return [];
   return cl.tabs;
 }
 function activeTab(){ const cl=activeCustom(); if(!cl) return null; const ts=tabsOf(cl); return ts.find(t=>t.id===cl.activeTab)||ts[0]; }
-function activeCanvas(){ const t=activeTab(); return t?t.cards:[]; }
-function layoutCardCount(L){ return tabsOf(L).reduce((s,t)=>s+t.cards.length,0); }
-function currentLayoutName(){ if(state.layout==='build'){const cl=activeCustom();return cl?cl.name:'New workspace';} const p=PRESET_LAYOUTS.find(x=>x[0]===state.layout); return p?p[1]:'Originals'; }
 const isDesk=()=>state.persona==='trader'&&(state.layout==='options'||state.layout==='futures');
 const isCenterTakeover=()=>state.persona==='trader'&&['options','futures','build'].indexOf(state.layout)>=0;
-
-function renderDeskBar(){
-  // workspaces now live in the persistent bottom bar, clear the legacy top slot
-  const top=$('wsSwitch'); if(top){ top.innerHTML=''; closeLayoutMenu(); }
-  renderWsBar();
-}
-const PRESET_ICON={originals:'grip',charts:'trendUp',watchlist:'star',options:'scale',futures:'bolt'};
-// persistent bottom bar: persona-aware: trader → workspaces, investor → Invest & Trade tools.
-function renderWsBar(){
-  const bar=$('wsBar'); if(!bar) return;
-  if(state.persona==='trader'){ bar.hidden=false; document.body.classList.add('has-wsbar'); renderWsBarTrader(bar); }
-  else if(state.persona==='investor'){ bar.hidden=false; document.body.classList.add('has-wsbar'); renderWsBarInvestor(bar); }
-  else { bar.hidden=true; document.body.classList.remove('has-wsbar'); }
-}
-// investor bottom bar: Overview + every Invest & Trade tool as a tab (state.investSection drives active)
-function renderWsBarInvestor(bar){
-  const cur=state.investSection;
-  const home=`<button class="wsb-tab${!cur?' on':''}" data-invtool="" aria-current="${!cur}" title="Portfolio overview">${icon('pie',13)}<span>Overview</span></button>`;
-  const tools=INVEST_TOOLS.map(t=>{const on=cur===t.key;
-    return `<button class="wsb-tab${on?' on':''}" data-invtool="${t.key}" aria-current="${on}" title="${esc(t.label)}">${icon(t.icon,13)}<span>${esc(t.label)}</span>${t.tag?`<i class="wsb-tag">${esc(t.tag)}</i>`:''}</button>`;}).join('');
-  bar.innerHTML=`<span class="wsb-lead">${icon('sprout',13)} Invest &amp; Trade</span>
-    <div class="wsb-scroll" role="tablist" aria-label="Invest and trade tools">${home}<span class="wsb-div" aria-hidden="true"></span>${tools}</div>
-    <button class="wsb-new" data-invaddfund title="Add funds">${icon('wallet',14)}<span>Add Funds</span></button>`;
-  bar.querySelectorAll('[data-invtool]').forEach(b=>b.onclick=()=>{const k=b.dataset.invtool; k?enterTool(k):exitTool();});
-  const af=bar.querySelector('[data-invaddfund]'); if(af)af.onclick=()=>fundsAction('add');
-  const active=bar.querySelector('.wsb-tab.on'); if(active)active.scrollIntoView({inline:'nearest',block:'nearest'});
-}
-// trader bottom bar: preset terminals + your custom workspaces as tabs, with a New action.
-// Per-workspace TABS (Main / Tab 2 …) stay nested at the top of the canvas, so the hierarchy reads clearly.
-function renderWsBarTrader(bar){
-  const cl=customLayouts();
-  const presets=PRESET_LAYOUTS.map(([k,l])=>{const on=state.layout===k;
-    return `<button class="wsb-tab${on?' on':''}" data-wsbpreset="${k}" aria-current="${on}" title="${esc(PRESET_DESC[k]||l)}">${icon(PRESET_ICON[k]||'layout',13)}<span>${esc(l)}</span></button>`;}).join('');
-  const customs=cl.map(L=>{const on=state.layout==='build'&&state.activeCustom===L.id, n=layoutCardCount(L);
-    return `<span class="wsb-wrap${on?' on':''}"><button class="wsb-tab${on?' on':''}" data-wsbcustom="${L.id}" aria-current="${on}" title="${esc(L.name)} · ${n} widget${n===1?'':'s'}">${icon('layout',13)}<span>${esc(L.name)}</span></button>${on?`<button class="wsb-mini" data-wsbrename="${L.id}" aria-label="Rename ${esc(L.name)}" title="Rename workspace">${icon('sliders',11)}</button><button class="wsb-mini danger" data-wsbdelete="${L.id}" aria-label="Delete ${esc(L.name)}" title="Delete workspace">${icon('close',11)}</button>`:''}</span>`;}).join('');
-  bar.innerHTML=`<span class="wsb-lead">${icon('grip',13)} Workspaces</span>
-    <div class="wsb-scroll" role="tablist" aria-label="Switch workspace">
-      ${presets}${cl.length?'<span class="wsb-div" aria-hidden="true"></span>':''}${customs}
-    </div>
-    <button class="wsb-new" data-wsbnew title="Create a new workspace">${icon('plus',14)}<span>New</span></button>`;
-  bar.querySelectorAll('[data-wsbpreset]').forEach(b=>b.onclick=()=>pickQuickLayout(b.dataset.wsbpreset));
-  bar.querySelectorAll('[data-wsbcustom]').forEach(b=>b.onclick=()=>selectCustom(b.dataset.wsbcustom));
-  bar.querySelectorAll('[data-wsbrename]').forEach(b=>b.onclick=e=>{e.stopPropagation();renameLayout(b.dataset.wsbrename);});
-  bar.querySelectorAll('[data-wsbdelete]').forEach(b=>b.onclick=e=>{e.stopPropagation();deleteLayout(b.dataset.wsbdelete);});
-  const nb=bar.querySelector('[data-wsbnew]'); if(nb)nb.onclick=layoutGallery;
-  const active=bar.querySelector('.wsb-tab.on'); if(active)active.scrollIntoView({inline:'nearest',block:'nearest'});
-}
-function toggleLayoutMenu(){ const m=$('layoutMenu'); if(!m)return; m.hidden?openLayoutMenu():closeLayoutMenu(); }
-function openLayoutMenu(){
-  const m=$('layoutMenu'),btn=$('layoutBtn'); if(!m)return;
-  const item=(active,label,sub,attrs,extra)=>`<button class="lm-item${active?' on':''}" role="menuitem" ${attrs}><span class="lm-check">${active?icon('check',13):''}</span><span class="lm-tb"><b>${esc(label)}</b>${sub?`<span>${esc(sub)}</span>`:''}</span>${extra||''}</button>`;
-  let html=`<div class="lm-sec">Preset workspaces</div>`;
-  html+=PRESET_LAYOUTS.map(([k,l])=>item(state.layout===k,l,PRESET_DESC[k],`data-lmpreset="${k}"`)).join('');
-  html+=`<div class="lm-sec">My workspaces</div>`;
-  const cl=customLayouts();
-  html+= cl.length? cl.map(L=>item(state.layout==='build'&&state.activeCustom===L.id,L.name,layoutCardCount(L)+' widget'+(layoutCardCount(L)===1?'':'s'),`data-lmcustom="${L.id}"`,
-      `<span class="lm-acts"><span class="lm-mini" role="button" tabindex="0" data-lmrename="${L.id}" aria-label="Rename ${esc(L.name)}">${icon('sliders',12)}</span><span class="lm-mini danger" role="button" tabindex="0" data-lmdelete="${L.id}" aria-label="Delete ${esc(L.name)}">${icon('close',12)}</span></span>`)).join('')
-    : `<div class="lm-empty">No saved workspaces yet, build your own.</div>`;
-  html+=`<button class="lm-new" role="menuitem" data-lmnew>${icon('plus',14)} New workspace…</button>`;
-  m.innerHTML=html; m.hidden=false; if(btn)btn.setAttribute('aria-expanded','true');
-  m.querySelectorAll('[data-lmpreset]').forEach(b=>b.onclick=()=>{selectPreset(b.dataset.lmpreset);});
-  m.querySelectorAll('[data-lmcustom]').forEach(b=>b.onclick=e=>{ if(e.target.closest('[data-lmrename],[data-lmdelete]'))return; selectCustom(b.dataset.lmcustom);});
-  m.querySelectorAll('[data-lmrename]').forEach(b=>{const f=e=>{e.stopPropagation();e.preventDefault();renameLayout(b.dataset.lmrename);};b.onclick=f;b.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')f(e);};});
-  m.querySelectorAll('[data-lmdelete]').forEach(b=>{const f=e=>{e.stopPropagation();e.preventDefault();deleteLayout(b.dataset.lmdelete);};b.onclick=f;b.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')f(e);};});
-  const nb=m.querySelector('[data-lmnew]'); if(nb)nb.onclick=()=>{closeLayoutMenu();layoutGallery();};
-  setTimeout(()=>{document.addEventListener('click',layoutMenuOutside,true);document.addEventListener('keydown',layoutMenuEsc);},0);
-  const first=m.querySelector('.lm-item'); if(first)setTimeout(()=>first.focus(),20);
-}
-function closeLayoutMenu(){ const m=$('layoutMenu'),btn=$('layoutBtn'); if(m){m.hidden=true;} if(btn)btn.setAttribute('aria-expanded','false');
-  document.removeEventListener('click',layoutMenuOutside,true); document.removeEventListener('keydown',layoutMenuEsc); }
-function layoutMenuOutside(e){ if(!e.target.closest('#layoutMenu,#layoutBtn')) closeLayoutMenu(); }
-function layoutMenuEsc(e){ if(e.key==='Escape'){closeLayoutMenu();const b=$('layoutBtn');if(b)b.focus();} }
-
-function setLayout(l,customId){
-  state.layout=l; document.documentElement.dataset.layout=l;
-  if(l==='build'){ if(customId!==undefined) state.activeCustom=customId; }
-  else if(l==='options') state.desk.view='chain'; else if(l==='futures') state.desk.view='futures';
-  renderDeskBar(); renderDeskView(); saveState();
-  announce(currentLayoutName()+' workspace');
-  if(window.TPChart&&TPChart.resize){TPChart.resize();setTimeout(()=>TPChart.resize(),90);}
-}
-function selectPreset(k){ closeLayoutMenu(); setLayout(k); }
-function selectCustom(id){ closeLayoutMenu(); setLayout('build',id); }
-function createLayout(tplKey){
-  const tpl=(tplKey&&tplKey!=='scratch')?CANVAS_TEMPLATES.find(t=>t.key===tplKey):null;
-  const base=tpl?tpl.name:'My Layout', a=customLayouts();
-  let name=base, n=2; while(a.some(L=>L.name===name)){name=base+' '+n;n++;}
-  const id=newLayoutId(), tid=newTabId();
-  a.push({id,name,activeTab:tid,tabs:[{id:tid,name:'Main',cards:tpl?tpl.cards.map(c=>({key:c.key,span:c.span})):[],sync:{A:0,B:1}}]});
-  setLayout('build',id);
-  quickToast('Workspace created, '+name, tpl?tpl.cards.length+' widgets added · customise freely':'Empty canvas, add the widgets you want.');
-}
-function renameLayout(id){
-  const L=customLayouts().find(x=>x.id===id); if(!L)return;
-  flowModal({title:'Rename workspace', confirm:'Save',
-    body:`<div class="flow-field"><label for="lrName">Workspace name</label><input class="flow-input" id="lrName" type="text" value="${esc(L.name)}" maxlength="40" autocomplete="off"></div>`,
-    focus:'#lrName',
-    onConfirm(body){const v=body.querySelector('#lrName').value.trim(); if(!v){flowError(body,'#lrName','Enter a name.');return false;} L.name=v.slice(0,40); saveState(); renderDeskBar(); renderDeskView(); announce('Workspace renamed to '+L.name);}
-  });
-}
-function deleteLayout(id){
-  const L=customLayouts().find(x=>x.id===id); if(!L)return;
-  flowModal({title:'Delete workspace?', confirm:'Delete', danger:true,
-    body:`<p class="flow-confirm">Delete <b>${esc(L.name)}</b> and its ${layoutCardCount(L)} widget${layoutCardCount(L)===1?'':'s'}? This can’t be undone.</p>`,
-    onConfirm(){ state.customLayouts=customLayouts().filter(x=>x.id!==id);
-      if(state.activeCustom===id){ const nx=state.customLayouts[0]; if(nx){state.activeCustom=nx.id;setLayout('build',nx.id);} else {state.activeCustom=null;setLayout('originals');} }
-      else { renderDeskBar(); saveState(); }
-      quickToast('Workspace deleted, '+L.name,'Removed from your workspaces.'); }
-  });
-}
-// Shared Dext-style setup tiles, used by the modal gallery, the empty-canvas state, and the empty-workspace landing.
-// `attr` is the data-attribute the caller wires (e.g. 'lgtpl' to create, 'cvtpl' to seed the current tab).
-// Each widget maps to a tiny skeleton so the hover preview reads as a real layout, not abstract boxes.
-const SKEL_TYPE={cv_watch:'quotes',movers:'quotes',heatmap:'heat',cv_chain:'chain',oi:'bars',depth:'depth',cv_fut:'candles',pnl:'pnl',margin:'pnl',cv_pcr:'meter'};
-function skelByType(type){
-  switch(type){
-    case 'heat':    return `<span class="sk sk-heat"><i class="g"></i><i class="r"></i><i class="g"></i><i class="r"></i><i class="n"></i><i class="g"></i></span>`;
-    case 'chain':   return `<span class="sk sk-chain"><i class="hd"></i><i><b class="g"></b><b class="r"></b></i><i class="atm"><b class="g"></b><b class="r"></b></i><i><b class="g"></b><b class="r"></b></i></span>`;
-    case 'bars':    return `<span class="sk sk-bars"><i class="g"></i><i class="r"></i><i class="g"></i><i class="r"></i><i class="g"></i></span>`;
-    case 'candles': return `<span class="sk sk-cndl"><i class="g"></i><i class="r"></i><i class="g"></i><i class="g"></i><i class="r"></i><i class="g"></i></span>`;
-    case 'depth':   return `<span class="sk sk-depth"><i class="g"></i><i class="g"></i><i class="r"></i><i class="r"></i></span>`;
-    case 'meter':   return `<span class="sk sk-meter"><i></i></span>`;
-    case 'pnl':     return `<span class="sk sk-pnl"><b class="fig"></b><span class="spk"><i></i><i></i><i></i><i></i></span></span>`;
-    case 'list':    return `<span class="sk sk-list"><i class="tabs"><b></b><b class="on"></b><b></b></i><i class="ln"></i><i class="ln"></i><i class="ln"></i></span>`; // orders / scanner tabs
-    default:        return `<span class="sk sk-q"><i><b></b><b class="up"></b></i><i><b></b><b class="dn"></b></i><i><b></b><b class="up"></b></i></span>`; // quotes
-  }
-}
-function miniSkel(key){ return skelByType(SKEL_TYPE[key]||'quotes'); }
-function miniLayout(cards){ return `<span class="lg-wire">${cards.map(c=>{const sp=c.span===3?3:c.span===2?2:1;return `<span class="lg-wcell wsp-${sp}">${miniSkel(c.key)}</span>`;}).join('')}</span>`; }
-function setupTiles(attr){
-  const suggested={bull:'scalper',neutral:'originals',bear:'optdesk'}[state.displayed]||'originals';
-  return CANVAS_TEMPLATES.map(t=>`<button class="lg-tile${t.key===suggested?' is-suggested':''}" data-${attr}="${t.key}" style="--lg-accent:${t.accent}">
-      ${t.key===suggested?`<span class="lg-flag">${icon('check',11)} Suggested</span>`:''}
-      <span class="lg-stage"><span class="lg-stage-ic">${icon(t.icon,30)}</span><span class="lg-stage-wire">${miniLayout(t.cards)}</span></span>
-      <span class="lg-meta"><b>${esc(t.name)}</b><i class="lg-tag">${esc(t.tag)}</i><span class="lg-desc">${esc(t.desc)}</span></span>
-      <span class="lg-cta"><span class="lg-n">${icon('layout',10)} ${t.cards.length} widgets</span><em class="lg-go">Use this →</em></span>
-    </button>`).join('');
-}
-// distinct, full-width "do it yourself" path, surfaced upfront, separate from the ready-made tiles
-function scratchBar(attr){
-  return `<button class="lg-scratch-bar" data-${attr}="scratch">
-      <span class="lsb-ic">${icon('plus',20)}</span>
-      <span class="lsb-tx"><b>Start from a blank canvas</b><span>Prefer to build it yourself? Open an empty canvas and drop in exactly the widgets you want.</span></span>
-      <em class="lsb-go">Start blank →</em>
-    </button>`;
-}
-// pane schematic for quick layouts, horizontal panes, each with a header dash + type skeleton
-function quickWire(panes){
-  return `<span class="lg-pwire">${panes.map(p=>{const d=PWIRE[p]||PWIRE.chart;
-    return `<span class="lg-pane" style="flex:${d.f}"><span class="lg-pane-hd"></span><span class="lg-pane-bd">${skelByType(d.s)}</span></span>`;}).join('')}</span>`;
-}
-function quickTiles(attr){
-  const suggested={bull:'bull',neutral:'neutral',bear:'bear'}[state.displayed]||'neutral';
-  return QUICK_LAYOUTS.map(t=>{const isSug=t.suggest===suggested;
-    return `<button class="lg-tile${isSug?' is-suggested':''}" data-${attr}="${t.key}" style="--lg-accent:${t.accent}">
-      ${isSug?`<span class="lg-flag">${icon('check',11)} Suggested</span>`:''}
-      <span class="lg-stage"><span class="lg-stage-ic">${icon(t.icon,30)}</span><span class="lg-stage-wire">${quickWire(t.panes)}</span></span>
-      <span class="lg-meta"><b>${esc(t.name)}</b><i class="lg-tag">${esc(t.tag)}</i><span class="lg-desc">${esc(t.desc)}</span></span>
-      <span class="lg-cta"><span class="lg-n">${icon('grip',10)} Fixed panes</span><em class="lg-go">Open →</em></span>
-    </button>`;}).join('');
-}
-// saved canvas workspaces shown as resumable tiles (grid wireframe from the active tab)
-function savedTiles(attr){
-  const cl=customLayouts(); if(!cl.length) return '';
-  return cl.map(L=>{const tab=tabsOf(L).find(t=>t.id===L.activeTab)||tabsOf(L)[0], cards=(tab&&tab.cards)||[];
-    return `<button class="lg-tile lg-saved" data-${attr}="${L.id}" style="--lg-accent:#64748b">
-      <span class="lg-stage"><span class="lg-stage-ic">${icon('layout',30)}</span><span class="lg-stage-wire">${cards.length?miniLayout(cards):`<span class="lg-wire lg-wire-empty">${icon('plus',16)}</span>`}</span></span>
-      <span class="lg-meta"><b>${esc(L.name)}</b><i class="lg-tag">Saved workspace</i><span class="lg-desc">Pick up where you left off${tabsOf(L).length>1?` · ${tabsOf(L).length} tabs`:''}</span></span>
-      <span class="lg-cta"><span class="lg-n">${icon('layout',10)} ${cards.length} widget${cards.length===1?'':'s'}</span><em class="lg-go">Open →</em></span>
-    </button>`;}).join('');
-}
-// pick a fixed-pane terminal: bring any closed core panes back, then switch layout
-function pickQuickLayout(k){
-  if(state.cards){ Object.keys(CARD_EL).forEach(key=>{if(state.cards[key]==='hidden')state.cards[key]='normal';}); }
-  setLayout(k); applyCardStates(); applyPaneWidths(); saveState();
-}
-function layoutGallery(){
-  closeLayoutMenu();
-  const regimeWord={bull:'bullish',neutral:'range-bound',bear:'bearish'}[state.displayed]||'live';
-  flowModal({title:'Build your workspace', hideConfirm:true,
-    body:`<p class="cv-pick-note">Tuned to today's <b>${regimeWord}</b> market, <span class="lg-hint">${icon('check',10)} marks our pick</span>. Hover any setup to preview its layout.</p>
-      ${scratchBar('lgtpl')}
-      ${lgSection('Quick layouts','Ready-to-trade terminals, fixed panes, one click.',quickTiles('lgquick'))}
-      ${lgSection('Build your own','Pick a template to customise, or reopen a saved workspace.',savedTiles('lgsaved')+setupTiles('lgtpl'))}`,
-    wire(body){
-      body.querySelectorAll('[data-lgquick]').forEach(b=>b.onclick=()=>{closeModal();pickQuickLayout(b.dataset.lgquick);});
-      body.querySelectorAll('[data-lgsaved]').forEach(b=>b.onclick=()=>{closeModal();selectCustom(b.dataset.lgsaved);});
-      body.querySelectorAll('[data-lgtpl]').forEach(b=>b.onclick=()=>{closeModal();createLayout(b.dataset.lgtpl);});
-    }
-  });
-}
-/* full-canvas "pick a setup" landing shown when the workspace is emptied (all core panes closed) */
-let wsRestoreDismissed=false; // session opt-out: hide the restore prompt until the next pane is closed
-function restorePanels(){ if(!state.cards)state.cards={}; Object.keys(CARD_EL).forEach(k=>{if(state.cards[k]==='hidden')state.cards[k]='normal';}); applyCardStates(); applyPaneWidths(); saveState(); announce('Panels restored'); }
-function dismissRestore(){ wsRestoreDismissed=true; updateWorkspaceEmpty(); announce('Restore dismissed, closed panels stay closed'); }
-function lgSection(title,sub,inner){ return `<section class="lg-section"><div class="lg-sec-head"><b>${title}</b><span>${sub}</span></div><div class="lg-grid lg-inline">${inner}</div></section>`; }
-function renderWsEmpty(el){
-  const hidden=Object.keys(CARD_EL).filter(k=>state.cards&&state.cards[k]==='hidden').length;
-  const showRestore=hidden && !wsRestoreDismissed;
-  el.innerHTML=`<div class="ws-empty-inner">
-    <div class="ws-empty-head"><b>Build your workspace</b><span>Pick a ready-made terminal, design your own, or bring back a panel you closed, hover any setup to preview its layout.</span>
-      ${showRestore?`<span class="ws-restore-row">
-        <button class="btn-primary sm ws-restore" data-wsrestore>${icon('layout',13)} Restore ${hidden} closed panel${hidden>1?'s':''}</button>
-        <button class="btn-ghost sm ws-dismiss" data-wsdismiss aria-label="Dismiss, keep panels closed">${icon('close',12)} Dismiss</button>
-      </span>`:''}
-    </div>
-    ${scratchBar('wstpl')}
-    ${lgSection('Quick layouts','Ready-to-trade terminals, fixed panes, one click.',quickTiles('wsquick'))}
-    ${lgSection('Build your own','Pick a template to customise, or reopen a saved workspace.',savedTiles('wssaved')+setupTiles('wstpl'))}
-  </div>`;
-  el.querySelectorAll('[data-wsquick]').forEach(b=>b.onclick=()=>pickQuickLayout(b.dataset.wsquick));
-  el.querySelectorAll('[data-wssaved]').forEach(b=>b.onclick=()=>selectCustom(b.dataset.wssaved));
-  el.querySelectorAll('[data-wstpl]').forEach(b=>b.onclick=()=>createLayout(b.dataset.wstpl));
-  const rs=el.querySelector('[data-wsrestore]'); if(rs)rs.onclick=restorePanels;
-  const ds=el.querySelector('[data-wsdismiss]'); if(ds)ds.onclick=dismissRestore;
-}
-function updateWorkspaceEmpty(){
-  const el=$('wsEmpty'); if(!el) return;
-  const c=state.cards||{};
-  const empty = state.persona==='trader' && !isCenterTakeover() && c.chart==='hidden' && c.panel==='hidden';
-  if(empty){ renderWsEmpty(el); el.hidden=false; } else el.hidden=true;
-  const term=document.querySelector('.terminal'); if(term) term.classList.toggle('ws-landing',empty);
-}
 function renderDeskView(){
   const v=$('deskView'); if(!v) return;
-  updateWorkspaceEmpty();
-  if(!isCenterTakeover()){ v.innerHTML=''; return; }
-  if(state.layout==='build'){ renderCanvasInto(v); return; }
-  const tabs=[['chain','Option Chain'],['oi','OI Analysis'],['strategy','Strategy'],['futures','Futures']], view=state.desk.view||'chain';
-  const head=`<div class="desk-head"><div class="desk-tabs" role="tablist" aria-label="Derivatives views">${tabs.map(([k,l])=>
-    `<button class="desk-tab${k===view?' on':''}" role="tab" aria-selected="${k===view}" data-deskview="${k}">${l}${k==='strategy'&&state.desk.legs.length?` <i class="desk-tn">${state.desk.legs.length}</i>`:''}</button>`).join('')}</div></div>`;
-  let body;
-  if(view==='futures') body=deskFutures();
-  else{
-    ensureChain(state.desk.under,state.desk.exp);
-    const c=buildChain(state.desk.under,state.desk.exp);
-    body=deskControls(c)+(!c?chainEmptyBody():(view==='chain'?deskChain(c):view==='oi'?deskOI(c):deskStrategy(c)));
-  }
-  v.innerHTML=`<div class="desk-wrap">${head}${body}</div>`;
-  v.querySelectorAll('[data-deskview]').forEach(b=>b.onclick=()=>{state.desk.view=b.dataset.deskview;renderDeskView();});
-  wireDeskControls(v);
-  if(view==='chain') wireChain(v);
-  if(view==='strategy') wireStrategy(v);
+  v.innerHTML='';
 }
-// `c` may be null (no live chain yet) → selectors stay visible, stats show a live/connect chip.
-function deskControls(c){
-  const exps=expiriesFor(state.desk.under), ei=Math.min(state.desk.exp,exps.length-1);
-  const sel=`<div class="dc-sel"><label class="dc-lab" for="dcUnder">Underlying</label>
-      <select id="dcUnder" class="dc-input">${UNDERLYINGS.map((u,i)=>`<option value="${i}" ${i===state.desk.under?'selected':''}>${u.label}</option>`).join('')}</select></div>
-    <div class="dc-sel"><label class="dc-lab" for="dcExp">Expiry</label>
-      <select id="dcExp" class="dc-input">${exps.map((e,i)=>`<option value="${i}" ${i===ei?'selected':''}>${e.d} · ${e.tag}</option>`).join('')}</select></div>`;
-  let stats;
-  if(c){ const mp=maxPain(c),p=pcr(c),sr=srLevels(c);
-    stats=`<div class="dc-stats">
-      <div class="dc-stat"><span>Spot</span><b class="num">${Math.round(c.u.spot).toLocaleString('en-IN')}</b></div>
-      <div class="dc-stat"><span>PCR</span><b class="num ${p>=1?'up':'down'}">${p.toFixed(2)}</b></div>
-      <div class="dc-stat"><span>Max Pain</span><b class="num">${mp.toLocaleString('en-IN')}</b></div>
-      <div class="dc-stat"><span>Support</span><b class="num up">${sr.support.toLocaleString('en-IN')}</b></div>
-      <div class="dc-stat"><span>Resistance</span><b class="num down">${sr.resist.toLocaleString('en-IN')}</b></div></div>
-      <span class="dc-live" title="Live option chain from Kite${c.asOf?' · '+new Date(c.asOf).toLocaleTimeString('en-IN'):''}"><span class="live-dot live"></span>Live</span>`;
-  } else {
-    stats=`<div class="dc-stats"></div><span class="dc-live off">${icon('shield',12)}${BOT.live?'Loading…':'Kite offline'}</span>`;
-  }
-  return `<div class="desk-ctrls">${sel}${stats}</div>`;
-}
-// Honest empty state for the chain views when no live chain is loaded (mirrors the chart).
-function chainEmptyBody(){
-  const u=(UNDERLYINGS[state.desk.under]||UNDERLYINGS[0]).label;
-  return `<div class="desk-scroll">${BOT.live
-    ? secEmpty('scale','Loading live chain…',`Fetching ${u} strikes, open interest, LTP and IV from Kite.`)
-    : secEmpty('shield','Live option chain unavailable',`Connect your Kite session (run <b>python3 login.py</b> in the bot folder) to load the real ${u} option chain, strikes, live OI, LTP and computed IV. No synthetic data is shown.`)}</div>`;
-}
-function wireDeskControls(v){
-  const u=v.querySelector('#dcUnder'); if(u)u.onchange=()=>{state.desk.under=+u.value;state.desk.exp=0;state.desk.legs=[];renderDeskView();};
-  const e=v.querySelector('#dcExp'); if(e)e.onchange=()=>{state.desk.exp=+e.value;renderDeskView();};
-}
-function deskChain(c){
-  const cellLtp=(t,K,v,itm)=>v==null?`<td class="ch-ltp"><span class="ch-na">—</span></td>`
-    :`<td class="ch-ltp ${itm?'itm':''}"><button class="ch-add" data-leg="${t}:${K}" aria-label="Add buy ${K} ${t==='CE'?'Call':'Put'} at ${num1(v)}">${num1(v)}</button></td>`;
-  const rows=c.rows.map(R=>{const callItm=R.K<c.u.spot,putItm=R.K>c.u.spot;
-    return `<tr class="${R.atm?'ch-atm':''}">
-      <td class="num ch-oi">${oiTxt(R.callOI)}</td>
-      <td class="num ch-na">—</td>
-      ${cellLtp('CE',R.K,R.callLtp,callItm)}
-      <td class="ch-k num ${R.atm?'atm':''}">${R.K}<i class="ch-iv">${R.iv==null?'-':num1(R.iv)}</i></td>
-      ${cellLtp('PE',R.K,R.putLtp,putItm)}
-      <td class="num ch-na">—</td>
-      <td class="num ch-oi">${oiTxt(R.putOI)}</td></tr>`;}).join('');
-  return `<div class="desk-scroll"><table class="ch-tbl">
-    <thead><tr><th colspan="3" class="ch-grp call">CALLS</th><th class="ch-grp k">Strike · IV</th><th colspan="3" class="ch-grp put">PUTS</th></tr>
-    <tr class="ch-sub"><th>OI</th><th>OI Chg</th><th>LTP</th><th></th><th>LTP</th><th>OI Chg</th><th>OI</th></tr></thead>
-    <tbody>${rows}</tbody></table>
-    <p class="desk-hint">${icon('bolt',12)}<span>Live OI &amp; premiums from Kite${c.e&&c.e.d?' · '+c.e.d+' expiry':''}. Tap any premium to add it to your strategy. Green = ITM. ATM strike ${c.atm.toLocaleString('en-IN')} highlighted. (Intraday OI-change isn’t in the live quote, shown as —.)</span></p></div>`;
-}
-function wireChain(v){ v.querySelectorAll('[data-leg]').forEach(b=>b.onclick=()=>{const p=b.dataset.leg.split(':');addLeg(p[0],+p[1],'B');}); }
-function addLeg(type,K,side){
-  const c=buildChain(state.desk.under,state.desk.exp); if(!c) return;
-  const R=c.rows.find(r=>r.K===K); if(!R) return;
-  const raw=type==='CE'?R.callLtp:R.putLtp;
-  if(raw==null){ quickToast('No live quote','That strike isn’t trading right now, pick a nearer strike.'); return; }
-  const ltp=Math.round(raw*100)/100;
-  state.desk.legs.push({type,side:side||'B',K,ltp,lot:c.u.lot,qty:1});
-  const nm=(side==='S'?'Sell':'Buy')+' '+K+' '+(type==='CE'?'Call':'Put');
-  quickToast('Leg added, '+nm, '₹'+ltp.toFixed(1)+' × '+c.u.lot+' (1 lot) · open the Strategy tab');
-  renderDeskView(); announce(nm+' added to strategy, '+state.desk.legs.length+' legs');
-}
-function deskOI(c){
-  const maxOI=Math.max(...c.rows.map(r=>Math.max(r.callOI||0,r.putOI||0)))||1, mp=maxPain(c), sr=srLevels(c);
-  const rows=c.rows.map(R=>{const cw=(R.callOI||0)/maxOI*100,pw=(R.putOI||0)/maxOI*100;
-    const tag=R.K===sr.support?'<i class="oi-tag sup">Support</i>':R.K===sr.resist?'<i class="oi-tag res">Resist</i>':R.K===mp?'<i class="oi-tag mp">Max Pain</i>':'';
-    return `<div class="oi-row ${R.atm?'atm':''}">
-      <div class="oi-call"><span class="oi-v num">${oiTxt(R.callOI)}</span><span class="oi-bar call" style="width:${cw}%"></span></div>
-      <div class="oi-k num">${R.K}${tag}</div>
-      <div class="oi-put"><span class="oi-bar put" style="width:${pw}%"></span><span class="oi-v num">${oiTxt(R.putOI)}</span></div></div>`;}).join('');
-  return `<div class="desk-scroll"><div class="oi-legend"><span><i class="oi-dot call"></i>Call OI · resistance</span><span><i class="oi-dot put"></i>Put OI · support</span></div>
-    <div class="oi-chart">${rows}</div>
-    <p class="desk-hint">${icon('bolt',12)}<span>Highest put OI marks support, highest call OI marks resistance. Max-pain strike pulls price toward it at expiry.</span></p></div>`;
-}
-function deskStrategy(c){
-  const legs=state.desk.legs;
-  const presetBar=`<div class="strat-presets" role="group" aria-label="Strategy presets">${STRAT_PRESETS.map(p=>`<button class="strat-preset" data-preset="${p.key}">${p.name}</button>`).join('')}<button class="strat-preset clear" data-clearlegs ${legs.length?'':'disabled'}>${icon('close',12)} Clear</button></div>`;
-  if(!legs.length) return presetBar+secEmpty('scale','Build a strategy','Tap any premium in the Option Chain, or pick a ready-made strategy above, we’ll chart the payoff, max profit, max loss and breakevens.');
-  const st=stratStats(legs,c.u);
-  const legRows=legs.map((l,i)=>`<div class="leg-row">
-    <button class="leg-side ${l.side==='B'?'buy':'sell'}" data-legside="${i}" aria-label="${l.side==='B'?'Buy':'Sell'}, tap to flip side">${l.side==='B'?'BUY':'SELL'}</button>
-    <span class="leg-desc"><b class="num">${l.K}</b> <i class="leg-type ${l.type==='CE'?'ce':'pe'}">${l.type}</i></span>
-    <span class="leg-ltp num">₹${l.ltp.toFixed(1)}</span>
-    <div class="leg-qty"><button data-legqty="${i}:-1" aria-label="Decrease lots">${icon('minus',12)}</button><b class="num" aria-label="${l.qty} lots">${l.qty}</b><button data-legqty="${i}:1" aria-label="Increase lots">${icon('plus',12)}</button></div>
-    <button class="leg-x" data-legdel="${i}" aria-label="Remove ${l.K} ${l.type} leg">${icon('close',12)}</button></div>`).join('');
-  const net=st.netPrem>=0?{l:'Net credit',v:inr(st.netPrem),t:'up'}:{l:'Net debit',v:inr(-st.netPrem),t:'down'};
-  const mp=st.maxPUnlimited?'Unlimited':inr(Math.max(0,st.maxP));
-  const ml=st.maxLUnlimited?'Unlimited':inr(Math.abs(Math.min(0,st.minP)));
-  const be=st.bes.length?st.bes.map(b=>Math.round(b).toLocaleString('en-IN')).join(' / '):'-';
-  return `<div class="desk-scroll strat-wrap">${presetBar}
-    <div class="strat-grid">
-      <div class="strat-legs">${legRows}<button class="btn-primary block" data-stratexec>${icon('bolt',13)} Execute strategy</button></div>
-      <div class="strat-analysis">
-        <div class="strat-stats">
-          <div class="ss2"><span>${net.l}</span><b class="num ${net.t}">${net.v}</b></div>
-          <div class="ss2"><span>Max profit</span><b class="num up">${mp}</b></div>
-          <div class="ss2"><span>Max loss</span><b class="num down">${ml}</b></div>
-          <div class="ss2"><span>Breakeven</span><b class="num">${be}</b></div>
-        </div>
-        ${payoffSVG(st,c.u)}
-        <div class="pf-axis"><span>${Math.round(c.u.spot*0.82).toLocaleString('en-IN')}</span><span class="pf-spotlab">Spot ${c.u.spot.toLocaleString('en-IN')}</span><span>${Math.round(c.u.spot*1.18).toLocaleString('en-IN')}</span></div>
-        <p class="desk-hint">${st.maxLUnlimited?icon('alert',12)+'<span>Unlimited loss potential, naked option leg.</span>':icon('shield',12)+'<span>Defined-risk: maximum loss is capped at expiry.</span>'}</p>
-      </div></div></div>`;
-}
-function payoffSVG(st,u){
-  const W=560,H=150,padL=4,padR=4,padT=12,padB=14,xs=st.xs;
-  const xlo=xs[0].P,xhi=xs[xs.length-1].P,yr=Math.max(Math.abs(st.minP),Math.abs(st.maxP))||1;
-  const X=P=>padL+(P-xlo)/(xhi-xlo)*(W-padL-padR), Y=y=>padT+(1-(y+yr)/(2*yr))*(H-padT-padB);
-  let segs=[],cur=[],sign=null;
-  xs.forEach(pt=>{const s=pt.y>=0;if(sign===null)sign=s;if(s!==sign){segs.push({s:sign,pts:cur.slice()});cur=[cur[cur.length-1]];sign=s;}cur.push(pt);});
-  if(cur.length)segs.push({s:sign,pts:cur});
-  const polys=segs.map(seg=>`<polyline class="pf-line ${seg.s?'up':'down'}" points="${seg.pts.map(p=>X(p.P).toFixed(1)+','+Y(p.y).toFixed(1)).join(' ')}"/>`).join('');
-  const zeroY=Y(0).toFixed(1),spotX=X(u.spot).toFixed(1);
-  const be=st.bes.map(b=>`<circle class="pf-be" cx="${X(b).toFixed(1)}" cy="${zeroY}" r="3.4"/>`).join('');
-  return `<svg class="pf-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
-    <line class="pf-zero" x1="0" y1="${zeroY}" x2="${W}" y2="${zeroY}"/>
-    <line class="pf-spot" x1="${spotX}" y1="${padT}" x2="${spotX}" y2="${H-padB}"/>${polys}${be}</svg>`;
-}
-function wireStrategy(v){
-  v.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const c=buildChain(state.desk.under,state.desk.exp); if(!c)return; const p=STRAT_PRESETS.find(x=>x.key===b.dataset.preset);if(p){state.desk.legs=p.build(c);renderDeskView();announce(p.name+' loaded, '+state.desk.legs.length+' legs');}});
-  const cl=v.querySelector('[data-clearlegs]'); if(cl)cl.onclick=()=>{state.desk.legs=[];renderDeskView();announce('Strategy cleared');};
-  v.querySelectorAll('[data-legside]').forEach(b=>b.onclick=()=>{const l=state.desk.legs[+b.dataset.legside];l.side=l.side==='B'?'S':'B';renderDeskView();});
-  v.querySelectorAll('[data-legqty]').forEach(b=>b.onclick=()=>{const p=b.dataset.legqty.split(':'),l=state.desk.legs[+p[0]];l.qty=Math.max(1,Math.min(10,l.qty+(+p[1])));renderDeskView();});
-  v.querySelectorAll('[data-legdel]').forEach(b=>b.onclick=()=>{state.desk.legs.splice(+b.dataset.legdel,1);renderDeskView();announce('Leg removed');});
-  const ex=v.querySelector('[data-stratexec]'); if(ex)ex.onclick=execStrategy;
-}
-function execStrategy(){
-  const legs=state.desk.legs; if(!legs.length) return;
-  const c=buildChain(state.desk.under,state.desk.exp); if(!c) return;
-  const st=stratStats(legs,c.u);
-  const rows=legs.map(l=>`<div class="wg-row"><span class="leg-side sm ${l.side==='B'?'buy':'sell'}">${l.side==='B'?'BUY':'SELL'}</span><span class="wg-grow">${c.u.sym} ${l.K} ${l.type}</span><b class="num">${l.qty}×${l.lot}</b></div>`).join('');
-  const margin=Math.round(Math.abs(st.netPrem)*1.4+c.u.spot*c.u.lot*0.12);
-  flowModal({title:'Place strategy, '+c.u.sym, confirm:'Place '+legs.length+'-leg order',
-    body:`<div class="flow-top"><div><b>${c.u.label} · ${c.e.d}</b><span class="flow-sub">${legs.length}-leg options basket</span></div></div>
-      <div class="strat-confirm">${rows}</div>
-      <div class="flow-rows"><div><span>${st.netPrem>=0?'Net credit':'Net debit'}</span><b class="num">${inr(Math.abs(st.netPrem))}</b></div><div><span>Margin (est.)</span><b class="num">${inr(margin)}</b></div></div>
-      <p class="flow-note">${icon('shield',13)}<span><b>Paper basket (simulated)</b>: no real order is placed. ${st.maxLUnlimited?'⚠ Naked leg: unlimited risk if this were live.':'Defined-risk position.'}</span></p>`,
-    onConfirm(){quickToast('Paper basket, '+c.u.sym, legs.length+' legs · '+c.e.d+' · simulated, no real order placed.');state.desk.legs=[];renderDeskView();}
-  });
-}
-// REAL stock-futures buildup from Kite (/api/futures). No synthetic OI.
-function futStocks(){ return SYMS.filter(s=>isEq(s)).map(s=>s.sym).slice(0,12); }
-const buTone=b=>b==='Long Buildup'?'up':b==='Short Buildup'?'down':b==='Short Covering'?'up':'warn';
-function ensureFutures(){
-  if(!BOT.live) return;
-  const f=BOT.futures;
-  if(f && (f.loading || Date.now()-f.t < 30000)) return;
-  BOT.futures={...(f||{}),loading:true,t:f?f.t:0};
-  fetch(`${BOT_API}/api/futures?symbols=${encodeURIComponent(futStocks().join(','))}`).then(r=>r.json()).then(p=>{
-    BOT.futures={rows:(p&&p.real)?p.rows:null,err:(p&&!p.real)?p.error:null,loading:false,t:Date.now()};
-    if(typeof isCenterTakeover==='function'&&isCenterTakeover())renderDeskView();
-    if(typeof renderWidgetStack==='function')renderWidgetStack();
-  }).catch(()=>{BOT.futures={rows:null,loading:false,t:Date.now()};});
-}
-function deskFutures(){
-  ensureFutures();
-  const fr=BOT.live&&BOT.futures&&BOT.futures.rows;
-  if(!fr) return `<div class="desk-scroll">${BOT.live
-    ? secEmpty('bolt','Loading live futures…','Fetching stock-futures price, basis, OI &amp; buildup from Kite.')
-    : secEmpty('shield','Live futures unavailable','Connect Kite (run <b>python3 login.py</b>) for live stock-futures buildup, price, basis, OI &amp; long/short buildup from real OI change. No synthetic data is shown.')}</div>`;
-  const body=futStocks().map(sym=>{const R=fr[sym]; if(!R)return '';const b=R.basis;
-    return `<tr>
-      <td><span class="t-sym">${esc(sym)}</span></td>
-      <td class="num">${R.spot!=null?R.spot.toLocaleString('en-IN'):'-'}</td>
-      <td class="num">${R.futLtp!=null?R.futLtp.toLocaleString('en-IN'):'-'}</td>
-      <td class="num ${b==null?'':b>=0?'up':'down'}">${b==null?'-':(b>=0?'+':'−')+Math.abs(b).toFixed(1)}</td>
-      <td class="num">${R.oi!=null?oiFmt(R.oi):'-'}</td>
-      <td class="num ${R.oiChg==null?'':R.oiChg>=0?'up':'down'}">${R.oiChg==null?'-':(R.oiChg>=0?'+':'')+R.oiChg.toFixed(1)+'%'}</td>
-      <td>${R.buildup?`<span class="bu-chip ${buTone(R.buildup)}">${R.buildup}</span>`:'<span class="ch-na">—</span>'}</td></tr>`;}).join('');
-  return `<div class="desk-scroll"><table class="fut-tbl">
-    <thead><tr><th>Scrip</th><th>Spot</th><th>Futures</th><th>Basis</th><th>OI</th><th>OI Chg</th><th>Buildup</th></tr></thead>
-    <tbody>${body}</tbody></table>
-    <p class="desk-hint">${icon('bolt',12)}<span>Live from Kite · Buildup = price direction × OI-change (vs prior trading-day close OI). “—” where a contract has no OI history yet.</span></p></div>`;
-}
-
-/* ============================================================
-   BUILD-YOUR-OWN: custom widget canvas ("My Layout")
-   Users compose a personal grid of widget cards (add / drag-reorder /
-   resize span / remove). Persisted in state.canvas; starter templates seed it.
-   ============================================================ */
-/* lazily built (WIDGET_CATALOG is defined later in the file → avoid TDZ at load) */
-let _canvasCat=null;
-function canvasCatalog(){ if(_canvasCat) return _canvasCat; _canvasCat=WIDGET_CATALOG.trader.map(w=>({key:w.key,name:w.name,icon:w.icon,span:1,render:w.render})).concat(CANVAS_EXTRA); return _canvasCat; }
-const CANVAS_EXTRA=[
-  {key:'cv_watch',name:'Watchlist',icon:'star',span:1,render(){
-    return SYMS.slice(0,7).map(s=>`<div class="wg-row"><span class="t-sym">${s.sym}</span><span class="num">${s.ltp.toLocaleString('en-IN')}</span><span class="num ${cls(s.chg)}">${pct(s.chg)}</span></div>`).join('');}},
-  {key:'cv_chain',name:'Option Chain',icon:'scale',span:2,sym:true,render(uIdx){
-    ensureChain(uIdx||0,0); const c=buildChain(uIdx||0,0);
-    if(!c) return cvChainOff();
-    const ai=c.rows.findIndex(r=>r.atm),rows=c.rows.slice(Math.max(0,ai-3),ai+4);
-    return `<div class="cvch"><div class="cvch-row cvch-h"><span>Call LTP</span><b>Strike</b><span>Put LTP</span></div>${rows.map(R=>`<div class="cvch-row ${R.atm?'atm':''}"><span class="num up">${num1(R.callLtp,0)}</span><b class="num">${R.K}</b><span class="num down">${num1(R.putLtp,0)}</span></div>`).join('')}</div>`;}},
-  {key:'cv_pcr',name:'PCR & Max Pain',icon:'target',span:1,sym:true,render(uIdx){
-    ensureChain(uIdx||0,0); const c=buildChain(uIdx||0,0);
-    if(!c) return cvChainOff();
-    const p=pcr(c),mp=maxPain(c),sr=srLevels(c);
-    return `<div class="wg-row"><span>PCR</span><b class="num ${p>=1?'up':'down'}">${p.toFixed(2)}</b></div>
-      <div class="wg-row"><span>Max Pain</span><b class="num">${mp.toLocaleString('en-IN')}</b></div>
-      <div class="wg-row"><span>Support</span><b class="num up">${sr.support.toLocaleString('en-IN')}</b></div>
-      <div class="wg-row"><span>Resistance</span><b class="num down">${sr.resist.toLocaleString('en-IN')}</b></div>`;}},
-  {key:'cv_fut',name:'Futures Buildup',icon:'bolt',span:2,render(){
-    ensureFutures();
-    const fr=BOT.live&&BOT.futures&&BOT.futures.rows;
-    if(!fr) return `<div class="cvch-off">${icon('shield',13)}<span>${BOT.live?'Loading live futures…':'Connect Kite for live futures buildup'}</span></div>`;
-    return futStocks().slice(0,6).map(sym=>{const R=fr[sym]; if(!R)return '';
-      return `<div class="wg-row"><span class="t-sym wg-grow">${esc(sym)}</span>${R.oiChg!=null?`<span class="num ${R.oiChg>=0?'up':'down'}">${R.oiChg>=0?'+':''}${R.oiChg.toFixed(1)}%</span>`:'<span class="num ch-na">—</span>'}${R.buildup?`<span class="bu-chip ${buTone(R.buildup)}">${R.buildup}</span>`:'<span class="ch-na">—</span>'}</div>`;}).join('');}},
-];
-const canvasW=key=>canvasCatalog().find(w=>w.key===key);
-// Card spans are designed so every row sums to 3 columns, no holes in the real canvas or the hover preview.
-const CANVAS_TEMPLATES=[
-  {key:'originals', name:'Originals',      tag:'The all-rounder',     accent:'#10b981', icon:'layout', desc:'Watchlist, movers, option chain & P&L', cards:[{key:'cv_watch',span:1},{key:'movers',span:1},{key:'pnl',span:1},{key:'cv_chain',span:2},{key:'margin',span:1}]},
-  {key:'watchdriven',name:'Watchlist Driven',tag:'Spot movers first',  accent:'#3b82f6', icon:'star',   desc:'Watchlist-led with movers & heatmap',  cards:[{key:'cv_watch',span:2},{key:'movers',span:1},{key:'heatmap',span:3}]},
-  {key:'optdesk',  name:'Option Analyser', tag:'Derivatives & hedging',accent:'#8b5cf6', icon:'scale',  desc:'Chain, PCR / max-pain & open interest',  cards:[{key:'cv_chain',span:2},{key:'cv_pcr',span:1},{key:'oi',span:3}]},
-  {key:'futdesk',  name:'Future Analyser', tag:'Futures & basis',      accent:'#f59e0b', icon:'bolt',   desc:'Futures buildup, watchlist & margin',    cards:[{key:'cv_fut',span:3},{key:'cv_watch',span:2},{key:'margin',span:1}]},
-  {key:'scalper',  name:'Scalper',         tag:'Fast intraday',        accent:'#ef4444', icon:'trendUp',desc:'Movers, depth & live P&L for fast intraday',cards:[{key:'movers',span:1},{key:'depth',span:1},{key:'pnl',span:1},{key:'heatmap',span:3}]},
-];
-/* tab bar across the top of the canvas, switch / add / rename / delete named workspaces */
-function cvTabBar(cl){ const ts=tabsOf(cl);
-  const tabs=ts.map(t=>{ const on=t.id===cl.activeTab;
-    return `<div class="cv-tabwrap${on?' on':''}"><button class="cv-tab" data-cvtab="${t.id}" role="tab" aria-selected="${on}">${esc(t.name)}</button>${on?`<button class="cv-tabbtn" data-cvtabedit="${t.id}" aria-label="Rename tab ${esc(t.name)}" title="Rename tab">${icon('sliders',10)}</button>${ts.length>1?`<button class="cv-tabbtn" data-cvtabdel="${t.id}" aria-label="Delete tab ${esc(t.name)}" title="Delete tab">${icon('close',10)}</button>`:''}`:''}</div>`;}).join('');
-  return `<div class="cv-tabs" role="tablist" aria-label="Workspace tabs">${tabs}<button class="cv-tab-add" data-cvtabadd aria-label="New tab" title="New tab">${icon('plus',12)}</button></div>`;
-}
-function cvSwitchTab(id){ const cl=activeCustom(); if(!cl)return; const t=tabsOf(cl).find(x=>x.id===id); if(!t)return; cl.activeTab=id; saveState(); renderDeskView(); announce('Tab '+t.name); }
-function cvAddTab(){ const cl=activeCustom(); if(!cl)return; const ts=tabsOf(cl); if(ts.length>=8){quickToast('Tab limit reached','Up to 8 tabs per layout.');return;}
-  let n=ts.length+1,name='Tab '+n; while(ts.some(t=>t.name===name)){n++;name='Tab '+n;} const id=newTabId(); ts.push({id,name,cards:[],sync:{A:0,B:1}}); cl.activeTab=id; saveState(); renderDeskView(); announce('Added '+name); }
-function cvRenameTab(id){ const cl=activeCustom(); if(!cl)return; const t=tabsOf(cl).find(x=>x.id===id); if(!t)return;
-  flowModal({title:'Rename tab', confirm:'Save', focus:'#ctName',
-    body:`<div class="flow-field"><label for="ctName">Tab name</label><input class="flow-input" id="ctName" type="text" value="${esc(t.name)}" maxlength="24" autocomplete="off"></div>`,
-    onConfirm(body){const val=body.querySelector('#ctName').value.trim(); if(!val){flowError(body,'#ctName','Enter a name.');return false;} t.name=val.slice(0,24); saveState(); renderDeskView(); announce('Tab renamed to '+t.name);}});
-}
-function cvDeleteTab(id){ const cl=activeCustom(); if(!cl)return; const ts=tabsOf(cl); if(ts.length<=1)return; const t=ts.find(x=>x.id===id); if(!t)return;
-  flowModal({title:'Delete tab?', confirm:'Delete', danger:true,
-    body:`<p class="flow-confirm">Delete tab <b>${esc(t.name)}</b> and its ${t.cards.length} widget${t.cards.length===1?'':'s'}? This can’t be undone.</p>`,
-    onConfirm(){ cl.tabs=ts.filter(x=>x.id!==id); if(cl.activeTab===id)cl.activeTab=cl.tabs[0].id; saveState(); renderDeskView(); quickToast('Tab deleted, '+t.name,'Removed from this workspace.'); }});
-}
-function renderCanvasInto(v){
-  const cl=activeCustom();
-  if(!cl){ // build layout selected but no custom layouts exist → full-canvas setup picker
-    v.innerHTML=`<div class="desk-wrap"><div class="desk-scroll"><div class="ws-empty-inner">
-      <div class="ws-empty-head"><b>Build your workspace</b><span>Start from a blank canvas, or pick a template, you can rearrange everything later.</span></div>
-      ${scratchBar('lgtpl')}
-      ${lgSection('Build your own','Pick a template to customise.',setupTiles('lgtpl'))}</div></div></div>`;
-    v.querySelectorAll('[data-lgtpl]').forEach(b=>b.onclick=()=>createLayout(b.dataset.lgtpl)); return;
-  }
-  const tab=activeTab(), cards=tab?tab.cards:[];
-  const head=`<div class="desk-head cv-topbar">
-    <div class="cv-title"><b>${icon('layout',15)} ${esc(cl.name)}</b><span>${cards.length?cards.length+' widget'+(cards.length===1?'':'s')+' · '+esc(tab.name):'Empty tab'}</span></div>
-    <div class="cv-tools"><button class="btn-ghost sm" data-cvrename aria-label="Rename workspace">${icon('sliders',12)}</button>${cards.length?`<button class="btn-ghost sm" data-cvclear>${icon('close',12)} Clear</button>`:''}<button class="btn-primary sm" data-cvadd>${icon('plus',13)} Add widget</button></div>
-  </div>`;
-  let body;
-  if(!cards.length){
-    body=`<div class="desk-scroll"><div class="ws-empty-inner">
-      <div class="ws-empty-head"><b>Build out “${esc(tab.name)}”</b><span>Add widgets one by one, or seed this tab from a template, everything stays editable.</span></div>
-      <button class="lg-scratch-bar" data-cvadd>
-        <span class="lsb-ic">${icon('plus',20)}</span>
-        <span class="lsb-tx"><b>Add widgets manually</b><span>Open the widget picker and choose exactly what you want, one by one.</span></span>
-        <em class="lsb-go">Open picker →</em>
-      </button>
-      ${lgSection('Start from a template','Seed this tab instantly, then rearrange, resize & save.',setupTiles('cvtpl'))}
-    </div></div>`;
-  }else{
-    body=`<div class="desk-scroll"><div class="cv-grid">${cards.map((c,i)=>canvasCard(c,i,tab)).join('')}</div></div>`;
-  }
-  v.innerHTML=`<div class="desk-wrap">${head}${cvTabBar(cl)}${body}</div>`;
-  wireCanvas(v);
-}
-function canvasCard(c,i,tab){
-  const w=canvasW(c.key); if(!w) return '';
-  const span=c.span===3?3:c.span===2?2:1, isSym=!!w.sym, grp=(c.grp==='A'||c.grp==='B')?c.grp:null;
-  const uIdx=(isSym&&grp)?(tab.sync[grp]||0):0;
-  let grpCtl='', symSel='';
-  if(isSym){ const dot=g=>`<button class="cv-grp cv-grp-${g.toLowerCase()}${grp===g?' on':''}" data-cvgrp="${i}" data-grp="${g}" aria-pressed="${grp===g}" aria-label="Link ${w.name} to sync group ${g}" title="Sync group ${g}">${g}</button>`;
-    grpCtl=`<span class="cv-grps" role="group" aria-label="Sync group">${dot('A')}${dot('B')}</span>`;
-    if(grp) symSel=`<select class="cv-sym" data-cvsym="${i}" aria-label="${w.name} underlying (group ${grp})">${UNDERLYINGS.map((u,ui)=>`<option value="${ui}" ${ui===uIdx?'selected':''}>${u.sym}</option>`).join('')}</select>`;
-  }
-  return `<div class="cv-card span-${span}${grp?' grp-'+grp.toLowerCase():''}" data-cvi="${i}" draggable="true">
-    <div class="cv-head"><span class="cv-ic">${icon(w.icon,13)}</span><b>${w.name}</b>${symSel}${grpCtl}
-      <span class="cv-grip" title="Drag to reorder" aria-hidden="true">${icon('grip',13)}</span>
-      <button class="cv-span" data-cvspan="${i}" aria-label="Cycle width of ${w.name} (now ${span} of 3)" title="Width ${span}/3, click to change">${span}</button>
-      <button class="cv-x" data-cvremove="${i}" aria-label="Remove ${w.name}">${icon('close',12)}</button></div>
-    <div class="cv-body">${w.render(uIdx)}</div>
-    <span class="cv-resize" data-cvresize="${i}" aria-hidden="true" title="Drag to resize"></span></div>`;
-}
-function wireCanvas(v){
-  const cl=activeCustom(), tab=activeTab();
-  v.querySelectorAll('[data-cvadd]').forEach(b=>b.onclick=canvasPicker);
-  const rn=v.querySelector('[data-cvrename]'); if(rn)rn.onclick=()=>{if(cl)renameLayout(cl.id);};
-  const clr=v.querySelector('[data-cvclear]'); if(clr)clr.onclick=()=>{if(tab){tab.cards=[];saveState();renderDeskView();announce('Tab cleared');}};
-  v.querySelectorAll('[data-cvtpl]').forEach(b=>b.onclick=()=>{const t=CANVAS_TEMPLATES.find(x=>x.key===b.dataset.cvtpl);if(t&&tab){tab.cards=t.cards.map(c=>({key:c.key,span:c.span}));saveState();renderDeskView();announce(t.name+' template loaded, '+t.cards.length+' widgets');}});
-  // tabs
-  v.querySelectorAll('[data-cvtab]').forEach(b=>b.onclick=()=>cvSwitchTab(b.dataset.cvtab));
-  const ta=v.querySelector('[data-cvtabadd]'); if(ta)ta.onclick=cvAddTab;
-  v.querySelectorAll('[data-cvtabedit]').forEach(b=>b.onclick=e=>{e.stopPropagation();cvRenameTab(b.dataset.cvtabedit);});
-  v.querySelectorAll('[data-cvtabdel]').forEach(b=>b.onclick=e=>{e.stopPropagation();cvDeleteTab(b.dataset.cvtabdel);});
-  // span cycle (1→2→3→1) + remove
-  v.querySelectorAll('[data-cvspan]').forEach(b=>b.onclick=()=>{const i=+b.dataset.cvspan;if(tab&&tab.cards[i]){tab.cards[i].span=((tab.cards[i].span||1)%3)+1;saveState();renderDeskView();}});
-  v.querySelectorAll('[data-cvremove]').forEach(b=>b.onclick=()=>{const i=+b.dataset.cvremove;if(tab&&tab.cards[i]){const nm=(canvasW(tab.cards[i].key)||{}).name||'Widget';tab.cards.splice(i,1);saveState();renderDeskView();announce(nm+' removed');}});
-  // sync groups: toggle a card's group, and pick the group's underlying
-  v.querySelectorAll('[data-cvgrp]').forEach(b=>b.onclick=()=>{const i=+b.dataset.cvgrp,g=b.dataset.grp,card=tab&&tab.cards[i];if(card){card.grp=(card.grp===g)?undefined:g;saveState();renderDeskView();announce(card.grp?('Linked to sync group '+g):'Unlinked from sync group');}});
-  v.querySelectorAll('[data-cvsym]').forEach(sel=>sel.onchange=()=>{const i=+sel.dataset.cvsym,card=tab&&tab.cards[i];if(card&&card.grp){tab.sync[card.grp]=+sel.value;saveState();renderDeskView();announce('Sync group '+card.grp+' → '+UNDERLYINGS[+sel.value].sym);}});
-  // drag-reorder
-  v.querySelectorAll('.cv-card').forEach(card=>{
-    card.ondragstart=e=>{state.dragCv=+card.dataset.cvi;card.classList.add('cv-drag');e.dataTransfer.effectAllowed='move';};
-    card.ondragend=()=>{card.classList.remove('cv-drag');state.dragCv=null;};
-    card.ondragover=e=>{e.preventDefault();};
-    card.ondrop=e=>{e.preventDefault();const from=state.dragCv,to=+card.dataset.cvi;if(!tab||from==null||from===to)return;const m=tab.cards.splice(from,1)[0];tab.cards.splice(to,0,m);saveState();renderDeskView();};
-  });
-  // drag-resize: drag a card's right edge; snap span to the nearest 1/2/3 columns under the pointer
-  v.querySelectorAll('[data-cvresize]').forEach(h=>{ h.onpointerdown=e=>{ e.preventDefault();e.stopPropagation();
-    const i=+h.dataset.cvresize, card=h.closest('.cv-card'), grid=h.closest('.cv-grid'); if(!card||!grid||!tab||!tab.cards[i])return;
-    card.setAttribute('draggable','false'); card.classList.add('cv-resizing');
-    const cols=getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length||3;
-    const colW=grid.getBoundingClientRect().width/cols, left=card.getBoundingClientRect().left, grpCls=tab.cards[i].grp?(' grp-'+tab.cards[i].grp.toLowerCase()):'';
-    let span=tab.cards[i].span||1;
-    const move=ev=>{ const want=Math.max(1,Math.min(cols,Math.round((ev.clientX-left)/colW))); if(want!==span){ span=want; card.className='cv-card span-'+span+grpCls+' cv-resizing'; } };
-    const up=()=>{ document.removeEventListener('pointermove',move); document.removeEventListener('pointerup',up); tab.cards[i].span=span; saveState(); renderDeskView(); };
-    document.addEventListener('pointermove',move); document.addEventListener('pointerup',up);
-  };});
-}
-function canvasPicker(){
-  const drawItems=()=>{const have=new Set(activeCanvas().map(c=>c.key));
-    return canvasCatalog().map(w=>`<button class="cv-pick-item${have.has(w.key)?' on':''}" data-cvpick="${w.key}" aria-pressed="${have.has(w.key)}">
-      <span class="cv-pick-ic">${icon(w.icon,16)}</span><span class="cv-pick-tb"><b>${w.name}</b><span>${w.span===2?'Wide card':'Standard card'}</span></span>
-      <span class="cv-pick-add">${icon(have.has(w.key)?'check':'plus',14)}</span></button>`).join('');};
-  flowModal({title:'Add widgets', hideConfirm:true,
-    body:`<p class="cv-pick-note">Tap to add or remove. Build your workspace with as many cards as you like.</p><div class="cv-pick" id="cvPick">${drawItems()}</div>`,
-    wire(body){
-      const bind=()=>body.querySelectorAll('[data-cvpick]').forEach(b=>b.onclick=()=>{
-        const tab=activeTab(); if(!tab)return;
-        const key=b.dataset.cvpick,w=canvasW(key),idx=tab.cards.findIndex(c=>c.key===key);
-        if(idx>=0)tab.cards.splice(idx,1); else tab.cards.push({key,span:w.span||1});
-        saveState(); body.querySelector('#cvPick').innerHTML=drawItems(); bind(); renderDeskView();
-        announce((idx>=0?'Removed ':'Added ')+w.name);
-      });
-      bind();
-    }
-  });
-}
-
-/* HTML-escape any user-supplied / persisted text before it enters innerHTML (XSS-safe) */
+function canvasCatalog(){ if(_canvasCat) return _canvasCat; _canvasCat=(WIDGET_CATALOG.trader||[]).map(w=>({key:w.key,name:w.name,icon:w.icon,span:1,render:w.render})); return _canvasCat; }
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-// Ingest sanitiser for instrument metadata (sym/name/type) that originates from the Kite instrument
-// master or persisted localStorage and is rendered via innerHTML at many sinks. Stripping the
-// HTML-active chars at the SOURCE neutralises stored-DOM XSS everywhere at once (defence-in-depth
-// on top of esc() at the sinks). Real symbols/names never contain these, so display is unaffected.
 function sanInstr(s){ return typeof s==='string' ? s.replace(/[<>"'`]/g,'') : s; }
-// CSP-safe image fallbacks: replaces the two inline `onerror=` handlers (which a strict
-// `script-src 'self'` CSP blocks). Image 'error' events don't bubble, so listen in CAPTURE.
-document.addEventListener('error', function(e){
-  const t=e.target; if(!(t instanceof HTMLImageElement)) return;
-  if(t.classList.contains('rb-mascot')){ t.style.display='none'; const ic=t.nextElementSibling; if(ic) ic.style.display='inline-flex'; }
-  else if(t.classList.contains('rv-img')){ t.style.display='none'; const f=t.parentNode&&t.parentNode.querySelector('.rv-svg'); if(f) f.style.display='block'; }
-}, true);
-
-/* ============================================================
-   ALGO MODE: strategy studio (Marketplace · Backtest · Monitor)
-   Full-width center takeover; reuses ALGOS + algoDeploy.
-   ============================================================ */
-/* ===== LIVE BOT INTEGRATION: kite-mean-reversion-bot API (:8756) =====
-   Origin-aware so ONE build works everywhere: served from localhost → talk to the local bot;
-   served from app.zengtrade.in → talk to the Cloudflare-tunnelled bot (Access-gated, HTTPS).
-   The bot itself still binds 127.0.0.1 only, the tunnel dials OUT, so no inbound port is ever opened. */
 const BOT_API=(()=>{
   const h=location.hostname;
   if(h==='localhost'||h==='127.0.0.1'||h==='::1'||h==='') return 'http://localhost:8756';
   return '';   // production: SAME-ORIGIN, the tunnel routes /api/* to the bot, so the Cloudflare
                // Access cookie rides along automatically. No CORS, no CSP change, no secret in JS.
 })();
-let BOT={loaded:false,connected:false,status:null,paperMode:true,error:false,chains:{},chainExp:{},futures:null};
 async function loadBotData(){
   try{
     const reqs=CRYPTO_ONLY
@@ -2981,8 +1490,6 @@ async function loadBotData(){
   }catch(e){ BOT.error=true; }
   BOT.loaded=true;
 }
-/* ---- 100% real market data from Kite (/api/market). No fake fallback: when the bot
-   is offline or the Kite token has expired, displays show honest blanks, never mock. ---- */
 // Structural signature: everything that, if changed, genuinely needs a heavy panel re-render.
 // Deliberately EXCLUDES live prices/P&L, those are patched in place by the 2s loops + 1s clock,
 // so the 30s poll no longer repaints the whole screen (that was the idle "flickers on its own").
@@ -4808,326 +3315,8 @@ function liveLockedPanel(){
    ============================================================ */
 const AI_PROMPTS=['Top movers right now','Find me oversold ideas','Hedge my portfolio','Explain my portfolio health','Best option strategy now'];
 function aiWelcome(){return `<b>Hi, I’m your market copilot.</b> ${aiLive()?'I read your <b>real</b> holdings, live prices, the market regime &amp; option chains and can run real backtests, every number I give you is fetched live, never invented.':'Ask me for ideas, a hedge, an option strategy, or a read on your portfolio.'} Try a suggestion below 👇`;}
-function renderAI(){
-  const v=$('aiView'); if(!v) return;
-  if(!isAI()){ v.innerHTML=''; return; }
-  state.ai=state.ai||{msgs:[]};
-  if(!state.ai.msgs.length) state.ai.msgs.push({role:'ai',html:aiWelcome()});
-  const log=state.ai.msgs.map(m=>m.role==='user'
-    ? `<div class="ai-msg user"><div class="ai-bubble">${esc(m.text)}</div></div>`
-    : `<div class="ai-msg ai"><span class="ai-av">${icon('spark',14)}</span><div class="ai-bubble">${m.html}</div></div>`).join('');
-  const chips=AI_PROMPTS.map(p=>`<button class="ai-chip" data-aiprompt="${esc(p)}">${esc(p)}</button>`).join('');
-  v.innerHTML=`<div class="ai-wrap">
-    <div class="ai-main">
-      <div class="ai-head"><div class="ai-title"><span class="ai-ic">${icon('spark',16)}</span><div><b>AI Copilot</b><span>Ask about markets, ideas, hedges or your portfolio</span></div></div>
-        <div class="ai-head-acts">
-          <span class="ai-mode ${aiLive()?'live':''}" title="${aiLive()?'Connected to a live Claude model via your proxy':'Scripted demo responses, connect a Claude proxy in settings'}">${aiLive()?'<span class="ai-dot"></span>Live · '+esc(aiModelName()):'Demo mode'}</span>
-          <button class="icon-mini" data-aisettings aria-label="AI connection settings" title="Connect a live Claude model">${icon('sliders',13)}</button>
-          <button class="btn-ghost sm" data-aiclear>${icon('close',12)} Clear</button>
-        </div></div>
-      <div class="ai-log" id="aiLog" role="log" aria-live="polite" aria-label="Conversation with AI copilot">${log}</div>
-      <div class="ai-chips" role="group" aria-label="Suggested prompts">${chips}</div>
-      <form class="ai-input" id="aiForm"><input id="aiText" type="text" placeholder="${aiLive()?'Ask the live Claude copilot…':'Ask anything…'}" autocomplete="off" aria-label="Message the AI copilot"><button class="ai-send" type="submit" aria-label="Send message">${icon('send',16)}</button></form>
-      <p class="ai-disc">${icon('shield',11)} ${aiLive()?'Powered by Claude ('+esc(aiModelName())+') via your proxy. ':''}AI suggestions are informational, not advice. Nothing trades without your confirmation.</p>
-    </div>
-    <aside class="ai-side"><div class="ai-side-ttl">${icon('spark',13)} Today’s AI signals</div>${aiSignals()}</aside>
-  </div>`;
-  const form=v.querySelector('#aiForm'); if(form)form.onsubmit=e=>{e.preventDefault();const t=v.querySelector('#aiText');aiSend(t.value);t.value='';};
-  v.querySelectorAll('[data-aiprompt]').forEach(b=>b.onclick=()=>aiSend(b.dataset.aiprompt));
-  const cl=v.querySelector('[data-aiclear]'); if(cl)cl.onclick=()=>{state.ai.msgs=[];renderAI();announce('Conversation cleared');};
-  const gs=v.querySelector('[data-aisettings]'); if(gs)gs.onclick=aiSettings;
-  v.querySelectorAll('[data-aiact]').forEach(b=>b.onclick=()=>aiAction(b.dataset.aiact));
-  const lg=v.querySelector('#aiLog'); if(lg)lg.scrollTop=lg.scrollHeight;
-}
-function aiSend(text){
-  text=String(text||'').trim(); if(!text||state.ai.busy)return;
-  if(aiLive()){ aiSendLive(text); return; }
-  state.ai.msgs.push({role:'user',text});
-  state.ai.msgs.push({role:'ai',html:aiRespond(text)});
-  renderAI(); announce('Copilot replied');
-}
-function aiChips(list){return `<div class="ai-acts">${list.map(([k,l])=>`<button class="ai-act" data-aiact="${k}">${l}</button>`).join('')}</div>`;}
-function aiRespond(q){
-  const s=q.toLowerCase();
-  if(/mover|gainer|loser|^top|active/.test(s)) return aiCardMovers();
-  if(/oversold|idea|pick|opportun|what.*buy|screen/.test(s)) return aiCardIdeas();
-  if(/hedge|protect|downside|crash|insurance|safe/.test(s)) return aiCardHedge();
-  if(/portfolio|health|holding|my stock|review|diversif/.test(s)) return aiCardPortfolio();
-  if(/option|strategy|straddle|spread|premium|condor|call|put/.test(s)) return aiCardOptions();
-  if(/sip|invest|long.?term|wealth|mutual/.test(s)) return aiCardSIP();
-  if(/sector|heatmap|rotation/.test(s)) return aiCardSectors();
-  return aiCardFallback();
-}
-function aiCardMovers(){
-  if(!BOT.live) return `I can only show <b>real</b> movers when Kite is connected, run <code>python3 login.py</code>. I won't invent prices.${aiChips([['go-research','See research calls']])}`;
-  const g=[...SYMS].filter(s=>s.live!==false).sort((a,b)=>b.chg-a.chg);
-  const row=s=>`<div class="ais-row"><span class="t-sym">${s.sym}</span><span class="num">${s.ltp.toLocaleString('en-IN')}</span><span class="num ${cls(s.chg)}">${pct(s.chg)}</span></div>`;
-  return `Here are today’s biggest movers:<div class="ai-data"><div class="ai-col"><div class="ai-coln up">Top gainers</div>${g.slice(0,3).map(row).join('')}</div><div class="ai-col"><div class="ai-coln down">Top losers</div>${g.slice(-3).reverse().map(row).join('')}</div></div>${aiChips([['open-chain','Open option chain'],['go-research','See research calls']])}`;}
-function aiCardIdeas(){const ideas=[...SYMS].filter(s=>s.live!==false&&s.chg>0).sort((a,b)=>b.chg-a.chg).slice(0,3);
-  return `Screening momentum + breadth, these stand out right now:<div class="ai-data2">${ideas.map(s=>`<div class="ais-row"><span class="t-sym">${s.sym}</span><span class="ais-tag">${s.chg>2?'Strong momentum':'Building'}</span><span class="num ${cls(s.chg)}">${pct(s.chg)}</span></div>`).join('')}</div><span class="ai-conf">Confidence: medium · ideas, not advice.</span>${aiChips([['go-research','Deep-dive research'],['go-analyser','Check overlap']])}`;}
-function aiCardHedge(){const hs=liveHoldings();
-  if(!hs||!hs.length){ return `To size a hedge I need your <b>real</b> holdings from Kite, connect with <code>python3 login.py</code> and I'll value your book and propose a defined-risk <b>NIFTY put</b> or bear put spread. I won't guess your exposure.${aiChips([['go-analyser','Open analyser']])}`; }
-  const h=hs.reduce((a,x)=>a+(x.ltp||0)*(x.qty||0),0);
-  return `To protect your <b>${inrL(h)}</b> equity book against a drop, a simple hedge is a <b>NIFTY put</b> or a bear put spread, defined cost, defined protection. I can set it up in the strategy builder.${aiChips([['open-strategy','Build the hedge'],['go-analyser','Assess my risk']])}`;}
-function aiCardPortfolio(){const hs=liveHoldings();
-  if(!hs||!hs.length){ return `I read your <b>real</b> holdings from Kite to score concentration, drift &amp; overlap, connect with <code>python3 login.py</code> and I'll X-ray your actual book. I never analyse a fake portfolio.${aiChips([['go-analyser','Open analyser']])}`; }
-  const exp=hs.reduce((a,h)=>a+(h.ltp||0)*(h.qty||0),0)||1, top=[...hs].sort((a,b)=>((b.ltp||0)*(b.qty||0))-((a.ltp||0)*(a.qty||0)))[0], topW=Math.round((top.ltp||0)*(top.qty||0)/exp*100);
-  const score=Math.max(40,Math.min(95,Math.round(95-Math.max(0,topW-25)*1.6)));
-  return `Your portfolio health is <b>${score}/100</b>. <b>${top.sym}</b> is <b>${topW}%</b> of your equity${topW>25?', above the 25% guardrail, worth trimming':', well balanced'}.${aiChips([['go-analyser','Full X-ray'],['go-sip','Rebalance via SIP']])}`;}
-function aiCardOptions(){const c=buildChain(0,0),r=state.displayed;
-  if(!c||!c.rows){ return `I can only read a <b>real</b> option chain when Kite is connected, run <code>python3 login.py</code>. I won't invent PCR or strikes.${aiChips([['open-chain','Open option chain']])}`; }
-  const p=pcr(c);
-  const sug=r==='bull'?'a Bull Call Spread (defined-risk, directional up)':r==='bear'?'a Bear Put Spread (defined-risk, directional down)':'an Iron Condor (range-bound, theta-positive)';
-  return `With PCR at <b>${p.toFixed(2)}</b> and a <b>${r}</b> regime, consider <b>${sug}</b>. I can load it into the strategy builder with one tap.${aiChips([['open-strategy','Open strategy builder'],['open-chain','View option chain']])}`;}
-function aiCardSIP(){const tot=SIPS.reduce((a,s)=>a+s.amt,0);
-  return `For long-term wealth, stay systematic, you’re running <b>${inr(tot)}/mo</b> across ${SIPS.length} SIPs. In this regime, keep them running and add quality on dips.${aiChips([['go-sip','Manage SIPs'],['go-research','Find quality names']])}`;}
-function aiCardSectors(){
-  if(!BOT.live){ return `Sector rotation needs <b>live</b> prices, connect Kite with <code>python3 login.py</code> and I'll rank today's real sector leaders and laggards from your watchlist. No invented moves.${aiChips([['go-research','Sector research']])}`; }
-  // real sector performance from the live watchlist
-  const m={}; SYMS.filter(s=>isEq(s)&&s.sector&&s.live!==false).forEach(s=>{(m[s.sector]=m[s.sector]||[]).push(s.chg);});
-  const top=Object.entries(m).map(([s,a])=>({s,c:a.reduce((x,y)=>x+y,0)/a.length})).sort((a,b)=>b.c-a.c);
-  if(top.length<2){ return `I don't have enough live sector coverage in your watchlist yet, add a few names across sectors and I'll rank the rotation.${aiChips([['go-research','Sector research']])}`; }
-  return `Sector rotation today, leaders: <b>${top[0].s}</b>, ${top[1].s}. Laggards: <b>${top[top.length-1].s}</b>. Money is rotating toward ${top[0].c>0?'risk-on':'defensives'}.${aiChips([['go-research','Sector research'],['open-chain','Trade the leaders']])}`;}
-function aiCardFallback(){return `I can help with: <b>top movers</b>, <b>oversold ideas</b>, <b>hedging</b>, an <b>option strategy</b>, or a read on <b>your portfolio</b>. Pick one below or type your own.${aiChips([['go-research','Research'],['open-strategy','Option strategy'],['go-analyser','Portfolio X-ray']])}`;}
-function aiSignals(){
-  // OFFLINE → honest, never fabricated stock scores/anomalies/portfolio numbers
-  if(!BOT.live){
-    return `<div class="ais-card ais-off"><div class="ais-h">Live AI signals</div>
-      <p class="ais-note">${icon('shield',12)}<span>Ranked ideas, options anomalies &amp; your portfolio read appear here once Kite is connected, no simulated signals are shown. <button class="ais-relogin" data-relogin>Reconnect</button></span></p></div>`;
-  }
-  const pool=SYMS.filter(s=>s.live!==false && isEq(s));
-  if(!pool.length) return `<div class="ais-card"><div class="ais-h">AI-ranked ideas</div><p class="ais-note"><span>No live equity quotes yet, they populate during market hours.</span></p></div>`;
-  const ranked=[...pool].map(s=>({s,score:Math.round(Math.max(20,Math.min(98,55+(s.chg||0)*6+(dseed(s.ltp)*16-8))))})).sort((a,b)=>b.score-a.score).slice(0,4);
-  const ideas=ranked.map(r=>`<div class="ais-row"><span class="t-sym">${esc(r.s.sym)}</span><span class="ais-score">${r.score}</span><span class="num ${cls(r.s.chg)}">${pct(r.s.chg)}</span></div>`).join('');
-  const rp=realPortfolio();
-  const pulse=rp
-    ? `<p class="ais-note">${icon('shield',12)}<span>${rp.n} equity holding${rp.n===1?'':'s'} · P&amp;L <b class="${rp.pnl>=0?'up':'down'}">${rp.pnl>=0?'+':'−'}₹${Math.abs(Math.round(rp.pnl)).toLocaleString('en-IN')}</b> live from Kite.</span></p><button class="ai-act" data-aiact="go-analyser">Open X-ray</button>`
-    : `<p class="ais-note">${icon('shield',12)}<span>No equity holdings linked, your portfolio read appears here when you hold stocks.</span></p>`;
-  return `<div class="ais-card"><div class="ais-h">AI-ranked ideas <i class="ais-sub">live momentum</i></div>${ideas}</div>
-    <div class="ais-card"><div class="ais-h">Anomaly alert</div><p class="ais-note">${icon('alert',12)}<span>Unusual options activity in <b>${esc(ranked[0].s.sym)}</b>: call OI building near ATM.</span></p></div>
-    <div class="ais-card"><div class="ais-h">Portfolio pulse</div>${pulse}</div>`;
-}
-function aiAction(key){
-  if(key==='open-chain'){applyPersona('trader',{user:true});setLayout('options');}
-  else if(key==='open-strategy'){applyPersona('trader',{user:true});setLayout('options');state.desk.view='strategy';renderDeskView();}
-  else if(key==='go-research'){applyPersona('investor',{user:true});enterTool('research');}
-  else if(key==='go-analyser'){applyPersona('investor',{user:true});enterTool('analyser');}
-  else if(key==='go-sip'){applyPersona('investor',{user:true});enterTool('sip');}
-  else if(key==='go-algo'){applyPersona('algo',{user:true});}
-}
-
-/* ============================================================
-   AI MODE: LIVE Claude wiring (via a user-run proxy; key never in browser)
-   Raw fetch + SSE streaming to the Messages API through a proxy endpoint.
-   Falls back to scripted aiRespond() when no proxy is configured.
-   ============================================================ */
-const AI_ACTIONS={'open-chain':'Open option chain','open-strategy':'Open strategy builder','go-research':'See research','go-analyser':'Portfolio X-ray','go-sip':'Manage SIPs','go-algo':'Algo studio'};
-/* ---- Real agent tools ----
-   `navigate` is a UI action (renders a tap-to-confirm shortcut; no tool_result needed).
-   The DATA tools below fetch REAL data from the local bot API (Kite). aiCallClaude runs a
-   genuine tool_use → tool_result agentic loop, so Claude fetches live numbers instead of
-   guessing. Every tool returns honest {connected:false,...} when Kite is offline. */
-const AI_TOOL={name:'navigate',description:'Offer the user a one-tap shortcut to a relevant part of the zengtrade app (option chain, strategy builder, research, portfolio analyser, SIP manager, or algo studio). Call this in addition to a normal text answer whenever your reply points the user toward one of these tools. Calling navigate does NOT move the user, it renders a button they tap to confirm. Use it when it genuinely helps; never invent destinations outside the enum.',input_schema:{type:'object',properties:{destination:{type:'string',enum:Object.keys(AI_ACTIONS),description:'Where to send the user: '+Object.entries(AI_ACTIONS).map(([k,v])=>k+' = '+v).join('; ')+'.'},reason:{type:'string',description:'A short 2–4 word label for the shortcut button, e.g. "Build the hedge" or "See research".'}},required:['destination']}};
-const AI_DATA_TOOLS=[
-  {name:'get_portfolio',description:"Fetch the user's REAL equity holdings, open positions and P&L from their connected Zerodha Kite account. Use for any question about my portfolio / holdings / positions / P&L / exposure / concentration / what do I own. Returns connected:false when Kite is not connected, and an empty list if the account is unfunded, never invent holdings.",input_schema:{type:'object',properties:{}}},
-  {name:'get_market',description:'Fetch the live market snapshot: detected regime (bull/bear/neutral) with a composite score, India VIX, advance/decline breadth, and key index levels. Use for "how is the market / what is the regime / VIX / breadth".',input_schema:{type:'object',properties:{}}},
-  {name:'get_quote',description:'Fetch the live last price and day change for specific instruments by symbol. Use for "price of X", "how is X doing", or to rank movers. Resolve names to symbols with search_instruments first if unsure.',input_schema:{type:'object',properties:{symbols:{type:'array',items:{type:'string'},description:'Exchange:symbol or plain NSE symbols, e.g. ["RELIANCE","INFY","NSE:TCS"]. Max 15.'}},required:['symbols']}},
-  {name:'search_instruments',description:'Resolve a company/instrument name or partial symbol to exact tradable symbols across all segments (equity, F&O, indices, MCX). Works even when Kite is disconnected (static instrument master). Use to find the right symbol before get_quote.',input_schema:{type:'object',properties:{query:{type:'string',description:'Name or partial symbol, e.g. "infosys" or "bank nifty".'}},required:['query']}},
-  {name:'run_backtest',description:'Run a REAL historical backtest of a built-in strategy over a period and return metrics: total return, CAGR, max drawdown, Sharpe, win-rate, trade count, plus an in-sample vs out-of-sample split. Use for "backtest X" or "how would strategy Y have performed". Needs a connected Kite session for price history.',input_schema:{type:'object',properties:{strategy:{type:'string',enum:['momentum','rsi2','macross','supertrend','meanrev'],description:'Strategy: momentum=20d breakout, rsi2=RSI(2) mean-reversion, macross=50/200 cross, supertrend, meanrev=Bollinger reversion.'},period:{type:'string',enum:['1M','3M','1Y','3Y'],description:'Lookback (default 1Y).'}},required:['strategy']}},
-  {name:'get_option_chain',description:'Fetch live option-chain analytics for an index underlying: PCR, max-pain, ATM implied volatility and OI-based support/resistance. Use for options / PCR / max-pain / IV questions.',input_schema:{type:'object',properties:{underlying:{type:'string',enum:['NIFTY','BANKNIFTY'],description:'Index underlying (default NIFTY).'}}}}
-];
-const AI_ALL_TOOLS=[...AI_DATA_TOOLS,AI_TOOL];
 const aiCfg=()=>state.aiCfg||(state.aiCfg={endpoint:'',model:'claude-opus-4-8'});
 const aiLive=()=>!!(aiCfg().endpoint||'').trim();
-const aiModelName=()=>aiCfg().model||'claude-opus-4-8';
-const aiEndpoint=()=>(aiCfg().endpoint||'').trim();
-
-/* Execute a data tool against the bot API → compact JSON string for the model.
-   Always honest: connected:false / empty when Kite is offline, never fabricated. */
-async function aiExecTool(name,input){
-  input=input||{};
-  const get=async(url)=>{ const r=await fetch(BOT_API+url); return await r.json(); };
-  try{
-    if(name==='get_portfolio'){
-      const d=await get('/api/holdings');
-      const hs=(d&&d.holdings)||[];
-      if(!d||!d.real||(d.error&&!hs.length)) return JSON.stringify({connected:false,note:'Kite not connected, no real holdings. Ask the user to run python3 login.py. Do not invent holdings.'});
-      if(!hs.length) return JSON.stringify({connected:true,holdings:[],note:'Account connected but holds no equity yet.'});
-      const exposure=hs.reduce((a,h)=>a+(h.ltp||0)*(h.qty||0),0);
-      return JSON.stringify({connected:true,holdingsCount:hs.length,exposure:Math.round(exposure),dayPnl:Math.round(d.dayPnl||0),totalPnl:Math.round(d.totalPnl||0),
-        holdings:hs.slice(0,15).map(h=>({sym:h.sym,qty:h.qty,ltp:h.ltp,pnl:Math.round(h.pnl||0),dayChangePct:h.dayChangePct,weightPct:Math.round((h.ltp||0)*(h.qty||0)/Math.max(1,exposure)*100)}))});
-    }
-    if(name==='get_market'){
-      const d=await get('/api/market');
-      if(!d||!d.real||!d.engine) return JSON.stringify({connected:false,note:'Kite not connected, no live market data. Ask the user to run python3 login.py.'});
-      const idx=(k)=>{const o=d[k];return o&&o.ltp!=null?{ltp:o.ltp,chgPct:o.chgPct}:null;};
-      return JSON.stringify({connected:true,regime:d.engine.regime,score:d.engine.score,vix:d.vix&&d.vix.ltp,breadthAD:d.breadth&&d.breadth.ad,
-        nifty:idx('nifty'),banknifty:idx('banknifty'),sensex:idx('sensex')});
-    }
-    if(name==='get_quote'){
-      const syms=(input.symbols||[]).slice(0,15).map(s=>/:/.test(s)?s:('NSE:'+s));
-      if(!syms.length) return JSON.stringify({error:'no symbols given'});
-      const d=await get('/api/uquotes?keys='+encodeURIComponent(syms.join(',')));
-      const q=(d&&d.quotes)||{};
-      if(!Object.keys(q).length) return JSON.stringify({connected:false,note:'No live quotes, Kite not connected. Ask the user to run python3 login.py.'});
-      return JSON.stringify({connected:true,quotes:Object.entries(q).map(([k,v])=>({sym:k,ltp:v.ltp,chgPct:v.chg!=null?v.chg:v.chgPct}))});
-    }
-    if(name==='search_instruments'){
-      const d=await get('/api/instruments?q='+encodeURIComponent(input.query||'')+'&limit=8');
-      const rs=(d&&d.results)||[];
-      return JSON.stringify({results:rs.map(r=>({sym:r.ts,name:r.name,exch:r.exch,type:r.type,key:r.key}))});
-    }
-    if(name==='run_backtest'){
-      const strat=input.strategy||'momentum', period=input.period||'1Y';
-      const d=await get('/api/backtest?strategy='+encodeURIComponent(strat)+'&period='+encodeURIComponent(period));
-      if(!d||!d.real) return JSON.stringify({connected:false,note:'Backtest needs a connected Kite session for price history ('+((d&&d.error)||'unavailable')+'). Ask the user to run python3 login.py.'});
-      const o={connected:true,strategy:strat,period,totalRet:d.totalRet,cagr:d.cagr,maxDD:d.maxDD,sharpe:d.sharpe,winRate:d.winRate,trades:d.trades,universe:d.universe,costBps:d.costBps};
-      if(d.oos) o.outOfSample={inSampleRet:d.oos.is_ret,outSampleRet:d.oos.oos_ret,verdict:(d.oos.oos_ret>=d.oos.is_ret*0.5?'edge held out-of-sample':'edge weakened out-of-sample')};
-      return JSON.stringify(o);
-    }
-    if(name==='get_option_chain'){
-      const u=(input.underlying||'NIFTY').toUpperCase();
-      const d=await get('/api/chain?underlying='+encodeURIComponent(u));
-      if(!d||!d.real) return JSON.stringify({connected:false,note:'Option chain needs a connected Kite session. Ask the user to run python3 login.py.'});
-      return JSON.stringify({connected:true,underlying:u,spot:d.spot,pcr:d.pcr,maxPain:d.maxPain,atmIV:d.atmIV,support:d.support,resist:d.resist,expiry:d.expiry});
-    }
-  }catch(e){ return JSON.stringify({error:'tool failed: '+String(e&&e.message||e)}); }
-  return JSON.stringify({error:'unknown tool '+name});
-}
-
-function aiSystemPrompt(){
-  const r=state.displayed;
-  const conn=BOT.live?('CONNECTED to Kite ('+((BOT.status&&BOT.status.user)||'user')+'), live data available'):'NOT connected to Kite right now, data tools will return connected:false';
-  return [
-    'You are the in-app AI copilot for zengtrade, a real trading & investing terminal wired to the user\'s Zerodha Kite account via local tools.',
-    'CRITICAL, never invent numbers. For anything about prices, the market/regime/VIX, the user\'s holdings/P&L, option chains, or backtests, you MUST call the relevant tool and answer from what it returns. If a tool returns connected:false or empty, say so plainly and tell the user to run python3 login.py, do NOT guess or fabricate figures. This product\'s whole promise is that every number is real.',
-    'You can call multiple tools and chain them (e.g. search_instruments → get_quote). Resolve ambiguous names with search_instruments first.',
-    'Be concise and direct, a few sentences, no preamble. Plain text only; **bold** for key numbers is fine. No markdown headers, tables, or code blocks.',
-    'Detected market regime right now: '+r+'. Connection: '+conn+'.',
-    'When your answer points the user toward a specific part of the app, ALSO call the `navigate` tool to offer a one-tap shortcut (the user must tap it, navigate never moves them on its own). Never reply with only a tool call; always include a helpful text answer.',
-    'You are informational only, never claim to place trades; nothing is executed without the user\'s explicit confirmation. This is not financial advice.'
-  ].join('\n');
-}
-function aiHistory(){
-  const out=[];
-  state.ai.msgs.forEach(m=>{
-    if(m.role==='user') out.push({role:'user',content:m.text||''});
-    else if(m.role==='ai'&&m.text) out.push({role:'assistant',content:m.text});
-  });
-  return out;
-}
-/* safe render of model text: escape first, then a tiny allow-list of formatting */
-function aiRenderText(raw, toolActs){
-  const pairs=[], seen=new Set();
-  const add=(k,label)=>{ if(AI_ACTIONS[k]&&!seen.has(k)){ seen.add(k); pairs.push([k, label?esc(label):AI_ACTIONS[k]]); } };
-  // backward-compat: tolerate a model still emitting the old [[action:KEY]] convention
-  let t=String(raw||'').replace(/\[\[action:([a-z-]+)\]\]/gi,(m,k)=>{add(k);return '';});
-  (toolActs||[]).forEach(a=>add(a.key,a.label));   // navigate tool calls → chips (model-authored label escaped via esc)
-  let html=esc(t.trim()).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/\n{2,}/g,'<br><br>').replace(/\n/g,'<br>');
-  if(pairs.length) html+=aiChips(pairs);
-  return html||'…';
-}
-/* One streaming request → {text, stop, toolUses:[{id,name,input}]}.
-   onDelta(prefix+thisTurnText) streams cumulative text across the whole agentic loop. */
-async function aiStreamOnce(convo,onDelta,prefix){
-  const body={model:aiModelName(),max_tokens:1024,stream:true,system:aiSystemPrompt(),tools:AI_ALL_TOOLS,messages:convo};
-  const resp=await fetch(aiEndpoint(),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
-  if(!resp.ok||!resp.body){ let d='';try{d=(await resp.text()).slice(0,200);}catch(e){} throw new Error('Proxy returned HTTP '+resp.status+(d?'-'+d:'')); }
-  const reader=resp.body.getReader(), dec=new TextDecoder(); let buf='',text='',stop=null; const tu={};   // tool_use blocks keyed by content-block index
-  for(;;){ const {value,done}=await reader.read(); if(done)break; buf+=dec.decode(value,{stream:true});
-    let i; while((i=buf.indexOf('\n\n'))>=0){ const block=buf.slice(0,i); buf=buf.slice(i+2);
-      const dl=block.split('\n').find(l=>l.startsWith('data:')); if(!dl)continue;
-      const data=dl.slice(5).trim(); if(!data||data==='[DONE]')continue;
-      let ev; try{ev=JSON.parse(data);}catch(e){continue;}
-      if(ev.type==='content_block_start'&&ev.content_block&&ev.content_block.type==='tool_use'){ tu[ev.index]={id:ev.content_block.id,name:ev.content_block.name,json:''}; }
-      else if(ev.type==='content_block_delta'&&ev.delta){
-        if(ev.delta.type==='text_delta'){ text+=ev.delta.text; if(onDelta)onDelta((prefix||'')+text); }
-        else if(ev.delta.type==='input_json_delta'&&tu[ev.index]){ tu[ev.index].json+=ev.delta.partial_json||''; }   // accumulate streamed tool-input JSON
-      }
-      else if(ev.type==='message_delta'&&ev.delta&&ev.delta.stop_reason){ stop=ev.delta.stop_reason; }
-      else if(ev.type==='error'){ throw new Error((ev.error&&ev.error.message)||'stream error'); }
-    } }
-  const toolUses=Object.keys(tu).map(k=>{ const b=tu[k]; let inp={}; try{inp=b.json?JSON.parse(b.json):{};}catch(e){} return {id:b.id,name:b.name,input:inp}; });
-  return {text,stop,toolUses};
-}
-/* Agentic loop: stream → if Claude calls DATA tools, execute them against the bot API,
-   feed tool_results back, and continue, until it produces a final answer. `navigate`
-   calls are collected as tap-to-confirm chips (UI action), not data. Capped to avoid loops. */
-async function aiCallClaude(messages,onDelta,onStop){
-  let convo=messages.slice(); let displayText=''; const navChips=[]; let stop=null; const MAX_STEPS=6;
-  for(let step=0; step<MAX_STEPS; step++){
-    const prefix=displayText?displayText+'\n\n':'';
-    const turn=await aiStreamOnce(convo,onDelta,prefix);
-    const thisText=turn.text||'';
-    turn.toolUses.filter(t=>t.name==='navigate'&&t.input&&t.input.destination).forEach(t=>navChips.push({key:t.input.destination,label:t.input.reason}));
-    const dataCalls=turn.toolUses.filter(t=>t.name!=='navigate');
-    if(thisText) displayText+=(displayText?'\n\n':'')+thisText;
-    // only loop when there is real data to fetch (and we haven't hit the cap)
-    if(turn.stop==='tool_use' && dataCalls.length && step<MAX_STEPS-1){
-      // replay ALL tool_use blocks with matching tool_results (API requires one per tool_use)
-      const aContent=[]; if(thisText) aContent.push({type:'text',text:thisText});
-      turn.toolUses.forEach(t=>aContent.push({type:'tool_use',id:t.id,name:t.name,input:t.input||{}}));
-      convo.push({role:'assistant',content:aContent});
-      const results=[];
-      for(const t of turn.toolUses){
-        const content=t.name==='navigate'?'A shortcut button was shown to the user.':await aiExecTool(t.name,t.input||{});
-        results.push({type:'tool_result',tool_use_id:t.id,content:String(content)});
-      }
-      convo.push({role:'user',content:results});
-      if(onDelta)onDelta(displayText);    // keep the partial answer visible while tools run
-      continue;
-    }
-    stop=turn.stop; break;
-  }
-  if(onStop)onStop(displayText,stop,navChips); return {text:displayText,stop,tools:navChips};
-}
-function aiSendLive(text){
-  state.ai.msgs.push({role:'user',text});
-  state.ai.msgs.push({role:'ai',html:'<span class="ai-typing"><i></i><i></i><i></i></span>',streaming:true});
-  state.ai.busy=true; renderAI();
-  const history=aiHistory();
-  const lastBubble=()=>{const lg=$('aiLog');return lg?lg.querySelector('.ai-msg.ai:last-child .ai-bubble'):null;};
-  aiCallClaude(history,
-    (partial)=>{const b=lastBubble(); if(b){b.innerHTML=aiRenderText(partial);const lg=$('aiLog');if(lg)lg.scrollTop=lg.scrollHeight;}},
-    (full,stop,tools)=>{
-      const last=state.ai.msgs[state.ai.msgs.length-1];
-      if(stop==='refusal'){ last.html='<span class="ai-warn">'+icon('alert',13)+' I can’t help with that one. Try a markets, ideas, hedging or portfolio question.</span>'; last.text=''; }
-      else { last.text=full; last.html=aiRenderText(full,tools); }
-      delete last.streaming; state.ai.busy=false; renderAI(); announce('Copilot replied');
-    }
-  ).catch(err=>{
-    const last=state.ai.msgs[state.ai.msgs.length-1];
-    last.html='<span class="ai-warn">'+icon('alert',13)+' Couldn’t reach the Claude proxy ('+esc(String(err.message||err))+'). Falling back to demo answers, check AI settings.</span>';
-    last.text=''; delete last.streaming; state.ai.busy=false; renderAI();
-  });
-}
-function aiSettings(){
-  const c=aiCfg();
-  flowModal({title:'Connect a live Claude model', confirm:'Save',
-    body:`<p class="cv-pick-note">For security, the browser never holds your Anthropic API key. Run the bundled <b>proxy</b> (see <code>proxy/README.md</code>), it keeps the key server-side and streams Claude’s responses back. Leave the endpoint blank to use scripted demo answers.</p>
-      <div class="flow-field"><label for="aiEp">Proxy endpoint URL</label><input class="flow-input" id="aiEp" type="text" inputmode="url" placeholder="http://localhost:8787/v1/messages" value="${esc(c.endpoint||'')}" autocomplete="off" spellcheck="false"></div>
-      <div class="flow-field"><label for="aiModel">Model</label><select class="flow-input" id="aiModel">${['claude-opus-4-8','claude-sonnet-4-6','claude-haiku-4-5'].map(m=>`<option ${m===aiModelName()?'selected':''}>${m}</option>`).join('')}</select></div>
-      <div id="aiTestRow"><button class="btn-ghost sm" type="button" id="aiTest">${icon('bolt',12)} Test connection</button> <span id="aiTestMsg" class="ai-test-msg"></span></div>
-      <p class="flow-note">${icon('shield',13)}<span>The endpoint is stored locally in your browser only. Point it at a proxy you control; never paste an API key here.</span></p>`,
-    focus:'#aiEp',
-    wire(body){
-      const t=body.querySelector('#aiTest'); if(t)t.onclick=async()=>{
-        const ep=body.querySelector('#aiEp').value.trim(), msg=body.querySelector('#aiTestMsg');
-        if(!/^https?:\/\//.test(ep)){msg.className='ai-test-msg bad';msg.textContent='Enter a valid http(s) URL.';return;}
-        msg.className='ai-test-msg';msg.textContent='Testing…';
-        try{ const r=await fetch(ep,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({model:body.querySelector('#aiModel').value,max_tokens:16,messages:[{role:'user',content:'ping'}]})});
-          msg.className='ai-test-msg '+(r.ok?'ok':'bad'); msg.textContent=r.ok?'Connected ✓':'Proxy responded HTTP '+r.status;
-        }catch(e){ msg.className='ai-test-msg bad'; msg.textContent='Could not reach proxy. Is it running + CORS-enabled?'; }
-      };
-    },
-    onConfirm(body){ const ep=body.querySelector('#aiEp').value.trim();
-      if(ep&&!/^https?:\/\//.test(ep)){flowError(body,'#aiEp','Endpoint must start with http:// or https://');return false;}
-      state.aiCfg={endpoint:ep,model:body.querySelector('#aiModel').value}; saveState(); renderAI();
-      quickToast(ep?'Live Claude connected':'Demo mode', ep?'Copilot now answers via '+aiModelName()+'.':'Using scripted demo responses.'); }
-  });
-}
-
-/* ---------- Trading Floor (Day/Night) surface ---------- */
 function setSurface(s,silent){
   state.surface=s; document.documentElement.dataset.surface=s;
   const b=$('surfaceToggle'); if(b){ b.innerHTML=icon(s==='night'?'sun':'moon',16); b.setAttribute('aria-label',s==='night'?'Switch to day mode':'Switch to night trading-floor mode'); b.setAttribute('aria-pressed',s==='night'); }
@@ -5136,60 +3325,7 @@ function setSurface(s,silent){
   saveState();
 }
 function toggleSurface(){ cascadeSurface(state.surface==='night'?'day':'night'); }
-function powerOn(){ const f=$('floorSweep'); if(!f)return; f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
-/* ---------- day/night CASCADE: trading floor powers on/off, pane by pane ----------
-   Freeze each visible pane in the OLD theme (inline CSS vars inherit to the whole
-   subtree), flip the global theme so the canvas changes at once, then release the
-   panes in a ripple outward from the toggle, each flipping with an accent flash. */
-const THEME_VARS=['--bg','--surface','--surface-2','--white','--line','--line-2','--navy','--slate','--slate-2','--green','--green-d','--red','--red-d','--blue','--amber','--tint-down','--tint-warn','--tint-info','--bd-down','--bd-warn','--up-flash','--down-flash','--topbar-bg','--glass','--glass-hi','--shadow','--shadow-hover','--shadow-lg','--accent','--accent-d','--accent-soft','--accent-line'];
-const CASCADE_SEL=['.topbar','.ticker-bar','.regime-bar','.pane-left','.chart-card','#investHub','.panel','.order-card','.ctx-card','#modeFab',
-  /* algo / ai / trader-desk takeover panes. So day↔night powers on in EVERY persona, not just the 3-pane floor */
-  '.av-head','.av-scroll','.ai-main','.ai-side','.desk-head','.desk-scroll'];
-function cascadeSurface(next){
-  if(prefersReduced()||!document.querySelector('.topbar')){ setSurface(next); return; }
-  const cs=getComputedStyle(document.documentElement);
-  const oldVals={}; THEME_VARS.forEach(v=>{const val=cs.getPropertyValue(v).trim(); if(val) oldVals[v]=val;});
-  const keys=Object.keys(oldVals);
-  const btn=$('surfaceToggle'); const br=btn?btn.getBoundingClientRect():{left:innerWidth-40,top:20,width:24,height:24};
-  const ox=br.left+br.width/2, oy=br.top+br.height/2;
-  const cards=[];
-  CASCADE_SEL.forEach(s=>document.querySelectorAll(s).forEach(el=>{ if(el.getClientRects().length) cards.push(el); }));
-  cards.forEach(el=>{
-    keys.forEach(v=>el.style.setProperty(v,oldVals[v]));            // freeze in old theme
-    const r=el.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2;
-    el.__dist=Math.hypot(cx-ox,cy-oy);
-    el.style.setProperty('--fx',(((ox-r.left)/Math.max(1,r.width))*100).toFixed(1)+'%');  // flash points back at toggle
-    el.style.setProperty('--fy',(((oy-r.top)/Math.max(1,r.height))*100).toFixed(1)+'%');
-  });
-  cards.sort((a,b)=>a.__dist-b.__dist);
-  setSurface(next,true);                                            // flip global theme (canvas) now; panes held by local vars
-  const step=58;
-  cards.forEach((el,i)=>setTimeout(()=>{
-    el.classList.add('theme-flip');
-    keys.forEach(v=>el.style.removeProperty(v));                    // release → pane eases to new theme + flashes
-    setTimeout(()=>{ el.classList.remove('theme-flip'); el.style.removeProperty('--fx'); el.style.removeProperty('--fy'); },620);
-  }, i*step));
-}
-
-/* ---------- live tape: VIX-driven ticks with uptick/downtick flash ---------- */
-function flashNum(el,txt,dir){ el.textContent=txt; el.classList.remove('tk-up','tk-down'); void el.offsetWidth; el.classList.add(dir>=0?'tk-up':'tk-down'); }
-function doTick(){
-  // LIVE: real Kite WebSocket ticks (loadTicks) drive every price, never fabricate
-  // movement on top of them. This synthetic tape only animates the offline demo.
-  // (BOT is a module-scoped `let`, NOT on window, reference it directly.)
-  if(typeof BOT!=='undefined' && BOT.live) return;
-  if(state.algo && state.algo.market==='crypto') return;   // crypto tape is fed by real Binance data, never synth-tick it
-  const vix=+$('sVix').value, vol=clamp((vix-8)/27,0,1), night=state.surface==='night'?1.4:1;
-  const upd=(el,dec)=>{const base=parseFloat(el.textContent.replace(/,/g,''))||0; if(!base)return;
-    const mv=(Math.random()-0.5)*base*0.0007*(0.4+vol*3.2)*night;
-    flashNum(el,(base+mv).toLocaleString('en-IN',{maximumFractionDigits:dec}),mv);};
-  document.querySelectorAll('#topIndex .tb-seq-a .tix-val').forEach(el=>upd(el,(parseFloat(el.textContent.replace(/,/g,''))||0)>=20000?0:1));
-  const _sa=document.querySelector('#topIndex .tb-seq-a'),_sb=document.querySelector('#topIndex .tb-seq-b'); if(_sa&&_sb)_sb.innerHTML=_sa.innerHTML; // keep the looped copy in sync
-  document.querySelectorAll('#wlRows .wl-row .wl-ltp').forEach(el=>{if(Math.random()<0.6+vol*0.4)upd(el, (parseFloat(el.textContent.replace(/,/g,''))||0)>1000?1:2);});
-  const op=$('ordLtp'); if(op) upd(op,1);
-}
 function tapeLoop(){ doTick(); const vix=+$('sVix').value, night=state.surface==='night'?0.7:1; const delay=clamp((1500-(vix-8)*42)*night,300,1500); state.tapeT=setTimeout(tapeLoop,delay); }
-
 function applyPaneWidths(){
   const t=document.querySelector('.terminal'); if(!t)return;
   const threePane=state.persona==='trader'||state.persona==='investor';
@@ -5201,70 +3337,31 @@ function applyPaneWidths(){
 function applyChartHeight(){
   const card=$('chartCard'); if(card) card.style.height=state.chartH?state.chartH+'px':'';
 }
-
-/* ============================================================
-   CARD MINIMIZE / MAXIMIZE  (per-card focus & flexibility)
-   ============================================================ */
-/* ============================================================
-   WIDGET LIBRARY: persona-aware, user-composable cards (right rail)
-   Two distinct catalogs are the trader/investor differentiator.
-   ============================================================ */
 const sgn=n=>Number.isFinite(n)?(n>=0?'+':'−')+'₹'+Math.abs(Math.round(n)).toLocaleString('en-IN'):'-';
 const WIDGET_CATALOG={
   trader:[
     {key:'movers',name:'Top Movers',icon:'trendUp',desc:'Biggest gainers & losers right now',render(){
-      if(!BOT.live) return `<div class="wg-empty">${icon('shield',13)} Connect Kite for live movers.</div>`;
+      if(!BOT.live) return `<div class="wg-empty">${icon('shield',13)} Connect the exchange for live movers.</div>`;
       const live=SYMS.filter(s=>s.live!==false);   // exclude symbols with no real quote, never a stale price
       if(!live.length) return `<div class="wg-empty">No live quotes yet.</div>`;
-      const g=[...live].sort((a,b)=>b.chg-a.chg), row=s=>`<div class="wg-row"><span class="t-sym">${s.sym}</span><span class="num">${s.ltp.toLocaleString('en-IN')}</span><span class="num ${cls(s.chg)}">${pct(s.chg)}</span></div>`;
+      const g=[...live].sort((a,b)=>b.chg-a.chg), row=s=>`<div class="wg-row"><span class="t-sym">${s.sym}</span><span class="num">${s.ltp.toLocaleString()}</span><span class="num ${cls(s.chg)}">${pct(s.chg)}</span></div>`;
       return `<div class="wg-split"><div><div class="wg-cap up">Gainers</div>${g.slice(0,3).map(row).join('')}</div><div><div class="wg-cap down">Losers</div>${g.slice(-3).reverse().map(row).join('')}</div></div>`;}},
-    {key:'heatmap',name:'Sector Heatmap',icon:'grip',desc:'Sector performance at a glance',render(){
-      if(!BOT.live) return `<div class="wg-heat"><div class="wg-empty">${icon('shield',13)} Connect Kite for live sector performance.</div></div>`;
-      const m={}; SYMS.filter(s=>isEq(s)&&s.sector&&s.live!==false).forEach(s=>{(m[s.sector]=m[s.sector]||[]).push(s.chg);});
-      const secs=Object.entries(m).map(([s,a])=>({s,chg:a.reduce((x,y)=>x+y,0)/a.length})).sort((a,b)=>b.chg-a.chg);
-      if(!secs.length) return `<div class="wg-heat"><div class="wg-empty">No live quotes yet.</div></div>`;
-      return `<div class="wg-heat">${secs.map(x=>`<div class="wg-tile ${x.chg>=0?'up':'down'}" style="--i:${Math.min(1,Math.abs(x.chg)/3).toFixed(2)}"><b>${esc(x.s)}</b><span class="num">${pct(x.chg)}</span></div>`).join('')}</div>`;}},
-    {key:'pnl',name:'Day P&L',icon:'bolt',desc:'Today’s real P&L across your Kite holdings',render(){
-      if(!BOT.live||!BOT.holdings) return `<div class="wg-big muted">—</div><div class="wg-empty">Connect Kite for live Day P&amp;L.</div>`;
+    {key:'pnl',name:'Day P&L',icon:'bolt',desc:'Today’s real P&L across your paper holdings',render(){
+      if(!BOT.live||!BOT.holdings) return `<div class="wg-big muted">—</div><div class="wg-empty">Connect the exchange for live Day P&amp;L.</div>`;
       const hs=BOT.holdings.holdings||[];
-      if(!hs.length) return `<div class="wg-big">₹0</div><div class="wg-empty">No holdings yet, your real Day P&amp;L shows here once you hold positions.</div>`;
+      if(!hs.length) return `<div class="wg-big">$0</div><div class="wg-empty">No holdings yet, your real Day P&amp;L shows here once you hold positions.</div>`;
       const day=BOT.holdings.dayPnl||0, byPct=[...hs].map(h=>({sym:h.sym,chg:h.dayChangePct||0}));
       const best=[...byPct].sort((a,b)=>b.chg-a.chg)[0], worst=[...byPct].sort((a,b)=>a.chg-b.chg)[0];
       return `<div class="wg-big ${cls(day)}">${sgn(day)}</div><div class="wg-row"><span>Best</span><span class="t-sym">${esc(best.sym)}</span><span class="num ${cls(best.chg)}">${pct(best.chg)}</span></div><div class="wg-row"><span>Worst</span><span class="t-sym">${esc(worst.sym)}</span><span class="num ${cls(worst.chg)}">${pct(worst.chg)}</span></div><div class="wg-foot">${hs.length} holdings · total ${sgn(BOT.holdings.totalPnl||0)}</div>`;}},
     {key:'depth',name:'Market Depth',icon:'sliders',desc:'5-level bid / ask ladder',render(){
-      if(!BOT.live) return `<div class="wg-empty">${icon('shield',13)} Connect Kite for live market depth.</div>`;
-      const sel=state.selected||'RELIANCE', d=BOT.depth;
+      if(!BOT.live) return `<div class="wg-empty">${icon('shield',13)} Connect the exchange for live market depth.</div>`;
+      const sel=state.selected||'BTCUSDT', d=BOT.depth;
       if(!d||d.symbol!==sel){ loadDepth(sel); return `<div class="wg-empty">Loading live depth for ${esc(sel)}…</div>`; }
       if(d.error) return `<div class="wg-empty">No depth for ${esc(sel)}, ${esc(d.error)}.</div>`;
       return depthLadderHtml(d);}},
-    {key:'oi',name:'Option Chain OI',icon:'scale',desc:'Call / Put open interest near spot',render(){
-      return `<div class="wg-empty">${icon('shield',13)} Open the Option Analyser for live chain OI, no synthetic OI shown here.</div>`;}},
-    {key:'margin',name:'Margin & Funds',icon:'wallet',desc:'Available margin & exposure',render(){
-      if(!BOT.live||!BOT.market) return `<div class="wg-empty">${icon('shield',13)} Connect Kite for live margin & funds.</div>`;
-      const avail=BOT.market.funds||0;
-      const exposure=((BOT.holdings&&BOT.holdings.holdings)||[]).reduce((a,h)=>a+(h.ltp||0)*(h.qty||0),0);
-      const denom=exposure+avail, util=denom>0?Math.round(exposure/denom*100):0;
-      return `<div class="wg-row"><span>Available funds</span><b class="num">${inrL(avail)}</b></div><div class="wg-row"><span>Holdings value</span><b class="num">${inrL(exposure)}</b></div><div class="wg-bar-track"><span style="width:${util}%"></span></div><div class="wg-sub">${util}% deployed · live from your Kite account</div>`;}},
-  ],
-  investor:[
-    {key:'goals',name:'Goal Tracker',icon:'flag',desc:'Progress toward your life goals',render(){
-      return GOALS.map(g=>{const p=Math.round(g.cur/g.target*100);return `<div class="wg-goal"><div class="wg-row"><span>${g.name}</span><b class="num">${p}%</b></div><div class="wg-bar-track"><span style="width:${p}%"></span></div></div>`;}).join('');}},
-    {key:'sipcal',name:'SIP Calendar',icon:'repeat',desc:'Upcoming SIP debits this month',render(){
-      return SIPS.map(s=>`<div class="wg-row"><span class="wg-day">${s.day}</span><span class="wg-grow">${s.name}</span><b class="num">${inr(s.amt)}</b></div>`).join('')+`<div class="wg-sub">Total ${inr(SIPS.reduce((a,s)=>a+s.amt,0))}/month</div>`;}},
-    {key:'alloc',name:'Asset Allocation',icon:'pie',desc:'Current mix vs target',render(){
-      return ALLOC.map(a=>`<div class="wg-goal"><div class="wg-row"><span>${a.a}</span><b class="num">${a.cur}% <i class="wg-tgt">/ ${a.tgt}%</i></b></div><div class="wg-bar-track"><span class="al-${a.col}" style="width:${a.cur}%"></span></div></div>`).join('');}},
-    {key:'dividend',name:'Dividend Income',icon:'droplet',desc:'Estimated annual dividends',render(){
-      const yld={RELIANCE:0.4,SBIN:1.6,ITC:2.8,HDFCBANK:1.1,TATAMOTORS:0.6,INFY:2.1,BAJFINANCE:0.5,ADANIENT:0.2}; let tot=0;
-      const rows=HOLDINGS.map(h=>{const d=h.val*((yld[h.sym]||1)/100);tot+=d;return `<div class="wg-row"><span class="t-sym">${h.sym}</span><b class="num">${inr(d)}</b></div>`;}).join('');
-      return `<div class="wg-big up">${inr(tot)} <small>/yr</small></div>${rows}`;}},
-    {key:'health',name:'Portfolio Health',icon:'shield',desc:'A single score for your portfolio',render(){
-      const drift=ALLOC.reduce((a,x)=>a+Math.abs(x.cur-x.tgt),0), score=Math.max(40,Math.round(92-drift*1.5)), div=HOLDINGS.length>=6?'Good':'Fair';
-      return `<div class="wg-score"><b class="num">${score}</b><span>/100</span></div><div class="wg-bar-track"><span style="width:${score}%"></span></div><div class="wg-row"><span>Diversification</span><b class="num">${div}</b></div><div class="wg-row"><span>Allocation drift</span><b class="num">${drift}%</b></div>`;}},
-    {key:'events',name:'Market Events',icon:'clock',desc:'Dividends, bonuses & board meets',render(){
-      return MARKET_EVENTS.slice(0,5).map(e=>`<div class="wg-row"><span class="wg-grow">${e.co}</span><span class="badge ${e.type==='Dividend'?'b-up':e.type==='Bonus'?'b-warn':'b-neu'}">${e.type}</span></div>`).join('');}},
   ],
 };
-const WIDGET_DEFAULTS={trader:['movers','heatmap','pnl'],investor:['goals','sipcal','alloc']};
+const WIDGET_DEFAULTS={trader:['movers','pnl'],investor:[]};   // investor catalog removed (unreachable persona under CRYPTO_ONLY), key kept for state-init structural compat
 const personaKey=()=>isInvestor()?'investor':'trader';
 const widgetCatalog=()=>WIDGET_CATALOG[personaKey()];
 function activeWidgets(){ if(!state.widgets)state.widgets={trader:WIDGET_DEFAULTS.trader.slice(),investor:WIDGET_DEFAULTS.investor.slice()}; return state.widgets[personaKey()]; }
@@ -5280,10 +3377,10 @@ function renderWidgetStack(){
   wrap.querySelectorAll('[data-wremove]').forEach(b=>b.onclick=e=>{e.stopPropagation();removeWidget(b.dataset.wremove);});
   initWidgetDnD();
 }
+function openWidgetGallery(o){ const g=$('widgetGallery'); if(!g)return; g.classList.toggle('collapsed',!o); $('widgetGalleryScrim').classList.toggle('show',o); if(o)renderWidgetGallery(); }
 function addWidget(k){const a=activeWidgets(); if(widgetCatalog().some(w=>w.key===k)&&!a.includes(k)){a.push(k);renderWidgetStack();renderWidgetGallery();saveState();}}
 function removeWidget(k){const p=personaKey();state.widgets[p]=activeWidgets().filter(x=>x!==k);renderWidgetStack();renderWidgetGallery();saveState();}
 function toggleWidget(k){ activeWidgets().includes(k)?removeWidget(k):addWidget(k); }
-function openWidgetGallery(o){ const g=$('widgetGallery'); if(!g)return; g.classList.toggle('collapsed',!o); $('widgetGalleryScrim').classList.toggle('show',o); if(o)renderWidgetGallery(); }
 function renderWidgetGallery(){
   const body=$('wgGalleryBody'); if(!body) return;
   const inv=isInvestor(), keys=activeWidgets();
@@ -5341,6 +3438,8 @@ function updateCardBtns(){
     if(mx) mx.innerHTML=icon(m==='max'?'compress':'expand',13);
   });
 }
+function paneVisible(key){ return ((state.cards&&state.cards[key])||'normal')!=='hidden'; }
+function togglePane(key){ if(!state.cards)state.cards={}; state.cards[key]= paneVisible(key)?'hidden':'normal'; applyCardStates(); applyPaneWidths(); renderWidgetGallery(); saveState(); }
 function applyCardStates(){
   let anyMax=false;
   Object.keys(CARD_EL).forEach(k=>{
@@ -5354,7 +3453,7 @@ function applyCardStates(){
   const term=document.querySelector('.terminal'); if(term) term.classList.toggle('has-max',anyMax);
   const scrim=$('cardScrim'); if(scrim) scrim.classList.toggle('show',anyMax);
   document.body.classList.toggle('card-maxed',anyMax);
-  updateCardBtns(); updateWorkspaceEmpty();
+  updateCardBtns();
   if(window.TPChart&&TPChart.resize){TPChart.resize();setTimeout(()=>TPChart.resize(),70);}
 }
 function toggleCard(key,which){
@@ -5370,30 +3469,7 @@ function toggleCard(key,which){
   else announce(`${nm} ${st==='normal'?'restored':st==='min'?'minimized':'maximized'}`);
   saveState();
 }
-function paneVisible(key){ return ((state.cards&&state.cards[key])||'normal')!=='hidden'; }
-function togglePane(key){ if(!state.cards)state.cards={}; state.cards[key]= paneVisible(key)?'hidden':'normal'; applyCardStates(); applyPaneWidths(); renderWidgetGallery(); saveState(); }
 function restoreMaxCard(){ let changed=false; Object.keys(CARD_EL).forEach(k=>{if(state.cards[k]==='max'){state.cards[k]='normal';changed=true;}}); if(changed){applyCardStates();saveState();} }
-
-/* ============================================================
-   ENGINE READOUT
-   ============================================================ */
-function renderEngine(S,sc,conf,regime,label){
-  $('gaugeNeedle').style.left=clamp((S+100)/200*100,1,99)+'%';
-  const rd=$('erRegime'); rd.textContent=(label||regime).toUpperCase(); rd.dataset.reg=label||regime;   // 4-state label (Bull/Bear/Choppy/High-Vol)
-  $('erScore').textContent=(S>=0?'+':'')+S; $('erConf').textContent=conf+'%';
-  const sigs=[['Trend',sc.trend,'.30'],['Volatility',sc.vix,'.20'],['Breadth',sc.ad,'.20'],['Momentum',sc.mom,'.20'],['Personal',sc.pers,'.10']];
-  $('signals').innerHTML=sigs.map(([nm,v,w])=>{const pos=v>=0,width=Math.abs(v)/100*50;
-    return `<div class="sig"><span class="sig-name">${nm} <i style="color:var(--slate-2)">${w}</i></span>
-      <span class="sig-bar"><span class="sig-fill ${pos?'pos':'neg'}" style="width:${width}%"></span></span>
-      <span class="sig-val num">${v>=0?'+':''}${v}</span></div>`;}).join('');
-}
-
-/* ============================================================
-   CONTROLLER
-   ============================================================ */
-function syncSliderLabels(){const s=readSignals();
-  $('vTrend').textContent=(s.trend>=0?'+':'')+s.trend;$('vVix').textContent=s.vix.toFixed(1);
-  $('vAd').textContent=s.ad.toFixed(2);$('vRsi').textContent=s.rsi;$('vPnl').textContent=(s.pnl>=0?'+':'')+s.pnl.toFixed(1)+'%';}
 function recompute(opts={}){
   syncSliderLabels();
   const raw=readSignals(),sc=scoreSignals(raw),S=composite(sc),conf=confidence(S,sc);
@@ -5417,9 +3493,76 @@ function recompute(opts={}){
   state.prevVix=raw.vix;
   renderEngineSrc();
 }
+/* ---------- Trading Floor (Day/Night) surface ---------- */
+function powerOn(){ const f=$('floorSweep'); if(!f)return; f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
+/* ---------- day/night CASCADE: trading floor powers on/off, pane by pane ----------
+   Freeze each visible pane in the OLD theme (inline CSS vars inherit to the whole
+   subtree), flip the global theme so the canvas changes at once, then release the
+   panes in a ripple outward from the toggle, each flipping with an accent flash. */
+const THEME_VARS=['--bg','--surface','--surface-2','--white','--line','--line-2','--navy','--slate','--slate-2','--green','--green-d','--red','--red-d','--blue','--amber','--tint-down','--tint-warn','--tint-info','--bd-down','--bd-warn','--up-flash','--down-flash','--topbar-bg','--glass','--glass-hi','--shadow','--shadow-hover','--shadow-lg','--accent','--accent-d','--accent-soft','--accent-line'];
+const CASCADE_SEL=['.topbar','.ticker-bar','.regime-bar','.pane-left','.chart-card','#investHub','.panel','.order-card','.ctx-card','#modeFab',
+  /* algo / ai / trader-desk takeover panes. So day↔night powers on in EVERY persona, not just the 3-pane floor */
+  '.av-head','.av-scroll','.ai-main','.ai-side','.desk-head','.desk-scroll'];
+function cascadeSurface(next){
+  if(prefersReduced()||!document.querySelector('.topbar')){ setSurface(next); return; }
+  const cs=getComputedStyle(document.documentElement);
+  const oldVals={}; THEME_VARS.forEach(v=>{const val=cs.getPropertyValue(v).trim(); if(val) oldVals[v]=val;});
+  const keys=Object.keys(oldVals);
+  const btn=$('surfaceToggle'); const br=btn?btn.getBoundingClientRect():{left:innerWidth-40,top:20,width:24,height:24};
+  const ox=br.left+br.width/2, oy=br.top+br.height/2;
+  const cards=[];
+  CASCADE_SEL.forEach(s=>document.querySelectorAll(s).forEach(el=>{ if(el.getClientRects().length) cards.push(el); }));
+  cards.forEach(el=>{
+    keys.forEach(v=>el.style.setProperty(v,oldVals[v]));            // freeze in old theme
+    const r=el.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2;
+    el.__dist=Math.hypot(cx-ox,cy-oy);
+    el.style.setProperty('--fx',(((ox-r.left)/Math.max(1,r.width))*100).toFixed(1)+'%');  // flash points back at toggle
+    el.style.setProperty('--fy',(((oy-r.top)/Math.max(1,r.height))*100).toFixed(1)+'%');
+  });
+  cards.sort((a,b)=>a.__dist-b.__dist);
+  setSurface(next,true);                                            // flip global theme (canvas) now; panes held by local vars
+  const step=58;
+  cards.forEach((el,i)=>setTimeout(()=>{
+    el.classList.add('theme-flip');
+    keys.forEach(v=>el.style.removeProperty(v));                    // release → pane eases to new theme + flashes
+    setTimeout(()=>{ el.classList.remove('theme-flip'); el.style.removeProperty('--fx'); el.style.removeProperty('--fy'); },620);
+  }, i*step));
+}
+
+/* ---------- live tape: VIX-driven ticks with uptick/downtick flash ---------- */
+function flashNum(el,txt,dir){ el.textContent=txt; el.classList.remove('tk-up','tk-down'); void el.offsetWidth; el.classList.add(dir>=0?'tk-up':'tk-down'); }
+function doTick(){
+  // LIVE: real Kite WebSocket ticks (loadTicks) drive every price, never fabricate
+  // movement on top of them. This synthetic tape only animates the offline demo.
+  // (BOT is a module-scoped `let`, NOT on window, reference it directly.)
+  if(typeof BOT!=='undefined' && BOT.live) return;
+  if(state.algo && state.algo.market==='crypto') return;   // crypto tape is fed by real Binance data, never synth-tick it
+  const vix=+$('sVix').value, vol=clamp((vix-8)/27,0,1), night=state.surface==='night'?1.4:1;
+  const upd=(el,dec)=>{const base=parseFloat(el.textContent.replace(/,/g,''))||0; if(!base)return;
+    const mv=(Math.random()-0.5)*base*0.0007*(0.4+vol*3.2)*night;
+    flashNum(el,(base+mv).toLocaleString('en-IN',{maximumFractionDigits:dec}),mv);};
+  document.querySelectorAll('#topIndex .tb-seq-a .tix-val').forEach(el=>upd(el,(parseFloat(el.textContent.replace(/,/g,''))||0)>=20000?0:1));
+  const _sa=document.querySelector('#topIndex .tb-seq-a'),_sb=document.querySelector('#topIndex .tb-seq-b'); if(_sa&&_sb)_sb.innerHTML=_sa.innerHTML; // keep the looped copy in sync
+  document.querySelectorAll('#wlRows .wl-row .wl-ltp').forEach(el=>{if(Math.random()<0.6+vol*0.4)upd(el, (parseFloat(el.textContent.replace(/,/g,''))||0)>1000?1:2);});
+  const op=$('ordLtp'); if(op) upd(op,1);
+}
+
+
+/* ============================================================
+   CARD MINIMIZE / MAXIMIZE  (per-card focus & flexibility)
+   ============================================================ */
+/* ============================================================
+   WIDGET LIBRARY: persona-aware, user-composable cards (right rail)
+   Two distinct catalogs are the trader/investor differentiator.
+   ============================================================ */
+
+/* ============================================================
+   CONTROLLER
+   ============================================================ */
+function syncSliderLabels(){const s=readSignals();
+  $('vTrend').textContent=(s.trend>=0?'+':'')+s.trend;$('vVix').textContent=s.vix.toFixed(1);
+  $('vAd').textContent=s.ad.toFixed(2);$('vRsi').textContent=s.rsi;$('vPnl').textContent=(s.pnl>=0?'+':'')+s.pnl.toFixed(1)+'%';}
 /* ---- Regime panel ↔ live Kite: feed the real signals into the sliders so the panel,
-   gauge and AUTO switching all reflect the live market. scoreSignals() over these raw
-   values reproduces the bot's engine.components exactly (same weights). ---- */
 function syncSlidersFromLive(){
   const sg=BOT.live&&BOT.market&&BOT.market.signals; if(!sg) return false;
   const set=(id,v,lo,hi)=>{ if(typeof v!=='number'||!isFinite(v)) return; const el=$(id); if(el) el.value=clamp(v,lo,hi); };
@@ -5435,6 +3578,16 @@ function resyncLive(){
   else { recompute(); }
 }
 // Honest source badge: LIVE (mirrors Kite) · WHAT-IF (user override) · SIMULATED (offline demo).
+function renderEngine(S,sc,conf,regime,label){
+  $('gaugeNeedle').style.left=clamp((S+100)/200*100,1,99)+'%';
+  const rd=$('erRegime'); rd.textContent=(label||regime).toUpperCase(); rd.dataset.reg=label||regime;   // 4-state label (Bull/Bear/Choppy/High-Vol)
+  $('erScore').textContent=(S>=0?'+':'')+S; $('erConf').textContent=conf+'%';
+  const sigs=[['Trend',sc.trend,'.30'],['Volatility',sc.vix,'.20'],['Breadth',sc.ad,'.20'],['Momentum',sc.mom,'.20'],['Personal',sc.pers,'.10']];
+  $('signals').innerHTML=sigs.map(([nm,v,w])=>{const pos=v>=0,width=Math.abs(v)/100*50;
+    return `<div class="sig"><span class="sig-name">${nm} <i style="color:var(--slate-2)">${w}</i></span>
+      <span class="sig-bar"><span class="sig-fill ${pos?'pos':'neg'}" style="width:${width}%"></span></span>
+      <span class="sig-val num">${v>=0?'+':''}${v}</span></div>`;}).join('');
+}
 function renderEngineSrc(){
   const el=$('engSrc'); if(!el) return;
   if(state.simOverride){
@@ -5442,12 +3595,12 @@ function renderEngineSrc(){
     el.innerHTML=`<span class="es-dot"></span><span class="es-txt"><b>What-if</b> · simulated inputs, not the live market</span>${BOT.live?`<button class="es-reset" id="esReset" type="button">Use live</button>`:''}`;
   } else if(BOT.live && BOT.market){
     const reg=(BOT.market.engine&&BOT.market.engine.regime)||'-';
-    const t=BOT.market.asOf?new Date(BOT.market.asOf).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'';
+    const t=BOT.market.asOf?new Date(BOT.market.asOf).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';
     el.className='eng-src live';
-    el.innerHTML=`<span class="es-dot live"></span><span class="es-txt"><b>● LIVE from Kite</b> · ${esc(reg)}${t?` · ${t}`:''} · updates every 30s</span>`;
+    el.innerHTML=`<span class="es-dot live"></span><span class="es-txt"><b>● LIVE from Binance</b> · ${esc(reg)}${t?` · ${t}`:''} · updates every 30s</span>`;
   } else {
     el.className='eng-src off';
-    el.innerHTML=`<span class="es-dot"></span><span class="es-txt"><b>Simulated</b> · connect Kite for the live regime, drag to explore</span>`;
+    el.innerHTML=`<span class="es-dot"></span><span class="es-txt"><b>Simulated</b> · connect the live engine for the real regime, drag to explore</span>`;
   }
   const rb=$('esReset'); if(rb) rb.onclick=resyncLive;
 }
