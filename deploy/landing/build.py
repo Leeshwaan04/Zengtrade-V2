@@ -128,6 +128,7 @@ HOWITWORKS_SCHEMA = """<script type="application/ld+json">
 def shell(title, desc, canon, main, extra_head=""):
     return f"""<!DOCTYPE html><html lang="en" data-regime="bull"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="frame-ancestors 'none'">
 <script>document.documentElement.className+=" js";</script>
 <title>{title}</title>
 <meta name="description" content="{desc}">
