@@ -43,6 +43,12 @@ Deno.serve(async (req) => {
 
     // order_id carries everything the IPN webhook needs to grant the right tier for the right user.
     const order_id = `${user.id}:${plan}:${cycle}:${Date.now()}`;
+    // BUG FIX (2026-09-10): the invoice never told NOWPayments who eats its processing/network
+    // fee, so their hosted checkout used its own default and charged the customer the fee on top,
+    // real disposable-account test paid ~$29 against the advertised $19, undisclosed anywhere.
+    // is_fee_paid_by_user:false + fixed_rate:true means the price ZengTrade quotes is the price
+    // the customer pays, the fee comes out of ZengTrade's payout instead, same model as absorbing
+    // a card processor's cut rather than surprising the customer with it.
     const resp = await fetch("https://api.nowpayments.io/v1/invoice", {
       method: "POST",
       headers: { "x-api-key": key, "Content-Type": "application/json" },
@@ -54,6 +60,8 @@ Deno.serve(async (req) => {
         ipn_callback_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/nowpayments-ipn`,
         success_url: `${SITE}/app?paid=1`,
         cancel_url: `${SITE}/app#pricing`,
+        is_fee_paid_by_user: false,
+        fixed_rate: true,
       }),
     });
     const data = await resp.json().catch(() => ({}));
