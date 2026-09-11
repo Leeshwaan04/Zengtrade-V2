@@ -285,7 +285,6 @@ function saveState(){try{localStorage.setItem(LS_KEY,JSON.stringify({
   mode:state.mode,regime:state.displayed,surface:state.surface,regimeCollapsed:state.regimeCollapsed,
   watchlist:SYMS.map(s=>({sym:s.sym,name:s.name,exch:s.exch,type:s.type,key:itemKey(s),token:s.token,sector:s.sector,beta:s.beta,lot:s.lot,expiry:s.expiry,strike:s.strike,seg:s.seg,hold:s.hold})),wlCustom:!!state.wlCustom,
   selected:state.selected,paneW:state.paneW,chartH:state.chartH,
-  plan:state.plan,billing:state.billing,
   persona:state.persona,investSection:state.investSection,layout:state.layout,customLayouts:state.customLayouts,activeCustom:state.activeCustom,aiCfg:state.aiCfg,widgets:state.widgets,cards:state.cards,ticker:state.ticker,algo:(state.algo?{view:state.algo.view,exec:state.algo.exec,market:state.algo.market}:null),chart:(window.TPChart?TPChart.serialize():null)}));}catch(e){}}
 function saveChart(){saveState();}   // persist callback for the chart engine
 function loadState(){
@@ -3727,8 +3726,6 @@ function init(){
   if(saved&&saved.ticker) state.ticker=saved.ticker;
   if(saved&&typeof saved.regimeCollapsed==='boolean') state.regimeCollapsed=saved.regimeCollapsed;
   state.persona=CRYPTO_ONLY?'algo':((saved&&saved.persona)||'trader');
-  state.plan=(saved&&TIER_RANK[saved.plan]!=null)?saved.plan:'algopro';   // restore tier (validated)
-  state.billing=(saved&&(saved.billing==='mo'||saved.billing==='yr'))?saved.billing:'mo';
   renderPlanChip();
   state.investSection=(saved&&saved.investSection)||null;
   state.layout=(saved&&['originals','charts','watchlist','options','futures','build'].indexOf(saved.layout)>=0)?saved.layout:'originals';
@@ -3983,79 +3980,14 @@ function initAddScrip(){   // watchlist "Add scrip…" box → add any instrumen
    it; real checkout (Razorpay) + user accounts aren't wired, nothing is charged.
    ============================================================ */
 // each feature = [label, liveToday?]  → storefront shows ✓ available now vs ○ on the roadmap (honest)
-const PLANS=[
-  {id:'free',name:'Paper',tag:'Free forever',mo:0,yr:0,accent:'#64748b',
-   blurb:'The honest core, analyse real markets &amp; paper-trade, free.',
-   feats:[['Full terminal + all-segment search',1],['Real charts &amp; option chain',1],['Real portfolio (read-only)',1],['Paper trading + forward-test',1],['Regime engine',1],['AI copilot (demo; live via your proxy)',1]]},
-  {id:'trader',name:'Trader',tag:'Active trader',mo:349,yr:2990,accent:'#0ea5e9',
-   blurb:'A real cockpit on top of your Zerodha account.',
-   feats:[['Everything in Paper',1],['Streaming chain + indices',1],['Portfolio analytics (drift/concentration)',0],['Real order execution',0],['Price/indicator alerts',0],['Multiple named watchlists',0]]},
-  {id:'algopro',name:'Algo Pro',tag:'Automation',star:true,mo:749,yr:5990,accent:'#10b981',
-   blurb:'Run validated strategies live, pay only when it’s proven.',
-   feats:[['Everything in Trader',1],['16-gate go-live audit',1],['Real historical backtests',0],['Run strategies live (in-UI)',0],['Deploy / pause from the UI',0],['AI copilot (higher limits)',1]]},
-  {id:'quant',name:'Quant',tag:'Power user / HNI',mo:1799,yr:14990,accent:'#8b5cf6',
-   blurb:'Unlimited automation, API access &amp; priority compute.',
-   feats:[['Everything in Algo Pro',1],['Unlimited live strategies',0],['Priority backtests',0],['API access',0],['Advanced analytics',0],['Highest AI limits',1]]},
-];
-const ADDONS=[
-  {id:'copilot',name:'Copilot',mo:249,note:'150 msgs + credits at cost +15%',blurb:'The AI agent: reads real holdings, runs backtests, drafts gated orders.'},
-  {id:'slot',name:'Extra live slot',mo:199,note:'per strategy / mo',blurb:'Scale automation, pay only for what you run.'},
-];
-const TIER_RANK={free:0,trader:1,algopro:2,quant:3};
-// NB: feature entitlement ENFORCEMENT is intentionally NOT done client-side (it's bypassable), 
-// the storefront is a roadmap preview; real gating belongs server-side once there's a backend.
-function curPlan(){ return PLANS.find(p=>p.id===state.plan)||PLANS[0]; }
-function renderPlanChip(){ const el=$('planChip'); if(!el) return; const p=curPlan();
-  el.innerHTML=`${p.star?icon('bolt',12):icon('spark',12)}<span>${esc(p.name)}</span>`;
-  el.title='Your plan: '+p.name+', view pricing'; el.onclick=openPricing; }
-let _pxEsc;
-function closePricing(){ const o=$('pricingOv'); if(o)o.remove(); if(_pxEsc)document.removeEventListener('keydown',_pxEsc); }
-function openPricing(){
-  closePricing();
-  const annual=(state.billing||'mo')==='yr';
-  const cards=PLANS.map(p=>{
-    const cur=p.id===state.plan;
-    const price=p.mo===0?'Free':(annual?`₹${Math.round(p.yr/12).toLocaleString('en-IN')}`:`₹${p.mo.toLocaleString('en-IN')}`);
-    const sub=p.mo===0?'forever':(annual?`/mo · ₹${p.yr.toLocaleString('en-IN')} billed yearly`:'/mo');
-    const up=TIER_RANK[p.id]>TIER_RANK[state.plan];
-    const cta=cur?`<button class="pc-cta cur" disabled>${icon('check',13)} Previewing</button>`
-      :`<button class="pc-cta" data-pickplan="${p.id}">Preview ${esc(p.name)}</button>`;
-    return `<div class="pc-card${p.star?' star':''}${cur?' cur':''}" style="--pc:${p.accent}">
-      ${p.star?'<span class="pc-flag">Most popular</span>':''}
-      <div class="pc-h"><b>${esc(p.name)}</b><i>${esc(p.tag)}</i></div>
-      <div class="pc-price"><b>${price}</b><span>${sub}</span></div>
-      <p class="pc-blurb">${p.blurb}</p>
-      <ul class="pc-feats">${p.feats.map(([f,live])=>`<li class="${live?'':'soon'}"><span class="pc-tk">${icon(live?'check':'clock',12)}</span>${f}${live?'':' <i class="soon-pill">soon</i>'}</li>`).join('')}</ul>
-      ${cta}</div>`;
-  }).join('');
-  const addons=ADDONS.map(a=>`<div class="pc-addon"><div class="pc-an"><b>${esc(a.name)}</b><span>₹${a.mo}/mo · ${esc(a.note)}</span></div><p>${esc(a.blurb)}</p></div>`).join('');
-  const ov=document.createElement('div'); ov.className='pricing-ov'; ov.id='pricingOv';
-  ov.innerHTML=`<div class="pricing-panel" role="dialog" aria-modal="true" aria-label="Pricing">
-    <div class="pricing-top"><div><h2>Pricing, roadmap preview</h2>
-      <p>Our planned model. <b class="leg-now">✓ available today</b> · <b class="leg-soon">○ on the roadmap</b>. We only charge for what’s real, nothing here is billed yet.</p></div>
-      <button class="pricing-x" data-pxclose aria-label="Close pricing">${icon('close',18)}</button></div>
-    <div class="pricing-founder">${icon('bolt',14)}<span><b>Founder Lifetime</b>: first 250 users: <b>₹4,999 once</b> = lifetime Algo Pro. <i>60-day launch offer.</i></span></div>
-    <div class="pricing-toggle"><button class="pt-opt${!annual?' on':''}" data-cycle="mo">Monthly</button><button class="pt-opt${annual?' on':''}" data-cycle="yr">Annual <i>save ~30%</i></button></div>
-    <div class="pricing-grid">${cards}</div>
-    <div class="pricing-addons"><div class="pc-addons-h">Add-ons</div>${addons}</div>
-    <div class="pricing-b2b">${icon('shield',15)}<div><b>White-label / B2B</b>: license the honest-algo + safety + terminal stack to sub-brokers, RIAs &amp; PMS who hold the advice licenses. The cleanest path, highest ACV. <button class="pc-link" data-pxb2b>Talk to us →</button></div></div>
-    <p class="pricing-demo">${icon('shield',12)}<span><b>Roadmap preview, nothing is charged.</b> ✓ = working today · ○ = planned. Choosing a plan just previews the tier in-app; real checkout (Razorpay) &amp; accounts aren’t built. We won’t sell a feature until it’s real.</span></p>
-  </div>`;
-  document.body.appendChild(ov);
-  ov.addEventListener('click',e=>{
-    if(e.target===ov||e.target.closest('[data-pxclose]')) return closePricing();
-    const c=e.target.closest('[data-cycle]'); if(c){ state.billing=c.dataset.cycle; saveState(); openPricing(); return; }
-    const pk=e.target.closest('[data-pickplan]'); if(pk) return pickPlan(pk.dataset.pickplan);
-    if(e.target.closest('[data-pxb2b]')) quickToast('White-label enquiry','In production this opens a B2B contact form / Calendly. Tell me and I’ll wire it.');
-  });
-  _pxEsc=e=>{ if(e.key==='Escape')closePricing(); }; document.addEventListener('keydown',_pxEsc);
-}
-function pickPlan(id){
-  if(!PLANS.find(p=>p.id===id)) return;
-  state.plan=id; saveState(); closePricing(); renderPlanChip();
-  if(typeof applyPersona==='function') applyPersona(state.persona);
-  quickToast('Previewing '+curPlan().name,'Roadmap preview, nothing is charged. ✓ features work today; ○ features are planned.');
-}
+// The old in-app "pricing preview" modal (PLANS/ADDONS tiers, Zerodha-cockpit copy, Razorpay,
+// RIA/PMS white-label pitch) was entirely pre-pivot Indian-equity content with its own fake
+// tier prices in rupees, disconnected from the real crypto billing (NOWPayments, $19/mo
+// Founding Pro) that actually exists on /pricing and /app#pricing. Rather than reskin numbers
+// that don't correspond to anything real, the chip now just opens the real pricing directly.
+function renderPlanChip(){ const el=$('planChip'); if(!el) return;
+  el.innerHTML=`${icon('bolt',12)}<span>Pricing</span>`;
+  el.title='View plans & pricing'; el.onclick=()=>{ window.location.href='/app#pricing'; }; }
 
 document.addEventListener('DOMContentLoaded',init);
 
