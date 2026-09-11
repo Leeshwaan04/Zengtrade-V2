@@ -403,7 +403,10 @@ function setMarket(m){
 function renderTopIndex(){
   const track=$('topIndex'); if(!track) return;
   // CRYPTO MODE: the global tape rolls live Binance prices (independent of Kite). Real data only.
-  const bar=track.closest('.ticker-bar'); const crypto=!!(state.algo&&state.algo.market==='crypto');
+  // CRYPTO_ONLY is known at script load, before state.algo.market gets set during boot (init() sets
+  // it a few calls later) - checking it directly here closes that gap instead of racing it, which
+  // used to flash the old "connect Kite" banner for a moment on every fresh load.
+  const bar=track.closest('.ticker-bar'); const crypto=CRYPTO_ONLY||!!(state.algo&&state.algo.market==='crypto');
   if(bar) bar.classList.toggle('crypto',crypto);
   if(crypto){ renderCryptoTape(track); return; }
   // NO FAKE PRICES: when Kite isn't connected, show an honest banner instead of synthetic ticks.
@@ -1457,6 +1460,8 @@ const BOT_API=(()=>{
   return '';   // production: SAME-ORIGIN, the tunnel routes /api/* to the bot, so the Cloudflare
                // Access cookie rides along automatically. No CORS, no CSP change, no secret in JS.
 })();
+let BOT={loaded:false,connected:false,status:null,paperMode:true,error:false,chains:{},chainExp:{},futures:null};
+let ALGOS=[];   // no fabricated strategies, loadBotData() fills this from the real crypto engine
 async function loadBotData(){
   try{
     const reqs=CRYPTO_ONLY
