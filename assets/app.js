@@ -2433,7 +2433,7 @@ function scheduleCryptoWSReconnect(){
 }
 // ---- crypto views ----
 function cryptoStatusBar(){
-  const live=CRYPTO.live, t=CRYPTO.t?new Date(CRYPTO.t).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'';
+  const live=CRYPTO.live, t=CRYPTO.t?new Date(CRYPTO.t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';
   const cells=[
     `<div class="asb-cell"><span class="asb-l">Venue${infoI('Binance public market data (read-only, no API key). Real prices, never simulated.')}</span><span class="asb-v"><span class="live-dot ${live?'live':''}"></span>Binance</span></div>`,
     `<div class="asb-cell"><span class="asb-l">Data</span><span class="asb-v">${live?`● LIVE${t?` · ${t}`:''}`:(CRYPTO.error?'Unreachable, retrying':'Connecting…')}</span></div>`,
@@ -2606,7 +2606,7 @@ function cryptoMonitor(){
   const scoped=(d.strategies||[]).filter(s=>(s.instr||'spot')===cur);
   const t=scoped.reduce((a,s)=>{a.realised+=s.realisedPnl||0;a.unreal+=s.openPnl||0;a.pnl+=s.paperPnl||0;a.open+=s.openPositions||0;return a;},{realised:0,unreal:0,pnl:0,open:0});
   const clsLabel=(CX_INSTR.find(x=>x[0]===cur)||[,'Spot'])[1];
-  const upd=d.updated?new Date(d.updated).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'';
+  const upd=d.updated?new Date(d.updated).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';
   const gate=cur==='perps'?' Perps can go long OR short and harvest funding.':cur==='options'?' Premium selling, regime-gated (never sold into a strong trend).':' Long-only on spot majors.';
   const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Live crypto paper book, ${esc(clsLabel)}.</b> Real Binance prices, simulated fills, <b>no crypto orders are placed</b>.${gate} Same survival-first Governor across every strategy. P&L is USDT on a $${Math.round((d.capital||1e6)/1000)}K sizing sandbox.</span></div>`;
   if(cur==='options' && !scoped.length){
@@ -3342,7 +3342,7 @@ function applyPaneWidths(){
 function applyChartHeight(){
   const card=$('chartCard'); if(card) card.style.height=state.chartH?state.chartH+'px':'';
 }
-const sgn=n=>Number.isFinite(n)?(n>=0?'+':'−')+'₹'+Math.abs(Math.round(n)).toLocaleString('en-IN'):'-';
+const sgn=n=>Number.isFinite(n)?(n>=0?'+':'−')+'$'+Math.abs(Math.round(n)).toLocaleString():'-';
 const WIDGET_CATALOG={
   trader:[
     {key:'movers',name:'Top Movers',icon:'trendUp',desc:'Biggest gainers & losers right now',render(){
