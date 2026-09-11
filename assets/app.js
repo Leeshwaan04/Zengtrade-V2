@@ -3743,6 +3743,17 @@ function init(){
     }
     if(saved.algo.market==='in'||saved.algo.market==='crypto'){ state.algo=state.algo||{bt:{algo:0,period:'1Y'}}; state.algo.market=saved.algo.market; }
   }
+  // CRYPTO_ONLY forces state BEFORE the first setMode/applyRegime/recompute below, not after - those
+  // calls fan out into renderAlgo() and 30+ other spots gated on state.algo.market==='crypto'. Forcing
+  // this late (as it used to) meant the very first render of the whole chain ran against unset/legacy
+  // state and showed the pre-pivot layout for one frame - the flash a fresh login used to hit every time.
+  if(CRYPTO_ONLY){
+    state.algo=state.algo||{}; state.algo.market='crypto'; state.persona='algo';
+    const wlTabs=document.querySelector('.wl-tabs'); if(wlTabs) wlTabs.style.display='none';
+    const invHub=$('investHub'); if(invHub) invHub.style.display='none';
+    const deskView=$('deskView'); if(deskView) deskView.style.display='none';
+    document.documentElement.dataset.persona='algo';
+  }
   if(state.layout==='options')state.desk.view='chain'; else if(state.layout==='futures')state.desk.view='futures';
   // restore named custom layouts (validate card keys against the live catalog)
   const validCard=c=>c&&canvasCatalog().some(w=>w.key===c.key);
@@ -3773,17 +3784,9 @@ function init(){
   applyRegime(startMode==='manual'&&saved&&saved.regime?saved.regime:'bull');
   recompute({silent:true});
   renderHdrMarket();
-  if(CRYPTO_ONLY){ state.algo=state.algo||{}; state.algo.market='crypto'; }
   if(CRYPTO_ONLY && !(saved&&saved.watchlist)){
     SYMS=CRYPTO_UNIVERSE.slice(0,6).map(c=>({sym:c.tk,name:c.name,exch:'CRYPTO',type:'SPOT',key:'CRYPTO:'+c.sym,ltp:0,chg:0,live:false}));
     state.wlCustom=true;
-  }
-  if(CRYPTO_ONLY){
-    const wlTabs=document.querySelector('.wl-tabs'); if(wlTabs) wlTabs.style.display='none';
-    const invHub=$('investHub'); if(invHub) invHub.style.display='none';
-    const deskView=$('deskView'); if(deskView) deskView.style.display='none';
-    document.documentElement.dataset.persona='algo';
-    state.persona='algo';
   }
   if(CRYPTO_ONLY || (state.algo&&state.algo.market==='crypto')){ renderTopIndex(); loadCrypto().then(()=>{ if(state.algo.market==='crypto'){ patchCryptoTape(); applyTickerSpeed(); } }); connectCryptoWS(); }
   tapeLoop();
