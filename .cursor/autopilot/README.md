@@ -1,6 +1,20 @@
 # zengtrade Autopilot Agents
 
-Seven role-based Cloud Agent charters run on a schedule (or on demand). Each agent reads its charter, executes the highest-priority unchecked task, updates `saas/web/ops-data.json` and `docs/GROWTH_DASHBOARD.md`, and **commits directly to `main`** (no PRs unless the founder asks).
+Seven role-based charters. As of 2026-09-11, Claude Code is the senior actor for all seven roles:
+whenever a Claude Code session is active (interactively or on a schedule via CronCreate), it reads
+this file + `saas/web/ops-data.json` + recent commit history first, so it picks up wherever the
+Cursor Cloud Agents left off rather than duplicating work. Cursor's scheduled agents (below) stay
+on as the persistent floor — they're the only thing that runs work when no Claude Code session is
+open, since Claude Code's own scheduling (CronCreate) is session-bound and caps at 7 days, unlike
+Cursor's server-side schedule. Revisit pausing Cursor once the founder trusts the Claude Code path.
+
+Standing approval gate for Claude Code operating under these charters: **anything touching money**
+(pricing, billing logic, payment-provider config, refunds) stops and asks the founder first.
+Everything else in the charters below, it does on its own judgment and commits directly.
+
+Each agent reads its charter, executes the highest-priority unchecked task, updates
+`saas/web/ops-data.json` and `docs/GROWTH_DASHBOARD.md`, and **commits directly to `main`** (no PRs
+unless the founder asks).
 
 ## How to enable true autopilot (Cursor)
 
