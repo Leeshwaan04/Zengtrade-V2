@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-12T02:07:33Z",
+  "updated": "2026-09-12T09:48:31Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
@@ -489,10 +489,10 @@
   "rnd": {
     "headline": "Retention, revenue & GTM R&D",
     "shipped": [
-      "Charter: .cursor/autopilot/rnd.md (2026-09-12) — retention mechanics, revenue experiments, GTM exploration, scoped separately from CBO/Marketing/Sales' operational work",
+      "Charter: .cursor/autopilot/rnd.md (2026-09-12) \u2014 retention mechanics, revenue experiments, GTM exploration, scoped separately from CBO/Marketing/Sales' operational work",
       "First finding: no re-engagement mechanic exists for a closed paper trade (P0, unowned before this charter)"
     ],
-    "next": "Design the first retention hook for a closed paper trade; worker went live 2026-09-11 with 0 deployments so far — mechanics need to be in place before real usage arrives, not after",
+    "next": "Design the first retention hook for a closed paper trade; worker went live 2026-09-11 with 0 deployments so far \u2014 mechanics need to be in place before real usage arrives, not after",
     "links": [
       {
         "label": "R&D charter (repo)",
@@ -503,8 +503,8 @@
   "content": {
     "headline": "Content strategy & taxonomy",
     "shipped": [
-      "Charter: .cursor/autopilot/content.md (2026-09-12) — owns content taxonomy/roadmap (/learn/, new /blog/, glossary expansion); SEO keeps the coin-page generator, Marketing keeps distribution",
-      "Real-ceiling guardrail baked into the charter from day one: page count follows real non-duplicated content (coin+strategy math, genuine topics), never a round target — padding is scaled content abuse and risks the whole domain"
+      "Charter: .cursor/autopilot/content.md (2026-09-12) \u2014 owns content taxonomy/roadmap (/learn/, new /blog/, glossary expansion); SEO keeps the coin-page generator, Marketing keeps distribution",
+      "Real-ceiling guardrail baked into the charter from day one: page count follows real non-duplicated content (coin+strategy math, genuine topics), never a round target \u2014 padding is scaled content abuse and risks the whole domain"
     ],
     "next": "Add /blog/ (timely posts, distinct from /learn/'s evergreen guides) + nav entries; expand glossary past 46 terms with real terms only. Founder confirmed 2026-09-12: grow toward the real ~8,800-page coin+strategy ceiling first (not a bigger round number), and Hostinger Reach for the newsletter once a plan is active (see founder_actions).",
     "links": [
@@ -523,11 +523,11 @@
     "billing": true,
     "billing_ready": true,
     "gsc_ready": false,
-    "activation_ready": true,
+    "activation_ready": false,
     "funnel_ctas": true,
     "migration_0011": true,
     "worker": true,
-    "worker_heartbeat_utc": "2026-09-12T02:06:59",
+    "worker_heartbeat_utc": "2026-09-12T09:42:49",
     "all_p0_green": true,
     "database_url_auth_ok": false,
     "parallel_growth_ready": true,
