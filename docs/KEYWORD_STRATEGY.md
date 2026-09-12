@@ -126,6 +126,22 @@ shape as `coin_{slug}`, captured automatically by the existing pageview beacon �
 **Shipped:** all 150 coin pages' "Honest about the cost" paragraph now links to this article
 (`seo/generate.py`'s `coin_parts()`).
 
+## `/blog/` (added session 220, owned by Content Strategist)
+
+Distinct from `/learn/` on purpose: `/learn/` targets evergreen definitional queries and is meant
+to rank for years; `/blog/` is dated build-in-public posts (what shipped, honest progress notes)
+and isn't trying to own a keyword the way a `/learn/` article does — each post's "primary keyword"
+is really just its own headline. Don't let a blog post's phrasing drift onto a keyword `/learn/`
+or a coin page already owns.
+
+| Page | Note |
+|---|---|
+| `/blog/` (hub) | No keyword target — a dated index, not a ranking page |
+| `/blog/retention-hook-and-coin-coverage/` | First post (2026-09-12) — ships the retention-hook and coin-coverage-expansion news, doesn't compete with any `/learn/` keyword |
+
+**UTM convention:** `utm_campaign=blog_{slug}` on each post's signup CTA, same shape as
+`learn_{slug}` and `coin_{slug}`.
+
 ## Content gaps and opportunities (things that don't exist yet)
 
 1. ~~No on-site educational/blog content~~ — **closed session 219**, see `/learn/` section above.

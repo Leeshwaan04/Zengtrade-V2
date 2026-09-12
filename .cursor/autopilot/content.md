@@ -73,14 +73,14 @@ Search Console impressions/clicks on that specific page, not a plan document's c
 ## Priority queue (work top-down; skip if already done)
 
 ### P0 — Foundation for expansion
-- [ ] Add `/blog/` as a new content type, distinct from `/learn/`: `/learn/` stays evergreen
-  reference (what is X, how does Y work); `/blog/` is timely posts (weekly proof updates, coin
-  spotlights, build-in-public recaps) - reuses `docs/content/WEEKLY_PROOF.md` and the coin-spotlight
-  template already drafted by Marketing instead of inventing a new format
-- [ ] Add both `/learn/` and `/blog/` to the mega-nav and mobile nav (`deploy/landing/index.html`)
-  alongside the existing "Learn" dropdown - check whether they should merge into one dropdown or
-  stay separate before shipping, since a nav with two similar-sounding items reads worse than one
-  well-organized one
+- [x] Add `/blog/` as a new content type, distinct from `/learn/` (session 220): `content/blog.py`
+  mirrors `content/articles.py`'s pipeline (markdown + front-matter, same `shell()`), BlogPosting
+  schema instead of Article. First post: `/blog/retention-hook-and-coin-coverage/`. Future posts
+  can draw on `docs/content/WEEKLY_PROOF.md` and Marketing's coin-spotlight template once there's
+  real forward-proof/usage to report - don't invent numbers to fill a cadence.
+- [x] Added both `/learn/` and `/blog/` to the mega-nav (session 220) - kept in the SAME "Learn"
+  dropdown rather than a second top-level item, per the nav-clutter concern this item raised;
+  also fixed the mobile nav panel, which had no `/learn/` link at all before this.
 - [ ] Expand `content/articles.py`'s glossary beyond its current 46 terms using real crypto/trading
   terms that appear in the product's own copy or in coin-page cost paragraphs, cross-checked
   against `docs/KEYWORD_STRATEGY.md` so no term collides with an existing page's primary keyword

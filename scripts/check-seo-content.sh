@@ -39,6 +39,8 @@ check_html "coins hub" "/coins/" "coins_hub\\|/coins/"
 check_html "coins hub category sections" "/coins/" "Majors\\|Layer-1s"
 check_html "learn hub" "/learn/" "guides"
 check_html "learn article UTM CTA" "/learn/is-zengtrade-custodial/" "utm_campaign=learn_"
+check_html "blog hub" "/blog/" "building in public"
+check_html "blog post UTM CTA" "/blog/retention-hook-and-coin-coverage/" "utm_campaign=blog_"
 check_html "robots.txt" "/robots.txt" "Sitemap:"
 
 if [[ $fail -ne 0 ]]; then

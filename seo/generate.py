@@ -147,8 +147,21 @@ STABLE_BASES = {
 # Not cryptocurrencies at all - tokenized wrappers for traditional-market assets (e.g. a Binance
 # "bStock" tokenized equity). zengtrade is a crypto-only product (see README/CRYPTO_PRODUCT.md);
 # a regime-read/strategy page for a tokenized stock proxy would be a category error, not just thin
-# content, so these are excluded even though they trade against USDT on Binance spot.
-NON_CRYPTO_BASES = {"CRCLB"}
+# content, so these are excluded even though they trade against USDT on Binance spot. Kept as an
+# explicit set (not name-matching alone) for symbols CoinGecko doesn't label clearly.
+NON_CRYPTO_BASES = {
+    "CRCLB", "GOOGLB", "MUB", "NVDAB", "DRAMB", "SNDKB", "SKHYB", "SPCXB", "TSLAB", "MSTRB",
+}
+
+# Session 220: expanding the roster from 150->300 coins reached deep enough into CoinGecko's
+# rankings to surface NINE tokenized-stock listings (Tesla, Nvidia, Alphabet, SpaceX, Micron,
+# SanDisk, SK Hynix, MicroStrategy, a memory-chip ETF) that the hardcoded set above didn't yet
+# know about - a real category-error bug caught before it shipped, not a hypothetical. CoinGecko
+# names every one of these "<Company> (bStocks Tokenized Stock)", so this catches the whole class
+# generically instead of needing a new hardcoded ticker every time the roster grows further.
+def _is_tokenized_stock(name):
+    n = (name or "").lower()
+    return "tokenized stock" in n or "bstocks" in n
 
 # CoinGecko's `id` field is usually a fine slug (bitcoin, ethereum, solana, ...), but for a few
 # well-known coins it's the project/company name rather than the ticker people actually search for
@@ -157,14 +170,18 @@ NON_CRYPTO_BASES = {"CRCLB"}
 SLUG_OVERRIDE = {"BNB": "bnb", "XRP": "xrp"}
 
 
-def build_coin_universe(n=150):
+def build_coin_universe(n=300):
     """Real top-N coins ranked by CoinGecko market cap (stable, hard to game), filtered to
     whichever of those are actually tradable on Binance USDT spot right now (so every page still
     backs its stats with live Binance data). Market cap, not 24h volume, drives the ranking on
-    purpose: a single pump-of-the-day microcap can spike into a raw-volume top-150 for one day
+    purpose: a single pump-of-the-day microcap can spike into a raw-volume top-N for one day
     (an earlier version of this picked up things like MARSCOIN and MUBARAK that way), whereas
     market cap tracks what people actually recognise and search for. Dynamic, not hardcoded, so
-    the roster stays current as rankings shift over time."""
+    the roster stays current as rankings shift over time.
+
+    n=300 as of session 220 (founder-confirmed 2026-09-12): a deliberate batch on the way to the
+    real ~488-coin Binance-tradable ceiling, not a jump straight there - see
+    .cursor/autopilot/seo.md and content.md for why this is staged rather than one shot."""
     info = get("/api/v3/exchangeInfo")
     tradable = {
         s["baseAsset"] for s in info["symbols"]
@@ -173,7 +190,8 @@ def build_coin_universe(n=150):
         and s["baseAsset"] not in NON_CRYPTO_BASES
     }
     universe, seen = {}, set()
-    for page in (1, 2, 3):
+    for page in (1, 2, 3, 4, 5):  # up to 1250 candidates so a real N=300+ still has margin after
+                                   # filtering to Binance-tradable-only (was (1,2,3) for N=150)
         if len(universe) >= n:
             break
         try:
@@ -191,6 +209,8 @@ def build_coin_universe(n=150):
             sym = str(r.get("symbol", "")).upper()
             if not sym or sym in seen or sym not in tradable:
                 continue
+            if _is_tokenized_stock(r.get("name")):
+                continue
             seen.add(sym)
             slug = SLUG_OVERRIDE.get(sym) or r.get("id") or sym.lower()
             universe[sym] = (r.get("name") or sym, slug, CATEGORY_MAP.get(sym, DEFAULT_CATEGORY))
@@ -200,7 +220,7 @@ def build_coin_universe(n=150):
 
 
 try:
-    COINS = build_coin_universe(150)
+    COINS = build_coin_universe(300)
     if not COINS:
         raise RuntimeError("empty coin universe")
 except Exception as ex:

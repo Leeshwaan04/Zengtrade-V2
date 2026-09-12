@@ -343,12 +343,22 @@ try:
 except Exception as ex:
     print("  ! /learn/glossary/ skipped (marketing site still builds):", ex)
 
+# ---- /blog/ timely posts live in content/blog.py (same shell(), sibling to articles.py but a
+# different editorial calendar - see its module docstring) ------------------------------------
+blog_css, blog_posts = "", []
+try:
+    import blog as BLOG
+    blog_css = BLOG.BLOG_CSS
+    blog_posts = BLOG.load_posts()
+except Exception as ex:
+    print("  ! /blog/ skipped (marketing site still builds):", ex)
+
 # ---- write everything -----------------------------------------------------------------
 if os.path.exists(DIST):
     shutil.rmtree(DIST)
 os.makedirs(DIST)
 shutil.copytree(os.path.join(HERE, "assets"), os.path.join(DIST, "assets"))
-open(os.path.join(DIST, "site.css"), "w").write(css + HOME_CSS + coin_css + article_css + glossary_css)   # ONE stylesheet for every page
+open(os.path.join(DIST, "site.css"), "w").write(css + HOME_CSS + coin_css + article_css + glossary_css + blog_css)   # ONE stylesheet for every page
 
 # ---- bundle the Supabase auth app onto the SAME origin (login / dashboard / legal) -----
 # Written as FOLDERS (login/index.html) so clean URLs work on GitHub Pages, which has no
@@ -488,6 +498,18 @@ if glossary_terms:
         title, desc, canon, gmain, extra = GL.term_parts(t)
         emit(os.path.join("learn", "glossary", t["slug"]), shell(title, desc, canon, gmain, extra_head=extra), canon)
     print("  ✓ /learn/glossary/ (%d terms)" % len(glossary_terms))
+
+# ---- /blog/ hub + posts (identical shell -> full design parity) -----------------------
+if blog_posts:
+    emit("blog", shell(
+        "Blog | zengtrade",
+        "Dated, honest build-in-public updates on what shipped in zengtrade's crypto algo studio. No hype, no fabricated numbers.",
+        "https://zengtrade.in/blog/", BLOG.blog_hub_main(blog_posts),
+        extra_head=BLOG.blog_hub_schema(blog_posts)), "https://zengtrade.in/blog/")
+    for post in blog_posts:
+        title, desc, canon, pmain, extra = BLOG.post_parts(post)
+        emit(os.path.join("blog", post["slug"]), shell(title, desc, canon, pmain, extra_head=extra), canon)
+        print("  ✓ /blog/%s/" % post["slug"])
 
 # Product routes (auth-gated but indexable landing/signup entry points for GSC)
 urls.extend([

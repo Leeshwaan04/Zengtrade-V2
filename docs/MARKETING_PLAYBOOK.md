@@ -69,6 +69,8 @@ Verify parallel gates before posting: `./scripts/check-parallel-growth.sh`
 
 **UTM addition:** `utm_campaign=learn_{slug}` / `learn_{slug}_pro` on `/learn/` article CTAs, same convention as `coin_{slug}` — captured automatically by the existing pageview beacon, no new tracking needed.
 
+**`/blog/` (added session 220, Content Strategist charter):** dated build-in-public posts, distinct from `/learn/`'s evergreen guides — reuses the same markdown pipeline (`content/blog.py`, sibling to `content/articles.py`). `utm_campaign=blog_{slug}` on each post's signup CTA. First post: `/blog/retention-hook-and-coin-coverage/`. This is what week-4's "coin spotlight" content should eventually feed into if it moves past a template — check with Content Strategist before starting a separate build.
+
 **Coin spotlight template (week N):** run `./scripts/guide-coin-spotlight.sh [slug]` for founder-ready copy.
 
 ```
