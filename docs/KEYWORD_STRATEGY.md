@@ -27,6 +27,9 @@ Owner: SEO Manager autopilot (`.cursor/autopilot/seo.md`) · companion to `docs/
 | `/pricing/` | `zengtrade pricing` / `crypto paper trading pro plan` | Transactional — ready to compare plans |
 | `/coins/` (hub) | `crypto trading strategies by coin` | Navigational/informational — browsing by coin, not yet coin-specific |
 | `/coins/{slug}/` × 150 | `{coin name} trading strategy` (e.g. `bitcoin trading strategy`) | Commercial investigation — researching a systematic approach to ONE coin |
+| `/learn/investing/` | `crypto investing for beginners` | Informational, top-of-funnel — asset-class literacy, not platform evaluation |
+| `/learn/trading/` | `crypto trading basics indicators and risk` | Informational, mid-funnel — deliberately NOT `crypto trading strategies` (home already owns that at commercial-investigation intent; this page is purely educational) |
+| `/learn/algo-studio/` | `how does algo trading work` | Informational, bottom-of-funnel — deliberately NOT `crypto algo trading platform` (home owns that at commercial intent); this page explains the concept and links into the real product |
 | `/login` | (no organic keyword target — conversion page, arrives via CTA only) | Transactional |
 
 The riskiest overlap is **home vs. the coins hub vs. individual coin pages** — all three could
@@ -141,6 +144,29 @@ or a coin page already owns.
 
 **UTM convention:** `utm_campaign=blog_{slug}` on each post's signup CTA, same shape as
 `learn_{slug}` and `coin_{slug}`.
+
+## `/learn/{investing,trading,algo-studio}/` learning tracks (added session 220)
+
+Founder direction (2026-09-12): help a DIY user understand "crypto investing, trading and algo or
+automated trading" better, in that order of sophistication, since the simpler that journey is the
+higher conversion and retention gets. Not new content: `content/tracks.py` regroups the existing
+58 real glossary terms and 6 real `/learn/` articles into three sophistication-ladder hub pages,
+each linking forward to the next tier and, at the end of the ladder, into the real product.
+
+| Page | Primary keyword | Real content aggregated |
+|---|---|---|
+| `/learn/investing/` | `crypto investing for beginners` | 6 glossary terms (market cap, liquidity, bull/bear market, DCA, non-custodial trading), 1 article (`is-zengtrade-custodial`) |
+| `/learn/trading/` | `crypto trading basics indicators and risk` | 42 glossary terms (indicators, risk & position sizing, regimes, strategy types, trading mechanics), 2 articles |
+| `/learn/algo-studio/` | `how does algo trading work` | 10 glossary terms (backtesting/paper/forward testing, zengtrade's own engine vocabulary), 3 articles, the only track ending in the real product CTA |
+
+Every glossary term is placed in exactly one track (verified: 58 of 58 covered, zero duplicates
+across tracks) - the `related` cross-links already on each glossary term page carry a reader
+sideways into an adjacent track's territory from there, so nothing is walled off. `/learn/` itself
+now leads with these three cards above the flat article grid, as the primary way in.
+
+**UTM convention:** `utm_campaign=learn_track_{slug}` / `_pro` on the Algo Studio track's signup
+CTA (the only track with a primary conversion CTA; Investing and Trading end in a "continue to the
+next track" nudge instead).
 
 ## Content gaps and opportunities (things that don't exist yet)
 

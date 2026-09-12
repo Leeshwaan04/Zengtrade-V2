@@ -500,9 +500,11 @@
       "Real-ceiling guardrail baked into the charter from day one: page count follows real non-duplicated content (coin+strategy math, genuine topics), never a round target \u2014 padding is scaled content abuse and risks the whole domain",
       "/blog/ shipped (content/blog.py, mirrors content/articles.py's pipeline) with a first real post, wired into the same mega-nav dropdown as /learn/; fixed the mobile nav panel, which had no /learn/ link at all (session 220)",
       "Coin roster expansion: 150 -> 339 real coins (seo/generate.py), letting the actual real Binance-tradable count fall out of the tradable/non-stable/non-tokenized-stock filters rather than hitting a round target; verified zero tokenized-stock leftovers in the built dist output (session 220)",
-      "Glossary expanded 46 -> 58 terms: order types, cost mechanics (bps, cost drag, funding rate), risk-adjusted return metrics, market-structure basics, plus 2 stub entries linking to existing /learn/ articles (session 220)"
+      "Glossary expanded 46 -> 58 terms: order types, cost mechanics (bps, cost drag, funding rate), risk-adjusted return metrics, market-structure basics, plus 2 stub entries linking to existing /learn/ articles (session 220)",
+      "Shipped /learn/{investing,trading,algo-studio}/ (content/tracks.py): three sophistication-ladder hubs regrouping the existing 58 glossary terms + 6 articles, founder-suggested structure, no new definitions invented; /learn/ now leads with these 3 cards; each track links forward, Algo Studio ends in the real product CTA (session 220)",
+      "Inline glossary tooltips on the dashboard (assets/app.js secStats()): Win rate, Profit factor, Sharpe, CAGR, Drawdown, Regime now explain themselves on hover/tap with the real glossary definition, verbatim and cross-checked against content/glossary.py (session 220)"
     ],
-    "next": "Hostinger Reach for the newsletter still blocked on an active plan (see founder_actions). Otherwise: keep watching for real GSC data before proposing more content categories, per the charter's own no-guessing rule.",
+    "next": "Hostinger Reach for the newsletter still blocked on an active plan (see founder_actions). Otherwise: apply the DIY-simplicity agenda (founder, 2026-09-12) to the next surfaces - dashboard empty states and first-run onboarding are the next highest-leverage places a confused DIY user gives up.",
     "links": [
       {
         "label": "Content charter (repo)",

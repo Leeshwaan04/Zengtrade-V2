@@ -353,12 +353,23 @@ try:
 except Exception as ex:
     print("  ! /blog/ skipped (marketing site still builds):", ex)
 
+# ---- /learn/{investing,trading,algo-studio}/ - three sophistication-ladder hubs regrouping the
+# real glossary terms + articles above (content/tracks.py). Founder-confirmed 2026-09-12: help a
+# DIY user understand investing, trading, and algo/automated trading better, in that order --------
+TRACKS_MOD, tracks_css = None, ""
+try:
+    import tracks as TR
+    TRACKS_MOD = TR
+    tracks_css = TR.TRACKS_CSS
+except Exception as ex:
+    print("  ! learning tracks skipped (marketing site still builds):", ex)
+
 # ---- write everything -----------------------------------------------------------------
 if os.path.exists(DIST):
     shutil.rmtree(DIST)
 os.makedirs(DIST)
 shutil.copytree(os.path.join(HERE, "assets"), os.path.join(DIST, "assets"))
-open(os.path.join(DIST, "site.css"), "w").write(css + HOME_CSS + coin_css + article_css + glossary_css + blog_css)   # ONE stylesheet for every page
+open(os.path.join(DIST, "site.css"), "w").write(css + HOME_CSS + coin_css + article_css + glossary_css + blog_css + tracks_css)   # ONE stylesheet for every page
 
 # ---- bundle the Supabase auth app onto the SAME origin (login / dashboard / legal) -----
 # Written as FOLDERS (login/index.html) so clean URLs work on GitHub Pages, which has no
@@ -477,15 +488,23 @@ if coins:
 
 # ---- /learn/ hub + articles (identical shell -> full design parity) -------------------
 if articles:
+    tracks_html = TRACKS_MOD.tracks_index_cards() if TRACKS_MOD else ""
     emit("learn", shell(
         "Learn: Crypto Trading Guides & Explainers | zengtrade",
-        "Plain-English guides on market regimes, paper trading, backtest costs, and non-custodial execution, plus a 46-term trading glossary. No hype, no promises.",
-        "https://zengtrade.in/learn/", ART.articles_hub_main(articles, len(glossary_terms)),
+        f"Plain-English guides on market regimes, paper trading, backtest costs, and non-custodial execution, plus a {len(glossary_terms)}-term trading glossary. No hype, no promises.",
+        "https://zengtrade.in/learn/", ART.articles_hub_main(articles, len(glossary_terms), tracks_html),
         extra_head=ART.learn_hub_schema(articles, len(glossary_terms))), "https://zengtrade.in/learn/")
     for a in articles:
         title, desc, canon, amain, extra = ART.article_parts(a)
         emit(os.path.join("learn", a["slug"]), shell(title, desc, canon, amain, extra_head=extra), canon)
         print("  ✓ /learn/%s/" % a["slug"])
+
+# ---- /learn/{investing,trading,algo-studio}/ - the three learning tracks --------------
+if TRACKS_MOD and glossary_terms:
+    for track in TRACKS_MOD.TRACKS:
+        title, desc, canon, tmain, extra = TRACKS_MOD.track_parts(track, glossary_terms, articles)
+        emit(os.path.join("learn", track["slug"]), shell(title, desc, canon, tmain, extra_head=extra), canon)
+        print("  ✓ /learn/%s/  (track: %s)" % (track["slug"], track["label"]))
 
 # ---- /learn/glossary/ hub + terms ------------------------------------------------------
 if glossary_terms:

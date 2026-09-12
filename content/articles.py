@@ -172,7 +172,7 @@ def _truncate(text, limit=90):
     return cut + "…"
 
 
-def articles_hub_main(articles, glossary_count=0):
+def articles_hub_main(articles, glossary_count=0, tracks_html=""):
     e = html.escape
     cards = "".join(
         f'<a class="home-card" href="/learn/{e(a["slug"])}/"><b>{e(a["title"])}</b>'
@@ -181,6 +181,15 @@ def articles_hub_main(articles, glossary_count=0):
     if glossary_count:
         glossary_card = (f'<a class="home-card" href="/learn/glossary/"><b>Trading &amp; risk glossary</b>'
                           f'<span>{glossary_count} terms: indicators, strategy types, cost mechanics, and zengtrade\'s own engine vocabulary.</span></a>')
+    tracks_section = ""
+    if tracks_html:
+        tracks_section = f"""<section class="lp-sec" aria-label="Learning tracks">
+    <div class="lp-wrap"><div class="gl-hub-cat">
+      <h2>Not sure where to start? Pick a track</h2>
+      <p class="lp-sub" style="margin-bottom:14px">Investing, then trading, then automating it, in that order. Each one leads into the next.</p>
+      {tracks_html}
+    </div></div>
+  </section>"""
     return f"""<main id="main">
   <section class="lp-hero" aria-labelledby="h-learn">
     <div class="lp-wrap">
@@ -190,7 +199,8 @@ def articles_hub_main(articles, glossary_count=0):
       <p class="lp-sub">Plain-English explainers on regimes, costs, and paper-first evidence. No hype, no live-trading promises.</p>
     </div>
   </section>
+  {tracks_section}
   <section class="lp-sec" aria-label="Articles">
-    <div class="lp-wrap"><div class="lp-grid4">{glossary_card}{cards}</div></div>
+    <div class="lp-wrap"><h2 class="lp-h2">All guides</h2><div class="lp-grid4">{glossary_card}{cards}</div></div>
   </section>
 </main>"""

@@ -64,6 +64,17 @@ Newsletter: founder confirmed Hostinger Reach as the platform, but a live check 
 Reach profile/plan on the connected account yet - this is a founder action item (see
 `saas/web/ops-data.json` founder_actions), not something this charter can provision by API alone.
 
+**DIY-simplicity agenda (2026-09-12, same session):** stated directly - "the agenda is to make
+crypto trading as simple as possible for the end users and also make them understand better on
+crypto investing, trading and algo or automated trading... the more simple our ui/ux journeys for
+the end users on DIY, the more we will be able to have the conversion and retention rate." Weigh
+every content and UX decision against this before novelty or scale - see
+`feedback_diy_simplicity_agenda` in the assistant's memory for the full standing rule. The founder
+also suggested the "investing / trading / algo studio" three-category structure directly, which
+became the `/learn/{investing,trading,algo-studio}/` tracks above - treat this as the ongoing
+information-architecture frame for how new content and dashboard explainers get organized, not a
+one-time page ship.
+
 ## North star
 
 **Real organic sessions and returning readers, from real, indexed, genuinely useful pages** - not
@@ -87,6 +98,17 @@ Search Console impressions/clicks on that specific page, not a plan document's c
   market cap, liquidity), and two short stub entries (paper trading, forward testing) that link
   out to their full `/learn/` articles, matching the pattern "Market Regime" and "Backtesting"
   already used. All 58 terms verified with zero broken cross-links before shipping.
+- [x] Shipped `/learn/{investing,trading,algo-studio}/` (session 220), founder-suggested structure:
+  three sophistication-ladder hubs (`content/tracks.py`) regrouping the existing 58 glossary terms
+  and 6 articles by "crypto investing, trading and algo/automated trading" - no new definitions,
+  a pure editorial regroup, each track links forward into the next and Algo Studio ends in the
+  real product CTA. `/learn/` itself now leads with these 3 cards above the flat article grid.
+  See `docs/KEYWORD_STRATEGY.md`'s new section for keyword targets and the term/article mapping.
+- [x] Inline "explain this metric" tooltips on the dashboard (session 220, `assets/app.js`
+  `secStats()` + `GLOSS` map): Win rate, Profit factor, Sharpe, CAGR, Drawdown and Regime now show
+  their real glossary definition on hover/tap, verbatim from `content/glossary.py`, cross-checked
+  for drift before shipping. Directly serves the founder's DIY-simplicity agenda: no human ever
+  explains these numbers, so the product has to, in place.
 
 ### P1 — Real signal, not guessed trends
 - [ ] Once GSC is verified (blocked on founder, tracked in CBO/SEO charters): review Performance

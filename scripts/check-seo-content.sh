@@ -41,6 +41,10 @@ check_html "learn hub" "/learn/" "guides"
 check_html "learn article UTM CTA" "/learn/is-zengtrade-custodial/" "utm_campaign=learn_"
 check_html "blog hub" "/blog/" "building in public"
 check_html "blog post UTM CTA" "/blog/retention-hook-and-coin-coverage/" "utm_campaign=blog_"
+check_html "learn hub tracks" "/learn/" "Pick a track"
+check_html "investing track" "/learn/investing/" "non-custodial"
+check_html "trading track" "/learn/trading/" "regime"
+check_html "algo studio track" "/learn/algo-studio/" "utm_campaign=learn_track_"
 check_html "robots.txt" "/robots.txt" "Sitemap:"
 
 if [[ $fail -ne 0 ]]; then
