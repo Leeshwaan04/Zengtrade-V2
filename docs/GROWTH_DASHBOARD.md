@@ -10,14 +10,14 @@
 | Users with ≥1 closed trade | — | — | 15 |
 | Paying Pro/Elite | — | — | 10 |
 | MRR (USD) | $0 | $0 | $290 |
-| Worker status | Unknown | Offline (last heartbeat 2026-08-11T09:57:38 UTC · wrong Railway DB password) | Live 99% |
+| Worker status | Unknown | Live (heartbeat fresh) | Live 99% |
 | DATABASE_URL auth | — | - | — |
-| Partial activation (signup→deploy) | — | ✅ verify-activation-path --partial | — |
-| Parallel growth (excl. worker) | — | ❌ run ./scripts/check-founder-parallel-ready.sh | — |
+| Partial activation (signup→deploy) | — | ❌ | — |
+| Parallel growth (excl. worker) | — | ✅ founder-parallel-ready | — |
 | Sales-ready | — | ✅ check-sales-ready.sh | — |
 | QA parallel | — | ✅ check-qa-parallel.sh | — |
 | Growth: CBO infra | — | ❌ | — |
-| Growth: CPO trades | — | partial ✅ (trades need worker) | — |
+| Growth: CPO trades | — | ✅ signup → trades | — |
 | Growth: CTO loop | — | ❌ /ops/worker | — |
 
 *Fill "Today" from [zengtrade.in/admin](https://zengtrade.in/admin) after login.*
@@ -4150,6 +4150,40 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 19:03Z)
 - worker ❌ · migration 0011 ✅ · partial activation ❌ · parallel growth ❌ · sales-ready ❌ · qa parallel ✅
 - growth goals: CTO ❌ · CPO ❌ · CBO ❌ · MRR founder /admin
+
+### Day 1 (session 220) — RLS isolation verified end-to-end with two real accounts
+
+### CTO
+- **Shipped:** —
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** —
+
+### CBO
+- **Shipped:** —
+
+### SEO
+- **Shipped:** —
+
+### Marketing
+- **Shipped:** —
+
+### Sales
+- **Shipped:** —
+
+### QA&VAPT
+- **Shipped:** Q3 RLS isolation PASSED - two real accounts tested read+write isolation directly against Supabase REST API, including a live worker-opened position
+
+### R&D
+- **Shipped:** —
+
+### Content Strategist
+- **Shipped:** —
+
+### Status (`./scripts/check-growth-standup.sh` @ 10:42Z)
+- worker ✅ · migration 0011 ✅ · parallel growth - · sales-ready ✅ · qa parallel ✅
+- growth goals: CTO ✅ · CPO ✅ trades · CBO ❌ · MRR founder /admin
 
 ---
 

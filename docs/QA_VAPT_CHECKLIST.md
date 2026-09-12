@@ -9,7 +9,7 @@
 |----|------|-------|--------|----------|
 | Q1 | Client secrets | No service_role / API keys in browser JS | ☑ | `security-smoke.sh` (2026-08-23) |
 | Q2 | Auth | `establishSession` on `/js/auth.js` | ☑ | `security-smoke.sh` + prod |
-| Q3 | RLS | User A ≠ User B trades/deployments | ☐ | `./scripts/guide-qa-rls-isolation.sh` after worker live |
+| Q3 | RLS | User A ≠ User B trades/deployments | ☑ | Two real Supabase accounts, live prod, 2026-09-12 (session 220) — see below |
 | Q4 | Admin | Non-admin cannot read `admin_overview` metrics | ☑ | `security-smoke.sh` admin_users 401 + RLS empty anon |
 | Q5 | Billing IPN | Unsigned webhook rejected | ☑ | `security-smoke.sh` + `verify-billing.sh` |
 | Q6 | Funnel | `signup_complete` not on sign-in only | ☑ | `login.html` PENDING_SIGNUP_KEY (code review) |
@@ -21,7 +21,28 @@
 | V2 | Event abuse | `event` insert policy name whitelist | ☑ | migration `0011` applied prod (2026-08-23) |
 | V3 | Worker | DB creds only server-side | ☑ | no secrets in `saas/web/js` |
 
-## Manual RLS isolation (required before scale)
+## RLS isolation — PASSED (2026-09-12, session 220)
+
+Run directly against the Supabase REST API with two real, email-confirmed test accounts
+(`zengtrade.qa.rls.test.{a,b}.<ts>@mailinator.com`) rather than two incognito windows - same
+result, more precise (proves DB-level RLS, not just client-side query construction), and doesn't
+depend on a human being available. Confirmation links retrieved from Mailinator's public inbox
+(no real inbox access needed - that's what makes disposable test addresses work for this).
+
+- **Read isolation:** User A deployed `trend_follow` (real row, real worker pickup - a live
+  `ETHUSDT` position appeared in `book_state` within ~20s). User B queried `deployment`,
+  `book_state`, and `trade` three ways (no filter, explicit `user_id=eq.<A's uid>`, explicit
+  `id=eq.<A's row>`) and got `[]` every time - RLS enforced server-side, not just hidden by the
+  app's own query shape.
+- **Write isolation:** User B attempted `PATCH` (stop A's deployment) and `DELETE` against A's
+  exact row id. Both returned `[]` / HTTP 200 (zero rows matched under B's RLS-scoped policy, so
+  nothing was touched) - confirmed by re-reading the row as A afterward: unchanged.
+- **Cleanup:** test deployment stopped after the test. The two test accounts remain in
+  production `auth.users` (harmless, but founder can delete them from Supabase Studio if wanted -
+  no service-role key was used or available for this test, by design).
+
+**If retesting later:** the manual incognito-window version below still works as a human-facing
+sanity check, but isn't required to reverify RLS itself.
 
 1. Incognito A: signup → deploy → note trade count in `/app#forward`.
 2. Incognito B: signup → confirm **zero** trades from A.

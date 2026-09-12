@@ -35,7 +35,10 @@ Parallel index: `docs/FOUNDER_PARALLEL.md`
 ### P0 — Trust & isolation
 - [x] `security-smoke.sh` in CI + health-watch
 - [x] Admin RPCs gated; IPN signature gate; no client secrets
-- [ ] RLS two-account manual test (`/ops/e2e` step 5) — **after worker live**
+- [x] RLS two-account test — **PASSED 2026-09-12** (session 220): run against the live Supabase
+  REST API with two real, email-confirmed accounts rather than waiting for a founder-run manual
+  incognito test. Read + write isolation both confirmed with real data (a live worker-opened
+  position). See `docs/QA_VAPT_CHECKLIST.md` for the full writeup.
 
 ### P1 — Functional QA
 - [ ] `verify-activation-path.sh` exit 0 (blocked on worker)

@@ -468,9 +468,10 @@
       "check-qa-parallel.sh + check-xss-hygiene.sh (session 125)",
       "guide-qa-rls-isolation.sh + check-founder-parallel-ready.sh (session 130)",
       "check-qa-parallel includes check-free-tier-limit Q9 + ops-security playbook probe (session 202)",
-      "guide-qa-founder-standup.sh \u2014 parallel QA combined playbook (session 213)"
+      "guide-qa-founder-standup.sh \u2014 parallel QA combined playbook (session 213)",
+      "Q3 RLS isolation PASSED (session 220) \u2014 two real, email-confirmed accounts tested directly against the Supabase REST API: read isolation (deployment/book_state/trade, including a live worker-opened position) and write isolation (User B's PATCH/DELETE against User A's row both no-op'd under RLS). See docs/QA_VAPT_CHECKLIST.md for the full writeup."
     ],
-    "next": "Run security-smoke + E2E after P0; manual RLS isolation (2 accounts)",
+    "next": "Investigate why ops-data.json's database_url_auth_ok gate reads false when check-worker.sh confirms a healthy, current heartbeat \u2014 likely a stale probe, not a real outage",
     "links": [
       {
         "label": "QA / VAPT playbook",
