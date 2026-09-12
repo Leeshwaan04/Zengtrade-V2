@@ -81,9 +81,12 @@ Search Console impressions/clicks on that specific page, not a plan document's c
 - [x] Added both `/learn/` and `/blog/` to the mega-nav (session 220) - kept in the SAME "Learn"
   dropdown rather than a second top-level item, per the nav-clutter concern this item raised;
   also fixed the mobile nav panel, which had no `/learn/` link at all before this.
-- [ ] Expand `content/articles.py`'s glossary beyond its current 46 terms using real crypto/trading
-  terms that appear in the product's own copy or in coin-page cost paragraphs, cross-checked
-  against `docs/KEYWORD_STRATEGY.md` so no term collides with an existing page's primary keyword
+- [x] Expanded the glossary 46 -> 58 terms (session 220): order types (limit/market order), cost
+  mechanics already referenced elsewhere but never defined on their own (basis points, cost drag,
+  funding rate), risk-adjusted return metrics (Sharpe, CAGR), market-structure basics (whipsaw,
+  market cap, liquidity), and two short stub entries (paper trading, forward testing) that link
+  out to their full `/learn/` articles, matching the pattern "Market Regime" and "Backtesting"
+  already used. All 58 terms verified with zero broken cross-links before shipping.
 
 ### P1 — Real signal, not guessed trends
 - [ ] Once GSC is verified (blocked on founder, tracked in CBO/SEO charters): review Performance

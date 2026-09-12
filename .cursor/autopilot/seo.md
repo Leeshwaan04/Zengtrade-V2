@@ -38,10 +38,16 @@ Founder: verify GSC property + submit **https://zengtrade.in/sitemap.xml** — `
 - [x] Coins hub: category-segmented sections instead of one flat grid (session 219)
 - [x] `/learn/` educational content section — 6 articles live, claims MARKETING_PLAYBOOK's week-4
       "blog section" idea; extends the existing "Learn" mega-nav dropdown (session 219)
-- [ ] Expand coin roster from 150 toward the full real Binance-tradable universe (~488 coins),
-      founder-confirmed 2026-09-12 as the direction over chasing a bigger round page-count number.
-      Roll out in batches (crawl-budget/trust), same pattern as the 7->150 expansion. Coordinate
-      with `.cursor/autopilot/content.md`, which owns the no-padding guardrail on this work.
+- [x] Expanded coin roster from 150 -> 339 real Binance-tradable coins (session 220), widened the
+      CoinGecko candidate pull (pages 1-5) and raised the generous cap to 600 so the real tradable
+      count falls out of the tradable/non-stable/non-tokenized-stock filters rather than being
+      picked as a target. Also added a durable name-based `_is_tokenized_stock()` filter (session
+      219's `NON_CRYPTO_BASES` hardcoded list only caught symbols already seen; this catches future
+      "bStocks Tokenized Stock" listings automatically as the roster keeps growing). 339 verified
+      with zero tokenized-stock leftovers in the built dist output. Remaining gap to the ~488
+      estimate is coins CoinGecko lists that aren't (yet) Binance-tradable, or don't clear the
+      other real-content filters, not coins skipped for padding reasons. Coordinated with
+      `.cursor/autopilot/content.md`, which owns the no-padding guardrail on this work.
 
 ### P2 — Compounding
 - [x] Paper loop section on how-it-works

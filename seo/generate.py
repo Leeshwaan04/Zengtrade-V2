@@ -179,9 +179,12 @@ def build_coin_universe(n=300):
     market cap tracks what people actually recognise and search for. Dynamic, not hardcoded, so
     the roster stays current as rankings shift over time.
 
-    n=300 as of session 220 (founder-confirmed 2026-09-12): a deliberate batch on the way to the
-    real ~488-coin Binance-tradable ceiling, not a jump straight there - see
-    .cursor/autopilot/seo.md and content.md for why this is staged rather than one shot."""
+    n=600 as of session 220 (founder-confirmed 2026-09-12): set comfortably above the real
+    Binance-tradable ceiling (estimated ~488) on purpose - this isn't a target to hit, it's a
+    cap high enough that the actual number of real, tradable, non-stable, non-tokenized-stock
+    coins determines the final count on its own. Whatever comes out under 600 IS the real
+    ceiling for this batch; there's no padding risk in raising this further since every entry
+    still has to pass the same tradable/non-stable/non-tokenized-stock filters below."""
     info = get("/api/v3/exchangeInfo")
     tradable = {
         s["baseAsset"] for s in info["symbols"]
@@ -220,7 +223,7 @@ def build_coin_universe(n=300):
 
 
 try:
-    COINS = build_coin_universe(300)
+    COINS = build_coin_universe(600)
     if not COINS:
         raise RuntimeError("empty coin universe")
 except Exception as ex:

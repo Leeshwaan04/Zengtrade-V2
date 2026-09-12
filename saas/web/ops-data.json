@@ -342,7 +342,8 @@
       "Scaled coin pSEO from 7 to 150 real coins, CoinGecko market-cap ranked (session 219)",
       "Fixed GA4 measurement ID site-wide + trimmed meta title/description to SERP display budget + sitemap lastmod (session 219)",
       "Coins hub category segmentation shipped (11 sections, CATEGORY_MAP expanded 60->155 symbols) (session 219)",
-      "/learn/ educational section shipped: 6 articles, Article+BreadcrumbList schema, coin-page cost paragraphs now link to the cost article (session 219)"
+      "/learn/ educational section shipped: 6 articles, Article+BreadcrumbList schema, coin-page cost paragraphs now link to the cost article (session 219)",
+      "Coin roster expanded 150 -> 339 real Binance-tradable coins: widened CoinGecko candidate pull (pages 1-5), added a durable name-based tokenized-stock filter alongside the existing symbol blocklist, verified zero non-crypto leftovers in dist (session 220)"
     ],
     "next": "GSC property + sitemap submit after P0; consider expanding CATEGORY_MAP further as roster shifts",
     "links": [
@@ -498,9 +499,10 @@
       "Charter: .cursor/autopilot/content.md (2026-09-12) \u2014 owns content taxonomy/roadmap (/learn/, new /blog/, glossary expansion); SEO keeps the coin-page generator, Marketing keeps distribution",
       "Real-ceiling guardrail baked into the charter from day one: page count follows real non-duplicated content (coin+strategy math, genuine topics), never a round target \u2014 padding is scaled content abuse and risks the whole domain",
       "/blog/ shipped (content/blog.py, mirrors content/articles.py's pipeline) with a first real post, wired into the same mega-nav dropdown as /learn/; fixed the mobile nav panel, which had no /learn/ link at all (session 220)",
-      "Coin roster expansion: 150 -> 300 real coins (seo/generate.py), a deliberate batch toward the ~8,800-page ceiling, not the full jump at once (session 220)"
+      "Coin roster expansion: 150 -> 339 real coins (seo/generate.py), letting the actual real Binance-tradable count fall out of the tradable/non-stable/non-tokenized-stock filters rather than hitting a round target; verified zero tokenized-stock leftovers in the built dist output (session 220)",
+      "Glossary expanded 46 -> 58 terms: order types, cost mechanics (bps, cost drag, funding rate), risk-adjusted return metrics, market-structure basics, plus 2 stub entries linking to existing /learn/ articles (session 220)"
     ],
-    "next": "Expand glossary past 46 terms with real terms only; continue coin roster expansion in further batches toward ~488 real coins. Hostinger Reach for the newsletter still blocked on an active plan (see founder_actions) - account's billing list shows only domains + hosting, no Reach subscription.",
+    "next": "Hostinger Reach for the newsletter still blocked on an active plan (see founder_actions). Otherwise: keep watching for real GSC data before proposing more content categories, per the charter's own no-guessing rule.",
     "links": [
       {
         "label": "Content charter (repo)",

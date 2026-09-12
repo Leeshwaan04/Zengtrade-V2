@@ -395,7 +395,111 @@ A backtest is necessary but not sufficient evidence: it can still be curve-fit t
 Perps allow strategies unavailable to spot-only trading: shorting an asset without borrowing it, or running market-neutral trades like funding-rate carry (holding spot long and perp short simultaneously to collect the funding payment while staying roughly market-direction-neutral).
 
 zengtrade is currently a spot-only platform. Perpetuals (and the funding-rate-carry strategy type that depends on them) are a real roadmap item, not yet built: they need a derivatives venue integration the current engine doesn't have.""",
-   "related":["non-custodial-trading","statistical-arbitrage","market-regime"],"platform":False},
+   "related":["non-custodial-trading","funding-rate","market-regime"],"platform":False},
+
+  {"term":"Funding Rate","slug":"funding-rate","cat":"Trading mechanics & costs",
+   "short":"The periodic payment exchanged between long and short holders of a perpetual futures contract, the mechanism that keeps its price anchored to spot.",
+   "body":"""A funding rate is a payment made directly between traders (not to the exchange) on a perpetual futures contract, typically every 8 hours. When the perp trades above spot, longs pay shorts; when it trades below spot, shorts pay longs. The size of the payment scales with how far the perp has drifted from spot, which is precisely what pulls it back toward spot over time: a persistent premium makes staying long progressively more expensive, drawing in arbitrage sellers.
+
+A positive funding rate usually signals bullish positioning (more traders paying to stay long), a negative rate signals bearish positioning, and either extreme can itself become a contrarian signal when it gets unusually stretched.
+
+Funding-rate carry (going long spot and short the equivalent perp size to collect funding while staying roughly market-neutral) is the classic strategy built around this mechanism, and it's exactly the strategy type zengtrade can't run yet without a derivatives venue integration, see perpetual futures.""",
+   "related":["perpetual-futures","statistical-arbitrage","market-regime"],"platform":False},
+
+  {"term":"Limit Order","slug":"limit-order","cat":"Trading mechanics & costs",
+   "short":"An order to buy or sell at a specified price or better, guarantees the fill price but not that the order fills at all.",
+   "body":"""A limit order names an exact price (or better): a buy limit only fills at that price or lower, a sell limit only at that price or higher. If the market never reaches the limit price, the order simply never fills, sitting on the order book until it does, gets cancelled, or expires.
+
+The trade-off with a market order is direct: a limit order controls price at the cost of certainty of execution, a market order guarantees execution at the cost of controlling price. Limit orders also add liquidity to the order book (they're often called "maker" orders for exactly this reason, and some exchanges charge lower fees for them) rather than taking it.
+
+Where an exchange venue exposes them, limit orders are the more cost-conscious default for a signal that isn't time-critical, since they can avoid the slippage a market order accepts by definition.""",
+   "related":["market-order","slippage","round-trip-cost"],"platform":False},
+
+  {"term":"Market Order","slug":"market-order","cat":"Trading mechanics & costs",
+   "short":"An order to buy or sell immediately at the best available price, prioritizes certainty of execution over price control.",
+   "body":"""A market order doesn't specify a price at all: it instructs the exchange to fill immediately against whatever orders are currently resting on the book, working through the available depth until the full size is filled. That's what makes it fast and (for a small order in a liquid market) usually cheap, and also what exposes it directly to slippage: a larger order, or a thinner order book, means the fill walks further up (or down) the book before completing, at a progressively worse average price.
+
+Market orders are "taker" orders (they remove existing liquidity from the book rather than adding to it), which is why many exchanges charge a higher fee for them than for limit orders.
+
+A signal-driven strategy generally uses market orders when the entry/exit timing itself is the edge and waiting for a limit fill risks missing the move entirely, accepting some slippage as the cost of that certainty.""",
+   "related":["limit-order","slippage","round-trip-cost"],"platform":False},
+
+  {"term":"Basis Points (bps)","slug":"basis-points-bps","cat":"Trading mechanics & costs",
+   "short":"One hundredth of one percent (0.01%), the standard unit for quoting small costs and rates precisely without a string of decimal places.",
+   "body":"""A basis point is 1/100th of a percentage point: 100 bps equals 1%, 15 bps equals 0.15%. Trading costs, fees, and spreads are almost always quoted in bps rather than raw percentages, since the numbers involved are typically small enough that "0.15%" invites rounding errors and misreads that "15 bps" doesn't.
+
+It's the unit zengtrade's own cost model is expressed in: a 15bps round-trip cost figure means exactly that, 0.15% of position value lost to fees and slippage on the full entry-plus-exit round trip, applied identically to every backtest and every live paper fill rather than varying by context.
+
+Reading strategy performance in bps terms also makes cost comparisons concrete: a strategy generating an average 40bps of edge per trade against a 15bps round-trip cost has a real margin of safety; one generating 18bps of edge against that same 15bps cost is trading on the edge of profitability, however good its win rate looks.""",
+   "related":["round-trip-cost","slippage","cost-drag"],"platform":False},
+
+  {"term":"Cost Drag","slug":"cost-drag","cat":"Trading mechanics & costs",
+   "short":"The cumulative erosion of a strategy's returns by trading costs (fees plus slippage) compounding across many trades, worse for high-frequency strategies.",
+   "body":"""Cost drag is what happens when a strategy's real per-trade edge is evaluated against how often it trades: a strategy with a small edge per trade can still be strongly profitable at low frequency, but the same small edge gets progressively eaten away as trade frequency rises and round-trip costs compound across more and more trades. Two strategies with identical gross returns can have very different net returns purely based on how many times each one paid the round-trip cost to get there.
+
+This is precisely why a backtest that under-counts fees and slippage flatters high-frequency strategies the most: the gap between gross and cost-drag-adjusted net returns widens with trade count, so the strategies most vulnerable to an unrealistic cost assumption are exactly the ones a careless backtest makes look best.
+
+zengtrade's cost gate exists specifically to police this: it refuses signals whose expected edge doesn't clear a multiple of round-trip cost, keeping cost drag from quietly turning an active-looking strategy into a net loser.""",
+   "related":["round-trip-cost","cost-gate","scalping"],"platform":False},
+
+  {"term":"Sharpe Ratio","slug":"sharpe-ratio","cat":"Trading mechanics & costs",
+   "short":"A risk-adjusted return measure: average return divided by the volatility (standard deviation) of those returns, higher means more return per unit of risk taken.",
+   "body":"""The Sharpe ratio divides a strategy's average excess return (over a risk-free rate, often approximated as zero for simplicity in crypto) by the standard deviation of its returns. Two strategies with identical average returns can have very different Sharpe ratios if one achieves its returns smoothly and the other via a wild, volatile ride, the smoother one wins on Sharpe even though the raw returns tie.
+
+It's a useful single-number way to compare strategies (or the same strategy across regimes) on a risk-adjusted basis rather than on raw return alone, since raw return says nothing about how much volatility, and therefore how much emotional and financial risk, was tolerated to earn it.
+
+Sharpe has a well-known limitation: it penalizes upside volatility the same as downside volatility, even though a strategy with occasional huge wins (which raises the standard deviation) isn't actually undesirable the way one with occasional huge losses is. Metrics like the Sortino ratio (which only penalizes downside deviation) exist specifically to address this asymmetry.""",
+   "related":["drawdown","profit-factor","expectancy"],"platform":False},
+
+  {"term":"Compound Annual Growth Rate (CAGR)","slug":"cagr","cat":"Trading mechanics & costs",
+   "short":"The smoothed annual growth rate that would take a starting value to an ending value over a period, assuming steady compounding, useful for comparing returns across different timeframes.",
+   "body":"""CAGR answers "what constant annual growth rate would have produced this same total return, compounding every year?" It smooths an actual, lumpy return path (a great year followed by a flat one, say) into one comparable annualized figure, which is what makes it useful for comparing a strategy's returns over 18 months against another strategy's returns over 3 years on equal footing.
+
+CAGR on its own says nothing about the ride along the way. A strategy with an attractive CAGR and a 60% max drawdown is a very different proposition from one with a similar CAGR and a 15% max drawdown, even though CAGR alone can't tell the two apart.
+
+This is exactly why zengtrade's evidence gates never show CAGR (or any return figure) in isolation: it's always paired with drawdown, profit factor, and expectancy, so a smoothed annual number can't hide a genuinely rough or fragile path underneath it.""",
+   "related":["drawdown","sharpe-ratio","expectancy"],"platform":False},
+
+  {"term":"Whipsaw","slug":"whipsaw","cat":"Market structure & regimes",
+   "short":"A sharp price move that reverses direction almost immediately, stopping out a position shortly after entry, the characteristic failure mode of trend strategies in choppy markets.",
+   "body":"""A whipsaw is what happens when a strategy enters on what looks like a genuine breakout or trend signal, only for price to reverse hard almost immediately, hitting the stop for a loss before any real move develops. One whipsaw is just a losing trade; a string of them, each triggered by the same signal type in quick succession, is the specific pattern that erodes a trend-following strategy's edge fastest.
+
+Whipsaws cluster in choppy, range-bound markets by nature: every attempted breakout looks identical to a real one at the moment of entry, and it's only the market's subsequent behavior that reveals which kind it was.
+
+This is the concrete, trade-level cost that indicators like ADX exist to reduce: filtering for confirmed trend strength before acting on a crossover or breakout signal doesn't eliminate whipsaws, but it does reduce how often a strategy pays for one.""",
+   "related":["choppy-market","adx","trend-following"],"platform":False},
+
+  {"term":"Market Capitalization","slug":"market-capitalization","cat":"Market structure & regimes",
+   "short":"An asset's total value: circulating supply multiplied by current price, the standard way to rank and compare coins by size rather than by price alone.",
+   "body":"""Market capitalization ("market cap") is simply circulating supply times price. It's the standard way to compare the size of two assets that have wildly different unit prices and supply counts, a coin trading at $0.01 with a huge supply can have a far larger market cap, and represent a far larger, more established asset, than a coin trading at $100 with a tiny supply.
+
+Market cap is a size ranking, not a quality or safety signal on its own. A large market cap generally correlates with deeper liquidity and more participants, but plenty of large-cap assets have still gone through severe drawdowns, and a shrinking market cap can persist for a long time before a coin is meaningfully "small" by any other measure.
+
+zengtrade's coin universe is ranked by market cap specifically because it's a stable, hard-to-game ordering. Raw 24-hour volume, by contrast, can spike a low-quality, low-liquidity coin to the top of a volume ranking for a single noisy day.""",
+   "related":["liquidity","bull-market","bear-market"],"platform":False},
+
+  {"term":"Liquidity","slug":"liquidity","cat":"Market structure & regimes",
+   "short":"How easily an asset can be bought or sold in size without moving its price meaningfully, deeper order books mean lower slippage for the same trade size.",
+   "body":"""Liquidity describes how much size a market can absorb, on either side, before price moves meaningfully in response. A liquid market has a deep order book: large buy and sell orders resting close to the current price, so a typical trade barely nudges the price at all. A thin, illiquid market has little resting size nearby, so even a modest order can walk noticeably up or down the book before it's fully filled.
+
+Liquidity is the direct driver of slippage: the same order size produces far more slippage in a thin market than a deep one, which is exactly why a strategy's real-world costs depend on which coins it trades, not just how good its signal is.
+
+It's also why zengtrade's coin universe is filtered to Binance USDT-spot pairs specifically: a coin with a real regime read and a real backtest still needs a real, tradable market underneath it for that evidence to mean anything live, not just a market-cap ranking on a data provider.""",
+   "related":["market-capitalization","slippage","round-trip-cost"],"platform":False},
+
+  {"term":"Paper Trading","slug":"paper-trading","cat":"Trading mechanics & costs",
+   "short":"Simulating trades on live prices without risking real money, tracking exactly what a strategy would have done, and won or lost, had it been live.",
+   "body":"""See the full explainer: [What Is Paper Trading Crypto?](/learn/what-is-paper-trading-crypto/). In short, paper trading runs a strategy's real rules against live, real-time prices, but with a simulated account instead of real capital: every entry, exit, and cost is tracked exactly as it would be live, without ever risking a dollar.
+
+The honesty of a paper implementation is what makes it useful evidence rather than a toy. zengtrade's paper book marks to live Binance spot prices every cycle and applies the same round-trip cost model as live execution, specifically so paper results are a genuine preview of live performance, not an optimistic fiction.""",
+   "related":["backtesting","forward-testing","non-custodial-trading"],"platform":False},
+
+  {"term":"Forward Testing","slug":"forward-testing","cat":"Trading mechanics & costs",
+   "short":"Running a strategy on live, real-time data after development is finished, the strictest form of out-of-sample evidence since the data genuinely didn't exist when the strategy was built.",
+   "body":"""See the full explainer: [Backtest vs. Forward Test](/learn/backtest-vs-forward-test/). In short, forward testing (running a strategy live, on paper, going forward in time) is out-of-sample testing in its strongest form: there's no possibility the strategy was curve-fit to data that hadn't happened yet when its rules were written.
+
+A backtest is necessary evidence but a forward track record is what actually earns trust, which is why zengtrade's go-live bar is built entirely on forward paper results, not backtest results, however good the backtest looked.""",
+   "related":["backtesting","out-of-sample-testing","go-live-bar"],"platform":False},
 
   # ---------------- Platform-specific: zengtrade's own engine vocabulary ----------------
   {"term":"Cost Gate","slug":"cost-gate","cat":"zengtrade engine terms",
