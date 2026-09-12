@@ -3047,7 +3047,7 @@ function cxTradesCSV(){
 function cryptoAnalytics(){
   const d=CRYPTOAN.data;
   if(!d){ if(!CRYPTOAN.busy) loadCryptoAn().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); return secEmpty('activity','Loading analytics…','Attributing the crypto P&L by instrument, strategy, regime, symbol, exit-reason and hour.'); }
-  if(d.running===false){ return secEmpty('activity','Analytics offline','Start the crypto harness, analytics attributes its live book once it is running.'); }
+  if(d.running===false){ return secEmpty('activity','Analytics offline','The trading engine is temporarily offline, analytics resumes attributing its live book once it\'s back.'); }
   const t=d.totals||{}, st=d.stats||{}, note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>P&L attribution, real, from the closed-trade log.</b> Every realised figure below is computed from actual closed paper trades (not estimated): the equity curve, and the splits by regime, symbol, exit-reason and hour. Open P&L is marked live. Nothing here is synthesised.</span></div>`;
   // live-book summary (open + realised), the running picture
   const stat=secStats([
