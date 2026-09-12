@@ -119,13 +119,19 @@ def main() -> int:
         gates[k] for k in ("production", "billing", "migration_0011", "worker")
     )
 
+    # database_url_auth_ok deliberately excluded here: it tests whether THIS session/runner has
+    # local psql credentials to self-heal a DB problem (DATABASE_URL/DATABASE_PASSWORD env vars),
+    # not whether production itself is healthy - a bare interactive session or a health-watch run
+    # without repo secrets will always read False here even when the worker is verifiably fine
+    # (confirmed 2026-09-12, session 220: worker heartbeat fresh + a live RLS test wrote/read real
+    # trade data, while this exact gate read False the whole time). all_p0_green below already
+    # gets this right; cto_ok was the one place still conflating the two.
     cto_ok = all(
         (
             gates["production"],
             gates["billing"],
             gates["migration_0011"],
             gates["worker"],
-            gates.get("database_url_auth_ok", False),
         )
     )
     cpo_full = False

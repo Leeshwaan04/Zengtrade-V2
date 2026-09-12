@@ -1,16 +1,8 @@
 {
-  "updated": "2026-09-12T09:48:31Z",
+  "updated": "2026-09-12T10:48:41Z",
   "github_issue": "https://github.com/Leeshwaan04/Zengtrade-V2/issues/4",
   "p0_checklist": "https://zengtrade.in/ops/p0",
   "founder_actions": [
-    {
-      "id": "p0-unblock",
-      "title": "Fix DATABASE_URL password",
-      "detail": "Railway has DATABASE_URL but Postgres auth fails. Reset in Supabase Connect \u2192 copy Session URI (port 5432). Or add Cloud Agent secret DATABASE_PASSWORD only \u2014 agent auto-fixes Railway. GitHub Secrets also trigger health-watch every 6h.",
-      "url": "https://supabase.com/dashboard/project/ponvarxeytfcntckczbn/database/settings",
-      "alt_url": "https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/health-watch.yml",
-      "urgent": true
-    },
     {
       "id": "migration-0011",
       "title": "Migration 0011 \u2014 funnel v2 events",
@@ -21,11 +13,10 @@
     },
     {
       "id": "worker",
-      "title": "Deploy paper worker \u2014 add DATABASE_URL",
-      "detail": "Railway DATABASE_URL password invalid (deploy FAILED). Supabase Connect \u2192 Reset password \u2192 copy Session URI (no [brackets]) \u2192 Railway Deploy. Or add Cloud Agent secret DATABASE_PASSWORD.",
-      "url": "https://railway.app/project/f5902ffd-5b3f-49ed-b87d-dad21568185b",
-      "alt_url": "https://zengtrade.in/ops/worker",
-      "urgent": true
+      "title": "\u2705 Paper worker live",
+      "detail": "Worker confirmed healthy (session 220, 2026-09-12): fresh heartbeat + a live two-account RLS test wrote and read a real worker-opened position within ~20s of deploy. The 'DATABASE_URL password invalid' state this used to show was real once but is resolved \u2014 don't chase it further. Separately, database_url_auth_ok in /ops gates will still read false in any session without DATABASE_URL/RAILWAY_API_TOKEN exported locally; that's a self-heal-capability check, not a production health signal, and is expected to be false in normal use.",
+      "url": "https://zengtrade.in/ops/worker",
+      "urgent": false
     },
     {
       "id": "gsc",
@@ -504,8 +495,8 @@
   "content": {
     "headline": "Content strategy & taxonomy",
     "shipped": [
-      "Charter: .cursor/autopilot/content.md (2026-09-12) — owns content taxonomy/roadmap (/learn/, new /blog/, glossary expansion); SEO keeps the coin-page generator, Marketing keeps distribution",
-      "Real-ceiling guardrail baked into the charter from day one: page count follows real non-duplicated content (coin+strategy math, genuine topics), never a round target — padding is scaled content abuse and risks the whole domain",
+      "Charter: .cursor/autopilot/content.md (2026-09-12) \u2014 owns content taxonomy/roadmap (/learn/, new /blog/, glossary expansion); SEO keeps the coin-page generator, Marketing keeps distribution",
+      "Real-ceiling guardrail baked into the charter from day one: page count follows real non-duplicated content (coin+strategy math, genuine topics), never a round target \u2014 padding is scaled content abuse and risks the whole domain",
       "/blog/ shipped (content/blog.py, mirrors content/articles.py's pipeline) with a first real post, wired into the same mega-nav dropdown as /learn/; fixed the mobile nav panel, which had no /learn/ link at all (session 220)",
       "Coin roster expansion: 150 -> 300 real coins (seo/generate.py), a deliberate batch toward the ~8,800-page ceiling, not the full jump at once (session 220)"
     ],
@@ -526,11 +517,11 @@
     "billing": true,
     "billing_ready": true,
     "gsc_ready": false,
-    "activation_ready": false,
+    "activation_ready": true,
     "funnel_ctas": true,
     "migration_0011": true,
     "worker": true,
-    "worker_heartbeat_utc": "2026-09-12T09:42:49",
+    "worker_heartbeat_utc": "2026-09-12T10:46:20",
     "all_p0_green": true,
     "database_url_auth_ok": false,
     "parallel_growth_ready": true,
@@ -538,7 +529,7 @@
     "qa_parallel_ready": true,
     "partial_activation_ready": true,
     "growth_goal": {
-      "cto_ok": false,
+      "cto_ok": true,
       "cpo_partial_ok": true,
       "cpo_full_ok": true,
       "cbo_infra_ok": false,
