@@ -1398,7 +1398,7 @@ async function setStrategyState(id, stateVal, title){
     await Promise.all([loadBotData(), loadCryptoMonitor()]);
     if(typeof renderAlgo==='function') renderAlgo();
     return r;
-  }catch(e){ quickToast('Action failed','Is the bot API running on :8756?'); }
+  }catch(e){ quickToast('Action failed','The trading engine is temporarily unreachable, try again shortly.'); }
 }
 function algoDeploy(a){
   if(!a.wired){ quickToast('Not deployable yet', `${a.name} has no live engine, backtest/validate it first.`); return; }
@@ -1721,7 +1721,7 @@ function realQuote(name){
 }
 function botBanner(){
   if(!BOT.loaded) return `<div class="bot-banner">${icon('cpu',13)}<span>Connecting to your trading bot…</span></div>`;
-  if(BOT.error) return `<div class="bot-banner off">${icon('shield',13)}<span>Bot API offline, run <b>python3 bot_api.py</b> in the bot folder, then reopen Algo.</span></div>`;
+  if(BOT.error) return `<div class="bot-banner off">${icon('shield',13)}<span>The trading engine is temporarily offline, try reopening Algo Studio shortly.</span></div>`;
   if(!BOT.connected){
     const auto=BOT.status&&BOT.status.autoLogin, running=(BOT.status&&BOT.status.reloginRunning)||BOT.reconnecting;
     const msg=running?'Session expired, reconnecting to Kite…'
@@ -2598,9 +2598,9 @@ function patchCryptoMon(){ const d=CRYPTOMON.data; if(!d||!d.strategies) return;
 function cryptoMonitor(){
   const d=CRYPTOMON.data;
   if(!d){ if(!CRYPTOMON.busy) loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); });
-    return secEmpty('cpu','Loading crypto book…','Fetching the live crypto paper P&L from the bot on :8756.'); }
-  if(CRYPTOMON.err && !d.running){ return secEmpty('cpu','Bot API unreachable','Start the dashboard API + crypto harness in the bot folder, <b>python3 bot_api.py</b> then <b>python3 paper_trade_crypto.py</b>. Prices are real Binance; the book is paper.'); }
-  if(d.running===false){ return secEmpty('cpu','Crypto harness not running','Start it with <b>python3 paper_trade_crypto.py</b> in the bot folder, it runs 24/7 on live Binance data, paper only.'); }
+    return secEmpty('cpu','Loading crypto book…','Fetching your live crypto paper P&L…'); }
+  if(CRYPTOMON.err && !d.running){ return secEmpty('cpu','Trading engine unreachable','The paper-trading engine is temporarily unreachable. Prices are still real Binance; your paper book resumes once it\'s back.'); }
+  if(d.running===false){ return secEmpty('cpu','Trading engine offline','The paper-trading engine is temporarily offline. It normally runs 24/7 on live Binance data, paper only, we\'re on it.'); }
   const cur=state.algo.cinstr||'spot', g=d.governor||{};
   const scoped=(d.strategies||[]).filter(s=>(s.instr||'spot')===cur);
   const t=scoped.reduce((a,s)=>{a.realised+=s.realisedPnl||0;a.unreal+=s.openPnl||0;a.pnl+=s.paperPnl||0;a.open+=s.openPositions||0;return a;},{realised:0,unreal:0,pnl:0,open:0});
@@ -2761,7 +2761,7 @@ function cryptoGoLiveCheck(id){
     wire(body){
       fetch(BOT_API+'/api/readiness/book?market=crypto').then(r=>r.json())
         .then(d=>{ body.innerHTML=cryptoGoLiveHTML(d,id); })
-        .catch(()=>{ body.innerHTML=`<p class="flow-note">${icon('shield',13)}<span>Bot API offline, run <b>python3 bot_api.py</b>, then retry.</span></p>`; });
+        .catch(()=>{ body.innerHTML=`<p class="flow-note">${icon('shield',13)}<span>The trading engine is temporarily offline, please retry shortly.</span></p>`; });
     }});
 }
 function cryptoGoLiveHTML(d,id){
@@ -2789,8 +2789,8 @@ function cryptoPositions(){
   const d=CRYPTOMON.data;
   if(!d){ if(!CRYPTOMON.busy) loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); });
     return hero+`<div class="opp-load">${icon('cpu',16)}<span>Reading open crypto positions…</span></div>`; }
-  if(CRYPTOMON.err && !d.running) return hero+`<div class="opp-offline">${icon('shield',14)}<span>Bot API unreachable, start it with <b>python3 bot_api.py</b>.</span></div>`;
-  if(d.running===false) return hero+`<div class="opp-offline">${icon('shield',14)}<span>Crypto harness not running, start <b>python3 paper_trade_crypto.py</b>.</span></div>`;
+  if(CRYPTOMON.err && !d.running) return hero+`<div class="opp-offline">${icon('shield',14)}<span>The trading engine is temporarily unreachable.</span></div>`;
+  if(d.running===false) return hero+`<div class="opp-offline">${icon('shield',14)}<span>The trading engine is temporarily offline.</span></div>`;
   const cur=state.algo.cinstr||'spot';
   const {curReg, fitMap}=cxRegimeFit();
   const scoped=(d.strategies||[]).filter(s=>(s.instr||'spot')===cur);
@@ -2832,7 +2832,7 @@ function cxRiskBar(p,limit,label){ const w=Math.min(100,(p/limit)*100), over=p>l
 function cryptoRisk(){
   const d=CRYPTORISK.data;
   if(!d){ if(!CRYPTORISK.busy) loadCryptoRisk().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); return secEmpty('shield','Loading crypto risk…','Reading the crypto Governor state from the bot.'); }
-  if(d.running===false){ return secEmpty('shield','Crypto Governor offline','Start the crypto harness (python3 paper_trade_crypto.py), it publishes the Governor state each cycle.'); }
+  if(d.running===false){ return secEmpty('shield','Crypto Governor offline','The trading engine is temporarily offline, Governor state resumes once it\'s back.'); }
   // BUG FIX (2026-09-09): real per-user Governor state (health score, drawdown ladder, kill-switch,
   // trade audit) only exists inside the worker's Python process and isn't published per user yet.
   // This used to fall through to shared platform numbers instead - every signed-in user saw the
@@ -2879,7 +2879,7 @@ const CX_BT_PERIODS=['1M','3M','1Y','3Y'];
 const CRYPTOBT={busy:false,key:'',data:null};
 async function loadCryptoBT(strat,period){ const key=strat+'|'+period; CRYPTOBT.busy=true; CRYPTOBT.key=key;
   try{ CRYPTOBT.data=await fetch(`${BOT_API}/api/crypto/backtest?strategy=${encodeURIComponent(strat)}&period=${period}`).then(r=>r.json()); }
-  catch(e){ CRYPTOBT.data={real:false,error:'Bot API unreachable on :8756'}; }
+  catch(e){ CRYPTOBT.data={real:false,error:'The trading engine is temporarily unreachable'}; }
   CRYPTOBT.busy=false; }
 function cxCurve(a,b){ const all=(a||[]).concat(b||[]); if(all.length<2) return ''; const min=Math.min(...all),max=Math.max(...all),rng=(max-min)||1,W=560,H=150;
   const path=arr=>(!arr||arr.length<2)?'':arr.map((v,i)=>`${(i/(arr.length-1)*W).toFixed(1)},${(H-(v-min)/rng*H).toFixed(1)}`).join(' ');
@@ -3122,7 +3122,7 @@ function readinessView(mkt){
   const d=READY.data[mkt];
   const money=mkt==='crypto'?cxMoney:(v=>(v==null||!isFinite(v))?'-':(v<0?'−':'+')+'₹'+Math.abs(Math.round(v)).toLocaleString('en-IN'));
   if(!d){ if(!READY.busy[mkt]) loadReadiness(mkt).then(()=>{ if(isAlgo()) renderAlgo(); }); return secEmpty('shield','Assessing go-live readiness…','Scoring each strategy against the bar.'); }
-  if(d.err){ return secEmpty('shield','Readiness unavailable','Bot API unreachable on :8756, start bot_api.py.'); }
+  if(d.err){ return secEmpty('shield','Readiness unavailable','The trading engine is temporarily unreachable.'); }
   const s=d.summary||{}, bar=d.bar||{};
   const verdict=d.goLive?'READY':(s.ready>0?'PARTIAL, not all clear':'NOT READY');
   const banner=`<div class="rdy-banner ${d.goLive?'ok':'no'}">${icon(d.goLive?'check':'shield',22)}
