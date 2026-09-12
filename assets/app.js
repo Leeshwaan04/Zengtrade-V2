@@ -3949,6 +3949,17 @@ function wireInstSearch(input, box, onPick){
       el.onmousedown=e=>{e.preventDefault();pick(items[i]);}; }); };
   const pick=r=>{ if(!r)return; onPick(r); input.value=''; close(); input.blur(); };
   const run=q=>{ q=q.trim(); if(q.length<2){close();return;}
+    // CRYPTO_ONLY: search the real, bounded crypto universe locally, no network round-trip needed.
+    // This used to always call the old Kite/NSE instrument-search API regardless of market, so
+    // typing "BTC" (or any crypto symbol) against a crypto-only build returned nothing, found via
+    // an adversarial QA pass - the search bar's own placeholder says "e.g. BTCUSDT" but the search
+    // itself could never find it.
+    if(CRYPTO_ONLY){
+      const ql=q.toLowerCase();
+      items=CRYPTO_UNIVERSE.filter(c=>c.tk.toLowerCase().includes(ql)||c.sym.toLowerCase().includes(ql)||c.name.toLowerCase().includes(ql))
+        .map(c=>({key:'CRYPTO:'+c.sym, ts:c.tk, sym:c.sym, name:c.name, exch:'CRYPTO', type:'SPOT'}));
+      active=items.length?0:-1; draw(); return;
+    }
     if(cache[q]){items=cache[q];active=items.length?0:-1;draw();return;}
     if(ctrl)ctrl.abort(); ctrl=new AbortController();
     fetch(`${BOT_API}/api/instruments?q=${encodeURIComponent(q)}&limit=30`,{signal:ctrl.signal})
@@ -3973,13 +3984,6 @@ function initAddScrip(){   // watchlist "Add scrip…" box → add any instrumen
   if(!box){ box=document.createElement('div'); box.className='search-results wl-results'; si.parentElement.appendChild(box); }
   wireInstSearch(si, box, r=>addInstrument(r));
 }
-/* ============================================================
-   MONETIZATION: tiers, entitlements & in-app storefront.
-   Real entitlement model + feature-gating + a pricing storefront. Payment is a
-   LABELLED DEMO: selecting a plan switches your in-app tier so you can experience
-   it; real checkout (Razorpay) + user accounts aren't wired, nothing is charged.
-   ============================================================ */
-// each feature = [label, liveToday?]  → storefront shows ✓ available now vs ○ on the roadmap (honest)
 // The old in-app "pricing preview" modal (PLANS/ADDONS tiers, Zerodha-cockpit copy, Razorpay,
 // RIA/PMS white-label pitch) was entirely pre-pivot Indian-equity content with its own fake
 // tier prices in rupees, disconnected from the real crypto billing (NOWPayments, $19/mo
