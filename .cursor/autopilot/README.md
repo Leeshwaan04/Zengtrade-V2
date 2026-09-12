@@ -1,7 +1,8 @@
 # zengtrade Autopilot Agents
 
-Eight role-based charters (R&D added 2026-09-12). As of 2026-09-11, Claude Code is the senior actor
-for all eight roles: whenever a Claude Code session is active (interactively or on a schedule via
+Nine role-based charters (R&D added 2026-09-12; Content Strategist added 2026-09-12). As of
+2026-09-11, Claude Code is the senior actor for all nine roles: whenever a Claude Code session is
+active (interactively or on a schedule via
 CronCreate), it reads this file + `saas/web/ops-data.json` + recent commit history first, so it picks
 up wherever the Cursor Cloud Agents left off rather than duplicating work. Cursor's scheduled agents
 (below) stay on as the persistent floor — they're the only thing that runs work when no Claude Code
@@ -38,12 +39,13 @@ unless the founder asks).
 | Marketing Lead | `.cursor/autopilot/marketing.md` | `marketing(autopilot):` |
 | Sales Manager | `.cursor/autopilot/sales.md` | `sales(autopilot):` |
 | R&D | `.cursor/autopilot/rnd.md` | `rnd(autopilot):` |
+| Content Strategist | `.cursor/autopilot/content.md` | `content(autopilot):` |
 
 **CTO first action each run:** `./scripts/run-p0-if-ready.sh`
 
 **P0 blocker (founder):** Railway `paper-worker` has wrong Postgres password — Cloud Agent secret `DATABASE_PASSWORD` or https://zengtrade.in/ops/worker
 
-**Daily log:** `./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..." --seo "..." --marketing "..." --sales "..." --qa "..." --rnd "..."` (auto-syncs header probes; `--rnd` may need adding to the script if it isn't accepted yet)
+**Daily log:** `./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..." --seo "..." --marketing "..." --sales "..." --qa "..." --rnd "..." --content "..."` (auto-syncs header probes)
 
 **While worker down:** `./scripts/check-founder-parallel-ready.sh` · `./scripts/guide-founder-parallel.sh` · `./scripts/audit-growth-goal.sh` · `./scripts/print-growth-goal-summary.sh` · `docs/GUIDE_INDEX.md`
 
@@ -53,12 +55,12 @@ One daily agent with prompt:
 
 ```
 Read .cursor/autopilot/README.md and run charters in order:
-CTO → CPO → CBO → SEO → Marketing → Sales → QA&VAPT → R&D.
+CTO → CPO → CBO → SEO → Marketing → Sales → QA&VAPT → R&D → Content Strategist.
 Update docs/GROWTH_DASHBOARD.md with today's date section.
 Use ./scripts/append-growth-log.sh for each session log block.
 Update saas/web/ops-data.json for any role that shipped work.
 Commit and push to main. Summarize for the founder in 5 bullets.
-Use ./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..." --seo "..." --marketing "..." --sales "..." --qa "..." --rnd "..." each run.
+Use ./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..." --seo "..." --marketing "..." --sales "..." --qa "..." --rnd "..." --content "..." each run.
 ```
 
 ### Growth squad (who owns what)
@@ -73,6 +75,7 @@ Use ./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..."
 | Pro conversion, checkout, MRR | Sales Manager | `docs/SALES_PLAYBOOK.md` |
 | Security smoke, RLS, VAPT | QA&VAPT | `docs/QA_VAPT_CHECKLIST.md` |
 | Retention, revenue experiments, GTM exploration | R&D | `.cursor/autopilot/rnd.md` |
+| Content taxonomy, /learn/ + /blog/ roadmap, glossary | Content Strategist | `.cursor/autopilot/content.md` |
 
 ## Founder dashboard (bookmark this)
 

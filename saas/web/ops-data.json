@@ -42,6 +42,13 @@
       "urgent": false
     },
     {
+      "id": "hostinger-reach",
+      "title": "Activate a Hostinger Reach plan for the newsletter",
+      "detail": "Founder confirmed Hostinger Reach as the newsletter platform (2026-09-12). It's connected as an integration, but every live API call (e.g. list profiles) fails generically - there's no active Reach plan/profile on the account yet. Content Strategist can't provision a list until a plan exists.",
+      "url": "https://hpanel.hostinger.com/",
+      "urgent": false
+    },
+    {
       "id": "linkedin-bip",
       "title": "LinkedIn build-in-public post",
       "detail": "Founder-ready draft in docs/content/LINKEDIN_BUILD_IN_PUBLIC.md \u2014 post after ./scripts/check-parallel-growth.sh green",
@@ -490,6 +497,24 @@
       {
         "label": "R&D charter (repo)",
         "url": "https://github.com/Leeshwaan04/Zengtrade-V2/blob/main/.cursor/autopilot/rnd.md"
+      }
+    ]
+  },
+  "content": {
+    "headline": "Content strategy & taxonomy",
+    "shipped": [
+      "Charter: .cursor/autopilot/content.md (2026-09-12) — owns content taxonomy/roadmap (/learn/, new /blog/, glossary expansion); SEO keeps the coin-page generator, Marketing keeps distribution",
+      "Real-ceiling guardrail baked into the charter from day one: page count follows real non-duplicated content (coin+strategy math, genuine topics), never a round target — padding is scaled content abuse and risks the whole domain"
+    ],
+    "next": "Add /blog/ (timely posts, distinct from /learn/'s evergreen guides) + nav entries; expand glossary past 46 terms with real terms only. Founder confirmed 2026-09-12: grow toward the real ~8,800-page coin+strategy ceiling first (not a bigger round number), and Hostinger Reach for the newsletter once a plan is active (see founder_actions).",
+    "links": [
+      {
+        "label": "Content charter (repo)",
+        "url": "https://github.com/Leeshwaan04/Zengtrade-V2/blob/main/.cursor/autopilot/content.md"
+      },
+      {
+        "label": "Keyword ownership map",
+        "url": "https://github.com/Leeshwaan04/Zengtrade-V2/blob/main/docs/KEYWORD_STRATEGY.md"
       }
     ]
   },

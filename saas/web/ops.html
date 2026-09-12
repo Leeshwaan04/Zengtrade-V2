@@ -412,7 +412,7 @@ async function refresh() {
   document.getElementById("roles").innerHTML =
     roleCard("CTO", data.cto) + roleCard("CPO", data.cpo) + roleCard("CBO", data.cbo) +
     roleCard("SEO", data.seo) + roleCard("Marketing", data.marketing) + roleCard("Sales", data.sales) +
-    roleCard("QA&VAPT", data.qavapt) + roleCard("R&D", data.rnd);
+    roleCard("QA&VAPT", data.qavapt) + roleCard("R&D", data.rnd) + roleCard("Content Strategist", data.content);
   document.getElementById("asof").textContent =
     "Live probes: " + new Date().toLocaleString() + (data.updated ? " · Briefing data: " + data.updated.replace("T", " ").replace("Z", " UTC") : "");
 }

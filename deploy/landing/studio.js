@@ -63,6 +63,8 @@
   var sess = session();
   if (!sess) { location.replace("/login"); return; }
   trackPageview();
+  setTimeout(checkFirstClosedTrade, 2000);
+  setInterval(function () { if (document.visibilityState === "visible") checkFirstClosedTrade(); }, 30000);
 
   function sbHeaders(extra) {
     var h = { apikey: ANON, Authorization: "Bearer " + (session() || {}).tok,
@@ -319,6 +321,37 @@
     var map = {};
     list.forEach(function (x) { var k = keyFn(x); (map[k] = map[k] || []).push(x); });
     return map;
+  }
+
+  /* ---- retention (R&D charter P0): the ONE moment worth interrupting for -----------------
+   * Before this, a user who deployed had zero signal anything happened unless they opened
+   * Forward Test themselves. This fires once, only for the very first closed trade an account
+   * ever gets (not every trade after - a strategy can close several a day and a toast per
+   * trade would turn into exactly the "toast-theater" pattern QA already flagged elsewhere).
+   * localStorage flag makes the check free after the first hit; myTrades() is the same
+   * RLS-scoped query the Forward/Accuracy tabs already trust. */
+  function checkFirstClosedTrade() {
+    try { if (localStorage.getItem("zt_seen_first_trade")) return; } catch (e) { return; }
+    myTrades().then(function (trades) {
+      if (!trades || !trades.length) return;
+      try { localStorage.setItem("zt_seen_first_trade", "1"); } catch (e) {}
+      var t = trades[0], pnl = Number(t.pnl || 0), win = pnl >= 0;
+      setTimeout(function () {
+        ztToast({
+          uniqueClass: "zt-first-trade-toast",
+          icon: win ? "check" : "activity",
+          title: "Your first paper trade just closed",
+          body: (t.symbol || t.strategy_key) + " closed " + (win ? "up " : "down ") +
+            (win ? "+$" : "-$") + Math.abs(pnl).toFixed(2) +
+            ". Real evidence from live prices, not a backtest projection.",
+          timeout: 12000,
+          actions: [
+            { key: "view", cls: "primary", label: "View evidence", onClick: function () { location.href = "/app#forward"; } },
+            { key: "ok", cls: "ghost", label: "Dismiss" },
+          ],
+        });
+      }, 800);
+    });
   }
 
   /* BUG FIX (2026-09-09): Forward Test, Accuracy(*), and Analytics used to render the SHARED

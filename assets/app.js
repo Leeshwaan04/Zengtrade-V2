@@ -2990,7 +2990,8 @@ function cryptoForward(mode){   // mode: 'forward' | 'accuracy'
   const d=CRYPTOFWD.data;
   if(!d){ if(!CRYPTOFWD.busy) loadCryptoFwd().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); return secEmpty('activity','Loading track record…','Reading closed crypto trades from the harness log.'); }
   const rows=d.strategies||[], t=d.totals||{};
-  if(!rows.length){ return secEmpty('activity','No closed trades yet',`The 24/7 crypto harness books this as it runs, win%, profit factor and expectancy appear once positions close. Open positions are on the <b>Monitor</b> tab.`); }
+  if(!rows.length){ return secEmpty('activity','No closed trades yet',`The 24/7 crypto harness books this as it runs, win%, profit factor and expectancy appear once positions close. Open positions are on the <b>Monitor</b> tab.`,
+    `<a class="mon-acc-link" href="/learn/backtest-vs-forward-test/?utm_source=site&amp;utm_medium=organic&amp;utm_campaign=learn_forward_empty">Why forward evidence beats a backtest &rarr;</a>`); }
   const acc=mode==='accuracy';
   const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>${acc?'Forward accuracy':'Forward test'}, real out-of-sample.</b> Every metric below is from <b>closed</b> paper trades on live Binance data (not a backtest, not fabricated). ${acc?'Win% and profit factor are the honest edge measure.':'This is the live track record the go-live gate would judge.'}</span></div>`;
   const stat=secStats([

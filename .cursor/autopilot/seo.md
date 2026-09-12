@@ -38,6 +38,10 @@ Founder: verify GSC property + submit **https://zengtrade.in/sitemap.xml** — `
 - [x] Coins hub: category-segmented sections instead of one flat grid (session 219)
 - [x] `/learn/` educational content section — 6 articles live, claims MARKETING_PLAYBOOK's week-4
       "blog section" idea; extends the existing "Learn" mega-nav dropdown (session 219)
+- [ ] Expand coin roster from 150 toward the full real Binance-tradable universe (~488 coins),
+      founder-confirmed 2026-09-12 as the direction over chasing a bigger round page-count number.
+      Roll out in batches (crawl-budget/trust), same pattern as the 7->150 expansion. Coordinate
+      with `.cursor/autopilot/content.md`, which owns the no-padding guardrail on this work.
 
 ### P2 — Compounding
 - [x] Paper loop section on how-it-works

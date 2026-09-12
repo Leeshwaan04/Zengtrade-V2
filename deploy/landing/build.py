@@ -411,7 +411,7 @@ CSP_STUDIO = ("default-src 'self'; script-src 'self' https://www.googletagmanage
 term = re.sub(r'<meta http-equiv="Content-Security-Policy"[^>]*/>',
               f'<meta http-equiv="Content-Security-Policy" content="{CSP_STUDIO}" />', term, count=1)
 term = term.replace('<script src="assets/chart.js',
-                    '<script src="studio.js?v=12"></script>\n<script src="assets/chart.js')
+                    '<script src="studio.js?v=13"></script>\n<script src="assets/chart.js')
 assert 'studio.js' in term, "studio.js injection failed - terminal script tags moved?"
 # gtag as high in <head> as possible, right after the CSP that now permits it.
 term = term.replace(f'<meta http-equiv="Content-Security-Policy" content="{CSP_STUDIO}" />',

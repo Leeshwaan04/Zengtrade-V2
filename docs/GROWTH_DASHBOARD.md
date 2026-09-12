@@ -4200,6 +4200,11 @@ Copy for each new day:
 - Blocked:
 - Next:
 
+### Content Strategist
+- Shipped:
+- Blocked:
+- Next:
+
 ### Metrics snapshot
 - Pageviews 7d:
 - Users / deployers / trades:
