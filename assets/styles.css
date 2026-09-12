@@ -2353,7 +2353,13 @@ html[data-persona="ai"] #chartCard,html[data-persona="ai"] #chartResize,html[dat
 .ais-card .ai-act{margin-top:9px}
 
 @media(max-width:1000px){ .ai-wrap{grid-template-columns:1fr} .ai-side{flex-direction:row;flex-wrap:wrap} .ais-card{flex:1;min-width:200px} }
-@media(max-width:680px){ .av-head{flex-direction:column;align-items:stretch} .av-tabs{justify-content:space-between} }
+@media(max-width:680px){ .av-head{flex-direction:column;align-items:stretch}
+  /* Eight Algo Studio tabs never fit a phone width in one row (justify-content:space-between doesn't
+     help once content overflows, it only redistributes slack that doesn't exist here); found via a
+     mobile QA pass where Accuracy/Analytics/Risk Governor/Backtest rendered off-screen with no way
+     to reach them at all. Horizontal swipe-scroll instead of trying to force everything to fit. */
+  .av-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap;max-width:100%}
+  .av-tabs::-webkit-scrollbar{display:none} }
 
 /* ============================================================
    LAYOUT BUILDER: compact Layout menu + named layouts + gallery
