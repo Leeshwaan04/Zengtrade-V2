@@ -1436,6 +1436,13 @@ html[data-persona="investor"] .wg-body{gap:8px}
 .ss-l{font-size:10px;color:var(--slate);text-transform:uppercase;letter-spacing:.3px;font-weight:600}
 .ss-v{font-size:17px;font-weight:700;letter-spacing:-.4px}
 .ss-s{font-size:10.5px;color:var(--slate-2)}
+button.ss-help{background:none;border:none;padding:0;font:inherit;text-transform:inherit;letter-spacing:inherit;cursor:help;display:inline-flex;align-items:center;gap:4px;text-decoration:underline dotted var(--slate);text-underline-offset:2px}
+button.ss-help:hover,button.ss-help:focus-visible{color:var(--accent-d);text-decoration-color:var(--accent-d)}
+.ss-q{width:11px;height:11px;border-radius:50%;background:var(--line-2,var(--line));color:var(--slate);font-size:8px;font-weight:700;font-style:normal;display:inline-flex;align-items:center;justify-content:center;flex:none;line-height:1}
+.gloss-tip{position:fixed;z-index:80;max-width:260px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-s);box-shadow:var(--shadow-lg);padding:10px 12px;font-size:12.5px;line-height:1.45;color:var(--navy);opacity:0;transform:translateY(4px);pointer-events:none;transition:opacity .12s ease,transform .12s ease}
+.gloss-tip.show{opacity:1;transform:translateY(0)}
+.gloss-tip a{display:inline-block;margin-top:4px;color:var(--accent-d);font-weight:600;white-space:nowrap;text-decoration:none}
+.gloss-tip a:hover{text-decoration:underline}
 /* Unified P&L: compact inline Realised/Unrealised breakdown (pnlCompact) so a single Net number is never ambiguous */
 .pnl-net{font-weight:800}
 .pnl-ru{margin-left:7px;font-size:10.5px;color:var(--slate-2);white-space:nowrap}

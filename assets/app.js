@@ -1375,8 +1375,43 @@ function quickToast(title,sub){
   t._timer=setTimeout(()=>{if(document.body.contains(t))dismiss(t);},4000);
 }
 function ts(k,def){ return (state.toolState[k]!==undefined)?state.toolState[k]:def; }
-function secStats(items){return `<div class="sec-stats">${items.map(s=>`<div class="sec-stat"><span class="ss-l">${s.l}</span><b class="ss-v num ${s.tone||''}"${s.id?` data-live="${s.id}"`:''}>${s.v}</b>${s.s?`<span class="ss-s">${s.s}</span>`:''}</div>`).join('')}</div>`;}
+function secStats(items){return `<div class="sec-stats">${items.map(s=>`<div class="sec-stat">${s.g?`<button type="button" class="ss-l ss-help" data-g="${s.g}">${s.l}<i class="ss-q">?</i></button>`:`<span class="ss-l">${s.l}</span>`}<b class="ss-v num ${s.tone||''}"${s.id?` data-live="${s.id}"`:''}>${s.v}</b>${s.s?`<span class="ss-s">${s.s}</span>`:''}</div>`).join('')}</div>`;}
 function secEmpty(ic,title,msg,cta){return `<div class="sec-empty"><span class="se-ic">${icon(ic,28)}</span><b>${title}</b><p>${msg}</p>${cta||''}</div>`;}
+// Inline "what does this mean" tooltips on secStats() labels, wired to the real glossary already
+// shipped at /learn/glossary/{slug}/. Definitions below are copied verbatim from content/glossary.py's
+// `short` field (single source of truth) - if that text changes there, update it here too. This is
+// the DIY-simplicity lever: no human ever explains these numbers, so the product has to, in place.
+const GLOSS={
+  'win-rate':'The percentage of trades that close profitably, informative, but meaningless without knowing the size of wins versus losses too.',
+  'profit-factor':'Gross profit divided by gross loss, a single number summarizing whether winners meaningfully outweigh losers, independent of win rate.',
+  'drawdown':"The decline from a portfolio's peak value to its lowest point since, the real, lived cost of a losing stretch.",
+  'sharpe-ratio':'A risk-adjusted return measure: average return divided by the volatility (standard deviation) of those returns, higher means more return per unit of risk taken.',
+  'cagr':'The smoothed annual growth rate that would take a starting value to an ending value over a period, assuming steady compounding, useful for comparing returns across different timeframes.',
+  'market-regime':'The prevailing character of a market, trending up, trending down, or range-bound/choppy, that determines which strategies actually have an edge right now.',
+};
+function initGlossTips(){
+  let tip=null;
+  function ensureTip(){ if(!tip){ tip=document.createElement('div'); tip.className='gloss-tip'; tip.setAttribute('role','tooltip'); document.body.appendChild(tip); } return tip; }
+  function place(btn){
+    const slug=btn.dataset.g, def=GLOSS[slug]; if(!def) return;
+    const t=ensureTip(), r=btn.getBoundingClientRect();
+    t.innerHTML=`${def} <a href="/learn/glossary/${slug}/" target="_blank" rel="noopener">Full definition &rarr;</a>`;
+    t.classList.add('show');
+    const tw=Math.min(260, window.innerWidth-24);
+    t.style.maxWidth=tw+'px';
+    const left=Math.min(Math.max(8,r.left), window.innerWidth-tw-8);
+    let top=r.bottom+8;
+    if(top+120>window.innerHeight) top=r.top-8-t.offsetHeight;
+    t.style.left=left+'px'; t.style.top=top+'px';
+  }
+  function hide(){ if(tip) tip.classList.remove('show'); }
+  document.addEventListener('mouseover',e=>{const b=e.target.closest('.ss-help'); if(b) place(b);});
+  document.addEventListener('mouseout',e=>{const b=e.target.closest('.ss-help'); if(b) hide();});
+  document.addEventListener('focusin',e=>{const b=e.target.closest('.ss-help'); if(b) place(b);});
+  document.addEventListener('focusout',e=>{const b=e.target.closest('.ss-help'); if(b) hide();});
+  document.addEventListener('click',e=>{const b=e.target.closest('.ss-help'); if(b){ e.preventDefault(); place(b); } else if(!e.target.closest('.gloss-tip')) hide();});
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') hide(); });
+}
 function lcMsg(s){
   return s==='paper'?'Live data, simulated fills, no real money. Building forward evidence.'
     : s==='paused'?'Paused, no new entries; open paper positions are kept.'
@@ -2615,7 +2650,7 @@ function cryptoMonitor(){
     {l:'Unrealised',v:cxMoney(t.unreal),s:'open · live',tone:t.unreal>0?'up':(t.unreal<0?'down':''),id:'cxUnreal'},
     {l:'Net',v:cxMoney(t.pnl),s:'realised + unrealised',tone:t.pnl>0?'up':(t.pnl<0?'down':''),id:'cxClsPnl'},
     {l:'Open positions',v:String(t.open||0),s:esc(clsLabel)+' strategies',id:'cxOpen'},
-    {l:'Regime',v:esc(d.regime||'-'),s:'BTC-led'},
+    {l:'Regime',g:'market-regime',v:esc(d.regime||'-'),s:'BTC-led'},
     {l:'Risk score',v:g.score==null?'-':String(g.score),s:g.exposurePct!=null?`${g.exposurePct}% exposure`:'governor'},
   ]);
   // forward stats (win%/PF/expectancy/closed per strategy) power the accuracy line + go-live check, 
@@ -2844,7 +2879,7 @@ function cryptoRisk(){
     {l:'Health score',v:String(d.score),s:esc(d.mode||'normal'),tone:d.score>=70?'up':(d.score<40?'down':'')},
     {l:'Mode',v:esc(d.mode||'normal'),s:d.killSwitch?'KILL-SWITCH':'live',tone:d.killSwitch?'down':''},
     {l:'Exposure',v:(d.exposurePct||0)+'%',s:`limit ${lim.total||150}%`,tone:(d.exposurePct>(lim.total||150))?'down':''},
-    {l:'Drawdown',v:(d.drawdownPct||0)+'%',s:'realised vs peak',tone:(d.drawdownPct>=2)?'down':''},
+    {l:'Drawdown',g:'drawdown',v:(d.drawdownPct||0)+'%',s:'realised vs peak',tone:(d.drawdownPct>=2)?'down':''},
     {l:'Book',v:cxMoney(d.totalBook),s:`of $${Math.round((d.capital||1e6)/1000)}K pool`},
     {l:'Equity',v:cxMoney(d.equity),s:'capital + realised'},
   ]);
@@ -2907,10 +2942,10 @@ function cryptoBacktest(){
     else{ const tone=v=>v>0?'up':(v<0?'down':'');
       const stat=secStats([
         {l:'Total return',v:pct(d.totalRet),s:esc(d.period||period),tone:tone(d.totalRet)},
-        {l:'CAGR',v:pct(d.cagr),s:'annualised',tone:tone(d.cagr)},
-        {l:'Max drawdown',v:pct(-Math.abs(d.maxDD||0)),s:'peak-to-trough',tone:'down'},
-        {l:'Sharpe',v:(d.sharpe==null?'-':(+d.sharpe).toFixed(2)),s:'risk-adjusted',tone:tone(d.sharpe)},
-        {l:'Win rate',v:(d.winRate==null?'-':d.winRate+'%'),s:`${d.trades||0} trades`},
+        {l:'CAGR',g:'cagr',v:pct(d.cagr),s:'annualised',tone:tone(d.cagr)},
+        {l:'Max drawdown',g:'drawdown',v:pct(-Math.abs(d.maxDD||0)),s:'peak-to-trough',tone:'down'},
+        {l:'Sharpe',g:'sharpe-ratio',v:(d.sharpe==null?'-':(+d.sharpe).toFixed(2)),s:'risk-adjusted',tone:tone(d.sharpe)},
+        {l:'Win rate',g:'win-rate',v:(d.winRate==null?'-':d.winRate+'%'),s:`${d.trades||0} trades`},
         {l:'Avg trade',v:pct(d.avgTrade),s:`${d.timeInMarket!=null?d.timeInMarket+'% in market':''}`,tone:tone(d.avgTrade)},
       ]);
       const bh=d.benchmark||{}; const curve=cxCurve(d.pts,bh.pts);
@@ -2996,8 +3031,8 @@ function cryptoForward(mode){   // mode: 'forward' | 'accuracy'
   const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>${acc?'Forward accuracy':'Forward test'}, real out-of-sample.</b> Every metric below is from <b>closed</b> paper trades on live Binance data (not a backtest, not fabricated). ${acc?'Win% and profit factor are the honest edge measure.':'This is the live track record the go-live gate would judge.'}</span></div>`;
   const stat=secStats([
     {l:'Closed trades',v:String(t.closed||0),s:`${t.wins||0}W / ${t.losses||0}L`},
-    {l:'Win rate',v:t.winPct==null?'-':t.winPct+'%',s:'across all strategies',tone:(t.winPct>=50)?'up':(t.winPct<45?'down':'')},
-    {l:'Profit factor',v:t.profitFactor==null?'-':(+t.profitFactor).toFixed(2),s:'gross win ÷ loss',tone:(t.profitFactor>=1.3)?'up':(t.profitFactor<1?'down':'')},
+    {l:'Win rate',g:'win-rate',v:t.winPct==null?'-':t.winPct+'%',s:'across all strategies',tone:(t.winPct>=50)?'up':(t.winPct<45?'down':'')},
+    {l:'Profit factor',g:'profit-factor',v:t.profitFactor==null?'-':(+t.profitFactor).toFixed(2),s:'gross win ÷ loss',tone:(t.profitFactor>=1.3)?'up':(t.profitFactor<1?'down':'')},
     {l:'Net P&L',v:cxMoney(t.netPnl),s:'realised, closed',tone:(t.netPnl>0)?'up':(t.netPnl<0?'down':'')},
   ]);
   const {curReg:reg, fitMap}=cxRegimeFit();
@@ -3995,4 +4030,5 @@ function renderPlanChip(){ const el=$('planChip'); if(!el) return;
   el.title='View plans & pricing'; el.onclick=()=>{ window.location.href='/app#pricing'; }; }
 
 document.addEventListener('DOMContentLoaded',init);
+initGlossTips();   // delegated listeners on document, safe to attach before DOMContentLoaded
 
