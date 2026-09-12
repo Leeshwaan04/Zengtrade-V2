@@ -3,7 +3,7 @@
 # Usage:
 #   ./scripts/append-growth-log.sh 109 "Short title" \
 #     --cto "..." --cpo "..." --cbo "..." \
-#     --seo "..." --marketing "..." --sales "..." --qa "..."
+#     --seo "..." --marketing "..." --sales "..." --qa "..." --rnd "..."
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -20,6 +20,7 @@ SEO_SHIPPED=""
 MARKETING_SHIPPED=""
 SALES_SHIPPED=""
 QA_SHIPPED=""
+RND_SHIPPED=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --cto) CTO_SHIPPED="$2"; shift 2 ;;
@@ -29,6 +30,7 @@ while [[ $# -gt 0 ]]; do
     --marketing) MARKETING_SHIPPED="$2"; shift 2 ;;
     --sales) SALES_SHIPPED="$2"; shift 2 ;;
     --qa) QA_SHIPPED="$2"; shift 2 ;;
+    --rnd) RND_SHIPPED="$2"; shift 2 ;;
     *) shift ;;
   esac
 done
@@ -63,6 +65,9 @@ BLOCK="### Day 1 (session ${SESSION}) — ${TITLE}
 
 ### QA&VAPT
 - **Shipped:** ${QA_SHIPPED:-—}
+
+### R&D
+- **Shipped:** ${RND_SHIPPED:-—}
 
 ${STATUS_BLOCK}
 "

@@ -4195,6 +4195,11 @@ Copy for each new day:
 - Blocked:
 - Next:
 
+### R&D
+- Shipped:
+- Blocked:
+- Next:
+
 ### Metrics snapshot
 - Pageviews 7d:
 - Users / deployers / trades:

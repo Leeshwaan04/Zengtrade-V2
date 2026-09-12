@@ -1,16 +1,20 @@
 # zengtrade Autopilot Agents
 
-Seven role-based charters. As of 2026-09-11, Claude Code is the senior actor for all seven roles:
-whenever a Claude Code session is active (interactively or on a schedule via CronCreate), it reads
-this file + `saas/web/ops-data.json` + recent commit history first, so it picks up wherever the
-Cursor Cloud Agents left off rather than duplicating work. Cursor's scheduled agents (below) stay
-on as the persistent floor — they're the only thing that runs work when no Claude Code session is
-open, since Claude Code's own scheduling (CronCreate) is session-bound and caps at 7 days, unlike
-Cursor's server-side schedule. Revisit pausing Cursor once the founder trusts the Claude Code path.
+Eight role-based charters (R&D added 2026-09-12). As of 2026-09-11, Claude Code is the senior actor
+for all eight roles: whenever a Claude Code session is active (interactively or on a schedule via
+CronCreate), it reads this file + `saas/web/ops-data.json` + recent commit history first, so it picks
+up wherever the Cursor Cloud Agents left off rather than duplicating work. Cursor's scheduled agents
+(below) stay on as the persistent floor — they're the only thing that runs work when no Claude Code
+session is open, since Claude Code's own scheduling (CronCreate) is session-bound and caps at 7 days,
+unlike Cursor's server-side schedule. Revisit pausing Cursor once the founder trusts the Claude Code
+path.
 
 Standing approval gate for Claude Code operating under these charters: **anything touching money**
-(pricing, billing logic, payment-provider config, refunds) stops and asks the founder first.
-Everything else in the charters below, it does on its own judgment and commits directly.
+(pricing, billing logic, payment-provider config, refunds, referral payouts) never ships silently.
+As refined 2026-09-12: don't reflexively hold the work back and wait for a reply either — do the
+non-money parts, write up the money part clearly, and call it out by name in the same summary rather
+than a separate blocking question each time. Everything else in the charters below, it does on its
+own judgment and commits directly.
 
 Each agent reads its charter, executes the highest-priority unchecked task, updates
 `saas/web/ops-data.json` and `docs/GROWTH_DASHBOARD.md`, and **commits directly to `main`** (no PRs
@@ -33,12 +37,13 @@ unless the founder asks).
 | SEO Manager | `.cursor/autopilot/seo.md` | `seo(autopilot):` |
 | Marketing Lead | `.cursor/autopilot/marketing.md` | `marketing(autopilot):` |
 | Sales Manager | `.cursor/autopilot/sales.md` | `sales(autopilot):` |
+| R&D | `.cursor/autopilot/rnd.md` | `rnd(autopilot):` |
 
 **CTO first action each run:** `./scripts/run-p0-if-ready.sh`
 
 **P0 blocker (founder):** Railway `paper-worker` has wrong Postgres password — Cloud Agent secret `DATABASE_PASSWORD` or https://zengtrade.in/ops/worker
 
-**Daily log:** `./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..." --seo "..." --marketing "..." --sales "..." --qa "..."` (auto-syncs header probes)
+**Daily log:** `./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..." --seo "..." --marketing "..." --sales "..." --qa "..." --rnd "..."` (auto-syncs header probes; `--rnd` may need adding to the script if it isn't accepted yet)
 
 **While worker down:** `./scripts/check-founder-parallel-ready.sh` · `./scripts/guide-founder-parallel.sh` · `./scripts/audit-growth-goal.sh` · `./scripts/print-growth-goal-summary.sh` · `docs/GUIDE_INDEX.md`
 
@@ -48,12 +53,12 @@ One daily agent with prompt:
 
 ```
 Read .cursor/autopilot/README.md and run charters in order:
-CTO → CPO → CBO → SEO → Marketing → Sales → QA&VAPT.
+CTO → CPO → CBO → SEO → Marketing → Sales → QA&VAPT → R&D.
 Update docs/GROWTH_DASHBOARD.md with today's date section.
 Use ./scripts/append-growth-log.sh for each session log block.
 Update saas/web/ops-data.json for any role that shipped work.
 Commit and push to main. Summarize for the founder in 5 bullets.
-Use ./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..." --seo "..." --marketing "..." --sales "..." --qa "..." each run.
+Use ./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..." --seo "..." --marketing "..." --sales "..." --qa "..." --rnd "..." each run.
 ```
 
 ### Growth squad (who owns what)
@@ -67,6 +72,7 @@ Use ./scripts/append-growth-log.sh N "title" --cto "..." --cpo "..." --cbo "..."
 | Brand, content, campaigns, community | Marketing Lead | `docs/MARKETING_PLAYBOOK.md` |
 | Pro conversion, checkout, MRR | Sales Manager | `docs/SALES_PLAYBOOK.md` |
 | Security smoke, RLS, VAPT | QA&VAPT | `docs/QA_VAPT_CHECKLIST.md` |
+| Retention, revenue experiments, GTM exploration | R&D | `.cursor/autopilot/rnd.md` |
 
 ## Founder dashboard (bookmark this)
 
