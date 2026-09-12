@@ -439,7 +439,7 @@ def emit(path, html_str, canon):
 
 emit("", shell(
     "zengtrade: Regime-Aware Crypto Trading Strategies",
-    "Paper-trade regime-aware crypto strategies on live prices before risking a dollar. 18 systematic strategies, honest costs, non-custodial. Not investment advice.",
+    "Paper-trade regime-aware crypto strategies on live prices before risking a dollar. 13 systematic strategies, honest costs, non-custodial. Not investment advice.",
     "https://zengtrade.in/", HOME_MAIN, extra_head=HOME_SCHEMA), "https://zengtrade.in/")
 
 emit("how-it-works", shell(

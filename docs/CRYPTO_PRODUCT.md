@@ -102,7 +102,7 @@ We do **not** target: manual scalpers who want a slick charting terminal, Indian
 |---------|--------------|
 | **Live crypto tape** | Real-time BTC/ETH/SOL+ prices via Binance public API |
 | **Regime engine** | Trade the right strategies for the current market structure |
-| **Strategy library** | 18 systematic strategies live today (momentum, mean-reversion, breakout; spot only), plus a no-code Builder to compose your own from 13 indicator primitives. Perps, pairs, and options structures are roadmap, not yet available: they need venue/engine integrations `strategies.py` explicitly doesn't have yet. |
+| **Strategy library** | 13 systematic strategies live today (momentum, mean-reversion, breakout; spot only). No no-code Builder exists yet - found overclaiming this on the homepage + meta description during a QA pass (2026-09-12) and corrected both to the real count. Perps, pairs, and options structures are roadmap, not yet available: they need venue/engine integrations `strategies.py` explicitly doesn't have yet. |
 | **Backtest** | Historical proof on Binance data with honest costs |
 | **Forward paper** | Live proof before capital risk |
 | **Monitor** | Real-time P&L, positions, governor health |
