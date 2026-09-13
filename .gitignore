@@ -1,5 +1,8 @@
 # build output
 deploy/landing/dist/
+# coin market data cache (refreshed every 6h via GitHub Actions cache, never git history -
+# see seo/generate.py's CACHE_PATH comment and seo/refresh_coin_data.py)
+seo/coin_data_cache.json
 # python
 __pycache__/
 *.pyc

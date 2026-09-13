@@ -2,9 +2,22 @@ name: Deploy zengtrade to GitHub Pages
 
 # Builds the static site (marketing + coin pSEO + bundled auth app) with build.py and publishes it.
 # One-time setup: repo Settings -> Pages -> Source = "GitHub Actions".
+#
+# Session 220: a plain code push (e.g. a one-line CSS fix) used to cost the same 15-19 minutes as
+# a 190-coin roster expansion, because seo/generate.py's fetch_coins() re-ran ~1360 sequential,
+# deliberately-paced Binance klines calls on EVERY build regardless of whether market data needed
+# refreshing. The `schedule` trigger below + the cache restore/save steps decouple that: only a
+# scheduled (or manually dispatched) run pays the live-fetch cost and refreshes
+# seo/coin_data_cache.json; a normal push restores the most recent cache and skips straight to a
+# fast build. Nothing is committed to git for this (would bloat repo history with a file that
+# changes every 6h) - it lives entirely in the GitHub Actions cache, keyed by run id with a
+# restore-keys prefix so "most recent" always resolves. If the cache is ever missing entirely,
+# generate.py's get_coin_data() falls back to a live fetch on its own - never a hard dependency.
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: '20 */6 * * *'   # refresh coin data every 6h, offset from health-watch's :00 cron
   workflow_dispatch:
 
 permissions:
@@ -26,6 +39,22 @@ jobs:
           python-version: "3.11"
       - name: Install deps
         run: pip install requests markdown
+      - name: Restore coin data cache
+        uses: actions/cache/restore@v4
+        with:
+          path: seo/coin_data_cache.json
+          key: coin-data-${{ github.run_id }}   # never matches on restore, forces the prefix fallback below
+          restore-keys: |
+            coin-data-
+      - name: Refresh coin data (scheduled/manual only)
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: python3 seo/refresh_coin_data.py
+      - name: Save coin data cache
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        uses: actions/cache/save@v4
+        with:
+          path: seo/coin_data_cache.json
+          key: coin-data-${{ github.run_id }}
       - name: Build site
         run: python3 deploy/landing/build.py
       - uses: actions/upload-pages-artifact@v3

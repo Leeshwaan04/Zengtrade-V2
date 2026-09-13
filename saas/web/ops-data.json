@@ -161,9 +161,11 @@
       "founder parallel hub: guide-founder-parallel + FOUNDER_PARALLEL + /ops parallel list (session 209)",
       "guide-founder-growth-standup.sh \u2014 combined CPO + CBO founder standup (session 212)",
       "guide-cto-founder-standup.sh \u2014 P0 worker recovery combined playbook (session 215)",
-      "guide-founder-growth-standup quick mode ZT_QUICK_GROWTH_STANDUP (session 218)"
+      "guide-founder-growth-standup quick mode ZT_QUICK_GROWTH_STANDUP (session 218)",
+      "Fixed cto_ok reading false when production was actually healthy (session 220): sync-ops-gates.py was including database_url_auth_ok (a local-session credential check, not a production health signal) in the cto_ok tuple - removed it, verified live",
+      "Decoupled coin-data fetch from every push (session 220): a plain code push used to cost the same 15-19 minutes as a 190-coin roster expansion because seo/generate.py re-fetched all coin prices/candles live on every build. pages.yml now restores/saves seo/coin_data_cache.json via the GitHub Actions cache (not git, avoids history bloat), refreshed only on the workflow's 6h schedule or manual dispatch via seo/refresh_coin_data.py; a normal push just reads the cache. Also fixed a real bug this surfaced: build_coin_universe()'s CoinGecko loop had no pacing/retry-on-429 and could silently truncate the whole coin universe under rate limiting - now paced and retries respecting Retry-After"
     ],
-    "next": "Founder: reset Supabase DB password \u2192 update Railway DATABASE_URL \u2192 Deploy \u2192 run-p0-if-ready.sh",
+    "next": "Worker + billing + migration + production all green (see founder_actions for remaining founder-only items: GSC sitemap submit, first Pro checkout, Hostinger Reach activation, LinkedIn post).",
     "links": [
       {
         "label": "Founder guide index",

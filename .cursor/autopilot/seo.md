@@ -48,6 +48,13 @@ Founder: verify GSC property + submit **https://zengtrade.in/sitemap.xml** — `
       estimate is coins CoinGecko lists that aren't (yet) Binance-tradable, or don't clear the
       other real-content filters, not coins skipped for padding reasons. Coordinated with
       `.cursor/autopilot/content.md`, which owns the no-padding guardrail on this work.
+- [x] Decoupled coin-data fetch from every push, cache-hardened CoinGecko fetch (session 220): see
+  `.cursor/autopilot/cto.md` for the full writeup (this is a CTO-lens infra change to `generate.py`
+  SEO owns the content of, cross-charter by nature). Also fixed a real bug reproduced live during
+  testing: `build_coin_universe()`'s 5-page CoinGecko loop had zero pacing and no retry-on-429, so
+  a single rate-limit response silently truncated the whole coin universe - now paced (2s between
+  pages) and retries respecting `Retry-After`, same philosophy as `fetch_coins()`'s existing
+  Binance pacing.
 
 ### P2 — Compounding
 - [x] Paper loop section on how-it-works

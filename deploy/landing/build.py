@@ -319,7 +319,7 @@ try:
     sys.path.insert(0, os.path.abspath(os.path.join(HERE, "..", "..", "seo")))
     import generate as G
     coin_css = G.COIN_CSS
-    coins = G.fetch_coins()                       # live data; skipped gracefully if offline
+    coins = G.get_coin_data()                     # cache-first, live fallback if no cache exists
 except Exception as ex:
     print("  ! coin pages skipped (marketing site still builds):", ex)
 

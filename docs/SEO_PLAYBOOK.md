@@ -21,13 +21,29 @@ Owner: **SEO Manager autopilot** (`.cursor/autopilot/seo.md`)
 
 ## Coin pSEO pipeline
 
+`seo/generate.py` is a content library, not a standalone script (its own `__main__` block says so) -
+`deploy/landing/build.py` imports it and calls `G.get_coin_data()` to get every coin page's data.
+
 ```bash
-python3 seo/generate.py          # generate coin HTML
-python3 deploy/landing/build.py  # merge into dist
+python3 deploy/landing/build.py  # imports seo/generate.py, builds every page including /coins/*
 ./scripts/check-sitemap.sh       # verify URLs in production sitemap
 ```
 
-Target coins (minimum 7): BTC, ETH, SOL, BNB, XRP, ADA, DOGE.
+Roster: real top-N Binance-tradable coins by CoinGecko market cap (339 as of session 220, cap
+raised to 600 so the real ceiling falls out of the tradable/non-stable/non-tokenized-stock filters
+- see `build_coin_universe()`'s docstring, not a fixed target).
+
+**Data caching (session 220):** a plain code push used to cost the same 15-19 minutes as a
+190-coin roster expansion, because coin price/candle data was re-fetched live from CoinGecko +
+Binance on every single build. `get_coin_data()` now prefers `seo/coin_data_cache.json`, which
+`.github/workflows/pages.yml` restores from the GitHub Actions cache (not git - it changes every
+6h and would bloat repo history) on every run, but only *refreshes* on the workflow's `schedule`
+trigger (every 6h) or a manual `workflow_dispatch`, via `seo/refresh_coin_data.py`. A normal push
+just reads whatever was last cached and builds fast. If the cache is ever missing entirely (fresh
+checkout, first-ever run), `get_coin_data()` falls back to a live fetch automatically - there's no
+hard dependency on the cache existing, only a speed difference. To force a fresh local cache:
+`python3 seo/refresh_coin_data.py` (takes the full 15-19 min, that's the whole point of running it
+separately from every build).
 
 ## On-page standards
 

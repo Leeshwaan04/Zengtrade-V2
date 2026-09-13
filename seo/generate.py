@@ -15,7 +15,7 @@ tradability - see build_coin_universe()), so there's no separate "prototype vs -
 the whole site (which imports this module) with:  python3 deploy/landing/build.py
 """
 from __future__ import annotations
-import html, json, os, sys, time
+import datetime, html, json, os, sys, time
 
 try:
     import requests
@@ -24,6 +24,31 @@ except ImportError:
 
 BASE = "https://data-api.binance.vision"
 SITE = "https://zengtrade.in"
+
+# Session 220: a one-line code change used to cost the same 15-19 minutes as a 190-coin roster
+# expansion, because fetch_coins() below (~1360 sequential, deliberately-paced Binance calls -
+# see its own docstring for why the pacing is non-negotiable) ran on EVERY push regardless of
+# whether market data needed refreshing. CACHE_PATH decouples "how often do we hit rate-limited
+# APIs" from "did the code change": refresh_coin_data.py writes this file on its own schedule
+# (.github/workflows/pages.yml's cron trigger), get_coin_data() reads it for normal code-push
+# builds, and both fall back to a live fetch if the cache is missing or unusable - never a hard
+# dependency, just a fast path when available.
+CACHE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "coin_data_cache.json")
+
+
+def _load_cache():
+    """None if missing/corrupt/incomplete - every caller has exactly one fallback: fetch live."""
+    if not os.path.exists(CACHE_PATH):
+        return None
+    try:
+        with open(CACHE_PATH, encoding="utf-8") as f:
+            data = json.load(f)
+        if not data.get("universe") or not data.get("coins"):
+            return None
+        return data
+    except Exception as ex:
+        print("  ! coin_data_cache.json unreadable, ignoring:", ex)
+        return None
 
 # Curated category map for well-known symbols (drives which CATEGORY_ANGLE paragraph a coin
 # gets). Anything not listed falls back to DEFAULT_CATEGORY, still personalised with its own
@@ -170,6 +195,41 @@ def _is_tokenized_stock(name):
 SLUG_OVERRIDE = {"BNB": "bnb", "XRP": "xrp"}
 
 
+def _coingecko_markets_page(page, attempts=3):
+    """One page of CoinGecko's markets endpoint, retrying on a 429 the same way the Binance get()
+    helper above already retries on a network blip - reproduced concretely during session 220's
+    testing: 5 sequential page fetches with zero pacing between them (the original code here)
+    tripped CoinGecko's free-tier rate limit mid-loop, and a bare try/except treated the 429's
+    error-dict response as 'not a list' and silently truncated the whole coin universe rather than
+    retrying. Respects the API's own Retry-After header when present instead of guessing a delay."""
+    for attempt in range(attempts):
+        try:
+            r = requests.get(
+                "https://api.coingecko.com/api/v3/coins/markets",
+                params={"vs_currency": "usd", "order": "market_cap_desc", "per_page": 250, "page": page},
+                timeout=20,
+            )
+        except Exception as ex:
+            print(f"  ! CoinGecko page {page} request failed (attempt {attempt + 1}/{attempts}):", ex)
+            r = None
+        if r is not None and r.status_code == 200:
+            try:
+                return r.json()
+            except Exception as ex:
+                print(f"  ! CoinGecko page {page} returned non-JSON (attempt {attempt + 1}/{attempts}):", ex)
+        elif r is not None:
+            wait = int(r.headers.get("retry-after", 5 * (attempt + 1)))
+            print(f"  ! CoinGecko page {page} HTTP {r.status_code} (attempt {attempt + 1}/{attempts}), "
+                  f"waiting {wait}s before retry")
+            if attempt < attempts - 1:
+                time.sleep(wait)
+            continue
+        if attempt < attempts - 1:
+            time.sleep(3 * (attempt + 1))
+    print(f"  ! CoinGecko page {page} failed after {attempts} attempts, giving up on this page")
+    return None
+
+
 def build_coin_universe(n=300):
     """Real top-N coins ranked by CoinGecko market cap (stable, hard to game), filtered to
     whichever of those are actually tradable on Binance USDT spot right now (so every page still
@@ -197,15 +257,11 @@ def build_coin_universe(n=300):
                                    # filtering to Binance-tradable-only (was (1,2,3) for N=150)
         if len(universe) >= n:
             break
-        try:
-            rows = requests.get(
-                "https://api.coingecko.com/api/v3/coins/markets",
-                params={"vs_currency": "usd", "order": "market_cap_desc", "per_page": 250, "page": page},
-                timeout=20,
-            ).json()
-        except Exception as ex:
-            print("  ! CoinGecko market-cap lookup failed on page", page, ":", ex)
-            break
+        if page > 1:
+            time.sleep(2)   # observed, not assumed: 5 pages fired back-to-back tripped CoinGecko's
+                             # free-tier rate limit mid-loop during session 220 testing; a 2s gap
+                             # between pages avoided it entirely in the same test conditions
+        rows = _coingecko_markets_page(page)
         if not isinstance(rows, list) or not rows:
             break
         for r in rows:
@@ -222,8 +278,15 @@ def build_coin_universe(n=300):
     return universe
 
 
+_CACHE = _load_cache()
+CACHE_GENERATED_AT = _CACHE.get("generated_at") if _CACHE else None
+
 try:
-    COINS = build_coin_universe(600)
+    if _CACHE:
+        COINS = {sym: tuple(v) for sym, v in _CACHE["universe"].items()}
+        print(f"  coin universe from cache: {len(COINS)} coins, generated {CACHE_GENERATED_AT}")
+    else:
+        COINS = build_coin_universe(600)
     if not COINS:
         raise RuntimeError("empty coin universe")
 except Exception as ex:
@@ -735,6 +798,30 @@ def fetch_coins(syms=None):
         bars = {"24h": _bars(kl_1h), "1w": _bars(kl_4h), "1m": bars_1d[-30:], "3m": bars_1d, "1y": _bars(kl_1w)}
         out.append((sym, name, slug, cat, tk, bars))
     return out
+
+
+def get_coin_data(syms=None):
+    """What build.py actually calls for coin pages. Prefers the cache refresh_coin_data.py wrote
+    (see CACHE_PATH's comment above for why), falling back to a live fetch_coins() when no usable
+    cache exists - first-ever run, a local dev build that's never run the refresh script, or a
+    corrupt cache file all self-heal into the same slower-but-correct path fetch_coins() already
+    provides. Every coin page still shows only real, live-sourced data either way."""
+    cache = _load_cache()
+    if cache:
+        rows = [tuple(row) for row in cache["coins"] if not syms or row[0] in syms]
+        if rows:
+            gen_at = cache.get("generated_at")
+            try:
+                age_h = (datetime.datetime.now(datetime.timezone.utc)
+                          - datetime.datetime.fromisoformat(gen_at.replace("Z", "+00:00"))).total_seconds() / 3600
+                if age_h > 24:
+                    print(f"  ! coin data cache is {age_h:.0f}h old (generated {gen_at}) - check the refresh-coin-data schedule")
+            except Exception:
+                pass
+            print(f"  using cached coin data: {len(rows)} coins, generated {gen_at}")
+            return rows
+    print("  ! no usable coin_data_cache.json, falling back to a live fetch (slow, ~15-19 min for the full roster)")
+    return fetch_coins(syms)
 
 
 if __name__ == "__main__":

@@ -33,8 +33,18 @@ Preflight (no secrets printed): `./scripts/validate-database-credentials.sh`
 - [x] `tests/e2e_smoke.sh` in CI
 
 ### P2 — Hardening
-- [ ] RLS two-account manual test (`/ops/e2e` step 5) — after worker live
+- [x] RLS two-account test — PASSED 2026-09-12 (session 220), see `.cursor/autopilot/qavapt.md` and
+  `docs/QA_VAPT_CHECKLIST.md` for the full write-up (live prod, two real accounts, not a simulation)
 - [x] Document worker recovery runbook (`docs/WORKER_RECOVERY.md`)
+- [x] Decoupled coin-data fetch from every code push (session 220): a plain push used to cost the
+  same 15-19 minutes as a 190-coin roster expansion because `seo/generate.py`'s `fetch_coins()`
+  re-ran ~1360 sequential, deliberately-paced Binance calls on every build regardless of whether
+  market data needed refreshing. `.github/workflows/pages.yml` now restores/saves
+  `seo/coin_data_cache.json` via the GitHub Actions cache (not git, to avoid history bloat from a
+  file that changes every 6h); only the `schedule` (every 6h) or manual-dispatch trigger actually
+  refreshes it via `seo/refresh_coin_data.py`. `generate.py`'s `get_coin_data()` reads the cache
+  when present and falls back to a live fetch when it's missing - never a hard dependency. See
+  `docs/SEO_PLAYBOOK.md` for the full architecture note.
 
 ## Parallel work (while worker blocked)
 
