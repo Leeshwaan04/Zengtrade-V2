@@ -465,7 +465,7 @@
       "guide-qa-founder-standup.sh \u2014 parallel QA combined playbook (session 213)",
       "Q3 RLS isolation PASSED (session 220) \u2014 two real, email-confirmed accounts tested directly against the Supabase REST API: read isolation (deployment/book_state/trade, including a live worker-opened position) and write isolation (User B's PATCH/DELETE against User A's row both no-op'd under RLS). See docs/QA_VAPT_CHECKLIST.md for the full writeup."
     ],
-    "next": "Investigate why ops-data.json's database_url_auth_ok gate reads false when check-worker.sh confirms a healthy, current heartbeat \u2014 likely a stale probe, not a real outage",
+    "next": "Resolved (session 220): database_url_auth_ok is a local-session credential check, not a production health signal - sync-ops-gates.py's cto_ok no longer includes it. Next real QA&VAPT item: security-review the new dashboard tooltip/track features for anything user-input-adjacent (none currently take user input, so likely a quick pass).",
     "links": [
       {
         "label": "QA / VAPT playbook",
@@ -487,7 +487,7 @@
       "Charter: .cursor/autopilot/rnd.md (2026-09-12) \u2014 retention mechanics, revenue experiments, GTM exploration, scoped separately from CBO/Marketing/Sales' operational work",
       "First finding: no re-engagement mechanic exists for a closed paper trade (P0, unowned before this charter)"
     ],
-    "next": "Design the first retention hook for a closed paper trade; worker went live 2026-09-11 with 0 deployments so far \u2014 mechanics need to be in place before real usage arrives, not after",
+    "next": "First retention hook shipped (session 220): first-closed-trade toast in deploy/landing/studio.js. Next R&D bet: a second, later-funnel retention mechanic (e.g. the weekly digest or streak counter from the Signal Stack backlog) once real usage data shows where users actually drop off, not guessed in advance.",
     "links": [
       {
         "label": "R&D charter (repo)",
