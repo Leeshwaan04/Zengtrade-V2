@@ -201,6 +201,6 @@ def articles_hub_main(articles, glossary_count=0, tracks_html=""):
   </section>
   {tracks_section}
   <section class="lp-sec" aria-label="Articles">
-    <div class="lp-wrap"><h2 class="lp-h2">All guides</h2><div class="lp-grid4">{glossary_card}{cards}</div></div>
+    <div class="lp-wrap"><h2 class="lp-h2" style="margin-bottom:16px">All guides</h2><div class="lp-grid4">{glossary_card}{cards}</div></div>
   </section>
 </main>"""
