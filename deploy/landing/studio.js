@@ -555,10 +555,11 @@
     "background:var(--tint-warn);color:var(--amber);border-bottom:1px solid var(--bd-warn)}" +
     ".zt-banner-warn a{color:inherit;font-weight:700;text-decoration:none;margin:0 2px}" +
     ".zt-banner-warn a:hover{text-decoration:underline}";
+  var nudgeTimer = null;
   function nudgeDeployIfCold() {
     var delay = 5000;
     try { if (localStorage.getItem("zt_fresh_signup")) { delay = 800; localStorage.removeItem("zt_fresh_signup"); } } catch (e) {}
-    setTimeout(function () {
+    nudgeTimer = setTimeout(function () {
       mine("deployment?select=strategy_key&status=eq.running&limit=1").then(function (rows) {
         if (rows && rows.length) return;
         /* the CTA below is "Open Library", showing it to someone already composing a custom
@@ -581,14 +582,114 @@
       });
     }, delay);
   }
+  /* ---- first-run guided tour: orientation, not a sales nudge (nudgeDeployIfCold above already
+   * owns "go deploy something" and fires separately). Once ever per browser, explaining the tab
+   * flow the terminal's own renderAlgo() comment already documents: watch -> browse -> hold ->
+   * prove -> protect. Library (browse real, rule-based strategies) -> Monitor (watch it live) ->
+   * Forward Test (the real evidence, never a backtest) -> Risk Governor (limits, not hope).
+   * DIY-simplicity agenda (founder, 2026-09-12): no human ever walks a new user through this UI,
+   * so the product has to, once, briefly, and skippably. Suppresses nudgeDeployIfCold's toast for
+   * this page load so a fresh signup never sees both at once (see nudgeTimer above). */
+  var TOUR_STEPS = [
+    { view: "library", title: "Browse real, rule-based strategies",
+      body: "Every strategy shows its rule, when it works, when it fails, and what protects you if it's wrong, before you ever deploy it." },
+    { view: "monitor", title: "Watch it live",
+      body: "Once you deploy a strategy in paper, this is where you see it running: real positions, real Binance prices, nothing simulated." },
+    { view: "forward", title: "See the real evidence",
+      body: "Every number here comes from trades that have actually closed. Never a backtest, never a projection." },
+    { view: "risk", title: "Protected by design",
+      body: "This won't let any single strategy or coin take over your paper book. Confidence comes from limits, not hope." },
+  ];
+  var TOUR_CSS =
+    "#ztTourWrap{position:fixed;inset:0;z-index:400}" +
+    ".zt-tour-scrim{position:absolute;inset:0;background:rgba(10,15,12,.55);cursor:pointer}" +
+    ".zt-tour-spot{position:fixed;border-radius:10px;box-shadow:0 0 0 4px var(--accent-line,rgba(31,208,122,.4)),0 0 0 9999px rgba(10,15,12,.55);pointer-events:none;transition:top .2s ease,left .2s ease,width .2s ease,height .2s ease}" +
+    ".zt-tour-card{position:fixed;width:300px;max-width:calc(100vw - 24px);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius,14px);box-shadow:var(--shadow-lg,0 20px 54px -14px rgba(0,0,0,.4));padding:14px 16px;font-size:13.5px}" +
+    ".zt-tour-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}" +
+    ".zt-tour-progress{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--slate)}" +
+    ".zt-tour-x{background:none;border:0;color:var(--slate);font-size:18px;line-height:1;cursor:pointer;padding:0 2px}" +
+    ".zt-tour-card b{display:block;font-size:15px;color:var(--navy);margin-bottom:4px}" +
+    ".zt-tour-card p{margin:0 0 10px;color:var(--slate);line-height:1.5}" +
+    ".zt-tour-link{display:inline-block;margin-bottom:10px;font-size:12.5px;font-weight:600;color:var(--accent-d);text-decoration:none}" +
+    ".zt-tour-link:hover{text-decoration:underline}" +
+    ".zt-tour-actions{display:flex;align-items:center;justify-content:space-between;gap:10px}" +
+    ".zt-tour-skip{background:none;border:0;color:var(--slate);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;padding:6px 4px}" +
+    ".zt-tour-skip:hover{color:var(--navy)}" +
+    ".zt-tour-next{background:var(--accent);color:#fff;border:0;border-radius:9px;padding:8px 16px;font:inherit;font-weight:700;font-size:12.5px;cursor:pointer}" +
+    ".zt-tour-next:hover{background:var(--accent-d)}";
+  function endTour() {
+    try { localStorage.setItem("zt_seen_dashboard_tour", "1"); } catch (e) {}
+    var wrap = document.getElementById("ztTourWrap");
+    if (wrap) wrap.remove();
+    document.removeEventListener("keydown", tourKeydown);
+  }
+  function tourKeydown(e) { if (e.key === "Escape") endTour(); }
+  function positionTourSpot(el, wrap) {
+    var r = el.getBoundingClientRect(), pad = 6;
+    var spot = wrap.querySelector(".zt-tour-spot");
+    spot.style.top = (r.top - pad) + "px";
+    spot.style.left = (r.left - pad) + "px";
+    spot.style.width = (r.width + pad * 2) + "px";
+    spot.style.height = (r.height + pad * 2) + "px";
+    var card = wrap.querySelector(".zt-tour-card");
+    var cw = 300, margin = 12;
+    var top = r.bottom + pad + margin;
+    if (top + 180 > window.innerHeight) top = Math.max(margin, r.top - pad - 190);
+    var left = Math.min(Math.max(margin, r.left), window.innerWidth - cw - margin);
+    card.style.top = top + "px";
+    card.style.left = left + "px";
+  }
+  function showTourStep(i) {
+    var step = TOUR_STEPS[i];
+    var el = document.querySelector('[data-algoview="' + step.view + '"]');
+    if (!el) { endTour(); return; }
+    if (el.scrollIntoView) el.scrollIntoView({ inline: "center", block: "nearest" });
+    var wrap = document.getElementById("ztTourWrap");
+    if (!wrap) { wrap = document.createElement("div"); wrap.id = "ztTourWrap"; document.body.appendChild(wrap); }
+    var last = i === TOUR_STEPS.length - 1;
+    wrap.innerHTML =
+      '<div class="zt-tour-scrim" data-tourdismiss></div>' +
+      '<div class="zt-tour-spot"></div>' +
+      '<div class="zt-tour-card" role="dialog" aria-label="Guided tour ' + (i + 1) + ' of ' + TOUR_STEPS.length + '">' +
+        '<div class="zt-tour-top"><span class="zt-tour-progress">' + (i + 1) + ' of ' + TOUR_STEPS.length + '</span>' +
+        '<button type="button" class="zt-tour-x" data-tourdismiss aria-label="Skip tour">&times;</button></div>' +
+        '<b>' + esc(step.title) + '</b>' +
+        '<p>' + esc(step.body) + '</p>' +
+        (last ? '<a class="zt-tour-link" href="/learn/algo-studio/" target="_blank" rel="noopener">How Algo Studio actually works &rarr;</a>' : "") +
+        '<div class="zt-tour-actions">' +
+          '<button type="button" class="zt-tour-skip" data-tourdismiss>Skip tour</button>' +
+          '<button type="button" class="zt-tour-next">' + (last ? "Got it" : "Next") + "</button>" +
+        "</div>" +
+      "</div>";
+    positionTourSpot(el, wrap);
+    wrap.querySelectorAll("[data-tourdismiss]").forEach(function (b) { b.onclick = endTour; });
+    wrap.querySelector(".zt-tour-next").onclick = function () {
+      if (last) endTour(); else showTourStep(i + 1);
+    };
+  }
+  function initDashboardTour() {
+    try { if (localStorage.getItem("zt_seen_dashboard_tour")) return; } catch (e) { return; }
+    var tries = 0;
+    (function waitForTabs() {
+      if (!document.querySelector('[data-algoview="' + TOUR_STEPS[0].view + '"]')) {
+        if (++tries < 30) setTimeout(waitForTabs, 300);
+        return;
+      }
+      if (nudgeTimer) { clearTimeout(nudgeTimer); nudgeTimer = null; }
+      document.addEventListener("keydown", tourKeydown);
+      showTourStep(0);
+    })();
+  }
+
   function inject() {
     var st = document.createElement("style");
-    st.textContent = css + ZTB_CSS;
+    st.textContent = css + ZTB_CSS + TOUR_CSS;
     document.head.appendChild(st);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", inject);
   else inject();
   nudgeDeployIfCold();
+  setTimeout(initDashboardTour, 1200);
 
   function injectAppLink() {
     var spacer = document.querySelector(".topbar .tb-spacer");

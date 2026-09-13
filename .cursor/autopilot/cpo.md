@@ -43,6 +43,14 @@ Manual: https://zengtrade.in/ops/e2e (steps 1–2). Steps 3–4 need `./scripts/
 ### P2 — Polish
 - [x] `/dashboard` vs `/app` help blurb
 - [x] Worker-aware empty states across evidence tabs
+- [x] First-run guided tour (session 220, `deploy/landing/studio.js`): a 4-step, fully skippable
+  spotlight tour on a brand-new account's first `/dashboard` visit, orienting on Library (browse) ->
+  Monitor (watch) -> Forward Test (prove) -> Risk Governor (protect) - the exact flow
+  `renderAlgo()`'s own code comment already documents. Suppresses the existing `nudgeDeployIfCold`
+  toast for that page load so a fresh signup never sees both at once. DIY-simplicity agenda
+  (founder, 2026-09-12): no human ever walks a new user through this UI, so the product now does,
+  once, briefly. Verified in a standalone harness (real styles.css, all 4 steps, edge-of-viewport
+  positioning, all three dismiss paths: button, scrim click, Escape).
 
 ## Definition of done (each run)
 

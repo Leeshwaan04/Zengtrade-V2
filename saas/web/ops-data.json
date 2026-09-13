@@ -234,9 +234,10 @@
       "studio.js worker-offline banner View evidence \u2192 /app#forward (session 197)",
       "/ops/e2e + guide-partial-e2e document dashboard worker-offline evidence link (session 198)",
       "app.js activation checklist View evidence when worker offline (session 199)",
-      "guide-cpo-founder-standup.sh \u2014 partial activation + Q9 combined playbook (session 211)"
+      "guide-cpo-founder-standup.sh \u2014 partial activation + Q9 combined playbook (session 211)",
+      "First-run guided tour on /dashboard (session 220, deploy/landing/studio.js): 4-step, skippable spotlight tour orienting new accounts on Library -> Monitor -> Forward Test -> Risk Governor, the flow the terminal's own code already documents. Suppresses the existing cold-deploy nudge toast for the same page load so a fresh signup never sees both at once."
     ],
-    "next": "E2E: signup \u2192 deploy \u2192 trades within 15 min once worker live",
+    "next": "Worker is live (session 220) - founder should run the real E2E once: signup \u2192 deploy \u2192 trades. Otherwise: empty-state audit across Accuracy/Analytics tabs is the next DIY-simplicity item (Forward Test's and the tour's first-run gaps are now closed).",
     "links": [
       {
         "label": "E2E test guide",
