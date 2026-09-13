@@ -45,6 +45,10 @@ Preflight (no secrets printed): `./scripts/validate-database-credentials.sh`
   refreshes it via `seo/refresh_coin_data.py`. `generate.py`'s `get_coin_data()` reads the cache
   when present and falls back to a live fetch when it's missing - never a hard dependency. See
   `docs/SEO_PLAYBOOK.md` for the full architecture note.
+  **Confirmed live in CI, not just locally (2026-09-13):** a `workflow_dispatch` run
+  (34745308650) genuinely refreshed the cache in 21m7s (340 coins, real "Cache saved with key"
+  log line), and this same commit's own push-triggered build is the first real test of the
+  restore-only fast path a normal push should get.
 
 ## Parallel work (while worker blocked)
 
