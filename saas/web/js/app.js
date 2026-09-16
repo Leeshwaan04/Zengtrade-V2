@@ -207,6 +207,7 @@ function renderDashboard() {
   }
   app.innerHTML = `
     <div class="page-h">
+      <div class="page-eyebrow"><span class="dot"></span>your paper book</div>
       <h2>Evidence &amp; billing</h2>
       <p>Deploy strategies in <a href="/dashboard">Algo Studio</a>. This page tracks your forward paper results, accuracy, and Pro plan.</p>
     </div>
@@ -219,11 +220,11 @@ function renderDashboard() {
       <div class="stat"><span>Plan</span><b>${isPro(tier) ? "Pro" : "Free"}</b></div>
     </div>
     <div class="card curve-card">
-      <div class="card-h"><h3>Equity curve</h3><span class="muted">paper · your deployed strategies</span></div>
+      <div class="card-h"><span class="card-ic">↝</span><h3>Equity curve</h3><span class="muted">paper · your deployed strategies</span></div>
       <canvas id="curve" height="200"></canvas>
     </div>
     <div class="card">
-      <div class="card-h"><h3>Your strategies</h3><button class="btn sm primary" id="goStrat">+ Deploy</button></div>
+      <div class="card-h"><span class="card-ic">≡</span><h3>Your strategies</h3><button class="btn sm primary" id="goStrat">+ Deploy</button></div>
       ${ps.length ? ps.map(stratRow).join("") : emptyStrategies()}
     </div>
     <p class="iso">🔒 Your data is yours alone, isolated per account and enforced at the database level (row-level security).</p>`;
@@ -316,7 +317,7 @@ function renderForward() {
   const rows = [...state.trades].reverse();
   const m = metrics();
   app.innerHTML = `
-    <div class="page-h"><h2>Forward Test</h2><p class="muted">Your out-of-sample paper track record: every closed trade on live crypto prices, net of costs. This is the evidence that earns go-live consideration.</p></div>
+    <div class="page-h"><div class="page-eyebrow"><span class="dot"></span>out-of-sample evidence</div><h2>Forward Test</h2><p class="muted">Your out-of-sample paper track record: every closed trade on live crypto prices, net of costs. This is the evidence that earns go-live consideration.</p></div>
     <div class="grid stats">
       <div class="stat"><span>Closed trades</span><b>${num(m.n)}</b></div>
       <div class="stat"><span>Win rate</span><b>${m.n ? pct(m.win) : "-"}</b></div>
@@ -340,7 +341,7 @@ function renderAccuracy() {
   if (state.loading) { app.innerHTML = `<div class="card">${skeletonRows(4)}</div>`; return; }
   const ps = perStrategy();
   app.innerHTML = `
-    <div class="page-h"><h2>Accuracy</h2><p class="muted">Per-strategy forward accuracy from your closed paper trades: win rate, net P&amp;L, and trade count. Backtest figures are not shown here; only your live forward evidence counts.</p></div>
+    <div class="page-h"><div class="page-eyebrow"><span class="dot"></span>go-live readiness</div><h2>Accuracy</h2><p class="muted">Per-strategy forward accuracy from your closed paper trades: win rate, net P&amp;L, and trade count. Backtest figures are not shown here; only your live forward evidence counts.</p></div>
     <div class="card">${ps.length ? ps.map(s => {
       const w = s.n ? (100 * s.wins / s.n) : 0;
       const meta = byKey[s.key] || { name: s.key };
@@ -365,7 +366,7 @@ function renderAnalytics() {
   const symRows = Object.values(bySym).sort((a, b) => b.net - a.net);
   const byStrat = perStrategy().sort((a, b) => b.net - a.net);
   app.innerHTML = `
-    <div class="page-h"><h2>Analytics</h2><p class="muted">P&amp;L attribution across your paper book, by strategy and symbol. All figures are net of booked costs from closed trades.</p></div>
+    <div class="page-h"><div class="page-eyebrow"><span class="dot"></span>P&amp;L attribution</div><h2>Analytics</h2><p class="muted">P&amp;L attribution across your paper book, by strategy and symbol. All figures are net of booked costs from closed trades.</p></div>
     <div class="grid stats">
       <div class="stat"><span>Total net</span><b class="${tone(m.net)}">${money(m.net)}</b></div>
       <div class="stat"><span>Strategies</span><b>${num(byStrat.length)}</b></div>
@@ -392,7 +393,7 @@ function renderStrategies() {
     ? `<p class="muted" style="margin-top:8px;font-size:13px">Paper worker is offline: deploys are saved but trades pause until it restarts. <a href="/ops/worker">Worker status</a> · <a href="/ops/e2e">E2E status</a> · <a href="/how-it-works/">How paper trading works</a></p>`
     : "";
   app.innerHTML = `
-    <div class="page-h"><h2>Strategies</h2><p class="muted">Deploy to paper-trade free. Backtest figures are ~2 years of real data, net of fees, <b>backtest, not forward-proven.</b> Watch each earn its track record in your own book before it ever runs live.</p>${workerNote}</div>
+    <div class="page-h"><div class="page-eyebrow"><span class="dot"></span>the library</div><h2>Strategies</h2><p class="muted">Deploy to paper-trade free. Backtest figures are ~2 years of real data, net of fees, <b>backtest, not forward-proven.</b> Watch each earn its track record in your own book before it ever runs live.</p>${workerNote}</div>
     <div class="grid cards">${STRATEGIES.map(s => stratCard(s, deployed.has(s.key))).join("")}</div>`;
   STRATEGIES.forEach(s => {
     const b = document.getElementById(`act-${s.key}`);
@@ -419,7 +420,7 @@ function renderActivity() {
   if (state.loading) { app.innerHTML = `<div class="card">${skeletonRows(6)}</div>`; return; }
   const rows = [...state.trades].reverse();     // most recent first
   app.innerHTML = `
-    <div class="page-h"><h2>Activity</h2><p class="muted">Every closed paper trade in your book, newest first. Cost is booked on each.</p></div>
+    <div class="page-h"><div class="page-eyebrow"><span class="dot"></span>trade log</div><h2>Activity</h2><p class="muted">Every closed paper trade in your book, newest first. Cost is booked on each.</p></div>
     <div class="card table-card">${rows.length ? `
       <div class="tbl-scroll"><table><thead><tr><th>When</th><th>Strategy</th><th>Symbol</th><th class="r">Entry</th><th class="r">Exit</th><th class="r">Cost</th><th class="r">P&amp;L</th></tr></thead>
       <tbody>${rows.slice(0, 200).map(tradeRow).join("")}</tbody></table></div>
@@ -441,7 +442,7 @@ function tradeRow(t) {
 // ---- Account ----
 function renderAccount() {
   app.innerHTML = `
-    <div class="page-h"><h2>Account</h2></div>
+    <div class="page-h"><div class="page-eyebrow"><span class="dot"></span>your account</div><h2>Account</h2></div>
     <div class="card acc">
       <div class="acc-row"><span>Email</span><b>${esc(user.email)}</b></div>
       <div class="acc-row"><span>Plan</span><b>${isPro(tier) ? "Pro" : "Free"}</b>
@@ -518,7 +519,9 @@ function renderPricing() {
       </div>`
     : "";
   app.innerHTML = `
-    <div class="page-h center"><h2>Simple, honest pricing</h2>
+    <div class="page-h center">
+      <div class="page-eyebrow" style="justify-content:center"><span class="dot"></span>simple · honest · cancel anytime</div>
+      <h2>Simple, honest pricing</h2>
       <p class="muted">Start free. Upgrade when you want more, cancel anytime.</p>
       ${workerNote}
       ${deployFirst}
@@ -557,8 +560,10 @@ function planCard(p, ready = true) {
   const cta = current ? "Current plan"
     : p.id === "free" ? "Get started"
     : paidNotReady ? "Opening soon" : `Choose ${esc(p.name)}`;
+  const planIcon = { free: "○", pro: "◈", elite: "✦" }[p.id] || "○";
   return `<div class="plan${p.featured ? " feat" : ""}">
     ${p.featured ? `<div class="ribbon">Most popular</div>` : ""}
+    <span class="plan-ic">${planIcon}</span>
     <div class="plan-name">${esc(p.name)}</div>
     <div class="plan-price">$${price}<span>${per}</span></div>
     <div class="plan-tag">${esc(p.tagline)}</div>

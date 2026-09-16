@@ -27,7 +27,14 @@
   .sp{flex:1}
   .uchip{font:600 12.5px/1 var(--mono);color:var(--slate);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   @media(max-width:560px){.uchip{display:none}}
-  .btn{border:0;border-radius:10px;padding:11px 15px;font:700 13.5px/1 var(--sans);cursor:pointer;
+  /* BUG FIX (2026-09-16): css.css (shared with the vertical login/signup form, where every
+     button really should be full-width) sets .btn{width:100%} unconditionally. /app never reset
+     that for its own very different context - a dashboard full of small inline buttons next to
+     icons, text, and other buttons - so every plain .btn here silently stretched to fill its
+     flex container edge to edge (the giant green "+Deploy"/"Upgrade" bars this surfaced). .full
+     already existed as the intended explicit opt-in for genuinely full-width buttons; this just
+     makes the default actually default again for this page. */
+  .btn{width:auto;border:0;border-radius:10px;padding:11px 15px;font:700 13.5px/1 var(--sans);cursor:pointer;
     display:inline-flex;align-items:center;justify-content:center;gap:7px;text-decoration:none;transition:transform .1s,filter .1s}
   .btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
   .btn.primary{background:var(--green);color:#04140a} .btn.primary:hover{filter:brightness(1.05)}
@@ -41,8 +48,15 @@
   #nav a:hover{color:var(--navy)} #nav a.on{color:var(--green-d);border-bottom-color:var(--green)}
   /* layout */
   main{max-width:1080px;margin:0 auto;padding:22px 20px 90px}
-  .page-h{margin:2px 0 18px} .page-h h2{font:800 24px/1.15 var(--sans);letter-spacing:-.02em;margin:0 0 5px}
+  .page-h{margin:2px 0 20px} .page-h h2{font:800 clamp(22px,3vw,28px)/1.15 var(--sans);letter-spacing:-.02em;margin:0 0 6px}
   .page-h p{margin:0;font-size:14px;max-width:74ch;line-height:1.6}
+  /* eyebrow: same micro-label language the marketing site uses above every page's H1/H2 */
+  .page-eyebrow{display:flex;align-items:center;gap:7px;margin-bottom:9px;font:700 11px/1 var(--mono);
+    letter-spacing:.07em;text-transform:uppercase;color:var(--green-d)}
+  .page-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex:0 0 auto}
+  /* icon badge: matches the marketing site's .hc-ic treatment on home-card */
+  .card-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:16px;
+    font-weight:800;background:var(--green-soft);color:var(--green-d);flex:0 0 auto}
   .card{background:var(--surface);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
   .card-h{display:flex;align-items:center;gap:10px;margin-bottom:14px} .card-h h3{font:700 15px/1 var(--sans);margin:0} .card-h .muted,.card-h span{margin-left:auto;font:600 11.5px/1 var(--mono)}
   /* stats */
@@ -79,9 +93,11 @@
   .acc-row>span:first-child{width:130px;flex:0 0 auto;color:var(--slate);font-size:13px;font-weight:600} .acc-row b{font-size:13.5px} .acc-row .sp,.acc-row>b{flex:1}
   .acc-row a{color:var(--blue);text-decoration:none;font-size:13.5px;font-weight:600} .acc-row .links{display:flex;gap:14px}
   .acc-row button{margin-left:auto}
-  /* upsell */
-  .upsell{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--green-soft);border:1px solid var(--green-line);border-radius:13px;padding:14px 18px;margin-bottom:16px}
-  .upsell b{display:block;font:700 14px/1.4 var(--sans);color:var(--navy)} .upsell span{font-size:13px;color:var(--slate)}
+  /* upsell: quiet accent note, not a full shouting block - this loads on every free-tier visit,
+     so it needs to read as useful context, not a nag repeated at every login. */
+  .upsell{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--green);border-radius:13px;padding:13px 16px;margin-bottom:16px}
+  .upsell b{display:block;font:700 13.5px/1.4 var(--sans);color:var(--navy)} .upsell span{font-size:12.5px;color:var(--slate)}
+  .upsell .btn{flex:0 0 auto;width:auto}
   /* empty / iso */
   .empty{text-align:center;padding:34px 18px} .empty.big{padding:60px 20px} .empty h3{font:800 20px/1.2 var(--sans);margin:0 0 8px}
   .empty p{margin:0 0 6px;font-size:14px} .empty .btn{margin-top:14px}
@@ -124,6 +140,8 @@
   .plan{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px 22px;box-shadow:var(--shadow);display:flex;flex-direction:column}
   .plan.feat{border-color:var(--green);box-shadow:0 0 0 2px var(--green-soft),var(--shadow)}
   .ribbon{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--green);color:#04140a;font:700 10px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border-radius:99px;white-space:nowrap}
+  .plan-ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-size:16px;font-weight:800;margin-bottom:12px;background:var(--surface-2);color:var(--slate)}
+  .plan.feat .plan-ic{background:var(--green-soft);color:var(--green-d)}
   .plan-name{font:700 13px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--slate-2);margin-bottom:12px}
   .plan.feat .plan-name{color:var(--green-d)}
   .plan-price{font:800 34px/1 var(--sans);letter-spacing:-.02em;margin-bottom:4px} .plan-price span{font:600 14px/1 var(--sans);color:var(--slate)}
