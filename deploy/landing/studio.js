@@ -691,37 +691,11 @@
   nudgeDeployIfCold();
   setTimeout(initDashboardTour, 1200);
 
-  function injectAppLink() {
-    var spacer = document.querySelector(".topbar .tb-spacer");
-    if (!spacer || document.getElementById("zt-app-link")) return;
-    var a = document.createElement("a");
-    a.id = "zt-app-link";
-    a.href = "/app";
-    a.title = "Forward test, accuracy, activity, and Pro billing";
-    a.textContent = "Evidence & billing";
-    a.style.cssText = "font:600 12.5px/1 var(--sans,system-ui);color:var(--slate,#64748b);" +
-      "text-decoration:none;padding:6px 10px;border:1px solid var(--line,#e2e8f0);border-radius:8px;" +
-      "white-space:nowrap;margin-right:8px";
-    a.onmouseover = function () { a.style.color = "var(--navy,#101e36)"; };
-    a.onmouseout = function () { a.style.color = "var(--slate,#64748b)"; };
-    spacer.parentNode.insertBefore(a, spacer);
-  }
-  function injectStudioBlurb() {
-    if (document.getElementById("zt-studio-blurb")) return;
-    var bar = document.querySelector(".topbar");
-    if (!bar) return;
-    var p = document.createElement("p");
-    p.id = "zt-studio-blurb";
-    p.textContent = "Algo Studio: deploy paper strategies here. Evidence & billing live in /app.";
-    p.style.cssText = "margin:0;padding:8px 16px 10px;font:500 12.5px/1.45 var(--sans,system-ui);" +
-      "color:var(--slate,#64748b);background:var(--bg,#f8fafc);border-bottom:1px solid var(--line,#e2e8f0)";
-    bar.parentNode.insertBefore(p, bar.nextSibling);
-  }
-  if (document.readyState === "loading")
-    document.addEventListener("DOMContentLoaded", function () {
-      setTimeout(function () { injectAppLink(); injectStudioBlurb(); }, 1200);
-    });
-  else setTimeout(function () { injectAppLink(); injectStudioBlurb(); }, 1200);
+  /* injectAppLink()/injectStudioBlurb() removed (founder, 2026-09-16): a redundant nav chip
+   * ("Evidence & billing") plus an almost-identical text banner right below it, both just
+   * announcing the same /app link, cluttering the terminal's topbar for zero added function -
+   * every real path into /app (View evidence on the retention toast, the Pricing chip, the
+   * Builder's free-tier upsell message) already exists elsewhere and is untouched by this. */
 
   /* ---- force the crypto book after boot (full setMarket path: live tape + WS) ---- */
   function forceCrypto(tries) {
