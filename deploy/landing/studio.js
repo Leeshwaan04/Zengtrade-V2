@@ -354,6 +354,122 @@
     });
   }
 
+  /* ---- pricing modal (founder, 2026-09-16): the dashboard's Pricing chip used to navigate away
+   * to /app#pricing for even just BROWSING plans - full page nav to compare three cards. This
+   * shows the same real plans in place instead; only the actual purchase (an external redirect to
+   * a NOWPayments-hosted invoice, unavoidable either way - see billing.js) leaves the page. There
+   * used to be an in-dashboard pricing modal before this session; it was removed because it showed
+   * fabricated pre-pivot India-equity prices in rupees with no relation to the real crypto billing.
+   * This one is real: PLANS below is a verbatim copy of saas/web/js/billing.js's PLANS (that file's
+   * own comment already calls it a mirror of the Edge Function's authoritative pricing - one more
+   * client-side copy of an already-accepted pattern, not a new one). Keep both in sync by hand if
+   * pricing ever changes; there's no shared bundle between /dashboard and /app to import across. */
+  var PLANS = [
+    { id: "free", name: "Free", monthly: 0, annual: 0, tagline: "Learn and paper-trade, free forever",
+      features: ["1 paper strategy", "Live crypto prices, 24/7", "Backtest + Forward Test", "Accuracy & Analytics", "Honest cost accounting"] },
+    { id: "pro", name: "Pro", monthly: 19, annual: 190, featured: true, tagline: "Founding price · unlimited paper",
+      features: ["Everything in Free", "Unlimited paper strategies", "Live execution (coming soon)*", "Tick-level stops & kill-switch (with live)", "Email & push alerts"] },
+    { id: "elite", name: "Elite", monthly: 79, annual: 790, tagline: "Maximum firepower",
+      features: ["Everything in Pro", "Perps + options engines", "Multiple exchange accounts", "Custom risk parameters", "Priority support & early access"] },
+  ];
+  var PLAN_ICON = { free: "○", pro: "◈", elite: "✦" };
+  var pmCycle = "month";
+
+  function dashboardCheckout(plan, cycle) {
+    var sess = session();
+    if (!sess) { location.href = "/login/?mode=signup"; return; }
+    var btn = document.querySelector('.pm-cta[data-plan="' + plan + '"]');
+    if (btn) { btn.disabled = true; btn.textContent = "Starting checkout…"; }
+    try {
+      var planDef = PLANS.filter(function (p) { return p.id === plan; })[0];
+      var value = planDef ? (cycle === "year" ? planDef.annual : planDef.monthly) : 0;
+      if (window.gtag) window.gtag("event", "begin_checkout", { currency: "USD", value: value,
+        items: [{ item_id: plan, item_name: "zengtrade " + plan + " (" + cycle + ")", price: value, quantity: 1 }] });
+    } catch (e) {}
+    fetch(SUPA + "/functions/v1/nowpayments-create-invoice", {
+      method: "POST",
+      headers: sbHeaders(),
+      body: JSON.stringify({ plan: plan, cycle: cycle }),
+    })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (res) {
+        if (res.ok && res.d && res.d.invoice_url) { window.location.href = res.d.invoice_url; return; }
+        if (btn) { btn.disabled = false; btn.textContent = "Choose " + esc((PLANS.filter(function (p) { return p.id === plan; })[0] || {}).name || plan); }
+        ztToast({ icon: "alert", title: "Could not start checkout", body: (res.d && res.d.error) || "Please try again.", timeout: 7000,
+          actions: [{ key: "ok", cls: "ghost", label: "Dismiss" }] });
+      })
+      .catch(function () {
+        if (btn) { btn.disabled = false; btn.textContent = "Choose " + esc((PLANS.filter(function (p) { return p.id === plan; })[0] || {}).name || plan); }
+        ztToast({ icon: "alert", title: "Could not start checkout", body: "Please try again.", timeout: 7000,
+          actions: [{ key: "ok", cls: "ghost", label: "Dismiss" }] });
+      });
+  }
+
+  function planCardHtml(p) {
+    var price = pmCycle === "year" ? p.annual : p.monthly;
+    var per = p.id === "free" ? "" : (pmCycle === "year" ? "/yr" : "/mo");
+    var cta = p.id === "free"
+      ? '<button type="button" class="pm-cta ghost" disabled>Included</button>'
+      : '<button type="button" class="pm-cta primary" data-plan="' + p.id + '">Choose ' + esc(p.name) + "</button>";
+    return '<div class="pm-plan' + (p.featured ? " feat" : "") + '">' +
+      (p.featured ? '<div class="pm-ribbon">Most popular</div>' : "") +
+      '<span class="pm-ic">' + (PLAN_ICON[p.id] || "○") + "</span>" +
+      '<div class="pm-name">' + esc(p.name) + "</div>" +
+      '<div class="pm-price">$' + price + (per ? "<span>" + per + "</span>" : "") + "</div>" +
+      '<div class="pm-tag">' + esc(p.tagline) + "</div>" +
+      "<ul>" + p.features.map(function (f) { return "<li>" + esc(f) + "</li>"; }).join("") + "</ul>" +
+      cta + "</div>";
+  }
+
+  function renderPricingModal() {
+    var wrap = document.getElementById("ztPricingModal");
+    if (!wrap) return;
+    wrap.innerHTML =
+      '<div class="pm-head"><b></b><button type="button" class="pm-close" aria-label="Close">&times;</button></div>' +
+      '<div class="pm-body">' +
+        '<div class="pm-eyebrow"><span class="dot"></span>simple · honest · cancel anytime</div>' +
+        "<h2>Simple, honest pricing</h2>" +
+        "<p>Start free. Upgrade when you want more, cancel anytime.</p>" +
+        '<div class="pm-cycle">' +
+          '<button type="button" data-c="month" class="' + (pmCycle === "month" ? "on" : "") + '">Monthly</button>' +
+          '<button type="button" data-c="year" class="' + (pmCycle === "year" ? "on" : "") + '">Annual <span class="save">2 months free</span></button>' +
+        "</div>" +
+        '<div class="pm-grid">' + PLANS.map(planCardHtml).join("") + "</div>" +
+        '<p class="pm-foot">* Live execution unlocks per strategy only after it clears the go-live bar in paper. Non-custodial, your keys, your coins. Not investment advice. Full plan comparison: <a href="/pricing/">/pricing/</a>.</p>' +
+      "</div>";
+    wrap.querySelector(".pm-close").onclick = hidePricingModal;
+    wrap.querySelectorAll(".pm-cycle button").forEach(function (b) {
+      b.onclick = function () { pmCycle = b.dataset.c; renderPricingModal(); };
+    });
+    wrap.querySelectorAll(".pm-cta[data-plan]").forEach(function (b) {
+      b.onclick = function () { dashboardCheckout(b.dataset.plan, pmCycle); };
+    });
+  }
+  function hidePricingModal() {
+    var scrim = document.getElementById("ztPricingScrim"), modal = document.getElementById("ztPricingModal");
+    if (scrim) scrim.classList.remove("show");
+    if (modal) modal.classList.remove("show");
+    document.removeEventListener("keydown", pmKeydown);
+  }
+  function pmKeydown(e) { if (e.key === "Escape") hidePricingModal(); }
+  function showPricingModal() {
+    var scrim = document.getElementById("ztPricingScrim"), modal = document.getElementById("ztPricingModal");
+    if (!scrim) {
+      scrim = document.createElement("div"); scrim.id = "ztPricingScrim"; scrim.className = "modal-scrim";
+      scrim.onclick = hidePricingModal;
+      document.body.appendChild(scrim);
+    }
+    if (!modal) {
+      modal = document.createElement("div"); modal.id = "ztPricingModal"; modal.className = "pricing-modal";
+      document.body.appendChild(modal);
+    }
+    renderPricingModal();
+    scrim.classList.add("show");
+    modal.classList.add("show");
+    document.addEventListener("keydown", pmKeydown);
+  }
+  window.ztOpenPricingModal = showPricingModal;
+
   /* BUG FIX (2026-09-09): Forward Test, Accuracy(*), and Analytics used to render the SHARED
    * engine_state payload verbatim - a brand-new, zero-deployment account saw the same
    * platform-wide numbers (145 closed trades, -$28,170 net) as every other user. These three

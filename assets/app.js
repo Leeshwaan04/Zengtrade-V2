@@ -4023,11 +4023,16 @@ function initAddScrip(){   // watchlist "Add scrip…" box → add any instrumen
 // The old in-app "pricing preview" modal (PLANS/ADDONS tiers, Zerodha-cockpit copy, Razorpay,
 // RIA/PMS white-label pitch) was entirely pre-pivot Indian-equity content with its own fake
 // tier prices in rupees, disconnected from the real crypto billing (NOWPayments, $19/mo
-// Founding Pro) that actually exists on /pricing and /app#pricing. Rather than reskin numbers
-// that don't correspond to anything real, the chip now just opens the real pricing directly.
+// Founding Pro) that actually exists on /pricing and /app#pricing. That's why a previous session
+// made the chip just navigate to real pricing instead of faking a modal.
+// Session 2026-09-16: founder asked for the modal back, for real this time - studio.js's
+// ztOpenPricingModal() shows the genuine plans in place (real prices, real NOWPayments checkout on
+// "Choose Pro/Elite", same edge function /app#pricing uses) so comparing plans doesn't need a full
+// page navigation. studio.js loads before this script, but fall back to the real page if it's ever
+// missing (e.g. the local operator terminal, which never loads studio.js) rather than do nothing.
 function renderPlanChip(){ const el=$('planChip'); if(!el) return;
   el.innerHTML=`${icon('bolt',12)}<span>Pricing</span>`;
-  el.title='View plans & pricing'; el.onclick=()=>{ window.location.href='/app#pricing'; }; }
+  el.title='View plans & pricing'; el.onclick=()=>{ window.ztOpenPricingModal ? window.ztOpenPricingModal() : (window.location.href='/app#pricing'); }; }
 
 document.addEventListener('DOMContentLoaded',init);
 initGlossTips();   // delegated listeners on document, safe to attach before DOMContentLoaded

@@ -569,6 +569,55 @@ body.resizing{user-select:none;cursor:col-resize}
 .modal-foot .tbtn{flex:1;padding:11px}
 .tbtn.danger{background:var(--red);color:#fff}
 
+/* pricing modal: reuses .modal-scrim (the dimming layer) but needs real width for 3 plan cards
+   side by side, so it's a distinct variant rather than a squeeze into the 440px order-confirm
+   modal. Fixed green (not the regime-reactive --accent) on purpose: a "bear regime" market read
+   shouldn't turn the upgrade button red, money UI stays visually constant regardless of market. */
+.pricing-modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-46%);width:min(880px,94vw);
+  max-height:88vh;overflow-y:auto;background:var(--surface);border-radius:18px;box-shadow:var(--shadow-lg);
+  z-index:96;opacity:0;visibility:hidden;transition:.22s}
+.pricing-modal.show{opacity:1;visibility:visible;transform:translate(-50%,-50%)}
+.pm-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line)}
+.pm-close{background:none;border:0;color:var(--slate-2);cursor:pointer;padding:4px;line-height:1;font-size:20px}
+.pm-close:hover{color:var(--navy)}
+.pm-body{padding:22px 26px 26px}
+.pm-eyebrow{display:flex;align-items:center;gap:7px;margin-bottom:8px;font:700 11px/1 var(--mono);
+  letter-spacing:.07em;text-transform:uppercase;color:var(--green-d)}
+.pm-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.pm-body h2{font:800 22px/1.2 var(--sans);letter-spacing:-.02em;margin:0 0 4px}
+.pm-body>p{margin:0 0 16px;font-size:13.5px;color:var(--slate)}
+.pm-cycle{display:inline-flex;gap:3px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:4px;margin-bottom:18px}
+.pm-cycle button{border:0;background:transparent;color:var(--slate);font:700 12.5px/1 var(--sans);padding:8px 14px;border-radius:8px;cursor:pointer}
+.pm-cycle button.on{background:var(--surface);color:var(--navy);box-shadow:0 1px 2px rgba(16,30,54,.08)}
+.pm-cycle .save{font:700 10px/1 var(--mono);color:var(--green-d);margin-left:4px}
+.pm-grid{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:680px){.pm-grid{grid-template-columns:repeat(3,1fr)}}
+.pm-plan{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 16px;display:flex;flex-direction:column}
+.pm-plan.feat{border-color:var(--green);box-shadow:0 0 0 2px color-mix(in srgb,var(--green) 16%,transparent)}
+.pm-ribbon{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--green);color:#04140a;
+  font:700 9.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border-radius:99px;white-space:nowrap}
+.pm-ic{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-size:15px;font-weight:800;
+  margin-bottom:10px;background:var(--surface-2);color:var(--slate)}
+.pm-plan.feat .pm-ic{background:color-mix(in srgb,var(--green) 14%,var(--surface));color:var(--green-d)}
+.pm-name{font:700 11.5px/1 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--slate-2);margin-bottom:8px}
+.pm-plan.feat .pm-name{color:var(--green-d)}
+.pm-price{font:800 28px/1 var(--sans);letter-spacing:-.02em;margin-bottom:2px}
+.pm-price span{font:600 12px/1 var(--sans);color:var(--slate)}
+.pm-tag{font-size:12px;color:var(--slate);min-height:30px;margin-bottom:10px}
+.pm-plan ul{list-style:none;padding:0;margin:0 0 14px;flex:1;display:flex;flex-direction:column;gap:7px}
+.pm-plan li{position:relative;padding-left:19px;font-size:12.5px;color:var(--slate);line-height:1.4}
+.pm-plan li::before{content:"✓";position:absolute;left:0;color:var(--green-d);font-weight:700}
+.pm-cta{border:0;border-radius:10px;padding:11px;font:700 13px/1 var(--sans);cursor:pointer;width:100%;
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:filter .1s}
+.pm-cta.primary{background:var(--green);color:#04140a}.pm-cta.primary:hover{filter:brightness(1.05)}
+.pm-cta.ghost{background:var(--surface);color:var(--navy);border:1px solid var(--line-2,var(--line))}
+.pm-cta.ghost:hover{border-color:var(--green)}
+.pm-cta[disabled]{opacity:.6;cursor:default}
+.pm-foot{margin-top:16px;font-size:11.5px;color:var(--slate-2);line-height:1.6}
+.pm-foot a{color:var(--green-d);font-weight:600;text-decoration:none}
+.pm-foot a:hover{text-decoration:underline}
+@media(max-width:560px){.pricing-modal{width:96vw;max-height:92vh}.pm-body{padding:18px}}
+
 @media(max-width:1180px){.pane-resize{display:none}}
 
 /* ===================== LOOK & FEEL POLISH ===================== */
