@@ -354,6 +354,15 @@ def chart_block(sym, closes_1m, bars):
         var data={data_json};
         var el=document.getElementById("chart-{sym}");
         if(!window.LightweightCharts||!el) return;   // static sparkline above stays as the real fallback
+        // BUG FIX: this whole block used to run synchronously as soon as the chart-lib <script>
+        // finished loading, which is BEFORE the page's day/night restoration script (later in the
+        // document) sets html[data-surface="night"] from the saved preference. A returning visitor
+        // with night mode saved got the chart's grid/axis colors baked in from the LIGHT theme's
+        // --line (#e6eaf1, off-white), producing exactly the "why are these white lines here" bug -
+        // the rest of the page repaints correctly via pure CSS, only this JS-read color didn't.
+        // requestAnimationFrame defers one frame (~16ms, imperceptible), by which point every
+        // synchronous script earlier in page load - including the theme restoration - has run.
+        requestAnimationFrame(function(){{
         function v(n){{return getComputedStyle(document.documentElement).getPropertyValue(n).trim()||n;}}
         function baseOpts(){{return {{layout:{{background:{{color:"transparent"}},textColor:v("--slate")}},
           grid:{{vertLines:{{color:v("--line")}},horzLines:{{color:v("--line")}}}},
@@ -414,6 +423,7 @@ def chart_block(sym, closes_1m, bars):
         if(surfaceToggle) surfaceToggle.addEventListener("click", function(){{
           setTimeout(function(){{chart.applyOptions(baseOpts()); render();}}, 40);
         }});
+        }});   // end requestAnimationFrame
       }})();
       </script>"""
 
