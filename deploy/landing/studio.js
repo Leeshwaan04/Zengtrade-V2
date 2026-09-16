@@ -364,13 +364,18 @@
    * own comment already calls it a mirror of the Edge Function's authoritative pricing - one more
    * client-side copy of an already-accepted pattern, not a new one). Keep both in sync by hand if
    * pricing ever changes; there's no shared bundle between /dashboard and /app to import across. */
+  // Session 2026-09-16 revision: trimmed to the 4 most decision-relevant features per plan (was
+  // 5) so the modal fits common desktop viewports without an internal scroll - nothing fabricated
+  // or hidden, the dropped line per plan (Accuracy & Analytics / Email & push alerts / Priority
+  // support & early access) is still real and still shown on the full comparison at /pricing/,
+  // linked in the footer. Prices/tiers themselves are unchanged and still mirror billing.js.
   var PLANS = [
     { id: "free", name: "Free", monthly: 0, annual: 0, tagline: "Learn and paper-trade, free forever",
-      features: ["1 paper strategy", "Live crypto prices, 24/7", "Backtest + Forward Test", "Accuracy & Analytics", "Honest cost accounting"] },
+      features: ["1 paper strategy", "Live crypto prices, 24/7", "Backtest + Forward Test", "Honest cost accounting"] },
     { id: "pro", name: "Pro", monthly: 19, annual: 190, featured: true, tagline: "Founding price · unlimited paper",
-      features: ["Everything in Free", "Unlimited paper strategies", "Live execution (coming soon)*", "Tick-level stops & kill-switch (with live)", "Email & push alerts"] },
+      features: ["Everything in Free", "Unlimited paper strategies", "Live execution (coming soon)*", "Tick-level stops & kill-switch"] },
     { id: "elite", name: "Elite", monthly: 79, annual: 790, tagline: "Maximum firepower",
-      features: ["Everything in Pro", "Perps + options engines", "Multiple exchange accounts", "Custom risk parameters", "Priority support & early access"] },
+      features: ["Everything in Pro", "Perps + options engines", "Multiple exchange accounts", "Custom risk parameters"] },
   ];
   var PLAN_ICON = { free: "○", pro: "◈", elite: "✦" };
   var pmCycle = "month";
@@ -413,29 +418,30 @@
       : '<button type="button" class="pm-cta primary" data-plan="' + p.id + '">Choose ' + esc(p.name) + "</button>";
     return '<div class="pm-plan' + (p.featured ? " feat" : "") + '">' +
       (p.featured ? '<div class="pm-ribbon">Most popular</div>' : "") +
-      '<span class="pm-ic">' + (PLAN_ICON[p.id] || "○") + "</span>" +
-      '<div class="pm-name">' + esc(p.name) + "</div>" +
+      '<div class="pm-top"><span class="pm-ic">' + (PLAN_ICON[p.id] || "○") + '</span><span class="pm-name">' + esc(p.name) + "</span></div>" +
       '<div class="pm-price">$' + price + (per ? "<span>" + per + "</span>" : "") + "</div>" +
       '<div class="pm-tag">' + esc(p.tagline) + "</div>" +
       "<ul>" + p.features.map(function (f) { return "<li>" + esc(f) + "</li>"; }).join("") + "</ul>" +
-      cta + "</div>";
+      cta +
+      (p.id !== "free" ? '<div class="pm-trust">Cancel anytime · secure checkout</div>' : "") +
+      "</div>";
   }
 
   function renderPricingModal() {
     var wrap = document.getElementById("ztPricingModal");
     if (!wrap) return;
     wrap.innerHTML =
-      '<div class="pm-head"><b></b><button type="button" class="pm-close" aria-label="Close">&times;</button></div>' +
-      '<div class="pm-body">' +
+      '<div class="pm-head"><span></span><button type="button" class="pm-close" aria-label="Close">&times;</button></div>' +
+      '<div class="pm-body center">' +
         '<div class="pm-eyebrow"><span class="dot"></span>simple · honest · cancel anytime</div>' +
         "<h2>Simple, honest pricing</h2>" +
-        "<p>Start free. Upgrade when you want more, cancel anytime.</p>" +
+        "<p>Start free. Upgrade when you want more.</p>" +
         '<div class="pm-cycle">' +
           '<button type="button" data-c="month" class="' + (pmCycle === "month" ? "on" : "") + '">Monthly</button>' +
           '<button type="button" data-c="year" class="' + (pmCycle === "year" ? "on" : "") + '">Annual <span class="save">2 months free</span></button>' +
         "</div>" +
         '<div class="pm-grid">' + PLANS.map(planCardHtml).join("") + "</div>" +
-        '<p class="pm-foot">* Live execution unlocks per strategy only after it clears the go-live bar in paper. Non-custodial, your keys, your coins. Not investment advice. Full plan comparison: <a href="/pricing/">/pricing/</a>.</p>' +
+        '<p class="pm-foot">Non-custodial: your keys, your coins, always. Not investment advice. <a href="/pricing/">Full plan comparison →</a></p>' +
       "</div>";
     wrap.querySelector(".pm-close").onclick = hidePricingModal;
     wrap.querySelectorAll(".pm-cycle button").forEach(function (b) {
@@ -445,13 +451,32 @@
       b.onclick = function () { dashboardCheckout(b.dataset.plan, pmCycle); };
     });
   }
+  var pmLastFocus = null;
+  function pmFocusables() {
+    var wrap = document.getElementById("ztPricingModal");
+    if (!wrap) return [];
+    return [].slice.call(wrap.querySelectorAll("button:not([disabled]), a[href]"));
+  }
   function hidePricingModal() {
     var scrim = document.getElementById("ztPricingScrim"), modal = document.getElementById("ztPricingModal");
     if (scrim) scrim.classList.remove("show");
     if (modal) modal.classList.remove("show");
     document.removeEventListener("keydown", pmKeydown);
+    if (pmLastFocus && pmLastFocus.focus) { try { pmLastFocus.focus(); } catch (e) {} }
+    pmLastFocus = null;
   }
-  function pmKeydown(e) { if (e.key === "Escape") hidePricingModal(); }
+  // Escape closes; Tab/Shift+Tab wrap within the modal instead of leaking focus onto the
+  // dashboard behind it - a real, if small, "feels polished not thrown together" signal for
+  // anyone navigating by keyboard, and it's genuinely easy to get wrong with a bare dialog.
+  function pmKeydown(e) {
+    if (e.key === "Escape") { hidePricingModal(); return; }
+    if (e.key !== "Tab") return;
+    var f = pmFocusables();
+    if (!f.length) return;
+    var first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
   function showPricingModal() {
     var scrim = document.getElementById("ztPricingScrim"), modal = document.getElementById("ztPricingModal");
     if (!scrim) {
@@ -461,12 +486,18 @@
     }
     if (!modal) {
       modal = document.createElement("div"); modal.id = "ztPricingModal"; modal.className = "pricing-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "Pricing");
       document.body.appendChild(modal);
     }
+    pmLastFocus = document.activeElement;
     renderPricingModal();
     scrim.classList.add("show");
     modal.classList.add("show");
     document.addEventListener("keydown", pmKeydown);
+    var closeBtn = modal.querySelector(".pm-close");
+    if (closeBtn) setTimeout(function () { closeBtn.focus(); }, 50);
   }
   window.ztOpenPricingModal = showPricingModal;
 
