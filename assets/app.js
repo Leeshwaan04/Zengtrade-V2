@@ -102,24 +102,6 @@ const inrL=n=>Number.isFinite(n)?'₹'+(n/100000).toFixed(2)+'L':'-';
 const pct=n=>Number.isFinite(n)?(n>=0?'+':'')+n.toFixed(2)+'%':'-';
 const cls=n=>Number.isFinite(n)?(n>=0?'up':'down'):'';
 const tone=n=>n>0?'up':n<0?'down':'';
-// ---- Unified P&L presentation (both books) ------------------------------------------------
-// One currency-aware signed formatter + the canonical Realised / Unrealised / Net triad and a
-// compact inline form. Reuses sgn() (₹) / cxMoney() ($) + secStats(). Net is ALWAYS computed
-// realised+unrealised: never trusts a separate "total" field. cur is 'inr' (default) or 'usd'.
-function pnlFmt(v,cur){ return cur==='usd' ? cxMoney(v) : sgn(v); }
-function pnlTriad(realised,unrealised,cur){
-  const r=+realised||0, u=+unrealised||0, net=r+u;
-  return [
-    {l:'Realised', v:pnlFmt(r,cur), s:'booked', tone:tone(r)},
-    {l:'Unrealised', v:pnlFmt(u,cur), s:'open · live', tone:tone(u)},
-    {l:'Net', v:pnlFmt(net,cur), s:'realised + unrealised', tone:tone(net)},
-  ];
-}
-function pnlCompact(realised,unrealised,cur){
-  const r=+realised||0, u=+unrealised||0, net=r+u;
-  return `<span class="pnl-net num ${tone(net)}">${pnlFmt(net,cur)}</span>`
-    +`<span class="pnl-ru">R <i class="num ${tone(r)}">${pnlFmt(r,cur)}</i> · U <i class="num ${tone(u)}">${pnlFmt(u,cur)}</i></span>`;
-}
 const bySym=s=>SYMS.find(x=>x.sym===s||itemKey(x)===s);
 
 /* ---------- icon set (monochrome, currentColor) ---------- */
@@ -369,7 +351,6 @@ function announce(msg){const el=$('srAnnounce');if(el)el.textContent=msg;}
 /* ============================================================
    RENDER: TOP INDEX + REGIME BAR
    ============================================================ */
-function liveS(){return composite(scoreSignals(readSignals()));}
 function tickerItems(){ const uni=new Map(TICKER_UNIVERSE.map(u=>[u.name,u])); return (state.ticker.items||[]).map(n=>uni.get(n)).filter(Boolean); }
 // Header market toggle (left of search), Indian ⇄ Crypto. Always visible; drives the rolling tape + Algo Studio scope.
 function renderHdrMarket(){
@@ -728,12 +709,6 @@ function removeInstrument(key){
   saveState(); if(BOT.live) connectStream();
   renderWatchlist(state.displayed); renderChart(state.displayed);
   announce(was+' removed from watchlist');
-}
-function resetWatchlist(){   // restore the default seed list
-  SYMS=SEED_SYMS.map(sym=>({sym,name:sym,exch:'NSE',type:'EQ',key:'NSE:'+sym,ltp:0,chg:0,live:false}));
-  state.wlCustom=false; state.selected=null; saveState();
-  if(BOT.live){ connectStream(); loadMarket(); }
-  renderWatchlist(state.displayed);
 }
 function selectSym(sym){
   if(!bySym(sym))return;
@@ -1754,20 +1729,6 @@ function realQuote(name){
   // 3) a stock pinned to the tape → its live watchlist quote (SYMS carry tick-updated ltp/chg)
   const s=bySym(name); return (s&&s.live&&s.ltp!=null)?{ltp:s.ltp,chg:s.chg||0}:null;
 }
-function botBanner(){
-  if(!BOT.loaded) return `<div class="bot-banner">${icon('cpu',13)}<span>Connecting to your trading bot…</span></div>`;
-  if(BOT.error) return `<div class="bot-banner off">${icon('shield',13)}<span>The trading engine is temporarily offline, try reopening Algo Studio shortly.</span></div>`;
-  if(!BOT.connected){
-    const auto=BOT.status&&BOT.status.autoLogin, running=(BOT.status&&BOT.status.reloginRunning)||BOT.reconnecting;
-    const msg=running?'Session expired, reconnecting to Kite…'
-      :auto?'Session expired (daily token). Tap reconnect or it will auto-refresh shortly.'
-      :'Kite session expired, the daily token. Run <b>python3 auto_login.py</b> (or <b>login.py</b>), or set up auto-login.';
-    return `<div class="bot-banner off">${running?'<span class="live-dot warn pulse"></span>':icon('shield',13)}<span>${msg}</span>
-      <button class="bot-relogin" data-relogin ${running?'disabled':''}>${running?'Reconnecting…':'Reconnect'}</button></div>`;
-  }
-  const u=BOT.status&&BOT.status.user?esc(BOT.status.user):'-';
-  return `<div class="bot-banner on"><span class="live-dot live"></span><span>Kite connected · ${u} · <b>${BOT.paperMode?'PAPER mode, no real orders':'LIVE'}</b>${BOT.status&&BOT.status.subscription?' · '+esc(BOT.status.subscription):''}</span></div>`;
-}
 // Manual reconnect: trigger the headless TOTP re-login, then refresh everything.
 async function botReconnect(){
   if(BOT.reconnecting) return; BOT.reconnecting=true;
@@ -1911,14 +1872,6 @@ function algoInstr(a){ const id=(a&&a.id||'').toLowerCase(), seg=(a&&a.segment||
   if(seg==='cash') return 'equity';
   if(seg==='fno'||seg==='commodity') return 'futures';
   return 'equity'; }
-// Capital-at-risk deployed by a strategy = Σ open-position notional, marked to LTP (falls back to entry).
-// Reconciles with the backend risk.exposure; F&O legs are shown at NOTIONAL, not margin (see the monitor note).
-function algoDeployed(a){ return (a&&a.positions||[]).reduce((s,p)=>{ const q=p.qty,px=(p.ltp!=null?p.ltp:p.entry);
-  return s+((q!=null&&px!=null)?Math.abs(q*px):0); },0); }
-// Compact INR for capital figures: ₹99.9K · ₹9.95L · ₹1.20Cr.
-function inrC(v){ if(v==null||!isFinite(v)) return '-'; const a=Math.abs(v);
-  if(a>=1e7) return '₹'+(a/1e7).toFixed(2)+'Cr'; if(a>=1e5) return '₹'+(a/1e5).toFixed(2)+'L';
-  if(a>=1e3) return '₹'+(a/1e3).toFixed(1)+'K'; return '₹'+Math.round(a); }
 // Crypto deployed = Σ open-position notional (qty×entry); perps book 20% margin. Options premium ≈ 0 notional.
 function cryptoDeployed(s){ const seg=(s&&s.instr)||'spot'; return (s&&s.positions||[]).reduce((a,p)=>{
   const n=Math.abs((p.qty||0)*(p.entry||0)); return a+(seg==='perps'?n*0.20:n); },0); }
@@ -1943,7 +1896,6 @@ function studioScope(){ const a=state.algo=state.algo||{};
   if(!a.instr){ a.instr=(a.lib&&a.lib.instr)||'equity'; } if(!a.hold){ a.hold=(a.lib&&a.lib.hold)||'all'; }
   return {instr:a.instr,hold:a.hold}; }
 function inScope(a){ const sc=studioScope(); return algoInstr(a)===sc.instr && (sc.hold==='all'||algoHold(a)===sc.hold); }       // ALGOS
-function libInScope(s){ const sc=studioScope(); return instrOf(s)===sc.instr && (sc.hold==='all'||holdOf(s)===sc.hold); }       // STRAT_LIBRARY
 // risk → existing badge class (Conservative=b-up, Moderate=b-neu, Aggressive=b-warn)
 const STRAT_LIBRARY=[
   // ---- Trend / Momentum ----
@@ -2476,25 +2428,6 @@ function cryptoStatusBar(){
   ].join('<span class="asb-div"></span>');
   return `<div class="algo-statusbar${live?'':' off'}">${cells}</div>`;
 }
-function cryptoPriceStrip(){
-  const tiles=CRYPTO_UNIVERSE.map(c=>{ const q=CRYPTO.quotes[c.sym], ch=q?q.chg:null;
-    return `<div class="cx-tile" data-cprice="${c.sym}">
-      <div class="cx-tk"><b>${esc(c.tk)}</b><span>${esc(c.name)}</span></div>
-      <div class="cx-px"><span class="cx-ltp num"${q?` data-raw="${q.ltp}"`:''}>${q?cryptoFmt(q.ltp):'-'}</span>
-        <span class="cx-chg num ${cls(ch)}" data-cchg>${ch==null?'·':pct(ch)+' · 24h'}</span></div></div>`; }).join('');
-  const note=CRYPTO.live?`<span class="cx-src live">● Live · Binance · 24h change</span>`
-    :(CRYPTO.error?`<span class="cx-src off">Can’t reach Binance, retrying…</span>`:`<span class="cx-src off">Connecting to Binance…</span>`);
-  return `<div class="cx-strip-wrap"><div class="cx-strip-head">${icon('spark',13)}<b>Live crypto prices</b>${note}</div><div class="cx-strip">${tiles}</div></div>`;
-}
-function patchCryptoPrices(){
-  document.querySelectorAll('[data-cprice]').forEach(el=>{ const q=CRYPTO.quotes[el.dataset.cprice]; if(!q) return;
-    const l=el.querySelector('.cx-ltp'), c=el.querySelector('[data-cchg]');
-    if(l){ const txt=cryptoFmt(q.ltp); if(l.textContent!==txt){ const prev=parseFloat(l.dataset.raw); const dir=isFinite(prev)?Math.sign(q.ltp-prev):0;
-      l.textContent=txt; l.dataset.raw=q.ltp; if(dir){ l.classList.remove('tick-up','tick-dn'); void l.offsetWidth; l.classList.add(dir>0?'tick-up':'tick-dn'); } } }
-    if(c){ c.textContent=pct(q.chg)+' · 24h'; c.className='cx-chg num '+cls(q.chg); c.setAttribute('data-cchg',''); } });
-  const note=document.querySelector('.cx-strip-head .cx-src');
-  if(note){ note.className='cx-src '+(CRYPTO.live?'live':'off'); note.textContent=CRYPTO.live?'● Live · Binance · 24h change':(CRYPTO.error?'Can’t reach Binance, retrying…':'Connecting to Binance…'); }
-}
 function cryptoStratCard(s){
   const rk=LIB_RISK_CLASS[s.risk]||'b-neu';
   // BUG FIX (2026-09-09): this used to read ALGOS (the shared, unscoped /api/strategies payload -
@@ -2541,24 +2474,6 @@ function cryptoMarket(){
 function cryptoSoon(label){
   return secEmpty('cpu',label+' · crypto',
     `${esc(label)} runs on the live 24/7 crypto paper harness. Start the engine from <b>Monitor</b> or deploy a strategy from <b>Library</b>.`);
-}
-// Real 24h movers from the live Binance data, honest momentum snapshot, not a scored signal.
-function cryptoOpportunity(){
-  if(!CRYPTO.live) return secEmpty('cpu','Scanning crypto…','Pulling live 24h moves from Binance. If this persists, the public data API may be unreachable from your network.');
-  // relative leaders/laggards (top & bottom of the same sorted set), never an empty column, even on an all-red day
-  const m=CRYPTO_UNIVERSE.map(c=>({...c,q:CRYPTO.quotes[c.sym]})).filter(r=>r.q).sort((a,b)=>b.q.chg-a.q.chg);
-  const n=Math.min(5,Math.ceil(m.length/2)), lead=m.slice(0,n), lag=m.slice(-n).reverse();
-  const row=r=>`<div class="cx-mv-row"><div class="cx-mv-tk"><b>${esc(r.tk)}</b><span>${esc(r.name)}</span></div><span class="cx-mv-px num">${cryptoFmt(r.q.ltp)}</span><span class="cx-mv-chg num ${cls(r.q.chg)}">${pct(r.q.chg)}</span></div>`;
-  const col=(title,arr,ic)=>`<div class="cx-mv-col"><div class="cx-mv-h">${icon(ic,12)} ${title}</div>${arr.map(row).join('')||'<div class="cx-mv-empty">—</div>'}</div>`;
-  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Honest scan.</b> These are <b>real 24h moves</b> from Binance, relative leaders vs laggards, a momentum snapshot and <b>not a validated signal</b>. The explainable, scored crypto opportunity engine arrives with the strategy engine; nothing is traded.</span></div>`;
-  return note+`<div class="cx-movers">${col('Leaders · 24h',lead,'trendUp')}${col('Laggards · 24h',lag,'alert')}</div>`;
-}
-// Templates grouped by family: no fabricated track record; real ranking unlocks with the engine.
-function cryptoLeaderboard(){
-  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>No fabricated track record.</b> Crypto strategies are templates, there's no live performance to rank yet, so we won't invent one. They're grouped by family below; a real, forward-tested leaderboard unlocks with the crypto paper engine.</span></div>`;
-  const byCat={}; CRYPTO_STRATEGIES.forEach(s=>{(byCat[s.cat]=byCat[s.cat]||[]).push(s);});
-  const groups=Object.keys(byCat).map(cat=>`<div class="cx-lb-grp"><div class="cx-lb-h">${esc(cat)} <i>${byCat[cat].length}</i></div>${byCat[cat].map(s=>`<div class="cx-lb-row"><b>${esc(s.name)}</b><span class="cx-cat">${esc(s.pair)}</span><span class="badge ${LIB_RISK_CLASS[s.risk]||'b-neu'}">${esc(s.risk)}</span></div>`).join('')}</div>`).join('');
-  return note+`<div class="cx-lb">${groups}</div>`;
 }
 // ---- LIVE crypto paper book (24/7 harness on :8756 → /api/crypto/monitor) ----
 const CRYPTOMON={loaded:false,busy:false,data:null,err:false,t:0};
@@ -3197,9 +3112,7 @@ function regimeFitMatrix(mkt){
 }
 // Crypto-scoped router: every Algo Studio tab stays in sync with the crypto market (no Indian content leaks).
 function cryptoBody(view,label){
-  if(view==='library'||view==='market') return cryptoMarket();
-  if(view==='opportunity') return cryptoOpportunity();
-  if(view==='leaderboard') return cryptoLeaderboard();
+  if(view==='library') return cryptoMarket();
   if(view==='monitor') return cryptoMonitor();
   if(view==='positions') return cryptoPositions();
   if(view==='risk') return cryptoRisk();
@@ -3210,29 +3123,6 @@ function cryptoBody(view,label){
   return cryptoSoon(label);
 }
 
-// Studio-wide scope toggle (Equity/Options/Futures + holding style), rendered once in the
-// chrome, below the tabs, so every tab is scoped consistently. Counts are the strategy
-// universe (the Library catalog) so the number means the same on every tab.
-function studioScopeBar(){
-  const {instr,hold}=studioScope();
-  const instrCount=i=>STRAT_LIBRARY.filter(s=>instrOf(s)===i).length;
-  const holdCount=(i,h)=>STRAT_LIBRARY.filter(s=>instrOf(s)===i&&holdOf(s)===h).length;
-  const instrBar=`<div class="lib-instr" role="tablist" aria-label="Instrument class">${INSTR_TABS.map(([id,lab,ic,desc])=>
-    `<button class="lib-instr-tab${instr===id?' on':''}" data-algoinstr="${id}" role="tab" aria-selected="${instr===id}">
-      <span class="lii-top">${icon(ic,15)}<b>${esc(lab)}</b><i class="lii-n">${instrCount(id)}</i></span>
-      <span class="lii-desc">${esc(desc)}</span></button>`).join('')}</div>`;
-  const holdBar=`<div class="lib-hold" role="tablist" aria-label="Holding style">`+
-    `<button class="lib-hold-tab${hold==='all'?' on':''}" data-algohold="all" role="tab" aria-selected="${hold==='all'}">All <i>${instrCount(instr)}</i></button>`+
-    (HOLD_TABS[instr]||[]).map(h=>`<button class="lib-hold-tab${hold===h?' on':''}" data-algohold="${h}" role="tab" aria-selected="${hold===h}" title="${esc(HOLD_DESC[h])}">${esc(HOLD_LABEL[h])} <i>${holdCount(instr,h)}</i></button>`).join('')+
-    `</div>`;
-  return `<div class="av-scope">${instrBar}${holdBar}</div>`;
-}
-// honest empty state that names the active scope (used when a tab is empty BECAUSE of the scope)
-function scopeEmpty(ic,title,msg,cta){ const {instr,hold}=studioScope();
-  const chip=`<div class="av-scope-empty">${icon('layout',12)}<span>Scope · <b>${esc(INSTR_LABEL[instr])}${hold!=='all'?' · '+esc(HOLD_LABEL[hold]):''}</b></span></div>`;
-  return chip+secEmpty(ic,title,msg,cta); }
-// honest note for portfolio/engine-level tabs that are deliberately NOT scoped by instrument
-function scopeNote(msg){ return `<div class="av-scope-note">${icon('layout',12)}<span>${msg}</span></div>`; }
 function renderAlgo(){
   const v=$('algoView'); if(!v) return;
   if(!isAlgo()){ v.innerHTML=''; return; }
@@ -3354,7 +3244,6 @@ function liveLockedPanel(){
    AI MODE: copilot chat + AI signals (XSS-safe via esc())
    ============================================================ */
 const AI_PROMPTS=['Top movers right now','Find me oversold ideas','Hedge my portfolio','Explain my portfolio health','Best option strategy now'];
-function aiWelcome(){return `<b>Hi, I’m your market copilot.</b> ${aiLive()?'I read your <b>real</b> holdings, live prices, the market regime &amp; option chains and can run real backtests, every number I give you is fetched live, never invented.':'Ask me for ideas, a hedge, an option strategy, or a read on your portfolio.'} Try a suggestion below 👇`;}
 const aiCfg=()=>state.aiCfg||(state.aiCfg={endpoint:'',model:'claude-opus-4-8'});
 const aiLive=()=>!!(aiCfg().endpoint||'').trim();
 function setSurface(s,silent){
@@ -3827,17 +3716,6 @@ function init(){
     loadBotData().then(()=>{ if(typeof renderAlgo==='function'&&isAlgo()) renderAlgo(); });
     setInterval(()=>{ if(document.visibilityState==='visible') loadBotData().then(()=>{ if(isAlgo()) renderAlgo(); }); }, 15000);
   }
-  if(!CRYPTO_ONLY){
-    loadMarket(); setInterval(loadMarket, 30000);   // Kite market data (Indian edition only)
-  }
-  if(!CRYPTO_ONLY) setInterval(()=>{ loadTicks();                  // Kite WebSocket (Indian edition only)
-    loadTape();                                   // real-time index tape (WS-fed), patched in place, no scroll reset
-    // desk movers/P&L/heatmap are live-data cards but the 30s cascade gate skips them between
-    // structural changes → refresh them on the tick ONLY when the desk is the visible center view
-    // (localised rebuild, not the whole screen, so no global flicker).
-    if(BOT.live && typeof renderDeskView==='function' && ((typeof isDesk==='function'&&isDesk()) || (typeof isCenterTakeover==='function'&&isCenterTakeover()))) renderDeskView();
-    if(BOT.live && document.querySelector('.wg-card[data-wkey="depth"]')) loadDepth(state.selected||'RELIANCE');
-  }, 2000);
   // live crypto prices: the WebSocket drives the tape sub-second; this 5s REST poll is the FALLBACK,
   // firing only when the socket isn't delivering (first paint, dropped socket, WS unsupported).
   setInterval(()=>{ if(!(state.algo && state.algo.market==='crypto' && document.visibilityState==='visible')) return;
@@ -3871,27 +3749,6 @@ function init(){
     else if(v==='analytics') loadCryptoAn().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='analytics') renderAlgo(); });
     else if(v==='accuracy') loadReadiness('crypto').then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&state.algo.view==='accuracy') renderAlgo(); });
     else if(v==='analytics') loadRegimeFit('crypto'); }, 7000);
-  // fast real-time poll (2s): refresh live paper P&L + positions across ALL live algo
-  // views: Marketplace, Leaderboard, Forward Test, Monitor. (Backtest is static, skip it.)
-  // Safe re-render: skips the tick while a field is focused (no clobbering the capital box)
-  // and preserves scroll so live numbers update without any UI disruption.
-  const ALGO_LIVE_VIEWS=['market','leaderboard','forward','monitor','accuracy','analytics','opportunity'];
-  setInterval(()=>{
-    if(!(typeof isAlgo==='function'&&isAlgo())) return;
-    if(state.algo&&state.algo.market==='crypto') return;   // Indian P&L poll is paused while the studio is scoped to Crypto
-    if(!ALGO_LIVE_VIEWS.includes(state.algo&&state.algo.view)) return;
-    loadMonitor().then(()=>{
-      if(!(isAlgo()&&ALGO_LIVE_VIEWS.includes(state.algo.view))) return;
-      const ae=document.activeElement;
-      if(ae&&ae.closest&&ae.closest('#algoView')&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName)) return; // don't interrupt typing
-      if(state.algo.view==='analytics'){ patchAlgoLive(); ensureAnalytics(); return; } // analytics: live P&L patched in sync (2s) + breakdowns refreshed (throttled)
-      if(algoLiveSig()!==state.algo._sig){           // structure changed (a trade opened/closed) → one full re-render
-        const av=$('algoView'), sc=av?av.scrollTop:0; renderAlgo(); if(av) av.scrollTop=sc;
-      } else {
-        patchAlgoLive();                             // steady state → patch the ticking numbers in place, NO flicker
-      }
-    });
-  }, 2000);
   mountStableCardCtls(); applyCardStates();
 
   // first-run: onboarding wizard (pick a persona, then connect Kite)
