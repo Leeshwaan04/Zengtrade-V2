@@ -630,9 +630,6 @@ body.resizing{user-select:none;cursor:col-resize}
 .pm-cta:focus-visible{outline:2px solid var(--green);outline-offset:2px}
 .pm-cta[disabled]{opacity:.6;cursor:default;transform:none}
 .pm-trust{margin-top:8px;text-align:center;font-size:10.5px;color:var(--slate-2)}
-.pm-foot{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);text-align:center;font-size:11px;color:var(--slate-2);line-height:1.5}
-.pm-foot a{color:var(--green-d);font-weight:600;text-decoration:none}
-.pm-foot a:hover{text-decoration:underline}
 @media(max-width:560px){.pricing-modal{width:96vw}.pm-body{padding:14px}}
 
 @media(max-width:1180px){.pane-resize{display:none}}

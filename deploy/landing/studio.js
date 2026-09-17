@@ -441,7 +441,6 @@
           '<button type="button" data-c="year" class="' + (pmCycle === "year" ? "on" : "") + '">Annual <span class="save">2 months free</span></button>' +
         "</div>" +
         '<div class="pm-grid">' + PLANS.map(planCardHtml).join("") + "</div>" +
-        '<p class="pm-foot">Non-custodial: your keys, your coins, always. Not investment advice. <a href="/pricing/">Full plan comparison →</a></p>' +
       "</div>";
     wrap.querySelector(".pm-close").onclick = hidePricingModal;
     wrap.querySelectorAll(".pm-cycle button").forEach(function (b) {
