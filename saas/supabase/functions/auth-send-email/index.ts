@@ -94,12 +94,21 @@ function renderEmail(user: { email: string }, d: EmailData): { subject: string; 
         ),
       };
     case "email_change":
+      // KNOWN LIMITATION (2026-09-18): Supabase's hook payload always gives user.email as the
+      // CURRENT (old) address, never the new one being confirmed, and doesn't expose the new
+      // address anywhere else - so this can't correctly say what address is being confirmed TO.
+      // With Secure Email Change on (Supabase's default), this hook fires once per required
+      // confirmation; token_hash_new is what's used when the recipient is the current/old
+      // address (their doc's own field naming is reversed for backward compatibility), which is
+      // the case this handles. If Secure Email Change is off, or for the new-address leg
+      // specifically, this hasn't been live-tested - test a real email change before relying on
+      // it, since a wrong link here doesn't break anything else but would leave that one flow silently broken.
       return {
-        subject: "Confirm your new zengtrade email",
+        subject: "Confirm your zengtrade email change",
         html: shell(
-          "Confirm your new email",
-          `Confirm this address to finish updating the email on your zengtrade account to ${user.email}.`,
-          { label: "Confirm new email", url: verifyUrl(d, d.token_hash_new || d.token_hash, "email_change") }
+          "Confirm this email change",
+          "A request was made to change the email on your zengtrade account. Confirm it below if this was you.",
+          { label: "Confirm change", url: verifyUrl(d, d.token_hash_new || d.token_hash, "email_change") }
         ),
       };
     case "invite":
