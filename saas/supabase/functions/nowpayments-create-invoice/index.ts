@@ -16,7 +16,12 @@ const PRICES: Record<string, Record<string, number>> = {
 const SITE = "https://zengtrade.in";
 const cors = {
   "Access-Control-Allow-Origin": SITE,
-  "Access-Control-Allow-Headers": "authorization, content-type",
+  // BUG FIX (2026-09-18): the browser client (studio.js sbHeaders()) sends apikey + authorization +
+  // content-type on every call, but this list was missing "apikey" - real browsers correctly refused
+  // to send the actual POST after the preflight response didn't allow that header, failing silently
+  // with a generic network error (caught by the client's .catch(), showing "Please try again" with
+  // no server-side detail). curl-based testing never caught this because curl doesn't enforce CORS.
+  "Access-Control-Allow-Headers": "apikey, authorization, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 const json = (o: unknown, status = 200) =>
