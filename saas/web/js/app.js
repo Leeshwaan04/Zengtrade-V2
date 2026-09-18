@@ -451,7 +451,7 @@ function renderAccount() {
     </div>
     <div class="card acc">
       <div class="acc-row"><span>Legal</span><span class="links"><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/risk">Risk</a></span></div>
-      <div class="acc-row"><span>Support</span><span class="links"><a href="mailto:hello@zengtrade.in">hello@zengtrade.in</a><a href="mailto:letmeknow@zengtrade.in">letmeknow@zengtrade.in</a></span></div>
+      <div class="acc-row"><span>Support</span><a href="mailto:letmeknow@zengtrade.in">letmeknow@zengtrade.in</a></div>
     </div>
     <div class="card acc danger">
       <div class="acc-row"><span>Sign out</span><button class="btn ghost sm" id="accOut">Sign out</button></div>
