@@ -15,7 +15,12 @@ let user = null, tier = "free", billCycle = "month";
 let state = { deployments: [], trades: [], loading: true, error: null, workerAlive: true, exchange: { connected: false } };
 
 const ROUTES = ["dashboard", "strategies", "forward", "accuracy", "analytics", "activity", "account"];
-const route = () => (location.hash.replace("#", "") || "dashboard");
+// /account is a real, standalone clean URL (not a hash route) - same app.html/app.js serve both,
+// build.py just also copies app.html to dist/account/index.html. On that path there's no shared
+// tab nav (Account isn't really part of the "your trading performance" tab set) and the route is
+// always forced to account regardless of any hash, so a stray #foo in the URL can't show through.
+const ACCOUNT_ONLY = /\/account\/?$/.test(location.pathname);
+const route = () => (ACCOUNT_ONLY ? "account" : (location.hash.replace("#", "") || "dashboard"));
 
 // ---------------------------------------------------------------- boot
 (async function boot() {
@@ -24,13 +29,13 @@ const route = () => (location.hash.replace("#", "") || "dashboard");
   try {
     await sb.from("event").insert({
       name: "pageview",
-      path: ("/app" + location.hash).slice(0, 290),
+      path: (ACCOUNT_ONLY ? "/account" : ("/app" + location.hash)).slice(0, 290),
       ref: (document.referrer || "").slice(0, 290),
     });
   } catch { /* funnel */ }
   $("#userEmail").textContent = user.email;
   $("#signout").onclick = () => signOut();
-  $("#upgradeBtn").onclick = () => location.hash = "pricing";
+  $("#upgradeBtn").onclick = () => ACCOUNT_ONLY ? (location.href = "/app#pricing") : (location.hash = "pricing");
   window.addEventListener("hashchange", render);
   window.addEventListener("resize", debounce(() => { if (route() === "dashboard") drawCurve(); }, 150));
   buildNav();
@@ -153,7 +158,10 @@ function perStrategy() {
 
 // ---------------------------------------------------------------- router / render
 function buildNav() {
-  $("#nav").innerHTML = ROUTES.map(r =>
+  if (ACCOUNT_ONLY) { const t = document.querySelector("nav.tabs"); if (t) t.hidden = true; return; }
+  // Account has its own standalone page now (see ACCOUNT_ONLY above) - it's dropped from the tab
+  // bar itself, not just hidden when viewed, so there's exactly one way to reach it, not two.
+  $("#nav").innerHTML = ROUTES.filter(r => r !== "account").map(r =>
     `<a href="#${r}" data-r="${r}">${r[0].toUpperCase() + r.slice(1)}</a>`).join("");
 }
 function render() {
@@ -460,7 +468,7 @@ function renderAccount() {
            password, this key only ever places orders on your own account.
          </p>
          <div style="display:flex;flex-wrap:wrap;gap:14px;margin:-2px 0 11px">
-           <a href="https://www.binance.com" target="_blank" rel="noopener" style="font-size:11.5px;font-weight:700;color:var(--green-d);text-decoration:none">Open Binance &rarr;</a>
+           <a href="https://www.binance.com/en/my/settings/api-management" target="_blank" rel="noopener" style="font-size:11.5px;font-weight:700;color:var(--green-d);text-decoration:none">Open Binance &rarr;</a>
            <a href="/learn/how-to-create-a-binance-api-key/" target="_blank" rel="noopener" style="font-size:11.5px;font-weight:700;color:var(--green-d);text-decoration:none">Full step-by-step guide &rarr;</a>
          </div>
          <input type="password" id="exKey" placeholder="Paste your API key" autocomplete="off" class="acc-input">
@@ -489,7 +497,7 @@ function renderAccount() {
       <div class="card-h"><span class="card-ic">⏻</span><h3>Sign out</h3></div>
       <div class="acc-row"><span>End your session on this device</span><button class="btn ghost sm" id="accOut">Sign out</button></div>
     </div>`;
-  $("#accUp") && ($("#accUp").onclick = () => location.hash = "pricing");
+  $("#accUp") && ($("#accUp").onclick = () => ACCOUNT_ONLY ? (location.href = "/app#pricing") : (location.hash = "pricing"));
   $("#accOut").onclick = (e) => { const b = e.currentTarget; b.disabled = true; b.textContent = "Signing out…"; signOut(); };
   $("#exConnect") && ($("#exConnect").onclick = async (e) => {
     const btn = e.currentTarget;

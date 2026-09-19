@@ -72,7 +72,7 @@
   // UX FIX (2026-09-19, founder): a full navigation away from wherever the user currently is
   // (mid Algo Studio session) on a single avatar click was too heavy - a small dropdown with a
   // couple of CTAs is the right pattern here, matching how this control works on any SaaS
-  // product. Menu items reuse the existing real destinations (/app#account) and the existing
+  // product. Menu items reuse the existing real destinations (/account) and the existing
   // real sign-out mechanism instead of inventing new ones.
   (function wireProfileAvatar() {
     var el = document.querySelector(".profile");
@@ -125,7 +125,7 @@
         + 'text-align:left;cursor:pointer">Sign out</button>';
       el.appendChild(menu);
       el.setAttribute("aria-expanded", "true");
-      menu.querySelector('[data-pm-item="account"]').onclick = function (e) { e.stopPropagation(); location.href = "/app#account"; };
+      menu.querySelector('[data-pm-item="account"]').onclick = function (e) { e.stopPropagation(); location.href = "/account"; };
       menu.querySelector('[data-pm-item="signout"]').onclick = function (e) { e.stopPropagation(); doSignOut(e.currentTarget); };
       menu.querySelectorAll("button").forEach(function (b) {
         b.onmouseenter = function () { b.style.background = "var(--surface-2,#f4f6fa)"; };

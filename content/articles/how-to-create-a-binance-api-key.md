@@ -13,7 +13,7 @@ You'll need an existing Binance account with two-factor authentication (2FA) tur
 ## Step by step
 
 1. **Go to [binance.com](https://www.binance.com) and log in.**
-2. **Open API Management.** Click your profile icon in the top right, then **Account**, then **API Management**.
+2. **Open [API Management](https://www.binance.com/en/my/settings/api-management).** You can click that direct link once you're logged in, or get there manually: profile icon in the top right, then **Account**, then **API Management**.
 3. **Create a new key.** Click **Create API**, choose the standard system-generated key, and give it a label you'll recognize later, e.g. "zengtrade".
 4. **Complete the security check.** Binance will ask for an email code and/or your 2FA code to confirm it's really you.
 5. **Set permissions, carefully.** This is the only step that matters for your safety. Check **only** "Enable Spot & Margin Trading", and leave everything else, including **"Enable Withdrawals"**, unchecked. zengtrade never needs withdrawal access, and a key without it can place and manage orders but can never move funds out of your account, even if the key itself were somehow exposed.

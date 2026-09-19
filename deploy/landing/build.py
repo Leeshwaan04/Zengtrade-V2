@@ -388,6 +388,15 @@ for f, route_dir in AUTH_ROUTES.items():
     if os.path.exists(src):
         d = os.path.join(DIST, route_dir); os.makedirs(d, exist_ok=True)
         shutil.copy(src, os.path.join(d, "index.html"))
+# /account: a real, standalone clean URL for Account settings, not a hash buried inside /app - the
+# same app.html/app.js serve it (app.js detects the /account path and forces that route, hiding
+# the shared tab nav), so this is just a second copy of the same source, not a second app to
+# maintain. AUTH_ROUTES above can't express "one source, two destinations" (dict keys are unique
+# per source file), hence this one extra explicit copy rather than a bigger routing rewrite.
+_app_src = os.path.join(AUTH_SRC, "app.html")
+if os.path.exists(_app_src):
+    _acct_d = os.path.join(DIST, "account"); os.makedirs(_acct_d, exist_ok=True)
+    shutil.copy(_app_src, os.path.join(_acct_d, "index.html"))
 _ops_data = os.path.join(AUTH_SRC, "ops-data.json")
 if os.path.exists(_ops_data):
     d = os.path.join(DIST, "ops"); os.makedirs(d, exist_ok=True)
@@ -417,11 +426,14 @@ for d in ("js", "assets"):                        # js = auth glue; assets merge
 # URLs, unaffected by any query string on app.js itself, so this only guarantees a fresh app.js;
 # a change to auth.js/config.js alone could still hit the same staleness until those also get a
 # real cache-busting story (out of scope here, flagging so it isn't forgotten).
-_app_html = os.path.join(DIST, "app", "index.html")
-if os.path.exists(_app_html):
-    _appjs_hash = hashlib.sha256(open(os.path.join(DIST, "js", "app.js"), "rb").read()).hexdigest()[:10]
-    _html = open(_app_html).read().replace('src="/js/app.js"', f'src="/js/app.js?v={_appjs_hash}"')
-    open(_app_html, "w").write(_html)
+_appjs_hash = None
+for _route_dir in ("app", "account"):   # /account is a second copy of the same app.html/app.js
+    _app_html = os.path.join(DIST, _route_dir, "index.html")
+    if os.path.exists(_app_html):
+        if _appjs_hash is None:
+            _appjs_hash = hashlib.sha256(open(os.path.join(DIST, "js", "app.js"), "rb").read()).hexdigest()[:10]
+        _html = open(_app_html).read().replace('src="/js/app.js"', f'src="/js/app.js?v={_appjs_hash}"')
+        open(_app_html, "w").write(_html)
 
 # ---- /dashboard = the REAL Algo Studio terminal (customer edition) ------------------
 # The operator's terminal (root index.html + assets/) IS the product. build copies it

@@ -2881,7 +2881,7 @@ function tradingTradeTab(){
     toggle=`<div class="live-toggle"><span class="lt-label">${live?'Trading with real money on your connected Binance account.':'Paper trading, no money at risk.'}</span>
       <div class="lt-seg"><button class="lt-btn${live?'':' on'}" data-lt="paper">Paper</button><button class="lt-btn${live?' on':''}" data-lt="live">Live</button></div></div>`;
   } else if(hasExchangeBridge&&ex&&!ex.connected){
-    toggle=`<p class="live-connect-hint">${icon('shield',13)} Trading with real money needs a connected exchange. <a href="/app#account" target="_blank" rel="noopener">Connect your Binance account &rarr;</a></p>`;
+    toggle=`<p class="live-connect-hint">${icon('shield',13)} Trading with real money needs a connected exchange. <a href="/account" target="_blank" rel="noopener">Connect your Binance account &rarr;</a></p>`;
   }
   const note=live
     ?`<div class="cx-preview-note">${icon('alert',13)}<span><b>Real orders, your own Binance account.</b> Every buy/sell below places a REAL market order using your connected key. This is not simulated and cannot be undone once filled.</span></div>`
@@ -4004,7 +4004,7 @@ function renderExchangeChip(){
     el.classList.add('ex-on');
     el.innerHTML=`<span class="ex-dot"></span><span>Exchange Connected</span>`;
     el.title='Manage your connected exchange';
-    el.onclick=()=>{ window.location.href='/app#account'; };
+    el.onclick=()=>{ window.location.href='/account'; };
   } else {
     el.classList.remove('ex-on');
     el.innerHTML=`<span class="ex-dot"></span>${icon('link',12)}<span>Connect Exchange</span>`;
@@ -4019,7 +4019,7 @@ function openConnectExchangeModal(){
     body:`<div class="trust-row">${trust}</div>
       <p class="flow-note">${icon('activity',13)}<span>On Binance: <b>API Management &rarr; Create API</b>, check <b>only</b> "Enable Spot &amp; Margin Trading", leave "Enable Withdrawals" unchecked. zengtrade never sees your Binance password, this key only ever places orders on your own account.</span></p>
       <div class="flow-links">
-        <a href="https://www.binance.com" target="_blank" rel="noopener">${icon('link',12)}Open Binance</a>
+        <a href="https://www.binance.com/en/my/settings/api-management" target="_blank" rel="noopener">${icon('link',12)}Open Binance</a>
         <a href="/learn/how-to-create-a-binance-api-key/" target="_blank" rel="noopener">${icon('activity',12)}Full step-by-step guide</a>
       </div>
       <div class="fld"><label>API key</label><div class="inp"><span class="inp-ic">${icon('link',13)}</span><input type="password" class="gyok-inp" id="gyokKey" autocomplete="off" aria-label="Binance API key" placeholder="Paste your API key"></div></div>
