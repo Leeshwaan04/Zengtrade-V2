@@ -38,60 +38,6 @@ function instSub(s){                                                  // watchli
   const k=(s.type==='CE'||s.type==='PE')&&s.strike?(' '+Math.round(s.strike)):'';
   return `${s.exch||'NSE'} · ${t}${k}${exp}`;
 }
-const HOLDINGS = SYMS.filter(s=>s.hold).map(s=>({...s, pnl:(s.ltp-s.hold.avg)*s.hold.qty, val:s.ltp*s.hold.qty}));
-const TOT_PNL = Math.round(HOLDINGS.reduce((a,h)=>a+h.pnl,0));
-const EXPOSURE = HOLDINGS.reduce((a,h)=>a+h.val,0);
-const CASH = 482000;
-const SECTORS = [
-  {s:'Auto',base:2.6},{s:'IT',base:1.8},{s:'Energy',base:1.1},{s:'PSU Bank',base:1.3},
-  {s:'Banks',base:0.7},{s:'Pharma',base:0.4,def:true},{s:'FMCG',base:-0.2,def:true},
-  {s:'Metals',base:-1.4},{s:'Realty',base:-2.1},
-];
-const STRIKES=[23300,23350,23400,23450,23500,23550,23600], SPOT=23450;
-
-/* ---------- investor-mode data ---------- */
-const SIPS=[
-  {name:'Nifty 50 Index Fund', amt:5000, day:5,  xirr:14.2, val:182000},
-  {name:'Flexi Cap Fund',      amt:7500, day:10, xirr:17.8, val:246500},
-  {name:'RELIANCE · stock SIP', amt:3000, day:15, xirr:11.4, val:71200},
-];
-const GOALS=[
-  {name:'Retirement',      target:20000000, cur:4820000, icon:'flag'},
-  {name:'Child education', target:5000000,  cur:1640000, icon:'target'},
-  {name:'Emergency fund',  target:600000,   cur:540000,  icon:'shield'},
-];
-const ALLOC=[
-  {a:'Equity', cur:64, tgt:60, col:'green'},
-  {a:'Debt',   cur:18, tgt:25, col:'blue'},
-  {a:'Gold',   cur:9,  tgt:10, col:'amber'},
-  {a:'Cash',   cur:9,  tgt:5,  col:'slate'},
-];
-/* mutual-fund holdings (for the Stocks/MF split + portfolio overview) */
-const MF_HELD=[
-  {name:'Parag Parikh Flexi Cap', cat:'Flexi Cap', inv:120000, cur:163400, xirr:18.6},
-  {name:'Nifty 50 Index Fund',    cat:'Index',     inv:90000,  cur:108200, xirr:14.2},
-  {name:'ICICI Pru Corporate Bond',cat:'Debt',     inv:60000,  cur:66100,  xirr:7.8},
-  {name:'SBI Gold Fund',          cat:'Gold',      inv:30000,  cur:35400,  xirr:11.1},
-];
-/* market events + news (curated from the live dashboard; our own copy) */
-const MARKET_EVENTS=[
-  {co:'HDFC Bank',          type:'Dividend',      detail:'Final dividend recommended',         date:'19 Jun'},
-  {co:'Polycab India',      type:'Dividend',      detail:'Final dividend recommended',         date:'19 Jun'},
-  {co:'String Metaverse',   type:'Bonus',         detail:'2:9 bonus issue of equity',          date:'19 Jun'},
-  {co:'State Bank of India',type:'Board Meeting', detail:'Raising up to ₹60,000 cr via bonds', date:'18 Jun'},
-  {co:'Bata India',         type:'Board Meeting', detail:'Appointed new MD & CEO',             date:'18 Jun'},
-  {co:'Brigade Enterprises',type:'Bonus',         detail:'1:3 bonus issue of equity',          date:'17 Jun'},
-  {co:'Tata Steel',         type:'Dividend',      detail:'Dividend recommended',               date:'12 Jun'},
-  {co:'City Union Bank',    type:'Bonus',         detail:'1:3 bonus issue of equity',          date:'12 Jun'},
-];
-const NEWS_FEED=[
-  {head:'Jio Platforms files DRHP for proposed IPO',              co:'Reliance Industries',  date:'19 Jun 2026'},
-  {head:'HCL Tech partners with e.solutions (Volkswagen group)',  co:'HCL Technologies',     date:'19 Jun 2026'},
-  {head:'Alembic Pharma gets USFDA nod for Binimetinib tablets',  co:'Alembic Pharma',       date:'19 Jun 2026'},
-  {head:'SBI board approves raising up to ₹60,000 cr via bonds',  co:'State Bank of India',  date:'18 Jun 2026'},
-  {head:'Tata Motors announces hike in commercial-vehicle prices',co:'Tata Motors',          date:'18 Jun 2026'},
-  {head:'Bajaj Finance raises ₹1,455 cr via NCDs',               co:'Bajaj Finance',        date:'18 Jun 2026'},
-];
 
 /* ---------- helpers ---------- */
 const $ = id => document.getElementById(id);
@@ -209,8 +155,6 @@ const state={mode:'auto',displayed:'bull',engine:'bull',prevVix:12.4,forceHard:f
   surface:'day', tapeT:null,                           // floor mode + live tape
   tradeFromChart:null,                                 // bracket dragged on the chart
   persona:null,                                        // 'trader' | 'investor' (null = first run)
-  investAmt:null, investType:'cnc', investSection:null,// investor order pad + tool hub
-  portfolioTab:'all',                                  // investing hub: all|stocks|mf
   layout:'originals',                                  // trader workspace preset (originals|charts|watchlist|options|futures|build)
   desk:{view:'chain',under:0,exp:0,legs:[]},           // derivatives desk (ephemeral)
   canvas:[], dragCv:null,                              // build-your-own widget canvas (persisted list of {key,span})
@@ -287,7 +231,7 @@ function loadState(){
     surface:oneOf(s.surface,['day','night'],'day'),
     regimeCollapsed:typeof s.regimeCollapsed==='boolean'?s.regimeCollapsed:undefined,
     persona:oneOf(s.persona,['trader','investor','algo','ai'],null),
-    investSection:oneOf(s.investSection,INVEST_TOOLS.map(t=>t.key),null),
+    investSection:null,
     layout:oneOf(s.layout,['originals','charts','watchlist','options','futures','build'],'originals'),
     canvas:Array.isArray(s.canvas)?s.canvas.filter(c=>c&&typeof c.key==='string').map(c=>({key:c.key,span:c.span===2?2:1})):null, // legacy single canvas (migrated on boot)
     customLayouts:Array.isArray(s.customLayouts)?s.customLayouts.filter(l=>l&&typeof l.id==='string'&&typeof l.name==='string').map(l=>{
@@ -760,149 +704,6 @@ async function chartFeed(sym, tfKey){
   return null;
 }
 
-/* Real holdings from the Kite account (/api/holdings) or null when offline, panels
-   that show positions/P&L use this so they never display the mock catalog. */
-function liveHoldings(){
-  return (BOT.live && BOT.holdings && Array.isArray(BOT.holdings.holdings)) ? BOT.holdings.holdings : null;
-}
-function emptyConnect(what){
-  return `<div class="empty-state">${icon('alert',16)} <span>Connect Kite for live ${what}, run <code>python3 login.py</code>.</span></div>`;
-}
-
-/* ============================================================
-   RENDER: BOTTOM PANEL (tabs reorder per regime)
-   ============================================================ */
-const PANELS={
-  scan(r){
-    // A screener needs the live market. With no connected Kite session there is nothing real to
-    // screen: stay honest (no fabricated setups/moves) and prompt to connect, like every other panel.
-    if(!BOT.live) return emptyConnect('breakout &amp; momentum screening');
-    if(r==='bear'){
-      const rows=[['ADANIENT','Lost 50-DMA · gap risk','b-down','52W LOW',-2.8],['BAJFINANCE','RSI 32 · distribution','b-down','WEAK',-1.9],['TCS','High-beta fade','b-warn','DISTRIB',-0.6]];
-      return tbl(['Scrip','Setup','','LTP','Chg%'],rows.map(x=>scanRow(x)).join(""))+note('warn','Surfacing weakness, 52-wk lows &amp; high-beta names that lead a sell-off.');
-    }
-    if(r==='neutral'){
-      const rows=[['HDFCBANK','Coiling in range','b-warn','RANGE',0.4],['ICICIBANK','At mid-band','b-warn','NEUTRAL',0.9],['ITC','Low volatility','b-warn','QUIET',-0.3]];
-      return tbl(['Scrip','Setup','','LTP','Chg%'],rows.map(x=>scanRow(x)).join(""))+note('info','Awaiting the breakout that resolves the range, no decisive edge yet.');
-    }
-    const rows=[['MARUTI','Volume thrust · 2.4× avg','b-up','BREAKOUT',3.4],['INFY','Flag breakout','b-up','52W HIGH',2.1],['SBIN','Cup &amp; handle','b-up','VOL ↑',1.6]];
-    return tbl(['Scrip','Setup','','LTP','Chg%'],rows.map(x=>scanRow(x)).join(""))+note('go','Surfacing momentum, fresh 52-wk highs &amp; volume thrust to ride the trend.');
-  },
-  positions(r){
-    const hs=liveHoldings();
-    if(!hs) return emptyConnect('positions & P&L');
-    if(!hs.length) return '<div class="empty-state">No holdings in your Zerodha account yet, fund it and buy to see positions here.</div>';
-    const day=BOT.holdings.dayPnl||0, total=BOT.holdings.totalPnl||0;
-    const exposure=hs.reduce((a,h)=>a+(h.ltp||0)*(h.qty||0),0);
-    if(r==='bear'){
-      const losers=[...hs].sort((a,b)=>(a.dayChangePct||0)-(b.dayChangePct||0)).slice(0,5);
-      const cards=`<div class="riskcards">
-        <div class="rcard"><span>Day P&L</span><b class="${cls(day)}">${sgn(day)}</b></div>
-        <div class="rcard"><span>Exposure</span><b>${inrL(exposure)}</b></div>
-        <div class="rcard"><span>Total P&L</span><b class="${cls(total)}">${sgn(total)}</b></div>
-        <div class="rcard"><span>Holdings</span><b>${hs.length}</b></div></div>`;
-      const body=losers.map(h=>`<tr><td><span class="t-sym">${esc(h.sym)}</span></td>
-        <td class="num">${h.qty}</td><td class="num">${(h.ltp||0).toLocaleString('en-IN')}</td>
-        <td class="num ${cls(h.pnl)}">${h.pnl>=0?'+':''}${inr(h.pnl)}</td>
-        <td><span class="badge ${(h.dayChangePct||0)<0?'b-down':'b-warn'}">${pct(h.dayChangePct||0)}</span></td></tr>`).join('');
-      return cards+tbl(['Scrip','Qty','LTP','P&L','Day'],body)+note('warn','Weakest holdings by today’s move shown first, review risk on the red names.');
-    }
-    const winners=[...hs].sort((a,b)=>(b.pnl||0)-(a.pnl||0));
-    const body=winners.map(h=>`<tr><td><span class="t-sym">${esc(h.sym)}</span></td>
-      <td class="num">${h.qty}</td><td class="num">${(h.avg||0).toLocaleString('en-IN',{maximumFractionDigits:2})}</td>
-      <td class="num">${(h.ltp||0).toLocaleString('en-IN')}</td><td class="num ${cls(h.pnl)}">${h.pnl>=0?'+':''}${inr(h.pnl)}</td></tr>`).join('');
-    return tbl(['Scrip','Qty','Avg','LTP','P&L'],body)+note(r==='neutral'?'info':'go',
-      `Total unrealised <b>${sgn(total)}</b> · day <b>${sgn(day)}</b> across ${hs.length} holdings.`);
-  },
-  orders(){
-    if(!state.orders.length) return '<div class="empty-state">No orders yet. Place one from the order pad on the right.</div>';
-    const body=state.orders.map(o=>{
-      const live=(o.status==='Pending'||o.status==='Open');
-      const act=live?`<button class="mini-cancel" data-cancel="${o.id}">Cancel</button>`
-        :`<span class="badge ${o.status==='Cancelled'?'b-warn':'b-up'}">${o.status}</span>`;
-      return `<tr><td><span class="t-sym">${o.sym} <span class="side-chip side-${o.side}">${o.side}</span></span></td>
-        <td>${o.type}</td><td class="num">${o.qty}</td><td class="num">${o.price.toLocaleString('en-IN')}</td>
-        <td>${act}</td></tr>`;}).join('');
-    return tbl(['Scrip','Type','Qty','Price','Status'],body);
-  },
-  holdings(){
-    const hs=liveHoldings();
-    if(!hs) return emptyConnect('holdings');
-    if(!hs.length) return '<div class="empty-state">No holdings in your Zerodha account yet.</div>';
-    const body=hs.map(h=>{const val=(h.ltp||0)*(h.qty||0);return `<tr><td><span class="t-sym">${esc(h.sym)}</span></td>
-      <td class="num">${h.qty}</td><td class="num">${(h.avg||0).toLocaleString('en-IN',{maximumFractionDigits:2})}</td>
-      <td class="num">${inr(val)}</td><td class="num ${cls(h.pnl)}">${h.pnl>=0?'+':''}${inr(h.pnl)}</td></tr>`;}).join('');
-    return tbl(['Scrip','Qty','Avg','Cur. Value','P&L'],body)
-      +note('info',`${hs.length} holdings · total unrealised <b>${sgn(BOT.holdings.totalPnl||0)}</b> · day <b>${sgn(BOT.holdings.dayPnl||0)}</b>.`);
-  },
-  sips(r){
-    const tot=SIPS.reduce((a,s)=>a+s.amt,0);
-    const body=SIPS.map(s=>`<tr><td><span class="t-sym">${s.name}</span></td><td class="num">${inr(s.amt)}</td>
-      <td class="num">${s.day}th</td><td class="num up">${s.xirr.toFixed(1)}%</td><td class="num">${inrL(s.val)}</td></tr>`).join('');
-    const tip=r==='bear'?'Markets are lower, a strong time to <b>step up SIPs</b>; each rupee buys more units.'
-      :r==='bull'?'Markets extended, <b>keep SIPs running</b> but avoid lump-sum chasing at highs.'
-      :'Range-bound is ideal, <b>rupee-cost averaging</b> works best here.';
-    return tbl(['Fund / Scrip','Monthly','Date','XIRR','Value'],body)+note(r==='bear'?'go':'info',`Total <b>${inr(tot)}/mo</b> across ${SIPS.length} SIPs. ${tip}`);
-  },
-  goals(){
-    const cards=GOALS.map(g=>{const p=Math.round(g.cur/g.target*100);
-      return `<div class="goal-card"><div class="goal-h"><span class="ctx-ico ic-info">${icon(g.icon,15)}</span><b>${g.name}</b><span class="num">${p}%</span></div>
-        <div class="goal-bar"><span style="width:${p}%"></span></div>
-        <div class="goal-sub"><span>${inrL(g.cur)}</span><span>of ${inrL(g.target)}</span></div></div>`;}).join('');
-    return `<div class="goals-wrap">${cards}</div>`+note('info','On track for 2 of 3 goals, stepping up SIPs ~10% closes the retirement gap about 3 years sooner.');
-  },
-  alloc(r){
-    const body=ALLOC.map(a=>{const d=a.cur-a.tgt;return `<tr><td><span class="t-sym">${a.a}</span></td>
-      <td class="num">${a.cur}%</td><td class="num">${a.tgt}%</td>
-      <td><span class="badge ${Math.abs(d)>=5?'b-warn':'b-up'}">${d>0?'+':''}${d}%</span></td></tr>`;}).join('');
-    const tip=r==='bear'?'Equity has slipped under target, <b>deploy cash to rebalance</b> back to 60% while valuations are lower.'
-      :r==='bull'?'Equity is <b>4% over target</b>: book partial profits and top up debt / gold.'
-      :'Allocation is near target, small top-ups keep you balanced.';
-    return tbl(['Asset','Current','Target','Drift'],body)+note(r==='bull'?'warn':'go',tip);
-  },
-  events(){
-    const body=MARKET_EVENTS.map(e=>{const bc=e.type==='Dividend'?'b-up':e.type==='Bonus'?'b-warn':'b-neu';
-      return `<tr><td><span class="t-sym">${e.co}</span></td>
-        <td><span class="badge ${bc}">${e.type}</span></td>
-        <td style="text-align:left;color:var(--slate)">${e.detail}</td><td class="num">${e.date}</td></tr>`;}).join('');
-    return tbl(['Company','Event','Details','Date'],body)+note('info','Corporate actions across your watchlist &amp; holdings, dividends, bonuses and board meetings.');
-  },
-  news(){
-    return `<div class="news-wrap">${NEWS_FEED.map(n=>`<div class="news-item">
-      <div class="news-h">${n.head}</div>
-      <div class="news-m"><span class="t-sym">${n.co}</span><span>${n.date}</span></div></div>`).join('')}</div>`;
-  },
-};
-function scanRow(x){const[s,setup,bc,bt,chg]=x;return `<tr><td><span class="t-sym">${s}</span></td><td style="text-align:left;color:var(--slate)">${setup}</td><td><span class="badge ${bc}">${bt}</span></td><td class="num">${bySym(s)?bySym(s).ltp.toLocaleString('en-IN'):'-'}</td><td class="num ${cls(chg)}">${pct(chg)}</td></tr>`;}
-function tbl(heads,bodyRows){return `<table class="tbl"><thead><tr>${heads.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${bodyRows}</tbody></table>`;}
-function note(t,html){const ic=t==='go'?'check':t==='warn'?'alert':'swap';return `<div class="panel-note note-${t}">${icon(ic,15)}<span>${html}</span></div>`;}
-
-const PANEL_LAYOUT={
-  bull:   {order:[['scan','Breakout Scanner','12'],['positions','Positions','6'],['orders','Orders','4'],['holdings','Holdings','6']], def:'scan'},
-  neutral:{order:[['orders','Orders','4'],['positions','Positions','6'],['holdings','Holdings','6'],['scan','Scanner','-']], def:'orders'},
-  bear:   {order:[['positions','Positions · Risk','6'],['orders','Orders','4'],['holdings','Holdings','6'],['scan','Breakdown Scanner','9']], def:'positions'},
-};
-const PANEL_LAYOUT_INV={
-  bull:   {order:[['holdings','Holdings','-'],['alloc','Allocation','4'],['sips','SIPs','3'],['goals','Goals','3'],['events','Events','8'],['news','News','-']], def:'holdings'},
-  neutral:{order:[['sips','SIPs','3'],['holdings','Holdings','-'],['goals','Goals','3'],['alloc','Allocation','4'],['events','Events','8'],['news','News','-']], def:'sips'},
-  bear:   {order:[['sips','SIPs · Step-up','3'],['holdings','Holdings','-'],['alloc','Allocation','4'],['goals','Goals','3'],['events','Events','8'],['news','News','-']], def:'sips'},
-};
-function renderPanel(r){
-  const L=(isInvestor()?PANEL_LAYOUT_INV:PANEL_LAYOUT)[r];
-  if(!state.panelTab || !L.order.find(t=>t[0]===state.panelTab)) state.panelTab=L.def;
-  const hcnt=(liveHoldings()||[]).length;
-  const cnt=id=>id==='orders'?state.orders.length:(id==='positions'||id==='holdings')?(BOT.live?hcnt:null):id==='sips'?SIPS.length:id==='goals'?GOALS.length:id==='events'?MARKET_EVENTS.length:null;
-  $('panelTabs').innerHTML=L.order.map(([id,label,count])=>{
-    let c=cnt(id);
-    // positions/holdings come only from a live Kite session, show NO badge when offline (the body says "connect"),
-    // never the static placeholder. Other tabs keep their app-computed/static count.
-    if(c==null) c=(id==='positions'||id==='holdings')?'':count;
-    const badge=(c===''||c==null)?'':`<span class="pt-count">${c}</span>`;
-    return `<button class="p-tab ${id===state.panelTab?'active':''}" data-ptab="${id}">${label}${badge}</button>`;}).join('');
-  $('panelBody').innerHTML=PANELS[state.panelTab](r);
-  $('panelTabs').querySelectorAll('[data-ptab]').forEach(b=>b.onclick=()=>{state.panelTab=b.dataset.ptab;renderPanel(r);});
-}
-
 /* ============================================================
    RENDER: ORDER PAD (right)
    ============================================================ */
@@ -922,7 +723,6 @@ function orderModel(r){
   return {sym,s,px,priced:px>0,side,qty,w,entry,sl,target,type,value:qty*entry,fromChart:!!tf};
 }
 function renderOrder(r){
-  if(isInvestor()) return renderOrderInvestor(r);
   const m=orderModel(r);
   const types=r==='bear'?['SL-M','GTT stop','Cover','Margin ×5']:r==='bull'?['BRACKET','Cover','Margin ×5']:['LIMIT','Market','SL'];
   const typePills=types.map((tp,i)=>`<span class="type-pill ${i===0?'on':''} ${tp.startsWith('Margin')&&r==='bear'?'disabled':''}">${tp}</span>`).join('');
@@ -1000,7 +800,7 @@ function successToast(o,status){
 function placeOrder(o){
   const status=o.type.startsWith('SL')?'Pending':(o.type==='MARKET'||o.type==='BRACKET')?'Filled':'Open';
   state.orders.unshift({id:++ORDER_ID,...o,status,paper:true});   // SIMULATED, no real order is placed
-  state.panelTab='orders'; renderPanel(state.displayed);
+  if(typeof renderTrading==='function') renderTrading();
   successToast(o,status);
 }
 function flowModal(o){
@@ -1016,16 +816,17 @@ function flowModal(o){
   state.lastFocus=document.activeElement; showModal(true);
   setTimeout(()=>{ const first=$('modalBody').querySelector(o.focus||'input:not([disabled]),select,button,[tabindex="0"]'); (first||$('modalConfirm')).focus(); },50);
 }
-function cancelOrder(id){const o=state.orders.find(x=>x.id===id);if(o&&(o.status==='Pending'||o.status==='Open')){o.status='Cancelled';renderPanel(state.displayed);}}
+function cancelOrder(id){const o=state.orders.find(x=>x.id===id);if(o&&(o.status==='Pending'||o.status==='Open')){o.status='Cancelled';if(typeof renderTrading==='function') renderTrading();}}
 function applyRegime(regime){
   state.displayed=regime;
   document.documentElement.dataset.regime=regime;
   document.querySelectorAll('[data-regime-btn]').forEach(b=>{const on=b.dataset.regimeBtn===regime;b.classList.toggle('active',on);b.setAttribute('aria-selected',on);});
   $('fundsLabel').textContent=(PERSONA[state.persona||'trader']||PERSONA.trader).fundsLabel(regime);
   $('fundsVal').textContent=fundsText();
-  state.panelTab=null; // reset to regime default
   renderTopIndex(); renderRegimeBar(regime); renderWatchlist(regime);
-  renderChart(regime); renderPanel(regime); renderOrder(regime); renderWidgetStack(); renderDeskView(); renderAlgo();
+  renderChart(regime); renderWidgetStack(); renderAlgo();
+  if(typeof renderTrading==='function') renderTrading();
+  if(typeof renderInvesting==='function') renderInvesting();
   applyPaneWidths(); // keep any manual resize across regime switches
   flashRegime();
   announce(`${regime.charAt(0).toUpperCase()+regime.slice(1)} regime, ${regime==='bull'?'markets trending up':regime==='bear'?'markets under pressure':'markets rangebound'}`);
@@ -1186,11 +987,13 @@ function applyPersona(p,opts){
   syncFab();
   const gate=$('personaGate'); if(gate && !onboarding) gate.classList.remove('show');  // onboarding keeps the gate open to advance to the connect step
   // reset order-pad context so verbs/defaults match the new persona
-  state.orderSide=null; state.orderQty=null; state.tradeFromChart=null; state.panelTab=null;
+  state.orderSide=null; state.orderQty=null; state.tradeFromChart=null;
   $('fundsLabel').textContent=PERSONA[p].fundsLabel(state.displayed);
   if(opts.user && changed && window.TPChart && TPChart.setTimeframe) TPChart.setTimeframe(PERSONA[p].chartTf);
   const r=state.displayed;
-  renderRegimeBar(r); renderWatchlist(r); renderPanel(r); renderOrder(r); renderWidgetStack(); renderDeskView(); renderAlgo();
+  renderRegimeBar(r); renderWatchlist(r); renderWidgetStack(); renderAlgo();
+  if(typeof renderTrading==='function') renderTrading();
+  if(typeof renderInvesting==='function') renderInvesting();
   if(opts.user){
     announce(`${PERSONA[p].label} mode, terminal retuned for ${p==='investor'?'long-term investing':'active trading'}`);
     const t=document.querySelector('.terminal'); if(t){t.classList.remove('persona-morph');void t.offsetWidth;t.classList.add('persona-morph');setTimeout(function(){t.classList.remove('persona-morph');},480);}
@@ -1240,107 +1043,6 @@ function finishOnboarding(){
   const g=$('personaGate'); if(g) g.classList.remove('show');
   saveState();                       // persona was already saved on pick; this also persists post-onboarding state
   if(state.lastFocus&&state.lastFocus.focus) try{state.lastFocus.focus();}catch(e){}
-}
-function renderOrderInvestor(r){
-  const sym=state.selected||REGIME_SYM[r], s=bySym(sym);
-  const side=state.orderSide==='sell'?'redeem':'invest';
-  const amt=state.investAmt!=null?state.investAmt:10000;
-  const type=state.investType||'cnc';
-  // honest pricing: no live quote → no price (never divide by 0 → "Infinity" units)
-  const live=!!BOT.live && s && s.live!==false;
-  const px=(live&&typeof s.ltp==='number'&&isFinite(s.ltp)&&s.ltp>0)?s.ltp:0;
-  const pxTxt=px>0?px.toLocaleString('en-IN'):'-';
-  const units=px>0?Math.max(0,Math.floor(amt/px)):null;
-  const unitsTxt=units!=null?units:'-';
-  const types=[['cnc','Buy · Delivery'],['sip','Monthly SIP'],['gtt','GTT buy']];
-  const typePills=types.map(([k,l])=>`<span class="type-pill ${k===type?'on':''}" data-itype="${k}">${l}</span>`).join('');
-  const ctaCls=side==='invest'?'cta-buy':'cta-sell';
-  const ctaTxt=side==='invest'?(type==='sip'?'START SIP · '+sym:'INVEST '+inr(amt)+' · '+sym):'REDEEM · '+sym;
-  const note=r==='bear'?`<div class="order-note note-go">${icon('sprout',14)}<span>Accumulation zone, averaging down quality at lower prices. No leverage, no stop-loss.</span></div>`
-    :r==='bull'?`<div class="order-note note-warn">${icon('scale',14)}<span>Markets extended, invest steadily, don't chase. Consider rebalancing instead of adding.</span></div>`
-    :`<div class="order-note note-info">${icon('repeat',14)}<span>Range-bound, ideal for rupee-cost averaging via SIP.</span></div>`;
-  $('orderPad').innerHTML=`<div class="order-card">
-    <div class="order-head"><span class="oh-sym">${sym}</span><span class="oh-px ${live?cls(s.chg):'muted'} num"><span id="ordLtp">${pxTxt}</span> ${live?pct(s.chg):''}</span>${cardCtl('order')}</div>
-    <div class="order-body">
-      <div class="side-tabs"><div class="side-tab buy ${side==='invest'?'active':''}" data-iside="invest">INVEST</div><div class="side-tab sell ${side==='redeem'?'active':''}" data-iside="redeem">REDEEM</div></div>
-      <div class="type-row">${typePills}</div>
-      <div class="fld"><label>${type==='sip'?'Monthly amount':'Amount'} <i>₹</i></label><div class="qty-step"><button class="qbtn" data-amt="-2500" aria-label="Decrease amount">−</button><input class="qty-inp num" id="ordAmt" value="${amt}" inputmode="numeric" aria-label="Investment amount"><button class="qbtn" data-amt="2500" aria-label="Increase amount">+</button></div></div>
-      <div class="fld-row">
-        <div class="fld"><label>Approx units</label><div class="inp num" id="ordUnits">${unitsTxt}</div></div>
-        <div class="fld"><label>${type==='sip'?'Annual outlay':'Avg cost'}</label><div class="inp num">${type==='sip'?inr(amt*12):pxTxt}</div></div>
-      </div>
-      ${note}
-      <button class="cta ${ctaCls}" id="placeBtn">${ctaTxt}</button>
-    </div></div>`;
-  $('orderPad').querySelectorAll('[data-iside]').forEach(b=>b.onclick=()=>{state.orderSide=b.dataset.iside==='redeem'?'sell':'buy';renderOrder(state.displayed);});
-  $('orderPad').querySelectorAll('[data-itype]').forEach(b=>b.onclick=()=>{state.investType=b.dataset.itype;renderOrder(state.displayed);});
-  $('orderPad').querySelectorAll('[data-amt]').forEach(b=>b.onclick=()=>{const d=+b.dataset.amt;state.investAmt=Math.max(500,(state.investAmt!=null?state.investAmt:amt)+d);renderOrder(state.displayed);});
-  const ai=$('ordAmt'); if(ai) ai.oninput=()=>{const v=parseInt(ai.value)||0;state.investAmt=Math.max(0,v);
-    const u=$('ordUnits'); if(u)u.textContent=px>0?Math.max(0,Math.floor(state.investAmt/px)):'-';
-    const cb=$('placeBtn'); if(cb&&side==='invest')cb.textContent=(type==='sip'?'START SIP · '+sym:'INVEST '+inr(state.investAmt)+' · '+sym);};
-  $('placeBtn').onclick=()=>openInvestModal(r);
-  updateCardBtns();
-}
-function openInvestModal(r){
-  const sym=state.selected||REGIME_SYM[r], s=bySym(sym);
-  const side=state.orderSide==='sell'?'redeem':'invest';
-  const amt=state.investAmt!=null?state.investAmt:10000;
-  const type=state.investType||'cnc';
-  const live=!!BOT.live && s && s.live!==false;
-  const px=(live&&typeof s.ltp==='number'&&isFinite(s.ltp)&&s.ltp>0)?s.ltp:0;
-  if(px<=0){ quickToast&&quickToast('No live price for '+sym,'Connect the exchange to invest at a real price.'); return; }
-  const units=Math.max(0,Math.floor(amt/px));
-  if(!amt){const ai=$('ordAmt');if(ai)ai.focus();return;}
-  setModalTitle(side==='invest'?(type==='sip'?'Start SIP':'Confirm investment'):'Confirm redemption');
-  $('modalBody').innerHTML=`
-    <div class="modal-top ${side==='invest'?'is-buy':'is-sell'}">
-      <span class="modal-side">${side==='invest'?(type==='sip'?'SIP':'INVEST'):'REDEEM'}</span>
-      <div><div class="modal-sym">${sym}</div><div class="modal-name">${s.name}</div></div>
-      <span class="modal-px num">${s.ltp.toLocaleString('en-IN')}</span></div>
-    <div class="modal-grid">
-      <div><span>Product</span><b>${type==='sip'?'Monthly SIP':type==='gtt'?'GTT':'Delivery · CNC'}</b></div>
-      <div><span>${type==='sip'?'Monthly amount':'Amount'}</span><b class="num">${inr(amt)}</b></div>
-      <div><span>Approx units</span><b class="num">${units}</b></div>
-      <div><span>Avg cost</span><b class="num">${s.ltp.toLocaleString('en-IN')}</b></div>
-      ${type==='sip'?`<div><span>Annual outlay</span><b class="num">${inr(amt*12)}</b></div>`:''}
-      <div><span>Regime context</span><b style="text-transform:capitalize;color:var(--accent-d)">${r}</b></div>
-    </div>
-    <div class="modal-note">${icon('sprout',13)}<span>${side==='invest'?'Long-term delivery order, no leverage, no stop-loss. Pause or stop a SIP anytime.':'Redemption request against your delivery holding.'}</span></div>`;
-  const cf=$('modalConfirm');
-  cf.style.display='';
-  cf.className='tbtn '+(side==='invest'?'primary':'danger');
-  cf.textContent=side==='invest'?(type==='sip'?'Start SIP':'Confirm Invest'):'Confirm Redeem';
-  cf.onclick=()=>{placeInvest({sym,side,type,amt,units,price:Math.round(s.ltp)});closeModal();};
-  state.lastFocus=document.activeElement; showModal(true);
-  setTimeout(()=>{const c=$('modalConfirm');if(c)c.focus();},40);
-}
-function placeInvest(o){
-  const title=o.side==='invest'?(o.type==='sip'?'SIP started, '+o.sym:'Investment placed, '+o.sym):'Redemption placed, '+o.sym;
-  const sub=o.type==='sip'?`${inr(o.amt)}/month · ~${o.units} units @ ${o.price.toLocaleString('en-IN')}`
-    :`${inr(o.amt)} · ~${o.units} units @ ${o.price.toLocaleString('en-IN')} · Delivery`;
-  const t=document.createElement('div');t.className='toast';
-  t.innerHTML=`<div class="toast-ico">${icon('check',22)}</div><div class="toast-body"><b>${title}</b><span>${sub}</span></div><div class="toast-acts"><button class="tbtn ghost" data-act="ok">Dismiss</button></div>`;
-  $('toastWrap').appendChild(t);
-  t.querySelector('[data-act=ok]').onclick=()=>dismiss(t);
-  t._timer=setTimeout(()=>{if(document.body.contains(t))dismiss(t);},4500);
-  state.panelTab=o.type==='sip'?'sips':'holdings'; renderPanel(state.displayed);
-  announce(title);
-}
-const INVEST_TOOLS=[
-  {key:'ipo',      label:'IPO',                icon:'wallet',  tag:'5 open',    desc:'Apply to mainboard &amp; SME IPOs via UPI / ASBA.'},
-  {key:'algo',     label:'IB Algo',            icon:'bolt',    tag:'New',       desc:'Rule-based strategies that execute for you.'},
-  {key:'basket',   label:'Smart Basket',       icon:'shield',  tag:'12 themes', desc:'Curated, theme-based stock baskets in one tap.'},
-  {key:'analyser', label:'Portfolio Analyser', icon:'pie',     tag:'Live',      real:true, desc:'X-ray your real holdings, value, concentration, sector mix &amp; P&amp;L.'},
-  {key:'mf',       label:'Mutual Funds',       icon:'droplet', tag:'2,000+',    desc:'Direct funds, explore, compare &amp; invest.'},
-  {key:'sip',      label:'Stock SIP',          icon:'repeat',  tag:'',          desc:'Automate recurring investments in stocks.'},
-  {key:'research', label:'Research',           icon:'search',  tag:'Daily',     desc:'Ideas, calls &amp; deep-dive reports.'},
-];
-function portfolio(){
-  const eqInv=HOLDINGS.reduce((a,h)=>a+h.hold.qty*h.hold.avg,0), eqCur=EXPOSURE;
-  const eqToday=HOLDINGS.reduce((a,h)=>a+h.val*h.chg/100,0);
-  const mfInv=MF_HELD.reduce((a,m)=>a+m.inv,0), mfCur=MF_HELD.reduce((a,m)=>a+m.cur,0);
-  const mk=(inv,cur,today)=>({inv,cur,pnl:cur-inv,pct:inv?(cur-inv)/inv*100:0,today,todayPct:cur?today/cur*100:0});
-  return {all:mk(eqInv+mfInv,eqCur+mfCur,eqToday),stocks:mk(eqInv,eqCur,eqToday),mf:mk(mfInv,mfCur,0),eqCur,mfCur};
 }
 function quickToast(title,sub){
   const t=document.createElement('div');t.className='toast';
