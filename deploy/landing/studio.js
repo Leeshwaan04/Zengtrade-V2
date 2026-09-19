@@ -179,6 +179,14 @@
         .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }).catch(function () { return { ok: false, data: { error: "unexpected response" } }; }); })
         .catch(function () { return { ok: false, data: { error: "network error, please try again" } }; });
     },
+    // same exchange-connect Edge Function saas/web/js/exchange.js's connectExchange() calls from
+    // the /app Account page - this is just a second caller, reachable from the header chip
+    // without leaving the terminal.
+    connect: function (apiKey, apiSecret) {
+      return fetch(SUPA + "/functions/v1/exchange-connect", { method: "POST", headers: sbHeaders(), body: JSON.stringify({ apiKey: apiKey, apiSecret: apiSecret }) })
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }).catch(function () { return { ok: false, data: { error: "unexpected response" } }; }); })
+        .catch(function () { return { ok: false, data: { error: "network error, please try again" } }; });
+    },
   };
 
   /* ---- toasts: reuse the terminal's own #toastWrap/.toast component (same one every other

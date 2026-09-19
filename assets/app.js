@@ -3738,6 +3738,7 @@ function init(){
   // allowed." Respect a real saved choice among all three modes; 'algo' only as the true first-visit default.
   state.persona=(saved&&['trader','investor','algo'].indexOf(saved.persona)>=0)?saved.persona:'algo';
   renderPlanChip();
+  renderExchangeChip();
   // Trading's paper book and Investing's DCA plans/goals didn't survive a reload before this fix -
   // restore them the same validated way as everything else above, and bump ORDER_ID past any
   // restored order id so a newly placed order can never collide with one from a prior session.
@@ -3985,6 +3986,58 @@ function initAddScrip(){   // watchlist "Add scrip…" box → add any instrumen
 function renderPlanChip(){ const el=$('planChip'); if(!el) return;
   el.innerHTML=`${icon('bolt',12)}<span>Pricing</span>`;
   el.title='View plans & pricing'; el.onclick=()=>{ window.ztOpenPricingModal ? window.ztOpenPricingModal() : (window.location.href='/app#pricing'); }; }
+
+// A single, obvious, always-visible entry point for "I want to trade with real money" -
+// previously only discoverable by already being in Trading mode or digging into Account
+// settings. Same window.zt* feature-detection precedent as renderPlanChip() above: on the
+// untouched local terminal (no studio.js, no window.ztExchange) this chip simply never shows,
+// consistent with Trading mode's own Live toggle already being unreachable there.
+function renderExchangeChip(){
+  const el=$('exChip'); if(!el) return;
+  if(typeof window.ztExchange==='undefined'){ el.hidden=true; return; }
+  if(state.headerExchange===undefined){
+    window.ztExchange.status().then(s=>{ state.headerExchange=s; renderExchangeChip(); });
+    return;   // stay hidden until the first status check resolves, no flash of the wrong state
+  }
+  el.hidden=false;
+  if(state.headerExchange.connected){
+    el.classList.add('ex-on');
+    el.innerHTML=`${icon('check',12)}<span>Exchange Connected</span>`;
+    el.title='Manage your connected exchange';
+    el.onclick=()=>{ window.location.href='/app#account'; };
+  } else {
+    el.classList.remove('ex-on');
+    el.innerHTML=`${icon('link',12)}<span>Connect Exchange</span>`;
+    el.title='Connect your own Binance account to trade with real money';
+    el.onclick=openConnectExchangeModal;
+  }
+}
+function openConnectExchangeModal(){
+  flowModal({title:'Connect Binance',confirm:'Connect',
+    body:`<p class="flow-note">${icon('shield',13)}<span>Create a <b>trade-only</b> API key on Binance (API Management &rarr; Create API), check <b>only</b> "Enable Spot &amp; Margin Trading", leave "Enable Withdrawals" unchecked, then paste both values below. zengtrade never sees your Binance password and never touches your funds, it just places orders using this key, on your own account.</span></p>
+      <div class="fld"><label>API key</label><div class="inp"><input type="password" id="gyokKey" autocomplete="off" aria-label="Binance API key"></div></div>
+      <div class="fld"><label>API secret</label><div class="inp"><input type="password" id="gyokSecret" autocomplete="off" aria-label="Binance API secret"></div></div>
+      <p class="flow-err" id="gyokErr" hidden></p>`,
+    onConfirm(body){
+      const key=body.querySelector('#gyokKey').value.trim(), secret=body.querySelector('#gyokSecret').value.trim();
+      const err=body.querySelector('#gyokErr');
+      if(!key||!secret){ err.textContent='Enter both the API key and secret.'; err.hidden=false; return false; }
+      const cf=$('modalConfirm'); if(cf){ cf.disabled=true; cf.textContent='Connecting…'; }
+      window.ztExchange.connect(key,secret).then(res=>{
+        closeModal();
+        if(res.ok&&res.data&&res.data.connected){
+          quickToast('Binance connected','You can now switch Trading mode to Live.');
+          state.headerExchange={connected:true,connectedAt:new Date().toISOString()};
+          renderExchangeChip();
+          if(state.trading){ state.trading.exchangeStatus=undefined; if(state.persona==='trader'&&typeof renderTrading==='function') renderTrading(); }
+        } else {
+          quickToast('Could not connect',(res.data&&res.data.error)||'Please check your key/secret and try again.');
+        }
+      });
+      return false;   // keep the modal open (now showing "Connecting…") until the async call resolves
+    }
+  });
+}
 
 document.addEventListener('DOMContentLoaded',init);
 initGlossTips();   // delegated listeners on document, safe to attach before DOMContentLoaded

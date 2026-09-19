@@ -1637,6 +1637,13 @@ select.flow-input{cursor:pointer;appearance:none;-webkit-appearance:none;backgro
 .flow-confirm{font-size:13px;color:var(--navy);line-height:1.55;margin:2px 0 4px}
 .flow-err{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:600;color:var(--red-d);background:var(--tint-down);border:1px solid var(--bd-down);border-radius:9px;padding:8px 11px;margin-top:-4px;margin-bottom:12px}
 .flow-err .ico{flex:0 0 auto}
+/* BUG FIX (2026-09-20): .flow-err's own display:flex outranks the [hidden] attribute's built-in
+   display:none (a class selector beats a UA-stylesheet attribute selector on specificity) - this
+   class was defined but never actually wired to the hidden attribute until the GYOK connect
+   modal, which is what surfaced it: the empty error bar showed on every open, not just on a real
+   validation failure. Same fix already applied elsewhere in this file for the same reason
+   (.tk-settings[hidden], .layout-menu[hidden], .ws-empty[hidden]). */
+.flow-err[hidden]{display:none}
 .flow-check{display:flex;align-items:flex-start;gap:9px;font-size:11.5px;color:var(--navy);line-height:1.45;margin-bottom:12px;cursor:pointer}
 .flow-check input{margin-top:1px;width:16px;height:16px;flex:0 0 auto;accent-color:var(--accent)}
 .flow-seg{margin-bottom:13px}
@@ -1733,6 +1740,12 @@ html[data-persona="trader"][data-layout="build"] .panel{display:none}
   padding:6px 11px;border-radius:10px;border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);
   background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 16%,transparent),color-mix(in srgb,var(--accent) 6%,transparent));color:var(--accent);transition:filter .15s}
 .plan-chip:hover{filter:brightness(1.08)}
+/* GYOK header entry point: same box model as .plan-chip (shared class), its own accent per state -
+   neutral/inviting when not connected, a quiet confirmed green once it is. Never red/urgent here,
+   that treatment is reserved for Trading mode's actual Live-order flow, not this discovery chip. */
+.ex-chip{border-color:var(--line-2);background:var(--surface-2);color:var(--slate)}
+.ex-chip.ex-on{border-color:color-mix(in srgb,var(--green) 40%,transparent);
+  background:linear-gradient(135deg,color-mix(in srgb,var(--green) 16%,transparent),color-mix(in srgb,var(--green) 6%,transparent));color:var(--green-d)}
 .pricing-ov{position:fixed;inset:0;z-index:200;background:color-mix(in srgb,#04070c 62%,transparent);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:36px 18px}
 .pricing-panel{width:min(1080px,100%);background:var(--bg);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-lg);padding:26px 28px 22px;animation:pxin .22s ease}
 @keyframes pxin{from{opacity:0;transform:translateY(10px) scale(.99)}to{opacity:1;transform:none}}
