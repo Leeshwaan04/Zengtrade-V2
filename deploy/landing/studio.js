@@ -67,9 +67,13 @@
 
   // BUG FIX (2026-09-19): the header profile avatar was static markup ("SB", the founder's own
   // initials left over from building this), shown to every real user regardless of who's
-  // actually signed in, and had zero click handler at all - a dead CTA. Wire it to the real
-  // signed-in user's own initials and make it open the real Account page (/app#account), which
-  // already has Sign out and account settings - reuses what exists instead of building a new menu.
+  // actually signed in, and had zero click handler at all - a dead CTA. Wired to the real
+  // signed-in user's own initials.
+  // UX FIX (2026-09-19, founder): a full navigation away from wherever the user currently is
+  // (mid Algo Studio session) on a single avatar click was too heavy - a small dropdown with a
+  // couple of CTAs is the right pattern here, matching how this control works on any SaaS
+  // product. Menu items reuse the existing real destinations (/app#account) and the existing
+  // real sign-out mechanism instead of inventing new ones.
   (function wireProfileAvatar() {
     var el = document.querySelector(".profile");
     if (!el) return;
@@ -77,10 +81,61 @@
     el.textContent = local ? local.slice(0, 2).toUpperCase() : "?";
     el.setAttribute("title", sess.email || "Account");
     el.style.cursor = "pointer";
+    el.style.position = "relative";
     el.setAttribute("role", "button");
+    el.setAttribute("aria-haspopup", "true");
+    el.setAttribute("aria-expanded", "false");
     el.setAttribute("tabindex", "0");
-    el.onclick = function () { location.href = "/app#account"; };
-    el.onkeydown = function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); el.onclick(); } };
+
+    var menu = null;
+    function closeMenu() {
+      if (!menu) return;
+      menu.remove(); menu = null;
+      el.setAttribute("aria-expanded", "false");
+      document.removeEventListener("click", onOutsideClick, true);
+      document.removeEventListener("keydown", onKeydown, true);
+    }
+    function onOutsideClick(e) { if (menu && !menu.contains(e.target) && e.target !== el) closeMenu(); }
+    function onKeydown(e) { if (e.key === "Escape") closeMenu(); }
+    async function doSignOut() {
+      try {
+        await fetch(SUPA + "/auth/v1/logout", { method: "POST", headers: sbHeaders() });
+      } catch (e) {}
+      try { localStorage.removeItem(LS_AUTH); } catch (e) {}
+      location.href = "/login";
+    }
+    function openMenu() {
+      menu = document.createElement("div");
+      menu.setAttribute("role", "menu");
+      menu.style.cssText = "position:absolute;top:calc(100% + 8px);right:0;min-width:200px;"
+        + "background:var(--surface,#fff);border:1px solid var(--line,#e3e8f0);border-radius:12px;"
+        + "box-shadow:var(--shadow,0 8px 24px rgba(15,26,42,.14));padding:6px;z-index:200;"
+        + "font-family:var(--sans);text-align:left";
+      menu.innerHTML =
+        '<div style="padding:8px 10px;font-size:11.5px;color:var(--slate-2,#8a94a6);'
+        + 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid var(--line,#e3e8f0);margin-bottom:4px">'
+        + (sess.email || "") + '</div>'
+        + '<button type="button" data-pm-item="account" style="display:flex;width:100%;padding:8px 10px;'
+        + 'background:none;border:0;border-radius:8px;font:600 13px var(--sans);color:var(--navy,#0f1a2a);'
+        + 'text-align:left;cursor:pointer">Account</button>'
+        + '<button type="button" data-pm-item="signout" style="display:flex;width:100%;padding:8px 10px;'
+        + 'background:none;border:0;border-radius:8px;font:600 13px var(--sans);color:#b3261e;'
+        + 'text-align:left;cursor:pointer">Sign out</button>';
+      el.appendChild(menu);
+      el.setAttribute("aria-expanded", "true");
+      menu.querySelector('[data-pm-item="account"]').onclick = function (e) { e.stopPropagation(); location.href = "/app#account"; };
+      menu.querySelector('[data-pm-item="signout"]').onclick = function (e) { e.stopPropagation(); doSignOut(); };
+      menu.querySelectorAll("button").forEach(function (b) {
+        b.onmouseenter = function () { b.style.background = "var(--surface-2,#f4f6fa)"; };
+        b.onmouseleave = function () { b.style.background = "none"; };
+      });
+      setTimeout(function () {
+        document.addEventListener("click", onOutsideClick, true);
+        document.addEventListener("keydown", onKeydown, true);
+      }, 0);
+    }
+    el.onclick = function (e) { e.stopPropagation(); if (menu) closeMenu(); else openMenu(); };
+    el.onkeydown = function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); el.onclick(e); } };
   })();
   setTimeout(checkFirstClosedTrade, 2000);
   setInterval(function () { if (document.visibilityState === "visible") checkFirstClosedTrade(); }, 30000);

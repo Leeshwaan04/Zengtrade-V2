@@ -410,6 +410,18 @@ for d in ("js", "assets"):                        # js = auth glue; assets merge
     sd = os.path.join(AUTH_SRC, d)
     if os.path.isdir(sd):
         shutil.copytree(sd, os.path.join(DIST, d), dirs_exist_ok=True)
+# BUG FIX (2026-09-19): /app's entry script had NO cache-busting at all (plain "/js/app.js"),
+# same root cause as the studio.js/chart.js fix above - a real fix could ship and browsers would
+# keep the stale cached copy forever. Hash it the same way. NOTE: app.js is loaded as an ES module
+# and statically imports ./auth.js + ./config.js - those imports are fetched by their OWN bare
+# URLs, unaffected by any query string on app.js itself, so this only guarantees a fresh app.js;
+# a change to auth.js/config.js alone could still hit the same staleness until those also get a
+# real cache-busting story (out of scope here, flagging so it isn't forgotten).
+_app_html = os.path.join(DIST, "app", "index.html")
+if os.path.exists(_app_html):
+    _appjs_hash = hashlib.sha256(open(os.path.join(DIST, "js", "app.js"), "rb").read()).hexdigest()[:10]
+    _html = open(_app_html).read().replace('src="/js/app.js"', f'src="/js/app.js?v={_appjs_hash}"')
+    open(_app_html, "w").write(_html)
 
 # ---- /dashboard = the REAL Algo Studio terminal (customer edition) ------------------
 # The operator's terminal (root index.html + assets/) IS the product. build copies it
