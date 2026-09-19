@@ -198,7 +198,8 @@ $("t-up").onclick=()=>{$("t-up").ariaSelected="true";$("t-in").ariaSelected="fal
   } }
 
 $("f-in").onsubmit=async e=>{e.preventDefault();const b=e.target.querySelector("button");busy(b,true,"Signing in…");
-  try{ const data=await signIn($("i-email").value.trim(), $("i-pw").value); goAfterAuth(data.user); }
+  try{ const data=await signIn($("i-email").value.trim(), $("i-pw").value);
+       busy(b,true,"Signed in ✓"); setTimeout(()=>goAfterAuth(data.user),350); }
   catch(err){ show(niceError(err)); busy(b,false,"Sign in"); }};
 
 $("f-up").onsubmit=async e=>{e.preventDefault();const b=e.target.querySelector("button");busy(b,true,"Creating…");
@@ -207,7 +208,8 @@ $("f-up").onsubmit=async e=>{e.preventDefault();const b=e.target.querySelector("
        show("Account created, check your email to confirm, then sign in.",true); busy(b,false,"Create free account"); }
   catch(err){ show(niceError(err)); busy(b,false,"Create free account"); }};
 
-$("google").onclick=async()=>{ prepOAuthSignup(); try{ await signInWithGoogle(); }catch(e){ show(niceError(e)); } };
+$("google").onclick=async()=>{ prepOAuthSignup(); const b=$("google"); busy(b,true,"Redirecting to Google…");
+  try{ await signInWithGoogle(); }catch(e){ show(niceError(e)); busy(b,false,"Continue with Google"); } };
 $("forgot").onclick=async e=>{ e.preventDefault(); const em=$("i-email").value.trim(); if(!em) return show("Enter your email first.");
   try{ await resetPassword(em); show("Password reset link sent.",true); }catch(err){ show(niceError(err)); } };
 </script></body></html>

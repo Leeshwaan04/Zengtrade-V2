@@ -97,12 +97,14 @@
     }
     function onOutsideClick(e) { if (menu && !menu.contains(e.target) && e.target !== el) closeMenu(); }
     function onKeydown(e) { if (e.key === "Escape") closeMenu(); }
-    async function doSignOut() {
+    async function doSignOut(btn) {
+      if (btn) { btn.disabled = true; btn.textContent = "Signing out…"; }
       try {
         await fetch(SUPA + "/auth/v1/logout", { method: "POST", headers: sbHeaders() });
       } catch (e) {}
       try { localStorage.removeItem(LS_AUTH); } catch (e) {}
-      location.href = "/login";
+      if (btn) btn.textContent = "Signed out ✓";
+      setTimeout(function () { location.href = "/login"; }, 250);
     }
     function openMenu() {
       menu = document.createElement("div");
@@ -124,7 +126,7 @@
       el.appendChild(menu);
       el.setAttribute("aria-expanded", "true");
       menu.querySelector('[data-pm-item="account"]').onclick = function (e) { e.stopPropagation(); location.href = "/app#account"; };
-      menu.querySelector('[data-pm-item="signout"]').onclick = function (e) { e.stopPropagation(); doSignOut(); };
+      menu.querySelector('[data-pm-item="signout"]').onclick = function (e) { e.stopPropagation(); doSignOut(e.currentTarget); };
       menu.querySelectorAll("button").forEach(function (b) {
         b.onmouseenter = function () { b.style.background = "var(--surface-2,#f4f6fa)"; };
         b.onmouseleave = function () { b.style.background = "none"; };

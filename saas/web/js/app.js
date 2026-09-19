@@ -460,7 +460,7 @@ function renderAccount() {
       <div class="acc-row"><span>End your session on this device</span><button class="btn ghost sm" id="accOut">Sign out</button></div>
     </div>`;
   $("#accUp") && ($("#accUp").onclick = () => location.hash = "pricing");
-  $("#accOut").onclick = () => signOut();
+  $("#accOut").onclick = (e) => { const b = e.currentTarget; b.disabled = true; b.textContent = "Signing out…"; signOut(); };
 }
 
 // ---------------------------------------------------------------- actions (optimistic + toast)
