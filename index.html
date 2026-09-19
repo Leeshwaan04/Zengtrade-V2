@@ -49,13 +49,16 @@
     <span class="brand-pro">zengtrade</span>
   </div>
 
-  <!-- Workspace selector (JS-rendered in Trading mode): replaces the old NSE/BSE/MCX exchange switch -->
-  <div class="ws-switch" id="wsSwitch" aria-label="Workspace"></div>
-
   <div class="tb-spacer"></div>
 
   <!-- Crypto-only product, no Indian market toggle -->
   <div class="hdr-mkt" id="hdrMkt" aria-label="Market"></div>
+
+  <div class="mode-switch seg" id="modeSwitch" role="tablist" aria-label="Mode">
+    <button class="seg-btn" data-mode-btn="investor" role="tab" aria-selected="false">Investing</button>
+    <button class="seg-btn" data-mode-btn="trader" role="tab" aria-selected="false">Trading</button>
+    <button class="seg-btn" data-mode-btn="algo" role="tab" aria-selected="true">Algo Studio</button>
+  </div>
 
   <div class="search">
     <svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -123,6 +126,7 @@
   <section class="pane pane-center">
     <div class="invest-hub" id="investHub" aria-label="Invest and trade tools"></div>
     <div class="desk-view" id="deskView" aria-label="Derivatives desk"></div>
+    <div class="algo-view" id="tradingView" aria-label="Manual trading"></div>
     <div class="algo-view" id="algoView" aria-label="Algo trading"></div>
     <div class="ai-view" id="aiView" aria-label="AI copilot"></div>
     <div class="chart-card" id="chartCard"></div>
@@ -225,19 +229,6 @@
     <button class="tbtn ghost" id="modalCancel">Cancel</button>
     <button class="tbtn primary" id="modalConfirm">Confirm</button>
   </div>
-</div>
-
-<!-- ====================== FLOATING MODE SWITCH ====================== -->
-<div class="mode-fab" id="modeFab" data-persona="trader" role="tablist" aria-label="Workspace mode">
-  <span class="mf-pill" aria-hidden="true"></span>
-  <button class="mf-btn on" data-persona="trader" role="tab" aria-selected="true">
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M21 7h-5M21 7v5"/></svg>Trading</button>
-  <button class="mf-btn" data-persona="investor" role="tab" aria-selected="false">
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-8"/><path d="M12 13C12 9 8.5 7 5 7c0 4 3 6 7 6z"/><path d="M12 11c0-3.2 2.8-5 6-5 0 3.2-2.6 5-6 5z"/></svg>Investing</button>
-  <button class="mf-btn" data-persona="algo" role="tab" aria-selected="false">
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 3v2M15 3v2M9 19v2M15 19v2M3 9h2M3 15h2M19 9h2M19 15h2"/></svg>Algo</button>
-  <button class="mf-btn" data-persona="ai" role="tab" aria-selected="false">
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/></svg>AI</button>
 </div>
 
 <!-- ====================== FIRST-RUN PERSONA GATE ====================== -->

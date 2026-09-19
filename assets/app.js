@@ -247,7 +247,7 @@ function loadState(){
     aiCfg:(s.aiCfg&&typeof s.aiCfg==='object')?{endpoint:(typeof s.aiCfg.endpoint==='string'&&/^https?:\/\//.test(s.aiCfg.endpoint))?s.aiCfg.endpoint.slice(0,300):'',model:['claude-opus-4-8','claude-sonnet-4-6','claude-haiku-4-5'].indexOf(s.aiCfg.model)>=0?s.aiCfg.model:'claude-opus-4-8'}:null,
     widgets:(()=>{const def={trader:WIDGET_DEFAULTS.trader.slice(),investor:WIDGET_DEFAULTS.investor.slice()};
       if(s.widgets&&typeof s.widgets==='object')['trader','investor'].forEach(p=>{
-        const valid=WIDGET_CATALOG[p].map(w=>w.key);
+        const valid=(WIDGET_CATALOG[p]||[]).map(w=>w.key);
         if(Array.isArray(s.widgets[p])){const a=[...new Set(s.widgets[p].filter(k=>valid.includes(k)))]; def[p]=a;}});
       return def;})(),
     cards:(()=>{const o={};if(s.cards&&typeof s.cards==='object')['watchlist','chart','panel','order','context'].forEach(k=>{o[k]=oneOf(s.cards[k],['normal','min','max'],'normal');});return o;})(),
@@ -970,13 +970,12 @@ function cinematicPersona(p){
 function updateClock(){const el=$('mktStatus');if(el)el.hidden=true;const eng=$('hdrEngine');if(eng)eng.hidden=true;}
 const isInvestor=()=>state.persona==='investor';
 const isAlgo=()=>state.persona==='algo';
-function syncFab(){const p=CRYPTO_ONLY?'algo':(state.persona||'trader');
-  let active=null;
-  document.querySelectorAll('#modeFab [data-persona]').forEach(b=>{const on=b.dataset.persona===p;b.classList.toggle('on',on);b.setAttribute('aria-selected',on);if(on)active=b;});
-  const fb=$('modeFab'); if(fb){ fb.dataset.persona=p; if(CRYPTO_ONLY) fb.style.display='none'; }
-  // slide the pill to the active button (works for any count / variable widths)
-  const pill=fb&&fb.querySelector('.mf-pill');
-  if(pill&&active){ pill.style.left=active.offsetLeft+'px'; pill.style.width=active.offsetWidth+'px'; }}
+// BUG FIX (2026-09-19): this used to hard-force p='algo' whenever CRYPTO_ONLY was true, regardless
+// of state.persona, which is exactly what kept Investing/Trading permanently unreachable. Reads
+// the real persona now; CRYPTO_ONLY only ever affects which market/data source is used (crypto),
+// never which of the three modes is active.
+function syncFab(){const p=state.persona||'algo';
+  document.querySelectorAll('[data-mode-btn]').forEach(b=>{const on=b.dataset.modeBtn===p;b.classList.toggle('active',on);b.setAttribute('aria-selected',on);});}
 function applyPersona(p,opts){
   opts=opts||{};
   if(PERSONA_KEYS.indexOf(p)<0)p='trader';
@@ -2825,6 +2824,108 @@ function cryptoBody(view,label){
   return cryptoSoon(label);
 }
 
+/* ============================================================
+   TRADING MODE: manual paper trading, live crypto prices.
+   Real Binance prices (CRYPTO/CRYPTO_UNIVERSE, already shared with Algo Studio), simulated fills,
+   reuses the same honest order-pad mechanism (placeOrder/cancelOrder) built for the old trader
+   persona - that part was never fabricated, only the surrounding Zerodha-equity panels were.
+   ============================================================ */
+function tradeModel(sym){
+  const c=CRYPTO_UNIVERSE.find(x=>x.sym===sym)||CRYPTO_UNIVERSE[0];
+  const q=CRYPTO.quotes[c.sym];
+  const live=CRYPTO.live&&!!q;
+  const px=live?q.ltp:0;
+  const side=state.orderSide||'buy';
+  const qty=state.orderQty!=null?state.orderQty:0.01;
+  return {sym:c.sym,tk:c.tk,name:c.name,px,priced:px>0,chg:live?q.chg:0,side,qty,value:qty*px};
+}
+function tradingTradeTab(){
+  const m=tradeModel(state.trading.sym);
+  const picker=CRYPTO_UNIVERSE.map(c=>`<button class="msc-chip${c.sym===m.sym?' on':''}" data-tradesym="${c.sym}">${c.tk}</button>`).join('');
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Manual paper trading.</b> Real Binance prices, simulated fills, no real order is placed. Buy or sell any coin below instantly at the live price.</span></div>`;
+  return note+`<div class="mon-ctrl"><div class="mon-seg"><span class="msc-lead">Pair</span>${picker}</div></div>
+    <div class="order-card">
+      <div class="order-head"><span class="oh-sym">${m.tk} <i class="paper-tag" title="Simulated, no real order is placed. Real execution is on the roadmap.">PAPER</i></span>
+        <span class="oh-px ${cls(m.chg)} num">${m.priced?cryptoFmt(m.px):'-'} ${m.priced?pct(m.chg):''}</span></div>
+      <div class="order-body">
+        <div class="side-tabs"><div class="side-tab buy ${m.side==='buy'?'active':''}" data-tradeside="buy">BUY</div><div class="side-tab sell ${m.side==='sell'?'active':''}" data-tradeside="sell">SELL</div></div>
+        <div class="fld"><label>Quantity</label><div class="inp"><input class="qty-inp num" id="tradeQty" value="${m.qty}" inputmode="decimal" aria-label="Order quantity"></div></div>
+        <div class="fld"><label>Order value</label><div class="inp num" id="tradeOrdVal">${m.priced?cryptoFmt(m.value):'-'}</div></div>
+        <button class="cta ${m.side==='buy'?'cta-buy':'cta-sell'}" id="tradeCta"${m.priced?'':' disabled'}>${m.side==='buy'?'BUY':'SELL'} ${m.tk}</button>
+      </div></div>`;
+}
+function tradingPositionsTab(){
+  const rows={};
+  state.orders.filter(o=>o.status==='Filled').forEach(o=>{
+    const r=rows[o.sym]=rows[o.sym]||{sym:o.sym,qty:0,cost:0};
+    const sq=o.side==='buy'?o.qty:-o.qty;
+    r.qty+=sq; r.cost+=sq*o.price;
+  });
+  const open=Object.values(rows).filter(r=>Math.abs(r.qty)>1e-9);
+  if(!open.length) return secEmpty('trendUp','No open positions','Place a trade to see it here, live-marked against the current price.');
+  const cols='grid-template-columns:1fr 90px 110px 110px 110px';
+  const head=`<div class="cxm-row cxm-head" style="${cols}"><div class="cxm-name">Pair</div><span class="cxm-n">Qty</span><span class="cxm-n">Avg entry</span><span class="cxm-n">Mark</span><span class="cxm-n">P&amp;L</span></div>`;
+  const body=open.map(r=>{
+    const c=CRYPTO_UNIVERSE.find(x=>x.sym===r.sym);
+    const q=CRYPTO.quotes[r.sym]; const mark=q?q.ltp:null;
+    const avg=r.cost/r.qty;
+    const pnl=mark!=null?r.qty*(mark-avg):null;
+    return `<div class="cxm-row" style="${cols}"><div class="cxm-name"><b>${c?c.tk:esc(r.sym)}</b></div>
+      <span class="cxm-n num ${r.qty<0?'down':''}">${r.qty.toFixed(4)}</span>
+      <span class="cxm-n num">${cryptoFmt(avg)}</span>
+      <span class="cxm-n num">${mark!=null?cryptoFmt(mark):'-'}</span>
+      <span class="cxm-n num ${cls(pnl)}">${pnl!=null?cxMoney(pnl):'-'}</span></div>`;
+  }).join('');
+  return `<div class="cxm-tbl-h">${icon('activity',13)}<b>Open positions</b><span>${open.length} pair${open.length===1?'':'s'} · marked to live price</span></div><div class="cxm-tbl">${head}${body}</div>`;
+}
+function tradingHistoryTab(){
+  if(!state.orders.length) return secEmpty('activity','No trades yet','Every buy and sell you place shows up here, honestly, no fabricated track record.');
+  const cols='grid-template-columns:1fr 70px 90px 100px 110px';
+  const head=`<div class="cxm-row cxm-head" style="${cols}"><div class="cxm-name">Pair</div><span class="cxm-n">Side</span><span class="cxm-n">Qty</span><span class="cxm-n">Price</span><span class="cxm-n">Status</span></div>`;
+  const body=state.orders.map(o=>{
+    const c=CRYPTO_UNIVERSE.find(x=>x.sym===o.sym);
+    const statusHtml=o.status==='Cancelled'?`<span class="badge b-warn">Cancelled</span>`
+      :o.status==='Filled'?`<span class="badge b-up">Filled</span>`
+      :`<button class="mini-cancel" data-tradecancel="${o.id}">Cancel</button>`;
+    return `<div class="cxm-row" style="${cols}"><div class="cxm-name"><b>${c?c.tk:esc(o.sym)}</b></div>
+      <span class="cxm-n"><span class="side-chip side-${o.side}">${o.side}</span></span>
+      <span class="cxm-n num">${o.qty}</span>
+      <span class="cxm-n num">${cryptoFmt(o.price)}</span>
+      <span class="cxm-n">${statusHtml}</span></div>`;
+  }).join('');
+  return `<div class="cxm-tbl-h">${icon('activity',13)}<b>Trade history</b><span>${state.orders.length} order${state.orders.length===1?'':'s'} · newest first</span></div><div class="cxm-tbl">${head}${body}</div>`;
+}
+function tradingPlace(){
+  const m=tradeModel(state.trading.sym);
+  if(!m.priced) return;
+  placeOrder({sym:m.sym,side:m.side,qty:m.qty,price:m.px,type:'MARKET'});
+}
+function renderTrading(){
+  const v=$('tradingView'); if(!v) return;
+  if(state.persona!=='trader'){ v.innerHTML=''; return; }
+  state.trading=state.trading||{view:'trade',sym:CRYPTO_UNIVERSE[0].sym};
+  if(!CRYPTO.loaded&&!CRYPTO.busy){ loadCrypto().then(()=>{ if(state.persona==='trader') renderTrading(); }); }
+  const view=state.trading.view;
+  const tabs=[['trade','Trade'],['positions','Positions'],['history','History']];
+  const head=`<div class="av-head">
+    <div class="av-title"><span class="av-ic">${icon('trendUp',17)}</span><div><b>Trading</b><span>Crypto · live Binance data · manual paper trades</span></div></div>
+    <div class="av-tabs" role="tablist" aria-label="Trading views">${tabs.map(([k,l])=>`<button class="av-tab${k===view?' on':''}" role="tab" aria-selected="${k===view}" data-tradeview="${k}">${l}</button>`).join('')}</div></div>`;
+  const body=view==='trade'?tradingTradeTab():view==='positions'?tradingPositionsTab():tradingHistoryTab();
+  v.innerHTML=`<div class="av-wrap">${head}<div class="av-scroll">${body}</div></div>`;
+  v.querySelectorAll('[data-tradeview]').forEach(b=>b.onclick=()=>{state.trading.view=b.dataset.tradeview;renderTrading();});
+  v.querySelectorAll('[data-tradesym]').forEach(b=>b.onclick=()=>{state.trading.sym=b.dataset.tradesym;renderTrading();});
+  v.querySelectorAll('[data-tradeside]').forEach(b=>b.onclick=()=>{state.orderSide=b.dataset.tradeside;renderTrading();});
+  const qi=v.querySelector('#tradeQty'); if(qi) qi.oninput=()=>{
+    state.orderQty=Math.max(0,parseFloat(qi.value)||0);
+    const m=tradeModel(state.trading.sym);
+    const ordVal=v.querySelector('#tradeOrdVal');
+    if(ordVal) ordVal.textContent=m.priced?cryptoFmt(m.value):'-';
+    const cb=v.querySelector('#tradeCta'); if(cb) cb.disabled=!m.priced;
+  };
+  const cta=v.querySelector('#tradeCta'); if(cta) cta.onclick=tradingPlace;
+  v.querySelectorAll('[data-tradecancel]').forEach(b=>b.onclick=()=>cancelOrder(+b.dataset.tradecancel));
+}
+
 function renderAlgo(){
   const v=$('algoView'); if(!v) return;
   if(!isAlgo()){ v.innerHTML=''; return; }
@@ -3131,7 +3232,7 @@ function powerOn(){ const f=$('floorSweep'); if(!f)return; f.classList.remove('g
    subtree), flip the global theme so the canvas changes at once, then release the
    panes in a ripple outward from the toggle, each flipping with an accent flash. */
 const THEME_VARS=['--bg','--surface','--surface-2','--white','--line','--line-2','--navy','--slate','--slate-2','--green','--green-d','--red','--red-d','--blue','--amber','--tint-down','--tint-warn','--tint-info','--bd-down','--bd-warn','--up-flash','--down-flash','--topbar-bg','--glass','--glass-hi','--shadow','--shadow-hover','--shadow-lg','--accent','--accent-d','--accent-soft','--accent-line'];
-const CASCADE_SEL=['.topbar','.ticker-bar','.regime-bar','.pane-left','.chart-card','#investHub','.panel','.order-card','.ctx-card','#modeFab',
+const CASCADE_SEL=['.topbar','.ticker-bar','.regime-bar','.pane-left','.chart-card','#investHub','.panel','.order-card','.ctx-card','.mode-switch',
   /* algo / ai / trader-desk takeover panes. So day↔night powers on in EVERY persona, not just the 3-pane floor */
   '.av-head','.av-scroll','.ai-main','.ai-side','.desk-head','.desk-scroll'];
 function cascadeSurface(next){
@@ -3311,8 +3412,8 @@ function init(){
 
   $('surfaceToggle').addEventListener('click',toggleSurface);
 
-  // persona: floating CTA switches mode; the first-run gate drives the onboarding wizard
-  document.querySelectorAll('#modeFab [data-persona]').forEach(b=>b.addEventListener('click',()=>cinematicPersona(b.dataset.persona)));
+  // persona: header toggle switches mode; the first-run gate drives the onboarding wizard
+  document.querySelectorAll('[data-mode-btn]').forEach(b=>b.addEventListener('click',()=>cinematicPersona(b.dataset.modeBtn)));
   document.querySelectorAll('#personaGate [data-persona]').forEach(b=>b.addEventListener('click',()=>onboardPick(b.dataset.persona)));
   const pgSkip=$('pgSkip'); if(pgSkip) pgSkip.addEventListener('click',()=>onboardPick('trader'));
   // onboarding wizard: step-2 controls (back / finish / copy command / retry)
@@ -3352,7 +3453,11 @@ function init(){
   if(saved&&saved.cards) state.cards=saved.cards;
   if(saved&&saved.ticker) state.ticker=saved.ticker;
   if(saved&&typeof saved.regimeCollapsed==='boolean') state.regimeCollapsed=saved.regimeCollapsed;
-  state.persona=CRYPTO_ONLY?'algo':((saved&&saved.persona)||'trader');
+  // BUG FIX (2026-09-19): this used to force 'algo' unconditionally whenever CRYPTO_ONLY was true,
+  // which is what kept Investing/Trading permanently unreachable even after the header toggle was
+  // wired up - CRYPTO_ONLY means "this deployment only has crypto data," not "only Algo Studio is
+  // allowed." Respect a real saved choice among all three modes; 'algo' only as the true first-visit default.
+  state.persona=(saved&&['trader','investor','algo'].indexOf(saved.persona)>=0)?saved.persona:'algo';
   renderPlanChip();
   state.investSection=(saved&&saved.investSection)||null;
   state.layout=(saved&&['originals','charts','watchlist','options','futures','build'].indexOf(saved.layout)>=0)?saved.layout:'originals';
@@ -3371,13 +3476,13 @@ function init(){
   // calls fan out into renderAlgo() and 30+ other spots gated on state.algo.market==='crypto'. Forcing
   // this late (as it used to) meant the very first render of the whole chain ran against unset/legacy
   // state and showed the pre-pivot layout for one frame - the flash a fresh login used to hit every time.
-  if(CRYPTO_ONLY){
-    state.algo=state.algo||{}; state.algo.market='crypto'; state.persona='algo';
-    const wlTabs=document.querySelector('.wl-tabs'); if(wlTabs) wlTabs.style.display='none';
-    const invHub=$('investHub'); if(invHub) invHub.style.display='none';
-    const deskView=$('deskView'); if(deskView) deskView.style.display='none';
-    document.documentElement.dataset.persona='algo';
-  }
+  // BUG FIX (2026-09-19): this used to also force state.persona back to 'algo' here (undoing the
+  // real saved-persona read a few lines up) and set #investHub/#deskView to display:none via
+  // INLINE style - which, since nothing ever clears an inline style, would leave Investing
+  // permanently stuck hidden forever after boot even after switching to it, regardless of what the
+  // CSS for the active persona says. Visibility is fully owned by the data-persona CSS rules
+  // (already !important, already correct per-mode) - no JS inline-style hiding needed here at all.
+  if(CRYPTO_ONLY){ state.algo=state.algo||{}; state.algo.market='crypto'; }
   if(state.layout==='options')state.desk.view='chain'; else if(state.layout==='futures')state.desk.view='futures';
   // restore named custom layouts (validate card keys against the live catalog)
   const validCard=c=>c&&canvasCatalog().some(w=>w.key===c.key);

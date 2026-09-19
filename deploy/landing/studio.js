@@ -288,11 +288,16 @@
     document.body.insertBefore(el, document.body.firstChild);
   }
 
-  /* ---- customers live in the Algo Studio: persona pinned, crypto book pinned ---- */
+  /* ---- customers are pinned to the crypto book; persona (Investing/Trading/Algo Studio) is now
+   * a real, user-chosen header toggle, not an operator-only surface - do not touch it here. ---- */
   try {
     var K = "tradepro.terminal.v1";
     var st0 = JSON.parse(localStorage.getItem(K) || "null") || {};
-    st0.persona = "algo";                    // Trading/Investing/AI personas are operator surfaces
+    // BUG FIX (2026-09-19): this used to force st0.persona = "algo" unconditionally on every single
+    // page load, before crypto-only.js or app.js even ran - silently clobbering a real saved
+    // Investing/Trading choice back to Algo Studio on every reload. That was correct back when
+    // Trading/Investing were operator-only, but they are now a real customer-facing header toggle;
+    // this file must leave persona alone, same as the equivalent fix already made in crypto-only.js.
     st0.algo = st0.algo || {}; st0.algo.market = "crypto"; st0.algo.view = st0.algo.view || "monitor";
     localStorage.setItem(K, JSON.stringify(st0));
   } catch (e) {}

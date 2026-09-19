@@ -702,12 +702,8 @@ body.resizing{user-select:none;cursor:col-resize}
 .topbar{gap:14px;padding:9px 16px;background:var(--topbar-bg,var(--surface));-webkit-backdrop-filter:saturate(140%) blur(10px);backdrop-filter:saturate(140%) blur(10px);
   box-shadow:0 1px 0 var(--line), 0 8px 24px -20px rgba(16,30,54,.5)}
 .tb-brand{display:flex;align-items:center;gap:10px;flex:0 0 auto}
-/* Workspace selector in the top bar (Trading mode only), JS renders button + dropdown into #wsSwitch */
-.ws-switch{display:flex;align-items:center;gap:7px;flex:0 0 auto;position:relative}
-.ws-switch:empty{display:none}
-.ws-switch .layout-btn{padding:6px 11px;font-size:12px;border-radius:9px}
-.ws-switch .lb-name{max-width:170px}
-.ws-switch .lb-newq{margin-left:0}
+/* Investing/Trading/Algo Studio mode toggle, reuses .seg/.seg-btn (same control as Bull/Neutral/Bear) */
+.mode-switch{flex:0 0 auto}
 .mkt-status{display:flex;align-items:center;gap:7px;background:none;border:0;padding:0 2px 0 2px}
 .mkt-live{font-size:9px;font-weight:800;letter-spacing:.6px;color:var(--green)}
 .mkt-time{font-size:11.5px;color:var(--slate);border-left:0;padding-left:0}
@@ -885,66 +881,6 @@ body{background:var(--bg)}
 .auto-pill.on{animation:autoGlow 3s ease-in-out infinite}
 @keyframes autoGlow{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 16px -4px var(--accent-line)}}
 
-/* ================= PERSONA: floating mode switch ================= */
-.mode-fab{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:60;display:flex;gap:2px;
-  background:var(--glass);-webkit-backdrop-filter:blur(13px) saturate(1.4);backdrop-filter:blur(13px) saturate(1.4);border:1px solid var(--line-2);
-  border-radius:999px;padding:4px;box-shadow:var(--shadow-lg);transition:bottom .25s ease}
-/* lift the floating persona FAB above the bottom workspace bar when it's present */
-body.has-wsbar .mode-fab{bottom:60px}
-/* ===== persistent bottom WORKSPACE BAR (workspaces as tabs · tabs nest at top of canvas) ===== */
-.ws-bar{flex:0 0 auto;display:flex;align-items:center;gap:10px;height:46px;padding:0 16px;
-  background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -6px 18px -16px rgba(16,30,54,.4);z-index:40}
-.ws-bar[hidden]{display:none}
-.wsb-lead{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:800;
-  text-transform:uppercase;letter-spacing:.5px;color:var(--slate-2);padding-right:10px;border-right:1px solid var(--line)}
-.wsb-lead .ico{color:var(--slate-2)}
-.wsb-scroll{flex:1;min-width:0;display:flex;align-items:center;gap:4px;overflow-x:auto;overflow-y:hidden;padding:5px 2px;scrollbar-width:thin}
-.wsb-scroll::-webkit-scrollbar{height:5px}
-.wsb-div{flex:0 0 auto;width:1px;height:20px;background:var(--line);margin:0 6px}
-.wsb-wrap{flex:0 0 auto;display:inline-flex;align-items:center;border-radius:9px}
-.wsb-wrap.on{background:var(--accent-soft);border:1px solid var(--accent-line);padding-right:3px}
-.wsb-tab{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;border:1px solid transparent;background:transparent;
-  color:var(--slate);font-family:var(--sans);font-weight:700;font-size:12.5px;padding:6px 12px;border-radius:9px;
-  cursor:pointer;white-space:nowrap;max-width:180px;transition:.14s}
-.wsb-tab .ico{color:var(--slate-2);flex:0 0 auto}
-.wsb-tab span{overflow:hidden;text-overflow:ellipsis}
-.wsb-tab:hover{background:var(--surface-2);color:var(--navy)}
-.wsb-tab:hover .ico{color:var(--accent-d)}
-.wsb-tab.on,.wsb-tab.on:hover{background:var(--accent-soft);color:var(--accent-d);border-color:var(--accent-line)}
-.wsb-tab.on .ico{color:var(--accent-d)}
-.wsb-wrap.on .wsb-tab.on{background:transparent;border-color:transparent}
-.wsb-mini{flex:0 0 auto;display:grid;place-items:center;width:22px;height:22px;border:0;background:none;color:var(--slate-2);
-  cursor:pointer;border-radius:6px;transition:.12s}
-.wsb-mini:hover{background:var(--surface);color:var(--accent-d)}
-.wsb-mini.danger:hover{background:rgba(229,56,59,.1);color:#e5383b}
-.wsb-new{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;border:1px dashed var(--line-2);background:var(--surface-2);
-  color:var(--accent-d);font-family:var(--sans);font-weight:800;font-size:12px;padding:6px 13px;border-radius:9px;cursor:pointer;transition:.14s}
-.wsb-new:hover{border-color:var(--accent);background:var(--surface);box-shadow:var(--shadow)}
-/* small badge inside a bottom-bar tab (e.g. "New", "5 open", "12 themes") */
-.wsb-tag{font-style:normal;font-size:9px;font-weight:800;letter-spacing:.2px;padding:1px 6px;border-radius:20px;
-  background:var(--surface-2);color:var(--slate-2);flex:0 0 auto}
-.wsb-tab:hover .wsb-tag{background:var(--surface)}
-.wsb-tab.on .wsb-tag{background:var(--surface);color:var(--accent-d)}
-/* investing overview welcome (tools moved to the bottom bar) */
-.ih-welcome{margin-top:14px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2);padding:16px 18px;display:flex;flex-direction:column;gap:12px}
-.ihw-head{display:flex;flex-direction:column;gap:3px}
-.ihw-head b{font-size:15px;color:var(--navy)}
-.ihw-head span{font-size:12.5px;color:var(--slate);line-height:1.5}
-.ihw-chips{display:flex;flex-wrap:wrap;gap:8px}
-.ihw-chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);color:var(--navy);
-  font-family:var(--sans);font-weight:700;font-size:12.5px;padding:8px 12px;border-radius:10px;cursor:pointer;transition:.14s}
-.ihw-chip .ico{color:var(--accent-d)}
-.ihw-chip:hover{border-color:var(--accent-line);box-shadow:var(--shadow)}
-.ihw-chip i{font-style:normal;font-size:9px;font-weight:800;padding:1px 6px;border-radius:20px;background:var(--accent-soft);color:var(--accent-d)}
-.mf-pill{position:absolute;top:4px;left:4px;width:calc(25% - 4px);height:calc(100% - 8px);border-radius:999px;
-  background:var(--accent-soft);border:1px solid var(--accent-line);
-  transition:left .32s cubic-bezier(.34,1.3,.5,1),background .3s}
-.mode-fab[data-persona="investor"] .mf-pill{left:50%}
-.mf-btn{position:relative;z-index:1;display:flex;align-items:center;gap:7px;border:none;background:transparent;
-  color:var(--slate);font-family:var(--sans);font-weight:700;font-size:12.5px;padding:8px 18px;border-radius:999px;
-  cursor:pointer;white-space:nowrap;transition:color .2s}
-.mf-btn:hover{color:var(--navy)}
-.mf-btn.on,.mf-btn.on:hover{color:var(--accent-d)}
 @keyframes personaMorph{0%{opacity:.5;transform:scale(.996)}100%{opacity:1;transform:none}}
 .persona-morph .pane-right,.persona-morph .panel,.persona-morph .regime-bar,.persona-morph .pane-left{animation:personaMorph .42s ease both}
 html[data-persona="investor"] .ch-tool[data-tool="trade"]{display:none}
@@ -2042,14 +1978,18 @@ html[data-persona="algo"][data-surface="night"]{ --bg:#0a0c1c; }
 html[data-persona="ai"]{ --bg:#eef4f3; }
 html[data-persona="ai"][data-surface="night"]{ --bg:#06120f; }
 
-#algoView,#aiView{display:none}
+/* BUG FIX (2026-09-19): the old 3-pane layout (chart/watchlist/order-pad + legacy panel tabs) was
+   only ever hidden for the algo/ai personas - trader/investor still had it fully live underneath.
+   All four modes now use the same single-container-per-mode pattern (#algoView/#aiView/
+   #tradingView/#investHub), so this is universal, not persona-conditional. */
+#algoView,#aiView,#tradingView,#investHub{display:none}
 html[data-persona="algo"] #algoView{display:flex;flex-direction:column;flex:1;min-height:0}
 html[data-persona="ai"] #aiView{display:flex;flex-direction:column;flex:1;min-height:0}
-html[data-persona="algo"] .terminal,html[data-persona="ai"] .terminal{grid-template-columns:1fr}
-html[data-persona="algo"] .pane-left,html[data-persona="ai"] .pane-left,
-html[data-persona="algo"] .pane-right,html[data-persona="ai"] .pane-right{display:none}
-html[data-persona="algo"] #chartCard,html[data-persona="algo"] #chartResize,html[data-persona="algo"] .panel,html[data-persona="algo"] #investHub,html[data-persona="algo"] #deskBar,html[data-persona="algo"] #deskView,
-html[data-persona="ai"] #chartCard,html[data-persona="ai"] #chartResize,html[data-persona="ai"] .panel,html[data-persona="ai"] #investHub,html[data-persona="ai"] #deskBar,html[data-persona="ai"] #deskView{display:none!important}
+html[data-persona="trader"] #tradingView{display:flex;flex-direction:column;flex:1;min-height:0}
+html[data-persona="investor"] #investHub{display:flex;flex-direction:column;flex:1;min-height:0}
+.terminal{grid-template-columns:1fr}
+.pane-left,.pane-right{display:none}
+#chartCard,#chartResize,.panel,#deskBar,#deskView{display:none!important}
 
 /* shared takeover shell */
 /* .algo-view must be a flex column that FILLS the pane height, else .av-wrap's flex:1 has no
@@ -2586,8 +2526,7 @@ html[data-persona="trader"] #deskBar{position:relative}
 
 /* CUXO audit: Widgets live in the right rail (trader/investor only). Hide the
    topbar Widgets button in Algo/AI, where the rail is replaced by a full-width takeover. */
-html[data-persona="algo"] #widgetBtn,
-html[data-persona="ai"] #widgetBtn{display:none}
+#widgetBtn{display:none}
 
 /* ===== Regime-switched Algo Studio ===== */
 .rg-banner{display:flex;align-items:center;gap:9px;margin:0 0 12px;padding:10px 13px;border-radius:11px;
