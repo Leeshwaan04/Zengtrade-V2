@@ -2075,6 +2075,11 @@ html[data-persona="investor"] #investHub{display:flex;flex-direction:column;flex
 .cxm-n{font-size:12px;font-weight:700;text-align:right;color:var(--navy)}
 .cxm-pos{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
 .cxm-chip{font-size:9.5px;font-weight:700;color:var(--slate);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:2px 6px}
+/* Investing: Goals tab progress bar */
+.goal-row{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.goal-row-h{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;font-weight:700;color:var(--navy)}
+.goal-bar{height:8px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.goal-fill{height:100%;background:var(--accent);border-radius:999px;transition:width .3s ease}
 .cxm-chip i{font-style:normal;font-weight:700;margin-left:3px}
 .cxm-chip.up{color:var(--green);border-color:#bfe6c8} .cxm-chip.down{color:var(--red);border-color:#f2c9c9}
 /* crypto Risk Governor bars */

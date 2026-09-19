@@ -189,9 +189,9 @@ const PLAY={
     bear:`Capital-preservation mode. Leads with <b>portfolio risk, hedges &amp; stops</b>: losers surface first and the order pad defaults to PROTECT/SELL.`,
   },
   investor:{
-    bull:`Stay-disciplined mode. Markets look extended, <b>rebalance &amp; book partial profits</b>, don't chase highs. Keep your SIPs running.`,
-    neutral:`Keep compounding. A range is <b>ideal for rupee-cost averaging</b>: continue SIPs and accumulate quality on dips.`,
-    bear:`Accumulation mode. Lower prices are a chance to <b>step up SIPs &amp; average down</b> quality names. Tilt to defensives, don't panic-sell.`,
+    bull:`Stay-disciplined mode. Prices look extended, <b>keep your DCA plans running</b> and don't chase highs; that's what averaging in is for.`,
+    neutral:`Keep compounding. A range is <b>ideal for cost averaging</b>: let your DCA plans keep buying and accumulate quality dips.`,
+    bear:`Accumulation mode. Lower prices are a chance to <b>keep DCA plans active</b>, average down on quality coins. Don't panic-sell.`,
   },
   algo:{
     bull:`Momentum regime, <b>trend-following algos lead</b>. Breakout &amp; momentum strategies are favoured; keep stops trailing.`,
@@ -211,7 +211,8 @@ function saveState(){try{localStorage.setItem(LS_KEY,JSON.stringify({
   mode:state.mode,regime:state.displayed,surface:state.surface,regimeCollapsed:state.regimeCollapsed,
   watchlist:SYMS.map(s=>({sym:s.sym,name:s.name,exch:s.exch,type:s.type,key:itemKey(s),token:s.token,sector:s.sector,beta:s.beta,lot:s.lot,expiry:s.expiry,strike:s.strike,seg:s.seg,hold:s.hold})),wlCustom:!!state.wlCustom,
   selected:state.selected,paneW:state.paneW,chartH:state.chartH,
-  persona:state.persona,investSection:state.investSection,layout:state.layout,customLayouts:state.customLayouts,activeCustom:state.activeCustom,aiCfg:state.aiCfg,widgets:state.widgets,cards:state.cards,ticker:state.ticker,algo:(state.algo?{view:state.algo.view,exec:state.algo.exec,market:state.algo.market}:null),chart:(window.TPChart?TPChart.serialize():null)}));}catch(e){}}
+  persona:state.persona,investSection:state.investSection,layout:state.layout,customLayouts:state.customLayouts,activeCustom:state.activeCustom,aiCfg:state.aiCfg,widgets:state.widgets,cards:state.cards,ticker:state.ticker,algo:(state.algo?{view:state.algo.view,exec:state.algo.exec,market:state.algo.market}:null),chart:(window.TPChart?TPChart.serialize():null),
+  orders:state.orders,trading:state.trading,investing:state.investing}));}catch(e){}}
 function saveChart(){saveState();}   // persist callback for the chart engine
 function loadState(){
   let s; try{s=JSON.parse(localStorage.getItem(LS_KEY));}catch(e){return null;}
@@ -260,6 +261,26 @@ function loadState(){
     selected:(typeof s.selected==='string')?s.selected:null,   // validated after the watchlist is rebuilt
     chartH:numIn(s.chartH,120,500), wlCustom:!!s.wlCustom, paneW:null,
     chart:(s.chart&&typeof s.chart==='object')?s.chart:null,   // validated inside TPChart.restore
+    orders:Array.isArray(s.orders)?s.orders.filter(o=>o&&Number.isFinite(o.id)&&typeof o.sym==='string'&&
+      ['buy','sell'].indexOf(o.side)>=0&&typeof o.qty==='number'&&o.qty>0&&typeof o.price==='number'&&o.price>0&&
+      typeof o.type==='string'&&['Filled','Open','Pending','Cancelled'].indexOf(o.status)>=0&&o.paper===true)
+      .slice(0,500).map(o=>({id:o.id,sym:o.sym,side:o.side,qty:o.qty,price:o.price,type:o.type,status:o.status,paper:true})):[],
+    trading:(s.trading&&typeof s.trading==='object')?{view:oneOf(s.trading.view,['trade','positions','history'],'trade'),
+      sym:CRYPTO_UNIVERSE.some(c=>c.sym===s.trading.sym)?s.trading.sym:CRYPTO_UNIVERSE[0].sym}:null,
+    investing:(s.investing&&typeof s.investing==='object')?{
+      view:oneOf(s.investing.view,['portfolio','dca','goals'],'portfolio'),
+      dca:Array.isArray(s.investing.dca)?s.investing.dca.filter(p=>p&&typeof p.id==='string'&&CRYPTO_UNIVERSE.some(c=>c.sym===p.sym)&&
+        typeof p.amount==='number'&&p.amount>0&&['weekly','biweekly','monthly'].indexOf(p.cadence)>=0)
+        .slice(0,50).map(p=>({id:p.id,sym:p.sym,amount:p.amount,cadence:p.cadence,active:!!p.active,
+          createdAt:typeof p.createdAt==='number'?p.createdAt:Date.now(),
+          history:Array.isArray(p.history)?p.history.filter(h=>h&&typeof h.ts==='number'&&typeof h.price==='number'&&h.price>0&&
+            typeof h.qty==='number'&&h.qty>0&&typeof h.amount==='number'&&h.amount>0).slice(0,1000):[]})):[],
+      goals:Array.isArray(s.investing.goals)?s.investing.goals.filter(g=>g&&typeof g.id==='string'&&typeof g.label==='string'&&
+        typeof g.targetValue==='number'&&g.targetValue>0)
+        .slice(0,50).map(g=>({id:g.id,label:g.label.slice(0,80),targetValue:g.targetValue,
+          targetDate:typeof g.targetDate==='string'?g.targetDate:null,
+          createdAt:typeof g.createdAt==='number'?g.createdAt:Date.now()})):[],
+    }:null,
   };
   // universal watchlist: validate the persisted instrument list (any segment)
   if(Array.isArray(s.watchlist)){
@@ -548,7 +569,11 @@ function renderRegimeBar(r){
       read:`Capital-preservation mode. The terminal now leads with <b>portfolio risk, hedges &amp; stops</b>: the risk pane widens, losers surface first and the order pad defaults to PROTECT/SELL.`},
   }[r];
   const read=(PLAY[state.persona||'trader']||PLAY.trader)[r]||cfg.read;
-  const pTag=isInvestor()?'Investing':'Trading';
+  // BUG FIX (2026-09-19): this was a binary isInvestor() check, so it permanently showed "Trading"
+  // in Algo Studio (and would have in AI mode too) - harmless while only algo/ai were reachable,
+  // a real visible wrong label now that all modes are live. Reads the real persona via the
+  // existing PERSONA map instead; 'algo' is special-cased to match the header toggle's own wording.
+  const pTag=state.persona==='algo'?'Algo Studio':(PERSONA[state.persona]?PERSONA[state.persona].label:'Trading');
   if(state.regimeCollapsed===undefined) state.regimeCollapsed=true;   // compact by default, engine stats live in the header now
   const collapsed=state.regimeCollapsed;
   // Guard: the bar's content is purely regime + persona + collapsed. When none changed, skip the
@@ -800,6 +825,9 @@ function successToast(o,status){
 function placeOrder(o){
   const status=o.type.startsWith('SL')?'Pending':(o.type==='MARKET'||o.type==='BRACKET')?'Filled':'Open';
   state.orders.unshift({id:++ORDER_ID,...o,status,paper:true});   // SIMULATED, no real order is placed
+  saveState();   // BUG FIX (2026-09-19): an order used to only exist in memory until some unrelated
+                 // action (e.g. a persona switch) happened to trigger a save - a reload right after
+                 // placing a trade silently lost the whole order. Persist the moment it's placed.
   if(typeof renderTrading==='function') renderTrading();
   successToast(o,status);
 }
@@ -816,7 +844,7 @@ function flowModal(o){
   state.lastFocus=document.activeElement; showModal(true);
   setTimeout(()=>{ const first=$('modalBody').querySelector(o.focus||'input:not([disabled]),select,button,[tabindex="0"]'); (first||$('modalConfirm')).focus(); },50);
 }
-function cancelOrder(id){const o=state.orders.find(x=>x.id===id);if(o&&(o.status==='Pending'||o.status==='Open')){o.status='Cancelled';if(typeof renderTrading==='function') renderTrading();}}
+function cancelOrder(id){const o=state.orders.find(x=>x.id===id);if(o&&(o.status==='Pending'||o.status==='Open')){o.status='Cancelled';saveState();if(typeof renderTrading==='function') renderTrading();}}
 function applyRegime(regime){
   state.displayed=regime;
   document.documentElement.dataset.regime=regime;
@@ -2904,7 +2932,13 @@ function renderTrading(){
   const v=$('tradingView'); if(!v) return;
   if(state.persona!=='trader'){ v.innerHTML=''; return; }
   state.trading=state.trading||{view:'trade',sym:CRYPTO_UNIVERSE[0].sym};
-  if(!CRYPTO.loaded&&!CRYPTO.busy){ loadCrypto().then(()=>{ if(state.persona==='trader') renderTrading(); }); }
+  // BUG FIX (2026-09-19): the old !CRYPTO.busy guard skipped scheduling a re-render whenever some
+  // OTHER caller (e.g. renderTopIndex's own load at boot) already had a fetch in flight - since
+  // loadCrypto() itself no-ops while busy, nothing ever re-rendered this view once that unrelated
+  // fetch resolved, leaving the Buy/Sell button stuck disabled even after live prices arrived.
+  // Poll until CRYPTO.loaded is true regardless of who's driving the in-flight request.
+  if(!CRYPTO.loaded){ if(CRYPTO.busy) setTimeout(()=>{ if(state.persona==='trader') renderTrading(); },300);
+    else loadCrypto().then(()=>{ if(state.persona==='trader') renderTrading(); }); }
   const view=state.trading.view;
   const tabs=[['trade','Trade'],['positions','Positions'],['history','History']];
   const head=`<div class="av-head">
@@ -2912,8 +2946,8 @@ function renderTrading(){
     <div class="av-tabs" role="tablist" aria-label="Trading views">${tabs.map(([k,l])=>`<button class="av-tab${k===view?' on':''}" role="tab" aria-selected="${k===view}" data-tradeview="${k}">${l}</button>`).join('')}</div></div>`;
   const body=view==='trade'?tradingTradeTab():view==='positions'?tradingPositionsTab():tradingHistoryTab();
   v.innerHTML=`<div class="av-wrap">${head}<div class="av-scroll">${body}</div></div>`;
-  v.querySelectorAll('[data-tradeview]').forEach(b=>b.onclick=()=>{state.trading.view=b.dataset.tradeview;renderTrading();});
-  v.querySelectorAll('[data-tradesym]').forEach(b=>b.onclick=()=>{state.trading.sym=b.dataset.tradesym;renderTrading();});
+  v.querySelectorAll('[data-tradeview]').forEach(b=>b.onclick=()=>{state.trading.view=b.dataset.tradeview;saveState();renderTrading();});
+  v.querySelectorAll('[data-tradesym]').forEach(b=>b.onclick=()=>{state.trading.sym=b.dataset.tradesym;saveState();renderTrading();});
   v.querySelectorAll('[data-tradeside]').forEach(b=>b.onclick=()=>{state.orderSide=b.dataset.tradeside;renderTrading();});
   const qi=v.querySelector('#tradeQty'); if(qi) qi.oninput=()=>{
     state.orderQty=Math.max(0,parseFloat(qi.value)||0);
@@ -2924,6 +2958,189 @@ function renderTrading(){
   };
   const cta=v.querySelector('#tradeCta'); if(cta) cta.onclick=tradingPlace;
   v.querySelectorAll('[data-tradecancel]').forEach(b=>b.onclick=()=>cancelOrder(+b.dataset.tradecancel));
+}
+
+/* ============================================================
+   INVESTING MODE: passive DCA plans + goals, live crypto prices.
+   Same honesty rule as Trading: every recorded buy uses the real live price at the moment it
+   was simulated, never backdated or projected. No background/cron execution - a plan only
+   "buys" when the user taps Simulate a buy now, so every entry in a plan's history is something
+   that genuinely happened at a real moment, never a fabricated backfill.
+   ============================================================ */
+function newDcaId(){ return 'dca'+Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-3); }
+function newGoalId(){ return 'goal'+Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-3); }
+
+function investingPortfolioValue(){
+  const rows={};
+  (state.investing.dca||[]).forEach(p=>{
+    (p.history||[]).forEach(h=>{
+      const r=rows[p.sym]=rows[p.sym]||{sym:p.sym,qty:0,cost:0};
+      r.qty+=h.qty; r.cost+=h.amount;
+    });
+  });
+  let total=0;
+  Object.values(rows).forEach(r=>{ const q=CRYPTO.quotes[r.sym]; if(q) total+=r.qty*q.ltp; });
+  return {rows:Object.values(rows).filter(r=>r.qty>1e-9), total};
+}
+
+function investingPortfolioTab(){
+  const {rows,total}=investingPortfolioValue();
+  if(!rows.length) return secEmpty('sprout','No holdings yet','Set up a DCA plan and simulate your first buy to see it here.',`<button class="mini-cancel" data-investview="dca">Set up a DCA plan</button>`);
+  const cols='grid-template-columns:1fr 90px 110px 110px 110px';
+  const head=`<div class="cxm-row cxm-head" style="${cols}"><div class="cxm-name">Coin</div><span class="cxm-n">Qty</span><span class="cxm-n">Avg cost</span><span class="cxm-n">Mark</span><span class="cxm-n">P&amp;L</span></div>`;
+  const body=rows.map(r=>{
+    const c=CRYPTO_UNIVERSE.find(x=>x.sym===r.sym);
+    const q=CRYPTO.quotes[r.sym]; const mark=q?q.ltp:null;
+    const avg=r.cost/r.qty;
+    const pnl=mark!=null?(r.qty*mark-r.cost):null;
+    return `<div class="cxm-row" style="${cols}"><div class="cxm-name"><b>${c?c.tk:esc(r.sym)}</b></div>
+      <span class="cxm-n num">${r.qty.toFixed(6)}</span>
+      <span class="cxm-n num">${cryptoFmt(avg)}</span>
+      <span class="cxm-n num">${mark!=null?cryptoFmt(mark):'-'}</span>
+      <span class="cxm-n num ${cls(pnl)}">${pnl!=null?cxMoney(pnl):'-'}</span></div>`;
+  }).join('');
+  const statLine=`<div class="cxm-tbl-h">${icon('sprout',13)}<b>Simulated portfolio</b><span>${cryptoFmt(total)} total · ${rows.length} coin${rows.length===1?'':'s'}</span></div>`;
+  return statLine+`<div class="cxm-tbl">${head}${body}</div>`;
+}
+
+function investingDcaTab(){
+  const inv=state.investing;
+  const draftSym=inv.draftSym||CRYPTO_UNIVERSE[0].sym;
+  const draftAmount=inv.draftAmount!=null?inv.draftAmount:50;
+  const draftCadence=inv.draftCadence||'weekly';
+  const coinPicker=CRYPTO_UNIVERSE.map(c=>`<button class="msc-chip${c.sym===draftSym?' on':''}" data-dcasym="${c.sym}">${c.tk}</button>`).join('');
+  const cadences=[['weekly','Weekly'],['biweekly','Every 2 weeks'],['monthly','Monthly']];
+  const cadencePicker=cadences.map(([k,l])=>`<button class="msc-chip${k===draftCadence?' on':''}" data-dcacadence="${k}">${l}</button>`).join('');
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Simulated DCA, real prices.</b> Set an amount and cadence, then tap Simulate a buy now whenever you want to record one, it books at the live price the moment you click, never backdated.</span></div>`;
+  const form=`<div class="order-card"><div class="order-head"><span class="oh-sym">New DCA plan</span></div>
+    <div class="order-body">
+      <div class="mon-ctrl"><div class="mon-seg"><span class="msc-lead">Coin</span>${coinPicker}</div></div>
+      <div class="mon-ctrl"><div class="mon-seg"><span class="msc-lead">Cadence</span>${cadencePicker}</div></div>
+      <div class="fld"><label>Amount per buy</label><div class="inp"><input class="qty-inp num" id="dcaAmount" value="${draftAmount}" inputmode="decimal" aria-label="Amount per buy"></div></div>
+      <button class="cta cta-buy" id="dcaCreateCta">Create plan</button>
+    </div></div>`;
+  const plans=inv.dca||[];
+  const cadLabel=Object.fromEntries(cadences);
+  const cols='grid-template-columns:1fr 130px 100px 100px 220px';
+  const list=!plans.length?secEmpty('sprout','No DCA plans yet','Set one up below, e.g. $50 of BTC every week.'):
+    `<div class="cxm-tbl-h">${icon('activity',13)}<b>Your DCA plans</b><span>${plans.length} plan${plans.length===1?'':'s'}</span></div>
+    <div class="cxm-tbl"><div class="cxm-row cxm-head" style="${cols}"><div class="cxm-name">Coin</div><span class="cxm-n">Amount</span><span class="cxm-n">Invested</span><span class="cxm-n">Now</span><span class="cxm-n">Actions</span></div>
+    ${plans.map(p=>{
+      const c=CRYPTO_UNIVERSE.find(x=>x.sym===p.sym);
+      const invested=(p.history||[]).reduce((s,h)=>s+h.amount,0);
+      const qty=(p.history||[]).reduce((s,h)=>s+h.qty,0);
+      const q=CRYPTO.quotes[p.sym]; const mark=q?q.ltp:null;
+      const value=mark!=null?qty*mark:null;
+      return `<div class="cxm-row" style="${cols}">
+        <div class="cxm-name"><b>${c?c.tk:esc(p.sym)}</b>${p.active?'':' <span class="badge b-warn">Paused</span>'}</div>
+        <span class="cxm-n num">${cryptoFmt(p.amount)}/${cadLabel[p.cadence]||p.cadence}</span>
+        <span class="cxm-n num">${cryptoFmt(invested)}</span>
+        <span class="cxm-n num ${cls(value!=null?value-invested:null)}">${value!=null?cryptoFmt(value):'-'}</span>
+        <span class="cxm-n" style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap">
+          <button class="mini-cancel" data-dcabuy="${p.id}"${mark==null?' disabled':''}>Buy now</button>
+          <button class="mini-cancel" data-dcatoggle="${p.id}">${p.active?'Pause':'Resume'}</button>
+          <button class="mini-cancel" data-dcadelete="${p.id}">Delete</button>
+        </span></div>`;
+    }).join('')}</div>`;
+  return note+form+list;
+}
+
+function investingGoalsTab(){
+  const inv=state.investing;
+  const {total}=investingPortfolioValue();
+  const draftLabel=inv.draftGoalLabel||'';
+  const draftTarget=inv.draftGoalTarget!=null?inv.draftGoalTarget:1000;
+  const form=`<div class="order-card"><div class="order-head"><span class="oh-sym">New goal</span></div>
+    <div class="order-body">
+      <div class="fld"><label>What are you working toward</label><div class="inp"><input class="qty-inp" id="goalLabel" value="${esc(draftLabel)}" placeholder="e.g. House fund" aria-label="Goal name"></div></div>
+      <div class="fld"><label>Target value</label><div class="inp"><input class="qty-inp num" id="goalTarget" value="${draftTarget}" inputmode="decimal" aria-label="Target value"></div></div>
+      <button class="cta cta-buy" id="goalCreateCta">Set goal</button>
+    </div></div>`;
+  const goals=inv.goals||[];
+  const list=!goals.length?secEmpty('activity','No goals yet','Set a target below, this is your own target, never a promise or projection.'):
+    `<div class="cxm-tbl-h">${icon('activity',13)}<b>Your goals</b><span>${goals.length} goal${goals.length===1?'':'s'}</span></div>`+
+    goals.map(g=>{
+      const pctv=Math.max(0,Math.min(100,(total/g.targetValue)*100));
+      return `<div class="goal-row">
+        <div class="goal-row-h"><b>${esc(g.label)}</b><span class="num">${cryptoFmt(total)} of ${cryptoFmt(g.targetValue)}</span></div>
+        <div class="goal-bar"><div class="goal-fill" style="width:${pctv.toFixed(1)}%"></div></div>
+        <div style="display:flex;justify-content:flex-end"><button class="mini-cancel" data-goaldelete="${g.id}">Delete</button></div>
+      </div>`;
+    }).join('');
+  return form+list;
+}
+
+function investingSimulateBuy(id){
+  const p=(state.investing.dca||[]).find(x=>x.id===id);
+  if(!p) return;
+  const q=CRYPTO.quotes[p.sym];
+  if(!CRYPTO.live||!q) return;   // never record a buy without a real live price
+  p.history.push({ts:Date.now(),price:q.ltp,qty:p.amount/q.ltp,amount:p.amount});
+  saveState(); renderInvesting();
+}
+function investingToggleDca(id){
+  const p=(state.investing.dca||[]).find(x=>x.id===id); if(!p) return;
+  p.active=!p.active; saveState(); renderInvesting();
+}
+function investingDeleteDca(id){
+  if(!confirm('Delete this DCA plan? This removes its buy history too.')) return;
+  state.investing.dca=(state.investing.dca||[]).filter(p=>p.id!==id);
+  saveState(); renderInvesting();
+}
+function investingCreateDca(){
+  const inv=state.investing;
+  const sym=inv.draftSym||CRYPTO_UNIVERSE[0].sym;
+  const amount=inv.draftAmount!=null?inv.draftAmount:50;
+  const cadence=inv.draftCadence||'weekly';
+  if(!(amount>0)) return;
+  inv.dca=inv.dca||[];
+  inv.dca.unshift({id:newDcaId(),sym,amount,cadence,active:true,createdAt:Date.now(),history:[]});
+  saveState(); renderInvesting();
+}
+function investingCreateGoal(){
+  const inv=state.investing;
+  const label=(inv.draftGoalLabel||'').trim();
+  const targetValue=inv.draftGoalTarget!=null?inv.draftGoalTarget:0;
+  if(!label||!(targetValue>0)) return;
+  inv.goals=inv.goals||[];
+  inv.goals.unshift({id:newGoalId(),label,targetValue,targetDate:null,createdAt:Date.now()});
+  inv.draftGoalLabel=''; inv.draftGoalTarget=null;
+  saveState(); renderInvesting();
+}
+function investingDeleteGoal(id){
+  if(!confirm('Delete this goal?')) return;
+  state.investing.goals=(state.investing.goals||[]).filter(g=>g.id!==id);
+  saveState(); renderInvesting();
+}
+
+function renderInvesting(){
+  const v=$('investHub'); if(!v) return;
+  if(state.persona!=='investor'){ v.innerHTML=''; return; }
+  state.investing=state.investing||{view:'portfolio',dca:[],goals:[]};
+  state.investing.dca=state.investing.dca||[]; state.investing.goals=state.investing.goals||[];
+  // BUG FIX (2026-09-19): see the identical fix in renderTrading() - polls until CRYPTO.loaded
+  // regardless of who's driving an already-in-flight fetch, so this view is never stuck stale.
+  if(!CRYPTO.loaded){ if(CRYPTO.busy) setTimeout(()=>{ if(state.persona==='investor') renderInvesting(); },300);
+    else loadCrypto().then(()=>{ if(state.persona==='investor') renderInvesting(); }); }
+  const view=state.investing.view;
+  const tabs=[['portfolio','Portfolio'],['dca','DCA Plans'],['goals','Goals']];
+  const head=`<div class="av-head">
+    <div class="av-title"><span class="av-ic">${icon('sprout',17)}</span><div><b>Investing</b><span>Crypto · live Binance data · simulated DCA</span></div></div>
+    <div class="av-tabs" role="tablist" aria-label="Investing views">${tabs.map(([k,l])=>`<button class="av-tab${k===view?' on':''}" role="tab" aria-selected="${k===view}" data-investview="${k}">${l}</button>`).join('')}</div></div>`;
+  const body=view==='portfolio'?investingPortfolioTab():view==='dca'?investingDcaTab():investingGoalsTab();
+  v.innerHTML=`<div class="av-wrap">${head}<div class="av-scroll">${body}</div></div>`;
+  v.querySelectorAll('[data-investview]').forEach(b=>b.onclick=()=>{state.investing.view=b.dataset.investview;saveState();renderInvesting();});
+  v.querySelectorAll('[data-dcasym]').forEach(b=>b.onclick=()=>{state.investing.draftSym=b.dataset.dcasym;renderInvesting();});
+  v.querySelectorAll('[data-dcacadence]').forEach(b=>b.onclick=()=>{state.investing.draftCadence=b.dataset.dcacadence;renderInvesting();});
+  const ai=v.querySelector('#dcaAmount'); if(ai) ai.oninput=()=>{state.investing.draftAmount=Math.max(0,parseFloat(ai.value)||0);};
+  const dcaCta=v.querySelector('#dcaCreateCta'); if(dcaCta) dcaCta.onclick=investingCreateDca;
+  v.querySelectorAll('[data-dcabuy]').forEach(b=>b.onclick=()=>investingSimulateBuy(b.dataset.dcabuy));
+  v.querySelectorAll('[data-dcatoggle]').forEach(b=>b.onclick=()=>investingToggleDca(b.dataset.dcatoggle));
+  v.querySelectorAll('[data-dcadelete]').forEach(b=>b.onclick=()=>investingDeleteDca(b.dataset.dcadelete));
+  const gl=v.querySelector('#goalLabel'); if(gl) gl.oninput=()=>{state.investing.draftGoalLabel=gl.value;};
+  const gt=v.querySelector('#goalTarget'); if(gt) gt.oninput=()=>{state.investing.draftGoalTarget=Math.max(0,parseFloat(gt.value)||0);};
+  const goalCta=v.querySelector('#goalCreateCta'); if(goalCta) goalCta.onclick=investingCreateGoal;
+  v.querySelectorAll('[data-goaldelete]').forEach(b=>b.onclick=()=>investingDeleteGoal(b.dataset.goaldelete));
 }
 
 function renderAlgo(){
@@ -2938,7 +3155,10 @@ function renderAlgo(){
   if(!state.algo.cinstr) state.algo.cinstr='spot';   // crypto instrument scope (Spot/Perps/Options)
   const crypto=true;
   if(!BOT.loaded){ loadBotData().then(()=>{ if(isAlgo())renderAlgo(); }); }
-  if(!CRYPTO.loaded && !CRYPTO.busy){ loadCrypto().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); }
+  // BUG FIX (2026-09-19): see the identical fix in renderTrading() - polls until CRYPTO.loaded
+  // regardless of who's driving an already-in-flight fetch, so this view is never stuck stale.
+  if(!CRYPTO.loaded){ if(CRYPTO.busy) setTimeout(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); },300);
+    else loadCrypto().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); }
   const view=state.algo.view;
   if((view==='monitor'||view==='positions') && !CRYPTOMON.loaded && !CRYPTOMON.busy){ loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); }
   const depN=cxActive();   // Monitor badge reflects deployed strategy count
@@ -3459,6 +3679,15 @@ function init(){
   // allowed." Respect a real saved choice among all three modes; 'algo' only as the true first-visit default.
   state.persona=(saved&&['trader','investor','algo'].indexOf(saved.persona)>=0)?saved.persona:'algo';
   renderPlanChip();
+  // Trading's paper book and Investing's DCA plans/goals didn't survive a reload before this fix -
+  // restore them the same validated way as everything else above, and bump ORDER_ID past any
+  // restored order id so a newly placed order can never collide with one from a prior session.
+  if(saved&&Array.isArray(saved.orders)&&saved.orders.length){
+    state.orders=saved.orders;
+    ORDER_ID=Math.max(ORDER_ID,...saved.orders.map(o=>o.id));
+  }
+  if(saved&&saved.trading) state.trading=saved.trading;
+  if(saved&&saved.investing) state.investing=saved.investing;
   state.investSection=(saved&&saved.investSection)||null;
   state.layout=(saved&&['originals','charts','watchlist','options','futures','build'].indexOf(saved.layout)>=0)?saved.layout:'originals';
   // restore the active Algo sub-tab (Monitor / Library / …) so a refresh keeps you on the page you were on,
