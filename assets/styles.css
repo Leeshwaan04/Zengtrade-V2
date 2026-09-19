@@ -1774,6 +1774,19 @@ html[data-persona="trader"][data-layout="build"] .panel{display:none}
 .soon-pill{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;color:var(--amber);background:color-mix(in srgb,var(--amber) 16%,transparent);border-radius:5px;padding:1px 4px;font-style:normal;margin-left:3px}
 .leg-now{color:var(--green)} .leg-soon{color:var(--slate)}
 .paper-tag{font-size:8.5px;font-weight:800;letter-spacing:.4px;color:var(--amber);background:color-mix(in srgb,var(--amber) 15%,transparent);border:1px solid color-mix(in srgb,var(--amber) 35%,transparent);border-radius:5px;padding:1px 5px;font-style:normal;vertical-align:middle;cursor:help}
+/* real-order Live mode: deliberately red, not green - this is "you are about to risk real money",
+   not a routine status chip, and must never be visually confusable with .paper-tag at a glance. */
+.live-tag{font-size:8.5px;font-weight:800;letter-spacing:.4px;color:var(--red-d);background:color-mix(in srgb,var(--red) 15%,transparent);border:1px solid color-mix(in srgb,var(--red) 40%,transparent);border-radius:5px;padding:1px 5px;font-style:normal;vertical-align:middle;cursor:help}
+.live-toggle{display:flex;align-items:center;gap:8px;margin:0 0 11px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
+.live-toggle .lt-label{font-size:11.5px;font-weight:700;color:var(--slate);flex:1}
+.live-toggle .lt-seg{display:flex;border:1px solid var(--line-2);border-radius:8px;overflow:hidden}
+.live-toggle .lt-btn{border:0;background:var(--surface);color:var(--slate);font-family:var(--sans);font-weight:700;font-size:11px;padding:6px 12px;cursor:pointer}
+.live-toggle .lt-btn.on{background:var(--red);color:#fff}
+.live-toggle .lt-btn[data-lt="paper"].on{background:var(--slate);color:#fff}
+.live-connect-hint{font-size:11.5px;color:var(--slate);margin:0 0 11px}
+.live-connect-hint a{color:var(--accent-d);font-weight:600;text-decoration:none}
+.cta-live{background:var(--red)!important;color:#fff!important}
+.cta-live:hover{filter:brightness(1.08)}
 .ih-demo{display:inline-flex;align-items:center;font-size:9.5px;font-weight:700;letter-spacing:.2px;color:var(--amber);background:color-mix(in srgb,var(--amber) 14%,transparent);border-radius:6px;padding:2px 7px;cursor:help;white-space:nowrap}
 .ih-live{display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;letter-spacing:.2px;color:var(--green);background:color-mix(in srgb,var(--green) 14%,transparent);border-radius:6px;padding:2px 7px;cursor:help;white-space:nowrap}
 .anl-sec{font-size:9.5px;color:var(--slate-2);font-style:normal;margin-left:5px}

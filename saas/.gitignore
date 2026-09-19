@@ -1,4 +1,8 @@
 .webhook_secret
 .nowpayments_api_key
 .nowpayments_ipn_secret
+.exchange_key_enc_master
+.live_max_order_notional_usd
+.live_max_daily_orders
+.binance_force_testnet
 .env

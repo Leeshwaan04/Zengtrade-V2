@@ -2870,16 +2870,32 @@ function tradeModel(sym){
 function tradingTradeTab(){
   const m=tradeModel(state.trading.sym);
   const picker=CRYPTO_UNIVERSE.map(c=>`<button class="msc-chip${c.sym===m.sym?' on':''}" data-tradesym="${c.sym}">${c.tk}</button>`).join('');
-  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Manual paper trading.</b> Real Binance prices, simulated fills, no real order is placed. Buy or sell any coin below instantly at the live price.</span></div>`;
-  return note+`<div class="mon-ctrl"><div class="mon-seg"><span class="msc-lead">Pair</span>${picker}</div></div>
+  // Real order execution, feature-detected: window.ztExchange only exists on the authenticated
+  // production /dashboard (studio.js defines it), never on the untouched local terminal - real
+  // orders are structurally unreachable there, not just hidden behind a UI flag.
+  const hasExchangeBridge=typeof window.ztExchange!=='undefined';
+  const ex=state.trading.exchangeStatus;
+  const live=hasExchangeBridge&&ex&&ex.connected&&!!state.trading.live;
+  let toggle='';
+  if(hasExchangeBridge&&ex&&ex.connected){
+    toggle=`<div class="live-toggle"><span class="lt-label">${live?'Trading with real money on your connected Binance account.':'Paper trading, no money at risk.'}</span>
+      <div class="lt-seg"><button class="lt-btn${live?'':' on'}" data-lt="paper">Paper</button><button class="lt-btn${live?' on':''}" data-lt="live">Live</button></div></div>`;
+  } else if(hasExchangeBridge&&ex&&!ex.connected){
+    toggle=`<p class="live-connect-hint">${icon('shield',13)} Trading with real money needs a connected exchange. <a href="/app#account" target="_blank" rel="noopener">Connect your Binance account &rarr;</a></p>`;
+  }
+  const note=live
+    ?`<div class="cx-preview-note">${icon('alert',13)}<span><b>Real orders, your own Binance account.</b> Every buy/sell below places a REAL market order using your connected key. This is not simulated and cannot be undone once filled.</span></div>`
+    :`<div class="cx-preview-note">${icon('shield',13)}<span><b>Manual paper trading.</b> Real Binance prices, simulated fills, no real order is placed. Buy or sell any coin below instantly at the live price.</span></div>`;
+  const busy=!!state.trading.liveBusy;
+  return note+toggle+`<div class="mon-ctrl"><div class="mon-seg"><span class="msc-lead">Pair</span>${picker}</div></div>
     <div class="order-card">
-      <div class="order-head"><span class="oh-sym">${m.tk} <i class="paper-tag" title="Simulated, no real order is placed. Real execution is on the roadmap.">PAPER</i></span>
+      <div class="order-head"><span class="oh-sym">${m.tk} ${live?'<i class="live-tag" title="Places a real order on your own Binance account.">LIVE</i>':'<i class="paper-tag" title="Simulated, no real order is placed.">PAPER</i>'}</span>
         <span class="oh-px ${cls(m.chg)} num">${m.priced?cryptoFmt(m.px):'-'} ${m.priced?pct(m.chg):''}</span></div>
       <div class="order-body">
         <div class="side-tabs"><div class="side-tab buy ${m.side==='buy'?'active':''}" data-tradeside="buy">BUY</div><div class="side-tab sell ${m.side==='sell'?'active':''}" data-tradeside="sell">SELL</div></div>
         <div class="fld"><label>Quantity</label><div class="inp"><input class="qty-inp num" id="tradeQty" value="${m.qty}" inputmode="decimal" aria-label="Order quantity"></div></div>
         <div class="fld"><label>Order value</label><div class="inp num" id="tradeOrdVal">${m.priced?cryptoFmt(m.value):'-'}</div></div>
-        <button class="cta ${m.side==='buy'?'cta-buy':'cta-sell'}" id="tradeCta"${m.priced?'':' disabled'}>${m.side==='buy'?'BUY':'SELL'} ${m.tk}</button>
+        <button class="cta ${live?'cta-live':(m.side==='buy'?'cta-buy':'cta-sell')}" id="tradeCta"${(m.priced&&!busy)?'':' disabled'}>${busy?'Placing order…':(live?`${m.side==='buy'?'BUY':'SELL'} ${m.tk} (LIVE)`:`${m.side==='buy'?'BUY':'SELL'} ${m.tk}`)}</button>
       </div></div>`;
 }
 function tradingPositionsTab(){
@@ -2928,6 +2944,35 @@ function tradingPlace(){
   if(!m.priced) return;
   placeOrder({sym:m.sym,side:m.side,qty:m.qty,price:m.px,type:'MARKET'});
 }
+// Real order execution: a mandatory, visually-distinct confirm step before ANY real order, never
+// reusing the paper flow's "simulated" copy or its instant one-click placement. The per-order
+// notional cap, cooldown, and daily count are all re-enforced server-side in place-order itself -
+// this confirm step is about informed consent, not the actual safety boundary.
+function tradingPlaceLive(){
+  const m=tradeModel(state.trading.sym);
+  if(!m.priced||state.trading.liveBusy) return;
+  flowModal({title:'Place a REAL order',confirm:'Place real order',danger:true,
+    body:`<div class="flow-top"><div><b>${m.side==='buy'?'BUY':'SELL'} ${m.qty} ${esc(m.tk)}</b><span class="flow-sub">Real Binance order &middot; your own connected account</span></div></div>
+      <div class="flow-rows">
+        <div><span>Est. price</span><b class="num">${cryptoFmt(m.px)}</b></div>
+        <div><span>Est. value</span><b class="num">${cryptoFmt(m.value)}</b></div>
+      </div>
+      <p class="flow-note">${icon('alert',13)}<span><b>This places a real order on your own Binance account, using real money.</b> It is not simulated, and cannot be undone once filled.</span></p>`,
+    onConfirm(){ tradingSubmitLive(m); }
+  });
+}
+function tradingSubmitLive(m){
+  state.trading.liveBusy=true; renderTrading();
+  window.ztExchange.placeOrder({symbol:m.sym,side:m.side==='buy'?'BUY':'SELL',qty:m.qty}).then(res=>{
+    state.trading.liveBusy=false;
+    if(res.ok&&res.data&&res.data.filled){
+      quickToast('Real order filled',`${m.side==='buy'?'Bought':'Sold'} ${res.data.qty} ${m.tk} at ${cryptoFmt(res.data.avgPrice||m.px)} on your Binance account.`);
+    } else {
+      quickToast('Live order failed',(res.data&&res.data.error)||'Binance did not accept this order, please try again.');
+    }
+    renderTrading();
+  });
+}
 function renderTrading(){
   const v=$('tradingView'); if(!v) return;
   if(state.persona!=='trader'){ v.innerHTML=''; return; }
@@ -2939,6 +2984,14 @@ function renderTrading(){
   // Poll until CRYPTO.loaded is true regardless of who's driving the in-flight request.
   if(!CRYPTO.loaded){ if(CRYPTO.busy) setTimeout(()=>{ if(state.persona==='trader') renderTrading(); },300);
     else loadCrypto().then(()=>{ if(state.persona==='trader') renderTrading(); }); }
+  // Real-execution status, fetched lazily once per session (feature-detected: window.ztExchange
+  // only exists on the authenticated production dashboard). state.trading.live is deliberately
+  // never persisted (not part of saveState()'s trading shape) - it must default to Paper on every
+  // fresh page load even if a prior session left it on Live.
+  if(typeof window.ztExchange!=='undefined'&&state.trading.exchangeStatus===undefined&&!state.trading.exchangeStatusBusy){
+    state.trading.exchangeStatusBusy=true;
+    window.ztExchange.status().then(s=>{ state.trading.exchangeStatus=s; state.trading.exchangeStatusBusy=false; if(state.persona==='trader') renderTrading(); });
+  }
   const view=state.trading.view;
   const tabs=[['trade','Trade'],['positions','Positions'],['history','History']];
   const head=`<div class="av-head">
@@ -2956,7 +3009,8 @@ function renderTrading(){
     if(ordVal) ordVal.textContent=m.priced?cryptoFmt(m.value):'-';
     const cb=v.querySelector('#tradeCta'); if(cb) cb.disabled=!m.priced;
   };
-  const cta=v.querySelector('#tradeCta'); if(cta) cta.onclick=tradingPlace;
+  v.querySelectorAll('[data-lt]').forEach(b=>b.onclick=()=>{state.trading.live=b.dataset.lt==='live';renderTrading();});
+  const cta=v.querySelector('#tradeCta'); if(cta) cta.onclick=()=>{ (state.trading.live?tradingPlaceLive:tradingPlace)(); };
   v.querySelectorAll('[data-tradecancel]').forEach(b=>b.onclick=()=>cancelOrder(+b.dataset.tradecancel));
 }
 

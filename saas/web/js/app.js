@@ -7,11 +7,12 @@ import { getTier, isPro, openCheckout, checkoutReady, PLANS, FREE_DEPLOY_LIMIT }
 import { STRATEGIES, byKey, nameOf } from "./strategies.js";
 import { esc, money, pct, num, timeAgo, tone, toast, skeletonRows, equityCurve } from "./ui.js";
 import { gaEvent } from "./ga.js";
+import { getExchangeStatus, connectExchange, disconnectExchange } from "./exchange.js";
 
 const $ = s => document.querySelector(s);
 const app = $("#view");
 let user = null, tier = "free", billCycle = "month";
-let state = { deployments: [], trades: [], loading: true, error: null, workerAlive: true };
+let state = { deployments: [], trades: [], loading: true, error: null, workerAlive: true, exchange: { connected: false } };
 
 const ROUTES = ["dashboard", "strategies", "forward", "accuracy", "analytics", "activity", "account"];
 const route = () => (location.hash.replace("#", "") || "dashboard");
@@ -120,6 +121,7 @@ async function load() {
     state.trades = tr.data || [];
     tier = isPro(prof.data?.tier) ? prof.data.tier : "free";   // keep the real tier (pro OR elite)
     state.workerAlive = await isWorkerAlive();
+    state.exchange = await getExchangeStatus();
   } catch (e) {
     state.error = niceError(e);
     toast(state.error, "error");
@@ -441,6 +443,22 @@ function tradeRow(t) {
 
 // ---- Account ----
 function renderAccount() {
+  const ex = state.exchange;
+  const exchangeBody = ex.connected
+    ? `<div class="acc-row"><span>Binance</span><b>Connected ✓ <span class="muted">· ${esc(timeAgo(ex.connectedAt))}</span></b></div>
+       <div class="acc-row"><span>Disconnecting removes this key from zengtrade only, it does not revoke it on Binance.</span>
+         <button class="btn ghost sm" id="exDisconnect">Disconnect</button></div>`
+    : `<div class="acc-row-stack">
+         <p class="muted" style="font-size:12.5px;line-height:1.6;margin:0 0 10px">
+           Create a <b>trade-only</b> API key on Binance (API Management &rarr; Create API), check
+           <b>only</b> "Enable Spot &amp; Margin Trading", leave "Enable Withdrawals" unchecked, then
+           paste both values below. zengtrade never sees your Binance password and never touches
+           your funds &mdash; it just places orders using this key, on your own account.
+         </p>
+         <input type="password" id="exKey" placeholder="API key" autocomplete="off" class="acc-input">
+         <input type="password" id="exSecret" placeholder="API secret" autocomplete="off" class="acc-input">
+         <button class="btn sm primary" id="exConnect">Connect Binance</button>
+       </div>`;
   app.innerHTML = `
     <div class="page-h"><div class="page-eyebrow"><span class="dot"></span>your account</div><h2>Account</h2></div>
     <div class="card acc">
@@ -448,7 +466,11 @@ function renderAccount() {
       <div class="acc-row"><span>Email</span><b>${esc(user.email)}</b></div>
       <div class="acc-row"><span>Plan</span><b>${isPro(tier) ? "Pro" : "Free"}</b>
         ${isPro(tier) ? "" : `<button class="btn sm primary" id="accUp">Upgrade to Pro</button>`}</div>
-      <div class="acc-row"><span>Trading mode</span><b>Paper only <span class="muted">· non-custodial · no real orders</span></b></div>
+      <div class="acc-row"><span>Trading mode</span><b>Paper by default <span class="muted">· real orders only on your own connected exchange, non-custodial</span></b></div>
+    </div>
+    <div class="card acc">
+      <div class="card-h"><span class="card-ic">⇄</span><h3>Exchange connection</h3></div>
+      ${exchangeBody}
     </div>
     <div class="card acc">
       <div class="card-h"><span class="card-ic">§</span><h3>Legal &amp; support</h3></div>
@@ -461,6 +483,26 @@ function renderAccount() {
     </div>`;
   $("#accUp") && ($("#accUp").onclick = () => location.hash = "pricing");
   $("#accOut").onclick = (e) => { const b = e.currentTarget; b.disabled = true; b.textContent = "Signing out…"; signOut(); };
+  $("#exConnect") && ($("#exConnect").onclick = async (e) => {
+    const btn = e.currentTarget;
+    const apiKey = $("#exKey").value.trim(), apiSecret = $("#exSecret").value.trim();
+    if (!apiKey || !apiSecret) return toast("Enter both the API key and secret.", "info");
+    btn.disabled = true; btn.textContent = "Connecting…";
+    const r = await connectExchange(apiKey, apiSecret);
+    if (r.error) { toast(r.error, "error"); btn.disabled = false; btn.textContent = "Connect Binance"; return; }
+    toast("Binance connected.", "success");
+    state.exchange = await getExchangeStatus();
+    renderAccount();
+  });
+  $("#exDisconnect") && ($("#exDisconnect").onclick = async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true; btn.textContent = "Disconnecting…";
+    const r = await disconnectExchange();
+    if (r.error) { toast(r.error, "error"); btn.disabled = false; btn.textContent = "Disconnect"; return; }
+    toast("Binance disconnected.", "info");
+    state.exchange = { connected: false };
+    renderAccount();
+  });
 }
 
 // ---------------------------------------------------------------- actions (optimistic + toast)

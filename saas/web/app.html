@@ -93,6 +93,12 @@
   .acc-row>span:first-child{width:130px;flex:0 0 auto;color:var(--slate);font-size:13px;font-weight:600} .acc-row b{font-size:13.5px} .acc-row .sp,.acc-row>b{flex:1}
   .acc-row a{color:var(--blue);text-decoration:none;font-size:13.5px;font-weight:600} .acc-row .links{display:flex;gap:14px}
   .acc-row button{margin-left:auto}
+  /* exchange connect form: the first real text input in this SPA, so this is new, not reused */
+  .acc-row-stack{padding:14px 0}
+  .acc-input{display:block;width:100%;box-sizing:border-box;border:1px solid var(--line-2);border-radius:9px;
+    background:var(--surface-2);color:var(--navy);font:600 13px/1 var(--mono);padding:11px 13px;margin-bottom:9px}
+  .acc-input:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:transparent}
+  .acc-input::placeholder{color:var(--slate-2);font-weight:500}
   /* upsell: quiet accent note, not a full shouting block - this loads on every free-tier visit,
      so it needs to read as useful context, not a nag repeated at every login. */
   .upsell{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--green);border-radius:13px;padding:13px 16px;margin-bottom:16px}

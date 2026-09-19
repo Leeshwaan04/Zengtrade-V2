@@ -158,6 +158,29 @@
     });
   }
 
+  /* ---- real (non-custodial) order execution bridge ----
+   * assets/app.js (the terminal itself) has zero Supabase awareness - it only ever writes to
+   * localStorage. This is the ONLY place that talks to Supabase for the whole /dashboard page, so
+   * it's the natural, minimal-blast-radius integration point for real orders, same reasoning as
+   * every other real (non-paper) call already bridged from here. Trading mode feature-detects
+   * window.ztExchange before ever showing a Live toggle - on the untouched local terminal (no
+   * studio.js, no session) this global simply doesn't exist, so real orders are structurally
+   * unreachable outside the authenticated production surface, not just hidden by a UI check. */
+  window.ztExchange = {
+    status: function () {
+      return fetch(SUPA + "/rest/v1/exchange_connection?exchange=eq.binance&select=exchange,connected_at",
+        { headers: sbHeaders() })
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .then(function (rows) { return (rows && rows[0]) ? { connected: true, connectedAt: rows[0].connected_at } : { connected: false }; })
+        .catch(function () { return { connected: false }; });
+    },
+    placeOrder: function (spec) {
+      return fetch(SUPA + "/functions/v1/place-order", { method: "POST", headers: sbHeaders(), body: JSON.stringify(spec) })
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }).catch(function () { return { ok: false, data: { error: "unexpected response" } }; }); })
+        .catch(function () { return { ok: false, data: { error: "network error, please try again" } }; });
+    },
+  };
+
   /* ---- toasts: reuse the terminal's own #toastWrap/.toast component (same one every other
    * tab's confirmations use) instead of a bespoke floating card. Fixes two real bugs the ad hoc
    * version had: (1) it rendered at document.body scale with up to 4 action links, so on shorter

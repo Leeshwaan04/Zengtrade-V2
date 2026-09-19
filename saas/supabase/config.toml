@@ -12,3 +12,10 @@ verify_jwt = false   # gateway JWT check would 401 the CORS preflight; we valida
 [functions.auth-send-email]
 verify_jwt = false   # Supabase's Auth Hooks call this with a Standard Webhooks signature
                      # (verified in-code via SEND_EMAIL_HOOK_SECRET), not a Supabase JWT.
+
+[functions.exchange-connect]
+verify_jwt = false   # gateway JWT check would 401 the CORS preflight; we validate the user IN-CODE
+                     # (auth.getUser on the caller's token) instead, same reasoning as nowpayments-create-invoice.
+
+[functions.place-order]
+verify_jwt = false   # same reasoning as exchange-connect above.
