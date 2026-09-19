@@ -3280,11 +3280,16 @@ function toggleSurface(){ cascadeSurface(state.surface==='night'?'day':'night');
 function tapeLoop(){ doTick(); const vix=+$('sVix').value, night=state.surface==='night'?0.7:1; const delay=clamp((1500-(vix-8)*42)*night,300,1500); state.tapeT=setTimeout(tapeLoop,delay); }
 function applyPaneWidths(){
   const t=document.querySelector('.terminal'); if(!t)return;
-  const threePane=state.persona==='trader'||state.persona==='investor';
-  if(!threePane){ t.style.gridTemplateColumns=''; return; } // algo/ai are single-pane: drop any stale inline width so the persona stylesheet (1fr) wins
-  const wlHidden=threePane && state.cards && state.cards.watchlist==='hidden';
-  if(wlHidden){ const bear=document.documentElement.dataset.regime==='bear'; const right=state.paneW?state.paneW.right:(bear?300:332); t.style.gridTemplateColumns=`1fr ${right}px`; }
-  else t.style.gridTemplateColumns=state.paneW?`${state.paneW.left}px 1fr ${state.paneW.right}px`:'';
+  // BUG FIX (2026-09-19): this used to give trader/investor a resizable 3-pane inline width
+  // (watchlist | chart | order-pad), back when only algo/ai used the single-column layout. All
+  // four personas now use the same single-container-per-mode layout (#algoView/#tradingView/
+  // #investHub/#aiView, styles.css's universal `.terminal{grid-template-columns:1fr}`) - the old
+  // 3-pane layout is retired everywhere, not just for algo/ai. Leaving this stale inline width in
+  // place for trader/investor overrode that CSS rule (inline style beats a class selector),
+  // collapsing #investHub/#tradingView into a ~330px column and leaving most of the screen as
+  // bare ambient background with nothing drawn over it. Always clear it now; there's no persona
+  // left that needs a JS-computed grid width.
+  t.style.gridTemplateColumns='';
 }
 function applyChartHeight(){
   const card=$('chartCard'); if(card) card.style.height=state.chartH?state.chartH+'px':'';

@@ -1987,7 +1987,14 @@ html[data-persona="algo"] #algoView{display:flex;flex-direction:column;flex:1;mi
 html[data-persona="ai"] #aiView{display:flex;flex-direction:column;flex:1;min-height:0}
 html[data-persona="trader"] #tradingView{display:flex;flex-direction:column;flex:1;min-height:0}
 html[data-persona="investor"] #investHub{display:flex;flex-direction:column;flex:1;min-height:0}
-.terminal{grid-template-columns:1fr}
+/* BUG FIX (2026-09-19): a bare `.terminal` selector here loses to the older, more specific
+   regime-scoped 3-pane width rules still further up the file (e.g. html[data-regime="bear"]
+   .terminal{grid-template-columns:332px 1fr 300px}, plus narrow-viewport media-query variants) -
+   CSS specificity, not source order, decides the winner, and those rules were never removed when
+   the 3-pane layout retired. That left the single-column containers above squeezed into one of
+   the old pane's widths, with nothing drawn over most of the screen but the ambient background.
+   !important makes the intent explicit: no persona/regime keeps a multi-column terminal anymore. */
+.terminal{grid-template-columns:1fr!important}
 .pane-left,.pane-right{display:none}
 #chartCard,#chartResize,.panel,#deskBar,#deskView{display:none!important}
 
