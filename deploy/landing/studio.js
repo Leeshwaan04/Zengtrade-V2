@@ -57,12 +57,31 @@
       if (exp * 1000 <= Date.now()) return null;
       var tok = s.access_token || (s.session && s.session.access_token);
       var uid = (s.user && s.user.id) || (s.session && s.session.user && s.session.user.id);
-      return tok && uid ? { tok: tok, uid: uid } : null;
+      var email = (s.user && s.user.email) || (s.session && s.session.user && s.session.user.email) || "";
+      return tok && uid ? { tok: tok, uid: uid, email: email } : null;
     } catch (e) { return null; }
   }
   var sess = session();
   if (!sess) { location.replace("/login"); return; }
   trackPageview();
+
+  // BUG FIX (2026-09-19): the header profile avatar was static markup ("SB", the founder's own
+  // initials left over from building this), shown to every real user regardless of who's
+  // actually signed in, and had zero click handler at all - a dead CTA. Wire it to the real
+  // signed-in user's own initials and make it open the real Account page (/app#account), which
+  // already has Sign out and account settings - reuses what exists instead of building a new menu.
+  (function wireProfileAvatar() {
+    var el = document.querySelector(".profile");
+    if (!el) return;
+    var local = (sess.email || "").split("@")[0];
+    el.textContent = local ? local.slice(0, 2).toUpperCase() : "?";
+    el.setAttribute("title", sess.email || "Account");
+    el.style.cursor = "pointer";
+    el.setAttribute("role", "button");
+    el.setAttribute("tabindex", "0");
+    el.onclick = function () { location.href = "/app#account"; };
+    el.onkeydown = function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); el.onclick(); } };
+  })();
   setTimeout(checkFirstClosedTrade, 2000);
   setInterval(function () { if (document.visibilityState === "visible") checkFirstClosedTrade(); }, 30000);
 
