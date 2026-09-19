@@ -849,8 +849,19 @@
     var wrap = document.getElementById("ztTourWrap");
     if (wrap) wrap.remove();
     document.removeEventListener("keydown", tourKeydown);
+    document.removeEventListener("click", tourPersonaWatch, true);
   }
   function tourKeydown(e) { if (e.key === "Escape") endTour(); }
+  /* BUG FIX (2026-09-19): this tour's steps each spotlight an Algo Studio tab button via
+   * getBoundingClientRect() captured once, with no ongoing link back to that element. If the
+   * user switches to Investing/Trading mid-tour, renderAlgo() wipes Algo Studio's tab bar from
+   * the DOM (it's no longer the active mode) - the spotlighted button is gone, but the fixed-
+   * position spotlight div just stays frozen at its last coordinates, landing on whatever
+   * happens to share that pixel position in the new mode's identical tab-bar shell. End the tour
+   * the instant the user switches mode instead of leaving it stranded like that. */
+  function tourPersonaWatch(e) {
+    if (document.getElementById("ztTourWrap") && e.target.closest && e.target.closest("[data-mode-btn]")) endTour();
+  }
   function positionTourSpot(el, wrap) {
     var r = el.getBoundingClientRect(), pad = 6;
     var spot = wrap.querySelector(".zt-tour-spot");
@@ -898,12 +909,22 @@
     try { if (localStorage.getItem("zt_seen_dashboard_tour")) return; } catch (e) { return; }
     var tries = 0;
     (function waitForTabs() {
+      // BUG FIX (2026-09-19): this tour is Algo-Studio-only content (Library/Monitor/Forward
+      // Test/Risk Governor) written before the Investing/Trading header toggle existed, when
+      // Algo Studio was the only real destination - it had no awareness of which mode was
+      // actually active. A user landing on the default first-visit persona (algo) then switching
+      // to Investing/Trading before this fired (a completely normal first action now) still got
+      // shown Algo Studio's tour, spotlighting an already-removed tab button - see the
+      // tourPersonaWatch comment for the rest of that chain. Only ever start it while the user is
+      // actually looking at Algo Studio, and bail (not retry) once they've moved on themselves.
+      if (document.documentElement.dataset.persona !== "algo") return;
       if (!document.querySelector('[data-algoview="' + TOUR_STEPS[0].view + '"]')) {
         if (++tries < 30) setTimeout(waitForTabs, 300);
         return;
       }
       if (nudgeTimer) { clearTimeout(nudgeTimer); nudgeTimer = null; }
       document.addEventListener("keydown", tourKeydown);
+      document.addEventListener("click", tourPersonaWatch, true);
       showTourStep(0);
     })();
   }
