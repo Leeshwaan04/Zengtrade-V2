@@ -4018,6 +4018,10 @@ function openConnectExchangeModal(){
   flowModal({title:'Connect Binance',confirm:'Connect',
     body:`<div class="trust-row">${trust}</div>
       <p class="flow-note">${icon('activity',13)}<span>On Binance: <b>API Management &rarr; Create API</b>, check <b>only</b> "Enable Spot &amp; Margin Trading", leave "Enable Withdrawals" unchecked. zengtrade never sees your Binance password, this key only ever places orders on your own account.</span></p>
+      <div class="flow-links">
+        <a href="https://www.binance.com" target="_blank" rel="noopener">${icon('link',12)}Open Binance</a>
+        <a href="/learn/how-to-create-a-binance-api-key/" target="_blank" rel="noopener">${icon('activity',12)}Full step-by-step guide</a>
+      </div>
       <div class="fld"><label>API key</label><div class="inp"><span class="inp-ic">${icon('link',13)}</span><input type="password" class="gyok-inp" id="gyokKey" autocomplete="off" aria-label="Binance API key" placeholder="Paste your API key"></div></div>
       <div class="fld"><label>API secret</label><div class="inp"><span class="inp-ic">${icon('lock',13)}</span><input type="password" class="gyok-inp" id="gyokSecret" autocomplete="off" aria-label="Binance API secret" placeholder="Paste your API secret"></div></div>
       <p class="flow-err" id="gyokErr" hidden></p>`,

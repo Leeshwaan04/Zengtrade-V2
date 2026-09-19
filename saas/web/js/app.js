@@ -459,6 +459,10 @@ function renderAccount() {
            Margin Trading", leave "Enable Withdrawals" unchecked. zengtrade never sees your Binance
            password, this key only ever places orders on your own account.
          </p>
+         <div style="display:flex;flex-wrap:wrap;gap:14px;margin:-2px 0 11px">
+           <a href="https://www.binance.com" target="_blank" rel="noopener" style="font-size:11.5px;font-weight:700;color:var(--green-d);text-decoration:none">Open Binance &rarr;</a>
+           <a href="/learn/how-to-create-a-binance-api-key/" target="_blank" rel="noopener" style="font-size:11.5px;font-weight:700;color:var(--green-d);text-decoration:none">Full step-by-step guide &rarr;</a>
+         </div>
          <input type="password" id="exKey" placeholder="Paste your API key" autocomplete="off" class="acc-input">
          <input type="password" id="exSecret" placeholder="Paste your API secret" autocomplete="off" class="acc-input">
          <button class="btn sm primary" id="exConnect">Connect Binance</button>

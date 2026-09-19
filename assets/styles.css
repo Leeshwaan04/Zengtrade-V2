@@ -1757,6 +1757,9 @@ html[data-persona="trader"][data-layout="build"] .panel{display:none}
 .inp-ic{color:var(--slate-2);flex:0 0 auto;display:flex}
 .gyok-inp{flex:1;border:0;background:transparent;font-size:13px;color:var(--navy);outline:none;min-width:0;font-family:var(--mono)}
 .gyok-inp::placeholder{color:var(--slate-2);font-family:var(--sans)}
+.flow-links{display:flex;flex-wrap:wrap;gap:14px;margin:-3px 0 13px}
+.flow-links a{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;color:var(--accent-d);text-decoration:none}
+.flow-links a:hover{text-decoration:underline}
 .pricing-ov{position:fixed;inset:0;z-index:200;background:color-mix(in srgb,#04070c 62%,transparent);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:36px 18px}
 .pricing-panel{width:min(1080px,100%);background:var(--bg);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-lg);padding:26px 28px 22px;animation:pxin .22s ease}
 @keyframes pxin{from{opacity:0;transform:translateY(10px) scale(.99)}to{opacity:1;transform:none}}
