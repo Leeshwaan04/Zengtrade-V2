@@ -9,7 +9,7 @@ generates:
 All share /site.css, /site.js, the same header/ticker/nav, assets, and the live crypto tape.
 Run:  python3 deploy/landing/build.py   ->  writes into deploy/landing/dist/
 """
-import os, re, shutil
+import os, re, shutil, hashlib
 from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -431,9 +431,22 @@ CSP_STUDIO = ("default-src 'self'; script-src 'self' https://www.googletagmanage
               "object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
 term = re.sub(r'<meta http-equiv="Content-Security-Policy"[^>]*/>',
               f'<meta http-equiv="Content-Security-Policy" content="{CSP_STUDIO}" />', term, count=1)
+# BUG FIX (2026-09-19): "?v=14" used to be a hand-bumped number - a fix could ship server-side
+# and every browser that already cached the old studio.js would keep silently running it forever,
+# since the URL never changed. Hash the real file content instead: any edit changes the hash,
+# which changes the URL, which forces a fresh fetch. Nobody has to remember to bump anything again.
+studio_hash = hashlib.sha256(open(os.path.join(HERE, "studio.js"), "rb").read()).hexdigest()[:10]
 term = term.replace('<script src="assets/chart.js',
-                    '<script src="studio.js?v=14"></script>\n<script src="assets/chart.js')
+                    f'<script src="studio.js?v={studio_hash}"></script>\n<script src="assets/chart.js')
 assert 'studio.js' in term, "studio.js injection failed - terminal script tags moved?"
+# Same fix as studio.js above, for the other hand-versioned scripts baked into index.html
+# (chart.js/crypto-only.js/app.js) - content hash instead of a manually-bumped number.
+def _rehash_script(html, rel_path):
+    fpath = os.path.join(ROOT, rel_path)
+    h = hashlib.sha256(open(fpath, "rb").read()).hexdigest()[:10]
+    return re.sub(re.escape(rel_path) + r'\?v=[A-Za-z0-9]+', f'{rel_path}?v={h}', html)
+for _rel in ("assets/chart.js", "assets/crypto-only.js", "assets/app.js"):
+    term = _rehash_script(term, _rel)
 # gtag as high in <head> as possible, right after the CSP that now permits it.
 term = term.replace(f'<meta http-equiv="Content-Security-Policy" content="{CSP_STUDIO}" />',
                     f'<meta http-equiv="Content-Security-Policy" content="{CSP_STUDIO}" />\n{GA_SNIPPET}', 1)

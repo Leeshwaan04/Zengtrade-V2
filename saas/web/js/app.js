@@ -444,17 +444,20 @@ function renderAccount() {
   app.innerHTML = `
     <div class="page-h"><div class="page-eyebrow"><span class="dot"></span>your account</div><h2>Account</h2></div>
     <div class="card acc">
+      <div class="card-h"><span class="card-ic">◐</span><h3>Account details</h3></div>
       <div class="acc-row"><span>Email</span><b>${esc(user.email)}</b></div>
       <div class="acc-row"><span>Plan</span><b>${isPro(tier) ? "Pro" : "Free"}</b>
         ${isPro(tier) ? "" : `<button class="btn sm primary" id="accUp">Upgrade to Pro</button>`}</div>
       <div class="acc-row"><span>Trading mode</span><b>Paper only <span class="muted">· non-custodial · no real orders</span></b></div>
     </div>
     <div class="card acc">
+      <div class="card-h"><span class="card-ic">§</span><h3>Legal &amp; support</h3></div>
       <div class="acc-row"><span>Legal</span><span class="links"><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/risk">Risk</a></span></div>
       <div class="acc-row"><span>Support</span><a href="mailto:letmeknow@zengtrade.in">letmeknow@zengtrade.in</a></div>
     </div>
     <div class="card acc danger">
-      <div class="acc-row"><span>Sign out</span><button class="btn ghost sm" id="accOut">Sign out</button></div>
+      <div class="card-h"><span class="card-ic">⏻</span><h3>Sign out</h3></div>
+      <div class="acc-row"><span>End your session on this device</span><button class="btn ghost sm" id="accOut">Sign out</button></div>
     </div>`;
   $("#accUp") && ($("#accUp").onclick = () => location.hash = "pricing");
   $("#accOut").onclick = () => signOut();
