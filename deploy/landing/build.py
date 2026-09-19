@@ -457,7 +457,7 @@ def _rehash_script(html, rel_path):
     fpath = os.path.join(ROOT, rel_path)
     h = hashlib.sha256(open(fpath, "rb").read()).hexdigest()[:10]
     return re.sub(re.escape(rel_path) + r'\?v=[A-Za-z0-9]+', f'{rel_path}?v={h}', html)
-for _rel in ("assets/chart.js", "assets/crypto-only.js", "assets/app.js"):
+for _rel in ("assets/chart.js", "assets/crypto-only.js", "assets/app.js", "assets/early-restore.js", "assets/styles.css"):
     term = _rehash_script(term, _rel)
 # gtag as high in <head> as possible, right after the CSP that now permits it.
 term = term.replace(f'<meta http-equiv="Content-Security-Policy" content="{CSP_STUDIO}" />',
