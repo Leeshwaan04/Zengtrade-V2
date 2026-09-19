@@ -4002,21 +4002,24 @@ function renderExchangeChip(){
   el.hidden=false;
   if(state.headerExchange.connected){
     el.classList.add('ex-on');
-    el.innerHTML=`${icon('check',12)}<span>Exchange Connected</span>`;
+    el.innerHTML=`<span class="ex-dot"></span><span>Exchange Connected</span>`;
     el.title='Manage your connected exchange';
     el.onclick=()=>{ window.location.href='/app#account'; };
   } else {
     el.classList.remove('ex-on');
-    el.innerHTML=`${icon('link',12)}<span>Connect Exchange</span>`;
+    el.innerHTML=`<span class="ex-dot"></span>${icon('link',12)}<span>Connect Exchange</span>`;
     el.title='Connect your own Binance account to trade with real money';
     el.onclick=openConnectExchangeModal;
   }
 }
 function openConnectExchangeModal(){
+  const trust=[['shield','Non-custodial'],['lock','Encrypted at rest'],['link','Trade-only key']]
+    .map(([ic,l])=>`<span class="trust-badge">${icon(ic,11)}${l}</span>`).join('');
   flowModal({title:'Connect Binance',confirm:'Connect',
-    body:`<p class="flow-note">${icon('shield',13)}<span>Create a <b>trade-only</b> API key on Binance (API Management &rarr; Create API), check <b>only</b> "Enable Spot &amp; Margin Trading", leave "Enable Withdrawals" unchecked, then paste both values below. zengtrade never sees your Binance password and never touches your funds, it just places orders using this key, on your own account.</span></p>
-      <div class="fld"><label>API key</label><div class="inp"><input type="password" id="gyokKey" autocomplete="off" aria-label="Binance API key"></div></div>
-      <div class="fld"><label>API secret</label><div class="inp"><input type="password" id="gyokSecret" autocomplete="off" aria-label="Binance API secret"></div></div>
+    body:`<div class="trust-row">${trust}</div>
+      <p class="flow-note">${icon('activity',13)}<span>On Binance: <b>API Management &rarr; Create API</b>, check <b>only</b> "Enable Spot &amp; Margin Trading", leave "Enable Withdrawals" unchecked. zengtrade never sees your Binance password, this key only ever places orders on your own account.</span></p>
+      <div class="fld"><label>API key</label><div class="inp"><span class="inp-ic">${icon('link',13)}</span><input type="password" class="gyok-inp" id="gyokKey" autocomplete="off" aria-label="Binance API key" placeholder="Paste your API key"></div></div>
+      <div class="fld"><label>API secret</label><div class="inp"><span class="inp-ic">${icon('lock',13)}</span><input type="password" class="gyok-inp" id="gyokSecret" autocomplete="off" aria-label="Binance API secret" placeholder="Paste your API secret"></div></div>
       <p class="flow-err" id="gyokErr" hidden></p>`,
     onConfirm(body){
       const key=body.querySelector('#gyokKey').value.trim(), secret=body.querySelector('#gyokSecret').value.trim();

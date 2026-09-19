@@ -449,14 +449,18 @@ function renderAccount() {
        <div class="acc-row"><span>Disconnecting removes this key from zengtrade only, it does not revoke it on Binance.</span>
          <button class="btn ghost sm" id="exDisconnect">Disconnect</button></div>`
     : `<div class="acc-row-stack">
+         <div class="trust-row">
+           <span class="trust-badge">Non-custodial</span>
+           <span class="trust-badge">Encrypted at rest</span>
+           <span class="trust-badge">Trade-only key</span>
+         </div>
          <p class="muted" style="font-size:12.5px;line-height:1.6;margin:0 0 10px">
-           Create a <b>trade-only</b> API key on Binance (API Management &rarr; Create API), check
-           <b>only</b> "Enable Spot &amp; Margin Trading", leave "Enable Withdrawals" unchecked, then
-           paste both values below. zengtrade never sees your Binance password and never touches
-           your funds &mdash; it just places orders using this key, on your own account.
+           On Binance: <b>API Management &rarr; Create API</b>, check <b>only</b> "Enable Spot &amp;
+           Margin Trading", leave "Enable Withdrawals" unchecked. zengtrade never sees your Binance
+           password, this key only ever places orders on your own account.
          </p>
-         <input type="password" id="exKey" placeholder="API key" autocomplete="off" class="acc-input">
-         <input type="password" id="exSecret" placeholder="API secret" autocomplete="off" class="acc-input">
+         <input type="password" id="exKey" placeholder="Paste your API key" autocomplete="off" class="acc-input">
+         <input type="password" id="exSecret" placeholder="Paste your API secret" autocomplete="off" class="acc-input">
          <button class="btn sm primary" id="exConnect">Connect Binance</button>
        </div>`;
   app.innerHTML = `

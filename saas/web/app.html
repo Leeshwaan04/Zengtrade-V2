@@ -99,6 +99,10 @@
     background:var(--surface-2);color:var(--navy);font:600 13px/1 var(--mono);padding:11px 13px;margin-bottom:9px}
   .acc-input:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:transparent}
   .acc-input::placeholder{color:var(--slate-2);font-weight:500}
+  /* trust strip: same scannable-badge pattern as the terminal's connect modal (assets/styles.css) */
+  .trust-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:11px}
+  .trust-badge{display:inline-flex;align-items:center;font-size:10.5px;font-weight:700;color:var(--green-d);
+    background:var(--green-soft);border-radius:999px;padding:4px 9px}
   /* upsell: quiet accent note, not a full shouting block - this loads on every free-tier visit,
      so it needs to read as useful context, not a nag repeated at every login. */
   .upsell{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--green);border-radius:13px;padding:13px 16px;margin-bottom:16px}
