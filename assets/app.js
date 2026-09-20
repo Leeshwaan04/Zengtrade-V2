@@ -2131,7 +2131,14 @@ function patchCryptoMonitorLive(){
 }
 function connectCryptoWS(){
   if(typeof WebSocket==='undefined') return;
-  if(!(state.algo&&state.algo.market==='crypto')) return;
+  // BUG FIX (2026-09-20): every caller of this function (boot, refreshVisible, the market toggle)
+  // treats CRYPTO_ONLY alone as sufficient to mean "we're in crypto mode," matching how
+  // renderTopIndex/scheduleTapePatch/the 5s poll all read it - this was the one place still
+  // requiring state.algo.market==='crypto' specifically, with no CRYPTO_ONLY fallback. If that flag
+  // was ever unset/reset for even one tick between two synchronous statements at boot, this was
+  // the single guard standing between a live ticker and a WebSocket that never gets attempted for
+  // the rest of the session, with nothing else ever re-triggering the very first connect attempt.
+  if(!(CRYPTO_ONLY||(state.algo&&state.algo.market==='crypto'))) return;
   const url=cryptoWsUrl();
   if(CWS.ws && CWS.url===url && (CWS.ws.readyState===0||CWS.ws.readyState===1)) return;   // already connecting/open to this set
   disconnectCryptoWS();
@@ -3588,7 +3595,7 @@ function doTick(){
 function syncSliderLabels(){const s=readSignals();
   $('vTrend').textContent=(s.trend>=0?'+':'')+s.trend;$('vVix').textContent=s.vix.toFixed(1);
   $('vAd').textContent=s.ad.toFixed(2);$('vRsi').textContent=s.rsi;$('vPnl').textContent=(s.pnl>=0?'+':'')+s.pnl.toFixed(1)+'%';}
-/* ---- Regime panel ↔ live Kite: feed the real signals into the sliders so the panel,
+/* ---- Regime panel ↔ live Kite: feed the real signals into the sliders so the panel reacts as if a human dragged them. */
 function syncSlidersFromLive(){
   const sg=BOT.live&&BOT.market&&BOT.market.signals; if(!sg) return false;
   const set=(id,v,lo,hi)=>{ if(typeof v!=='number'||!isFinite(v)) return; const el=$(id); if(el) el.value=clamp(v,lo,hi); };
@@ -3832,6 +3839,18 @@ function init(){
   setInterval(()=>{ if(!(state.algo && state.algo.market==='crypto' && document.visibilityState==='visible')) return;
     if(CWS.on && Date.now()-CWS.lastMsg<8000) return;   // socket is live → skip the REST poll
     loadCrypto().then(()=>{ if(state.algo&&state.algo.market==='crypto') patchCryptoTape(); }); }, 5000);
+  // WATCHDOG (2026-09-20): reached production where init() threw partway through (root cause: an
+  // unclosed /* comment a few hundred lines up had silently deleted renderEngine() and friends
+  // from the running code, see the fix on syncSlidersFromLive's comment above), aborting boot
+  // before it ever reached the WebSocket connect call below - the ticker froze at its first REST
+  // fetch forever, no console error visible by the time a tab was inspected. That specific cause
+  // is fixed now, but a silent boot-abort is a class of bug, not a one-off, and nothing previously
+  // re-checked "is the tape actually still updating" after the fact. If data goes stale for longer
+  // than any single legitimate gap (poll + socket hiccup) should ever allow, force a fresh
+  // connect + fetch regardless of what CWS.on currently claims.
+  setInterval(()=>{ if(!(state.algo && state.algo.market==='crypto' && document.visibilityState==='visible')) return;
+    if(CRYPTO.t && Date.now()-CRYPTO.t<15000) return;
+    connectCryptoWS(); loadCrypto().then(()=>{ if(state.algo&&state.algo.market==='crypto') patchCryptoTape(); }); }, 10000);
   // Instant refresh the moment the tab regains focus. Background tabs throttle setInterval (Chrome caps
   // hidden-tab timers to ~1/min), so on return the crypto tape/book can look frozen until the next tick, 
   // pull fresh data immediately instead of waiting for it.
