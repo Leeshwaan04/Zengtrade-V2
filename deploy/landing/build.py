@@ -381,7 +381,7 @@ AUTH_ROUTES = {                                   # source file -> clean route f
     "login.html": "login", "reset.html": "reset", "admin.html": "admin",
     "app.html": "app",                             # billing, evidence tabs, pricing (#pricing)
     "ops.html": "ops",                             # founder autopilot dashboard (HTML, not md)
-    "terms.html": "terms", "privacy.html": "privacy", "risk.html": "risk",
+    "terms.html": "terms", "privacy.html": "privacy", "risk.html": "risk", "contact.html": "contact",
 }   # /dashboard = Algo Studio terminal (below); /app = SaaS dashboard + checkout return.
 for f, route_dir in AUTH_ROUTES.items():
     src = os.path.join(AUTH_SRC, f)
