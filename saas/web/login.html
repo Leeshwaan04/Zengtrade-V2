@@ -30,32 +30,61 @@
   @keyframes auroraC{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(7vw,-9vh) scale(1.16)}}
   .grid-motion{position:absolute;inset:-60%;opacity:.07;animation:gridPan 26s linear infinite;background-image:linear-gradient(var(--green,#00AB4E) 1px,transparent 1px),linear-gradient(90deg,var(--green,#00AB4E) 1px,transparent 1px);background-size:48px 48px}
   @keyframes gridPan{from{transform:translate(0,0)}to{transform:translate(48px,48px)}}
-  @media(prefers-color-scheme:dark){.aurora{mix-blend-mode:screen}.aurora.a1{opacity:.5}.grid-motion{opacity:.12}}
   @media(prefers-reduced-motion:reduce){.aurora,.grid-motion{animation:none}}
+  @media(prefers-color-scheme:dark){.aurora{mix-blend-mode:screen}.aurora.a1{opacity:.5}.grid-motion{opacity:.12}}
+
   .auth-shell{display:flex;align-items:center;justify-content:center;gap:52px;flex-wrap:wrap;position:relative;z-index:1;max-width:920px;width:100%;margin:0 auto}
-  .auth{width:100%;max-width:410px;position:relative;z-index:1}
-  /* regime mascot preview: the same three mascots/colors the marketing page uses,
-     "the same three mascots you would see after logging in" - so show them here too */
-  .mascot-panel{flex:0 0 auto;width:260px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px}
-  .mascot-stage{position:relative;width:200px;height:200px;display:grid;place-items:center}
-  .mascot-stage::before{content:"";position:absolute;inset:-24px;border-radius:50%;background:radial-gradient(circle,var(--r-soft,var(--green-soft)),transparent 72%);transition:background .5s ease}
-  .mascot-img{position:relative;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 16px 28px rgba(15,26,42,.22))}
+  .auth{width:100%;max-width:410px;position:relative;z-index:1;animation:riseIn .6s cubic-bezier(.16,1,.3,1) .08s both}
+
+  /* ---------------- regime mascot stage ----------------
+     Same three mascots/colors/copy the marketing page uses - its own copy already
+     promises "the same three mascots you would see after logging in", so this closes
+     that gap rather than inventing a new motif. Layered so each transform lives on its
+     own element and nothing fights the others: stage floats, tilt responds to the
+     mouse, img bursts in on a regime switch. */
+  .mascot-panel{flex:0 0 auto;width:260px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;
+    animation:riseIn .6s cubic-bezier(.16,1,.3,1) both}
+  .mascot-stage{position:relative;width:200px;height:200px;display:grid;place-items:center;animation:floatBob 4.6s ease-in-out infinite}
+  .mascot-stage::before{content:"";position:absolute;inset:-24px;border-radius:50%;
+    background:radial-gradient(circle,var(--r-soft,var(--green-soft)),transparent 72%);
+    transition:background .5s ease;animation:glowPulse 3.2s ease-in-out infinite}
+  .mascot-tilt{width:100%;height:100%;transition:transform .25s ease;transform-style:preserve-3d}
+  .mascot-img{position:relative;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 16px 28px rgba(15,26,42,.22));
+    animation:mascotPop .5s cubic-bezier(.2,.9,.3,1.3) both}
   @media(prefers-color-scheme:dark){.mascot-img{filter:drop-shadow(0 0 22px var(--r-soft,var(--green-line)))}}
+  @keyframes riseIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes floatBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+  @keyframes glowPulse{0%,100%{opacity:.75;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
+  @keyframes mascotPop{0%{opacity:0;transform:scale(.82) rotate(-5deg)}65%{opacity:1;transform:scale(1.05) rotate(2deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+  @media(prefers-reduced-motion:reduce){
+    .mascot-panel,.auth{animation:none}
+    .mascot-stage,.mascot-stage::before,.mascot-img{animation:none}
+    .mascot-tilt{transition:none}
+  }
+
+  .mascot-spark{width:180px;max-width:80%;height:34px;margin-top:-6px;display:block}
+  .mascot-spark path{fill:none;stroke-width:2.5px;stroke-linecap:round;stroke-linejoin:round;stroke:var(--r-line,#00ab4e);
+    stroke-dasharray:420;stroke-dashoffset:420;animation:sparkDraw 1s ease forwards}
+  .mascot-spark circle{fill:var(--r-line,#00ab4e);opacity:0;animation:sparkDot .35s ease .82s forwards}
+  @keyframes sparkDraw{to{stroke-dashoffset:0}}
+  @keyframes sparkDot{to{opacity:1}}
+  @media(prefers-reduced-motion:reduce){.mascot-spark path{animation:none;stroke-dashoffset:0}.mascot-spark circle{animation:none;opacity:1}}
+
   .mascot-kicker{font:700 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--green-d)}
   .mascot-cap{font-size:12.5px;line-height:1.55;color:var(--slate);max-width:230px;margin:0;min-height:38px}
-  .regime-seg{display:flex;gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:4px}
-  .regime-btn{border:0;background:transparent;color:var(--slate);font:700 12px/1 var(--sans);padding:8px 12px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px}
-  .regime-btn[aria-pressed=true]{background:var(--surface);color:var(--navy);box-shadow:0 1px 2px rgba(16,30,54,.08)}
+  .regime-seg{position:relative;display:flex;gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:4px}
+  .regime-btn{position:relative;z-index:1;border:0;background:transparent;color:var(--slate);font:700 12px/1 var(--sans);padding:8px 12px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:color .2s}
+  .regime-btn[aria-pressed=true]{color:var(--navy)}
   .regime-dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
   .dot-bull{background:#00ab4e}.dot-neutral{background:#1667d9}.dot-bear{background:#e5383b}
   @media(prefers-color-scheme:dark){.dot-bull{background:#1fd07a}.dot-neutral{background:#5b9dff}.dot-bear{background:#ff5a5d}}
-  .mascot-panel[data-regime=bull]{--r-soft:rgba(0,171,78,.35)}
-  .mascot-panel[data-regime=neutral]{--r-soft:rgba(22,103,217,.32)}
-  .mascot-panel[data-regime=bear]{--r-soft:rgba(229,56,59,.32)}
+  .mascot-panel[data-regime=bull]{--r-soft:rgba(0,171,78,.35);--r-line:#00ab4e}
+  .mascot-panel[data-regime=neutral]{--r-soft:rgba(22,103,217,.32);--r-line:#1667d9}
+  .mascot-panel[data-regime=bear]{--r-soft:rgba(229,56,59,.32);--r-line:#e5383b}
   @media(prefers-color-scheme:dark){
-    .mascot-panel[data-regime=bull]{--r-soft:rgba(31,208,122,.4)}
-    .mascot-panel[data-regime=neutral]{--r-soft:rgba(91,157,255,.4)}
-    .mascot-panel[data-regime=bear]{--r-soft:rgba(255,90,93,.4)}
+    .mascot-panel[data-regime=bull]{--r-soft:rgba(31,208,122,.4);--r-line:#1fd07a}
+    .mascot-panel[data-regime=neutral]{--r-soft:rgba(91,157,255,.4);--r-line:#5b9dff}
+    .mascot-panel[data-regime=bear]{--r-soft:rgba(255,90,93,.4);--r-line:#ff5a5d}
   }
   @media(max-width:860px){
     .auth-shell{flex-direction:column;gap:8px}
@@ -64,12 +93,21 @@
     .mascot-stage{width:132px;height:132px}
     .mascot-cap{max-width:320px}
   }
+
+  /* ---------------- sliding pill indicators (Sign in/Create account + regime picker) --- */
+  .tabs{position:relative}
+  .regime-seg,.tabs{overflow:hidden}
+  .seg-indicator{position:absolute;top:4px;left:0;height:calc(100% - 8px);border-radius:8px;background:var(--surface);
+    box-shadow:0 1px 2px rgba(16,30,54,.08);pointer-events:none;z-index:0;
+    transition:transform .32s cubic-bezier(.4,0,.2,1),width .32s cubic-bezier(.4,0,.2,1)}
+  @media(prefers-reduced-motion:reduce){.seg-indicator{transition:none}}
+
   .brand{justify-content:center;margin-bottom:6px}
   .tag{text-align:center;color:var(--slate);font-size:13.5px;margin:0 0 22px}
   .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px}
   .tabs{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:4px;margin-bottom:20px}
-  .tabs button{flex:1;border:0;background:transparent;color:var(--slate);font:700 13.5px/1 var(--sans);padding:10px;border-radius:8px;cursor:pointer}
-  .tabs button[aria-selected=true]{background:var(--surface);color:var(--navy);box-shadow:0 1px 2px rgba(16,30,54,.08)}
+  .tabs button{position:relative;z-index:1;flex:1;border:0;background:transparent;color:var(--slate);font:700 13.5px/1 var(--sans);padding:10px;border-radius:8px;cursor:pointer;transition:color .2s}
+  .tabs button[aria-selected=true]{color:var(--navy)}
   .or{display:flex;align-items:center;gap:12px;color:var(--slate-2);font:600 11px/1 var(--mono);letter-spacing:.1em;margin:16px 0}
   .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
   .row{display:flex;justify-content:flex-end;margin-top:9px}
@@ -78,20 +116,54 @@
   .consent input{width:16px;height:16px;margin-top:2px;accent-color:var(--green);flex:0 0 auto}
   .consent a{color:var(--blue)}
   .pane[hidden]{display:none}
+  .pane{animation:paneIn .32s ease}
+  @keyframes paneIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
   .foot{text-align:center;color:var(--slate-2);font-size:11.5px;margin-top:18px;line-height:1.6}
   .foot a{color:var(--slate);text-decoration:none}
   form>.btn{margin-top:16px}
   .plan-banner{text-align:center;font-size:13px;line-height:1.5;color:var(--green-d);background:var(--green-soft);border:1px solid var(--green-line);border-radius:10px;padding:10px 12px;margin:-6px 0 16px}
+  @media(prefers-reduced-motion:reduce){.pane{animation:none}}
+
+  /* password show/hide toggle - a <span>, never a <button>, so it can't be picked up by
+     the auth script's `form.querySelector("button")` submit-button lookup */
+  .pw-wrap{position:relative}
+  .pw-wrap input{padding-right:42px}
+  .pw-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:7px;color:var(--slate-2);cursor:pointer}
+  .pw-toggle:hover{color:var(--navy);background:var(--surface-2)}
+  .pw-toggle svg{width:17px;height:17px}
+  .pw-toggle .eye-off{display:none}
+  .pw-toggle.is-visible .eye{display:none}
+  .pw-toggle.is-visible .eye-off{display:block}
+
+  /* primary button: hover shine sweep + a spinner that piggybacks on the existing
+     :disabled state the auth script already sets while a request is in flight */
+  .auth .btn.primary{position:relative;overflow:hidden}
+  .auth .btn.primary::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;
+    background:linear-gradient(120deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);transition:left .55s ease}
+  .auth .btn.primary:hover::after{left:120%}
+  .auth .btn.primary:disabled::before{content:"";width:14px;height:14px;border-radius:50%;flex:0 0 auto;
+    border:2px solid rgba(0,0,0,.25);border-top-color:rgba(0,0,0,.75);animation:spin .6s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .msg.err{animation:shake .35s ease}
+  @keyframes shake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-4px)}40%,60%{transform:translateX(4px)}}
+  @media(prefers-reduced-motion:reduce){.auth .btn.primary::after{display:none}.auth .btn.primary:disabled::before{animation:none}.msg.err{animation:none}}
 </style></head><body>
 <div class="ambient" aria-hidden="true"><span class="aurora a1"></span><span class="aurora a2"></span><span class="aurora a3"></span><span class="grid-motion"></span></div>
 <div class="auth-shell">
   <div class="mascot-panel" data-regime="bull">
     <div class="mascot-stage">
-      <img class="mascot-img" id="mascotImg" src="/assets/mascot-bull.png" width="200" height="200" alt="Bull market mascot" draggable="false" fetchpriority="high" decoding="async">
+      <div class="mascot-tilt">
+        <img class="mascot-img" id="mascotImg" src="/assets/mascot-bull.png" width="200" height="200" alt="Bull market mascot" draggable="false" fetchpriority="high" decoding="async">
+      </div>
     </div>
+    <svg class="mascot-spark" id="mascotSpark" viewBox="0 0 200 50" preserveAspectRatio="none" aria-hidden="true">
+      <path id="sparkPath" d="M2,44 L26,38 L44,40 L62,28 L80,32 L98,18 L116,22 L134,10 L152,14 L170,6 L198,4"></path>
+      <circle id="sparkDot" cx="198" cy="4" r="3.4"></circle>
+    </svg>
     <div class="mascot-kicker" id="mascotKicker">Risk-on · Momentum</div>
     <p class="mascot-cap" id="mascotCap">Trend has the tape, so the engine leans with it and holds longer.</p>
     <div class="regime-seg" role="group" aria-label="Preview a market regime">
+      <span class="seg-indicator" id="regimeIndicator" aria-hidden="true"></span>
       <button type="button" class="regime-btn" data-regime-btn="bull" aria-pressed="true"><span class="regime-dot dot-bull" aria-hidden="true"></span>Bull</button>
       <button type="button" class="regime-btn" data-regime-btn="neutral" aria-pressed="false"><span class="regime-dot dot-neutral" aria-hidden="true"></span>Neutral</button>
       <button type="button" class="regime-btn" data-regime-btn="bear" aria-pressed="false"><span class="regime-dot dot-bear" aria-hidden="true"></span>Bear</button>
@@ -104,6 +176,7 @@
   <p id="planBanner" class="plan-banner" hidden></p>
   <div class="card">
     <div class="tabs" role="tablist">
+      <span class="seg-indicator" id="tabIndicator" aria-hidden="true"></span>
       <button role="tab" id="t-in" aria-selected="true">Sign in</button>
       <button role="tab" id="t-up" aria-selected="false">Create account</button>
     </div>
@@ -115,7 +188,13 @@
         <label for="i-email">Email</label>
         <input id="i-email" type="email" autocomplete="email" placeholder="you@email.com" required>
         <label for="i-pw">Password</label>
-        <input id="i-pw" type="password" autocomplete="current-password" placeholder="••••••••" required>
+        <div class="pw-wrap">
+          <input id="i-pw" type="password" autocomplete="current-password" placeholder="••••••••" required>
+          <span class="pw-toggle" role="button" tabindex="0" aria-label="Show password" data-target="i-pw">
+            <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 2l20 20M10.6 10.6a3 3 0 0 0 4.24 4.24M6.6 6.7C4 8.4 2 12 2 12s4 7 11 7c1.9 0 3.5-.4 4.9-1.1M12 5c7 0 11 7 11 7a17.9 17.9 0 0 1-3.1 3.9"/></svg>
+          </span>
+        </div>
         <div class="row"><a href="#" id="forgot">Forgot password?</a></div>
         <button class="btn primary" type="submit">Sign in</button>
       </form>
@@ -126,7 +205,13 @@
         <label for="u-email">Email</label>
         <input id="u-email" type="email" autocomplete="email" placeholder="you@email.com" required>
         <label for="u-pw">Create a password</label>
-        <input id="u-pw" type="password" autocomplete="new-password" placeholder="At least 8 characters" required minlength="8">
+        <div class="pw-wrap">
+          <input id="u-pw" type="password" autocomplete="new-password" placeholder="At least 8 characters" required minlength="8">
+          <span class="pw-toggle" role="button" tabindex="0" aria-label="Show password" data-target="u-pw">
+            <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 2l20 20M10.6 10.6a3 3 0 0 0 4.24 4.24M6.6 6.7C4 8.4 2 12 2 12s4 7 11 7c1.9 0 3.5-.4 4.9-1.1M12 5c7 0 11 7 11 7a17.9 17.9 0 0 1-3.1 3.9"/></svg>
+          </span>
+        </div>
         <label class="consent"><input type="checkbox" id="u-ack" required>
           <span>I understand crypto trading carries risk of loss, that zengtrade is <b>not investment advice</b>, and I accept the <a href="/terms/">Terms</a> &amp; <a href="/privacy/">Privacy Policy</a>.</span></label>
         <button class="btn primary" type="submit">Create free account</button>
@@ -141,6 +226,10 @@
 </div>
 <script>
 (function(){
+  "use strict";
+  var reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---- regime mascot preview -------------------------------------------------- */
   var MASCOTS={bull:"/assets/mascot-bull.png",neutral:"/assets/mascot-neutral.png",bear:"/assets/mascot-bear.png"};
   var KICKERS={bull:"Risk-on · Momentum",neutral:"Neutral · Rangebound",bear:"Risk-off · Defensive"};
   var CAPS={
@@ -148,28 +237,113 @@
     neutral:"No edge in direction. It works the range on smaller size, or not at all.",
     bear:"Capital-preservation mode. Size comes down and exits get simple."
   };
+  var SPARKS={
+    bull:{d:"M2,44 L26,38 L44,40 L62,28 L80,32 L98,18 L116,22 L134,10 L152,14 L170,6 L198,4",x:198,y:4},
+    neutral:{d:"M2,26 L26,20 L44,30 L62,22 L80,28 L98,20 L116,26 L134,20 L152,25 L170,20 L198,23",x:198,y:23},
+    bear:{d:"M2,6 L26,12 L44,10 L62,20 L80,16 L98,28 L116,24 L134,34 L152,30 L170,40 L198,46",x:198,y:46}
+  };
   var panel=document.querySelector(".mascot-panel");
-  if(!panel) return;
-  var img=document.getElementById("mascotImg");
-  var kicker=document.getElementById("mascotKicker");
-  var cap=document.getElementById("mascotCap");
-  var btns=[].slice.call(panel.querySelectorAll("[data-regime-btn]"));
-  function setRegime(r){
-    if(!MASCOTS[r]||panel.getAttribute("data-regime")===r) return;
-    panel.setAttribute("data-regime",r);
-    if(img){
-      var next=new Image();
-      next.onload=function(){ img.src=MASCOTS[r]; img.alt=r.charAt(0).toUpperCase()+r.slice(1)+" market mascot"; };
-      next.src=MASCOTS[r];
+  if(panel){
+    var img=document.getElementById("mascotImg");
+    var kicker=document.getElementById("mascotKicker");
+    var cap=document.getElementById("mascotCap");
+    var sparkPath=document.getElementById("sparkPath");
+    var sparkDot=document.getElementById("sparkDot");
+    var regimeBtns=[].slice.call(panel.querySelectorAll("[data-regime-btn]"));
+    var regimeIndicator=document.getElementById("regimeIndicator");
+
+    function replay(el){ if(!el||reduceMotion) return; el.style.animation="none"; void el.offsetWidth; el.style.animation=""; }
+
+    function setRegime(r){
+      if(!MASCOTS[r]||panel.getAttribute("data-regime")===r) return;
+      panel.setAttribute("data-regime",r);
+      if(img){
+        var next=new Image();
+        next.onload=function(){ img.src=MASCOTS[r]; img.alt=r.charAt(0).toUpperCase()+r.slice(1)+" market mascot"; replay(img); };
+        next.src=MASCOTS[r];
+      }
+      if(kicker) kicker.textContent=KICKERS[r];
+      if(cap) cap.textContent=CAPS[r];
+      if(sparkPath&&sparkDot&&SPARKS[r]){
+        sparkPath.setAttribute("d",SPARKS[r].d);
+        sparkDot.setAttribute("cx",SPARKS[r].x);
+        sparkDot.setAttribute("cy",SPARKS[r].y);
+        replay(sparkPath); replay(sparkDot);
+      }
+      regimeBtns.forEach(function(b){ b.setAttribute("aria-pressed", b.getAttribute("data-regime-btn")===r ? "true":"false"); });
     }
-    if(kicker) kicker.textContent=KICKERS[r];
-    if(cap) cap.textContent=CAPS[r];
-    btns.forEach(function(b){ b.setAttribute("aria-pressed", b.getAttribute("data-regime-btn")===r ? "true":"false"); });
+
+    function place(indicator, container, btn, animate){
+      if(!indicator||!btn) return;
+      var cRect=container.getBoundingClientRect(), bRect=btn.getBoundingClientRect();
+      if(!animate||reduceMotion) indicator.style.transition="none";
+      indicator.style.width=bRect.width+"px";
+      indicator.style.transform="translateX("+(bRect.left-cRect.left)+"px)";
+      if(!animate||reduceMotion){ void indicator.offsetWidth; indicator.style.transition=""; }
+    }
+
+    regimeBtns.forEach(function(b){
+      b.addEventListener("click",function(){ setRegime(b.getAttribute("data-regime-btn")); place(regimeIndicator,panel.querySelector(".regime-seg"),b,true); });
+    });
+
+    // idle-prefetch the other two mascots, same pattern the marketing page uses
+    var idle=window.requestIdleCallback||function(f){return setTimeout(f,1200);};
+    idle(function(){ Object.keys(MASCOTS).forEach(function(r){ if(r==="bull") return; var i=new Image(); i.src=MASCOTS[r]; }); });
+
+    // subtle mouse-tilt on the mascot art only, never on the floating stage or the
+    // one-shot pop animation, so none of the three fight over the transform property
+    var tilt=panel.querySelector(".mascot-tilt");
+    if(tilt && !reduceMotion && window.matchMedia && matchMedia("(hover: hover)").matches){
+      panel.addEventListener("mousemove",function(e){
+        var r=panel.getBoundingClientRect();
+        var px=(e.clientX-r.left)/r.width-0.5, py=(e.clientY-r.top)/r.height-0.5;
+        tilt.style.transform="perspective(600px) rotateX("+(-py*10).toFixed(2)+"deg) rotateY("+(px*10).toFixed(2)+"deg)";
+      });
+      panel.addEventListener("mouseleave",function(){ tilt.style.transform=""; });
+    }
+
+    var regimeSeg=panel.querySelector(".regime-seg");
+    var initPositions=function(){ place(regimeIndicator,regimeSeg,panel.querySelector('[data-regime-btn="bull"]'),false); };
+    initPositions();
+    window.addEventListener("load",initPositions);
+    window.addEventListener("resize",function(){ var active=regimeBtns.filter(function(b){return b.getAttribute("aria-pressed")==="true";})[0]; place(regimeIndicator,regimeSeg,active,false); });
   }
-  btns.forEach(function(b){ b.addEventListener("click",function(){ setRegime(b.getAttribute("data-regime-btn")); }); });
-  // idle-prefetch the other two mascots, same pattern the marketing page uses
-  var idle=window.requestIdleCallback||function(f){return setTimeout(f,1200);};
-  idle(function(){ Object.keys(MASCOTS).forEach(function(r){ if(r==="bull") return; var i=new Image(); i.src=MASCOTS[r]; }); });
+
+  /* ---- sliding pill under Sign in / Create account (visual only - the auth script
+     below owns aria-selected/pane switching; this just tracks which was clicked) --- */
+  var tabsEl=document.querySelector(".tabs");
+  var tabIndicator=document.getElementById("tabIndicator");
+  if(tabsEl&&tabIndicator){
+    var tIn=document.getElementById("t-in"), tUp=document.getElementById("t-up");
+    function placeTab(btn,animate){
+      var cRect=tabsEl.getBoundingClientRect(), bRect=btn.getBoundingClientRect();
+      if(!animate||reduceMotion) tabIndicator.style.transition="none";
+      tabIndicator.style.width=bRect.width+"px";
+      tabIndicator.style.transform="translateX("+(bRect.left-cRect.left)+"px)";
+      if(!animate||reduceMotion){ void tabIndicator.offsetWidth; tabIndicator.style.transition=""; }
+    }
+    if(tIn) tIn.addEventListener("click",function(){ placeTab(tIn,true); });
+    if(tUp) tUp.addEventListener("click",function(){ placeTab(tUp,true); });
+    var initTab=function(){ placeTab(tIn,false); };
+    initTab();
+    window.addEventListener("load",initTab);
+    window.addEventListener("resize",function(){ placeTab(document.getElementById("t-up").getAttribute("aria-selected")==="true"?tUp:tIn,false); });
+  }
+
+  /* ---- password show/hide - a <span role=button>, never a <button>, so the auth
+     script's `form.querySelector("button")` submit-button lookup can't pick it up --- */
+  [].slice.call(document.querySelectorAll(".pw-toggle")).forEach(function(t){
+    function toggle(){
+      var input=document.getElementById(t.getAttribute("data-target"));
+      if(!input) return;
+      var show=input.type==="password";
+      input.type=show?"text":"password";
+      t.classList.toggle("is-visible",show);
+      t.setAttribute("aria-label",show?"Hide password":"Show password");
+    }
+    t.addEventListener("click",toggle);
+    t.addEventListener("keydown",function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); toggle(); } });
+  });
 })();
 </script>
 <script type="module">
