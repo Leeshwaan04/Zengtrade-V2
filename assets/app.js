@@ -177,7 +177,7 @@ const PERSONA={
     chartTf:'15m' },
   investor:{ label:'Investing', icon:'sprout', fundsLabel:()=>'Investable surplus',
     chartTf:'1D' },
-  algo:{ label:'Algo', icon:'cpu', fundsLabel:()=>'Deployable capital',
+  algo:{ label:'Algo Studio', icon:'cpu', fundsLabel:()=>'Deployable capital',
     chartTf:'15m' },
   ai:{ label:'AI', icon:'spark', fundsLabel:()=>'Buying power',
     chartTf:'1D' },
@@ -630,7 +630,8 @@ function wlList(r){
 function renderWatchlist(r){
   const bear=r==='bear', inv=isInvestor();
   const list=wlList(r);
-  const effSel=state.selected||REGIME_SYM[r];
+  const fallbackSym = (typeof CRYPTO_ONLY!=='undefined'&&CRYPTO_ONLY) ? (r==='bear'?'SOLUSDT':r==='neutral'?'ETHUSDT':'BTCUSDT') : (REGIME_SYM[r]||'RELIANCE');
+  const effSel=state.selected||fallbackSym;
   $('wlMeta').innerHTML=state.wlCustom
     ? `<span>${SYMS.length} instruments · custom order</span><button class="wl-reset" id="wlReset">Reset sort</button>`
     : inv ? `<span>Quality &amp; your holdings</span><span>LTP · Chg%</span>`
@@ -726,14 +727,14 @@ function tradeFromChart(p){
    RENDER: CHART (center)  → delegates to the interactive engine
    ============================================================ */
 function chartSymbol(r){
-  // chart follows the watchlist/search selection so it stays in lock-step
-  // with the order pad; falls back to this regime's spotlight scrip
-  const sym=(state.selected&&bySym(state.selected))?state.selected:REGIME_SYM[r];
-  return bySym(sym);
+  if(state.selected && bySym(state.selected)) return bySym(state.selected);
+  const fallbackSym = (typeof CRYPTO_ONLY!=='undefined'&&CRYPTO_ONLY) ? (r==='bear'?'SOLUSDT':r==='neutral'?'ETHUSDT':'BTCUSDT') : (REGIME_SYM[r]||'RELIANCE');
+  return bySym(fallbackSym) || (Array.isArray(SYMS)&&SYMS[0]) || (typeof CRYPTO_UNIVERSE!=='undefined'&&CRYPTO_UNIVERSE[0]?{sym:CRYPTO_UNIVERSE[0].sym,name:CRYPTO_UNIVERSE[0].name,ltp:100,chg:0}:{sym:'BTCUSDT',name:'Bitcoin',ltp:100,chg:0});
 }
 function renderChart(r){
   if(!window.TPChart) return;
   const s=chartSymbol(r);
+  if(!s||!s.sym) return;
   TPChart.render({symbol:s.sym, name:s.name||s.sym, regime:r, basePrice:s.ltp, change:s.chg});
 }
 /* Real OHLCV feed for the chart, pulls Kite historical via /api/candles. Returns null
@@ -757,7 +758,8 @@ async function chartFeed(sym, tfKey){
    RENDER: ORDER PAD (right)
    ============================================================ */
 function orderModel(r){
-  const s=bySym(state.selected||REGIME_SYM[r])||SYMS[0];
+  const fallbackSym = (typeof CRYPTO_ONLY!=='undefined'&&CRYPTO_ONLY) ? (r==='bear'?'SOLUSDT':r==='neutral'?'ETHUSDT':'BTCUSDT') : (REGIME_SYM[r]||'RELIANCE');
+  const s=bySym(state.selected||fallbackSym)||(Array.isArray(SYMS)&&SYMS[0])||(typeof CRYPTO_UNIVERSE!=='undefined'&&CRYPTO_UNIVERSE[0]?{sym:CRYPTO_UNIVERSE[0].sym,name:CRYPTO_UNIVERSE[0].name,ltp:100,chg:0}:{sym:'BTCUSDT',ltp:100,chg:0});
   const sym=s.sym;
   const tf=(state.tradeFromChart&&state.tradeFromChart.sym===sym)?state.tradeFromChart:null;
   const side=tf?tf.side:(state.orderSide||(r==='bear'?'sell':'buy'));
@@ -930,7 +932,7 @@ function applyRegime(regime){
   saveState();
 }
 function flashRegime(){const s=$('regimeSweep');if(!s)return;s.classList.remove('go');void s.offsetWidth;s.classList.add('go');}
-const RV_SEL='.regime-bar,.pane-left,.chart-card,.panel,#orderPad,#contextModule';
+const RV_SEL='.regime-bar,#tradingView,#investHub,#algoView,.pane-left,.chart-card,.panel,#orderPad,#contextModule';
 const RV_META={
   bull:   {word:'BULL',    tag:'Risk-on · Momentum'},
   neutral:{word:'NEUTRAL', tag:'Wait for clarity'},
@@ -1032,9 +1034,10 @@ function buildMascot(r){
     <div class="rv-word">${m.word}<small>${m.tag}</small></div></div>`;
 }
 function buildPersonaFx(p){
+  const sub = p==='investor' ? 'Long-term wealth & DCA' : p==='algo' ? 'Systematic quantitative studio' : 'Active charts & trade signals';
   return `<div class="rv-back"></div><div class="rv-sweep"></div>
     <div class="rv-emblem"><span class="rve-ic">${icon(PERSONA[p].icon,34)}</span>
-      <b>${PERSONA[p].label}</b><small>${p==='investor'?'Long-term wealth':'Active markets'}</small></div>`;
+      <b>${PERSONA[p].label}</b><small>${sub}</small></div>`;
 }
 function cinematicRegime(r){
   if(prefersReduced()||state.revealing){applyRegime(r);return;}
@@ -1193,16 +1196,31 @@ function lcMsg(s){
 }
 async function setStrategyState(id, stateVal, title){
   try{
-    const r=await fetch(BOT_API+'/api/strategy',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({id,state:stateVal})}).then(x=>x.json());
+    let r=null;
+    try{
+      r=await fetch(BOT_API+'/api/strategy',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({id,state:stateVal})}).then(x=>x.json());
+    }catch(err){ r=null; }
     if(r&&r.error){
       if(r.upgrade){ quickToast('Upgrade to Pro', r.error); setTimeout(function(){ location.href=r.upgrade; }, 700); return r; }
       quickToast('Action failed', r.error); return r;
     }
     if(r&&r.locked){ quickToast('Live locked '+'🔒', r.reason||'Arm ALLOW_LIVE on the bot machine to go live.'); }
-    else { quickToast(title||'Updated', lcMsg(stateVal)); }
-    // refresh both the shared catalog and this user's own crypto monitor snapshot, so a Stop/Deploy
-    // toast is never followed by a card that still shows the pre-action state until the next poll.
+    else {
+      quickToast(title||'Updated', lcMsg(stateVal));
+      CRYPTOMON.data=CRYPTOMON.data||{strategies:[]};
+      CRYPTOMON.data.strategies=CRYPTOMON.data.strategies||[];
+      let st=CRYPTOMON.data.strategies.find(x=>x.id===id);
+      if(!st){
+        const meta=CRYPTO_STRATEGIES.find(x=>x.bid===id)||{name:id,cat:'Breakout',pair:'BTCUSDT'};
+        st={id,name:meta.name,pair:meta.pair,deployed:stateVal==='paper',status:stateVal,pnl:0,trades:0};
+        CRYPTOMON.data.strategies.push(st);
+      } else {
+        st.deployed=(stateVal==='paper');
+        st.status=stateVal;
+      }
+      CRYPTOMON.loaded=true;
+    }
     await Promise.all([loadBotData(), loadCryptoMonitor()]);
     if(typeof renderAlgo==='function') renderAlgo();
     return r;
@@ -3891,7 +3909,7 @@ function renderAlgo(){
   v.innerHTML=`<div class="av-wrap">${head}<div class="av-scroll">${cryptoStatusBar()}${cxScope}${body}</div></div>`;
   _scEl.scrollTop=_sy; if(_pane) _pane.scrollTop=_py;
   const _av1=v.querySelector('.av-scroll'); if(_av1) _av1.scrollTop=_avy;
-  v.querySelectorAll('[data-algoview]').forEach(b=>b.onclick=()=>{state.algo.view=b.dataset.algoview;renderAlgo();});
+  v.querySelectorAll('[data-algoview]').forEach(b=>b.onclick=()=>{state.algo.view=b.dataset.algoview;saveState();renderAlgo();});
   v.querySelectorAll('[data-algoinstr]').forEach(b=>b.onclick=()=>{ const a=state.algo; if(a.instr===b.dataset.algoinstr) return; a.instr=b.dataset.algoinstr; a.hold='all'; if(a.lib) a.lib.fam='all'; renderAlgo(); });
   v.querySelectorAll('[data-algohold]').forEach(b=>b.onclick=()=>{ state.algo.hold=b.dataset.algohold; renderAlgo(); });
   v.querySelectorAll('[data-cinstr]').forEach(b=>b.onclick=()=>{ state.algo.cinstr=b.dataset.cinstr; renderAlgo(); });
@@ -4473,9 +4491,9 @@ function init(){
   }
   // live crypto prices: the WebSocket drives the tape sub-second; this 5s REST poll is the FALLBACK,
   // firing only when the socket isn't delivering (first paint, dropped socket, WS unsupported).
-  setInterval(()=>{ if(!(state.algo && state.algo.market==='crypto' && document.visibilityState==='visible')) return;
+  setInterval(()=>{ if(!((CRYPTO_ONLY || (state.algo && state.algo.market==='crypto')) && document.visibilityState==='visible')) return;
     if(CWS.on && Date.now()-CWS.lastMsg<8000) return;   // socket is live → skip the REST poll
-    loadCrypto().then(()=>{ if(state.algo&&state.algo.market==='crypto') patchCryptoTape(); }); }, 5000);
+    loadCrypto().then(()=>{ patchCryptoTape(); }); }, 5000);
   // WATCHDOG (2026-09-20): reached production where init() threw partway through (root cause: an
   // unclosed /* comment a few hundred lines up had silently deleted renderEngine() and friends
   // from the running code, see the fix on syncSlidersFromLive's comment above), aborting boot
@@ -4485,21 +4503,25 @@ function init(){
   // re-checked "is the tape actually still updating" after the fact. If data goes stale for longer
   // than any single legitimate gap (poll + socket hiccup) should ever allow, force a fresh
   // connect + fetch regardless of what CWS.on currently claims.
-  setInterval(()=>{ if(!(state.algo && state.algo.market==='crypto' && document.visibilityState==='visible')) return;
+  setInterval(()=>{ if(!((CRYPTO_ONLY || (state.algo && state.algo.market==='crypto')) && document.visibilityState==='visible')) return;
     if(CRYPTO.t && Date.now()-CRYPTO.t<15000) return;
-    connectCryptoWS(); loadCrypto().then(()=>{ if(state.algo&&state.algo.market==='crypto') patchCryptoTape(); }); }, 10000);
+    connectCryptoWS(); loadCrypto().then(()=>{ patchCryptoTape(); }); }, 10000);
   // Instant refresh the moment the tab regains focus. Background tabs throttle setInterval (Chrome caps
   // hidden-tab timers to ~1/min), so on return the crypto tape/book can look frozen until the next tick, 
   // pull fresh data immediately instead of waiting for it.
   const refreshVisible=()=>{
     if(document.visibilityState!=='visible') return;
-    if(state.algo && state.algo.market==='crypto'){
+    if(CRYPTO_ONLY || (state.algo && state.algo.market==='crypto')){
       connectCryptoWS();   // ensure the price socket is up again after the tab was hidden
-      loadCrypto().then(()=>{ if(state.algo.market==='crypto') patchCryptoTape(); });
+      loadCrypto().then(()=>{
+        patchCryptoTape();
+        if(typeof renderTrading==='function' && state.persona==='trader') renderTrading();
+        if(typeof renderInvesting==='function' && state.persona==='investor') renderInvesting();
+      });
       if(typeof isAlgo==='function' && isAlgo()){ const v=state.algo.view;
-        if((v==='monitor'||v==='positions')&&typeof loadCryptoMonitor==='function') loadCryptoMonitor().then(()=>{ if(isAlgo()&&state.algo.market==='crypto'&&(state.algo.view==='monitor'||state.algo.view==='positions')){
+        if((v==='monitor'||v==='positions')&&typeof loadCryptoMonitor==='function') loadCryptoMonitor().then(()=>{ if(isAlgo()&&(state.algo.view==='monitor'||state.algo.view==='positions')){
           if(document.querySelector('.cxm-tbl') && CRYPTOMON._sig===cryptoMonSig()) patchCryptoMon(); else renderAlgo(); } });
-        else if(v==='risk'&&typeof loadCryptoRisk==='function') loadCryptoRisk().then(()=>{ if(isAlgo()&&state.algo.market==='crypto') renderAlgo(); }); }
+        else if(v==='risk'&&typeof loadCryptoRisk==='function') loadCryptoRisk().then(()=>{ if(isAlgo()) renderAlgo(); }); }
     } else if(BOT.live){ loadTicks(); }   // Indian book: pull fresh ticks on return too
   };
   document.addEventListener('visibilitychange',refreshVisible);

@@ -67,7 +67,13 @@ test -f scripts/print-growth-goal-summary.sh
 test -f scripts/print-growth-goal-summary-fast.sh
 test -x scripts/check-growth-goal.sh
 test -f scripts/check-growth-gates.sh
-timeout 30 env ZT_QUIET_GROWTH=1 ./scripts/print-growth-goal-summary-fast.sh >/dev/null
+if command -v timeout >/dev/null 2>&1; then
+  timeout 30 env ZT_QUIET_GROWTH=1 ./scripts/print-growth-goal-summary-fast.sh >/dev/null
+elif command -v gtimeout >/dev/null 2>&1; then
+  gtimeout 30 env ZT_QUIET_GROWTH=1 ./scripts/print-growth-goal-summary-fast.sh >/dev/null
+else
+  env ZT_QUIET_GROWTH=1 ./scripts/print-growth-goal-summary-fast.sh >/dev/null
+fi
 test -f .github/workflows/apply-p0.yml
 grep -q 'run-p0-if-ready' .github/workflows/apply-p0.yml
 test -f docs/QA_VAPT_CHECKLIST.md

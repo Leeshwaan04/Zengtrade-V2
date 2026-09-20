@@ -1201,7 +1201,7 @@ html[data-persona="investor"] #investHub{display:flex;flex-direction:column;flex
 html[data-persona="investor"] #chartCard,
 html[data-persona="investor"] #chartResize{display:none!important}
 
-.invest-hub{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;animation:fadeUp .4s ease both}
+.invest-hub{display:flex;flex-direction:column;height:100%;min-height:0;overflow:hidden;animation:fadeUp .3s ease both}
 .ih-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line)}
 .ih-h-tl b{display:block;font-size:15px;font-weight:800;color:var(--navy)}
 .ih-h-tl span{font-size:11.5px;color:var(--slate)}
@@ -2074,7 +2074,7 @@ html[data-persona="investor"] #investHub{display:flex;flex-direction:column;flex
    basis and .av-scroll expands to full content height, killing its internal scroll (the tabs
    scroll away instead of staying fixed). This completes the fixed-header + scrolling-body chain
    the Crypto Spot/Perps/Options view (and every Algo tab) relies on. */
-.algo-view{display:flex;flex-direction:column;height:100%;min-height:0}
+.algo-view,.invest-hub{display:flex;flex-direction:column;height:100%;min-height:0}
 .av-wrap,.ai-wrap{flex:1;min-height:0;display:flex;flex-direction:column}
 .av-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius) var(--radius) 0 0;border-bottom:0}
 .av-title{display:flex;align-items:center;gap:11px}
