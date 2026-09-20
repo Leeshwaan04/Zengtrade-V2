@@ -1771,6 +1771,19 @@ html[data-persona="trader"][data-layout="build"] .panel{display:none}
    they actually pasted before submitting, real friction point for two 64-char random strings. */
 .gyok-eye{background:transparent;border:0;padding:3px;margin:-3px;color:var(--slate-2);cursor:pointer;display:flex;align-items:center;border-radius:6px;flex:0 0 auto}
 .gyok-eye:hover{color:var(--navy);background:var(--surface)}
+/* UX REWORK (2026-09-20): Connect Binance modal's guided 2-step layout - .se-ic is the same
+   52px hero-icon circle secEmpty() already uses elsewhere, reused here rather than a new style. */
+.gyok-hero{display:flex;justify-content:center;margin-bottom:10px}
+.gyok-sub{text-align:center;font-size:12px;color:var(--slate);line-height:1.55;margin:0 0 14px;padding:0 6px}
+.gyok-step{margin:16px 0 0}
+.gyok-step-h{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.gyok-step-n{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;background:var(--accent-soft);color:var(--accent-d);font-size:11px;font-weight:800;flex:0 0 auto}
+.gyok-step-h b{font-size:12.5px;color:var(--navy)}
+.gyok-checklist{list-style:none;margin:0 0 11px;padding:0;display:flex;flex-direction:column;gap:7px}
+.gyok-checklist li{display:flex;align-items:flex-start;gap:7px;font-size:12px;color:var(--slate);line-height:1.5}
+.gyok-checklist li b{color:var(--navy)}
+.gyok-check-ic{color:var(--green);flex:0 0 auto;margin-top:2px;display:flex}
+.gyok-step .fld{margin-top:9px}
 .flow-links{display:flex;flex-wrap:wrap;gap:14px;margin:-3px 0 13px}
 .flow-links a{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;color:var(--accent-d);text-decoration:none}
 .flow-links a:hover{text-decoration:underline}

@@ -4130,15 +4130,33 @@ function openConnectExchangeModalForm(){
       <input type="password" class="gyok-inp" id="${id}" autocomplete="off" spellcheck="false" aria-label="Binance ${label}" placeholder="${placeholder}">
       <button type="button" class="gyok-eye" data-eyefor="${id}" aria-label="Show ${label}">${icon('eye',14)}</button>
     </div></div>`;
+  // UX REWORK (2026-09-20): restructured from one dense instructional paragraph into a guided
+  // 2-step flow - the real confusion this modal risks isn't the paste itself, it's that step 1
+  // requires LEAVING the page to go do something on Binance before coming back to step 2, and
+  // nothing previously signaled that explicitly. Reuses the app's own existing patterns (the
+  // .se-ic hero-icon circle from secEmpty(), the check icon, .flow-links) rather than inventing a
+  // new visual language just for this one modal.
+  const checklist=[
+    ['API Management &rarr; Create API'],
+    ['Check <b>only</b> "Enable Spot &amp; Margin Trading" &mdash; leave "Enable Withdrawals" unchecked'],
+  ].map(([t])=>`<li><span class="gyok-check-ic">${icon('check',13)}</span><span>${t}</span></li>`).join('');
   flowModal({title:'Connect Binance',confirm:'Connect',
-    body:`<div class="trust-row">${trust}</div>
-      <p class="flow-note">${icon('activity',13)}<span>On Binance: <b>API Management &rarr; Create API</b>, check <b>only</b> "Enable Spot &amp; Margin Trading", leave "Enable Withdrawals" unchecked. zengtrade never sees your Binance password, this key only ever places orders on your own account.</span></p>
-      <div class="flow-links">
-        <a href="https://www.binance.com/en/my/settings/api-management" target="_blank" rel="noopener">${icon('link',12)}Open Binance</a>
-        <a href="/learn/how-to-create-a-binance-api-key/" target="_blank" rel="noopener">${icon('activity',12)}Full step-by-step guide</a>
+    body:`<div class="gyok-hero"><span class="se-ic">${icon('shield',22)}</span></div>
+      <p class="gyok-sub">Your key only ever places orders on your own Binance account, zengtrade never touches your funds or sees your Binance password.</p>
+      <div class="trust-row">${trust}</div>
+      <div class="gyok-step">
+        <div class="gyok-step-h"><span class="gyok-step-n">1</span><b>Create a trade-only key on Binance</b></div>
+        <ul class="gyok-checklist">${checklist}</ul>
+        <div class="flow-links">
+          <a href="https://www.binance.com/en/my/settings/api-management" target="_blank" rel="noopener">${icon('link',12)}Open Binance</a>
+          <a href="/learn/how-to-create-a-binance-api-key/" target="_blank" rel="noopener">${icon('activity',12)}Full step-by-step guide</a>
+        </div>
       </div>
-      ${eyeField('gyokKey','link','API key','Paste your API key')}
-      ${eyeField('gyokSecret','lock','API secret','Paste your API secret')}
+      <div class="gyok-step">
+        <div class="gyok-step-h"><span class="gyok-step-n">2</span><b>Paste it here</b></div>
+        ${eyeField('gyokKey','link','API key','Paste your API key')}
+        ${eyeField('gyokSecret','lock','API secret','Paste your API secret')}
+      </div>
       <p class="flow-err" id="gyokErr" hidden></p>`,
     wire(body){
       body.querySelectorAll('[data-eyefor]').forEach(btn=>{
