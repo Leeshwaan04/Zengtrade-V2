@@ -768,6 +768,7 @@ body.resizing{user-select:none;cursor:col-resize}
 .tk-search::placeholder{color:var(--slate-2)}
 .tk-search-clear{border:0;background:none;color:var(--slate-2);cursor:pointer;display:flex;padding:2px;border-radius:5px;transition:.12s}
 .tk-search-clear:hover{color:var(--navy);background:var(--surface-2)}
+.tk-search-clear[hidden]{display:none}
 .tk-results{margin-top:6px;max-height:210px;overflow-y:auto;border:1px solid var(--line);border-radius:9px;background:var(--surface);
   box-shadow:0 14px 30px -18px rgba(16,30,54,.5);padding:4px}
 .tk-results[hidden]{display:none}
@@ -1748,6 +1749,11 @@ html[data-persona="trader"][data-layout="build"] .panel{display:none}
   background:linear-gradient(135deg,color-mix(in srgb,var(--green) 16%,transparent),color-mix(in srgb,var(--green) 6%,transparent));color:var(--green-d)}
 .ex-chip .ex-dot{width:6px;height:6px;border-radius:50%;background:var(--slate-2);flex:0 0 auto;margin-right:1px}
 .ex-chip.ex-on .ex-dot{background:var(--green);box-shadow:0 0 0 3px var(--green-soft);animation:pulse 1.8s infinite}
+/* BUG FIX (2026-09-20): same shape as .flow-err/.tk-settings/.layout-menu/.ws-empty below - the
+   inherited .plan-chip display:inline-flex beats the browser's [hidden]{display:none} UA rule
+   regardless of specificity, so #exChip's own "never shows without window.ztExchange" guarantee
+   (assets/app.js renderExchangeChip()) was unverified against this exact bug. */
+.ex-chip[hidden]{display:none}
 /* GYOK connect form: a scannable trust strip instead of burying "non-custodial, encrypted,
    trade-only" inside a wall of prose, plus icon-prefixed inputs matching the search bar's own
    icon+input pattern elsewhere in the header. */
