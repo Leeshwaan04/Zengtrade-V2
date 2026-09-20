@@ -103,6 +103,7 @@
         await fetch(SUPA + "/auth/v1/logout", { method: "POST", headers: sbHeaders() });
       } catch (e) {}
       try { localStorage.removeItem(LS_AUTH); } catch (e) {}
+      try { localStorage.removeItem("tradepro.terminal.v1"); } catch (e) {}
       if (btn) btn.textContent = "Signed out ✓";
       setTimeout(function () { location.href = "/login"; }, 250);
     }
@@ -324,6 +325,14 @@
   try {
     var K = "tradepro.terminal.v1";
     var st0 = JSON.parse(localStorage.getItem(K) || "null") || {};
+    // SECURITY FIX (2026-09-20): this blob was never scoped to a signed-in user - on a shared
+    // device, sign-out only ever cleared the auth token (see doSignOut below), never this key, so
+    // whoever's orders/DCA plans/deployed strategies/layouts were here stayed visible to the next
+    // person who signed in. Tag the blob with the current user's id and wipe it on mismatch, so a
+    // different user always starts clean, without assets/app.js (which has no auth awareness of
+    // its own) needing to know anything about this.
+    if (st0._owner && st0._owner !== sess.uid) st0 = {};
+    st0._owner = sess.uid;
     // BUG FIX (2026-09-19): this used to force st0.persona = "algo" unconditionally on every single
     // page load, before crypto-only.js or app.js even ran - silently clobbering a real saved
     // Investing/Trading choice back to Algo Studio on every reload. That was correct back when

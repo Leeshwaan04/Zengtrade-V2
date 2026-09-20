@@ -207,12 +207,19 @@ const PLAY={
 
 /* ---------- persistence (localStorage) ---------- */
 const LS_KEY='tradepro.terminal.v1';
-function saveState(){try{localStorage.setItem(LS_KEY,JSON.stringify({
+function saveState(){try{
+  // BUG FIX (2026-09-20): used to overwrite the whole blob unconditionally, silently dropping any
+  // field this function doesn't itself manage. studio.js stamps an _owner (signed-in user id) on
+  // this same key to stop one user's data leaking to the next person who signs in on a shared
+  // device, that tag has to survive every save this function does, or the very first order/tab
+  // switch after login would erase it. Merge onto the previous blob instead of replacing it.
+  let prev; try{prev=JSON.parse(localStorage.getItem(LS_KEY))||{};}catch(e){prev={};}
+  localStorage.setItem(LS_KEY,JSON.stringify(Object.assign({},prev,{
   mode:state.mode,regime:state.displayed,surface:state.surface,regimeCollapsed:state.regimeCollapsed,
   watchlist:SYMS.map(s=>({sym:s.sym,name:s.name,exch:s.exch,type:s.type,key:itemKey(s),token:s.token,sector:s.sector,beta:s.beta,lot:s.lot,expiry:s.expiry,strike:s.strike,seg:s.seg,hold:s.hold})),wlCustom:!!state.wlCustom,
   selected:state.selected,paneW:state.paneW,chartH:state.chartH,
   persona:state.persona,investSection:state.investSection,layout:state.layout,customLayouts:state.customLayouts,activeCustom:state.activeCustom,aiCfg:state.aiCfg,widgets:state.widgets,cards:state.cards,ticker:state.ticker,algo:(state.algo?{view:state.algo.view,exec:state.algo.exec,market:state.algo.market}:null),chart:(window.TPChart?TPChart.serialize():null),
-  orders:state.orders,trading:state.trading,investing:state.investing}));}catch(e){}}
+  orders:state.orders,trading:state.trading,investing:state.investing})));}catch(e){}}
 function saveChart(){saveState();}   // persist callback for the chart engine
 function loadState(){
   let s; try{s=JSON.parse(localStorage.getItem(LS_KEY));}catch(e){return null;}
