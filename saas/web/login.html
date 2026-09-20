@@ -32,7 +32,38 @@
   @keyframes gridPan{from{transform:translate(0,0)}to{transform:translate(48px,48px)}}
   @media(prefers-color-scheme:dark){.aurora{mix-blend-mode:screen}.aurora.a1{opacity:.5}.grid-motion{opacity:.12}}
   @media(prefers-reduced-motion:reduce){.aurora,.grid-motion{animation:none}}
+  .auth-shell{display:flex;align-items:center;justify-content:center;gap:52px;flex-wrap:wrap;position:relative;z-index:1;max-width:920px;width:100%;margin:0 auto}
   .auth{width:100%;max-width:410px;position:relative;z-index:1}
+  /* regime mascot preview: the same three mascots/colors the marketing page uses,
+     "the same three mascots you would see after logging in" - so show them here too */
+  .mascot-panel{flex:0 0 auto;width:260px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px}
+  .mascot-stage{position:relative;width:200px;height:200px;display:grid;place-items:center}
+  .mascot-stage::before{content:"";position:absolute;inset:-24px;border-radius:50%;background:radial-gradient(circle,var(--r-soft,var(--green-soft)),transparent 72%);transition:background .5s ease}
+  .mascot-img{position:relative;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 16px 28px rgba(15,26,42,.22))}
+  @media(prefers-color-scheme:dark){.mascot-img{filter:drop-shadow(0 0 22px var(--r-soft,var(--green-line)))}}
+  .mascot-kicker{font:700 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--green-d)}
+  .mascot-cap{font-size:12.5px;line-height:1.55;color:var(--slate);max-width:230px;margin:0;min-height:38px}
+  .regime-seg{display:flex;gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:4px}
+  .regime-btn{border:0;background:transparent;color:var(--slate);font:700 12px/1 var(--sans);padding:8px 12px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px}
+  .regime-btn[aria-pressed=true]{background:var(--surface);color:var(--navy);box-shadow:0 1px 2px rgba(16,30,54,.08)}
+  .regime-dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+  .dot-bull{background:#00ab4e}.dot-neutral{background:#1667d9}.dot-bear{background:#e5383b}
+  @media(prefers-color-scheme:dark){.dot-bull{background:#1fd07a}.dot-neutral{background:#5b9dff}.dot-bear{background:#ff5a5d}}
+  .mascot-panel[data-regime=bull]{--r-soft:rgba(0,171,78,.35)}
+  .mascot-panel[data-regime=neutral]{--r-soft:rgba(22,103,217,.32)}
+  .mascot-panel[data-regime=bear]{--r-soft:rgba(229,56,59,.32)}
+  @media(prefers-color-scheme:dark){
+    .mascot-panel[data-regime=bull]{--r-soft:rgba(31,208,122,.4)}
+    .mascot-panel[data-regime=neutral]{--r-soft:rgba(91,157,255,.4)}
+    .mascot-panel[data-regime=bear]{--r-soft:rgba(255,90,93,.4)}
+  }
+  @media(max-width:860px){
+    .auth-shell{flex-direction:column;gap:8px}
+    .mascot-panel{width:100%;order:2}
+    .auth{order:1}
+    .mascot-stage{width:132px;height:132px}
+    .mascot-cap{max-width:320px}
+  }
   .brand{justify-content:center;margin-bottom:6px}
   .tag{text-align:center;color:var(--slate);font-size:13.5px;margin:0 0 22px}
   .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px}
@@ -53,7 +84,21 @@
   .plan-banner{text-align:center;font-size:13px;line-height:1.5;color:var(--green-d);background:var(--green-soft);border:1px solid var(--green-line);border-radius:10px;padding:10px 12px;margin:-6px 0 16px}
 </style></head><body>
 <div class="ambient" aria-hidden="true"><span class="aurora a1"></span><span class="aurora a2"></span><span class="aurora a3"></span><span class="grid-motion"></span></div>
-<div class="auth">
+<div class="auth-shell">
+  <div class="mascot-panel" data-regime="bull">
+    <div class="mascot-stage">
+      <img class="mascot-img" id="mascotImg" src="/assets/mascot-bull.png" width="200" height="200" alt="Bull market mascot" draggable="false" fetchpriority="high" decoding="async">
+    </div>
+    <div class="mascot-kicker" id="mascotKicker">Risk-on · Momentum</div>
+    <p class="mascot-cap" id="mascotCap">Trend has the tape, so the engine leans with it and holds longer.</p>
+    <div class="regime-seg" role="group" aria-label="Preview a market regime">
+      <button type="button" class="regime-btn" data-regime-btn="bull" aria-pressed="true"><span class="regime-dot dot-bull" aria-hidden="true"></span>Bull</button>
+      <button type="button" class="regime-btn" data-regime-btn="neutral" aria-pressed="false"><span class="regime-dot dot-neutral" aria-hidden="true"></span>Neutral</button>
+      <button type="button" class="regime-btn" data-regime-btn="bear" aria-pressed="false"><span class="regime-dot dot-bear" aria-hidden="true"></span>Bear</button>
+    </div>
+  </div>
+
+  <div class="auth">
   <div class="brand"><svg class="logo" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#00AB4E"/><path d="M24.69 13.67A9 9 0 1 1 20.5 8.21" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M12.5 19.5L17 15L20 17.5L26.5 8.8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>zengtrade</div>
   <p class="tag">Honest, survival-first crypto strategies</p>
   <p id="planBanner" class="plan-banner" hidden></p>
@@ -93,6 +138,40 @@
   <a href="/coins/?utm_source=site&amp;utm_medium=organic&amp;utm_campaign=signup_coins">Browse coin strategies</a> ·
   <a href="/">← back to zengtrade.in</a></p>
 </div>
+</div>
+<script>
+(function(){
+  var MASCOTS={bull:"/assets/mascot-bull.png",neutral:"/assets/mascot-neutral.png",bear:"/assets/mascot-bear.png"};
+  var KICKERS={bull:"Risk-on · Momentum",neutral:"Neutral · Rangebound",bear:"Risk-off · Defensive"};
+  var CAPS={
+    bull:"Trend has the tape, so the engine leans with it and holds longer.",
+    neutral:"No edge in direction. It works the range on smaller size, or not at all.",
+    bear:"Capital-preservation mode. Size comes down and exits get simple."
+  };
+  var panel=document.querySelector(".mascot-panel");
+  if(!panel) return;
+  var img=document.getElementById("mascotImg");
+  var kicker=document.getElementById("mascotKicker");
+  var cap=document.getElementById("mascotCap");
+  var btns=[].slice.call(panel.querySelectorAll("[data-regime-btn]"));
+  function setRegime(r){
+    if(!MASCOTS[r]||panel.getAttribute("data-regime")===r) return;
+    panel.setAttribute("data-regime",r);
+    if(img){
+      var next=new Image();
+      next.onload=function(){ img.src=MASCOTS[r]; img.alt=r.charAt(0).toUpperCase()+r.slice(1)+" market mascot"; };
+      next.src=MASCOTS[r];
+    }
+    if(kicker) kicker.textContent=KICKERS[r];
+    if(cap) cap.textContent=CAPS[r];
+    btns.forEach(function(b){ b.setAttribute("aria-pressed", b.getAttribute("data-regime-btn")===r ? "true":"false"); });
+  }
+  btns.forEach(function(b){ b.addEventListener("click",function(){ setRegime(b.getAttribute("data-regime-btn")); }); });
+  // idle-prefetch the other two mascots, same pattern the marketing page uses
+  var idle=window.requestIdleCallback||function(f){return setTimeout(f,1200);};
+  idle(function(){ Object.keys(MASCOTS).forEach(function(r){ if(r==="bull") return; var i=new Image(); i.src=MASCOTS[r]; }); });
+})();
+</script>
 <script type="module">
 import { signIn, signUp, signInWithGoogle, resetPassword, establishSession, currentUser, niceError } from "/js/auth.js";
 import { SITE } from "/js/config.js";
