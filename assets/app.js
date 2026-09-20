@@ -3054,13 +3054,17 @@ function investingPortfolioValue(){
       r.qty+=h.qty; r.cost+=h.amount;
     });
   });
-  let total=0;
-  Object.values(rows).forEach(r=>{ const q=CRYPTO.quotes[r.sym]; if(q) total+=r.qty*q.ltp; });
-  return {rows:Object.values(rows).filter(r=>r.qty>1e-9), total};
+  let total=0, incomplete=false;
+  const held=Object.values(rows).filter(r=>r.qty>1e-9);
+  // BUG FIX (2026-09-20): a coin with no live quote yet was silently skipped from this sum, so the
+  // total could understate real holdings with no indication - the per-row Mark already showed '-'
+  // honestly, the aggregate didn't. Flag it instead of quietly presenting a partial sum as final.
+  held.forEach(r=>{ const q=CRYPTO.quotes[r.sym]; if(q) total+=r.qty*q.ltp; else incomplete=true; });
+  return {rows:held, total, incomplete};
 }
 
 function investingPortfolioTab(){
-  const {rows,total}=investingPortfolioValue();
+  const {rows,total,incomplete}=investingPortfolioValue();
   if(!rows.length) return secEmpty('sprout','No holdings yet','Set up a DCA plan and simulate your first buy to see it here.',`<button class="mini-cancel" data-investview="dca">Set up a DCA plan</button>`);
   const cols='grid-template-columns:1fr 90px 110px 110px 110px';
   const head=`<div class="cxm-row cxm-head" style="${cols}"><div class="cxm-name">Coin</div><span class="cxm-n">Qty</span><span class="cxm-n">Avg cost</span><span class="cxm-n">Mark</span><span class="cxm-n">P&amp;L</span></div>`;
@@ -3075,7 +3079,9 @@ function investingPortfolioTab(){
       <span class="cxm-n num">${mark!=null?cryptoFmt(mark):'-'}</span>
       <span class="cxm-n num ${cls(pnl)}">${pnl!=null?cxMoney(pnl):'-'}</span></div>`;
   }).join('');
-  const statLine=`<div class="cxm-tbl-h">${icon('sprout',13)}<b>Simulated portfolio</b><span>${cryptoFmt(total)} total · ${rows.length} coin${rows.length===1?'':'s'}</span></div>`;
+  const totalTxt=(incomplete?'~':'')+cryptoFmt(total);
+  const incompleteNote=incomplete?infoI('Some holdings are missing a live price right now, this total is a partial sum, not the full picture.'):'';
+  const statLine=`<div class="cxm-tbl-h">${icon('sprout',13)}<b>Simulated portfolio</b><span>${totalTxt} total${incompleteNote} · ${rows.length} coin${rows.length===1?'':'s'}</span></div>`;
   return statLine+`<div class="cxm-tbl">${head}${body}</div>`;
 }
 
