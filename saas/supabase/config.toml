@@ -2,6 +2,53 @@
 #   supabase link --project-ref ponvarxeytfcntckczbn
 project_id = "ponvarxeytfcntckczbn"
 
+# INCIDENT (2026-09-20): `supabase config push` treats any [auth] setting absent from this file as
+# "reset to the CLI's bare default", not "leave remote alone". This file used to define ONLY the
+# functions.*.verify_jwt keys below, so the first push (meant to add nothing but the Google client
+# below) silently reverted site_url/redirect_urls/MFA/email-confirmation to localhost dev defaults
+# on the LIVE project. Every [auth] setting below is now pinned explicitly, mirroring the last-known
+# -good production values, specifically so this file is never partial again and a future
+# `config push` can't blow away something it doesn't mention.
+[auth]
+enabled = true
+site_url = "https://zengtrade.in"
+additional_redirect_urls = ["https://zengtrade.in/**"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+
+[auth.mfa]
+max_enrolled_factors = 10
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+[auth.mfa.phone]
+enroll_enabled = false
+verify_enabled = false
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = true
+secure_password_change = false
+max_frequency = "1s"
+otp_length = 8
+otp_expiry = 3600
+
+# Google sign-in was already wired to the founder's own "Zengtrade" Google Cloud OAuth client
+# (client_id below is unchanged) - only the secret is updated, since it was just rotated in Google
+# Cloud Console. client_id/secret are read from env at push-time (`supabase config push`), never
+# committed here. The consent screen showing the raw project ref instead of zengtrade.in was NOT
+# caused by a missing custom client (one already existed) - most likely the Google Cloud OAuth
+# consent screen's own Branding (App name / Authorized domains) was never filled in; worth checking
+# there next if the screen still shows the wrong domain after this.
+[auth.external.google]
+enabled = true
+client_id = "env(GOOGLE_CLIENT_ID)"
+secret = "env(GOOGLE_CLIENT_SECRET)"
+url = ""
+redirect_uri = ""
+skip_nonce_check = false
+
 [functions.nowpayments-ipn]
 verify_jwt = false   # NOWPayments signs with its own HMAC-SHA512 (x-nowpayments-sig), not a Supabase JWT
 
