@@ -3159,9 +3159,17 @@ function investingToggleDca(id){
   p.active=!p.active; saveState(); renderInvesting();
 }
 function investingDeleteDca(id){
-  if(!confirm('Delete this DCA plan? This removes its buy history too.')) return;
-  state.investing.dca=(state.investing.dca||[]).filter(p=>p.id!==id);
-  saveState(); renderInvesting();
+  const p=(state.investing.dca||[]).find(x=>x.id===id); if(!p) return;
+  const c=CRYPTO_UNIVERSE.find(x=>x.sym===p.sym);
+  // UX FIX (2026-09-20): this used to block on the browser's own confirm() dialog, the only place
+  // left in Investing/Trading still doing that - every other destructive action in the terminal
+  // (Stop a strategy, place a live order) uses flowModal() for a consistent look and feel.
+  flowModal({title:'Delete DCA plan',confirm:'Delete plan',danger:true,
+    body:`<p class="flow-note">${icon('alert',13)}<span>Delete the <b>${esc(c?c.tk:p.sym)}</b> DCA plan? This removes its buy history too, and can't be undone.</span></p>`,
+    onConfirm(){
+      state.investing.dca=(state.investing.dca||[]).filter(x=>x.id!==id);
+      saveState(); renderInvesting();
+    }});
 }
 function investingCreateDca(){
   const inv=state.investing;
@@ -3184,9 +3192,13 @@ function investingCreateGoal(){
   saveState(); renderInvesting();
 }
 function investingDeleteGoal(id){
-  if(!confirm('Delete this goal?')) return;
-  state.investing.goals=(state.investing.goals||[]).filter(g=>g.id!==id);
-  saveState(); renderInvesting();
+  const g=(state.investing.goals||[]).find(x=>x.id===id); if(!g) return;
+  flowModal({title:'Delete goal',confirm:'Delete goal',danger:true,
+    body:`<p class="flow-note">${icon('alert',13)}<span>Delete <b>${esc(g.label)}</b>? This can't be undone.</span></p>`,
+    onConfirm(){
+      state.investing.goals=(state.investing.goals||[]).filter(x=>x.id!==id);
+      saveState(); renderInvesting();
+    }});
 }
 
 function renderInvesting(){
