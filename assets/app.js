@@ -4284,8 +4284,16 @@ function init(){
   // BUG FIX (2026-09-19): this used to force 'algo' unconditionally whenever CRYPTO_ONLY was true,
   // which is what kept Investing/Trading permanently unreachable even after the header toggle was
   // wired up - CRYPTO_ONLY means "this deployment only has crypto data," not "only Algo Studio is
-  // allowed." Respect a real saved choice among all three modes; 'algo' only as the true first-visit default.
-  state.persona=(saved&&['trader','investor','algo'].indexOf(saved.persona)>=0)?saved.persona:'algo';
+  // Support direct deep-linking via ?mode=trading, ?persona=trader, ?tab=trading
+  let urlPersona = null;
+  try {
+    const sp = new URLSearchParams(window.location.search);
+    const pParam = (sp.get('persona') || sp.get('mode') || sp.get('tab') || '').toLowerCase();
+    if (pParam === 'trading' || pParam === 'trader') urlPersona = 'trader';
+    else if (pParam === 'investing' || pParam === 'investor') urlPersona = 'investor';
+    else if (pParam === 'algo' || pParam === 'studio') urlPersona = 'algo';
+  } catch (e) {}
+  state.persona = urlPersona || ((saved && ['trader', 'investor', 'algo'].indexOf(saved.persona) >= 0) ? saved.persona : 'algo');
   renderPlanChip();
   renderExchangeChip();
   // Trading's paper book and Investing's DCA plans/goals didn't survive a reload before this fix -

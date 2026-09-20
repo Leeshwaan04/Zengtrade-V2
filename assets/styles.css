@@ -1,7 +1,7 @@
 /* ============================================================
-   TradePro · Indiabulls Securities, Bull/Bear Terminal
+   zengtrade · Crypto Algo Studio, Bull/Bear Terminal
    Brand-synced: white base · Plus Jakarta Sans
-   Indiabulls green #00AB4E · navy #0F1A2A · blue #1667D9
+   Accent green #00AB4E · navy #0F1A2A · blue #1667D9
    ============================================================ */
 :root{
   --white:#ffffff;
@@ -14,7 +14,7 @@
   --slate:#64748b;
   --slate-2:#94a3b8;
   --blue:#1667d9;         /* interactive accent */
-  --green:#00ab4e;        /* Indiabulls brand / up */
+  --green:#00ab4e;        /* brand up / bull accent */
   --green-d:#079a49;
   --red:#e5383b;          /* down / bear */
   --red-d:#cc2a2f;

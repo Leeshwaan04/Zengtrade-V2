@@ -11,7 +11,7 @@ rewrites the `?v=` on every asset to a CONTENT HASH at request time, so:
   * each asset URL changes the instant its file content changes → a plain reload
     always gets the fresh build, and unchanged assets still cache hard.
 
-Drop-in replacement for `python3 -m http.server` — just run this instead. Zero deps.
+Drop-in replacement for `python3 -m http.server` - just run this instead. Zero deps.
 """
 from __future__ import annotations
 
@@ -35,9 +35,38 @@ def _hash(rel: str) -> str:
         return "0"
 
 
+DIST = os.path.join(HERE, "deploy", "landing", "dist")
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
+    def translate_path(self, path):
+        clean = path.split("?", 1)[0].split("#", 1)[0].strip("/")
+        if clean in ("", "index.html", "dashboard"):
+            return os.path.join(HERE, "index.html")
+
+        # 1. Exact match in HERE (assets, etc.)
+        p_here = os.path.join(HERE, clean)
+        if os.path.exists(p_here):
+            return p_here
+
+        # 2. Match in DIST (clean directory with index.html or clean file)
+        p_dist_idx = os.path.join(DIST, clean, "index.html")
+        if os.path.isfile(p_dist_idx):
+            return p_dist_idx
+        p_dist = os.path.join(DIST, clean)
+        if os.path.exists(p_dist):
+            return p_dist
+
+        # 3. Match in saas/web/ (e.g. app.html, login.html, ops.html)
+        p_saas = os.path.join(HERE, "saas", "web", clean + ".html")
+        if os.path.isfile(p_saas):
+            return p_saas
+
+        return p_here
+
     def do_GET(self):
-        if self.path.split("?")[0] in ("/", "/index.html"):
+        clean = self.path.split("?", 1)[0].split("#", 1)[0].strip("/")
+        if clean in ("", "index.html", "dashboard"):
             return self._serve_index()
         return super().do_GET()
 
@@ -56,7 +85,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
     def end_headers(self):
-        # hashed assets can cache hard — the hash changes when the file does
+        # hashed assets can cache hard - the hash changes when the file does
         if self.path.startswith("/assets/") and "?v=" in self.path:
             self.send_header("Cache-Control", "public, max-age=31536000, immutable")
         super().end_headers()
@@ -69,7 +98,7 @@ def main():
     os.chdir(HERE)
     socketserver.ThreadingTCPServer.allow_reuse_address = True
     with socketserver.ThreadingTCPServer(("127.0.0.1", PORT), Handler) as httpd:
-        print(f"TradePro on http://localhost:{PORT}  —  auto cache-busting (no more ?v bumps; just edit + reload)")
+        print(f"zengtrade on http://localhost:{PORT} (auto cache-busting and clean URL routing)")
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
