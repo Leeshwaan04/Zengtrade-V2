@@ -2902,7 +2902,7 @@ function tradingTradeTab(){
         <div class="side-tabs"><div class="side-tab buy ${m.side==='buy'?'active':''}" data-tradeside="buy">BUY</div><div class="side-tab sell ${m.side==='sell'?'active':''}" data-tradeside="sell">SELL</div></div>
         <div class="fld"><label>Quantity</label><div class="inp"><input class="qty-inp num" id="tradeQty" value="${m.qty}" inputmode="decimal" aria-label="Order quantity"></div></div>
         <div class="fld"><label>Order value</label><div class="inp num" id="tradeOrdVal">${m.priced?cryptoFmt(m.value):'-'}</div></div>
-        <button class="cta ${live?'cta-live':(m.side==='buy'?'cta-buy':'cta-sell')}" id="tradeCta"${(m.priced&&!busy)?'':' disabled'}>${busy?'Placing order…':(live?`${m.side==='buy'?'BUY':'SELL'} ${m.tk} (LIVE)`:`${m.side==='buy'?'BUY':'SELL'} ${m.tk}`)}</button>
+        <button class="cta ${live?'cta-live':(m.side==='buy'?'cta-buy':'cta-sell')}" id="tradeCta"${(m.priced&&m.qty>0&&!busy)?'':' disabled'}>${busy?'Placing order…':(live?`${m.side==='buy'?'BUY':'SELL'} ${m.tk} (LIVE)`:`${m.side==='buy'?'BUY':'SELL'} ${m.tk}`)}</button>
       </div></div>`;
 }
 function tradingPositionsTab(){
@@ -2948,7 +2948,9 @@ function tradingHistoryTab(){
 }
 function tradingPlace(){
   const m=tradeModel(state.trading.sym);
-  if(!m.priced) return;
+  // BUG FIX (2026-09-20): only price was gated here, qty=0 (a valid state of the qty input's own
+  // clamp, Math.max(0,...)) reached this point and placed a meaningless zero-size order.
+  if(!m.priced||!(m.qty>0)) return;
   placeOrder({sym:m.sym,side:m.side,qty:m.qty,price:m.px,type:'MARKET'});
 }
 // Real order execution: a mandatory, visually-distinct confirm step before ANY real order, never
@@ -2957,7 +2959,9 @@ function tradingPlace(){
 // this confirm step is about informed consent, not the actual safety boundary.
 function tradingPlaceLive(){
   const m=tradeModel(state.trading.sym);
-  if(!m.priced||state.trading.liveBusy) return;
+  // BUG FIX (2026-09-20): same qty=0 gap as tradingPlace(), but on the real-money path - this let
+  // a user reach the "place a REAL order" confirm modal with a zero-quantity order.
+  if(!m.priced||!(m.qty>0)||state.trading.liveBusy) return;
   flowModal({title:'Place a REAL order',confirm:'Place real order',danger:true,
     body:`<div class="flow-top"><div><b>${m.side==='buy'?'BUY':'SELL'} ${m.qty} ${esc(m.tk)}</b><span class="flow-sub">Real Binance order &middot; your own connected account</span></div></div>
       <div class="flow-rows">
@@ -3014,7 +3018,11 @@ function renderTrading(){
     const m=tradeModel(state.trading.sym);
     const ordVal=v.querySelector('#tradeOrdVal');
     if(ordVal) ordVal.textContent=m.priced?cryptoFmt(m.value):'-';
-    const cb=v.querySelector('#tradeCta'); if(cb) cb.disabled=!m.priced;
+    // BUG FIX (2026-09-20): this in-place patch (avoids a full re-render on every keystroke) only
+    // ever checked m.priced, so it silently re-enabled the CTA the moment a user typed anything,
+    // undoing the qty>0 guard added to the initial render template - the actual bug the "zero-qty
+    // orders are placeable" finding was caught by, since typing "0" is exactly this path.
+    const cb=v.querySelector('#tradeCta'); if(cb) cb.disabled=!(m.priced&&m.qty>0);
   };
   v.querySelectorAll('[data-lt]').forEach(b=>b.onclick=()=>{state.trading.live=b.dataset.lt==='live';renderTrading();});
   const cta=v.querySelector('#tradeCta'); if(cta) cta.onclick=()=>{ (state.trading.live?tradingPlaceLive:tradingPlace)(); };
