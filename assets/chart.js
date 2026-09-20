@@ -39,30 +39,43 @@ const TOOLS=[
 const $=s=>document.querySelector(s);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const hash=s=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;};
-const fmtN=(n,d)=>n.toLocaleString('en-IN',{minimumFractionDigits:d,maximumFractionDigits:d});
+const priceDec=p=>{
+  if(p==null||!isFinite(p)) return 2;
+  const a=Math.abs(p);
+  return a>=1000?(a>2000?1:2):a>=1?2:a>=0.01?4:6;
+};
+const fmtN=(n,d)=>{
+  if(n==null||!isFinite(n)) return '-';
+  const dec=d!=null?d:priceDec(n);
+  return n.toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+};
 function cssv(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim();}
 function withA(hex,a){ // hex/rgb -> rgba
-  hex=hex.trim();
+  hex=(hex||'#000').trim();
   if(hex.startsWith('rgb')) return hex.replace(/rgba?\(([^)]+)\)/,(m,p)=>{const v=p.split(',').slice(0,3).join(',');return `rgba(${v},${a})`;});
   let h=hex.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');
-  const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
+  const r=parseInt(h.slice(0,2),16)||0,g=parseInt(h.slice(2,4),16)||0,b=parseInt(h.slice(4,6),16)||0;
   return `rgba(${r},${g},${b},${a})`;
 }
 
 /* ---------- engine state ---------- */
 const S={
-  mounted:false, cv:null, ctx:null, dpr:1, W:0, H:0,
-  sym:'NIFTY 50', name:'', regime:'bull', basePrice:23450, change:0,
+  mounted:false, target:null, cv:null, ctx:null, dpr:1, W:0, H:0,
+  sym:'BTCUSDT', name:'', regime:'bull', basePrice:60000, change:0,
   type:'candle', tf:'15m',
   ind:{ema20:true,ema50:true,ema200:false,bb:false,vwap:false,sup:false,vol:true,rsi:false,macd:false},
-  regimeStudies:true,
+  regimeStudies:false,
   bars:[], view:{start:0,count:90}, hover:-1, hoverY:null,
   drawings:{}, draft:null, tool:'cursor',
   trade:null,                 // {sym,side,entry,sl,target}
+  signals:[],                 // [{time, i, type:'buy'|'sell', price, label, pnl}]
   replay:{on:false,idx:0,timer:null},
   drag:null, palette:{}, onTrade:null, persist:null, raf:0,
-  feed:null, barReq:0, loading:false, noData:false,   // real-candle feed (Kite historical)
+  feed:null, barReq:0, loading:false, noData:false,
 };
+
+const find=s=>(S.target||document).querySelector(s);
+const findAll=s=>(S.target||document).querySelectorAll(s);
 
 /* ============================================================
    DATA
@@ -175,7 +188,7 @@ function draw(){
     ctx.fillStyle=withA(cssv('--slate')||'#8a93a6',0.9);
     ctx.font='13px '+(cssv('--ui')||'system-ui');
     ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(S.loading?'Loading live chart…':(S.noData?'No live chart data: connect Kite (run login.py)':'No data'),S.W/2,S.H/2);
+    ctx.fillText(S.loading?'Loading live candles…':(S.noData?'No live candle data available':'No data'),S.W/2,S.H/2);
     ctx.textAlign='left';
     return;
   }
@@ -188,12 +201,12 @@ function draw(){
   const steps=5;
   for(let s=0;s<=steps;s++){const p=rng.mn+(rng.mx-rng.mn)*s/steps,yy=yOf(p,main,rng);
     ctx.strokeStyle=withA(P.line,0.7);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(L.padL,yy);ctx.lineTo(S.W-L.padR,yy);ctx.stroke();
-    ctx.fillStyle=P.slate;ctx.textAlign='left';ctx.fillText(fmtN(p,p>2000?0:1),S.W-L.padR+5,yy);}
+    ctx.fillStyle=P.slate;ctx.textAlign='left';ctx.fillText(fmtN(p),S.W-L.padR+5,yy);}
   // time axis ticks
   ctx.fillStyle=P.slate2;ctx.textAlign='center';
   const tfMins=(TF[S.tf]||TF['15m']).mins;
   for(let i=lo;i<=hi;i++){if(i<0)continue;const gap=Math.max(1,Math.round(v.count/8));if(i%gap)continue;
-    const d=new Date(bars[i].t);const lbl=tfMins>=1440?`${d.getDate()}/${d.getMonth()+1}`:`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    const d=new Date(bars[i].t);const lbl=tfMins>=1440?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});
     ctx.fillText(lbl,xOf(i,L),S.H-10);}
 
   // regime auto-overlays (drawn under price)
@@ -238,12 +251,14 @@ function draw(){
 
   // overlay indicators
   drawOverlayIndicators(ctx,L,main,rng,bars,lo,hi);
+  // trade signals overlay (buy/sell arrows & markers)
+  drawSignals(ctx,L,main,rng,bars,lo,hi);
   // last price tag + line
   const last=bars[hi];const yL=yOf(last.c,main,rng);
   ctx.setLineDash([2,3]);ctx.strokeStyle=withA(last.c>=last.o?upC:dnC,.55);ctx.lineWidth=1;
   ctx.beginPath();ctx.moveTo(L.padL,yL);ctx.lineTo(S.W-L.padR,yL);ctx.stroke();ctx.setLineDash([]);
   ctx.fillStyle=last.c>=last.o?upC:dnC;ctx.fillRect(S.W-L.padR,yL-8,L.padR,16);
-  ctx.fillStyle='#fff';ctx.textAlign='left';ctx.font='10px '+(cssv('--mono')||'monospace');ctx.fillText(fmtN(last.c,last.c>2000?0:1),S.W-L.padR+5,yL);
+  ctx.fillStyle='#fff';ctx.textAlign='left';ctx.font='10px '+(cssv('--mono')||'monospace');ctx.fillText(fmtN(last.c),S.W-L.padR+5,yL);
 
   // sub-panes
   L.panes.forEach(p=>drawPane(ctx,L,p,bars,lo,hi));
@@ -322,7 +337,69 @@ function drawPane(ctx,L,pane,bars,lo,hi){
   }
 }
 
-/* ---------- drawings ---------- */
+/* ---------- drawings & signals ---------- */
+function drawSignals(ctx,L,main,rng,bars,lo,hi){
+  if(!S.signals||!S.signals.length||!bars.length) return;
+  const P=S.palette;
+  const timeMap=new Map();
+  for(let i=0;i<bars.length;i++) timeMap.set(bars[i].t,i);
+
+  S.signals.forEach(sig=>{
+    let i=sig.i;
+    if(i==null&&sig.time!=null){
+      i=timeMap.get(sig.time);
+      if(i==null){
+        for(let b=0;b<bars.length;b++){if(bars[b].t>=sig.time){i=b;break;}}
+      }
+    }
+    if(i==null||i<lo||i>hi) return;
+    const x=xOf(i,L);
+    const bar=bars[i];
+    const isBuy=sig.type==='buy';
+    const col=isBuy?(P.green||'#10b981'):(P.red||'#ef4444');
+    const yAnchor=isBuy?yOf(bar.l,main,rng)+14:yOf(bar.h,main,rng)-14;
+
+    ctx.save();
+    ctx.fillStyle=col;
+    ctx.strokeStyle='#ffffff';
+    ctx.lineWidth=1;
+    ctx.beginPath();
+    if(isBuy){
+      ctx.moveTo(x,yAnchor-8);
+      ctx.lineTo(x-5,yAnchor+4);
+      ctx.lineTo(x-2,yAnchor+4);
+      ctx.lineTo(x-2,yAnchor+10);
+      ctx.lineTo(x+2,yAnchor+10);
+      ctx.lineTo(x+2,yAnchor+4);
+      ctx.lineTo(x+5,yAnchor+4);
+      ctx.closePath();
+    } else {
+      ctx.moveTo(x,yAnchor+8);
+      ctx.lineTo(x-5,yAnchor-4);
+      ctx.lineTo(x-2,yAnchor-4);
+      ctx.lineTo(x-2,yAnchor-10);
+      ctx.lineTo(x+2,yAnchor-10);
+      ctx.lineTo(x+2,yAnchor-4);
+      ctx.lineTo(x+5,yAnchor-4);
+      ctx.closePath();
+    }
+    ctx.fill();ctx.stroke();
+
+    if(sig.label){
+      ctx.font='9px '+(cssv('--mono')||'monospace');
+      const tw=ctx.measureText(sig.label).width;
+      const pillY=isBuy?yAnchor+12:yAnchor-22;
+      ctx.fillStyle=withA(col,0.92);
+      ctx.fillRect(x-tw/2-4,pillY,tw+8,13);
+      ctx.fillStyle='#fff';
+      ctx.textAlign='center';
+      ctx.textBaseline='middle';
+      ctx.fillText(sig.label,x,pillY+6.5);
+    }
+    ctx.restore();
+  });
+}
+
 function drawDrawings(ctx,L,main,rng){
   const P=S.palette;const list=(S.drawings[S.sym]||[]).concat(S.draft?[S.draft]:[]);
   list.forEach(d=>{
@@ -331,37 +408,37 @@ function drawDrawings(ctx,L,main,rng){
     const X=p=>xOf(p.i,L),Y=p=>yOf(p.price,main,rng);
     if(d.type==='trend'&&d.pts.length>=2){ctx.beginPath();ctx.moveTo(X(d.pts[0]),Y(d.pts[0]));ctx.lineTo(X(d.pts[1]),Y(d.pts[1]));ctx.stroke();}
     else if(d.type==='ray'&&d.pts.length>=1){const y=Y(d.pts[0]);ctx.setLineDash([5,3]);ctx.beginPath();ctx.moveTo(L.padL,y);ctx.lineTo(S.W-L.padR,y);ctx.stroke();ctx.setLineDash([]);
-      ctx.fillStyle=col;ctx.font='9px '+(cssv('--mono')||'monospace');ctx.textAlign='right';ctx.fillText(fmtN(d.pts[0].price,1),S.W-L.padR-3,y-5);}
+      ctx.fillStyle=col;ctx.font='9px '+(cssv('--mono')||'monospace');ctx.textAlign='right';ctx.fillText(fmtN(d.pts[0].price),S.W-L.padR-3,y-5);}
     else if(d.type==='rect'&&d.pts.length>=2){const x1=X(d.pts[0]),y1=Y(d.pts[0]),x2=X(d.pts[1]),y2=Y(d.pts[1]);
       ctx.fillStyle=withA(P.blue,.07);ctx.fillRect(Math.min(x1,x2),Math.min(y1,y2),Math.abs(x2-x1),Math.abs(y2-y1));ctx.strokeRect(Math.min(x1,x2),Math.min(y1,y2),Math.abs(x2-x1),Math.abs(y2-y1));}
     else if(d.type==='fib'&&d.pts.length>=2){const p1=d.pts[0].price,p2=d.pts[1].price;const levels=[0,0.236,0.382,0.5,0.618,0.786,1];
       const x1=X(d.pts[0]),x2=X(d.pts[1]);levels.forEach(f=>{const pr=p1+(p2-p1)*f;const y=Y({price:pr});ctx.strokeStyle=withA(P.amber,.8);ctx.setLineDash(f===0||f===1?[]:[4,3]);
         ctx.beginPath();ctx.moveTo(Math.min(x1,x2),y);ctx.lineTo(S.W-L.padR,y);ctx.stroke();ctx.setLineDash([]);
-        ctx.fillStyle=P.amber;ctx.font='9px '+(cssv('--mono')||'monospace');ctx.textAlign='left';ctx.fillText((f*100).toFixed(1)+'%  '+fmtN(pr,1),Math.min(x1,x2)+3,y-4);});}
+        ctx.fillStyle=P.amber;ctx.font='9px '+(cssv('--mono')||'monospace');ctx.textAlign='left';ctx.fillText((f*100).toFixed(1)+'%  '+fmtN(pr),Math.min(x1,x2)+3,y-4);});}
   });
 }
 function drawTrade(ctx,L,main,rng){
   if(!S.trade||S.trade.sym!==S.sym)return;const t=S.trade,P=S.palette;
   const lvl=(p,col,label)=>{if(p==null)return;const y=yOf(p,main,rng);ctx.strokeStyle=col;ctx.lineWidth=1.3;ctx.setLineDash([6,3]);
     ctx.beginPath();ctx.moveTo(L.padL,y);ctx.lineTo(S.W-L.padR,y);ctx.stroke();ctx.setLineDash([]);
-    ctx.fillStyle=col;ctx.fillRect(L.padL,y-7,52,14);ctx.fillStyle='#fff';ctx.font='9px '+(cssv('--sans')||'sans-serif');ctx.textAlign='left';ctx.fillText(label,L.padL+4,y);};
+    ctx.fillStyle=col;ctx.fillRect(L.padL,y-7,60,14);ctx.fillStyle='#fff';ctx.font='9px '+(cssv('--sans')||'sans-serif');ctx.textAlign='left';ctx.fillText(label,L.padL+4,y);};
   // shade reward (entry->target) green, risk (entry->sl) red
   if(t.entry!=null&&t.target!=null){const ye=yOf(t.entry,main,rng),yt=yOf(t.target,main,rng);ctx.fillStyle=withA(P.green,.07);ctx.fillRect(L.padL,Math.min(ye,yt),L.plotW,Math.abs(yt-ye));}
   if(t.entry!=null&&t.sl!=null){const ye=yOf(t.entry,main,rng),ys=yOf(t.sl,main,rng);ctx.fillStyle=withA(P.red,.07);ctx.fillRect(L.padL,Math.min(ye,ys),L.plotW,Math.abs(ys-ye));}
-  lvl(t.target,P.green,'TGT '+fmtN(t.target,1));
-  lvl(t.entry,P.navy,(t.side==='buy'?'BUY':'SELL')+' '+fmtN(t.entry,1));
-  lvl(t.sl,P.red,'SL '+fmtN(t.sl,1));
+  lvl(t.target,P.green,'TGT '+fmtN(t.target));
+  lvl(t.entry,P.navy,(t.side==='buy'?'BUY':'SELL')+' '+fmtN(t.entry));
+  lvl(t.sl,P.red,'SL '+fmtN(t.sl));
 }
 function drawCrosshair(ctx,L,main,rng,bars){
   const P=S.palette,i=clamp(S.hover,0,bars.length-1),x=xOf(i,L);
   ctx.strokeStyle=withA(P.slate,.55);ctx.lineWidth=1;ctx.setLineDash([3,3]);
   ctx.beginPath();ctx.moveTo(x,main.top);ctx.lineTo(x,S.H-L.padB);ctx.stroke();
   if(S.hoverY!=null){ctx.beginPath();ctx.moveTo(L.padL,S.hoverY);ctx.lineTo(S.W-L.padR,S.hoverY);ctx.stroke();
-    const pr=pOf(S.hoverY,main,rng);if(S.hoverY>main.top&&S.hoverY<main.top+main.h){ctx.fillStyle=P.navy;ctx.fillRect(S.W-L.padR,S.hoverY-8,L.padR,16);ctx.fillStyle='#fff';ctx.font='10px '+(cssv('--mono')||'monospace');ctx.textAlign='left';ctx.fillText(fmtN(pr,pr>2000?0:1),S.W-L.padR+5,S.hoverY);}}
+    const pr=pOf(S.hoverY,main,rng);if(S.hoverY>main.top&&S.hoverY<main.top+main.h){ctx.fillStyle=P.navy;ctx.fillRect(S.W-L.padR,S.hoverY-8,L.padR,16);ctx.fillStyle='#fff';ctx.font='10px '+(cssv('--mono')||'monospace');ctx.textAlign='left';ctx.fillText(fmtN(pr),S.W-L.padR+5,S.hoverY);}}
   ctx.setLineDash([]);
   // time tag
   const d=new Date(bars[i].t);const tfMins=(TF[S.tf]||TF['15m']).mins;
-  const lbl=tfMins>=1440?d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}):d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  const lbl=tfMins>=1440?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});
   ctx.fillStyle=P.navy;ctx.font='9px '+(cssv('--mono')||'monospace');const tw=ctx.measureText(lbl).width+10;
   ctx.fillRect(clamp(x-tw/2,L.padL,S.W-L.padR-tw),S.H-L.padB+2,tw,15);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.fillText(lbl,clamp(x,L.padL+tw/2,S.W-L.padR-tw/2),S.H-L.padB+10);
 }
@@ -369,11 +446,11 @@ function drawCrosshair(ctx,L,main,rng,bars){
 /* ---------- HTML readout + legend ---------- */
 function updateReadout(bars,L,main,rng){
   const i=S.hover>=0?clamp(S.hover,0,bars.length-1):bars.length-1;const b=bars[i];
-  const ro=$('#chRead');if(!ro)return;const ch=b.c-b.o,chp=(ch/b.o*100);
+  const ro=find('#chRead');if(!ro)return;const ch=b.c-b.o,chp=(ch/b.o*100);
   const c=ch>=0?'up':'down';
   ro.innerHTML=`<b>${S.sym}</b><span class="ch-tf">${S.tf} · ${TYPE_LABEL[S.type]}</span>`+
-    ['O','H','L','C'].map((k,j)=>`<i>${k}</i><span class="${c} num">${fmtN([b.o,b.h,b.l,b.c][j],b.c>2000?0:1)}</span>`).join('')+
-    `<span class="${c} num">${ch>=0?'+':''}${fmtN(ch,1)} (${chp>=0?'+':''}${chp.toFixed(2)}%)</span>`;
+    ['O','H','L','C'].map((k,j)=>`<i>${k}</i><span class="${c} num">${fmtN([b.o,b.h,b.l,b.c][j])}</span>`).join('')+
+    `<span class="${c} num">${ch>=0?'+':''}${fmtN(ch)} (${chp>=0?'+':''}${chp.toFixed(2)}%)</span>`;
   // legend (indicator last values)
   const closes=bars.map(x=>x.c);const lg=[];
   if(S.ind.ema20)lg.push(['EMA20',ema(closes,20)[i],S.palette.blue]);
@@ -381,7 +458,7 @@ function updateReadout(bars,L,main,rng){
   if(S.ind.ema200)lg.push(['EMA200',ema(closes,200)[i],S.palette.slate]);
   if(S.ind.vwap)lg.push(['VWAP',vwap(bars)[i],'#8b5cf6']);
   if(S.ind.rsi){const r=rsi(closes,14)[i];lg.push(['RSI',r,'#8b5cf6']);}
-  const le=$('#chLegend');if(le)le.innerHTML=lg.map(([n,v,c])=>`<span class="ch-lg"><i style="background:${c}"></i>${n} <b class="num">${v==null?'-':fmtN(v,n==='RSI'?1:(v>2000?0:1))}</b></span>`).join('');
+  const le=find('#chLegend');if(le)le.innerHTML=lg.map(([n,v,c])=>`<span class="ch-lg"><i style="background:${c}"></i>${n} <b class="num">${v==null?'-':fmtN(v,n==='RSI'?1:undefined)}</b></span>`).join('');
 }
 
 /* ============================================================
@@ -438,11 +515,12 @@ function pushDrawing(d){if(!S.drawings[S.sym])S.drawings[S.sym]=[];S.drawings[S.
    TOOLBAR DOM + EVENTS
    ============================================================ */
 function buildDOM(){
-  const card=$('#chartCard');
+  const card=S.target||$('#chartCard');
+  if(!card) return;
   card.innerHTML=`
   <div class="ch-bar">
     <div class="ch-id">
-      <span class="ch-name" id="chName">NIFTY 50</span>
+      <span class="ch-name" id="chName">${S.sym}</span>
       <span class="ch-last num" id="chLast">—</span>
     </div>
     <div class="ch-seg" id="chTF">${TF_ORDER.map(t=>`<button class="ch-pill" data-tf="${t}">${t}</button>`).join('')}</div>
@@ -468,7 +546,9 @@ function buildDOM(){
       <div class="ch-trade-chip" id="chTradeChip"></div>
     </div>
   </div>`;
-  S.cv=$('#chCanvas');S.ctx=S.cv.getContext('2d');
+  S.cv=card.querySelector('#chCanvas');
+  if(!S.cv) return;
+  S.ctx=S.cv.getContext('2d');
 
   // events
   S.cv.addEventListener('mousedown',onDown);
@@ -482,36 +562,45 @@ function buildDOM(){
   S.cv.addEventListener('touchmove',e=>{if(e.touches.length===1){const t=e.touches[0];onMove({clientX:t.clientX,clientY:t.clientY});}},{passive:true});
   S.cv.addEventListener('touchend',onUp);
 
-  $('#chTF').addEventListener('click',e=>{const b=e.target.closest('[data-tf]');if(b)setTF(b.dataset.tf);});
-  $('#chTypeBtn').addEventListener('click',()=>togglePop('chTypePop'));
-  $('#chTypePop').addEventListener('click',e=>{const b=e.target.closest('[data-type]');if(b){setType(b.dataset.type);closePops();}});
-  $('#chIndBtn').addEventListener('click',()=>togglePop('chIndPop'));
-  // read checkbox state on change (avoids the label+input double-fire that cancels a toggle)
-  $('#chIndPop').addEventListener('change',e=>{const c=e.target.closest('[data-indc]');if(c){S.ind[c.dataset.indc]=c.checked;fit();persist();schedule();}});
-  $('#chRegimeStudies').addEventListener('click',()=>{S.regimeStudies=!S.regimeStudies;$('#chRegimeStudies').classList.toggle('on',S.regimeStudies);persist();schedule();});
-  $('#chReplay').addEventListener('click',toggleReplay);
-  $('#chReset').addEventListener('click',()=>{fit(true);schedule();});
-  $('#chTools').addEventListener('click',e=>{const b=e.target.closest('[data-tool]');if(b)setTool(b.dataset.tool);});
-  $('#chClear').addEventListener('click',()=>{S.drawings[S.sym]=[];S.trade=null;updateTradeChip();persist();schedule();});
+  const tfEl=card.querySelector('#chTF');
+  if(tfEl) tfEl.addEventListener('click',e=>{const b=e.target.closest('[data-tf]');if(b)setTF(b.dataset.tf);});
+  const typeBtn=card.querySelector('#chTypeBtn');
+  if(typeBtn) typeBtn.addEventListener('click',()=>togglePop('chTypePop'));
+  const typePop=card.querySelector('#chTypePop');
+  if(typePop) typePop.addEventListener('click',e=>{const b=e.target.closest('[data-type]');if(b){setType(b.dataset.type);closePops();}});
+  const indBtn=card.querySelector('#chIndBtn');
+  if(indBtn) indBtn.addEventListener('click',()=>togglePop('chIndPop'));
+  const indPop=card.querySelector('#chIndPop');
+  if(indPop) indPop.addEventListener('change',e=>{const c=e.target.closest('[data-indc]');if(c){S.ind[c.dataset.indc]=c.checked;fit();persist();schedule();}});
+  const regBtn=card.querySelector('#chRegimeStudies');
+  if(regBtn) regBtn.addEventListener('click',()=>{S.regimeStudies=!S.regimeStudies;regBtn.classList.toggle('on',S.regimeStudies);persist();schedule();});
+  const repBtn=card.querySelector('#chReplay');
+  if(repBtn) repBtn.addEventListener('click',toggleReplay);
+  const rstBtn=card.querySelector('#chReset');
+  if(rstBtn) rstBtn.addEventListener('click',()=>{fit(true);schedule();});
+  const toolsEl=card.querySelector('#chTools');
+  if(toolsEl) toolsEl.addEventListener('click',e=>{const b=e.target.closest('[data-tool]');if(b)setTool(b.dataset.tool);});
+  const clrBtn=card.querySelector('#chClear');
+  if(clrBtn) clrBtn.addEventListener('click',()=>{S.drawings[S.sym]=[];S.trade=null;updateTradeChip();persist();schedule();});
   document.addEventListener('click',e=>{if(!e.target.closest('.ch-menu-wrap'))closePops();});
-  $('#chRegimeStudies').classList.toggle('on',S.regimeStudies);
+  if(regBtn) regBtn.classList.toggle('on',S.regimeStudies);
 }
-function togglePop(id){const p=$('#'+id);const open=p.classList.contains('show');closePops();if(!open)p.classList.add('show');}
-function closePops(){document.querySelectorAll('.ch-pop').forEach(p=>p.classList.remove('show'));}
-function syncIndChecks(){IND_DEFS.forEach(([k])=>{const c=document.querySelector(`[data-indc="${k}"]`);if(c)c.checked=!!S.ind[k];});}
-function setTool(t){S.tool=t;document.querySelectorAll('.ch-tool').forEach(b=>b.classList.toggle('on',b.dataset.tool===t));S.cv.style.cursor=t==='cursor'?'crosshair':t==='trade'?'ns-resize':'crosshair';}
+function togglePop(id){const p=find('#'+id);if(!p)return;const open=p.classList.contains('show');closePops();if(!open)p.classList.add('show');}
+function closePops(){findAll('.ch-pop').forEach(p=>p.classList.remove('show'));}
+function syncIndChecks(){IND_DEFS.forEach(([k])=>{const c=find(`[data-indc="${k}"]`);if(c)c.checked=!!S.ind[k];});}
+function setTool(t){S.tool=t;findAll('.ch-tool').forEach(b=>b.classList.toggle('on',b.dataset.tool===t));if(S.cv)S.cv.style.cursor=t==='cursor'?'crosshair':t==='trade'?'ns-resize':'crosshair';}
 function setTF(tf){if(!TF[tf])return;S.tf=tf;rebuildBars();fit(true);syncToolbar();persist();schedule();}
-function setType(t){S.type=t;$('#chTypeLbl').textContent=TYPE_LABEL[t];persist();schedule();}
+function setType(t){S.type=t;const lbl=find('#chTypeLbl');if(lbl)lbl.textContent=TYPE_LABEL[t];persist();schedule();}
 function syncToolbar(){
-  document.querySelectorAll('[data-tf]').forEach(b=>b.classList.toggle('on',b.dataset.tf===S.tf));
-  $('#chTypeLbl').textContent=TYPE_LABEL[S.type];syncIndChecks();
-  $('#chName').textContent=S.sym;
-  const last=S.bars[S.bars.length-1];if(last){const ch=S.change;$('#chLast').innerHTML=`${fmtN(last.c,last.c>2000?0:1)} <span class="${ch>=0?'up':'down'}">${ch>=0?'+':''}${ch.toFixed(2)}%</span>`;}
+  findAll('[data-tf]').forEach(b=>b.classList.toggle('on',b.dataset.tf===S.tf));
+  const lbl=find('#chTypeLbl');if(lbl)lbl.textContent=TYPE_LABEL[S.type];syncIndChecks();
+  const nameEl=find('#chName');if(nameEl)nameEl.textContent=S.sym;
+  const last=S.bars[S.bars.length-1];if(last){const ch=S.change;const lastEl=find('#chLast');if(lastEl)lastEl.innerHTML=`${fmtN(last.c)} <span class="${ch>=0?'up':'down'}">${ch>=0?'+':''}${Number(ch||0).toFixed(2)}%</span>`;}
 }
 
 /* ---------- replay ---------- */
 function toggleReplay(){
-  const b=$('#chReplay');
+  const b=find('#chReplay');if(!b)return;
   if(S.replay.on){S.replay.on=false;clearInterval(S.replay.timer);b.textContent='▶ Replay';b.classList.remove('on');schedule();return;}
   S.replay.on=true;S.replay.idx=Math.max(20,Math.floor(S.bars.length*0.55));b.textContent='⏸ Replaying';b.classList.add('on');
   S.replay.timer=setInterval(()=>{S.replay.idx++;if(S.replay.idx>=S.bars.length){S.replay.idx=S.bars.length;clearInterval(S.replay.timer);S.replay.on=false;b.textContent='▶ Replay';b.classList.remove('on');}schedule();},220);
@@ -520,15 +609,23 @@ function toggleReplay(){
 /* ---------- trade chip ---------- */
 function updateTradeChip(){updateTradeChipDom();}
 function updateTradeChipDom(){
-  const el=$('#chTradeChip');if(!el)return;
+  const el=find('#chTradeChip');if(!el)return;
   if(!S.trade||S.trade.sym!==S.sym){el.classList.remove('show');el.innerHTML='';return;}
   const t=S.trade;const risk=Math.abs(t.entry-t.sl),rew=Math.abs(t.target-t.entry);const rr=risk?(rew/risk):0;
   el.classList.add('show');
   el.innerHTML=`<div class="tc-row"><b>${t.side==='buy'?'LONG':'SHORT'} ${S.sym}</b><span class="tc-rr">R:R ${rr.toFixed(2)}</span></div>
-    <div class="tc-lv"><span>Entry <b class="num">${fmtN(t.entry,1)}</b></span><span class="down">SL <b class="num">${fmtN(t.sl,1)}</b></span><span class="up">Tgt <b class="num">${fmtN(t.target,1)}</b></span></div>
+    <div class="tc-lv"><span>Entry <b class="num">${fmtN(t.entry)}</b></span><span class="down">SL <b class="num">${fmtN(t.sl)}</b></span><span class="up">Tgt <b class="num">${fmtN(t.target)}</b></span></div>
     <div class="tc-acts"><button id="tcSend" class="tc-send">Send to order pad ▸</button><button id="tcClear" class="tc-clear">✕</button></div>`;
-  $('#tcSend').onclick=()=>{if(S.onTrade)S.onTrade({sym:S.sym,side:t.side,entry:t.entry,sl:Math.round(t.sl),target:Math.round(t.target)});};
-  $('#tcClear').onclick=()=>{S.trade=null;updateTradeChipDom();persist();schedule();};
+  const sendBtn=find('#tcSend');
+  if(sendBtn) sendBtn.onclick=()=>{
+    if(S.onTrade){
+      const d=priceDec(t.entry);
+      const roundDec=(v,dec)=>Math.round(v*Math.pow(10,dec))/Math.pow(10,dec);
+      S.onTrade({sym:S.sym,side:t.side,entry:t.entry,sl:roundDec(t.sl,d),target:roundDec(t.target,d)});
+    }
+  };
+  const clrBtn=find('#tcClear');
+  if(clrBtn) clrBtn.onclick=()=>{S.trade=null;updateTradeChipDom();persist();schedule();};
 }
 
 /* ============================================================
@@ -549,24 +646,22 @@ function resize(){
 }
 function schedule(){if(S.raf)return;S.raf=requestAnimationFrame(()=>{S.raf=0;draw();updateTradeChipDom();});}
 function rebuildBars(){
-  // Real candles when a feed is wired (live Kite historical); NO synthetic fallback.
-  // While a request is in flight the prior bars stay; null/empty -> honest no-data state.
   if(S.feed){
     const sym=S.sym, tf=S.tf, reqId=++S.barReq;
     S.loading=true;
     Promise.resolve(S.feed(sym,tf)).then(bars=>{
-      if(reqId!==S.barReq) return;                 // superseded by a newer symbol/TF
+      if(reqId!==S.barReq) return;
       S.loading=false;
       if(Array.isArray(bars)&&bars.length){ S.bars=bars; S.noData=false; }
       else { S.bars=[]; S.noData=true; }
       const last=S.bars[S.bars.length-1];
-      const el=document.querySelector('#chLast');
-      if(el) el.innerHTML = last ? `${fmtN(last.c,last.c>2000?0:1)} <span class="${S.change>=0?'up':'down'}">${S.change>=0?'+':''}${(S.change||0).toFixed(2)}%</span>` : '<span class="muted">—</span>';
+      const el=find('#chLast');
+      if(el) el.innerHTML = last ? `${fmtN(last.c)} <span class="${S.change>=0?'up':'down'}">${S.change>=0?'+':''}${(S.change||0).toFixed(2)}%</span>` : '<span class="muted">—</span>';
       fit(true); schedule();
     }).catch(()=>{ if(reqId===S.barReq){S.loading=false;S.bars=[];S.noData=true;fit(true);schedule();} });
     return;
   }
-  S.bars=genBars(S.sym,S.tf,S.regime,S.basePrice);   // legacy fallback (no feed wired)
+  S.bars=genBars(S.sym,S.tf,S.regime,S.basePrice);
 }
 
 let persistT=0;
@@ -577,7 +672,12 @@ function persist(){if(S.persist)S.persist(serialize());}
    PUBLIC API
    ============================================================ */
 function mount(opts){
-  if(S.mounted)return;opts=opts||{};
+  opts=opts||{};
+  S.opts=opts;
+  const target=(opts.target?(typeof opts.target==='string'?$(opts.target):opts.target):null)||$('#chartCard');
+  if(!target) return;
+  if(S.mounted&&S.target===target) return;
+  S.target=target;
   S.onTrade=opts.onTrade||null;S.persist=opts.persist||null;S.feed=opts.feed||null;
   buildDOM();refreshPalette();
   rebuildBars();fit(true);syncToolbar();syncIndChecks();
@@ -591,10 +691,10 @@ function render(o){
   if(o.name!=null)S.name=o.name;
   if(o.basePrice)S.basePrice=o.basePrice;
   if(o.change!=null)S.change=o.change;
+  if(o.signals!=null)S.signals=o.signals;
   const regChanged=o.regime&&o.regime!==S.regime;if(o.regime)S.regime=o.regime;
   refreshPalette();
   if(symChanged||regChanged||!S.bars.length){rebuildBars();fit(symChanged);}
-  // clear a trade level that belongs to another symbol view
   updateTradeChipDom();syncToolbar();schedule();
 }
 function serialize(){
@@ -613,16 +713,19 @@ function restore(o){
     if(clean.length)S.drawings[sym]=clean.map(d=>({type:d.type,pts:d.pts.map(p=>({i:p.i,price:p.price}))}));});}
 }
 function setTimeframe(tf){if(S.mounted&&TF[tf])setTF(tf);}
-/* Real-time tick: nudge the last live candle's close (and extend its high/low) when a
-   fresh WebSocket price arrives for the symbol on screen. Cheap: just redraws. */
+function setSignals(sigs){S.signals=Array.isArray(sigs)?sigs:[];schedule();}
+function getBars(){return (S.bars||[]).slice();}
+function getEngineState(){return S;}
+
+/* Real-time tick: nudge the last live candle's close (and extend its high/low) */
 function tick(sym,ltp){
   if(!S.mounted||ltp==null||sym!==S.sym||!S.bars.length||S.noData)return;
   const b=S.bars[S.bars.length-1];
   b.c=ltp; if(ltp>b.h)b.h=ltp; if(ltp<b.l)b.l=ltp;
-  const el=document.querySelector('#chLast');
+  const el=find('#chLast');
   if(el){const d=el.querySelector('span');const chg=d?d.outerHTML:'';
-    el.innerHTML=`${fmtN(ltp,ltp>2000?0:1)} ${chg}`;}
+    el.innerHTML=`${fmtN(ltp)} ${chg}`;}
   schedule();
 }
-window.TPChart={mount,render,resize,serialize,restore,setTimeframe,tick};
+window.TPChart={mount,render,resize,serialize,restore,setTimeframe,setSignals,getBars,getEngineState,tick};
 })();

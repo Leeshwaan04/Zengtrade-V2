@@ -697,7 +697,18 @@ function selectSym(sym){
 }
 /* trade-from-chart: the engine drags an entry/SL/target bracket → order pad */
 function tradeFromChart(p){
-  if(!p||!bySym(p.sym)) return;
+  if(!p) return;
+  if(state.persona==='trader'){
+    state.trading=state.trading||{};
+    state.trading.sym=p.sym;
+    state.orderSide=p.side;
+    state.tradeFromChart={sym:p.sym,side:p.side,sl:p.sl,target:p.target,entry:p.entry};
+    quickToast('Chart level applied',`${(p.side||'').toUpperCase()} ${p.sym} at ${cryptoFmt(p.entry)}`);
+    renderTrading();
+    saveState();
+    return;
+  }
+  if(!bySym(p.sym)) return;
   state.selected=p.sym;
   state.tradeFromChart={sym:p.sym,side:p.side,sl:p.sl,target:p.target,entry:p.entry};
   state.orderSide=p.side; state.orderQty=null;
@@ -2084,6 +2095,9 @@ async function loadCrypto(){
       const q={}; d.forEach(t=>{ const ltp=parseFloat(t.lastPrice), chg=parseFloat(t.priceChangePercent);
         if(isFinite(ltp)) q[t.symbol]={ltp,chg:isFinite(chg)?chg:0}; });
       CRYPTO.quotes=q; CRYPTO.live=Object.keys(q).length>0; CRYPTO.error=!CRYPTO.live; CRYPTO.t=Date.now();
+      if(window.TPChart&&TPChart.tick&&state.trading&&state.trading.sym&&q[state.trading.sym]){
+        TPChart.tick(state.trading.sym, q[state.trading.sym].ltp);
+      }
     } else { CRYPTO.live=false; CRYPTO.error=true; }
   }catch(e){ CRYPTO.live=false; CRYPTO.error=true; }
   CRYPTO.loaded=true; CRYPTO.busy=false;
@@ -2150,7 +2164,9 @@ function connectCryptoWS(){
     ws.onopen=()=>{ CWS.on=true; CWS.backoff=1000; };
     ws.onmessage=ev=>{ try{ const d=JSON.parse(ev.data).data; if(d&&d.s){ const ltp=parseFloat(d.c), chg=parseFloat(d.P);
       if(isFinite(ltp)){ (CRYPTO.quotes||(CRYPTO.quotes={}))[d.s]={ltp,chg:isFinite(chg)?chg:0};
-        CRYPTO.live=true; CRYPTO.error=false; CRYPTO.loaded=true; CRYPTO.t=Date.now(); CWS.lastMsg=Date.now(); scheduleTapePatch(); } } }catch(e){} };
+        CRYPTO.live=true; CRYPTO.error=false; CRYPTO.loaded=true; CRYPTO.t=Date.now(); CWS.lastMsg=Date.now();
+        if(window.TPChart&&TPChart.tick) TPChart.tick(d.s, ltp);
+        scheduleTapePatch(); } } }catch(e){} };
     ws.onerror=()=>{ CWS.on=false; };
     ws.onclose=()=>{ CWS.on=false; CWS.ws=null; scheduleCryptoWSReconnect(); };   // Binance drops the socket every 24h → auto-reconnect
     CWS.ws=ws;
@@ -2878,14 +2894,429 @@ function cryptoBody(view,label){
 }
 
 /* ============================================================
-   TRADING MODE: manual paper trading, live crypto prices.
-   Real Binance prices (CRYPTO/CRYPTO_UNIVERSE, already shared with Algo Studio), simulated fills,
-   reuses the same honest order-pad mechanism (placeOrder/cancelOrder) built for the old trader
-   persona - that part was never fabricated, only the surrounding Zerodha-equity panels were.
+   BINANCE KLINE FEED & CANDLESTICK ADAPTER
+   Real OHLCV bars directly from Binance public market data.
+   CORS-enabled, unauthenticated, permitted under CSP connect-src.
    ============================================================ */
-// BUG FIX (2026-09-20): Sell had no held-qty check, so a user could "sell" a coin never bought,
-// creating a negative position tradingPositionsTab() would then render with no explanation. A
-// paper product with no real custody still shouldn't let you short by accident.
+const CRYPTO_KLINES_CACHE={};
+
+async function fetchCryptoKlines(symbol, tfKey){
+  let sym=symbol||'BTCUSDT';
+  if(!sym.endsWith('USDT')&&!sym.includes('/')) sym+='USDT';
+  sym=sym.replace('/','').toUpperCase();
+
+  const tfMap={
+    '1m':'1m','5m':'5m','15m':'15m',
+    '1H':'1h','1h':'1h','4H':'4h','4h':'4h',
+    '1D':'1d','1d':'1d','1W':'1w','1w':'1w'
+  };
+  const interval=tfMap[tfKey]||'15m';
+  const cacheKey=`${sym}_${interval}`;
+  const cached=CRYPTO_KLINES_CACHE[cacheKey];
+  if(cached&&(Date.now()-cached.t<8000)){
+    return cached.bars;
+  }
+
+  try{
+    const url=`${CRYPTO_API}/api/v3/klines?symbol=${encodeURIComponent(sym)}&interval=${interval}&limit=500`;
+    const res=await fetch(url);
+    if(!res.ok) throw new Error(`Binance klines status ${res.status}`);
+    const data=await res.json();
+    if(!Array.isArray(data)) return [];
+
+    const bars=data.map(k=>({
+      t:k[0],
+      o:parseFloat(k[1]),
+      h:parseFloat(k[2]),
+      l:parseFloat(k[3]),
+      c:parseFloat(k[4]),
+      v:parseFloat(k[5])
+    })).filter(b=>isFinite(b.c)&&isFinite(b.t));
+
+    CRYPTO_KLINES_CACHE[cacheKey]={t:Date.now(),bars};
+    return bars;
+  }catch(err){
+    if(cached&&cached.bars) return cached.bars;
+    return [];
+  }
+}
+
+async function cryptoChartFeed(sym, tfKey){
+  const bars=await fetchCryptoKlines(sym, tfKey);
+  if(bars&&bars.length){
+    updateTradingSignalBacktest(sym, tfKey, bars);
+  }
+  return bars;
+}
+
+/* ============================================================
+   TRADE SIGNAL GENERATOR & HONEST BACKTEST ENGINE
+   Mathematical indicator rules computed over real Binance candles.
+   15 bps modeled trading costs per side. Never fabricates numbers.
+   ============================================================ */
+function calcEma(arr, p){
+  const k=2/(p+1); const o=[]; let prev;
+  arr.forEach((v,i)=>{prev=i?v*k+prev*(1-k):v; o.push(prev);});
+  return o;
+}
+function calcRsi(arr, p){
+  const o=[]; let g=0, l=0;
+  for(let i=0; i<arr.length; i++){
+    if(i===0){ o.push(null); continue; }
+    const d=arr[i]-arr[i-1]; const up=Math.max(0,d), dn=Math.max(0,-d);
+    if(i<=p){
+      g+=up; l+=dn;
+      if(i===p){ g/=p; l/=p; o.push(100-100/(1+g/(l||1e-9))); }
+      else o.push(null);
+    } else {
+      g=(g*(p-1)+up)/p; l=(l*(p-1)+dn)/p;
+      o.push(100-100/(1+g/(l||1e-9)));
+    }
+  }
+  return o;
+}
+function calcAtr(bars, p){
+  const tr=bars.map((b,i)=>i?Math.max(b.h-b.l,Math.abs(b.h-bars[i-1].c),Math.abs(b.l-bars[i-1].c)):b.h-b.l);
+  return calcEma(tr, p);
+}
+function calcSupertrend(bars, p, mult){
+  const a=calcAtr(bars, p); const o=[]; let dir=1, st=bars[0]?bars[0].c:0;
+  for(let i=0; i<bars.length; i++){
+    const hl2=(bars[i].h+bars[i].l)/2; const up=hl2-mult*a[i], dn=hl2+mult*a[i];
+    if(i===0){ o.push({v:up,dir:1}); continue; }
+    if(dir===1){ st=Math.max(up,st); if(bars[i].c<st){ dir=-1; st=dn; } }
+    else { st=Math.min(dn,st); if(bars[i].c>st){ dir=1; st=up; } }
+    o.push({v:st,dir});
+  }
+  return o;
+}
+function calcMacd(arr){
+  const f=calcEma(arr,12), s=calcEma(arr,26);
+  const line=arr.map((_,i)=>f[i]-s[i]);
+  const sig=calcEma(line,9);
+  return { line, sig, hist: line.map((v,i)=>v-sig[i]) };
+}
+function calcBoll(arr, p, mult){
+  p=p||20; mult=mult||2;
+  const o=[];
+  for(let i=0; i<arr.length; i++){
+    if(i<p-1){ o.push(null); continue; }
+    let sum=0; for(let j=i-p+1; j<=i; j++) sum+=arr[j];
+    const mean=sum/p;
+    let varSum=0; for(let j=i-p+1; j<=i; j++) varSum+=(arr[j]-mean)**2;
+    const std=Math.sqrt(varSum/p);
+    o.push({ mean, upper: mean+mult*std, lower: mean-mult*std });
+  }
+  return o;
+}
+
+const TRADING_SIGNALS=[
+  { id:'ema_cross', name:'EMA 9/21 Cross', tag:'TREND', desc:'Golden Cross (9>21) / Death Cross (9<21) with trend momentum confirmation.' },
+  { id:'rsi_reversal', name:'RSI(14) Reversal', tag:'MEAN-REV', desc:'Oversold bounce (<30 crossing up) & Overbought fade (>70 crossing down).' },
+  { id:'supertrend', name:'Supertrend (10,3)', tag:'BREAKOUT', desc:'ATR volatility band breakout capturing sustained trends with trailing stops.' },
+  { id:'macd_momentum', name:'MACD (12,26,9)', tag:'MOMENTUM', desc:'Signal line cross with expanding histogram confirming directional momentum.' },
+  { id:'bollinger_bounce', name:'Bollinger (20,2)', tag:'VOLATILITY', desc:'Mean reversion from 2-sigma envelope boundaries back toward the midline.' }
+];
+
+function runSignalBacktest(strategyId, bars){
+  if(!Array.isArray(bars) || bars.length < 40){
+    return { strategyId, totalTrades:0, wins:0, losses:0, winRate:0, profitFactor:0, netPnlPct:0, avgPnlPct:0, verdict:'gathering', trades:[], markers:[], activeSignal:null };
+  }
+  const closes=bars.map(b=>b.c);
+  const feeRate=0.0015; // 15 bps (0.15%)
+  const trades=[];
+  const markers=[];
+  let pos=null;
+
+  let ema9, ema21, rsi14, st10, macdObj, bollObj;
+  if(strategyId==='ema_cross'){
+    ema9=calcEma(closes,9); ema21=calcEma(closes,21);
+  } else if(strategyId==='rsi_reversal'){
+    rsi14=calcRsi(closes,14);
+  } else if(strategyId==='supertrend'){
+    st10=calcSupertrend(bars,10,3.0);
+  } else if(strategyId==='macd_momentum'){
+    macdObj=calcMacd(closes);
+  } else if(strategyId==='bollinger_bounce'){
+    bollObj=calcBoll(closes,20,2.0);
+  }
+
+  const startIdx=30;
+  for(let i=startIdx; i<bars.length; i++){
+    const b=bars[i];
+    if(pos){
+      let closed=false;
+      let exitPrice=b.c;
+      let reason='hold';
+
+      if(pos.side==='buy'){
+        if(b.l<=pos.sl){ exitPrice=pos.sl; reason='sl'; closed=true; }
+        else if(b.h>=pos.tp){ exitPrice=pos.tp; reason='tp'; closed=true; }
+        else if(i-pos.entryI>=28){ exitPrice=b.c; reason='timeout'; closed=true; }
+      } else {
+        if(b.h>=pos.sl){ exitPrice=pos.sl; reason='sl'; closed=true; }
+        else if(b.l<=pos.tp){ exitPrice=pos.tp; reason='tp'; closed=true; }
+        else if(i-pos.entryI>=28){ exitPrice=b.c; reason='timeout'; closed=true; }
+      }
+
+      if(closed){
+        const entryEff = pos.side==='buy' ? pos.entryPrice*(1+feeRate) : pos.entryPrice*(1-feeRate);
+        const exitEff = pos.side==='buy' ? exitPrice*(1-feeRate) : exitPrice*(1+feeRate);
+        const pnlPct = pos.side==='buy'
+          ? ((exitEff-entryEff)/entryEff)*100
+          : ((entryEff-exitEff)/entryEff)*100;
+        const isWin = pnlPct > 0;
+        trades.push({
+          entryI: pos.entryI, exitI: i,
+          entryTime: pos.entryTime, exitTime: b.t,
+          entryPrice: pos.entryPrice, exitPrice,
+          side: pos.side, pnlPct, outcome: isWin?'win':'loss', reason
+        });
+        markers.push({
+          time: pos.entryTime, i: pos.entryI,
+          type: pos.side,
+          price: pos.entryPrice,
+          label: (pos.side==='buy'?'BUY ':'SELL ')+(isWin?'+':'')+pnlPct.toFixed(1)+'%'
+        });
+        pos=null;
+      }
+    }
+
+    if(!pos && i<bars.length-1){
+      let triggerSide=null;
+      if(strategyId==='ema_cross'){
+        if(ema9[i]>ema21[i] && ema9[i-1]<=ema21[i-1]) triggerSide='buy';
+        else if(ema9[i]<ema21[i] && ema9[i-1]>=ema21[i-1]) triggerSide='sell';
+      } else if(strategyId==='rsi_reversal'){
+        if(rsi14[i-1]<30 && rsi14[i]>=30) triggerSide='buy';
+        else if(rsi14[i-1]>70 && rsi14[i]<=70) triggerSide='sell';
+      } else if(strategyId==='supertrend'){
+        if(st10[i].dir===1 && st10[i-1].dir===-1) triggerSide='buy';
+        else if(st10[i].dir===-1 && st10[i-1].dir===1) triggerSide='sell';
+      } else if(strategyId==='macd_momentum'){
+        if(macdObj.line[i]>macdObj.sig[i] && macdObj.line[i-1]<=macdObj.sig[i-1]) triggerSide='buy';
+        else if(macdObj.line[i]<macdObj.sig[i] && macdObj.line[i-1]>=macdObj.sig[i-1]) triggerSide='sell';
+      } else if(strategyId==='bollinger_bounce'){
+        const bb=bollObj[i];
+        if(bb && bars[i-1].l<=bb.lower && b.c>bb.lower) triggerSide='buy';
+        else if(bb && bars[i-1].h>=bb.upper && b.c<bb.upper) triggerSide='sell';
+      }
+
+      if(triggerSide){
+        const nextO=bars[i+1].o;
+        const tpDist=nextO*0.026;
+        const slDist=nextO*0.014;
+        pos={
+          entryI: i+1,
+          entryPrice: nextO,
+          entryTime: bars[i+1].t,
+          side: triggerSide,
+          tp: triggerSide==='buy' ? nextO+tpDist : nextO-tpDist,
+          sl: triggerSide==='buy' ? nextO-slDist : nextO+slDist
+        };
+      }
+    }
+  }
+
+  const lastI=bars.length-1;
+  let activeSignal=null;
+  if(strategyId==='ema_cross'){
+    const isBull = ema9[lastI] > ema21[lastI];
+    activeSignal = { type: isBull?'buy':'sell', price: bars[lastI].c, text: isBull?'Bullish EMA alignment':'Bearish EMA alignment' };
+  } else if(strategyId==='rsi_reversal'){
+    const currRsi = rsi14[lastI];
+    activeSignal = {
+      type: currRsi < 35 ? 'buy' : (currRsi > 65 ? 'sell' : 'neutral'),
+      val: currRsi ? currRsi.toFixed(1) : '-',
+      price: bars[lastI].c,
+      text: currRsi < 35 ? 'RSI oversold rebound' : (currRsi > 65 ? 'RSI overbought pullback' : 'RSI neutral zone')
+    };
+  } else if(strategyId==='supertrend'){
+    const isBull = st10[lastI].dir === 1;
+    activeSignal = { type: isBull?'buy':'sell', price: bars[lastI].c, text: isBull?'Supertrend bullish run':'Supertrend bearish pressure' };
+  } else if(strategyId==='macd_momentum'){
+    const isBull = macdObj.line[lastI] > macdObj.sig[lastI];
+    activeSignal = { type: isBull?'buy':'sell', price: bars[lastI].c, text: isBull?'MACD positive momentum':'MACD negative momentum' };
+  } else if(strategyId==='bollinger_bounce'){
+    const bb=bollObj[lastI];
+    const isBuy = bb && bars[lastI].c < bb.lower;
+    const isSell = bb && bars[lastI].c > bb.upper;
+    activeSignal = {
+      type: isBuy ? 'buy' : (isSell ? 'sell' : 'neutral'),
+      price: bars[lastI].c,
+      text: isBuy ? 'Lower band pierced' : (isSell ? 'Upper band pierced' : 'Inside Bollinger bands')
+    };
+  }
+
+  const wins=trades.filter(t=>t.outcome==='win').length;
+  const losses=trades.filter(t=>t.outcome==='loss').length;
+  const total=trades.length;
+  const winRate=total>0?(wins/total)*100:0;
+  const grossProfit=trades.filter(t=>t.pnlPct>0).reduce((s,t)=>s+t.pnlPct,0);
+  const grossLoss=Math.abs(trades.filter(t=>t.pnlPct<0).reduce((s,t)=>s+t.pnlPct,0));
+  const profitFactor=grossLoss>0?(grossProfit/grossLoss):(grossProfit>0?9.99:1.0);
+  const netPnlPct=trades.reduce((s,t)=>s+t.pnlPct,0);
+  const avgPnlPct=total>0?netPnlPct/total:0;
+
+  let verdict='gathering';
+  if(total<10) verdict='gathering';
+  else if(total<22) verdict='preliminary';
+  else if(winRate>=50 && profitFactor>=1.2) verdict='promising';
+  else verdict='unfit';
+
+  return {
+    strategyId, totalTrades: total, wins, losses, winRate, profitFactor, netPnlPct, avgPnlPct,
+    verdict, trades, markers, activeSignal
+  };
+}
+
+const TRADING_BT_CACHE={};
+
+function updateTradingSignalBacktest(sym, tfKey, bars){
+  state.trading=state.trading||{};
+  const sigId=state.trading.signalId||'ema_cross';
+  const res=runSignalBacktest(sigId, bars);
+  TRADING_BT_CACHE[sym]=res;
+
+  if(window.TPChart&&TPChart.setSignals){
+    TPChart.setSignals(res.markers);
+  }
+
+  if(state.persona==='trader'){
+    const cardEl=document.getElementById('tradingSignalCard');
+    if(cardEl){
+      const m=tradeModel(sym);
+      cardEl.outerHTML=tradingSignalCardHtml(sym, m);
+      wireSignalCardEvents();
+    }
+    const footEl=document.getElementById('tradingChartFoot');
+    if(footEl){
+      footEl.innerHTML=tradingChartFootHtml(sym, res);
+    }
+  }
+}
+
+function tradingChartFootHtml(sym, res){
+  if(!res||!res.totalTrades) return `<span><b>${esc(sym)}</b> · Loading trade signal track record…</span><span class="muted">15 bps cost model</span>`;
+  const strat=TRADING_SIGNALS.find(s=>s.id===res.strategyId)||TRADING_SIGNALS[0];
+  const vTag=res.verdict==='promising'?'<span class="badge b-up">EDGE VERIFIED</span>'
+    :res.verdict==='preliminary'?'<span class="badge b-warn">PRELIMINARY SAMPLE</span>'
+    :res.verdict==='unfit'?'<span class="badge b-warn">UNFIT / NEGATIVE EXPECTANCY</span>'
+    :'<span class="badge">GATHERING EVIDENCE</span>';
+  return `<div><b>${esc(strat.name)}</b> on ${esc(sym)} · ${res.totalTrades} closed trades · ${res.winRate.toFixed(1)}% win rate · ${res.profitFactor.toFixed(2)} PF</div>
+    <div>${vTag} <span class="muted" style="margin-left:8px">Net of 15 bps Binance fees</span></div>`;
+}
+
+function tradingSignalCardHtml(sym, m){
+  state.trading=state.trading||{};
+  const currentSigId=state.trading.signalId||'ema_cross';
+  const bt=TRADING_BT_CACHE[sym]||{
+    strategyId: currentSigId, totalTrades: 0, winRate: 0, profitFactor: 0, netPnlPct: 0, avgPnlPct: 0,
+    verdict: 'gathering', activeSignal: null
+  };
+  const strat=TRADING_SIGNALS.find(s=>s.id===currentSigId)||TRADING_SIGNALS[0];
+  const chips=TRADING_SIGNALS.map(s=>`<button class="sig-chip${s.id===currentSigId?' on':''}" data-sigstrat="${s.id}">${esc(s.name)}</button>`).join('');
+
+  const vClass=`sig-verdict-${bt.verdict}`;
+  const vLabel=bt.verdict==='promising'?'Edge Verified'
+    :bt.verdict==='preliminary'?'Preliminary'
+    :bt.verdict==='unfit'?'Unfit'
+    :'Gathering';
+
+  const act=bt.activeSignal;
+  const actType=act?act.type:'neutral';
+  const actText=act?(act.type==='buy'?`BUY SIGNAL (${cryptoFmt(act.price)})`:act.type==='sell'?`SELL SIGNAL (${cryptoFmt(act.price)})`:'NEUTRAL ZONE'):'Scanning…';
+  const actSub=act?(act.text||'Waiting for trigger'):'Loading Binance klines…';
+
+  return `<div class="sig-card" id="tradingSignalCard">
+    <div class="sig-head">
+      <div class="sig-title"><span class="ico">${icon('activity',14)}</span><span>Trade Signal Engine</span></div>
+      <span class="sig-verdict-tag ${vClass}">${vLabel}</span>
+    </div>
+    <div class="sig-body">
+      <div>
+        <div class="sig-select-lbl"><span>Strategy Rule</span><i>${esc(strat.tag)}</i></div>
+        <div class="sig-chips">${chips}</div>
+      </div>
+
+      <div class="sig-grid">
+        <div class="sig-stat"><span class="sig-stat-lbl">Win Rate</span><span class="sig-stat-val ${bt.winRate>=50?'up':(bt.totalTrades>0?'down':'')}">${bt.totalTrades>0?bt.winRate.toFixed(1)+'%':'-'}</span></div>
+        <div class="sig-stat"><span class="sig-stat-lbl">Profit Factor</span><span class="sig-stat-val ${bt.profitFactor>=1.2?'up':(bt.totalTrades>0?'down':'')}">${bt.totalTrades>0?bt.profitFactor.toFixed(2):'-'}</span></div>
+        <div class="sig-stat"><span class="sig-stat-lbl">Sample Size</span><span class="sig-stat-val">${bt.totalTrades} trades</span></div>
+        <div class="sig-stat"><span class="sig-stat-lbl">Avg Trade P&L</span><span class="sig-stat-val ${bt.avgPnlPct>0?'up':(bt.avgPnlPct<0?'down':'')}">${bt.totalTrades>0?(bt.avgPnlPct>0?'+':'')+bt.avgPnlPct.toFixed(2)+'%':'-'}</span></div>
+      </div>
+
+      <div class="sig-alert ${actType}">
+        <div>
+          <b>${actText}</b>
+          <div style="font-size:10.5px;opacity:.9">${esc(actSub)}</div>
+        </div>
+        <button class="sig-act-btn primary" id="sigApplyBtn"${actType==='neutral'?' disabled':''}>Trade Signal ▸</button>
+      </div>
+
+      <div class="sig-note">
+        <span class="ico">${icon('shield',13)}</span>
+        <span><b>Honest evidence.</b> Replayed over real Binance historical candles with 15 bps fee model. Zero fabricated numbers.</span>
+      </div>
+
+      <div class="sig-actions">
+        <button class="sig-act-btn" id="sigDemoTrailBtn">⚡ Trail in Paper</button>
+        <button class="sig-act-btn" id="sigRefreshBtBtn">↻ Re-test</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function wireSignalCardEvents(){
+  const card=document.getElementById('tradingSignalCard');
+  if(!card) return;
+  card.querySelectorAll('[data-sigstrat]').forEach(b=>{
+    b.onclick=()=>{
+      state.trading=state.trading||{};
+      state.trading.signalId=b.dataset.sigstrat;
+      saveState();
+      const bars=window.TPChart?TPChart.getBars():[];
+      if(bars&&bars.length){
+        updateTradingSignalBacktest(state.trading.sym, '15m', bars);
+      } else {
+        renderTrading();
+      }
+    };
+  });
+  const applyBtn=card.querySelector('#sigApplyBtn');
+  if(applyBtn){
+    applyBtn.onclick=()=>{
+      const sym=state.trading.sym;
+      const bt=TRADING_BT_CACHE[sym];
+      if(bt&&bt.activeSignal&&(bt.activeSignal.type==='buy'||bt.activeSignal.type==='sell')){
+        state.orderSide=bt.activeSignal.type;
+        quickToast('Signal loaded to order pad',`${state.orderSide.toUpperCase()} signal applied at ${cryptoFmt(bt.activeSignal.price)}.`);
+        renderTrading();
+      }
+    };
+  }
+  const trailBtn=card.querySelector('#sigDemoTrailBtn');
+  if(trailBtn){
+    trailBtn.onclick=()=>{
+      const m=tradeModel(state.trading.sym);
+      const bt=TRADING_BT_CACHE[state.trading.sym];
+      const side=(bt&&bt.activeSignal&&(bt.activeSignal.type==='buy'||bt.activeSignal.type==='sell'))?bt.activeSignal.type:'buy';
+      placeOrder({sym:m.sym,side,qty:m.qty,price:m.px,type:'MARKET'});
+      quickToast('Virtual trail trade executed',`Simulated ${side.toUpperCase()} ${m.qty} ${m.tk} for signal trial.`);
+    };
+  }
+  const refBtn=card.querySelector('#sigRefreshBtBtn');
+  if(refBtn){
+    refBtn.onclick=()=>{
+      delete CRYPTO_KLINES_CACHE[`${state.trading.sym}_15m`];
+      fetchCryptoKlines(state.trading.sym,'15m').then(bars=>{
+        updateTradingSignalBacktest(state.trading.sym,'15m',bars);
+        quickToast('Evidence refreshed','Recomputed over fresh Binance klines.');
+      });
+    };
+  }
+}
+
 function heldQty(sym){
   let q=0;
   state.orders.filter(o=>o.sym===sym&&o.status==='Filled').forEach(o=>{ q+=o.side==='buy'?o.qty:-o.qty; });
@@ -2905,9 +3336,6 @@ function tradeModel(sym){
 function tradingTradeTab(){
   const m=tradeModel(state.trading.sym);
   const picker=CRYPTO_UNIVERSE.map(c=>`<button class="msc-chip${c.sym===m.sym?' on':''}" data-tradesym="${c.sym}">${c.tk}</button>`).join('');
-  // Real order execution, feature-detected: window.ztExchange only exists on the authenticated
-  // production /dashboard (studio.js defines it), never on the untouched local terminal - real
-  // orders are structurally unreachable there, not just hidden behind a UI flag.
   const hasExchangeBridge=typeof window.ztExchange!=='undefined';
   const ex=state.trading.exchangeStatus;
   const live=hasExchangeBridge&&ex&&ex.connected&&!!state.trading.live;
@@ -2920,18 +3348,45 @@ function tradingTradeTab(){
   }
   const note=live
     ?`<div class="cx-preview-note">${icon('alert',13)}<span><b>Real orders, your own Binance account.</b> Every buy/sell below places a REAL market order using your connected key. This is not simulated and cannot be undone once filled.</span></div>`
-    :`<div class="cx-preview-note">${icon('shield',13)}<span><b>Manual paper trading.</b> Real Binance prices, simulated fills, no real order is placed. Buy or sell any coin below instantly at the live price.</span></div>`;
+    :`<div class="cx-preview-note">${icon('shield',13)}<span><b>Custom charting &amp; trade signal laboratory.</b> Real Binance candles, honest backtested win rates, simulated fills. Test any signal virtually before going live.</span></div>`;
   const busy=!!state.trading.liveBusy;
-  return note+toggle+`<div class="mon-ctrl"><div class="mon-seg"><span class="msc-lead">Pair</span>${picker}</div></div>
-    <div class="order-card">
-      <div class="order-head"><span class="oh-sym">${m.tk} ${live?'<i class="live-tag" title="Places a real order on your own Binance account.">LIVE</i>':'<i class="paper-tag" title="Simulated, no real order is placed.">PAPER</i>'}</span>
-        <span class="oh-px ${cls(m.chg)} num">${m.priced?cryptoFmt(m.px):'-'} ${m.priced?pct(m.chg):''}</span></div>
-      <div class="order-body">
-        <div class="side-tabs"><div class="side-tab buy ${m.side==='buy'?'active':''}" data-tradeside="buy">BUY</div><div class="side-tab sell ${m.side==='sell'?'active':''}" data-tradeside="sell">SELL</div></div>
-        <div class="fld"><label>Quantity${(m.side==='sell'&&!live)?` <i>you hold ${m.held.toFixed(6)} ${esc(m.tk)}</i>`:''}</label><div class="inp"><input class="qty-inp num" id="tradeQty" value="${m.qty}" inputmode="decimal" aria-label="Order quantity"></div></div>
-        <div class="fld"><label>Order value</label><div class="inp num" id="tradeOrdVal">${m.priced?cryptoFmt(m.value):'-'}</div></div>
-        <button class="cta ${live?'cta-live':(m.side==='buy'?'cta-buy':'cta-sell')}" id="tradeCta"${(m.priced&&m.qty>0&&!(m.overSell&&!live)&&!busy)?'':' disabled'}>${busy?'Placing order…':(m.overSell&&!live)?`Insufficient ${m.tk} to sell`:(live?`${m.side==='buy'?'BUY':'SELL'} ${m.tk} (LIVE)`:`${m.side==='buy'?'BUY':'SELL'} ${m.tk}`)}</button>
-      </div></div>`;
+
+  return note+toggle+`
+    <div class="trading-workspace">
+      <div class="trading-topbar">
+        <div class="mon-ctrl" style="margin:0"><div class="mon-seg"><span class="msc-lead">Pair</span>${picker}</div></div>
+        <div class="trading-ticker-badge">
+          <span class="tt-tk">${m.tk}</span>
+          <span class="tt-px num ${cls(m.chg)}">${m.priced?cryptoFmt(m.px):'-'}</span>
+          <span class="tt-chg num ${cls(m.chg)}">${m.priced?pct(m.chg):''}</span>
+          <span class="tt-live-chip">${live?'LIVE BINANCE':'PAPER SIMULATOR'}</span>
+        </div>
+      </div>
+
+      <div class="trading-stage">
+        <div class="trading-main-col">
+          <div class="chart-card trading-chart-card" id="tradingChartCard"></div>
+          <div class="trading-chart-foot" id="tradingChartFoot">
+            ${tradingChartFootHtml(m.sym, TRADING_BT_CACHE[m.sym])}
+          </div>
+        </div>
+
+        <div class="trading-side-col">
+          ${tradingSignalCardHtml(m.sym, m)}
+
+          <div class="order-card">
+            <div class="order-head"><span class="oh-sym">${m.tk} ${live?'<i class="live-tag" title="Places a real order on your own Binance account.">LIVE</i>':'<i class="paper-tag" title="Simulated, no real order is placed.">PAPER</i>'}</span>
+              <span class="oh-px ${cls(m.chg)} num">${m.priced?cryptoFmt(m.px):'-'} ${m.priced?pct(m.chg):''}</span></div>
+            <div class="order-body">
+              <div class="side-tabs"><div class="side-tab buy ${m.side==='buy'?'active':''}" data-tradeside="buy">BUY</div><div class="side-tab sell ${m.side==='sell'?'active':''}" data-tradeside="sell">SELL</div></div>
+              <div class="fld"><label>Quantity${(m.side==='sell'&&!live)?` <i>you hold ${m.held.toFixed(6)} ${esc(m.tk)}</i>`:''}</label><div class="inp"><input class="qty-inp num" id="tradeQty" value="${m.qty}" inputmode="decimal" aria-label="Order quantity"></div></div>
+              <div class="fld"><label>Order value</label><div class="inp num" id="tradeOrdVal">${m.priced?cryptoFmt(m.value):'-'}</div></div>
+              <button class="cta ${live?'cta-live':(m.side==='buy'?'cta-buy':'cta-sell')}" id="tradeCta"${(m.priced&&m.qty>0&&!(m.overSell&&!live)&&!busy)?'':' disabled'}>${busy?'Placing order…':(m.overSell&&!live)?`Insufficient ${m.tk} to sell`:(live?`${m.side==='buy'?'BUY':'SELL'} ${m.tk} (LIVE)`:`${m.side==='buy'?'BUY':'SELL'} ${m.tk}`)}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
 }
 function tradingPositionsTab(){
   const rows={};
@@ -3021,17 +3476,10 @@ function renderTrading(){
   const v=$('tradingView'); if(!v) return;
   if(state.persona!=='trader'){ v.innerHTML=''; return; }
   state.trading=state.trading||{view:'trade',sym:CRYPTO_UNIVERSE[0].sym};
-  // BUG FIX (2026-09-19): the old !CRYPTO.busy guard skipped scheduling a re-render whenever some
-  // OTHER caller (e.g. renderTopIndex's own load at boot) already had a fetch in flight - since
-  // loadCrypto() itself no-ops while busy, nothing ever re-rendered this view once that unrelated
-  // fetch resolved, leaving the Buy/Sell button stuck disabled even after live prices arrived.
-  // Poll until CRYPTO.loaded is true regardless of who's driving the in-flight request.
+
   if(!CRYPTO.loaded){ if(CRYPTO.busy) setTimeout(()=>{ if(state.persona==='trader') renderTrading(); },300);
     else loadCrypto().then(()=>{ if(state.persona==='trader') renderTrading(); }); }
-  // Real-execution status, fetched lazily once per session (feature-detected: window.ztExchange
-  // only exists on the authenticated production dashboard). state.trading.live is deliberately
-  // never persisted (not part of saveState()'s trading shape) - it must default to Paper on every
-  // fresh page load even if a prior session left it on Live.
+
   if(typeof window.ztExchange!=='undefined'&&state.trading.exchangeStatus===undefined&&!state.trading.exchangeStatusBusy){
     state.trading.exchangeStatusBusy=true;
     window.ztExchange.status().then(s=>{ state.trading.exchangeStatus=s; state.trading.exchangeStatusBusy=false; if(state.persona==='trader') renderTrading(); });
@@ -3039,12 +3487,40 @@ function renderTrading(){
   const view=state.trading.view;
   const tabs=[['trade','Trade'],['positions','Positions'],['history','History']];
   const head=`<div class="av-head">
-    <div class="av-title"><span class="av-ic">${icon('trendUp',17)}</span><div><b>Trading</b><span>Crypto · live Binance data · manual paper trades</span></div></div>
+    <div class="av-title"><span class="av-ic">${icon('trendUp',17)}</span><div><b>Trading</b><span>Crypto · live Binance data · custom charting &amp; signal engine</span></div></div>
     <div class="av-tabs" role="tablist" aria-label="Trading views">${tabs.map(([k,l])=>`<button class="av-tab${k===view?' on':''}" role="tab" aria-selected="${k===view}" data-tradeview="${k}">${l}</button>`).join('')}</div></div>`;
   const body=view==='trade'?tradingTradeTab():view==='positions'?tradingPositionsTab():tradingHistoryTab();
   v.innerHTML=`<div class="av-wrap">${head}<div class="av-scroll">${body}</div></div>`;
+
+  if(view==='trade'){
+    const chartCard = v.querySelector('#tradingChartCard');
+    if(chartCard && window.TPChart){
+      const m = tradeModel(state.trading.sym);
+      TPChart.mount({
+        target: chartCard,
+        feed: cryptoChartFeed,
+        onTrade: tradeFromChart
+      });
+      TPChart.render({
+        symbol: state.trading.sym,
+        name: m.name || m.tk,
+        basePrice: m.px,
+        change: m.chg
+      });
+    }
+    wireSignalCardEvents();
+  }
+
   v.querySelectorAll('[data-tradeview]').forEach(b=>b.onclick=()=>{state.trading.view=b.dataset.tradeview;saveState();renderTrading();});
-  v.querySelectorAll('[data-tradesym]').forEach(b=>b.onclick=()=>{state.trading.sym=b.dataset.tradesym;saveState();renderTrading();});
+  v.querySelectorAll('[data-tradesym]').forEach(b=>b.onclick=()=>{
+    state.trading.sym=b.dataset.tradesym;
+    saveState();
+    const m=tradeModel(state.trading.sym);
+    if(window.TPChart){
+      TPChart.render({ symbol: state.trading.sym, name: m.name||m.tk, basePrice: m.px, change: m.chg });
+    }
+    renderTrading();
+  });
   v.querySelectorAll('[data-tradeside]').forEach(b=>b.onclick=()=>{state.orderSide=b.dataset.tradeside;renderTrading();});
   const qi=v.querySelector('#tradeQty'); if(qi) qi.oninput=()=>{
     state.orderQty=Math.max(0,parseFloat(qi.value)||0);
@@ -3054,12 +3530,6 @@ function renderTrading(){
     const hasExchangeBridge=typeof window.ztExchange!=='undefined';
     const ex=state.trading.exchangeStatus;
     const live=hasExchangeBridge&&ex&&ex.connected&&!!state.trading.live;
-    // BUG FIX (2026-09-20): this in-place patch (avoids a full re-render on every keystroke) only
-    // ever checked m.priced, so it silently re-enabled the CTA the moment a user typed anything,
-    // undoing the qty>0 guard added to the initial render template - the actual bug the "zero-qty
-    // orders are placeable" finding was caught by, since typing "0" is exactly this path. Same
-    // class of gap for the sell-side held-qty cap (paper only, see heldQty()/overSell) - keep this
-    // patch's guard and label in lockstep with the initial render's, or a fast typist slips past.
     const cb=v.querySelector('#tradeCta');
     if(cb&&!state.trading.liveBusy){
       cb.disabled=!(m.priced&&m.qty>0&&!(m.overSell&&!live));

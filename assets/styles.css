@@ -3836,3 +3836,67 @@ html[data-surface="night"] .rk-tier.on{background:var(--white);border-color:var(
 .cxf-grad{height:4px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0 3px;max-width:220px}
 .cxf-grad i{display:block;height:100%;border-radius:99px;background:var(--accent);transition:width .3s} .cxf-grad i.done{background:var(--green)}
 .cxf-gradlbl{font:600 10px/1 var(--mono);color:var(--slate-2);letter-spacing:.03em}
+
+/* ============================================================
+   TRADING MODE: TRADINGVIEW-STYLE WORKSTATION & SIGNAL ENGINE
+   ============================================================ */
+.trading-workspace{display:flex;flex-direction:column;gap:12px;padding-bottom:24px}
+.trading-topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 14px;box-shadow:var(--shadow)}
+.trading-ticker-badge{display:flex;align-items:center;gap:10px}
+.trading-ticker-badge .tt-tk{font-size:16px;font-weight:800;letter-spacing:-.3px}
+.trading-ticker-badge .tt-px{font-family:var(--mono);font-size:15px;font-weight:700}
+.trading-ticker-badge .tt-chg{font-family:var(--mono);font-size:12px;font-weight:700;padding:2px 6px;border-radius:6px;background:var(--surface-2)}
+.tt-live-chip{font-size:10px;font-weight:800;letter-spacing:.4px;padding:3px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent-d);border:1px solid var(--accent-line)}
+
+.trading-stage{display:grid;grid-template-columns:1fr 370px;gap:14px;align-items:start}
+@media(max-width:1080px){.trading-stage{grid-template-columns:1fr}}
+
+.trading-main-col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.trading-chart-card{height:530px;min-height:420px;border-radius:14px;box-shadow:var(--shadow);overflow:hidden;border:1px solid var(--line);background:var(--surface);display:flex!important;flex-direction:column!important}
+@media(max-width:768px){.trading-chart-card{height:400px;min-height:340px}}
+
+.trading-chart-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:9px 14px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;font-size:11.5px;color:var(--slate)}
+.trading-chart-foot b{color:var(--navy)}
+
+.trading-side-col{display:flex;flex-direction:column;gap:14px}
+
+/* ===== Signal Generator Card ===== */
+.sig-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;transition:border-color .2s}
+.sig-card:hover{border-color:var(--accent-line)}
+.sig-head{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sig-title{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px;color:var(--navy)}
+.sig-title .ico{color:var(--accent-d)}
+.sig-verdict-tag{font-size:10px;font-weight:800;letter-spacing:.3px;padding:3px 8px;border-radius:6px;text-transform:uppercase}
+.sig-verdict-gathering{background:var(--surface-2);color:var(--slate-2);border:1px solid var(--line)}
+.sig-verdict-preliminary{background:rgba(217,119,6,.12);color:var(--amber);border:1px solid rgba(217,119,6,.25)}
+.sig-verdict-promising{background:var(--tint-up);color:var(--green-d);border:1px solid rgba(16,185,129,.3)}
+.sig-verdict-unfit{background:var(--tint-down);color:var(--red-d);border:1px solid rgba(239,68,68,.25)}
+
+.sig-body{padding:14px;display:flex;flex-direction:column;gap:12px}
+.sig-select-lbl{font-size:11px;font-weight:700;color:var(--slate);margin-bottom:5px;display:flex;align-items:center;justify-content:space-between}
+.sig-chips{display:flex;flex-wrap:wrap;gap:6px}
+.sig-chip{border:1px solid var(--line);background:var(--surface-2);color:var(--slate);border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer;transition:.15s;font-family:var(--sans)}
+.sig-chip:hover{color:var(--navy);border-color:var(--line-2)}
+.sig-chip.on{background:var(--accent-soft);color:var(--accent-d);border-color:var(--accent-line)}
+
+.sig-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sig-stat{background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:8px 10px;display:flex;flex-direction:column;gap:3px}
+.sig-stat-lbl{font-size:10px;font-weight:700;color:var(--slate-2);text-transform:uppercase;letter-spacing:.3px}
+.sig-stat-val{font-family:var(--mono);font-size:14px;font-weight:800;color:var(--navy)}
+.sig-stat-val.up{color:var(--green-d)}
+.sig-stat-val.down{color:var(--red-d)}
+
+.sig-alert{border-radius:9px;padding:10px 12px;font-size:11.5px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sig-alert.buy{background:var(--tint-up);border:1px solid rgba(16,185,129,.28);color:var(--green-d)}
+.sig-alert.sell{background:var(--tint-down);border:1px solid rgba(239,68,68,.28);color:var(--red-d)}
+.sig-alert.neutral{background:var(--surface-2);border:1px solid var(--line);color:var(--slate)}
+.sig-alert b{font-weight:800}
+
+.sig-note{font-size:11px;color:var(--slate);line-height:1.4;display:flex;align-items:flex-start;gap:6px;background:var(--surface-2);border-radius:8px;padding:8px 10px}
+.sig-note .ico{flex:0 0 auto;margin-top:2px;color:var(--accent-d)}
+
+.sig-actions{display:flex;gap:8px}
+.sig-act-btn{flex:1;border:1px solid var(--line);background:var(--surface);color:var(--navy);font-family:var(--sans);font-size:11.5px;font-weight:700;padding:8px 10px;border-radius:8px;cursor:pointer;transition:.15s;text-align:center}
+.sig-act-btn:hover{background:var(--surface-2);border-color:var(--line-2)}
+.sig-act-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.sig-act-btn.primary:hover{opacity:.9}
