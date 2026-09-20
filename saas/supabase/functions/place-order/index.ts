@@ -19,6 +19,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { BinanceClient, roundToStep } from "../_shared/binance.mjs";
 import { decryptSecret, fromPgBytea } from "../_shared/crypto.mjs";
+import { requirePaidTier } from "../_shared/tier.mjs";
 
 const SITE = "https://zengtrade.in";
 const cors = {
@@ -44,6 +45,11 @@ Deno.serve(async (req) => {
     });
     const { data: { user } } = await db.auth.getUser();
     if (!user) return json({ error: "not signed in" }, 401);
+
+    // MONETIZATION FIX (2026-09-20): see _shared/tier.mjs - checked again here, not just at
+    // connect time, so a downgrade after connecting can't leave live orders still placeable.
+    const gate = await requirePaidTier(db, user.id);
+    if (!gate.ok) return json({ error: gate.error }, gate.status);
 
     const capUsd = parseFloat(Deno.env.get("LIVE_MAX_ORDER_NOTIONAL_USD") || "");
     if (!(capUsd > 0)) return json({ error: "live trading is not configured yet" }, 503);

@@ -188,6 +188,17 @@
         .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }).catch(function () { return { ok: false, data: { error: "unexpected response" } }; }); })
         .catch(function () { return { ok: false, data: { error: "network error, please try again" } }; });
     },
+    // MONETIZATION FIX (2026-09-20): lets the terminal show a Pro/Elite upgrade prompt BEFORE a
+    // free-tier user pastes real exchange credentials, instead of only finding out via a 403 from
+    // exchange-connect at the very end. This is a UX convenience only - the real gate is server-side
+    // (_shared/tier.mjs, checked again independently by both exchange-connect and place-order), so
+    // there's no harm if this read is stale or skipped. RLS scopes the row to the caller already.
+    tier: function () {
+      return fetch(SUPA + "/rest/v1/profile?select=tier", { headers: sbHeaders() })
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .then(function (rows) { return (rows && rows[0] && rows[0].tier) || "free"; })
+        .catch(function () { return "free"; });
+    },
   };
 
   /* ---- toasts: reuse the terminal's own #toastWrap/.toast component (same one every other

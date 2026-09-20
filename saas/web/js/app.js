@@ -452,10 +452,23 @@ function tradeRow(t) {
 // ---- Account ----
 function renderAccount() {
   const ex = state.exchange;
+  // MONETIZATION FIX (2026-09-20): live trading is a Pro/Elite feature, enforced server-side in
+  // exchange-connect/place-order (saas/supabase/functions/_shared/tier.mjs) regardless of what
+  // this page shows. This branch is the UX complement on the /app entry point (the terminal's
+  // header chip got the same treatment) - a free-tier user sees an upgrade prompt instead of
+  // pasting real credentials only to hit the same 403 the old code already surfaced via toast.
   const exchangeBody = ex.connected
     ? `<div class="acc-row"><span>Binance</span><b>Connected ✓ <span class="muted">· ${esc(timeAgo(ex.connectedAt))}</span></b></div>
        <div class="acc-row"><span>Disconnecting removes this key from zengtrade only, it does not revoke it on Binance.</span>
          <button class="btn ghost sm" id="exDisconnect">Disconnect</button></div>`
+    : !isPro(tier)
+    ? `<div class="acc-row-stack">
+         <p class="muted" style="font-size:12.5px;line-height:1.6;margin:0 0 10px">
+           Connecting a real exchange account and placing live orders is a <b>Pro/Elite</b> feature.
+           Free stays unlimited on paper trading, live execution unlocks with an upgrade.
+         </p>
+         <button class="btn sm primary" id="exUpgrade">Upgrade to Pro</button>
+       </div>`
     : `<div class="acc-row-stack">
          <div class="trust-row">
            <span class="trust-badge">Non-custodial</span>
@@ -498,6 +511,7 @@ function renderAccount() {
       <div class="acc-row"><span>End your session on this device</span><button class="btn ghost sm" id="accOut">Sign out</button></div>
     </div>`;
   $("#accUp") && ($("#accUp").onclick = () => ACCOUNT_ONLY ? (location.href = "/app#pricing") : (location.hash = "pricing"));
+  $("#exUpgrade") && ($("#exUpgrade").onclick = () => ACCOUNT_ONLY ? (location.href = "/app#pricing") : (location.hash = "pricing"));
   $("#accOut").onclick = (e) => { const b = e.currentTarget; b.disabled = true; b.textContent = "Signing out…"; signOut(); };
   $("#exConnect") && ($("#exConnect").onclick = async (e) => {
     const btn = e.currentTarget;

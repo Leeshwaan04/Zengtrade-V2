@@ -4104,6 +4104,22 @@ function renderExchangeChip(){
   }
 }
 function openConnectExchangeModal(){
+  // MONETIZATION FIX (2026-09-20): live trading is a Pro/Elite feature, enforced server-side in
+  // exchange-connect/place-order (saas/supabase/functions/_shared/tier.mjs). Check tier first so a
+  // free-tier user sees an upgrade prompt instead of pasting real credentials only to hit a 403 at
+  // the very end. Pure UX convenience - if the tier bridge or pricing modal isn't available for any
+  // reason, fall through to the form rather than hard-blocking; the server-side gate is authoritative.
+  if(typeof window.ztExchange!=='undefined'&&typeof window.ztExchange.tier==='function'){
+    window.ztExchange.tier().then(t=>{
+      if(t==='pro'||t==='elite') openConnectExchangeModalForm();
+      else if(typeof window.ztOpenPricingModal==='function') window.ztOpenPricingModal();
+      else openConnectExchangeModalForm();
+    });
+    return;
+  }
+  openConnectExchangeModalForm();
+}
+function openConnectExchangeModalForm(){
   const trust=[['shield','Non-custodial'],['lock','Encrypted at rest'],['link','Trade-only key']]
     .map(([ic,l])=>`<span class="trust-badge">${icon(ic,11)}${l}</span>`).join('');
   // UX FIX (2026-09-20): both fields now get a show/hide toggle - a masked key/secret with no way

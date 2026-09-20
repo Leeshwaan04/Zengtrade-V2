@@ -14,6 +14,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { BinanceClient } from "../_shared/binance.mjs";
 import { encryptSecret, toPgBytea } from "../_shared/crypto.mjs";
+import { requirePaidTier } from "../_shared/tier.mjs";
 
 const SITE = "https://zengtrade.in";
 const cors = {
@@ -38,6 +39,11 @@ Deno.serve(async (req) => {
     });
     const { data: { user } } = await db.auth.getUser();
     if (!user) return json({ error: "not signed in" }, 401);
+
+    // MONETIZATION FIX (2026-09-20): see _shared/tier.mjs - live trading is sold as Pro/Elite,
+    // this is the enforcement, not just the pricing page copy.
+    const gate = await requirePaidTier(db, user.id);
+    if (!gate.ok) return json({ error: gate.error }, gate.status);
 
     const { apiKey, apiSecret } = await req.json().catch(() => ({}));
     if (typeof apiKey !== "string" || typeof apiSecret !== "string" || !apiKey.trim() || !apiSecret.trim()) {
