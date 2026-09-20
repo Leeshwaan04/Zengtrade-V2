@@ -419,15 +419,85 @@ function drawDrawings(ctx,L,main,rng){
 }
 function drawTrade(ctx,L,main,rng){
   if(!S.trade||S.trade.sym!==S.sym)return;const t=S.trade,P=S.palette;
-  const lvl=(p,col,label)=>{if(p==null)return;const y=yOf(p,main,rng);ctx.strokeStyle=col;ctx.lineWidth=1.3;ctx.setLineDash([6,3]);
-    ctx.beginPath();ctx.moveTo(L.padL,y);ctx.lineTo(S.W-L.padR,y);ctx.stroke();ctx.setLineDash([]);
-    ctx.fillStyle=col;ctx.fillRect(L.padL,y-7,60,14);ctx.fillStyle='#fff';ctx.font='9px '+(cssv('--sans')||'sans-serif');ctx.textAlign='left';ctx.fillText(label,L.padL+4,y);};
-  // shade reward (entry->target) green, risk (entry->sl) red
-  if(t.entry!=null&&t.target!=null){const ye=yOf(t.entry,main,rng),yt=yOf(t.target,main,rng);ctx.fillStyle=withA(P.green,.07);ctx.fillRect(L.padL,Math.min(ye,yt),L.plotW,Math.abs(yt-ye));}
-  if(t.entry!=null&&t.sl!=null){const ye=yOf(t.entry,main,rng),ys=yOf(t.sl,main,rng);ctx.fillStyle=withA(P.red,.07);ctx.fillRect(L.padL,Math.min(ye,ys),L.plotW,Math.abs(ys-ye));}
-  lvl(t.target,P.green,'TGT '+fmtN(t.target));
-  lvl(t.entry,P.navy,(t.side==='buy'?'BUY':'SELL')+' '+fmtN(t.entry));
-  lvl(t.sl,P.red,'SL '+fmtN(t.sl));
+  const ye = yOf(t.entry, main, rng);
+  const yt = t.target != null ? yOf(t.target, main, rng) : null;
+  const ys = t.sl != null ? yOf(t.sl, main, rng) : null;
+  S.bracketHandles = { entryY: ye, tpY: yt, slY: ys };
+
+  const risk = Math.abs(t.entry - t.sl);
+  const rew = Math.abs(t.target - t.entry);
+  const rr = risk ? (rew / risk) : 0;
+  const rewPct = t.entry ? (rew / t.entry * 100) : 0;
+  const riskPct = t.entry ? (risk / t.entry * 100) : 0;
+
+  // Shaded reward (entry->target) green, risk (entry->sl) red
+  if(yt != null){
+    ctx.fillStyle = withA(P.green, 0.12);
+    ctx.fillRect(L.padL, Math.min(ye, yt), L.plotW, Math.abs(yt - ye));
+  }
+  if(ys != null){
+    ctx.fillStyle = withA(P.red, 0.12);
+    ctx.fillRect(L.padL, Math.min(ye, ys), L.plotW, Math.abs(ys - ye));
+  }
+
+  // Draw dashed horizontal bracket lines across plot width
+  const drawBracketLine = (y, col, dash) => {
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1.4;
+    ctx.setLineDash(dash || [6, 3]);
+    ctx.beginPath();
+    ctx.moveTo(L.padL, y);
+    ctx.lineTo(S.W - L.padR, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  };
+
+  if(yt != null) drawBracketLine(yt, P.green);
+  drawBracketLine(ye, P.navy, [3, 2]);
+  if(ys != null) drawBracketLine(ys, P.red);
+
+  // Left static tags
+  const leftTag = (y, col, text) => {
+    ctx.fillStyle = col;
+    ctx.fillRect(L.padL, y - 8, 70, 16);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 9px ' + (cssv('--sans') || 'sans-serif');
+    ctx.textAlign = 'left';
+    ctx.fillText(text, L.padL + 4, y + 3);
+  };
+
+  if(yt != null) leftTag(yt, P.green, 'TP ' + fmtN(t.target));
+  leftTag(ye, P.navy, (t.side === 'buy' ? 'BUY' : 'SELL') + ' ' + fmtN(t.entry));
+  if(ys != null) leftTag(ys, P.red, 'SL ' + fmtN(t.sl));
+
+  // Right interactive drag handles
+  const rightHandle = (y, bgCol, text) => {
+    const w = 155, h = 20;
+    const x = S.W - L.padR - w - 8;
+    ctx.fillStyle = bgCol;
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(x, y - h / 2, w, h, 5);
+    else ctx.fillRect(x, y - h / 2, w, h);
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '600 10px ' + (cssv('--mono') || 'monospace');
+    ctx.textAlign = 'center';
+    ctx.fillText(text + ' ↕', x + w / 2, y + 3.5);
+  };
+
+  if(yt != null){
+    const tpText = `TP ${fmtN(t.target)} (+${rewPct.toFixed(1)}%) [1:${rr.toFixed(1)}]`;
+    rightHandle(yt, P.green, tpText);
+  }
+  if(ys != null){
+    const slText = `SL ${fmtN(t.sl)} (-${riskPct.toFixed(1)}%)`;
+    rightHandle(ys, P.red, slText);
+  }
 }
 function drawCrosshair(ctx,L,main,rng,bars){
   const P=S.palette,i=clamp(S.hover,0,bars.length-1),x=xOf(i,L);
@@ -468,12 +538,28 @@ function localXY(e){const r=S.cv.getBoundingClientRect();return{x:(e.clientX-r.l
 function priceAt(py){const L=layout(),main=L.main,rng=priceRange(L,S.type==='heikin'?heikin(visBars()):visBars());return pOf(py,main,rng);}
 function onDown(e){
   const {x,y}=localXY(e);const L=layout();const i=clamp(iOf(x,L),0,S.bars.length-1);
+  if(S.trade && S.trade.sym===S.sym && S.bracketHandles){
+    const handleW = 160;
+    const handleX = S.W - L.padR - handleW - 8;
+    const inHandleX = x >= handleX - 25 && x <= S.W - L.padR + 10;
+    const inPlotX = x >= L.padL && x <= S.W - L.padR;
+    if(S.bracketHandles.tpY != null && ((inHandleX && Math.abs(y - S.bracketHandles.tpY) <= 14) || (inPlotX && Math.abs(y - S.bracketHandles.tpY) <= 6))){
+      S.drag = { mode: 'dragTP' };
+      S.cv.style.cursor = 'ns-resize';
+      return;
+    }
+    if(S.bracketHandles.slY != null && ((inHandleX && Math.abs(y - S.bracketHandles.slY) <= 14) || (inPlotX && Math.abs(y - S.bracketHandles.slY) <= 6))){
+      S.drag = { mode: 'dragSL' };
+      S.cv.style.cursor = 'ns-resize';
+      return;
+    }
+  }
   if(S.tool==='cursor'){S.drag={mode:'pan',x,start:S.view.start};S.cv.style.cursor='grabbing';return;}
   if(S.tool==='erase'){eraseAt(x,y,L);return;}
   const pr=priceAt(y);
   if(S.tool==='ray'){pushDrawing({type:'ray',pts:[{i,price:pr}]});return;}
   if(S.tool==='trade'){
-    const side=pr>=S.basePrice?'buy':'sell';// will refine on drag
+    const side=pr>=S.basePrice?'buy':'sell';
     S.draft={type:'trade',side,pts:[{i,price:pr}],entry:pr};S.drag={mode:'draftTrade'};return;
   }
   S.draft={type:S.tool,pts:[{i,price:pr},{i,price:pr}]};S.drag={mode:'draft'};
@@ -488,6 +574,38 @@ function onMove(e){
     else if(S.drag.mode==='draftTrade'&&S.draft){const tgt=priceAt(y);const e0=S.draft.entry;const side=tgt>=e0?'buy':'sell';
       const r=Math.abs(tgt-e0);S.draft.side=side;S.draft.target=tgt;S.draft.sl=side==='buy'?e0-r*0.5:e0+r*0.5;
       S.trade={sym:S.sym,side,entry:e0,target:tgt,sl:S.draft.sl};updateTradeChip();}
+    else if(S.drag.mode==='dragTP'&&S.trade){
+      const newTgt=priceAt(y);
+      if(S.trade.side==='buy'){
+        S.trade.target=Math.max(newTgt, S.trade.entry * 1.0005);
+      } else {
+        S.trade.target=Math.min(newTgt, S.trade.entry * 0.9995);
+      }
+      updateTradeChipDom();
+      if(S.onTradeDrag) S.onTradeDrag(S.trade);
+    }
+    else if(S.drag.mode==='dragSL'&&S.trade){
+      const newSL=priceAt(y);
+      if(S.trade.side==='buy'){
+        S.trade.sl=Math.min(newSL, S.trade.entry * 0.9995);
+      } else {
+        S.trade.sl=Math.max(newSL, S.trade.entry * 1.0005);
+      }
+      updateTradeChipDom();
+      if(S.onTradeDrag) S.onTradeDrag(S.trade);
+    }
+  } else if(S.trade && S.trade.sym===S.sym && S.bracketHandles){
+    const handleW = 160;
+    const handleX = S.W - L.padR - handleW - 8;
+    const inHandleX = x >= handleX - 25 && x <= S.W - L.padR + 10;
+    const inPlotX = x >= L.padL && x <= S.W - L.padR;
+    const nearTP = S.bracketHandles.tpY != null && ((inHandleX && Math.abs(y - S.bracketHandles.tpY) <= 14) || (inPlotX && Math.abs(y - S.bracketHandles.tpY) <= 6));
+    const nearSL = S.bracketHandles.slY != null && ((inHandleX && Math.abs(y - S.bracketHandles.slY) <= 14) || (inPlotX && Math.abs(y - S.bracketHandles.slY) <= 6));
+    if(nearTP || nearSL){
+      S.cv.style.cursor = 'ns-resize';
+    } else if(S.tool === 'cursor'){
+      S.cv.style.cursor = 'crosshair';
+    }
   }
   schedule();
 }
@@ -495,7 +613,10 @@ function onUp(){
   if(S.drag){
     if(S.drag.mode==='draft'&&S.draft){pushDrawing(S.draft);S.draft=null;}
     else if(S.drag.mode==='draftTrade'){S.draft=null;}
-    if(S.drag.mode==='pan')S.cv.style.cursor='';
+    else if(S.drag.mode==='dragTP'||S.drag.mode==='dragSL'){
+      if(S.onTradeChange) S.onTradeChange(S.trade);
+    }
+    if(S.drag.mode==='pan'||S.drag.mode==='dragTP'||S.drag.mode==='dragSL') S.cv.style.cursor='';
   }
   S.drag=null;persist();schedule();
 }
@@ -615,13 +736,21 @@ function updateTradeChipDom(){
   el.classList.add('show');
   el.innerHTML=`<div class="tc-row"><b>${t.side==='buy'?'LONG':'SHORT'} ${S.sym}</b><span class="tc-rr">R:R ${rr.toFixed(2)}</span></div>
     <div class="tc-lv"><span>Entry <b class="num">${fmtN(t.entry)}</b></span><span class="down">SL <b class="num">${fmtN(t.sl)}</b></span><span class="up">Tgt <b class="num">${fmtN(t.target)}</b></span></div>
-    <div class="tc-acts"><button id="tcSend" class="tc-send">Send to order pad ▸</button><button id="tcClear" class="tc-clear">✕</button></div>`;
+    <div class="tc-acts"><button id="tcExec" class="tc-exec" title="1-Click simulated paper execution with bracket levels attached">⚡ Execute Bracket</button><button id="tcSend" class="tc-send">Order pad &rarr;</button><button id="tcClear" class="tc-clear" aria-label="Clear bracket">✕</button></div>`;
+  const execBtn=find('#tcExec');
+  if(execBtn) execBtn.onclick=()=>{
+    const d=priceDec(t.entry);
+    const roundDec=(v,dec)=>Math.round(v*Math.pow(10,dec))/Math.pow(10,dec);
+    const payload={sym:S.sym,side:t.side,entry:t.entry,sl:roundDec(t.sl,d),target:roundDec(t.target,d),autoExecute:true};
+    if(S.onExecuteBracket) S.onExecuteBracket(payload);
+    else if(S.onTrade) S.onTrade(payload);
+  };
   const sendBtn=find('#tcSend');
   if(sendBtn) sendBtn.onclick=()=>{
     if(S.onTrade){
       const d=priceDec(t.entry);
       const roundDec=(v,dec)=>Math.round(v*Math.pow(10,dec))/Math.pow(10,dec);
-      S.onTrade({sym:S.sym,side:t.side,entry:t.entry,sl:roundDec(t.sl,d),target:roundDec(t.target,d)});
+      S.onTrade({sym:S.sym,side:t.side,entry:t.entry,sl:roundDec(t.sl,d),target:roundDec(t.target,d),autoExecute:false});
     }
   };
   const clrBtn=find('#tcClear');
@@ -678,7 +807,11 @@ function mount(opts){
   if(!target) return;
   if(S.mounted&&S.target===target) return;
   S.target=target;
-  S.onTrade=opts.onTrade||null;S.persist=opts.persist||null;S.feed=opts.feed||null;
+  S.onTrade=opts.onTrade||null;
+  S.onExecuteBracket=opts.onExecuteBracket||null;
+  S.onTradeDrag=opts.onTradeDrag||null;
+  S.onTradeChange=opts.onTradeChange||null;
+  S.persist=opts.persist||null;S.feed=opts.feed||null;
   buildDOM();refreshPalette();
   rebuildBars();fit(true);syncToolbar();syncIndChecks();
   if(window.ResizeObserver){new ResizeObserver(resize).observe(S.cv.parentElement);}
@@ -717,6 +850,27 @@ function setSignals(sigs){S.signals=Array.isArray(sigs)?sigs:[];schedule();}
 function getBars(){return (S.bars||[]).slice();}
 function getEngineState(){return S;}
 
+function setBracket(bracket){
+  if(!bracket){
+    S.trade=null;
+  } else {
+    S.trade={
+      sym: bracket.sym || S.sym,
+      side: bracket.side || 'buy',
+      entry: Number(bracket.entry || S.basePrice),
+      target: bracket.target != null ? Number(bracket.target) : null,
+      sl: bracket.sl != null ? Number(bracket.sl) : null,
+      qty: bracket.qty != null ? Number(bracket.qty) : 1
+    };
+  }
+  updateTradeChipDom();
+  schedule();
+}
+
+function getBracket(){
+  return S.trade && S.trade.sym===S.sym ? { ...S.trade } : null;
+}
+
 /* Real-time tick: nudge the last live candle's close (and extend its high/low) */
 function tick(sym,ltp){
   if(!S.mounted||ltp==null||sym!==S.sym||!S.bars.length||S.noData)return;
@@ -727,5 +881,5 @@ function tick(sym,ltp){
     el.innerHTML=`${fmtN(ltp)} ${chg}`;}
   schedule();
 }
-window.TPChart={mount,render,resize,serialize,restore,setTimeframe,setSignals,getBars,getEngineState,tick};
+window.TPChart={mount,render,resize,serialize,restore,setTimeframe,setSignals,getBars,getEngineState,tick,setBracket,getBracket};
 })();

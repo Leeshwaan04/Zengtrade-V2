@@ -698,6 +698,10 @@ function selectSym(sym){
 /* trade-from-chart: the engine drags an entry/SL/target bracket → order pad */
 function tradeFromChart(p){
   if(!p) return;
+  if(p.autoExecute){
+    executeBracketOrder(p);
+    return;
+  }
   if(state.persona==='trader'){
     state.trading=state.trading||{};
     state.trading.sym=p.sym;
@@ -850,6 +854,51 @@ function placeOrder(o){
                  // placing a trade silently lost the whole order. Persist the moment it's placed.
   if(typeof renderTrading==='function') renderTrading();
   successToast(o,status);
+}
+function executeBracketOrder(p){
+  if(!p) return;
+  const sym = p.sym || (state.trading && state.trading.sym) || state.selected;
+  const m = tradeModel(sym);
+  const side = p.side || 'buy';
+  const qty = (p.qty != null && p.qty > 0) ? p.qty : (m.qty || 1);
+  const price = p.entry != null ? p.entry : (m.px || 100);
+  const sl = p.sl;
+  const target = p.target;
+  placeOrder({ sym, side, qty, price, type: 'BRACKET', sl, target });
+  quickToast('1-Click Bracket Executed', `Paper ${side.toUpperCase()} ${qty} ${sym} filled @ ${cryptoFmt(price)}. TP: ${cryptoFmt(target)} | SL: ${cryptoFmt(sl)}`);
+}
+function checkBracketOrders(sym, ltp){
+  if(!state.orders || !state.orders.length || ltp == null || !isFinite(ltp)) return;
+  let changed = false;
+  state.orders.forEach(o => {
+    if(!o.paper || o.type !== 'BRACKET' || o.status !== 'Filled' || o.sym !== sym) return;
+    const isBuy = o.side === 'buy';
+    let hitType = null;
+    if(isBuy){
+      if(o.target != null && ltp >= o.target) hitType = 'TP';
+      else if(o.sl != null && ltp <= o.sl) hitType = 'SL';
+    } else {
+      if(o.target != null && ltp <= o.target) hitType = 'TP';
+      else if(o.sl != null && ltp >= o.sl) hitType = 'SL';
+    }
+    if(hitType){
+      o.status = hitType === 'TP' ? 'Closed (TP)' : 'Closed (SL)';
+      o.exitPrice = ltp;
+      o.exitTime = Date.now();
+      const pnlPct = isBuy ? ((ltp - o.price) / o.price * 100) : ((o.price - ltp) / o.price * 100);
+      o.pnlPct = pnlPct;
+      changed = true;
+      if(hitType === 'TP'){
+        quickToast('Target Hit!', `Paper ${o.sym} target filled at ${cryptoFmt(ltp)}! +${pnlPct.toFixed(1)}%`);
+      } else {
+        quickToast('Stop Loss Filled', `Paper ${o.sym} SL exited at ${cryptoFmt(ltp)}. ${pnlPct.toFixed(1)}%`);
+      }
+    }
+  });
+  if(changed){
+    saveState();
+    if(typeof renderTrading === 'function') renderTrading();
+  }
 }
 function flowModal(o){
   setModalTitle(o.title||'Confirm');
@@ -2098,6 +2147,9 @@ async function loadCrypto(){
       if(window.TPChart&&TPChart.tick&&state.trading&&state.trading.sym&&q[state.trading.sym]){
         TPChart.tick(state.trading.sym, q[state.trading.sym].ltp);
       }
+      if(state.orders&&state.orders.length){
+        Object.keys(q).forEach(s=>{ if(q[s]&&q[s].ltp!=null) checkBracketOrders(s, q[s].ltp); });
+      }
     } else { CRYPTO.live=false; CRYPTO.error=true; }
   }catch(e){ CRYPTO.live=false; CRYPTO.error=true; }
   CRYPTO.loaded=true; CRYPTO.busy=false;
@@ -2166,6 +2218,7 @@ function connectCryptoWS(){
       if(isFinite(ltp)){ (CRYPTO.quotes||(CRYPTO.quotes={}))[d.s]={ltp,chg:isFinite(chg)?chg:0};
         CRYPTO.live=true; CRYPTO.error=false; CRYPTO.loaded=true; CRYPTO.t=Date.now(); CWS.lastMsg=Date.now();
         if(window.TPChart&&TPChart.tick) TPChart.tick(d.s, ltp);
+        checkBracketOrders(d.s, ltp);
         scheduleTapePatch(); } } }catch(e){} };
     ws.onerror=()=>{ CWS.on=false; };
     ws.onclose=()=>{ CWS.on=false; CWS.ws=null; scheduleCryptoWSReconnect(); };   // Binance drops the socket every 24h → auto-reconnect
@@ -3148,6 +3201,16 @@ function runSignalBacktest(strategyId, bars){
     };
   }
 
+  if(activeSignal && (activeSignal.type==='buy' || activeSignal.type==='sell')){
+    const px = activeSignal.price;
+    const slDist = px * 0.014;
+    const tpDist = px * 0.028;
+    activeSignal.entry = px;
+    activeSignal.sl = activeSignal.type === 'buy' ? px - slDist : px + slDist;
+    activeSignal.target = activeSignal.type === 'buy' ? px + tpDist : px - tpDist;
+    activeSignal.rr = 2.0;
+  }
+
   const wins=trades.filter(t=>t.outcome==='win').length;
   const losses=trades.filter(t=>t.outcome==='loss').length;
   const total=trades.length;
@@ -3180,6 +3243,15 @@ function updateTradingSignalBacktest(sym, tfKey, bars){
 
   if(window.TPChart&&TPChart.setSignals){
     TPChart.setSignals(res.markers);
+  }
+  if(window.TPChart&&TPChart.setBracket&&res.activeSignal&&(res.activeSignal.type==='buy'||res.activeSignal.type==='sell')){
+    TPChart.setBracket({
+      sym,
+      side: res.activeSignal.type,
+      entry: res.activeSignal.entry,
+      sl: res.activeSignal.sl,
+      target: res.activeSignal.target
+    });
   }
 
   if(state.persona==='trader'){
@@ -3250,8 +3322,12 @@ function tradingSignalCardHtml(sym, m){
         <div>
           <b>${actText}</b>
           <div style="font-size:10.5px;opacity:.9">${esc(actSub)}</div>
+          ${act&&act.sl&&act.target?`<div style="font-size:10px;margin-top:3px;font-family:var(--mono);color:var(--slate)">TP: <b class="up">${cryptoFmt(act.target)}</b> &middot; SL: <b class="down">${cryptoFmt(act.sl)}</b> &middot; 1:2 R:R</div>`:''}
         </div>
-        <button class="sig-act-btn primary" id="sigApplyBtn"${actType==='neutral'?' disabled':''}>Trade Signal ▸</button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="sig-act-btn primary" id="sigBracketBtn"${actType==='neutral'?' disabled':''} title="1-Click simulated execution with bracket levels attached">⚡ Execute 1:2 Bracket</button>
+          <button class="sig-act-btn" id="sigApplyBtn"${actType==='neutral'?' disabled':''}>Pad &rarr;</button>
+        </div>
       </div>
 
       <div class="sig-note">
@@ -3283,6 +3359,27 @@ function wireSignalCardEvents(){
       }
     };
   });
+  const bracketBtn=card.querySelector('#sigBracketBtn');
+  if(bracketBtn){
+    bracketBtn.onclick=()=>{
+      const sym=state.trading.sym;
+      const bt=TRADING_BT_CACHE[sym];
+      if(bt&&bt.activeSignal&&(bt.activeSignal.type==='buy'||bt.activeSignal.type==='sell')){
+        const act=bt.activeSignal;
+        const currentBracket=(window.TPChart&&TPChart.getBracket)?TPChart.getBracket():null;
+        const entry=(currentBracket&&currentBracket.entry)?currentBracket.entry:act.entry;
+        const target=(currentBracket&&currentBracket.target)?currentBracket.target:act.target;
+        const sl=(currentBracket&&currentBracket.sl)?currentBracket.sl:act.sl;
+        executeBracketOrder({
+          sym,
+          side: act.type,
+          entry,
+          target,
+          sl
+        });
+      }
+    };
+  }
   const applyBtn=card.querySelector('#sigApplyBtn');
   if(applyBtn){
     applyBtn.onclick=()=>{
@@ -3420,8 +3517,12 @@ function tradingHistoryTab(){
     const c=CRYPTO_UNIVERSE.find(x=>x.sym===o.sym);
     const statusHtml=o.status==='Cancelled'?`<span class="badge b-warn">Cancelled</span>`
       :o.status==='Filled'?`<span class="badge b-up">Filled</span>`
+      :o.status&&o.status.startsWith('Closed')?`<span class="badge ${o.status.includes('TP')?'b-up':'b-warn'}">${esc(o.status)}</span>`
       :`<button class="mini-cancel" data-tradecancel="${o.id}">Cancel</button>`;
-    return `<div class="cxm-row" style="${cols}"><div class="cxm-name"><b>${c?c.tk:esc(o.sym)}</b></div>
+    const bracketInfo=o.type==='BRACKET'
+      ?`<div style="font-size:10px;color:var(--slate);font-family:var(--mono)">TP: ${o.target?cryptoFmt(o.target):'-'} &middot; SL: ${o.sl?cryptoFmt(o.sl):'-'}</div>`
+      :'';
+    return `<div class="cxm-row" style="${cols}"><div class="cxm-name"><b>${c?c.tk:esc(o.sym)}</b>${bracketInfo}</div>
       <span class="cxm-n"><span class="side-chip side-${o.side}">${o.side}</span></span>
       <span class="cxm-n num">${o.qty}</span>
       <span class="cxm-n num">${cryptoFmt(o.price)}</span>
@@ -3499,7 +3600,8 @@ function renderTrading(){
       TPChart.mount({
         target: chartCard,
         feed: cryptoChartFeed,
-        onTrade: tradeFromChart
+        onTrade: tradeFromChart,
+        onExecuteBracket: executeBracketOrder
       });
       TPChart.render({
         symbol: state.trading.sym,
@@ -4268,7 +4370,7 @@ function init(){
   initWatchlistDnD(); initResize(); initSearch(); initKeyboardNav(); wireTicker();
 
   // ---- mount the interactive chart engine (real Kite candles via /api/candles) ----
-  if(window.TPChart) TPChart.mount({onTrade:tradeFromChart, persist:saveChart, feed:chartFeed});
+  if(window.TPChart) TPChart.mount({onTrade:tradeFromChart, onExecuteBracket:executeBracketOrder, persist:saveChart, feed:chartFeed});
 
   // ---- restore persisted session ----
   const saved=loadState();
