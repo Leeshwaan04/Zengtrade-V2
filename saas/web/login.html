@@ -1,6 +1,9 @@
 <!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'none'">
+<meta name="color-scheme" content="light dark">
+<!-- apply a saved theme choice before first paint, so switching pages never flashes the wrong theme -->
+<script>(function(){try{var t=localStorage.getItem("zt_theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();</script>
 <title>Sign in · zengtrade</title>
 <meta name="robots" content="noindex">
 <link rel="canonical" href="https://zengtrade.in/login/">
@@ -32,6 +35,26 @@
   @keyframes gridPan{from{transform:translate(0,0)}to{transform:translate(48px,48px)}}
   @media(prefers-reduced-motion:reduce){.aurora,.grid-motion{animation:none}}
   @media(prefers-color-scheme:dark){.aurora{mix-blend-mode:screen}.aurora.a1{opacity:.5}.grid-motion{opacity:.12}}
+
+  /* ---------------- theme toggle (top-right) ----------------
+     A real switch, not a checkbox: reuses the same measure-and-slide technique as the
+     tab/regime pills below, so the whole page shares one motion language. Sets
+     data-theme on <html>, which css.css now understands (see :root[data-theme=...]),
+     overriding prefers-color-scheme in either direction and persisting via localStorage. */
+  .theme-toggle{position:fixed;top:20px;right:20px;z-index:20;border:0;background:none;padding:0;cursor:pointer;border-radius:999px;
+    animation:riseIn .5s cubic-bezier(.16,1,.3,1) .16s both}
+  .theme-toggle:focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+  .tt-track{position:relative;display:flex;align-items:center;justify-content:space-between;width:58px;height:32px;padding:0 8px;
+    border-radius:999px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);transition:background .35s ease,border-color .35s ease}
+  .tt-icon{position:relative;z-index:1;width:15px;height:15px;color:var(--slate-2);transition:color .35s ease}
+  .theme-toggle:not([aria-pressed=true]) .tt-sun{color:#c98a1a}
+  .theme-toggle[aria-pressed=true] .tt-moon{color:#cfe0ff}
+  .tt-thumb{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;
+    background:linear-gradient(145deg,#ffd85e,#ffb238);box-shadow:0 2px 6px rgba(0,0,0,.28);
+    transition:transform .4s cubic-bezier(.4,0,.2,1),background .4s ease}
+  .theme-toggle[aria-pressed=true] .tt-thumb{transform:translateX(26px);background:linear-gradient(145deg,#5b6b9e,#2d3a63)}
+  @media(max-width:860px){.theme-toggle{top:14px;right:14px;transform:scale(.92)}}
+  @media(prefers-reduced-motion:reduce){.theme-toggle{animation:none}.tt-thumb,.tt-track,.tt-icon{transition:none}}
 
   .auth-shell{display:flex;align-items:center;justify-content:center;gap:52px;flex-wrap:wrap;position:relative;z-index:1;max-width:920px;width:100%;margin:0 auto}
   .auth{width:100%;max-width:410px;position:relative;z-index:1;animation:riseIn .6s cubic-bezier(.16,1,.3,1) .08s both}
@@ -102,8 +125,14 @@
     transition:transform .32s cubic-bezier(.4,0,.2,1),width .32s cubic-bezier(.4,0,.2,1)}
   @media(prefers-reduced-motion:reduce){.seg-indicator{transition:none}}
 
-  .brand{justify-content:center;margin-bottom:6px}
+  .brand{position:fixed;top:20px;left:20px;z-index:20;margin:0;
+    animation:riseIn .5s cubic-bezier(.16,1,.3,1) .16s both}
   .tag{text-align:center;color:var(--slate);font-size:13.5px;margin:0 0 22px}
+  @media(max-width:860px){
+    .brand{top:14px;left:14px;transform:scale(.92);transform-origin:left center}
+    body{padding-top:78px}
+  }
+  @media(prefers-reduced-motion:reduce){.brand{animation:none}}
   .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px}
   .tabs{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:4px;margin-bottom:20px}
   .tabs button{position:relative;z-index:1;flex:1;border:0;background:transparent;color:var(--slate);font:700 13.5px/1 var(--sans);padding:10px;border-radius:8px;cursor:pointer;transition:color .2s}
@@ -149,6 +178,14 @@
   @media(prefers-reduced-motion:reduce){.auth .btn.primary::after{display:none}.auth .btn.primary:disabled::before{animation:none}.msg.err{animation:none}}
 </style></head><body>
 <div class="ambient" aria-hidden="true"><span class="aurora a1"></span><span class="aurora a2"></span><span class="aurora a3"></span><span class="grid-motion"></span></div>
+<div class="brand"><svg class="logo" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#00AB4E"/><path d="M24.69 13.67A9 9 0 1 1 20.5 8.21" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M12.5 19.5L17 15L20 17.5L26.5 8.8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>zengtrade</div>
+<button type="button" class="theme-toggle" id="themeToggle" aria-pressed="false" aria-label="Switch to dark theme">
+  <span class="tt-track">
+    <svg class="tt-icon tt-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M4.2 12H2M22 12h-2.2M6.5 6.5L5 5M19 19l-1.5-1.5M17.5 6.5L19 5M5 19l1.5-1.5"/></svg>
+    <svg class="tt-icon tt-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.4 8.4 0 1 0 10.2 10.2z"/></svg>
+    <span class="tt-thumb" aria-hidden="true"></span>
+  </span>
+</button>
 <div class="auth-shell">
   <div class="mascot-panel" data-regime="bull">
     <div class="mascot-stage">
@@ -171,7 +208,6 @@
   </div>
 
   <div class="auth">
-  <div class="brand"><svg class="logo" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#00AB4E"/><path d="M24.69 13.67A9 9 0 1 1 20.5 8.21" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M12.5 19.5L17 15L20 17.5L26.5 8.8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>zengtrade</div>
   <p class="tag">Honest, survival-first crypto strategies</p>
   <p id="planBanner" class="plan-banner" hidden></p>
   <div class="card">
@@ -228,6 +264,30 @@
 (function(){
   "use strict";
   var reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---- theme toggle ------------------------------------------------------------ */
+  (function(){
+    var root=document.documentElement, THEME_KEY="zt_theme";
+    var toggle=document.getElementById("themeToggle");
+    if(!toggle) return;
+    function systemDark(){ return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches; }
+    function current(){
+      var attr=root.getAttribute("data-theme");
+      if(attr==="dark"||attr==="light") return attr;
+      return systemDark() ? "dark" : "light";
+    }
+    function apply(theme){
+      root.setAttribute("data-theme",theme);
+      toggle.setAttribute("aria-pressed", theme==="dark" ? "true":"false");
+      toggle.setAttribute("aria-label", theme==="dark" ? "Switch to light theme" : "Switch to dark theme");
+    }
+    apply(current());
+    toggle.addEventListener("click",function(){
+      var next = root.getAttribute("data-theme")==="dark" ? "light" : "dark";
+      apply(next);
+      try{ localStorage.setItem(THEME_KEY,next); }catch(e){}
+    });
+  })();
 
   /* ---- regime mascot preview -------------------------------------------------- */
   var MASCOTS={bull:"/assets/mascot-bull.png",neutral:"/assets/mascot-neutral.png",bear:"/assets/mascot-bear.png"};

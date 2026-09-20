@@ -8,6 +8,18 @@
   --line-2:#2c3d5e;--navy:#e8eefb;--slate:#9aabc9;--slate-2:#8a9cc0;--green:#1fd07a;--green-d:#3ae892;
   --green-soft:rgba(31,208,122,.13);--green-line:rgba(31,208,122,.4);--blue:#5b9dff;--red:#ff6a6c;
   --shadow:0 1px 2px rgba(0,0,0,.5),0 26px 60px -18px rgba(0,0,0,.85)}}
+/* explicit theme override (a page's own toggle sets data-theme on <html>); higher
+   specificity than the bare :root above and the prefers-color-scheme block above it,
+   so it wins in either direction regardless of the OS setting. Pages with no toggle
+   never set this attribute, so they are unaffected and keep following the OS. */
+:root[data-theme="dark"]{--bg:#080d18;--surface:#101a2e;--surface-2:#0c1424;--line:#1f2c46;
+  --line-2:#2c3d5e;--navy:#e8eefb;--slate:#9aabc9;--slate-2:#8a9cc0;--green:#1fd07a;--green-d:#3ae892;
+  --green-soft:rgba(31,208,122,.13);--green-line:rgba(31,208,122,.4);--blue:#5b9dff;--red:#ff6a6c;
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 26px 60px -18px rgba(0,0,0,.85)}
+:root[data-theme="light"]{--bg:#f4f6fa;--surface:#fff;--surface-2:#f8fafc;--line:#e6eaf1;--line-2:#d8deea;
+  --navy:#0f1a2a;--slate:#5c6a7e;--slate-2:#64748b;--green:#00ab4e;--green-d:#00803b;
+  --green-soft:#e7f8ef;--green-line:#b6e8cc;--blue:#1667d9;--red:#c8302f;
+  --shadow:0 1px 2px rgba(16,30,54,.05),0 20px 50px -18px rgba(16,30,54,.22)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--navy);font:16px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
 .logo{width:28px;height:28px;flex:0 0 auto;display:block}
