@@ -172,6 +172,17 @@ function goAfterAuth(user){
     await establishSession();
     const u=await currentUser();
     if(u) goAfterAuth(u);
+    else {
+      // BUG FIX (2026-09-20): completeAuthCallback() (auth.js) returns null, not a thrown error,
+      // if its session poll times out without Supabase surfacing an explicit error - an expired
+      // or already-used confirmation/reset link, or a slow connection. That used to leave this
+      // page silently blank: no message, and ?code=/#access_token= still stuck in the address bar.
+      const hadCallback=new URLSearchParams(location.search).has("code")||/access_token=|refresh_token=/.test(location.hash);
+      if(hadCallback){
+        show("That link expired or was already used. Request a new one below.");
+        history.replaceState({}, "", location.pathname);
+      }
+    }
   }catch(e){ show(niceError(e)); history.replaceState({}, "", location.pathname); }
 })();
 
