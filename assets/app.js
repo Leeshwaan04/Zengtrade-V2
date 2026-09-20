@@ -92,6 +92,8 @@ const ICONS={
   download:'<path d="M12 3v11M8 10l4 4 4-4M4 20h16"/>',
   lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/>',
   layers:'<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>',
+  eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+  eyeOff:'<path d="M9.9 4.24A9.5 9.5 0 0 1 12 4c7 0 11 8 11 8a18 18 0 0 1-3.22 4.36M6.5 6.5A18.4 18.4 0 0 0 1 12s4 8 11 8a9.5 9.5 0 0 0 4.24-.99M9.9 14.1a3 3 0 0 0 4.24-4.24M3 3l18 18"/>',
 };
 function icon(name,size){const s=size||16;return `<svg class="ico" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]||''}</svg>`;}
 
@@ -4104,6 +4106,14 @@ function renderExchangeChip(){
 function openConnectExchangeModal(){
   const trust=[['shield','Non-custodial'],['lock','Encrypted at rest'],['link','Trade-only key']]
     .map(([ic,l])=>`<span class="trust-badge">${icon(ic,11)}${l}</span>`).join('');
+  // UX FIX (2026-09-20): both fields now get a show/hide toggle - a masked key/secret with no way
+  // to verify what was actually pasted is a real point of friction for exactly the two hardest
+  // values in the whole product to type or eyeball-check (64-char random strings).
+  const eyeField=(id,ic,label,placeholder)=>`<div class="fld"><label>${label}</label><div class="inp">
+      <span class="inp-ic">${icon(ic,13)}</span>
+      <input type="password" class="gyok-inp" id="${id}" autocomplete="off" spellcheck="false" aria-label="Binance ${label}" placeholder="${placeholder}">
+      <button type="button" class="gyok-eye" data-eyefor="${id}" aria-label="Show ${label}">${icon('eye',14)}</button>
+    </div></div>`;
   flowModal({title:'Connect Binance',confirm:'Connect',
     body:`<div class="trust-row">${trust}</div>
       <p class="flow-note">${icon('activity',13)}<span>On Binance: <b>API Management &rarr; Create API</b>, check <b>only</b> "Enable Spot &amp; Margin Trading", leave "Enable Withdrawals" unchecked. zengtrade never sees your Binance password, this key only ever places orders on your own account.</span></p>
@@ -4111,26 +4121,48 @@ function openConnectExchangeModal(){
         <a href="https://www.binance.com/en/my/settings/api-management" target="_blank" rel="noopener">${icon('link',12)}Open Binance</a>
         <a href="/learn/how-to-create-a-binance-api-key/" target="_blank" rel="noopener">${icon('activity',12)}Full step-by-step guide</a>
       </div>
-      <div class="fld"><label>API key</label><div class="inp"><span class="inp-ic">${icon('link',13)}</span><input type="password" class="gyok-inp" id="gyokKey" autocomplete="off" aria-label="Binance API key" placeholder="Paste your API key"></div></div>
-      <div class="fld"><label>API secret</label><div class="inp"><span class="inp-ic">${icon('lock',13)}</span><input type="password" class="gyok-inp" id="gyokSecret" autocomplete="off" aria-label="Binance API secret" placeholder="Paste your API secret"></div></div>
+      ${eyeField('gyokKey','link','API key','Paste your API key')}
+      ${eyeField('gyokSecret','lock','API secret','Paste your API secret')}
       <p class="flow-err" id="gyokErr" hidden></p>`,
+    wire(body){
+      body.querySelectorAll('[data-eyefor]').forEach(btn=>{
+        btn.onclick=()=>{
+          const inp=body.querySelector('#'+btn.dataset.eyefor);
+          const show=inp.type==='password';
+          inp.type=show?'text':'password';
+          btn.innerHTML=icon(show?'eyeOff':'eye',14);
+          btn.setAttribute('aria-label',(show?'Hide':'Show')+(btn.dataset.eyefor==='gyokKey'?' API key':' API secret'));
+        };
+      });
+    },
     onConfirm(body){
       const key=body.querySelector('#gyokKey').value.trim(), secret=body.querySelector('#gyokSecret').value.trim();
       const err=body.querySelector('#gyokErr');
-      if(!key||!secret){ err.textContent='Enter both the API key and secret.'; err.hidden=false; return false; }
+      const showErr=msg=>{ err.textContent=msg; err.hidden=false; };
+      if(!key||!secret){ showErr('Enter both the API key and secret.'); return false; }
+      // UX FIX (2026-09-20): a real Binance API key/secret is always 64 characters - catch an
+      // obviously partial paste instantly instead of waiting on a round trip to Binance to say so.
+      if(key.length<40||secret.length<40){ showErr("That looks too short for a real Binance API key/secret, check you copied the full value."); return false; }
+      err.hidden=true;
       const cf=$('modalConfirm'); if(cf){ cf.disabled=true; cf.textContent='Connecting…'; }
       window.ztExchange.connect(key,secret).then(res=>{
-        closeModal();
         if(res.ok&&res.data&&res.data.connected){
+          closeModal();
           quickToast('Binance connected','You can now switch Trading mode to Live.');
           state.headerExchange={connected:true,connectedAt:new Date().toISOString()};
           renderExchangeChip();
           if(state.trading){ state.trading.exchangeStatus=undefined; if(state.persona==='trader'&&typeof renderTrading==='function') renderTrading(); }
         } else {
-          quickToast('Could not connect',(res.data&&res.data.error)||'Please check your key/secret and try again.');
+          // BUG FIX (2026-09-20): this used to closeModal() unconditionally before checking
+          // success, so a failure - even a specific, actionable one like "withdrawal permission
+          // enabled" - wiped the form and only flashed a toast; the user had to reopen the modal
+          // and re-paste both fields from scratch. Keep it open, show the real backend message
+          // (exchange-connect/index.ts already returns specific, actionable errors) inline instead.
+          if(cf){ cf.disabled=false; cf.textContent='Connect'; }
+          showErr((res.data&&res.data.error)||'Could not connect, please check your key/secret and try again.');
         }
       });
-      return false;   // keep the modal open (now showing "Connecting…") until the async call resolves
+      return false;   // keep the modal open until the async call resolves either way
     }
   });
 }
