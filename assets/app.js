@@ -2845,8 +2845,17 @@ function regimeFitMatrix(mkt){
   if(!d){ if(!RFIT.busy[mkt]) loadRegimeFit(mkt).then(()=>{ if(isAlgo())renderAlgo(); }); return ''; }
   if(d.err||!(d.strategies||[]).length) return '';
   const regs=d.regimes||[], cur=d.currentRegime;
-  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Regime fit, learned, not assumed.</b> Each cell is a strategy's <b>net-of-cost</b> edge in that regime (needs ${d.minTrades}+ trades to call it). In the live regime (<b>${esc(cur)}</b> ●) the book <b>benches proven losers and deploys proven winners</b>; the safe default stands where evidence is thin, so we run the right strategies for the conditions.</span></div>`;
-  const head=`<div class="rf-row rf-head"><span class="rf-name">Strategy</span>${regs.map(r=>`<span class="rf-col${r===cur?' cur':''}">${esc(r)}${r===cur?' ●':''}</span>`).join('')}</div>`;
+  // BUG FIX (2026-09-20): the header's manual Bull/Neutral/Bear toggle used to change copy
+  // elsewhere but never touch this matrix, so toggling while on Analytics visibly did nothing -
+  // confusing, since a user expects the page to react. Can't just overwrite `cur` with the
+  // toggle though - `cur` is the real, backend-computed live regime driving actual strategy
+  // selection, faking it would be exactly the kind of fabricated claim this matrix explicitly
+  // exists to avoid (see the note below). Instead, highlight the toggled regime as a separate
+  // "viewing" lens alongside the untouched, real "live" marker - both stay visible and honest.
+  const toggled=state.mode==='manual'?({bull:'Bull',neutral:'Choppy',bear:'Bear'}[state.displayed]):null;
+  const sel=(toggled&&regs.includes(toggled)&&toggled!==cur)?toggled:null;
+  const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Regime fit, learned, not assumed.</b> Each cell is a strategy's <b>net-of-cost</b> edge in that regime (needs ${d.minTrades}+ trades to call it). In the live regime (<b>${esc(cur)}</b> ●) the book <b>benches proven losers and deploys proven winners</b>; the safe default stands where evidence is thin, so we run the right strategies for the conditions.${sel?` <b>Viewing ${esc(sel)}</b> (from the header toggle, dashed) - it doesn't change what's actually live, only which column is highlighted below.`:''}</span></div>`;
+  const head=`<div class="rf-row rf-head"><span class="rf-name">Strategy</span>${regs.map(r=>`<span class="rf-col${r===cur?' cur':''}${r===sel?' sel':''}">${esc(r)}${r===cur?' ●':''}</span>`).join('')}</div>`;
   const cell=c=>{ if(!c||!c.n) return '<span class="rf-cell rf-none">·</span>';
     const lbl=c.verdict==='fit'?'FIT':c.verdict==='unfit'?'UNFIT':'…';
     return `<span class="rf-cell rf-${esc(c.verdict)}" title="${c.n} trades · win ${c.winPct}% · PF ${c.pf} · expectancy ${c.expectancy}">${lbl} <i>${c.n}</i></span>`; };
@@ -2872,6 +2881,14 @@ function cryptoBody(view,label){
    reuses the same honest order-pad mechanism (placeOrder/cancelOrder) built for the old trader
    persona - that part was never fabricated, only the surrounding Zerodha-equity panels were.
    ============================================================ */
+// BUG FIX (2026-09-20): Sell had no held-qty check, so a user could "sell" a coin never bought,
+// creating a negative position tradingPositionsTab() would then render with no explanation. A
+// paper product with no real custody still shouldn't let you short by accident.
+function heldQty(sym){
+  let q=0;
+  state.orders.filter(o=>o.sym===sym&&o.status==='Filled').forEach(o=>{ q+=o.side==='buy'?o.qty:-o.qty; });
+  return q;
+}
 function tradeModel(sym){
   const c=CRYPTO_UNIVERSE.find(x=>x.sym===sym)||CRYPTO_UNIVERSE[0];
   const q=CRYPTO.quotes[c.sym];
@@ -2879,7 +2896,9 @@ function tradeModel(sym){
   const px=live?q.ltp:0;
   const side=state.orderSide||'buy';
   const qty=state.orderQty!=null?state.orderQty:0.01;
-  return {sym:c.sym,tk:c.tk,name:c.name,px,priced:px>0,chg:live?q.chg:0,side,qty,value:qty*px};
+  const held=heldQty(c.sym);
+  return {sym:c.sym,tk:c.tk,name:c.name,px,priced:px>0,chg:live?q.chg:0,side,qty,value:qty*px,held,
+    overSell:side==='sell'&&qty>held};
 }
 function tradingTradeTab(){
   const m=tradeModel(state.trading.sym);
@@ -2907,9 +2926,9 @@ function tradingTradeTab(){
         <span class="oh-px ${cls(m.chg)} num">${m.priced?cryptoFmt(m.px):'-'} ${m.priced?pct(m.chg):''}</span></div>
       <div class="order-body">
         <div class="side-tabs"><div class="side-tab buy ${m.side==='buy'?'active':''}" data-tradeside="buy">BUY</div><div class="side-tab sell ${m.side==='sell'?'active':''}" data-tradeside="sell">SELL</div></div>
-        <div class="fld"><label>Quantity</label><div class="inp"><input class="qty-inp num" id="tradeQty" value="${m.qty}" inputmode="decimal" aria-label="Order quantity"></div></div>
+        <div class="fld"><label>Quantity${(m.side==='sell'&&!live)?` <i>you hold ${m.held.toFixed(6)} ${esc(m.tk)}</i>`:''}</label><div class="inp"><input class="qty-inp num" id="tradeQty" value="${m.qty}" inputmode="decimal" aria-label="Order quantity"></div></div>
         <div class="fld"><label>Order value</label><div class="inp num" id="tradeOrdVal">${m.priced?cryptoFmt(m.value):'-'}</div></div>
-        <button class="cta ${live?'cta-live':(m.side==='buy'?'cta-buy':'cta-sell')}" id="tradeCta"${(m.priced&&m.qty>0&&!busy)?'':' disabled'}>${busy?'Placing order…':(live?`${m.side==='buy'?'BUY':'SELL'} ${m.tk} (LIVE)`:`${m.side==='buy'?'BUY':'SELL'} ${m.tk}`)}</button>
+        <button class="cta ${live?'cta-live':(m.side==='buy'?'cta-buy':'cta-sell')}" id="tradeCta"${(m.priced&&m.qty>0&&!(m.overSell&&!live)&&!busy)?'':' disabled'}>${busy?'Placing order…':(m.overSell&&!live)?`Insufficient ${m.tk} to sell`:(live?`${m.side==='buy'?'BUY':'SELL'} ${m.tk} (LIVE)`:`${m.side==='buy'?'BUY':'SELL'} ${m.tk}`)}</button>
       </div></div>`;
 }
 function tradingPositionsTab(){
@@ -2956,8 +2975,9 @@ function tradingHistoryTab(){
 function tradingPlace(){
   const m=tradeModel(state.trading.sym);
   // BUG FIX (2026-09-20): only price was gated here, qty=0 (a valid state of the qty input's own
-  // clamp, Math.max(0,...)) reached this point and placed a meaningless zero-size order.
-  if(!m.priced||!(m.qty>0)) return;
+  // clamp, Math.max(0,...)) reached this point and placed a meaningless zero-size order. Also caps
+  // Sell at held qty, matching the CTA's own disabled state, see heldQty()/overSell above.
+  if(!m.priced||!(m.qty>0)||m.overSell) return;
   placeOrder({sym:m.sym,side:m.side,qty:m.qty,price:m.px,type:'MARKET'});
 }
 // Real order execution: a mandatory, visually-distinct confirm step before ANY real order, never
@@ -2968,6 +2988,10 @@ function tradingPlaceLive(){
   const m=tradeModel(state.trading.sym);
   // BUG FIX (2026-09-20): same qty=0 gap as tradingPlace(), but on the real-money path - this let
   // a user reach the "place a REAL order" confirm modal with a zero-quantity order.
+  // NOTE: deliberately NOT applying m.overSell here - heldQty() only sums local paper fills
+  // (state.orders never gets live fills recorded today, a separate known gap), so it has zero
+  // visibility into what's actually on the user's real Binance account. Gating a real sell on
+  // that number would incorrectly block sells of real holdings the app never saw be bought.
   if(!m.priced||!(m.qty>0)||state.trading.liveBusy) return;
   flowModal({title:'Place a REAL order',confirm:'Place real order',danger:true,
     body:`<div class="flow-top"><div><b>${m.side==='buy'?'BUY':'SELL'} ${m.qty} ${esc(m.tk)}</b><span class="flow-sub">Real Binance order &middot; your own connected account</span></div></div>
@@ -3025,11 +3049,20 @@ function renderTrading(){
     const m=tradeModel(state.trading.sym);
     const ordVal=v.querySelector('#tradeOrdVal');
     if(ordVal) ordVal.textContent=m.priced?cryptoFmt(m.value):'-';
+    const hasExchangeBridge=typeof window.ztExchange!=='undefined';
+    const ex=state.trading.exchangeStatus;
+    const live=hasExchangeBridge&&ex&&ex.connected&&!!state.trading.live;
     // BUG FIX (2026-09-20): this in-place patch (avoids a full re-render on every keystroke) only
     // ever checked m.priced, so it silently re-enabled the CTA the moment a user typed anything,
     // undoing the qty>0 guard added to the initial render template - the actual bug the "zero-qty
-    // orders are placeable" finding was caught by, since typing "0" is exactly this path.
-    const cb=v.querySelector('#tradeCta'); if(cb) cb.disabled=!(m.priced&&m.qty>0);
+    // orders are placeable" finding was caught by, since typing "0" is exactly this path. Same
+    // class of gap for the sell-side held-qty cap (paper only, see heldQty()/overSell) - keep this
+    // patch's guard and label in lockstep with the initial render's, or a fast typist slips past.
+    const cb=v.querySelector('#tradeCta');
+    if(cb&&!state.trading.liveBusy){
+      cb.disabled=!(m.priced&&m.qty>0&&!(m.overSell&&!live));
+      cb.textContent=(m.overSell&&!live)?`Insufficient ${m.tk} to sell`:(live?`${m.side==='buy'?'BUY':'SELL'} ${m.tk} (LIVE)`:`${m.side==='buy'?'BUY':'SELL'} ${m.tk}`);
+    }
   };
   v.querySelectorAll('[data-lt]').forEach(b=>b.onclick=()=>{state.trading.live=b.dataset.lt==='live';renderTrading();});
   const cta=v.querySelector('#tradeCta'); if(cta) cta.onclick=()=>{ (state.trading.live?tradingPlaceLive:tradingPlace)(); };
@@ -3119,7 +3152,7 @@ function investingDcaTab(){
         <span class="cxm-n num">${cryptoFmt(invested)}</span>
         <span class="cxm-n num ${cls(value!=null?value-invested:null)}">${value!=null?cryptoFmt(value):'-'}</span>
         <span class="cxm-n" style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap">
-          <button class="mini-cancel" data-dcabuy="${p.id}"${mark==null?' disabled':''}>Buy now</button>
+          <button class="mini-cancel" data-dcabuy="${p.id}"${(mark==null||!p.active)?' disabled':''}${!p.active?' title="Resume this plan to buy"':(mark==null?' title="Waiting for a live price"':'')}>Buy now</button>
           <button class="mini-cancel" data-dcatoggle="${p.id}">${p.active?'Pause':'Resume'}</button>
           <button class="mini-cancel" data-dcadelete="${p.id}">Delete</button>
         </span></div>`;
@@ -3155,6 +3188,10 @@ function investingGoalsTab(){
 function investingSimulateBuy(id){
   const p=(state.investing.dca||[]).find(x=>x.id===id);
   if(!p) return;
+  // BUG FIX (2026-09-20): Pause used to only change the badge/label - a paused plan could still be
+  // bought via this same click handler, which made "Pause" mean nothing functionally. Matches the
+  // "Buy now" button's own new disabled state below, kept here too as defense in depth.
+  if(!p.active) return;
   const q=CRYPTO.quotes[p.sym];
   if(!CRYPTO.live||!q) return;   // never record a buy without a real live price
   p.history.push({ts:Date.now(),price:q.ltp,qty:p.amount/q.ltp,amount:p.amount});

@@ -542,6 +542,10 @@ body.resizing{user-select:none;cursor:col-resize}
 .qty-inp{flex:1;border:0;background:transparent;text-align:center;font-size:13px;color:var(--navy);outline:none;min-width:0;font-family:var(--mono)}
 .mini-cancel{border:1px solid var(--bd-down);background:var(--tint-down);color:var(--red-d);border-radius:7px;padding:4px 10px;font-family:var(--sans);font-weight:600;font-size:11px;cursor:pointer}
 .mini-cancel:hover{background:var(--red);color:#fff}
+/* BUG FIX (2026-09-20): had no disabled state at all - looked identically clickable whether
+   enabled or not (e.g. DCA "Buy now" while paused, or before a live price loads). */
+.mini-cancel:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
+.mini-cancel:disabled:hover{background:var(--tint-down);color:var(--red-d)}
 .empty-state{padding:26px 18px;text-align:center;color:var(--slate-2);font-size:12.5px}
 
 /* order confirmation modal */
@@ -2252,6 +2256,9 @@ html[data-persona="investor"] #investHub{display:flex;flex-direction:column;flex
 .rf-head{background:var(--surface-2);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--slate-2)}
 .rf-name{font-size:12px;color:var(--navy)} .rf-name b{font-weight:700}
 .rf-col{text-align:center} .rf-col.cur{color:var(--accent-d);font-weight:800}
+/* BUG FIX (2026-09-20): distinct from .cur (the real, backend-computed live regime) - marks the
+   header's manually-toggled regime as a separate "viewing" lens, never overwrites .cur itself. */
+.rf-col.sel{text-decoration:underline;text-decoration-style:dashed;text-underline-offset:3px}
 .rf-cell{display:inline-flex;align-items:center;justify-content:center;gap:4px;font-size:9.5px;font-weight:800;border-radius:6px;padding:3px 0}
 .rf-cell i{font-style:normal;font-weight:700;opacity:.7}
 .rf-fit{color:#fff;background:var(--green)}
