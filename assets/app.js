@@ -866,6 +866,7 @@ function executeBracketOrder(p){
   const price = p.entry != null ? p.entry : (m.px || 100);
   const sl = p.sl;
   const target = p.target;
+  playAudioFeedback('bracket');
   placeOrder({ sym, side, qty, price, type: 'BRACKET', sl, target });
   quickToast('1-Click Bracket Executed', `Paper ${side.toUpperCase()} ${qty} ${sym} filled @ ${cryptoFmt(price)}. TP: ${cryptoFmt(target)} | SL: ${cryptoFmt(sl)}`);
 }
@@ -891,6 +892,7 @@ function checkBracketOrders(sym, ltp){
       o.pnlPct = pnlPct;
       changed = true;
       if(hitType === 'TP'){
+        playAudioFeedback('success');
         quickToast('Target Hit!', `Paper ${o.sym} target filled at ${cryptoFmt(ltp)}! +${pnlPct.toFixed(1)}%`);
       } else {
         quickToast('Stop Loss Filled', `Paper ${o.sym} SL exited at ${cryptoFmt(ltp)}. ${pnlPct.toFixed(1)}%`);
@@ -4284,12 +4286,20 @@ function investingSimulatorTab(){
 
       <div class="dca-sim-actions">
         <div class="dca-action-text">
-          <b>Deploy this strategy</b>
-          <span>Transfer these parameters into an active simulated DCA plan.</span>
+          <b>Deploy or export plan</b>
+          <span>Execute as an active simulated DCA plan or export the compounding timeline.</span>
         </div>
-        <button class="cta cta-buy dca-deploy-btn" id="simDeployCta">
-          Create Active Plan ($${sim.amount}/${sim.cadence} ${selCoin.tk})
-        </button>
+        <div class="dca-act-btn-group">
+          <button class="cta cta-sub dca-export-btn" id="simCopyPlanCta" title="Copy DCA allocation summary to clipboard">
+            📋 Copy Summary
+          </button>
+          <button class="cta cta-sub dca-export-btn" id="simExportCsvCta" title="Download projected schedule CSV">
+            📥 Export CSV
+          </button>
+          <button class="cta cta-buy dca-deploy-btn" id="simDeployCta">
+            Create Active Plan ($${sim.amount}/${sim.cadence} ${selCoin.tk})
+          </button>
+        </div>
       </div>
     </div>
   `;
@@ -4538,7 +4548,68 @@ function renderInvesting(){
     };
   }
   const simDeployBtn=v.querySelector('#simDeployCta');
-  if(simDeployBtn) simDeployBtn.onclick=investingDeployPlan;
+  if(simDeployBtn){
+    simDeployBtn.onclick=()=>{
+      playAudioFeedback('success');
+      investingDeployPlan();
+    };
+  }
+  const simCopyBtn=v.querySelector('#simCopyPlanCta');
+  if(simCopyBtn){
+    simCopyBtn.onclick=()=>{
+      const sim=state.investing.sim;
+      const selCoin=CRYPTO_UNIVERSE.find(x=>x.sym===sim.sym)||CRYPTO_UNIVERSE[0];
+      const res=computeDcaSimulation(sim.sym, sim.amount, sim.cadence, sim.horizon);
+      const text=[
+        `# zengtrade DCA Investment Plan: ${selCoin.name} (${selCoin.tk})`,
+        `- Asset: ${selCoin.name} (${selCoin.sym})`,
+        `- Cadence: ${sim.cadence.toUpperCase()} contribution of $${sim.amount}`,
+        `- Horizon: ${sim.horizon} (${res.periods} contribution periods)`,
+        `- Total Invested: $${res.totalInvested.toLocaleString()}`,
+        `- Projected Future Value: $${Math.round(res.futureValue).toLocaleString()}`,
+        `- Estimated Net Yield: +${res.netYieldPct.toFixed(1)}%`,
+        `- Volatility Shield: ${res.downsideShieldPct}% historical downside mitigation`,
+        `- Cost Model: 35 bps round-trip friction deducted`,
+        `Generated via zengtrade (https://zengtrade.in/dashboard)`
+      ].join('\n');
+      navigator.clipboard.writeText(text).then(()=>{
+        playAudioFeedback('bracket');
+        simCopyBtn.textContent='✅ Copied!';
+        quickToast('Plan Copied', 'DCA investment plan summary copied to clipboard.');
+        setTimeout(()=>{ simCopyBtn.textContent='📋 Copy Summary'; }, 2000);
+      }).catch(()=>{
+        quickToast('Copy Blocked', 'Clipboard access unavailable in current context.');
+      });
+    };
+  }
+  const simCsvBtn=v.querySelector('#simExportCsvCta');
+  if(simCsvBtn){
+    simCsvBtn.onclick=()=>{
+      const sim=state.investing.sim;
+      const selCoin=CRYPTO_UNIVERSE.find(x=>x.sym===sim.sym)||CRYPTO_UNIVERSE[0];
+      const res=computeDcaSimulation(sim.sym, sim.amount, sim.cadence, sim.horizon);
+      const rows=[
+        ['Period', 'Contribution_USD', 'Cumulative_Invested_USD', 'Projected_Value_USD', 'Friction_Bps']
+      ];
+      const steps=12;
+      for(let i=1; i<=steps; i++){
+        const periodIdx=Math.min(Math.round(i*(res.periods/steps)), res.periods);
+        const inv=periodIdx*sim.amount;
+        const ratio=periodIdx/res.periods;
+        const val=inv+(res.futureValue-res.totalInvested)*Math.pow(ratio, 1.2);
+        rows.push([i, sim.amount, inv, Math.round(val), 35]);
+      }
+      const csvContent='data:text/csv;charset=utf-8,' + encodeURIComponent(rows.map(e=>e.join(',')).join('\n'));
+      const link=document.createElement('a');
+      link.setAttribute('href', csvContent);
+      link.setAttribute('download', `zengtrade_dca_${selCoin.tk}_${sim.horizon}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      playAudioFeedback('success');
+      quickToast('CSV Exported', `Downloaded schedule for ${selCoin.tk}.`);
+    };
+  }
 }
 
 function renderAlgo(){
@@ -5334,7 +5405,138 @@ function initSearch(){   // top-bar global search → add any instrument
   const si=document.querySelector('.search input'), sr=$('searchResults');
   if(si&&sr) wireInstSearch(si, sr, r=>addInstrument(r));
   document.addEventListener('keydown',e=>{const a=document.activeElement;if(e.key==='/'&&a!==si&&a.tagName!=='INPUT'){e.preventDefault();si&&si.focus();}});
+  initTerminalShortcuts();
 }
+
+/* ============================================================
+   TERMINAL AUDIO SYNTHESIZER MICRO-FEEDBACK (Web Audio API)
+   ============================================================ */
+function playAudioFeedback(type = 'click'){
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if(!AudioCtx) return;
+    if(!window.__ztAudioCtx) window.__ztAudioCtx = new AudioCtx();
+    const ctx = window.__ztAudioCtx;
+    if(ctx.state === 'suspended') ctx.resume();
+    
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    const now = ctx.currentTime;
+    if(type === 'success'){
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, now); // D5
+      osc.frequency.setValueAtTime(880, now + 0.08); // A5
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    } else if(type === 'bracket'){
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.exponentialRampToValueAtTime(880, now + 0.06);
+      gain.gain.setValueAtTime(0.07, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      osc.start(now);
+      osc.stop(now + 0.12);
+    } else {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(520, now);
+      gain.gain.setValueAtTime(0.04, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+      osc.start(now);
+      osc.stop(now + 0.06);
+    }
+  } catch(e){}
+}
+
+/* ============================================================
+   TERMINAL KEYBOARD SHORTCUTS & MODAL (Institutional Parity)
+   ============================================================ */
+function toggleShortcutsModal(){
+  const existing = $('shortcutsModalOverlay');
+  if(existing){ existing.remove(); return; }
+  const ov = document.createElement('div');
+  ov.id = 'shortcutsModalOverlay';
+  ov.className = 'shortcuts-overlay';
+  ov.innerHTML = `
+    <div class="shortcuts-modal-card">
+      <div class="sm-head">
+        <b>${icon('command', 16)} Terminal Keyboard Shortcuts</b>
+        <button class="sm-close" id="smCloseBtn">✕</button>
+      </div>
+      <div class="sm-grid">
+        <div class="sm-row"><kbd>1</kbd><span>Investing Mode (Shield &amp; DCA Simulator)</span></div>
+        <div class="sm-row"><kbd>2</kbd><span>Trading Mode (Confluence &amp; R:R Brackets)</span></div>
+        <div class="sm-row"><kbd>3</kbd><span>Algo Studio (Resilience Matrix &amp; Deploy)</span></div>
+        <div class="sm-row"><kbd>B</kbd><span>Select Bitcoin (BTCUSDT)</span></div>
+        <div class="sm-row"><kbd>E</kbd><span>Select Ethereum (ETHUSDT)</span></div>
+        <div class="sm-row"><kbd>S</kbd><span>Select Solana (SOLUSDT)</span></div>
+        <div class="sm-row"><kbd>F</kbd><span>Toggle Fullscreen Chart</span></div>
+        <div class="sm-row"><kbd>/</kbd><span>Focus Global Search Bar</span></div>
+        <div class="sm-row"><kbd>?</kbd><span>Toggle This Shortcuts Dialog</span></div>
+        <div class="sm-row"><kbd>Esc</kbd><span>Exit Fullscreen / Close Dialogs</span></div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(ov);
+  ov.addEventListener('click', e => {
+    if(e.target === ov || e.target.id === 'smCloseBtn') ov.remove();
+  });
+}
+
+function initTerminalShortcuts(){
+  document.addEventListener('keydown', e => {
+    const a = document.activeElement;
+    const inInput = a && (['INPUT', 'TEXTAREA', 'SELECT'].includes(a.tagName) || a.isContentEditable);
+    if(inInput) return;
+
+    if(e.key === '1'){
+      e.preventDefault();
+      applyPersona('investor', {user: true});
+      playAudioFeedback('click');
+      quickToast('Mode: Investing', 'Switched to Investing & DCA Simulator workstation.');
+    } else if(e.key === '2'){
+      e.preventDefault();
+      applyPersona('trader', {user: true});
+      playAudioFeedback('click');
+      quickToast('Mode: Trading', 'Switched to Trading & Multi-Timeframe Confluence workstation.');
+    } else if(e.key === '3'){
+      e.preventDefault();
+      applyPersona('algo', {user: true});
+      playAudioFeedback('click');
+      quickToast('Mode: Algo Studio', 'Switched to Algo Studio & Walk-Forward Resilience Matrix.');
+    } else if(e.key === 'b' || e.key === 'B'){
+      e.preventDefault();
+      selectSym('BTCUSDT');
+      playAudioFeedback('click');
+    } else if(e.key === 'e' || e.key === 'E'){
+      e.preventDefault();
+      selectSym('ETHUSDT');
+      playAudioFeedback('click');
+    } else if(e.key === 's' || e.key === 'S'){
+      e.preventDefault();
+      selectSym('SOLUSDT');
+      playAudioFeedback('click');
+    } else if(e.key === 'f' || e.key === 'F'){
+      e.preventDefault();
+      if(window.TPChart && window.TPChart.toggleFullscreen) window.TPChart.toggleFullscreen();
+    } else if(e.key === '?'){
+      e.preventDefault();
+      toggleShortcutsModal();
+    } else if(e.key === 'Escape'){
+      const card = document.getElementById('chartCard');
+      if(card && card.classList.contains('chart-fullscreen')){
+        if(window.TPChart && window.TPChart.toggleFullscreen) window.TPChart.toggleFullscreen();
+      }
+      const ov = $('shortcutsModalOverlay');
+      if(ov) ov.remove();
+    }
+  });
+}
+
 function initAddScrip(){   // watchlist "Add scrip…" box → add any instrument
   const si=document.querySelector('.wl-search input'); if(!si) return;
   let box=si.parentElement.querySelector('.search-results');

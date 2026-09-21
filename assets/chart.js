@@ -657,6 +657,7 @@ function buildDOM(){
     <button class="ch-pill" id="chReplay" title="Bar replay: reveal price bar by bar">▶ Replay</button>
     <span class="ch-flex"></span>
     <button class="ch-pill ch-reset" id="chReset" title="Reset zoom &amp; pan">Reset</button>
+    <button class="ch-pill ch-expand" id="chExpand" title="Toggle Fullscreen Chart (Hotkey: F)">⛶ Expand</button>
   </div>
   <div class="ch-stage">
     <div class="ch-tools" id="chTools">${TOOLS.map(([k,l,p])=>`<button class="ch-tool${k==='cursor'?' on':''}" data-tool="${k}" title="${l}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${p}"/></svg></button>`).join('')}<button class="ch-tool" id="chClear" title="Clear all drawings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button></div>
@@ -699,12 +700,27 @@ function buildDOM(){
   if(repBtn) repBtn.addEventListener('click',toggleReplay);
   const rstBtn=card.querySelector('#chReset');
   if(rstBtn) rstBtn.addEventListener('click',()=>{fit(true);schedule();});
+  const expBtn=card.querySelector('#chExpand');
+  if(expBtn) expBtn.addEventListener('click',toggleFullscreenChart);
   const toolsEl=card.querySelector('#chTools');
   if(toolsEl) toolsEl.addEventListener('click',e=>{const b=e.target.closest('[data-tool]');if(b)setTool(b.dataset.tool);});
   const clrBtn=card.querySelector('#chClear');
   if(clrBtn) clrBtn.addEventListener('click',()=>{S.drawings[S.sym]=[];S.trade=null;updateTradeChip();persist();schedule();});
   document.addEventListener('click',e=>{if(!e.target.closest('.ch-menu-wrap'))closePops();});
   if(regBtn) regBtn.classList.toggle('on',S.regimeStudies);
+}
+function toggleFullscreenChart(){
+  const card=S.target||find('#chartCard')||document.getElementById('chartCard');
+  if(!card) return;
+  const isFull=card.classList.toggle('chart-fullscreen');
+  const expBtn=card.querySelector('#chExpand');
+  if(expBtn) expBtn.innerHTML = isFull ? '✕ Exit' : '⛶ Expand';
+  document.body.classList.toggle('chart-is-fullscreen', isFull);
+  setTimeout(()=>{
+    resize();
+    fit(true);
+    schedule();
+  }, 30);
 }
 function togglePop(id){const p=find('#'+id);if(!p)return;const open=p.classList.contains('show');closePops();if(!open)p.classList.add('show');}
 function closePops(){findAll('.ch-pop').forEach(p=>p.classList.remove('show'));}
@@ -881,5 +897,5 @@ function tick(sym,ltp){
     el.innerHTML=`${fmtN(ltp)} ${chg}`;}
   schedule();
 }
-window.TPChart={mount,render,resize,serialize,restore,setTimeframe,setSignals,getBars,getEngineState,tick,setBracket,getBracket};
+window.TPChart={mount,render,resize,serialize,restore,setTimeframe,setSignals,getBars,getEngineState,tick,setBracket,getBracket,toggleFullscreen:toggleFullscreenChart};
 })();
