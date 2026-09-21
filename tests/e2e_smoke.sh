@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 echo "== landing build =="
-python3 deploy/landing/build.py >/dev/null
+ZT_FAST_PSEO=1 python3 deploy/landing/build.py >/dev/null
 chmod +x scripts/probe-dist.sh
 ./scripts/probe-dist.sh
 

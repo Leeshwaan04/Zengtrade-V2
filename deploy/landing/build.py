@@ -365,12 +365,23 @@ try:
 except Exception as ex:
     print("  ! learning tracks skipped (marketing site still builds):", ex)
 
+# ---- 15,000 programmatic pre-login pages + /sitemap/ portal (pseo_engine.py) ----------
+pseo_css = ""
+PSEO_MOD = None
+try:
+    sys.path.insert(0, os.path.abspath(os.path.join(HERE, "..", "..", "seo")))
+    import pseo_engine as PSEO
+    PSEO_MOD = PSEO
+    pseo_css = PSEO.PSEO_CSS
+except Exception as ex:
+    print("  ! pseo_engine skipped (marketing site still builds):", ex)
+
 # ---- write everything -----------------------------------------------------------------
 if os.path.exists(DIST):
     shutil.rmtree(DIST)
 os.makedirs(DIST)
 shutil.copytree(os.path.join(HERE, "assets"), os.path.join(DIST, "assets"))
-open(os.path.join(DIST, "site.css"), "w").write(css + HOME_CSS + coin_css + article_css + glossary_css + blog_css + tracks_css)   # ONE stylesheet for every page
+open(os.path.join(DIST, "site.css"), "w").write(css + HOME_CSS + coin_css + article_css + glossary_css + blog_css + tracks_css + pseo_css)   # ONE stylesheet for every page
 
 # ---- bundle the Supabase auth app onto the SAME origin (login / dashboard / legal) -----
 # Written as FOLDERS (login/index.html) so clean URLs work on GitHub Pages, which has no
@@ -569,22 +580,58 @@ if blog_posts:
         print("  ✓ /blog/%s/" % post["slug"])
 
 # Product routes (auth-gated but indexable landing/signup entry points for GSC)
+core_urls = [
+    "https://zengtrade.in/",
+    "https://zengtrade.in/how-it-works/",
+    "https://zengtrade.in/pricing/",
+    "https://zengtrade.in/sitemap/",
+    "https://zengtrade.in/login",
+    "https://zengtrade.in/dashboard",
+    "https://zengtrade.in/app",
+]
 urls.extend([
     "https://zengtrade.in/login",
     "https://zengtrade.in/dashboard",
     "https://zengtrade.in/app",
 ])
 
+coin_urls = [c for c in urls if "/coins/" in c]
+learn_urls = [l for l in urls if "/learn/" in l or "/blog/" in l]
+
+# ---- /sitemap/ interactive HTML directory & 15,000 pSEO catalog -----------------------
+pseo_partitions = {"strategies": [], "indicators": [], "regimes": []}
+if PSEO_MOD:
+    coin_roster = PSEO_MOD.build_pseo_coin_roster(coins if coins else [])
+    sm_title, sm_desc, sm_canon, sm_main = PSEO_MOD.generate_sitemap_html(
+        coin_roster, PSEO_MOD.STRATEGIES, PSEO_MOD.INDICATORS, PSEO_MOD.REGIMES)
+    emit("sitemap", shell(sm_title, sm_desc, sm_canon, sm_main), sm_canon)
+    print("  ✓ /sitemap/ HTML directory portal generated")
+
+    sample_only = bool(os.environ.get("ZT_FAST_PSEO"))
+    pseo_partitions = PSEO_MOD.emit_pseo_catalog(DIST, shell, coin_roster, sample_only=sample_only)
+    urls.extend(pseo_partitions["strategies"])
+    urls.extend(pseo_partitions["indicators"])
+    urls.extend(pseo_partitions["regimes"])
+
 # ---- sitemap + robots ------------------------------------------------------------------
-# lastmod = this build's own UTC date: every page here (coin pages especially) is genuinely
-# regenerated from live data on every build, so "today" is an honest modification date, not a
-# fabricated freshness signal, and it's a real crawl-scheduling hint Google actually uses (unlike
-# <priority>, which Google has said it largely ignores, so it's intentionally left out).
 _build_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-sm = ('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-      + "".join(f"  <url><loc>{u}</loc><lastmod>{_build_date}</lastmod><changefreq>daily</changefreq></url>\n" for u in urls)
-      + "</urlset>\n")
-open(os.path.join(DIST, "sitemap.xml"), "w").write(sm)
+
+if PSEO_MOD and (pseo_partitions["strategies"] or pseo_partitions["indicators"]):
+    all_partitions = {
+        "core": core_urls,
+        "coins": coin_urls,
+        "strategies": pseo_partitions["strategies"],
+        "indicators": pseo_partitions["indicators"],
+        "regimes": pseo_partitions["regimes"],
+        "learn": learn_urls,
+    }
+    PSEO_MOD.emit_xml_sitemaps(DIST, all_partitions, _build_date)
+else:
+    sm = ('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+          + "".join(f"  <url><loc>{u}</loc><lastmod>{_build_date}</lastmod><changefreq>daily</changefreq></url>\n" for u in urls)
+          + "</urlset>\n")
+    open(os.path.join(DIST, "sitemap.xml"), "w").write(sm)
+
 open(os.path.join(DIST, "robots.txt"), "w").write(
     "User-agent: *\nAllow: /\nSitemap: https://zengtrade.in/sitemap.xml\n")
 
