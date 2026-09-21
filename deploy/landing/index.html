@@ -577,20 +577,57 @@ html[data-regime="bear"] .lp-var[data-var="bear"]{opacity:1;visibility:visible;t
 .lp-and{margin:14px 0 0;display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:11px;color:var(--slate-c)}
 .lp-and .lp-op{color:var(--accent-t);font-size:14px;transition:color .4s}
 
-/* ---- footer ---- */
-.lp-foot{border-top:1px solid var(--line);padding-block:clamp(44px,6vh,72px) 36px;background:var(--surface)}
-.lp-foot-grid{display:grid;grid-template-columns:150px minmax(0,1fr);gap:clamp(24px,4vw,56px)}
-.lp-foot .tb-brand{align-self:start}
-.lp-foot-copy{max-width:72ch}
-.lp-foot-copy p{font-size:13.5px;line-height:1.75;color:var(--slate);margin:0 0 12px}
-.lp-foot-copy p b{color:var(--navy);font-weight:700}
-.lp-foot-links{display:flex;flex-wrap:wrap;gap:11px 22px;margin:2px 0 4px}
-.lp-foot-links a{font:600 13.5px/1 var(--sans);color:var(--slate);text-decoration:none}
-.lp-foot-links a:hover{color:var(--accent)}
-.lp-foot-rule{height:1px;background:var(--line);margin-block:24px 18px}
-.lp-foot-meta{display:flex;flex-wrap:wrap;gap:7px 16px;align-items:center;font-family:var(--mono);
-  font-size:11px;color:var(--slate)}
-.lp-foot-meta .lp-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);transition:background .4s}
+/* ---- Level-Up Enterprise SEO Footer ---- */
+.lp-foot{border-top:1px solid var(--line);padding-top:clamp(48px,6vh,72px);padding-bottom:36px;background:var(--surface);position:relative;overflow:hidden}
+.lp-foot-top{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,360px);gap:clamp(28px,4vw,56px);align-items:start;margin-bottom:44px}
+.lp-foot-brand-col{display:flex;flex-direction:column;gap:16px}
+.lp-foot-tagline{font-size:13.5px;line-height:1.7;color:var(--slate);max-width:56ch;margin:0}
+.lp-foot-trust-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.lp-trust-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:20px;font-size:11.5px;font-weight:600;color:var(--navy)}
+.lp-dot-live{width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;box-shadow:0 0 6px rgba(0,171,78,0.6)}
+
+.lp-foot-live-card{background:rgba(0,0,0,0.25);border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.lp-flc-head{display:flex;align-items:center;gap:8px;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--navy);font-weight:700}
+.lp-flc-body{display:flex;flex-direction:column;gap:8px;padding-block:6px;border-block:1px solid rgba(255,255,255,0.05);font-size:12.5px}
+.lp-flc-row{display:flex;justify-content:space-between;align-items:center;color:var(--slate)}
+.lp-flc-val{color:var(--navy);font-family:var(--mono);font-size:12px}
+.lp-flc-btn{display:inline-block;text-align:center;padding:8px 14px;background:rgba(0,171,78,0.1);border:1px solid rgba(0,171,78,0.3);border-radius:8px;font-size:12.5px;font-weight:700;color:var(--accent);text-decoration:none;transition:background .2s,border-color .2s}
+.lp-flc-btn:hover{background:var(--accent);color:#04140a}
+
+.lp-foot-nav-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:clamp(16px,2.5vw,32px);padding-block:36px;border-top:1px solid var(--line)}
+.lp-foot-col{display:flex;flex-direction:column;gap:14px}
+.lp-foot-heading{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.75px;color:var(--navy);margin:0}
+.lp-foot-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:9px}
+.lp-foot-list li{font-size:13px;line-height:1.4}
+.lp-foot-list a{color:var(--slate);text-decoration:none;transition:color .15s ease}
+.lp-foot-list a:hover{color:var(--accent)}
+.lp-foot-more{margin-top:4px}
+.lp-foot-more a{color:var(--accent);font-weight:600;font-size:12px}
+
+.lp-foot-eeat-card{margin-top:24px;padding:22px 24px;background:rgba(255,255,255,0.015);border:1px solid var(--line);border-radius:14px}
+.lp-eeat-badge{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;color:var(--navy);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px}
+.lp-eeat-badge svg{color:var(--accent)}
+.lp-eeat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;font-size:12px;line-height:1.6;color:var(--slate)}
+.lp-eeat-item strong{color:var(--navy);font-weight:700}
+
+.lp-foot-bottom{margin-top:32px;padding-top:20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--slate)}
+.lp-foot-copy-line{font-size:12px;color:var(--slate)}
+.lp-foot-meta-links{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.lp-foot-meta-links a{color:var(--slate);text-decoration:none;font-weight:500;transition:color .15s}
+.lp-foot-meta-links a:hover{color:var(--accent)}
+
+@media(max-width:1100px){
+  .lp-foot-nav-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .lp-eeat-grid{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+  .lp-foot-top{grid-template-columns:1fr}
+  .lp-foot-nav-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lp-foot-bottom{flex-direction:column;align-items:flex-start}
+}
+@media(max-width:480px){
+  .lp-foot-nav-grid{grid-template-columns:1fr}
+}
 
 /* ---- topbar seg: appears once the hero control has scrolled away ---- */
 .lp-tb-seg{opacity:0;visibility:hidden;transform:translateY(-6px);
@@ -1188,46 +1225,171 @@ html.js .lp-rv.in{opacity:1;transform:none}
 </main>
 
 <!-- ====================== FOOTER ====================== -->
-<footer class="lp-foot">
-  <div class="lp-wrap lp-foot-grid">
-    <div class="tb-brand">
-      <svg class="brand-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-        <rect width="32" height="32" rx="8" fill="currentColor"/>
-        <path d="M24.69 13.67A9 9 0 1 1 20.5 8.21" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-        <path d="M12.5 19.5L17 15L20 17.5L26.5 8.8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <span class="brand-pro">zengtrade</span>
+<footer class="lp-foot" role="contentinfo">
+  <div class="lp-wrap">
+    <!-- Top Row: Brand Statement, Mission, Real-time Status Badge -->
+    <div class="lp-foot-top">
+      <div class="lp-foot-brand-col">
+        <a href="/" class="tb-brand" aria-label="Zengtrade Home">
+          <svg class="brand-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+            <rect width="32" height="32" rx="8" fill="currentColor"/>
+            <path d="M24.69 13.67A9 9 0 1 1 20.5 8.21" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <path d="M12.5 19.5L17 15L20 17.5L26.5 8.8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="brand-pro">zengtrade</span>
+        </a>
+        <p class="lp-foot-tagline">
+          Institutional-grade systematic crypto algorithmic trading workstation. Backtest rule-based models, stress-test across macro market regimes, and execute with disciplined ATR risk brackets in zero-capital-risk forward paper simulation.
+        </p>
+        <div class="lp-foot-trust-pills">
+          <span class="lp-trust-pill"><span class="lp-dot-live"></span> Non-Custodial Architecture</span>
+          <span class="lp-trust-pill"><span class="lp-dot-live"></span> 35 bps Realistic Friction</span>
+          <span class="lp-trust-pill"><span class="lp-dot-live"></span> 150k+ Programmatic Models</span>
+        </div>
+      </div>
+
+      <div class="lp-foot-live-card">
+        <div class="lp-flc-head">
+          <span class="lp-dot-live"></span>
+          <strong>System Status &amp; Market Telemetry</strong>
+        </div>
+        <div class="lp-flc-body">
+          <div class="lp-flc-row">
+            <span>Market Regime:</span>
+            <strong class="lp-flc-val"><span data-regime-name>BULL</span> Expansion</strong>
+          </div>
+          <div class="lp-flc-row">
+            <span>Execution Protocol:</span>
+            <strong class="lp-flc-val">Forward Simulation (Paper)</strong>
+          </div>
+          <div class="lp-flc-row">
+            <span>Data Feed:</span>
+            <strong class="lp-flc-val">Binance Spot (Real-Time)</strong>
+          </div>
+        </div>
+        <a href="/dashboard" class="lp-flc-btn">Launch Algo Studio →</a>
+      </div>
     </div>
 
-    <div class="lp-foot-copy">
-      <nav class="lp-foot-links" aria-label="Footer">
-        <a href="/how-it-works/">How it works</a>
-        <a href="/pricing/">Pricing</a>
-        <a href="/coins/">Coins</a>
-        <a href="/sitemap/">Sitemap</a>
-        <a href="/login/">Log in</a>
-        <a href="/login/?mode=signup">Sign up</a>
-        <a href="/terms/">Terms</a>
-        <a href="/privacy/">Privacy</a>
-        <a href="/risk/">Risk</a>
-        <a href="/contact/">Contact us</a>
-      </nav>
+    <!-- Main Navigation Grid: 5 SEO Topic Silos -->
+    <div class="lp-foot-nav-grid">
+      <!-- Col 1: Quantitative Strategies -->
+      <div class="lp-foot-col">
+        <h4 class="lp-foot-heading">Systematic Strategies</h4>
+        <ul class="lp-foot-list">
+          <li><a href="/strategies/supertrend-breakout/bitcoin/">Supertrend Breakout Strategy</a></li>
+          <li><a href="/strategies/dual-ema-cross/bitcoin/">Dual EMA Trend Following</a></li>
+          <li><a href="/strategies/rsi-divergence/bitcoin/">RSI Momentum Divergence</a></li>
+          <li><a href="/strategies/bollinger-reversion/bitcoin/">Bollinger Mean Reversion</a></li>
+          <li><a href="/strategies/arithmetic-grid/bitcoin/">Arithmetic Grid Trading Bot</a></li>
+          <li><a href="/strategies/macd-cross/bitcoin/">MACD Signal Histogram Cross</a></li>
+          <li><a href="/strategies/vwap-pullback/bitcoin/">VWAP Institutional Pullback</a></li>
+          <li><a href="/strategies/atr-channel-breakout/bitcoin/">ATR Volatility Breakout</a></li>
+          <li class="lp-foot-more"><a href="/sitemap/#strategies">Explore All 15 Strategy Engines →</a></li>
+        </ul>
+      </div>
 
-      <div class="lp-foot-rule" aria-hidden="true"></div>
+      <!-- Col 2: Technical Indicators -->
+      <div class="lp-foot-col">
+        <h4 class="lp-foot-heading">Technical Indicators</h4>
+        <ul class="lp-foot-list">
+          <li><a href="/indicators/rsi/bitcoin/">Relative Strength Index (RSI)</a></li>
+          <li><a href="/indicators/macd/bitcoin/">MACD Momentum Oscillator</a></li>
+          <li><a href="/indicators/supertrend/bitcoin/">Supertrend ATR Directional</a></li>
+          <li><a href="/indicators/bollinger-bands/bitcoin/">Bollinger Bands Volatility</a></li>
+          <li><a href="/indicators/ema-200/bitcoin/">200 Exponential Moving Average</a></li>
+          <li><a href="/indicators/vwap/bitcoin/">Volume-Weighted Average Price</a></li>
+          <li><a href="/indicators/atr/bitcoin/">Average True Range Volatility</a></li>
+          <li><a href="/indicators/stochastic-rsi/bitcoin/">Stochastic RSI Oscillator</a></li>
+          <li class="lp-foot-more"><a href="/sitemap/#indicators">Explore All 15 Indicator Hubs →</a></li>
+        </ul>
+      </div>
 
-      <p>Everything here starts <b>paper-first</b>, and it is <b>non-custodial</b>: live execution runs on your own exchange with your own keys, so zengtrade never holds your funds. <b>Nothing on this site is investment advice</b>, a recommendation, or an offer. Trading in crypto and derivatives carries real risk of loss, up to and including the whole of your capital.</p>
-      <p>Not affiliated with, endorsed by, or connected to any exchange or broker. Third-party venues are referenced only as where an order would be routed.</p>
-      <p>No past-performance figures are shown unless they can be sourced and verified net of costs. That is the point.</p>
+      <!-- Col 3: Crypto Workstations -->
+      <div class="lp-foot-col">
+        <h4 class="lp-foot-heading">Asset Workstations</h4>
+        <ul class="lp-foot-list">
+          <li><a href="/coins/bitcoin/">Bitcoin Trading Bot (BTC)</a></li>
+          <li><a href="/coins/ethereum/">Ethereum Quant Hub (ETH)</a></li>
+          <li><a href="/coins/solana/">Solana High-Beta Algos (SOL)</a></li>
+          <li><a href="/coins/bnb/">BNB Chain Automated Trading</a></li>
+          <li><a href="/coins/xrp/">XRP Ledger Momentum</a></li>
+          <li><a href="/coins/cardano/">Cardano Swing Engine (ADA)</a></li>
+          <li><a href="/coins/dogecoin/">Dogecoin Mean Reversion (DOGE)</a></li>
+          <li><a href="/coins/avalanche-2/">Avalanche Subnet Trading (AVAX)</a></li>
+          <li class="lp-foot-more"><a href="/coins/">Browse 340+ Cryptocurrency Hubs →</a></li>
+        </ul>
+      </div>
 
-      <div class="lp-foot-rule" aria-hidden="true"></div>
+      <!-- Col 4: Platform & Workstations -->
+      <div class="lp-foot-col">
+        <h4 class="lp-foot-heading">Platform &amp; Workstations</h4>
+        <ul class="lp-foot-list">
+          <li><a href="/dashboard">Algo Studio Workstation</a></li>
+          <li><a href="/dashboard">Investing Mode (DCA &amp; Accumulation)</a></li>
+          <li><a href="/dashboard">Trading Mode (Bracket Execution)</a></li>
+          <li><a href="/how-it-works/">Forward Paper Simulation</a></li>
+          <li><a href="/how-it-works/#regime">Market Regimes Engine</a></li>
+          <li><a href="/pricing/">Transparent Pricing &amp; Pro Tier</a></li>
+          <li><a href="/login/">Customer Sign In</a></li>
+          <li><a href="/login/?mode=signup">Create Free Account (Zero Risk)</a></li>
+          <li class="lp-foot-more"><a href="/compare/supertrend-vs-ema-cross/bitcoin/">Strategy Showdowns Benchmark →</a></li>
+        </ul>
+      </div>
 
-      <div class="lp-foot-meta">
-        <span class="lp-dot" aria-hidden="true"></span>
-        <span>zengtrade.in</span>
-        <span aria-hidden="true">·</span>
-        <span>regime: <span data-regime-name>BULL</span></span>
-        <span aria-hidden="true">·</span>
-        <span>stand aside</span>
+      <!-- Col 5: Research & Compliance -->
+      <div class="lp-foot-col">
+        <h4 class="lp-foot-heading">Research &amp; Transparency</h4>
+        <ul class="lp-foot-list">
+          <li><a href="/learn/">Quant Learn Hub</a></li>
+          <li><a href="/learn/is-zengtrade-custodial/">Is Zengtrade Custodial? (Security)</a></li>
+          <li><a href="/learn/glossary/">Quantitative Trading Glossary</a></li>
+          <li><a href="/learn/trading/">Survival-First Risk Management</a></li>
+          <li><a href="/blog/">Build-in-Public Changelog</a></li>
+          <li><a href="/sitemap/">Sitemap &amp; Directory Portal</a></li>
+          <li><a href="/sitemap-index.xml">XML Sitemap Index (150k URLs)</a></li>
+          <li><a href="/llms.txt">AI Search Standards (llms.txt)</a></li>
+          <li class="lp-foot-more"><a href="/terms/">Terms</a> &middot; <a href="/privacy/">Privacy</a> &middot; <a href="/risk/">Risk</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- E-E-A-T & Google Financial YMYL Governance Card -->
+    <div class="lp-foot-eeat-card">
+      <div class="lp-eeat-badge">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Institutional Quantitative Governance &amp; Non-Custodial Architecture</span>
+      </div>
+      <div class="lp-eeat-grid">
+        <div class="lp-eeat-item">
+          <strong>Non-Custodial Architecture:</strong> Live order execution connects directly to user-managed exchange accounts via scoped API keys restricted to read and trade permissions only. Zengtrade never takes custody of deposits, stores private withdrawal keys, or pools client funds.
+        </div>
+        <div class="lp-eeat-item">
+          <strong>Realistic 35 bps Friction Modeling:</strong> All historical backtests, forward simulations, and metric benchmarks strictly deduct 35 basis points round-trip friction (10 bps maker/taker exchange fee plus 7.5 bps estimated slippage per leg). We do not display fabricated theoretical fills.
+        </div>
+        <div class="lp-eeat-item">
+          <strong>Google Financial YMYL Compliance:</strong> Zengtrade Technologies Inc. is a financial technology software provider offering rule-based algorithmic backtesting and simulated forward-testing software. Zengtrade does not provide investment, financial, legal, or tax advice. Past performance does not guarantee future results. Cryptocurrency trading entails substantial risk of capital loss.
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Bar: Copyright & Meta Status -->
+    <div class="lp-foot-bottom">
+      <div class="lp-foot-copy-line">
+        &copy; 2026 Zengtrade Technologies Inc. All rights reserved. Non-custodial quantitative crypto trading platform.
+      </div>
+      <div class="lp-foot-meta-links">
+        <a href="/terms/">Terms of Service</a>
+        <span aria-hidden="true">&middot;</span>
+        <a href="/privacy/">Privacy Policy</a>
+        <span aria-hidden="true">&middot;</span>
+        <a href="/risk/">Risk Disclosures</a>
+        <span aria-hidden="true">&middot;</span>
+        <a href="/contact/">Partnerships &amp; Support</a>
+        <span aria-hidden="true">&middot;</span>
+        <a href="/sitemap/">Sitemap Directory</a>
+        <span aria-hidden="true">&middot;</span>
+        <a href="/llms.txt">llms.txt</a>
       </div>
     </div>
   </div>
