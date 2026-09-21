@@ -609,10 +609,28 @@ def render_strategy_coin_content(strat: dict, coin: tuple[str, str, str, str]) -
   "name": "{html.escape(strat_name)} on {html.escape(name)} ({sym})",
   "description": "{html.escape(desc)}",
   "category": "Algorithmic Crypto Trading Strategy",
-  "provider": {{
+  "isAccessibleForFree": true,
+  "offers": {{
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "description": "Free paper trading with live market prices"
+  }},
+  "author": {{
+    "@type": "Organization",
+    "name": "zengtrade Quantitative Research",
+    "url": "https://zengtrade.in/learn/algo-studio/"
+  }},
+  "publisher": {{
     "@type": "Organization",
     "name": "zengtrade",
-    "url": "https://zengtrade.in/"
+    "url": "https://zengtrade.in/",
+    "logo": "https://zengtrade.in/assets/logo.svg",
+    "contactPoint": {{
+      "@type": "ContactPoint",
+      "contactType": "Customer Support",
+      "email": "letmeknow@zengtrade.in"
+    }}
   }}
 }}
 </script>
@@ -646,6 +664,14 @@ def render_strategy_coin_content(strat: dict, coin: tuple[str, str, str, str]) -
       "acceptedAnswer": {{
         "@type": "Answer",
         "text": "Yes. Zengtrade is paper-first and free to start. You can forward-test and verify proof of edge in Algo Studio without connecting an exchange API key."
+      }}
+    }},
+    {{
+      "@type": "Question",
+      "name": "Does zengtrade hold custody of my cryptocurrency?",
+      "acceptedAnswer": {{
+        "@type": "Answer",
+        "text": "No. Zengtrade is completely non-custodial. We never hold your tokens, never touch your private keys, and never charge transaction commissions."
       }}
     }}
   ]
@@ -718,6 +744,15 @@ def render_strategy_coin_content(strat: dict, coin: tuple[str, str, str, str]) -
     </div>
   </section>
 
+  <section class="lp-sec pseo-eeat-wrap">
+    <div class="lp-wrap">
+      <div class="pseo-eeat-card">
+        <div class="eeat-badge"><span>✓</span> Quantitative Methodology &amp; YMYL Risk Governance</div>
+        <p><strong>Authored &amp; Verified by Zengtrade Quantitative Research:</strong> Every model parameter for {name} ({sym}) is calibrated on historical Binance spot tick archives with a 35 bps round-trip friction model (exchange fees, spread, and slippage buffer). Zengtrade operates under a strict non-custodial, paper-first mandate: we never hold client deposits, never charge commissions on trading volume, and never fabricate hypothetical return curves. Forward-test evidence must be established before live deployment. Read our <a href="/how-it-works/">Regime Engine Methodology</a> and <a href="/risk/">Risk Disclosures</a>.</p>
+      </div>
+    </div>
+  </section>
+
   <section class="lp-sec pseo-related">
     <div class="lp-wrap">
       <div class="lp-sec-head">
@@ -758,6 +793,17 @@ def render_indicator_coin_content(ind: dict, coin: tuple[str, str, str, str]) ->
   "@type": "HowTo",
   "name": "How to trade {html.escape(ind_name)} on {html.escape(name)} ({sym})",
   "description": "{html.escape(desc)}",
+  "author": {{
+    "@type": "Organization",
+    "name": "zengtrade Quantitative Research",
+    "url": "https://zengtrade.in/learn/algo-studio/"
+  }},
+  "publisher": {{
+    "@type": "Organization",
+    "name": "zengtrade",
+    "url": "https://zengtrade.in/",
+    "logo": "https://zengtrade.in/assets/logo.svg"
+  }},
   "step": [
     {{"@type": "HowToStep", "name": "Identify Trend State", "text": "Determine if {sym} is trending or consolidating using {html.escape(ind_name)}."}},
     {{"@type": "HowToStep", "name": "Wait for Confirmation", "text": "Enter when signal threshold triggers with volume expansion."}},
@@ -773,6 +819,30 @@ def render_indicator_coin_content(ind: dict, coin: tuple[str, str, str, str]) ->
     {{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://zengtrade.in/"}},
     {{"@type": "ListItem", "position": 2, "name": "Indicators", "item": "https://zengtrade.in/sitemap/#indicators"}},
     {{"@type": "ListItem", "position": 3, "name": "{html.escape(ind_name)}", "item": "https://zengtrade.in/indicators/{ind_slug}/{slug}/"}}
+  ]
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {{
+      "@type": "Question",
+      "name": "What is the standard period setting for {html.escape(ind_name)} on {html.escape(name)}?",
+      "acceptedAnswer": {{
+        "@type": "Answer",
+        "text": "The recommended setting is {ind['standard_lookback']}, calibrated to account for continuous 24/7 crypto spot volatility."
+      }}
+    }},
+    {{
+      "@type": "Question",
+      "name": "How do I avoid false signals when trading {sym}?",
+      "acceptedAnswer": {{
+        "@type": "Answer",
+        "text": "Filter signals by the broader market regime and mandate volume expansion before executing orders."
+      }}
+    }}
   ]
 }}
 </script>"""
@@ -843,6 +913,15 @@ def render_indicator_coin_content(ind: dict, coin: tuple[str, str, str, str]) ->
     </div>
   </section>
 
+  <section class="lp-sec pseo-eeat-wrap">
+    <div class="lp-wrap">
+      <div class="pseo-eeat-card">
+        <div class="eeat-badge"><span>✓</span> Mathematical Rigor &amp; Technical Analysis Governance</div>
+        <p><strong>Authored &amp; Verified by Zengtrade Quantitative Research:</strong> Technical formulas for {ind_name} on {name} ({sym}) conform to classical quantitative definitions with crypto-specific parameter adaptations. Signal triggers should be confirmed across market regimes and executed with disciplined ATR risk brackets in paper simulation before risking live capital. Read our <a href="/learn/glossary/">Technical Glossary</a> and <a href="/risk/">Risk Disclosures</a>.</p>
+      </div>
+    </div>
+  </section>
+
   <section class="lp-sec pseo-related">
     <div class="lp-wrap">
       <div class="lp-sec-head">
@@ -882,8 +961,17 @@ def render_regime_coin_content(reg: dict, coin: tuple[str, str, str, str]) -> tu
   "@type": "Article",
   "headline": "{html.escape(title)}",
   "description": "{html.escape(desc)}",
-  "author": {{"@type": "Organization", "name": "zengtrade"}},
-  "publisher": {{"@type": "Organization", "name": "zengtrade", "logo": "https://zengtrade.in/assets/logo.svg"}}
+  "author": {{
+    "@type": "Organization",
+    "name": "zengtrade Quantitative Research",
+    "url": "https://zengtrade.in/learn/algo-studio/"
+  }},
+  "publisher": {{
+    "@type": "Organization",
+    "name": "zengtrade",
+    "url": "https://zengtrade.in/",
+    "logo": "https://zengtrade.in/assets/logo.svg"
+  }}
 }}
 </script>
 <script type="application/ld+json">
@@ -894,6 +982,30 @@ def render_regime_coin_content(reg: dict, coin: tuple[str, str, str, str]) -> tu
     {{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://zengtrade.in/"}},
     {{"@type": "ListItem", "position": 2, "name": "Market Regimes", "item": "https://zengtrade.in/sitemap/#regimes"}},
     {{"@type": "ListItem", "position": 3, "name": "{html.escape(reg_name)}", "item": "https://zengtrade.in/regimes/{reg_slug}/{slug}/"}}
+  ]
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {{
+      "@type": "Question",
+      "name": "Why is cash treated as a deliberate position in {html.escape(reg_name)}?",
+      "acceptedAnswer": {{
+        "@type": "Answer",
+        "text": "Survival is first. When market conditions lack positive expectancy, sitting in cash preserves trading capital for verified high-conviction regimes."
+      }}
+    }},
+    {{
+      "@type": "Question",
+      "name": "How does zengtrade classify market regimes?",
+      "acceptedAnswer": {{
+        "@type": "Answer",
+        "text": "Our algorithm reads macro trend direction, 200 EMA slope, realized volatility, and volume distribution without emotional bias."
+      }}
+    }}
   ]
 }}
 </script>"""
@@ -956,6 +1068,15 @@ def render_regime_coin_content(reg: dict, coin: tuple[str, str, str, str]) -> tu
       <div class="pseo-box">
         <h3>The Zengtrade Advantage</h3>
         <p>Most traders lose money because they force trend-following strategies into chop regimes or hold altcoins through brutal bear drawdowns. Zengtrade reads the mood of {name} and acts with disciplined risk control.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec pseo-eeat-wrap">
+    <div class="lp-wrap">
+      <div class="pseo-eeat-card">
+        <div class="eeat-badge"><span>✓</span> Regime Governance &amp; Capital Preservation</div>
+        <p><strong>Authored &amp; Verified by Zengtrade Quantitative Research:</strong> Market regime classifications for {name} ({sym}) evaluate multi-day exponential moving average slope, volatility expansion (ATR), and volume trends. Cash is treated as an active strategic position during high-risk regimes. Simulations are paper-first and non-custodial. See the <a href="/how-it-works/">Regime Framework</a> and <a href="/risk/">Risk Disclosures</a>.</p>
       </div>
     </div>
   </section>
@@ -1236,6 +1357,16 @@ PSEO_CSS = """
 .formula-box code{font-family:monospace;font-size:13px;color:var(--accent)}
 .pseo-list{margin:12px 0 0;padding-left:18px;color:var(--slate);font-size:13px;line-height:1.7}
 .pseo-list strong{color:var(--navy)}
+
+/* E-E-A-T & Trust Methodology Card */
+.pseo-eeat-wrap{padding:16px 0}
+.pseo-eeat-card{background:rgba(0,171,78,0.04);border:1px solid rgba(0,171,78,0.25);border-radius:14px;padding:20px 24px}
+.eeat-badge{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;color:var(--accent);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px}
+.eeat-badge span{background:var(--accent);color:#04140a;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:900}
+.pseo-eeat-card p{font-size:13px;color:var(--slate);line-height:1.6;margin:0}
+.pseo-eeat-card a{color:var(--navy);font-weight:600;text-decoration:underline}
+.pseo-eeat-card a:hover{color:var(--accent)}
+
 .pseo-related{padding:32px 0}
 .pseo-link-matrix{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
 .pseo-link-matrix a{display:inline-block;padding:7px 14px;background:var(--surface);border:1px solid var(--line);border-radius:8px;font-size:12.5px;color:var(--navy);text-decoration:none;transition:border-color 0.15s,background 0.15s}
