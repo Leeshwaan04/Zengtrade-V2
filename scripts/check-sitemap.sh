@@ -12,8 +12,8 @@ need_url() {
   # later), so don't fail the whole check on one slow/empty fetch.
   for attempt in 1 2 3; do
     sitemap=$(curl -sfL "$SITE/sitemap.xml" 2>/dev/null) || sitemap=""
-    if [[ -n "$sitemap" ]] && echo "$sitemap" | grep -q "<loc>${SITE}${path}</loc>"; then
-      echo "OK   $label — in sitemap"
+    if [[ -n "$sitemap" ]] && echo "$sitemap" | grep "<loc>${SITE}${path}</loc>" >/dev/null; then
+      echo "OK   $label - in sitemap"
       return
     fi
     [[ $attempt -lt 3 ]] && sleep 2

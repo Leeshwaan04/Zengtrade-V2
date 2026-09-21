@@ -9,7 +9,7 @@ check_html() {
   local html="" attempt
   for attempt in 1 2 3; do
     html=$(curl -sfL "$SITE$path" 2>/dev/null) || html=""
-    if [[ -n "$html" ]] && echo "$html" | grep -q "$pattern"; then
+    if [[ -n "$html" ]] && echo "$html" | grep "$pattern" >/dev/null; then
       echo "OK   $label"
       return
     fi
