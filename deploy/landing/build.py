@@ -598,31 +598,44 @@ urls.extend([
 coin_urls = [c for c in urls if "/coins/" in c]
 learn_urls = [l for l in urls if "/learn/" in l or "/blog/" in l]
 
-# ---- /sitemap/ interactive HTML directory & 15,000 pSEO catalog -----------------------
-pseo_partitions = {"strategies": [], "indicators": [], "regimes": []}
+# ---- /sitemap/ interactive HTML directory & 150,000 pSEO catalog ----------------------
+pseo_partitions = {
+    "strategies": [],
+    "indicators": [],
+    "regimes": [],
+    "timeframes_strat": [],
+    "timeframes_ind": [],
+    "compare": []
+}
 if PSEO_MOD:
-    coin_roster = PSEO_MOD.build_pseo_coin_roster(coins if coins else [])
+    coin_roster = PSEO_MOD.build_pseo_coin_roster(coins if coins else [], target_count=1000)
     sm_title, sm_desc, sm_canon, sm_main = PSEO_MOD.generate_sitemap_html(
         coin_roster, PSEO_MOD.STRATEGIES, PSEO_MOD.INDICATORS, PSEO_MOD.REGIMES)
     emit("sitemap", shell(sm_title, sm_desc, sm_canon, sm_main), sm_canon)
     print("  ✓ /sitemap/ HTML directory portal generated")
 
+    PSEO_MOD.generate_llms_txt(DIST)
+    PSEO_MOD.generate_llms_full_txt(DIST)
+    print("  ✓ /llms.txt & /llms-full.txt machine-readable documentation generated")
+
     sample_only = bool(os.environ.get("ZT_FAST_PSEO"))
     pseo_partitions = PSEO_MOD.emit_pseo_catalog(DIST, shell, coin_roster, sample_only=sample_only)
-    urls.extend(pseo_partitions["strategies"])
-    urls.extend(pseo_partitions["indicators"])
-    urls.extend(pseo_partitions["regimes"])
+    for p_urls in pseo_partitions.values():
+        urls.extend(p_urls)
 
 # ---- sitemap + robots ------------------------------------------------------------------
 _build_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-if PSEO_MOD and (pseo_partitions["strategies"] or pseo_partitions["indicators"]):
+if PSEO_MOD and (pseo_partitions.get("strategies") or pseo_partitions.get("indicators")):
     all_partitions = {
         "core": core_urls,
         "coins": coin_urls,
         "strategies": pseo_partitions["strategies"],
         "indicators": pseo_partitions["indicators"],
         "regimes": pseo_partitions["regimes"],
+        "timeframes_strat": pseo_partitions["timeframes_strat"],
+        "timeframes_ind": pseo_partitions["timeframes_ind"],
+        "compare": pseo_partitions["compare"],
         "learn": learn_urls,
     }
     PSEO_MOD.emit_xml_sitemaps(DIST, all_partitions, _build_date)
@@ -632,7 +645,53 @@ else:
           + "</urlset>\n")
     open(os.path.join(DIST, "sitemap.xml"), "w").write(sm)
 
-open(os.path.join(DIST, "robots.txt"), "w").write(
-    "User-agent: *\nAllow: /\nSitemap: https://zengtrade.in/sitemap.xml\n")
+robots_content = """# zengtrade robots.txt - optimized for search engines, web crawlers, and AI discovery
+User-agent: *
+Allow: /
+Disallow: /app
+Disallow: /ops/
+Disallow: /admin/
+Disallow: /reset/
+
+User-agent: Googlebot
+Allow: /
+Disallow: /app
+Disallow: /ops/
+
+User-agent: Bingbot
+Allow: /
+Disallow: /app
+Disallow: /ops/
+
+User-agent: Applebot
+Allow: /
+Disallow: /app
+Disallow: /ops/
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+Sitemap: https://zengtrade.in/sitemap-index.xml
+Sitemap: https://zengtrade.in/sitemap.xml
+"""
+open(os.path.join(DIST, "robots.txt"), "w").write(robots_content)
 
 print("built %d pages:" % len(urls), ", ".join(sorted(os.listdir(DIST))))

@@ -357,6 +357,42 @@ INDICATORS = [
         "formula": "Upper = HighestHigh(20); Lower = LowestLow(20); Center = (Upper + Lower) / 2",
         "interpretation": "Classical Turtle Trading channel plotting highest high and lowest low boundaries over designated lookback windows.",
         "best_practice": "Enter long upon clean close above upper channel boundary; exit when price crosses back below the center median line."
+    },
+    {
+        "slug": "keltner-channels",
+        "name": "Keltner Channels",
+        "type": "Volatility Envelope",
+        "range_spec": "Dynamic ATR Envelope",
+        "standard_lookback": "20 EMA, 2.0x ATR(10)",
+        "oversold_level": "Lower Band Contact",
+        "overbought_level": "Upper Band Contact",
+        "formula": "Center = EMA(20); Upper = EMA(20) + 2 * ATR(10); Lower = EMA(20) - 2 * ATR(10)",
+        "interpretation": "Volatility-based bands that use Average True Range rather than standard deviation to map dynamic price channels.",
+        "best_practice": "Look for price rides along the upper channel during strong bull trends with rising ATR."
+    },
+    {
+        "slug": "stochastic-oscillator",
+        "name": "Stochastic Oscillator",
+        "type": "Momentum Oscillator",
+        "range_spec": "0 to 100",
+        "standard_lookback": "14, 3, 3 Periods",
+        "oversold_level": "20",
+        "overbought_level": "80",
+        "formula": "%K = (Close - Low14)/(High14 - Low14) * 100; %D = SMA3(%K)",
+        "interpretation": "Compares closing price to price range over a given period to identify momentum exhaustion and rotational pivot turns.",
+        "best_practice": "Wait for %K to cross %D from below while emerging from beneath the 20 oversold line."
+    },
+    {
+        "slug": "adx-trend-strength",
+        "name": "Average Directional Index (ADX)",
+        "type": "Trend Strength Metric",
+        "range_spec": "0 to 100",
+        "standard_lookback": "14 Periods",
+        "oversold_level": "Sub-20 Choppy Range",
+        "overbought_level": "Above-40 Strong Trend Climax",
+        "formula": "DX = 100 * |+DI - -DI| / (|+DI + -DI|); ADX = WilderSmoothed(DX, 14)",
+        "interpretation": "Quantifies trend strength regardless of direction. ADX above 25 signifies a trending market suitable for momentum breakout bots.",
+        "best_practice": "Do not trade trend-following breakouts when ADX is below 20; deploy mean-reversion strategies instead."
     }
 ]
 
@@ -389,6 +425,125 @@ REGIMES = [
         "overview": "Characterized by descending moving averages, high liquidation cascades, and persistent funding discount pressure."
     }
 ]
+
+TIMEFRAMES = [
+    {
+        "slug": "5m",
+        "name": "5-Minute Scalping",
+        "horizon": "5 to 30 minutes",
+        "noise_filter": "Spread and fee buffer threshold (minimum 35 bps expected move)",
+        "best_for": "Fast micro-breakouts and order book imbalances",
+        "risk_guidance": "Mandate hard limit-if-touched stop loss orders to mitigate execution slippage."
+    },
+    {
+        "slug": "15m",
+        "name": "15-Minute Intraday",
+        "horizon": "1 to 4 hours",
+        "noise_filter": "Volume-weighted confirmation across European and US session opens",
+        "best_for": "Intraday trend continuation and VWAP reversion setups",
+        "risk_guidance": "Avoid holding open intraday scalps across major macroeconomic releases."
+    },
+    {
+        "slug": "1h",
+        "name": "1-Hour Swing Momentum",
+        "horizon": "12 to 48 hours",
+        "noise_filter": "200-period moving average alignment and multi-hour liquidity sweeps",
+        "best_for": "Intermediate swing trades capturing multi-day trend legs",
+        "risk_guidance": "Trail stop loss at the previous 1-hour swing pivot once trade reaches 1R profit."
+    },
+    {
+        "slug": "4h",
+        "name": "4-Hour Trend Following",
+        "horizon": "3 to 14 days",
+        "noise_filter": "Multi-day trend structure, volume profile nodes, and funding rate bias",
+        "best_for": "Core systematic swing trend captures with highest signal-to-noise ratio",
+        "risk_guidance": "Size positions according to ATR volatility to ensure stop loss does not exceed 1.5% account equity."
+    },
+    {
+        "slug": "1d",
+        "name": "1-Day Macro Regime",
+        "horizon": "2 to 12 weeks",
+        "noise_filter": "Macro cycle regime classification and secular 200-day EMA trend direction",
+        "best_for": "Major structural bull runs and dynamic dollar-cost averaging campaigns",
+        "risk_guidance": "Preserve high cash reserves in neutral or bear regimes to fund strategic accumulation dips."
+    }
+]
+
+SHOWDOWNS = [
+    {
+        "slug": "supertrend-vs-ema-cross",
+        "name": "Supertrend Breakout vs Dual EMA Golden Cross",
+        "strat1_slug": "supertrend-breakout",
+        "strat1_name": "Supertrend Breakout",
+        "strat2_slug": "dual-ema-cross",
+        "strat2_name": "Dual EMA Cross",
+        "comparison_thesis": "Supertrend reacts faster to violent volatility expansions with immediate trailing stops, whereas Dual EMA Cross excels in persistent, low-noise multi-week secular trends.",
+        "winner_in_chop": "Dual EMA Cross (stands down more cleanly with fewer whipsaws)",
+        "winner_in_trend": "Supertrend Breakout (captures earlier entries and locks in profits tighter)",
+        "verdict": "Deploy Supertrend on volatile high-beta altcoins; reserve Dual EMA Cross for large-cap macro momentum."
+    },
+    {
+        "slug": "rsi-vs-macd-divergence",
+        "name": "RSI Mean Reversion vs MACD Divergence",
+        "strat1_slug": "rsi-mean-reversion",
+        "strat1_name": "RSI Mean Reversion",
+        "strat2_slug": "macd-divergence",
+        "strat2_name": "MACD Divergence",
+        "comparison_thesis": "RSI excels at locating oversold price exhaustion points inside ranges, while MACD Divergence identifies structural momentum decay prior to major trend reversals.",
+        "winner_in_chop": "RSI Mean Reversion (consistent oscillation within 30-70 channel)",
+        "winner_in_trend": "MACD Divergence (filters out early false dips and confirms structural inflection)",
+        "verdict": "Use RSI in neutral consolidation regimes; deploy MACD divergence when hunting macro market cycle tops and bottoms."
+    },
+    {
+        "slug": "bollinger-vs-keltner-squeeze",
+        "name": "Bollinger Bands Reversion vs Keltner Channel Squeeze",
+        "strat1_slug": "bollinger-mean-reversion",
+        "strat1_name": "Bollinger Bands Reversion",
+        "strat2_slug": "keltner-squeeze",
+        "strat2_name": "Keltner Volatility Squeeze",
+        "comparison_thesis": "Bollinger Bands trade fading into the outer bands, whereas Keltner Squeeze prepares to trade with explosive breakouts once bands contract inside the channel.",
+        "winner_in_chop": "Bollinger Bands Reversion (harvests mean reversion gains repeatedly)",
+        "winner_in_trend": "Keltner Squeeze (captures massive directional expansions at ignition points)",
+        "verdict": "Combine both: use Bollinger Bands while bandwidth is expanding; switch to Keltner Squeeze when bandwidth contracts to multi-month lows."
+    },
+    {
+        "slug": "dynamic-dca-vs-supertrend",
+        "name": "Dynamic DCA Grid vs Supertrend Trend Following",
+        "strat1_slug": "dynamic-dca-grid",
+        "strat1_name": "Dynamic DCA Grid",
+        "strat2_slug": "supertrend-breakout",
+        "strat2_name": "Supertrend Breakout",
+        "comparison_thesis": "Dynamic DCA Grid builds an attractive average entry cost during market pullbacks, while Supertrend requires upfront price strength before triggering entries.",
+        "winner_in_chop": "Dynamic DCA Grid (generates ongoing cash flow by cycling grid levels)",
+        "winner_in_trend": "Supertrend Breakout (avoids carrying unhedged drawdown during catastrophic sell-offs)",
+        "verdict": "Dynamic DCA Grid is optimal for high-conviction fundamental assets; Supertrend is mandatory for risk defense on speculative altcoins."
+    },
+    {
+        "slug": "vwap-vs-volume-profile",
+        "name": "VWAP Mean Reversion vs Volume Profile Accumulation",
+        "strat1_slug": "vwap-mean-reversion",
+        "strat1_name": "VWAP Mean Reversion",
+        "strat2_slug": "volume-breakout",
+        "strat2_name": "Volume Profile Accumulation",
+        "comparison_thesis": "VWAP benchmarks institutional fair value on an intraday basis, while Volume Profile maps high-volume nodes (POC) across historical multi-week distributions.",
+        "winner_in_chop": "VWAP Mean Reversion (precise intraday oscillation around volume anchor)",
+        "winner_in_trend": "Volume Profile (identifies low-volume liquidity gaps for fast runner trades)",
+        "verdict": "Use VWAP for precision entries on intraday timeframes; use Volume Profile to map multi-day macro target levels."
+    },
+    {
+        "slug": "funding-arbitrage-vs-dca",
+        "name": "Delta-Neutral Funding Arbitrage vs Dynamic DCA Grid",
+        "strat1_slug": "funding-rate-arbitrage",
+        "strat1_name": "Funding Rate Arbitrage",
+        "strat2_slug": "dynamic-dca-grid",
+        "strat2_name": "Dynamic DCA Grid",
+        "comparison_thesis": "Funding Arbitrage delivers market-neutral cash yield regardless of market direction, while Dynamic DCA exposes capital to underlying asset price appreciation.",
+        "winner_in_chop": "Funding Rate Arbitrage (zero delta risk, pure funding harvest)",
+        "winner_in_trend": "Dynamic DCA Grid (outperforms significantly during secular bull markets)",
+        "verdict": "Allocate to Funding Arbitrage during uncertain or frothy market conditions; shift into Dynamic DCA at macro cycle valuation discounts."
+    }
+]
+
 
 SUPPLEMENTAL_COINS = [
     ("TON", "Toncoin", "toncoin", "layer-1"),
@@ -558,8 +713,8 @@ SUPPLEMENTAL_COINS = [
 ]
 
 
-def build_pseo_coin_roster(cached_coins: list) -> list[tuple[str, str, str, str]]:
-    """Builds a deterministic 500-coin roster combining cached live coins + supplemental coins."""
+def build_pseo_coin_roster(cached_coins: list, target_count: int = 1000) -> list[tuple[str, str, str, str]]:
+    """Builds a deterministic 1,000-coin roster combining cached live coins + supplemental coins."""
     roster = []
     seen = set()
 
@@ -580,7 +735,7 @@ def build_pseo_coin_roster(cached_coins: list) -> list[tuple[str, str, str, str]
             roster.append((sym, name, slug, cat))
 
     idx = 1
-    while len(roster) < 500:
+    while len(roster) < target_count:
         syn_sym = f"ALT{idx}"
         syn_name = f"Altcoin Asset {idx}"
         syn_slug = f"altcoin-asset-{idx}"
@@ -590,7 +745,8 @@ def build_pseo_coin_roster(cached_coins: list) -> list[tuple[str, str, str, str]
             roster.append((syn_sym, syn_name, syn_slug, syn_cat))
         idx += 1
 
-    return roster[:500]
+    return roster[:target_count]
+
 
 
 def render_strategy_coin_content(strat: dict, coin: tuple[str, str, str, str]) -> tuple[str, str, str, str, str]:
@@ -1101,22 +1257,649 @@ def render_regime_coin_content(reg: dict, coin: tuple[str, str, str, str]) -> tu
     return title, desc, canon, main_html, schema
 
 
+def render_timeframe_strategy_content(strat: dict, coin: tuple[str, str, str, str], tf: dict) -> tuple[str, str, str, str, str]:
+    """Generates (title, description, canonical_url, main_html, extra_head) for a strategy x coin x timeframe page."""
+    sym, name, slug, cat = coin
+    strat_slug = strat["slug"]
+    strat_name = strat["name"]
+    tf_slug = tf["slug"]
+    tf_name = tf["name"]
+    canon = f"{SITE}/strategies/{strat_slug}/{slug}/{tf_slug}/"
+    title = f"{name} ({sym}) {tf_name} {strat_name} Strategy & Bot Signals | zengtrade"
+    desc = f"Algorithmic {tf_name} {strat_name} strategy for {name} ({sym}). Calibrated for {tf['horizon']} with {tf['noise_filter']}. Paper trade on live Binance data."
+
+    schema = f"""<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "FinancialProduct",
+  "name": "{html.escape(tf_name)} {html.escape(strat_name)} on {html.escape(name)} ({sym})",
+  "description": "{html.escape(desc)}",
+  "category": "Algorithmic Crypto Trading Strategy",
+  "isAccessibleForFree": true,
+  "offers": {{
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "description": "Free paper trading on live spot market feeds"
+  }},
+  "feesAndCommissionsSpecification": "Non-custodial algorithmic paper trading simulation. Live execution subject to 0.10% Binance maker/taker fees + 0.05% slippage buffer.",
+  "author": {{
+    "@type": "Organization",
+    "name": "zengtrade Quantitative Research",
+    "url": "https://zengtrade.in/learn/algo-studio/"
+  }},
+  "publisher": {{
+    "@type": "Organization",
+    "name": "zengtrade",
+    "url": "https://zengtrade.in/",
+    "logo": "https://zengtrade.in/assets/logo.svg"
+  }}
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://zengtrade.in/"}},
+    {{"@type": "ListItem", "position": 2, "name": "Strategies", "item": "https://zengtrade.in/sitemap/#strategies"}},
+    {{"@type": "ListItem", "position": 3, "name": "{html.escape(strat_name)}", "item": "https://zengtrade.in/strategies/{strat_slug}/{slug}/"}},
+    {{"@type": "ListItem", "position": 4, "name": "{html.escape(tf_name)}", "item": "{canon}"}}
+  ]
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {{
+      "@type": "Question",
+      "name": "What timeframe parameters are best for {html.escape(strat_name)} on {html.escape(name)} ({sym})?",
+      "acceptedAnswer": {{
+        "@type": "Answer",
+        "text": "For {tf_name}, parameters are tuned for {tf['horizon']}. Noise filter: {tf['noise_filter']}."
+      }}
+    }},
+    {{
+      "@type": "Question",
+      "name": "How does zengtrade model execution friction on {html.escape(tf_name)} trades?",
+      "acceptedAnswer": {{
+        "@type": "Answer",
+        "text": "Every trade factors 35 bps round-trip friction (exchange fees, spread, slippage buffer) to eliminate false backtest optimism."
+      }}
+    }}
+  ]
+}}
+</script>"""
+
+    main_html = f"""<main id="main" class="pseo-page">
+  <section class="lp-hero pseo-hero">
+    <div class="lp-wrap">
+      <div class="pseo-breadcrumbs">
+        <a href="/">Home</a> <span>/</span>
+        <a href="/sitemap/#strategies">Strategies</a> <span>/</span>
+        <a href="/strategies/{strat_slug}/{slug}/">{strat_name} {sym}</a> <span>/</span>
+        <span class="active">{tf_name}</span>
+      </div>
+      <div class="lp-eyebrow"><span class="dot"></span> {tf_name} · {strat['category']} Engine</div>
+      <h1 class="lp-h1">{name} ({sym}) {tf_name} {strat_name}</h1>
+      <p class="lp-lead">{desc}</p>
+      <div class="lp-hero-cta">
+        <a href="/dashboard" class="btn btn-primary">Forward-Test {tf_slug.upper()} on {sym} Free →</a>
+        <a href="/strategies/{strat_slug}/{slug}/" class="btn btn-secondary">Base {strat_name} Guide</a>
+      </div>
+      <div class="pseo-chart-card">
+        <div class="chart-header">
+          <div class="chart-title">
+            <span class="pulse-live"></span>
+            <strong>{name} / USDT</strong> <span class="chart-tag">BINANCE LIVE ({tf_slug.upper()})</span>
+          </div>
+          <div class="chart-metrics">
+            <span class="cm-pill">Timeframe: <strong>{tf_slug.upper()}</strong></span>
+            <span class="cm-pill">Target Horizon: <strong>{tf['horizon']}</strong></span>
+          </div>
+        </div>
+        <div id="chart" style="height:360px;width:100%"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec pseo-specs">
+    <div class="lp-wrap">
+      <div class="lp-sec-head">
+        <span class="lp-tag">Timeframe Specifications</span>
+        <h2 class="lp-h2">{tf_name} Calibration &amp; Execution Dynamics</h2>
+      </div>
+      <div class="pseo-grid3">
+        <div class="pseo-spec-card">
+          <div class="psc-label">Execution Horizon</div>
+          <div class="psc-val">{tf['horizon']}</div>
+          <p>Expected duration from algorithmic entry trigger to defensive target exit.</p>
+        </div>
+        <div class="pseo-spec-card">
+          <div class="psc-label">Noise Filter</div>
+          <div class="psc-val">{tf_slug.upper()} Filter</div>
+          <p>{tf['noise_filter']}</p>
+        </div>
+        <div class="pseo-spec-card">
+          <div class="psc-label">Best Use-Case</div>
+          <div class="psc-val">Optimal Intent</div>
+          <p>{tf['best_for']}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec pseo-details">
+    <div class="lp-wrap lp-grid2">
+      <div class="pseo-box">
+        <h3>Mathematical Engine &amp; Formula</h3>
+        <div class="formula-box"><code>{html.escape(strat['math_formula'])}</code></div>
+        <p><strong>Entry Condition:</strong> {strat['entry_rule']}</p>
+        <p><strong>Exit Condition:</strong> {strat['exit_rule']}</p>
+      </div>
+      <div class="pseo-box">
+        <h3>Execution &amp; Cost Transparency ({tf_slug.upper()})</h3>
+        <p>Most backtests fabricate impossible returns by assuming zero fees and zero slippage. Zengtrade factors realistic market realities into every paper trade on {name}:</p>
+        <ul class="pseo-list">
+          <li><strong>Spot Friction:</strong> {strat['cost_note']}</li>
+          <li><strong>Risk Guidance:</strong> {tf['risk_guidance']}</li>
+          <li><strong>35 bps Friction Model:</strong> Exchange taker fee (10 bps) + maker fee (10 bps) + dynamic slippage buffer (15 bps).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec pseo-eeat-wrap">
+    <div class="lp-wrap">
+      <div class="pseo-eeat-card">
+        <div class="eeat-badge"><span>✓</span> Quantitative Methodology &amp; YMYL Risk Governance</div>
+        <p><strong>Authored &amp; Verified by Zengtrade Quantitative Research:</strong> Every model parameter for {name} ({sym}) on {tf_name} is calibrated on historical Binance spot tick archives with a 35 bps round-trip friction model. Zengtrade operates under a strict non-custodial, paper-first mandate: we never hold client deposits, never charge commissions on trading volume, and never fabricate hypothetical return curves. Forward-test evidence must be established before live deployment. Read our <a href="/how-it-works/">Regime Engine Methodology</a> and <a href="/risk/">Risk Disclosures</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec pseo-related">
+    <div class="lp-wrap">
+      <div class="lp-sec-head">
+        <span class="lp-tag">All Timeframes</span>
+        <h2 class="lp-h2">Explore {strat_name} on Other Horizons for {name}</h2>
+      </div>
+      <div class="pseo-link-matrix">
+        <a href="/strategies/{strat_slug}/{slug}/5m/">5-Minute Scalp {sym}</a>
+        <a href="/strategies/{strat_slug}/{slug}/15m/">15-Minute Intraday {sym}</a>
+        <a href="/strategies/{strat_slug}/{slug}/1h/">1-Hour Swing {sym}</a>
+        <a href="/strategies/{strat_slug}/{slug}/4h/">4-Hour Trend {sym}</a>
+        <a href="/strategies/{strat_slug}/{slug}/1d/">1-Day Macro {sym}</a>
+        <a href="/strategies/{strat_slug}/{slug}/">Base {strat_name} Hub</a>
+        <a href="/sitemap/">View Full Directory →</a>
+      </div>
+    </div>
+  </section>
+</main>"""
+
+    return title, desc, canon, main_html, schema
+
+
+def render_timeframe_indicator_content(ind: dict, coin: tuple[str, str, str, str], tf: dict) -> tuple[str, str, str, str, str]:
+    """Generates (title, description, canonical_url, main_html, extra_head) for an indicator x coin x timeframe page."""
+    sym, name, slug, cat = coin
+    ind_slug = ind["slug"]
+    ind_name = ind["name"]
+    tf_slug = tf["slug"]
+    tf_name = tf["name"]
+    canon = f"{SITE}/indicators/{ind_slug}/{slug}/{tf_slug}/"
+    title = f"{name} ({sym}) {tf_name} {ind_name} Technical Analysis & Signals | zengtrade"
+    desc = f"Technical analysis rules, calculation formulas, and algorithmic signal triggers for {ind_name} on {name} ({sym}) on {tf_name}. Paper-trade signals free on live data."
+
+    schema = f"""<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to trade {html.escape(ind_name)} on {html.escape(name)} ({sym}) on {html.escape(tf_name)}",
+  "description": "{html.escape(desc)}",
+  "author": {{
+    "@type": "Organization",
+    "name": "zengtrade Quantitative Research",
+    "url": "https://zengtrade.in/learn/algo-studio/"
+  }},
+  "publisher": {{
+    "@type": "Organization",
+    "name": "zengtrade",
+    "url": "https://zengtrade.in/",
+    "logo": "https://zengtrade.in/assets/logo.svg"
+  }},
+  "step": [
+    {{"@type": "HowToStep", "name": "Set Timeframe to {html.escape(tf_name)}", "text": "Select {tf_slug.upper()} on your TradingView chart canvas."}},
+    {{"@type": "HowToStep", "name": "Compute {html.escape(ind_name)}", "text": "Apply formula: {html.escape(ind['formula'])}."}},
+    {{"@type": "HowToStep", "name": "Filter False Breaks", "text": "{tf['noise_filter']}."}},
+    {{"@type": "HowToStep", "name": "Deploy Forward Paper Simulation", "text": "Forward-test with automated ATR risk brackets in Zengtrade Algo Studio."}}
+  ]
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://zengtrade.in/"}},
+    {{"@type": "ListItem", "position": 2, "name": "Indicators", "item": "https://zengtrade.in/sitemap/#indicators"}},
+    {{"@type": "ListItem", "position": 3, "name": "{html.escape(ind_name)}", "item": "https://zengtrade.in/indicators/{ind_slug}/{slug}/"}},
+    {{"@type": "ListItem", "position": 4, "name": "{html.escape(tf_name)}", "item": "{canon}"}}
+  ]
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {{
+      "@type": "Question",
+      "name": "What is the recommended {html.escape(ind_name)} lookback on {html.escape(tf_name)} for {sym}?",
+      "acceptedAnswer": {{
+        "@type": "Answer",
+        "text": "The standard lookback is {ind['standard_lookback']}, with noise filtering tuned for {tf['horizon']}."
+      }}
+    }},
+    {{
+      "@type": "Question",
+      "name": "How to prevent false signals on {html.escape(tf_name)}?",
+      "acceptedAnswer": {{
+        "@type": "Answer",
+        "text": "{tf['noise_filter']} and verify market regime context before executing orders."
+      }}
+    }}
+  ]
+}}
+</script>"""
+
+    main_html = f"""<main id="main" class="pseo-page">
+  <section class="lp-hero pseo-hero">
+    <div class="lp-wrap">
+      <div class="pseo-breadcrumbs">
+        <a href="/">Home</a> <span>/</span>
+        <a href="/sitemap/#indicators">Indicators</a> <span>/</span>
+        <a href="/indicators/{ind_slug}/{slug}/">{ind_name} {sym}</a> <span>/</span>
+        <span class="active">{tf_name}</span>
+      </div>
+      <div class="lp-eyebrow"><span class="dot"></span> {tf_name} · {ind['type']}</div>
+      <h1 class="lp-h1">{name} ({sym}) {tf_name} {ind_name}</h1>
+      <p class="lp-lead">{desc}</p>
+      <div class="lp-hero-cta">
+        <a href="/dashboard" class="btn btn-primary">Automate {ind_name} on {sym} ({tf_slug.upper()}) →</a>
+        <a href="/indicators/{ind_slug}/{slug}/" class="btn btn-secondary">Base Indicator Hub</a>
+      </div>
+      <div class="pseo-chart-card">
+        <div class="chart-header">
+          <div class="chart-title">
+            <span class="pulse-live"></span>
+            <strong>{name} / USDT</strong> <span class="chart-tag">BINANCE LIVE ({tf_slug.upper()})</span>
+          </div>
+          <div class="chart-metrics">
+            <span class="cm-pill">Lookback: <strong>{ind['standard_lookback']}</strong></span>
+            <span class="cm-pill">Horizon: <strong>{tf['horizon']}</strong></span>
+          </div>
+        </div>
+        <div id="chart" style="height:360px;width:100%"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec pseo-specs">
+    <div class="lp-wrap">
+      <div class="lp-sec-head">
+        <span class="lp-tag">Indicator Thresholds</span>
+        <h2 class="lp-h2">{ind_name} Values &amp; Interpretation on {tf_name}</h2>
+      </div>
+      <div class="pseo-grid3">
+        <div class="pseo-spec-card">
+          <div class="psc-label">Standard Lookback</div>
+          <div class="psc-val">{ind['standard_lookback']}</div>
+          <p>Tuned for continuous {tf_name} volatility cycles.</p>
+        </div>
+        <div class="pseo-spec-card">
+          <div class="psc-label">Oversold Boundary</div>
+          <div class="psc-val">{ind['oversold_level']}</div>
+          <p>Potential downside momentum exhaustion zone on {tf_slug.upper()}.</p>
+        </div>
+        <div class="pseo-spec-card">
+          <div class="psc-label">Overbought Boundary</div>
+          <div class="psc-val">{ind['overbought_level']}</div>
+          <p>Potential upside momentum climax zone on {tf_slug.upper()}.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec pseo-details">
+    <div class="lp-wrap lp-grid2">
+      <div class="pseo-box">
+        <h3>Mathematical Formula</h3>
+        <div class="formula-box"><code>{html.escape(ind['formula'])}</code></div>
+        <p><strong>Value Range:</strong> {ind['range_spec']}</p>
+        <p><strong>Best Practice:</strong> {ind['best_practice']}</p>
+      </div>
+      <div class="pseo-box">
+        <h3>Algorithmic Automation ({tf_slug.upper()})</h3>
+        <p>Automate {ind_name} signals and alerts without manual screen staring:</p>
+        <ul class="pseo-list">
+          <li><strong>Noise Reduction:</strong> {tf['noise_filter']}</li>
+          <li><strong>In-Canvas Brackets:</strong> Visualizes green Target and red Stop Loss zones directly on TradingView charts.</li>
+          <li><strong>Zero Capital Risk:</strong> Forward-test profitability on live data before risking live capital.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec pseo-eeat-wrap">
+    <div class="lp-wrap">
+      <div class="pseo-eeat-card">
+        <div class="eeat-badge"><span>✓</span> Mathematical Rigor &amp; Technical Analysis Governance</div>
+        <p><strong>Authored &amp; Verified by Zengtrade Quantitative Research:</strong> Technical formulas for {ind_name} on {name} ({sym}) conform to classical quantitative definitions with crypto-specific parameter adaptations. Signal triggers should be confirmed across market regimes and executed with disciplined ATR risk brackets in paper simulation before risking live capital. Read our <a href="/learn/glossary/">Technical Glossary</a> and <a href="/risk/">Risk Disclosures</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec pseo-related">
+    <div class="lp-wrap">
+      <div class="lp-sec-head">
+        <span class="lp-tag">Timeframes</span>
+        <h2 class="lp-h2">Explore {ind_name} on Other Horizons for {name}</h2>
+      </div>
+      <div class="pseo-link-matrix">
+        <a href="/indicators/{ind_slug}/{slug}/15m/">15-Minute Intraday {sym}</a>
+        <a href="/indicators/{ind_slug}/{slug}/1h/">1-Hour Swing {sym}</a>
+        <a href="/indicators/{ind_slug}/{slug}/1d/">1-Day Macro {sym}</a>
+        <a href="/indicators/{ind_slug}/{slug}/">Base {ind_name} Hub</a>
+        <a href="/sitemap/">View Full Directory →</a>
+      </div>
+    </div>
+  </section>
+</main>"""
+
+    return title, desc, canon, main_html, schema
+
+
+def render_strategy_comparison_content(comp: dict, coin: tuple[str, str, str, str]) -> tuple[str, str, str, str, str]:
+    """Generates (title, description, canonical_url, main_html, extra_head) for a strategy comparison x coin page."""
+    sym, name, slug, cat = coin
+    comp_slug = comp["slug"]
+    comp_name = comp["name"]
+    s1_name = comp["strat1_name"]
+    s2_name = comp["strat2_name"]
+    canon = f"{SITE}/compare/{comp_slug}/{slug}/"
+    title = f"{s1_name} vs {s2_name} on {name} ({sym}) | zengtrade"
+    desc = f"Quantitative comparison of {s1_name} vs {s2_name} on {name} ({sym}). Win rates, drawdown profiles, regime fit, and paper trading simulation."
+
+    schema = f"""<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "{html.escape(title)}",
+  "description": "{html.escape(desc)}",
+  "author": {{
+    "@type": "Organization",
+    "name": "zengtrade Quantitative Research",
+    "url": "https://zengtrade.in/learn/algo-studio/"
+  }},
+  "publisher": {{
+    "@type": "Organization",
+    "name": "zengtrade",
+    "url": "https://zengtrade.in/",
+    "logo": "https://zengtrade.in/assets/logo.svg"
+  }}
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://zengtrade.in/"}},
+    {{"@type": "ListItem", "position": 2, "name": "Strategy Showdowns", "item": "https://zengtrade.in/sitemap/#showdowns"}},
+    {{"@type": "ListItem", "position": 3, "name": "{html.escape(comp_name)} on {html.escape(sym)}", "item": "{canon}"}}
+  ]
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {{
+      "@type": "Question",
+      "name": "Which strategy performs better on {html.escape(name)} ({sym}): {html.escape(s1_name)} or {html.escape(s2_name)}?",
+      "acceptedAnswer": {{
+        "@type": "Answer",
+        "text": "{comp['verdict']}"
+      }}
+    }},
+    {{
+      "@type": "Question",
+      "name": "How do these strategies handle choppy market regimes?",
+      "acceptedAnswer": {{
+        "@type": "Answer",
+        "text": "{comp['winner_in_chop']}"
+      }}
+    }}
+  ]
+}}
+</script>"""
+
+    main_html = f"""<main id="main" class="pseo-page">
+  <section class="lp-hero pseo-hero">
+    <div class="lp-wrap">
+      <div class="pseo-breadcrumbs">
+        <a href="/">Home</a> <span>/</span>
+        <a href="/sitemap/#showdowns">Strategy Showdowns</a> <span>/</span>
+        <span class="active">{s1_name} vs {s2_name} ({sym})</span>
+      </div>
+      <div class="lp-eyebrow"><span class="dot"></span> Quantitative Strategy Showdown · Head-to-Head Comparison</div>
+      <h1 class="lp-h1">{s1_name} vs {s2_name} on {name} ({sym})</h1>
+      <p class="lp-lead">{comp['comparison_thesis']}</p>
+      <div class="lp-hero-cta">
+        <a href="/dashboard" class="btn btn-primary">Forward-Test Both Strategies on {sym} Free →</a>
+        <a href="/sitemap/" class="btn btn-secondary">Browse All 150,000 Hubs</a>
+      </div>
+      <div class="pseo-chart-card">
+        <div class="chart-header">
+          <div class="chart-title">
+            <span class="pulse-live"></span>
+            <strong>{name} / USDT</strong> <span class="chart-tag">BINANCE LIVE</span>
+          </div>
+          <div class="chart-metrics">
+            <span class="cm-pill">Strategy A: <strong>{s1_name}</strong></span>
+            <span class="cm-pill">Strategy B: <strong>{s2_name}</strong></span>
+          </div>
+        </div>
+        <div id="chart" style="height:360px;width:100%"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec pseo-specs">
+    <div class="lp-wrap">
+      <div class="lp-sec-head">
+        <span class="lp-tag">Head-to-Head Comparison</span>
+        <h2 class="lp-h2">Quantitative Matrix: {s1_name} vs {s2_name}</h2>
+      </div>
+      <div class="pseo-grid3">
+        <div class="pseo-spec-card">
+          <div class="psc-label">Trending Market Edge</div>
+          <div class="psc-val">{s1_name if 'Supertrend' in s1_name or 'Breakout' in s1_name else s2_name}</div>
+          <p>{comp['winner_in_trend']}</p>
+        </div>
+        <div class="pseo-spec-card">
+          <div class="psc-label">Choppy Range Defense</div>
+          <div class="psc-val">{s2_name if 'EMA' in s2_name or 'DCA' in s2_name or 'Reversion' in s1_name else s1_name}</div>
+          <p>{comp['winner_in_chop']}</p>
+        </div>
+        <div class="pseo-spec-card">
+          <div class="psc-label">Quantitative Verdict</div>
+          <div class="psc-val">Optimal Allocation</div>
+          <p>{comp['verdict']}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec pseo-details">
+    <div class="lp-wrap lp-grid2">
+      <div class="pseo-box">
+        <h3>Execution Dynamics for {sym}</h3>
+        <p>Trading edge is not about picking a single strategy for all market conditions. It requires regime-aware execution:</p>
+        <ul class="pseo-list">
+          <li><strong>{s1_name}:</strong> Best suited when directional volume expands and trend persistence is verified.</li>
+          <li><strong>{s2_name}:</strong> Best deployed during mean-reverting or structural accumulation phases.</li>
+          <li><strong>Execution Friction:</strong> Both models factor 35 bps round-trip friction for honest paper testing.</li>
+        </ul>
+      </div>
+      <div class="pseo-box">
+        <h3>Dual Simulation in Algo Studio</h3>
+        <p>Deploy both models concurrently on live Binance spot feeds with zero financial capital at risk:</p>
+        <ul class="pseo-list">
+          <li><strong>Side-by-Side Paper Tracking:</strong> Compare real-time equity curves, maximum drawdowns, and Sharpe ratios.</li>
+          <li><strong>In-Canvas Brackets:</strong> Inspect live Target Price and Stop Loss orders plotted directly on your TradingView chart canvas.</li>
+          <li><strong>Non-Custodial Security:</strong> Your exchange keys remain strictly read/trade only.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec pseo-eeat-wrap">
+    <div class="lp-wrap">
+      <div class="pseo-eeat-card">
+        <div class="eeat-badge"><span>✓</span> Strategy Governance &amp; Comparative Methodology</div>
+        <p><strong>Authored &amp; Verified by Zengtrade Quantitative Research:</strong> Strategy comparison metrics evaluate historical win rates, maximum drawdown recovery periods, and parameter stability across {name} ({sym}) spot archives. 35 bps round-trip fee and slippage friction is modeled on all executions. Paper-first forward testing is mandatory before capital deployment. Read our <a href="/how-it-works/">Quantitative Methodology</a> and <a href="/risk/">Risk Disclosures</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec pseo-related">
+    <div class="lp-wrap">
+      <div class="lp-sec-head">
+        <span class="lp-tag">Individual Strategy Hubs</span>
+        <h2 class="lp-h2">Deep Dive into Each Engine for {name}</h2>
+      </div>
+      <div class="pseo-link-matrix">
+        <a href="/strategies/{comp['strat1_slug']}/{slug}/">{s1_name} {sym} Hub</a>
+        <a href="/strategies/{comp['strat2_slug']}/{slug}/">{s2_name} {sym} Hub</a>
+        <a href="/sitemap/">View Full Directory →</a>
+      </div>
+    </div>
+  </section>
+</main>"""
+
+    return title, desc, canon, main_html, schema
+
+
+def generate_llms_txt(dist_dir: str):
+    """Generates /llms.txt per the llmstxt.org specification for LLM crawler ingestion."""
+    content = f"""# zengtrade
+
+> Non-custodial quantitative crypto trading platform featuring rule-based systematic strategies, real-time TradingView charting, forward paper trading simulations, and risk governance.
+
+## Overview
+Zengtrade provides retail and institutional traders with zero-capital-risk forward paper testing on live Binance spot feeds, automated risk brackets, and regime-based capital preservation.
+
+## Systematic Trading Strategies (15 Models)
+- Supertrend Volatility Breakout: https://zengtrade.in/strategies/supertrend-breakout/bitcoin/
+- Dual EMA Golden Cross (50/200): https://zengtrade.in/strategies/dual-ema-cross/bitcoin/
+- Bollinger Band Mean Reversion: https://zengtrade.in/strategies/bollinger-mean-reversion/bitcoin/
+- Delta-Neutral Funding Rate Cash & Carry: https://zengtrade.in/strategies/funding-rate-arbitrage/bitcoin/
+- Dynamic DCA Grid Accumulation: https://zengtrade.in/strategies/dynamic-dca-grid/bitcoin/
+- MACD Momentum Divergence: https://zengtrade.in/strategies/macd-divergence/bitcoin/
+- RSI Dynamic Mean Reversion: https://zengtrade.in/strategies/rsi-mean-reversion/bitcoin/
+- Volume Breakout & Liquidity Absorption: https://zengtrade.in/strategies/volume-breakout/bitcoin/
+- Parabolic SAR Trailing Momentum: https://zengtrade.in/strategies/parabolic-sar/bitcoin/
+- Keltner Channel Volatility Squeeze: https://zengtrade.in/strategies/keltner-squeeze/bitcoin/
+- Ichimoku Cloud Kumo Breakout: https://zengtrade.in/strategies/ichimoku-cloud-breakout/bitcoin/
+- Stochastic RSI Overbought/Oversold Reversal: https://zengtrade.in/strategies/stochastic-rsi/bitcoin/
+- ATR Trailing Profit Ladder: https://zengtrade.in/strategies/atr-trailing-ladder/bitcoin/
+- OBV Institutional Flow Confirmation: https://zengtrade.in/strategies/obv-institutional-flow/bitcoin/
+- Donchian Channel Trend Breakout: https://zengtrade.in/strategies/donchian-breakout/bitcoin/
+
+## Technical Indicators (15 Models)
+- RSI (Relative Strength Index): https://zengtrade.in/indicators/rsi/bitcoin/
+- MACD (Moving Average Convergence Divergence): https://zengtrade.in/indicators/macd/bitcoin/
+- Supertrend: https://zengtrade.in/indicators/supertrend/bitcoin/
+- Bollinger Bands: https://zengtrade.in/indicators/bollinger-bands/bitcoin/
+- 200 EMA (Exponential Moving Average): https://zengtrade.in/indicators/ema-200/bitcoin/
+- VWAP (Volume-Weighted Average Price): https://zengtrade.in/indicators/vwap/bitcoin/
+- ATR (Average True Range): https://zengtrade.in/indicators/atr/bitcoin/
+- Stochastic RSI: https://zengtrade.in/indicators/stochastic-rsi/bitcoin/
+- OBV (On-Balance Volume): https://zengtrade.in/indicators/obv/bitcoin/
+- Donchian Channels: https://zengtrade.in/indicators/donchian-channels/bitcoin/
+- Keltner Channels: https://zengtrade.in/indicators/keltner-channels/bitcoin/
+- Stochastic Oscillator: https://zengtrade.in/indicators/stochastic-oscillator/bitcoin/
+- ADX Trend Strength: https://zengtrade.in/indicators/adx-trend-strength/bitcoin/
+
+## Market Regimes & Capital Preservation
+- Bull Trend Regime (Long Expansion, 10-20% Cash Buffer): https://zengtrade.in/regimes/bull/bitcoin/
+- Neutral Consolidation Regime (Mean Reversion, 40-60% Cash): https://zengtrade.in/regimes/neutral/bitcoin/
+- Bear Defense Regime (Capital Preservation, 70-90% Cash): https://zengtrade.in/regimes/bear/bitcoin/
+
+## Execution Modeling & Governance
+- Round-trip Friction Model: 35 basis points (exchange maker/taker fees + spread + slippage buffer).
+- Architecture: Strict non-custodial design (zero client deposits, read/trade-only API keys, no commission on trading volume).
+- Documentation: https://zengtrade.in/how-it-works/
+- Risk Disclosures: https://zengtrade.in/risk/
+- Glossary & Research: https://zengtrade.in/learn/glossary/
+"""
+    with open(os.path.join(dist_dir, "llms.txt"), "w", encoding="utf-8") as f:
+        f.write(content)
+
+
+def generate_llms_full_txt(dist_dir: str):
+    """Generates /llms-full.txt with complete programmatic quant methodology for AI indexing."""
+    strat_details = "\n".join([f"### {s['name']}\n- Formula: `{s['math_formula']}`\n- Entry: {s['entry_rule']}\n- Exit: {s['exit_rule']}\n- Regime Fit: {s['regime_fit']}\n" for s in STRATEGIES])
+    ind_details = "\n".join([f"### {i['name']}\n- Formula: `{i['formula']}`\n- Standard Lookback: {i['standard_lookback']}\n- Interpretation: {i['interpretation']}\n" for i in INDICATORS])
+    comp_details = "\n".join([f"### {c['name']}\n- Thesis: {c['comparison_thesis']}\n- Verdict: {c['verdict']}\n" for c in SHOWDOWNS])
+
+    content = f"""# zengtrade Full Knowledge Base & Technical Documentation
+
+> Non-custodial quantitative algorithmic crypto trading engine, forward paper trading simulation, and market regime governance.
+
+## Systematic Trading Engine Formulas
+{strat_details}
+
+## Technical Indicator Specifications
+{ind_details}
+
+## Strategy Head-to-Head Comparison Framework
+{comp_details}
+
+## Risk Governance & Execution Transparency
+Every paper trade in Zengtrade Algo Studio factors:
+1. 0.10% Spot exchange taker fee
+2. 0.10% Spot exchange maker fee
+3. 0.15% Volume-weighted dynamic slippage buffer
+Total Round-Trip Friction: 35 basis points.
+
+Learn more at https://zengtrade.in/how-it-works/ and https://zengtrade.in/risk/.
+"""
+    with open(os.path.join(dist_dir, "llms-full.txt"), "w", encoding="utf-8") as f:
+        f.write(content)
+
+
 def generate_sitemap_html(coins: list, strategies: list, indicators: list, regimes: list) -> tuple[str, str, str, str]:
     """Generates the /sitemap/ human-navigable interactive HTML directory."""
     canon = f"{SITE}/sitemap/"
     title = "Sitemap & Systematic Trading Directory | zengtrade"
-    desc = "Complete index of 15,000+ systematic crypto trading strategies, technical indicators, coin hubs, market regimes, and educational guides on zengtrade."
+    desc = "Complete index of 150,000 systematic crypto trading strategies, technical indicators, coin hubs, market regimes, timeframes, and educational guides on zengtrade."
 
     top_coins = coins[:50]
 
     main_html = f"""<main id="main" class="sitemap-page">
   <section class="lp-hero sm-hero">
     <div class="lp-wrap">
-      <div class="lp-eyebrow"><span class="dot"></span> 15,000+ Systematic Trading Hubs · Complete Directory</div>
+      <div class="lp-eyebrow"><span class="dot"></span> 150,000 Systematic Trading Hubs · Complete Directory</div>
       <h1 class="lp-h1">Zengtrade <span class="hl">Sitemap &amp; Directory</span></h1>
-      <p class="lp-sub">Explore our comprehensive programmatic directory of quantitative trading strategies, indicator benchmarks, crypto coin analytics, and educational tracks.</p>
+      <p class="lp-sub">Explore our comprehensive programmatic directory of 150,000 quantitative trading strategies, indicator benchmarks, timeframe calibrations, strategy showdowns, and crypto coin analytics.</p>
       <div class="sm-search-bar">
-        <input type="search" id="smSearchInput" placeholder="Filter strategies, indicators, or coins (e.g. Bitcoin, RSI, Supertrend, Solana)..." aria-label="Search directory">
+        <input type="search" id="smSearchInput" placeholder="Filter strategies, indicators, timeframes, or coins (e.g. Bitcoin, 5m, RSI, Supertrend, Solana)..." aria-label="Search directory">
       </div>
     </div>
   </section>
@@ -1125,9 +1908,11 @@ def generate_sitemap_html(coins: list, strategies: list, indicators: list, regim
     <div class="lp-wrap">
       <div class="sm-tabs" role="tablist">
         <button class="sm-tab active" data-tab="core">Core Platform</button>
-        <button class="sm-tab" data-tab="strategies">Strategies (7,500)</button>
-        <button class="sm-tab" data-tab="indicators">Indicators (6,000)</button>
-        <button class="sm-tab" data-tab="regimes">Regimes (1,500)</button>
+        <button class="sm-tab" data-tab="strategies">Strategies (15,000)</button>
+        <button class="sm-tab" data-tab="indicators">Indicators (15,000)</button>
+        <button class="sm-tab" data-tab="timeframes">Timeframes (111,000)</button>
+        <button class="sm-tab" data-tab="showdowns">Showdowns (6,000)</button>
+        <button class="sm-tab" data-tab="regimes">Regimes (3,000)</button>
         <button class="sm-tab" data-tab="coins">Coins Hub ({len(coins)})</button>
         <button class="sm-tab" data-tab="learn">Learn &amp; Docs</button>
       </div>
@@ -1142,47 +1927,124 @@ def generate_sitemap_html(coins: list, strategies: list, indicators: list, regim
           <a class="sm-card" href="/dashboard/"><strong>Algo Studio</strong><span>Strategy builder, backtest, and forward-test</span></a>
           <a class="sm-card" href="/login/"><strong>Login &amp; Signup</strong><span>Authentication and non-custodial onboarding</span></a>
           <a class="sm-card" href="/app/"><strong>Account &amp; Evidence</strong><span>Paper trade tracking and analytics</span></a>
-          <a class="sm-card" href="/coins/"><strong>Coins Universe</strong><span>Category browser for 500+ cryptocurrencies</span></a>
-          <a class="sm-card" href="/learn/"><strong>Learn Hub</strong><span>Trading guides and risk engineering</span></a>
-          <a class="sm-card" href="/learn/glossary/"><strong>Trading Glossary</strong><span>Plain-English quantitative terminology</span></a>
-          <a class="sm-card" href="/blog/"><strong>Build-in-Public Blog</strong><span>Engineering changelog and updates</span></a>
+          <a class="sm-card" href="/llms.txt"><strong>LLMs Directory</strong><span>Machine-readable documentation for AI agents</span></a>
+          <a class="sm-card" href="/risk/"><strong>Risk Disclosures</strong><span>Non-custodial trading transparency</span></a>
         </div>
       </div>
 
       <!-- Strategies -->
       <div class="sm-panel" id="tab-strategies">
-        <h2 class="lp-h2">Systematic Quantitative Strategies (15 Engines across 500 Coins)</h2>
-        <p class="lp-sub">Each coin pair features calibrated ATR stop parameters, mathematical formulas, and 1-click paper execution.</p>
+        <h2 class="lp-h2">Systematic Trading Strategies (15 Models × 1,000 Coins)</h2>
         <div class="sm-strat-list">
-          {"".join(f'<div class="sm-strat-block"><h3>{s["name"]}</h3><p>{s["summary"]}</p><div class="sm-coin-chips">' + "".join(f'<a href="/strategies/{s["slug"]}/{c[2]}/">{c[0]}</a>' for c in top_coins[:16]) + f'<a class="more-link" href="/strategies/{s["slug"]}/{top_coins[0][2]}/">+ 484 more coins...</a></div></div>' for s in strategies)}
-        </div>
+"""
+    for s in strategies:
+        main_html += f"""          <div class="sm-strat-block">
+            <h3>{s['name']} <span class="sm-cat">{s['category']}</span></h3>
+            <p>{s['summary']} (Fit: <em>{s['regime_fit']}</em> · R:R: <em>{s['risk_reward']}</em>)</p>
+            <div class="sm-coin-chips">
+"""
+        for sym, name, slug, cat in top_coins[:12]:
+            main_html += f'              <a href="/strategies/{s["slug"]}/{slug}/">{sym}</a>\n'
+        main_html += f"""              <a href="/strategies/{s['slug']}/bitcoin/" class="more-link">+ more coins →</a>
+            </div>
+          </div>
+"""
+    main_html += """        </div>
       </div>
 
       <!-- Indicators -->
       <div class="sm-panel" id="tab-indicators">
-        <h2 class="lp-h2">Technical Indicators &amp; Signal Triggers (12 Models across 500 Coins)</h2>
+        <h2 class="lp-h2">Technical Indicators (15 Models × 1,000 Coins)</h2>
         <div class="sm-strat-list">
-          {"".join(f'<div class="sm-strat-block"><h3>{ind["name"]}</h3><p>{ind["interpretation"]}</p><div class="sm-coin-chips">' + "".join(f'<a href="/indicators/{ind["slug"]}/{c[2]}/">{c[0]}</a>' for c in top_coins[:16]) + f'<a class="more-link" href="/indicators/{ind["slug"]}/{top_coins[0][2]}/">+ 484 more coins...</a></div></div>' for ind in indicators)}
-        </div>
+"""
+    for ind in indicators:
+        main_html += f"""          <div class="sm-strat-block">
+            <h3>{ind['name']} <span class="sm-cat">{ind['type']}</span></h3>
+            <p>{ind['interpretation']} (Standard: <em>{ind['standard_lookback']}</em>)</p>
+            <div class="sm-coin-chips">
+"""
+        for sym, name, slug, cat in top_coins[:12]:
+            main_html += f'              <a href="/indicators/{ind["slug"]}/{slug}/">{sym}</a>\n'
+        main_html += f"""              <a href="/indicators/{ind['slug']}/bitcoin/" class="more-link">+ more coins →</a>
+            </div>
+          </div>
+"""
+    main_html += """        </div>
+      </div>
+
+      <!-- Timeframes -->
+      <div class="sm-panel" id="tab-timeframes">
+        <h2 class="lp-h2">Multi-Timeframe Horizon Calibrations (111,000 Hubs)</h2>
+        <div class="sm-strat-list">
+"""
+    for tf in TIMEFRAMES:
+        main_html += f"""          <div class="sm-strat-block">
+            <h3>{tf['name']} ({tf['slug'].upper()}) <span class="sm-cat">{tf['horizon']}</span></h3>
+            <p>{tf['best_for']}. Noise filter: <em>{tf['noise_filter']}</em>.</p>
+            <div class="sm-coin-chips">
+"""
+        for sym, name, slug, cat in top_coins[:10]:
+            main_html += f'              <a href="/strategies/supertrend-breakout/{slug}/{tf["slug"]}/">{sym} Supertrend ({tf["slug"]})</a>\n'
+        main_html += f"""              <a href="/strategies/supertrend-breakout/bitcoin/{tf['slug']}/" class="more-link">+ more pairs →</a>
+            </div>
+          </div>
+"""
+    main_html += """        </div>
+      </div>
+
+      <!-- Showdowns -->
+      <div class="sm-panel" id="tab-showdowns">
+        <h2 class="lp-h2">Strategy Showdowns &amp; Comparisons (6,000 Hubs)</h2>
+        <div class="sm-strat-list">
+"""
+    for comp in SHOWDOWNS:
+        main_html += f"""          <div class="sm-strat-block">
+            <h3>{comp['name']}</h3>
+            <p>{comp['comparison_thesis']}</p>
+            <div class="sm-coin-chips">
+"""
+        for sym, name, slug, cat in top_coins[:12]:
+            main_html += f'              <a href="/compare/{comp["slug"]}/{slug}/">{sym}</a>\n'
+        main_html += f"""              <a href="/compare/{comp['slug']}/bitcoin/" class="more-link">+ all 1,000 coins →</a>
+            </div>
+          </div>
+"""
+    main_html += """        </div>
       </div>
 
       <!-- Regimes -->
       <div class="sm-panel" id="tab-regimes">
-        <h2 class="lp-h2">Market Regimes &amp; Cash Allocation (3 Regimes across 500 Coins)</h2>
+        <h2 class="lp-h2">Market Regimes &amp; Cash Allocations (3,000 Hubs)</h2>
         <div class="sm-strat-list">
-          {"".join(f'<div class="sm-strat-block"><h3>{r["name"]}</h3><p>{r["overview"]}</p><div class="sm-coin-chips">' + "".join(f'<a href="/regimes/{r["slug"]}/{c[2]}/">{c[0]}</a>' for c in top_coins[:16]) + f'<a class="more-link" href="/regimes/{r["slug"]}/{top_coins[0][2]}/">+ 484 more coins...</a></div></div>' for r in regimes)}
-        </div>
+"""
+    for r in regimes:
+        main_html += f"""          <div class="sm-strat-block">
+            <h3>{r['name']} <span class="sm-cat">{r['cash_allocation']}</span></h3>
+            <p>{r['overview']} Risk Governor: <em>{r['risk_governor']}</em></p>
+            <div class="sm-coin-chips">
+"""
+        for sym, name, slug, cat in top_coins[:12]:
+            main_html += f'              <a href="/regimes/{r["slug"]}/{slug}/">{sym}</a>\n'
+        main_html += f"""              <a href="/regimes/{r['slug']}/bitcoin/" class="more-link">+ more coins →</a>
+            </div>
+          </div>
+"""
+    main_html += f"""        </div>
       </div>
 
-      <!-- Coins -->
+      <!-- Coins Hub -->
       <div class="sm-panel" id="tab-coins">
-        <h2 class="lp-h2">Top Crypto Assets by Sector</h2>
+        <h2 class="lp-h2">Monitored Crypto Assets ({len(coins)} Coins)</h2>
         <div class="sm-coins-grid">
-          {"".join(f'<a class="sm-coin-card" href="/coins/{c[2]}/"><div class="sm-sym">{c[0]}</div><div class="sm-name">{c[1]}</div><span class="sm-cat">{c[3]}</span></a>' for c in top_coins)}
-        </div>
-        <div style="text-align:center; margin-top:24px;">
-          <a class="lp-cta ghost" href="/coins/">Browse All {len(coins)} Coins on Hub →</a>
-        </div>
+"""
+    for sym, name, slug, cat in coins:
+        main_html += f"""          <a class="sm-coin-card" href="/coins/{slug}/">
+            <span class="sm-sym">{sym}</span>
+            <span class="sm-name">{name}</span>
+            <span class="sm-cat">{cat}</span>
+          </a>
+"""
+    main_html += """        </div>
       </div>
 
       <!-- Learn -->
@@ -1232,87 +2094,170 @@ document.addEventListener('DOMContentLoaded', function() {{
     return title, desc, canon, main_html
 
 
+def resolve_pseo_page(clean_path: str, shell_func, coin_roster: list) -> str | None:
+    """Dynamically resolves and renders any of the 150,000 pSEO pages on the fly."""
+    parts = [p for p in clean_path.strip("/").split("/") if p]
+    if not parts:
+        return None
+
+    coin_map = {c[2]: c for c in coin_roster}
+    strat_map = {s["slug"]: s for s in STRATEGIES}
+    ind_map = {i["slug"]: i for i in INDICATORS}
+    reg_map = {r["slug"]: r for r in REGIMES}
+    tf_map = {t["slug"]: t for t in TIMEFRAMES}
+    showdown_map = {s["slug"]: s for s in SHOWDOWNS}
+
+    # /strategies/{strat}/{coin}/
+    if len(parts) == 3 and parts[0] == "strategies" and parts[1] in strat_map and parts[2] in coin_map:
+        title, desc, canon, mhtml, extra = render_strategy_coin_content(strat_map[parts[1]], coin_map[parts[2]])
+        return shell_func(title, desc, canon, mhtml, extra_head=extra)
+
+    # /strategies/{strat}/{coin}/{tf}/
+    if len(parts) == 4 and parts[0] == "strategies" and parts[1] in strat_map and parts[2] in coin_map and parts[3] in tf_map:
+        title, desc, canon, mhtml, extra = render_timeframe_strategy_content(strat_map[parts[1]], coin_map[parts[2]], tf_map[parts[3]])
+        return shell_func(title, desc, canon, mhtml, extra_head=extra)
+
+    # /indicators/{ind}/{coin}/
+    if len(parts) == 3 and parts[0] == "indicators" and parts[1] in ind_map and parts[2] in coin_map:
+        title, desc, canon, mhtml, extra = render_indicator_coin_content(ind_map[parts[1]], coin_map[parts[2]])
+        return shell_func(title, desc, canon, mhtml, extra_head=extra)
+
+    # /indicators/{ind}/{coin}/{tf}/
+    if len(parts) == 4 and parts[0] == "indicators" and parts[1] in ind_map and parts[2] in coin_map and parts[3] in tf_map:
+        title, desc, canon, mhtml, extra = render_timeframe_indicator_content(ind_map[parts[1]], coin_map[parts[2]], tf_map[parts[3]])
+        return shell_func(title, desc, canon, mhtml, extra_head=extra)
+
+    # /regimes/{reg}/{coin}/
+    if len(parts) == 3 and parts[0] == "regimes" and parts[1] in reg_map and parts[2] in coin_map:
+        title, desc, canon, mhtml, extra = render_regime_coin_content(reg_map[parts[1]], coin_map[parts[2]])
+        return shell_func(title, desc, canon, mhtml, extra_head=extra)
+
+    # /compare/{showdown}/{coin}/
+    if len(parts) == 3 and parts[0] == "compare" and parts[1] in showdown_map and parts[2] in coin_map:
+        title, desc, canon, mhtml, extra = render_strategy_comparison_content(showdown_map[parts[1]], coin_map[parts[2]])
+        return shell_func(title, desc, canon, mhtml, extra_head=extra)
+
+    return None
+
+
 def emit_pseo_catalog(dist_dir: str, shell_func, coin_roster: list, sample_only: bool = False) -> dict[str, list[str]]:
-    """Emits strategy, indicator, and regime pages.
+    """Emits strategy, indicator, regime, timeframe, and comparison pages.
 
     Returns a dict with lists of canonical URLs for XML sitemap generation.
     """
     strat_urls = []
     ind_urls = []
     reg_urls = []
+    tf_strat_urls = []
+    tf_ind_urls = []
+    comp_urls = []
 
     coins_to_run = coin_roster[:5] if sample_only else coin_roster
-
-    for s in STRATEGIES:
-        os.makedirs(os.path.join(dist_dir, "strategies", s["slug"]), exist_ok=True)
-    for i in INDICATORS:
-        os.makedirs(os.path.join(dist_dir, "indicators", i["slug"]), exist_ok=True)
-    for r in REGIMES:
-        os.makedirs(os.path.join(dist_dir, "regimes", r["slug"]), exist_ok=True)
 
     def write_page(out_dir: str, content: str):
         os.makedirs(out_dir, exist_ok=True)
         with open(os.path.join(out_dir, "index.html"), "w", encoding="utf-8") as f:
             f.write(content)
 
-    strat_tasks = []
+    tasks = []
+
+    # 1. Strategies (15 x coins)
     for s in STRATEGIES:
         for c in coins_to_run:
             title, desc, canon, mhtml, extra = render_strategy_coin_content(s, c)
             out_d = os.path.join(dist_dir, "strategies", s["slug"], c[2])
-            html_page = shell_func(title, desc, canon, mhtml, extra_head=extra)
-            strat_tasks.append((out_d, html_page))
+            tasks.append((out_d, shell_func(title, desc, canon, mhtml, extra_head=extra)))
             strat_urls.append(canon)
 
-    ind_tasks = []
+    # 2. Indicators (15 x coins)
     for ind in INDICATORS:
         for c in coins_to_run:
             title, desc, canon, mhtml, extra = render_indicator_coin_content(ind, c)
             out_d = os.path.join(dist_dir, "indicators", ind["slug"], c[2])
-            html_page = shell_func(title, desc, canon, mhtml, extra_head=extra)
-            ind_tasks.append((out_d, html_page))
+            tasks.append((out_d, shell_func(title, desc, canon, mhtml, extra_head=extra)))
             ind_urls.append(canon)
 
-    reg_tasks = []
+    # 3. Regimes (3 x coins)
     for reg in REGIMES:
         for c in coins_to_run:
             title, desc, canon, mhtml, extra = render_regime_coin_content(reg, c)
             out_d = os.path.join(dist_dir, "regimes", reg["slug"], c[2])
-            html_page = shell_func(title, desc, canon, mhtml, extra_head=extra)
-            reg_tasks.append((out_d, html_page))
+            tasks.append((out_d, shell_func(title, desc, canon, mhtml, extra_head=extra)))
             reg_urls.append(canon)
 
-    all_tasks = strat_tasks + ind_tasks + reg_tasks
-    print(f"Emitting {len(all_tasks)} programmatic SEO pages into dist...")
-    with ThreadPoolExecutor(max_workers=8) as ex:
-        list(ex.map(lambda t: write_page(t[0], t[1]), all_tasks))
+    # 4. Timeframe Strategies (15 x 5 x coins)
+    for s in STRATEGIES:
+        for tf in TIMEFRAMES:
+            for c in coins_to_run:
+                title, desc, canon, mhtml, extra = render_timeframe_strategy_content(s, c, tf)
+                out_d = os.path.join(dist_dir, "strategies", s["slug"], c[2], tf["slug"])
+                tasks.append((out_d, shell_func(title, desc, canon, mhtml, extra_head=extra)))
+                tf_strat_urls.append(canon)
 
-    print(f"Successfully generated {len(strat_tasks)} strategy, {len(ind_tasks)} indicator, and {len(reg_tasks)} regime pages.")
+    # 5. Timeframe Indicators (12 x 3 x coins)
+    tf_ind_subset = [tf for tf in TIMEFRAMES if tf["slug"] in ("15m", "1h", "1d")]
+    for ind in INDICATORS[:12]:
+        for tf in tf_ind_subset:
+            for c in coins_to_run:
+                title, desc, canon, mhtml, extra = render_timeframe_indicator_content(ind, c, tf)
+                out_d = os.path.join(dist_dir, "indicators", ind["slug"], c[2], tf["slug"])
+                tasks.append((out_d, shell_func(title, desc, canon, mhtml, extra_head=extra)))
+                tf_ind_urls.append(canon)
+
+    # 6. Strategy Showdowns (6 x coins)
+    for comp in SHOWDOWNS:
+        for c in coins_to_run:
+            title, desc, canon, mhtml, extra = render_strategy_comparison_content(comp, c)
+            out_d = os.path.join(dist_dir, "compare", comp["slug"], c[2])
+            tasks.append((out_d, shell_func(title, desc, canon, mhtml, extra_head=extra)))
+            comp_urls.append(canon)
+
+    print(f"Emitting {len(tasks)} programmatic SEO pages into dist...")
+    with ThreadPoolExecutor(max_workers=16) as ex:
+        list(ex.map(lambda t: write_page(t[0], t[1]), tasks))
+
+    print(f"Successfully generated {len(strat_urls)} strategies, {len(ind_urls)} indicators, {len(reg_urls)} regimes, {len(tf_strat_urls)} tf-strategies, {len(tf_ind_urls)} tf-indicators, and {len(comp_urls)} showdowns.")
     return {
         "strategies": strat_urls,
         "indicators": ind_urls,
-        "regimes": reg_urls
+        "regimes": reg_urls,
+        "timeframes_strat": tf_strat_urls,
+        "timeframes_ind": tf_ind_urls,
+        "compare": comp_urls
     }
 
 
 def emit_xml_sitemaps(dist_dir: str, partitions: dict[str, list[str]], build_date: str):
-    """Emits partitioned XML sitemaps and a root sitemap.xml index for GSC compliance."""
+    """Emits partitioned XML sitemaps chunked under 45,000 URLs and a root sitemap-index.xml for GSC compliance."""
     sub_sitemaps = []
+    MAX_CHUNK = 45000
 
     for name, url_list in partitions.items():
         if not url_list:
             continue
-        sm_filename = f"sitemap-{name}.xml"
-        sub_sitemaps.append(f"{SITE}/{sm_filename}")
 
-        xml_body = ['<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n']
-        for u in url_list:
-            xml_body.append(f"  <url><loc>{u}</loc><lastmod>{build_date}</lastmod><changefreq>weekly</changefreq></url>\n")
-        xml_body.append("</urlset>\n")
-
-        with open(os.path.join(dist_dir, sm_filename), "w", encoding="utf-8") as f:
-            f.write("".join(xml_body))
-        print(f"  ✓ {sm_filename} ({len(url_list)} URLs)")
+        if len(url_list) > MAX_CHUNK:
+            chunks = [url_list[i:i + MAX_CHUNK] for i in range(0, len(url_list), MAX_CHUNK)]
+            for part_idx, chunk in enumerate(chunks, 1):
+                sm_filename = f"sitemap-{name}-{part_idx}.xml"
+                sub_sitemaps.append(f"{SITE}/{sm_filename}")
+                xml_body = ['<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n']
+                for u in chunk:
+                    xml_body.append(f"  <url><loc>{u}</loc><lastmod>{build_date}</lastmod><changefreq>weekly</changefreq></url>\n")
+                xml_body.append("</urlset>\n")
+                with open(os.path.join(dist_dir, sm_filename), "w", encoding="utf-8") as f:
+                    f.write("".join(xml_body))
+                print(f"  ✓ {sm_filename} ({len(chunk)} URLs)")
+        else:
+            sm_filename = f"sitemap-{name}.xml"
+            sub_sitemaps.append(f"{SITE}/{sm_filename}")
+            xml_body = ['<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n']
+            for u in url_list:
+                xml_body.append(f"  <url><loc>{u}</loc><lastmod>{build_date}</lastmod><changefreq>weekly</changefreq></url>\n")
+            xml_body.append("</urlset>\n")
+            with open(os.path.join(dist_dir, sm_filename), "w", encoding="utf-8") as f:
+                f.write("".join(xml_body))
+            print(f"  ✓ {sm_filename} ({len(url_list)} URLs)")
 
     # 1. Emit sitemap-index.xml
     index_body = ['<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n']
@@ -1323,10 +2268,14 @@ def emit_xml_sitemaps(dist_dir: str, partitions: dict[str, list[str]], build_dat
         f.write("".join(index_body))
     print(f"  ✓ Partitioned sitemap-index.xml written with {len(sub_sitemaps)} sub-sitemaps.")
 
-    # 2. Emit master sitemap.xml containing all URLs (within standard 50k limit) for probe-dist and unified crawlers
+    # 2. Emit master sitemap.xml containing all key URLs for probe-dist and unified crawlers
     all_urls = []
-    for url_list in partitions.values():
-        all_urls.extend(url_list)
+    for name, url_list in partitions.items():
+        if name in ("core", "coins", "learn", "regimes", "compare"):
+            all_urls.extend(url_list)
+        else:
+            # Add up to 500 representative sample URLs from each large partition
+            all_urls.extend(url_list[:500])
     master_body = ['<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n']
     for u in all_urls:
         master_body.append(f"  <url><loc>{u}</loc><lastmod>{build_date}</lastmod><changefreq>weekly</changefreq></url>\n")

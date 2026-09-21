@@ -68,7 +68,37 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         clean = self.path.split("?", 1)[0].split("#", 1)[0].strip("/")
         if clean in ("", "index.html", "dashboard"):
             return self._serve_index()
+
+        # Dynamic pSEO fall-through if file not written in DIST
+        p_dist_idx = os.path.join(DIST, clean, "index.html")
+        if not os.path.isfile(p_dist_idx):
+            if clean.startswith(("strategies/", "indicators/", "regimes/", "compare/")):
+                rendered = self._render_dynamic_pseo(clean)
+                if rendered:
+                    return self._serve_html_str(rendered)
+
         return super().do_GET()
+
+    def _render_dynamic_pseo(self, clean: str) -> str | None:
+        try:
+            import sys
+            if HERE not in sys.path:
+                sys.path.insert(0, HERE)
+            import seo.pseo_engine as pseo
+            from deploy.landing.build import shell, coins
+            roster = pseo.build_pseo_coin_roster(coins if coins else [], target_count=1000)
+            return pseo.resolve_pseo_page(clean, shell, roster)
+        except Exception:
+            return None
+
+    def _serve_html_str(self, html: str):
+        body = html.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
 
     def _serve_index(self):
         try:
