@@ -2154,10 +2154,14 @@ def emit_pseo_catalog(dist_dir: str, shell_func, coin_roster: list, sample_only:
 
     coins_to_run = coin_roster[:5] if sample_only else coin_roster
 
+    def minify_html(raw: str) -> str:
+        lines = [line.strip() for line in raw.splitlines() if line.strip()]
+        return "\n".join(lines)
+
     def write_page(out_dir: str, content: str):
         os.makedirs(out_dir, exist_ok=True)
         with open(os.path.join(out_dir, "index.html"), "w", encoding="utf-8") as f:
-            f.write(content)
+            f.write(minify_html(content))
 
     tasks = []
 
