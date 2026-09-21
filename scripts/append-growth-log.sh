@@ -38,41 +38,47 @@ while [[ $# -gt 0 ]]; do
 done
 
 if grep -q "(session ${SESSION})" "$GROWTH"; then
-  echo "Session ${SESSION} already in GROWTH_DASHBOARD.md — skip"
+  echo "Session ${SESSION} already in GROWTH_DASHBOARD.md : skip"
   exit 0
 fi
 
 STATUS_BLOCK=$(./scripts/log-growth-session.sh "$SESSION")
 
-BLOCK="### Day 1 (session ${SESSION}) — ${TITLE}
+if ./scripts/check-worker.sh >/dev/null 2>&1; then
+  CTO_BLOCKED_DEFAULT="None (Railway paper worker active with live heartbeat)."
+else
+  CTO_BLOCKED_DEFAULT="Railway Postgres password still invalid."
+fi
+
+BLOCK="### Day 1 (session ${SESSION}) : ${TITLE}
 
 ### CTO
-- **Shipped:** ${CTO_SHIPPED:-—}
-- **Blocked:** Railway Postgres password still invalid.
+- **Shipped:** ${CTO_SHIPPED:--}
+- **Blocked:** ${CTO_BLOCKED_DEFAULT}
 
 ### CPO
-- **Shipped:** ${CPO_SHIPPED:-—}
+- **Shipped:** ${CPO_SHIPPED:--}
 
 ### CBO
-- **Shipped:** ${CBO_SHIPPED:-—}
+- **Shipped:** ${CBO_SHIPPED:--}
 
 ### SEO
-- **Shipped:** ${SEO_SHIPPED:-—}
+- **Shipped:** ${SEO_SHIPPED:--}
 
 ### Marketing
-- **Shipped:** ${MARKETING_SHIPPED:-—}
+- **Shipped:** ${MARKETING_SHIPPED:--}
 
 ### Sales
-- **Shipped:** ${SALES_SHIPPED:-—}
+- **Shipped:** ${SALES_SHIPPED:--}
 
 ### QA&VAPT
-- **Shipped:** ${QA_SHIPPED:-—}
+- **Shipped:** ${QA_SHIPPED:--}
 
 ### R&D
-- **Shipped:** ${RND_SHIPPED:-—}
+- **Shipped:** ${RND_SHIPPED:--}
 
 ### Content Strategist
-- **Shipped:** ${CONTENT_SHIPPED:-—}
+- **Shipped:** ${CONTENT_SHIPPED:--}
 
 ${STATUS_BLOCK}
 "

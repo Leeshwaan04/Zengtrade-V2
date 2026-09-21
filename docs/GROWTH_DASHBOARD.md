@@ -16,7 +16,7 @@
 | Parallel growth (excl. worker) | — | ✅ founder-parallel-ready | — |
 | Sales-ready | — | ✅ check-sales-ready.sh | — |
 | QA parallel | — | ✅ check-qa-parallel.sh | — |
-| Growth: CBO infra | — | ❌ | — |
+| Growth: CBO infra | - | ✅ GSC+sales-ready · MRR founder | - |
 | Growth: CPO trades | — | ✅ signup → trades | — |
 | Growth: CTO loop | — | ❌ /ops/worker | — |
 
@@ -4184,6 +4184,40 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 10:42Z)
 - worker ✅ · migration 0011 ✅ · parallel growth - · sales-ready ✅ · qa parallel ✅
 - growth goals: CTO ✅ · CPO ✅ trades · CBO ❌ · MRR founder /admin
+
+### Day 1 (session 221) : P0 paper worker live + 3-mode institutional UI/UX level-up
+
+### CTO
+- **Shipped:** P0 unblocked: Railway paper-worker service live with fresh heartbeats (<2m); migration 0011 verified; production /app and billing verified.
+- **Blocked:** None (Railway paper worker active with live heartbeat).
+
+### CPO
+- **Shipped:** Shipped 3-mode institutional UI/UX: Investing Mode Macro Shield & DCA simulator; Trading Mode MTF Confluence ribbon & R:R bracket HUD with 35 bps friction; Algo Studio Walk-Forward 3-Regime Resilience Matrix; mobile responsive HUD polish (<480px).
+
+### CBO
+- **Shipped:** GSC infrastructure ready for 150k programmatic URLs at sitemap-index.xml; sales-ready Pro checkout verified.
+
+### SEO
+- **Shipped:** HTML minification added to pSEO engine to keep 150k generated pages within 1.0 GB GitHub Pages deploy quota.
+
+### Marketing
+- **Shipped:** LinkedIn build-in-public draft updated for live paper execution and 3-mode institutional launch.
+
+### Sales
+- **Shipped:** NOWPayments Pro plan checkout verified; waiting on founder live checkout for first MRR transition.
+
+### QA&VAPT
+- **Shipped:** E2E smoke, security smoke, and multi-tenant RLS isolation passing across all production endpoints.
+
+### R&D
+- **Shipped:** -
+
+### Content Strategist
+- **Shipped:** -
+
+### Status (`./scripts/check-growth-standup.sh` @ 16:34Z)
+- worker ✅ · migration 0011 ✅ · parallel growth - · sales-ready ✅ · qa parallel ✅
+- growth goals: CTO ✅ · CPO ✅ trades · CBO ✅ infra · MRR founder /admin
 
 ---
 

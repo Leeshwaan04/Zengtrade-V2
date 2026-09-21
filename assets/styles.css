@@ -4045,3 +4045,30 @@ html[data-surface="night"] .rk-tier.on{background:var(--white);border-color:var(
 .wf-m span{font-size:9.5px;font-weight:700;color:var(--slate-2)}
 .wf-m b{font-family:var(--mono);font-size:12px;font-weight:800}
 .wf-foot{font-size:10px;color:var(--slate-2);margin-top:10px;display:flex;align-items:center;gap:5px}
+
+/* Mobile Responsiveness Enhancements for Institutional Workstation HUDs */
+@media (max-width: 680px){
+  .dca-metrics-grid{grid-template-columns:repeat(2,1fr)}
+  .dca-chart-head{flex-direction:column;align-items:flex-start;gap:6px}
+  .dca-friction-tag{align-self:flex-start}
+}
+
+@media (max-width: 480px){
+  .order-act-row{flex-direction:column;gap:8px}
+  .order-act-row .cta{width:100%;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+  .dca-sim-actions{flex-direction:column;align-items:stretch;gap:8px}
+  .dca-deploy-btn{width:100%;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+  .rr-bracket-head{flex-direction:column;align-items:flex-start;gap:6px}
+  .rr-chips{width:100%;justify-content:space-between}
+  .rr-chip{flex:1;text-align:center;padding:4px 6px;min-height:28px;display:inline-flex;align-items:center;justify-content:center}
+  .dca-metrics-grid{grid-template-columns:1fr 1fr;gap:6px}
+  .dca-met-val{font-size:13px}
+  .dca-num-inp{width:55px}
+  .tfc-head{flex-direction:column;align-items:flex-start;gap:6px}
+  .wf-regime-head{flex-direction:column;align-items:flex-start;gap:6px}
+}
+
+@media (max-width: 380px){
+  .tfc-grid{grid-template-columns:1fr}
+  .dca-metrics-grid{grid-template-columns:1fr}
+}
