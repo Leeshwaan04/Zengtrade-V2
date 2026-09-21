@@ -1895,9 +1895,9 @@ def generate_sitemap_html(coins: list, strategies: list, indicators: list, regim
     main_html = f"""<main id="main" class="sitemap-page">
   <section class="lp-hero sm-hero">
     <div class="lp-wrap">
-      <div class="lp-eyebrow"><span class="dot"></span> 150,000 Systematic Trading Hubs · Complete Directory</div>
+      <div class="lp-eyebrow"><span class="dot"></span> Systematic Trading Hubs &middot; Complete Directory</div>
       <h1 class="lp-h1">Zengtrade <span class="hl">Sitemap &amp; Directory</span></h1>
-      <p class="lp-sub">Explore our comprehensive programmatic directory of 150,000 quantitative trading strategies, indicator benchmarks, timeframe calibrations, strategy showdowns, and crypto coin analytics.</p>
+      <p class="lp-sub">Explore our comprehensive programmatic directory of quantitative trading strategies, indicator benchmarks, timeframe calibrations, strategy showdowns, and crypto coin analytics.</p>
       <div class="sm-search-bar">
         <input type="search" id="smSearchInput" placeholder="Filter strategies, indicators, timeframes, or coins (e.g. Bitcoin, 5m, RSI, Supertrend, Solana)..." aria-label="Search directory">
       </div>
@@ -1908,12 +1908,12 @@ def generate_sitemap_html(coins: list, strategies: list, indicators: list, regim
     <div class="lp-wrap">
       <div class="sm-tabs" role="tablist">
         <button class="sm-tab active" data-tab="core">Core Platform</button>
-        <button class="sm-tab" data-tab="strategies">Strategies (15,000)</button>
-        <button class="sm-tab" data-tab="indicators">Indicators (15,000)</button>
-        <button class="sm-tab" data-tab="timeframes">Timeframes (111,000)</button>
-        <button class="sm-tab" data-tab="showdowns">Showdowns (6,000)</button>
-        <button class="sm-tab" data-tab="regimes">Regimes (3,000)</button>
-        <button class="sm-tab" data-tab="coins">Coins Hub ({len(coins)})</button>
+        <button class="sm-tab" data-tab="strategies">Strategies</button>
+        <button class="sm-tab" data-tab="indicators">Indicators</button>
+        <button class="sm-tab" data-tab="timeframes">Timeframes</button>
+        <button class="sm-tab" data-tab="showdowns">Showdowns</button>
+        <button class="sm-tab" data-tab="regimes">Regimes</button>
+        <button class="sm-tab" data-tab="coins">Coins Hub</button>
         <button class="sm-tab" data-tab="learn">Learn &amp; Docs</button>
       </div>
 
@@ -1934,7 +1934,7 @@ def generate_sitemap_html(coins: list, strategies: list, indicators: list, regim
 
       <!-- Strategies -->
       <div class="sm-panel" id="tab-strategies">
-        <h2 class="lp-h2">Systematic Trading Strategies (15 Models × 1,000 Coins)</h2>
+        <h2 class="lp-h2">Systematic Trading Strategies</h2>
         <div class="sm-strat-list">
 """
     for s in strategies:
@@ -1954,7 +1954,7 @@ def generate_sitemap_html(coins: list, strategies: list, indicators: list, regim
 
       <!-- Indicators -->
       <div class="sm-panel" id="tab-indicators">
-        <h2 class="lp-h2">Technical Indicators (15 Models × 1,000 Coins)</h2>
+        <h2 class="lp-h2">Technical Indicators &amp; Signal Triggers</h2>
         <div class="sm-strat-list">
 """
     for ind in indicators:
@@ -1974,7 +1974,7 @@ def generate_sitemap_html(coins: list, strategies: list, indicators: list, regim
 
       <!-- Timeframes -->
       <div class="sm-panel" id="tab-timeframes">
-        <h2 class="lp-h2">Multi-Timeframe Horizon Calibrations (111,000 Hubs)</h2>
+        <h2 class="lp-h2">Multi-Timeframe Horizon Calibrations</h2>
         <div class="sm-strat-list">
 """
     for tf in TIMEFRAMES:
@@ -1994,7 +1994,7 @@ def generate_sitemap_html(coins: list, strategies: list, indicators: list, regim
 
       <!-- Showdowns -->
       <div class="sm-panel" id="tab-showdowns">
-        <h2 class="lp-h2">Strategy Showdowns &amp; Comparisons (6,000 Hubs)</h2>
+        <h2 class="lp-h2">Strategy Showdowns &amp; Comparisons</h2>
         <div class="sm-strat-list">
 """
     for comp in SHOWDOWNS:
@@ -2014,7 +2014,7 @@ def generate_sitemap_html(coins: list, strategies: list, indicators: list, regim
 
       <!-- Regimes -->
       <div class="sm-panel" id="tab-regimes">
-        <h2 class="lp-h2">Market Regimes &amp; Cash Allocations (3,000 Hubs)</h2>
+        <h2 class="lp-h2">Market Regimes &amp; Cash Allocations</h2>
         <div class="sm-strat-list">
 """
     for r in regimes:
@@ -2034,7 +2034,7 @@ def generate_sitemap_html(coins: list, strategies: list, indicators: list, regim
 
       <!-- Coins Hub -->
       <div class="sm-panel" id="tab-coins">
-        <h2 class="lp-h2">Monitored Crypto Assets ({len(coins)} Coins)</h2>
+        <h2 class="lp-h2">Monitored Crypto Assets</h2>
         <div class="sm-coins-grid">
 """
     for sym, name, slug, cat in coins:
