@@ -577,22 +577,43 @@ html[data-regime="bear"] .lp-var[data-var="bear"]{opacity:1;visibility:visible;t
 .lp-and{margin:14px 0 0;display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:11px;color:var(--slate-c)}
 .lp-and .lp-op{color:var(--accent-t);font-size:14px;transition:color .4s}
 
-/* ---- Level-Up Enterprise SEO Footer ---- */
-.lp-foot{border-top:1px solid var(--line);padding-top:clamp(48px,6vh,72px);padding-bottom:36px;background:var(--surface);position:relative;overflow:hidden}
-.lp-foot-top{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,360px);gap:clamp(28px,4vw,56px);align-items:start;margin-bottom:44px}
+/* ---- Premium Animated Glassmorphic Footer ---- */
+@keyframes foot-aurora-drift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+@keyframes mascot-fade-bull { 0%, 25% { opacity: 1; transform: scale(1); } 33.33%, 91.66% { opacity: 0; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes mascot-fade-owl { 0%, 25% { opacity: 0; transform: scale(0.95); } 33.33%, 58.33% { opacity: 1; transform: scale(1); } 66.66%, 100% { opacity: 0; transform: scale(0.95); } }
+@keyframes mascot-fade-bear { 0%, 58.33% { opacity: 0; transform: scale(0.95); } 66.66%, 91.66% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(0.95); } }
+
+.lp-foot{border-top:1px solid rgba(255,255,255,0.05);padding-top:clamp(48px,6vh,72px);padding-bottom:36px;background:linear-gradient(135deg, rgba(8,12,18,0.9), rgba(4,6,9,0.95));position:relative;overflow:hidden;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+.lp-foot::before{content:"";position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at center, rgba(0,171,78,0.08) 0%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(229,56,59,0.06) 0%, transparent 50%);background-size:200% 200%;animation:foot-aurora-drift 20s ease infinite;z-index:0;pointer-events:none}
+.lp-foot > .lp-wrap{position:relative;z-index:1}
+.lp-foot-top{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(320px,380px);gap:clamp(28px,4vw,56px);align-items:start;margin-bottom:44px}
 .lp-foot-brand-col{display:flex;flex-direction:column;gap:16px}
 .lp-foot-tagline{font-size:13.5px;line-height:1.7;color:var(--slate);max-width:56ch;margin:0}
 .lp-foot-trust-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
-.lp-trust-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:20px;font-size:11.5px;font-weight:600;color:var(--navy)}
-.lp-dot-live{width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;box-shadow:0 0 6px rgba(0,171,78,0.6)}
+.lp-trust-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:20px;font-size:11.5px;font-weight:600;color:var(--navy);box-shadow:inset 0 1px 0 rgba(255,255,255,0.05),0 2px 8px rgba(0,0,0,0.2)}
+.lp-dot-live{width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;box-shadow:0 0 8px rgba(0,171,78,0.8),0 0 16px rgba(0,171,78,0.4);animation:pulse-live 2s infinite ease-in-out}
+@keyframes pulse-live{0%,100%{opacity:1}50%{opacity:0.4}}
 
-.lp-foot-live-card{background:rgba(0,0,0,0.25);border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:12px}
-.lp-flc-head{display:flex;align-items:center;gap:8px;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--navy);font-weight:700}
-.lp-flc-body{display:flex;flex-direction:column;gap:8px;padding-block:6px;border-block:1px solid rgba(255,255,255,0.05);font-size:12.5px}
+.lp-foot-live-card{background:linear-gradient(180deg,rgba(15,20,25,0.7),rgba(8,12,16,0.9));border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.05),0 8px 32px rgba(0,0,0,0.4);position:relative;overflow:hidden}
+.lp-flc-bg-glow{position:absolute;top:0;right:0;width:150px;height:150px;background:radial-gradient(circle,rgba(0,171,78,0.15) 0%,transparent 70%);filter:blur(20px);transform:translate(30%,-30%);pointer-events:none}
+.lp-flc-head{display:flex;align-items:center;gap:8px;font-size:13px;text-transform:uppercase;letter-spacing:0.75px;color:var(--navy);font-weight:800;z-index:1}
+.lp-flc-body{display:flex;flex-direction:column;gap:10px;padding-block:10px;border-block:1px solid rgba(255,255,255,0.06);font-size:12.5px;z-index:1}
 .lp-flc-row{display:flex;justify-content:space-between;align-items:center;color:var(--slate)}
-.lp-flc-val{color:var(--navy);font-family:var(--mono);font-size:12px}
-.lp-flc-btn{display:inline-block;text-align:center;padding:8px 14px;background:rgba(0,171,78,0.1);border:1px solid rgba(0,171,78,0.3);border-radius:8px;font-size:12.5px;font-weight:700;color:var(--accent);text-decoration:none;transition:background .2s,border-color .2s}
-.lp-flc-btn:hover{background:var(--accent);color:#04140a}
+.lp-flc-val{color:var(--navy);font-family:var(--mono);font-size:12px;display:flex;align-items:center;gap:8px}
+
+.lp-flc-carousel{position:relative;width:24px;height:24px;display:inline-block;margin-right:4px}
+.lp-flc-carousel img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;animation-duration:12s;animation-iteration-count:infinite;animation-timing-function:ease-in-out;opacity:0}
+.lp-flc-carousel img.cbull{animation-name:mascot-fade-bull}
+.lp-flc-carousel img.cowl{animation-name:mascot-fade-owl}
+.lp-flc-carousel img.cbear{animation-name:mascot-fade-bear}
+.lp-regime-txt{position:relative;display:inline-block;width:9ch;text-align:left}
+.lp-regime-txt span{position:absolute;top:50%;left:0;transform:translateY(-50%);animation-duration:12s;animation-iteration-count:infinite;animation-timing-function:ease-in-out;opacity:0}
+.lp-regime-txt span.cbull{animation-name:mascot-fade-bull;color:var(--accent)}
+.lp-regime-txt span.cowl{animation-name:mascot-fade-owl;color:var(--amber)}
+.lp-regime-txt span.cbear{animation-name:mascot-fade-bear;color:var(--red)}
+
+.lp-flc-btn{display:inline-block;text-align:center;padding:10px 16px;background:linear-gradient(180deg,rgba(0,171,78,0.15),rgba(0,171,78,0.05));border:1px solid rgba(0,171,78,0.4);border-radius:10px;font-size:13px;font-weight:700;color:var(--accent);text-decoration:none;transition:all .25s ease;z-index:1;box-shadow:0 2px 8px rgba(0,171,78,0.15)}
+.lp-flc-btn:hover{background:var(--accent);color:#04140a;box-shadow:0 4px 16px rgba(0,171,78,0.4);transform:translateY(-1px)}
 
 .lp-foot-nav-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:clamp(16px,2.5vw,32px);padding-block:36px;border-top:1px solid var(--line)}
 .lp-foot-col{display:flex;flex-direction:column;gap:14px}
@@ -1249,6 +1270,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
       </div>
 
       <div class="lp-foot-live-card">
+        <div class="lp-flc-bg-glow" aria-hidden="true"></div>
         <div class="lp-flc-head">
           <span class="lp-dot-live"></span>
           <strong>System Status &amp; Market Telemetry</strong>
@@ -1256,7 +1278,18 @@ html.js .lp-rv.in{opacity:1;transform:none}
         <div class="lp-flc-body">
           <div class="lp-flc-row">
             <span>Market Regime:</span>
-            <strong class="lp-flc-val"><span data-regime-name>BULL</span> Expansion</strong>
+            <strong class="lp-flc-val">
+              <span class="lp-flc-carousel" aria-hidden="true">
+                <img src="assets/mascot-bull.png" class="cbull" alt="" />
+                <img src="assets/mascot-owl.png" class="cowl" alt="" />
+                <img src="assets/mascot-bear.png" class="cbear" alt="" />
+              </span>
+              <span class="lp-regime-txt">
+                <span class="cbull">BULL</span>
+                <span class="cowl">NEUTRAL</span>
+                <span class="cbear">BEAR</span>
+              </span> Expansion
+            </strong>
           </div>
           <div class="lp-flc-row">
             <span>Execution Protocol:</span>

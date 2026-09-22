@@ -36,6 +36,15 @@ BLOG_CSS = """
 .blog-hub-row:last-child{border-bottom:none}
 .blog-hub-row b{font:700 16px/1.35 var(--sans);color:var(--navy)}
 .blog-hub-row span{font-size:14px;line-height:1.6;color:var(--slate)}
+/* ---- PSEO Quantitative Research section ---- */
+.quant-research-section{max-width:70ch;margin:60px auto 0;padding-top:40px;border-top:1px solid var(--line)}
+.quant-research-section h2{font:700 18px/1.3 var(--sans);color:var(--navy);margin:0 0 8px}
+.quant-research-section p{font-size:14px;line-height:1.6;color:var(--slate);margin:0 0 20px}
+.quant-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.quant-card{display:flex;flex-direction:column;gap:8px;padding:20px;background:var(--surface-2);border-radius:12px;text-decoration:none;transition:background 0.2s, transform 0.2s}
+.quant-card:hover{background:var(--surface-3);transform:translateY(-2px)}
+.quant-card b{font:600 15px/1.3 var(--sans);color:var(--navy)}
+.quant-card span{font-size:13px;line-height:1.5;color:var(--slate)}
 """
 
 
@@ -145,6 +154,20 @@ def blog_hub_main(posts):
     </div>
   </section>
   <section class="lp-sec" aria-label="Posts">
-    <div class="lp-wrap">{empty}<div class="blog-hub-list">{rows}</div></div>
+    <div class="lp-wrap">
+      {empty}<div class="blog-hub-list">{rows}</div>
+      
+      <div class="quant-research-section">
+        <h2>Quantitative Research Engine</h2>
+        <p>Explore over 10,000 data-driven, programmatic SEO articles analyzing regime-aware crypto trading strategies across the entire Binance-tradable universe.</p>
+        <div class="quant-grid">
+          <a class="quant-card" href="/blog/category/markets/"><b>Markets Analysis</b><span>Macro regimes and asset class dynamics.</span></a>
+          <a class="quant-card" href="/blog/category/trading/"><b>Trading Mechanics</b><span>Execution algorithms, risk, and slippage.</span></a>
+          <a class="quant-card" href="/blog/category/investing/"><b>Systematic Investing</b><span>Long-term data-driven portfolio models.</span></a>
+          <a class="quant-card" href="/blog/category/algo/"><b>Algo Studio</b><span>Automated execution and backtesting.</span></a>
+          <a class="quant-card" href="/blog/category/strategies/"><b>Trading Strategies</b><span>Deep dives into quantitative strategies.</span></a>
+        </div>
+      </div>
+    </div>
   </section>
 </main>"""

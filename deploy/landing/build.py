@@ -354,6 +354,17 @@ try:
 except Exception as ex:
     print("  ! /blog/ skipped (marketing site still builds):", ex)
 
+# ---- 10,000 programmatic SEO blog articles (seo/blog_engine.py) ------------------------
+pseo_blog_css = ""
+BLOG_MOD = None
+try:
+    sys.path.insert(0, os.path.abspath(os.path.join(HERE, "..", "..", "seo")))
+    import blog_engine as PSEO_BLOG
+    pseo_blog_css = PSEO_BLOG.BLOG_CSS
+    BLOG_MOD = PSEO_BLOG
+except Exception as ex:
+    print("  ! /blog/ programmatic engine skipped (marketing site still builds):", ex)
+
 # ---- /learn/{investing,trading,algo-studio}/ - three sophistication-ladder hubs regrouping the
 # real glossary terms + articles above (content/tracks.py). Founder-confirmed 2026-09-12: help a
 # DIY user understand investing, trading, and algo/automated trading better, in that order --------
@@ -381,7 +392,7 @@ if os.path.exists(DIST):
     shutil.rmtree(DIST)
 os.makedirs(DIST)
 shutil.copytree(os.path.join(HERE, "assets"), os.path.join(DIST, "assets"))
-open(os.path.join(DIST, "site.css"), "w").write(css + HOME_CSS + coin_css + article_css + glossary_css + blog_css + tracks_css + pseo_css)   # ONE stylesheet for every page
+open(os.path.join(DIST, "site.css"), "w").write(css + HOME_CSS + coin_css + article_css + glossary_css + blog_css + pseo_blog_css + tracks_css + pseo_css)   # ONE stylesheet for every page
 
 # ---- bundle the Supabase auth app onto the SAME origin (login / dashboard / legal) -----
 # Written as FOLDERS (login/index.html) so clean URLs work on GitHub Pages, which has no
@@ -579,6 +590,13 @@ if blog_posts:
         emit(os.path.join("blog", post["slug"]), shell(title, desc, canon, pmain, extra_head=extra), canon)
         print("  ✓ /blog/%s/" % post["slug"])
 
+# ---- /blog/ programmatic SEO posts --------------------------------------------
+blog_sitemaps = []
+if BLOG_MOD:
+    sample_only = bool(os.environ.get("ZT_FAST_PSEO"))
+    blog_urls, blog_sitemaps = BLOG_MOD.build_blog(DIST, shell, sample_only=sample_only)
+    urls.extend(blog_urls)
+
 # Product routes (auth-gated but indexable landing/signup entry points for GSC)
 core_urls = [
     "https://zengtrade.in/",
@@ -638,7 +656,8 @@ if PSEO_MOD and (pseo_partitions.get("strategies") or pseo_partitions.get("indic
         "compare": pseo_partitions["compare"],
         "learn": learn_urls,
     }
-    PSEO_MOD.emit_xml_sitemaps(DIST, all_partitions, _build_date)
+    # Add blog to sitemap partitions so it merges elegantly into sitemap-index.xml
+    PSEO_MOD.emit_xml_sitemaps(DIST, all_partitions, _build_date, extra_sitemaps=blog_sitemaps)
 else:
     sm = ('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
           + "".join(f"  <url><loc>{u}</loc><lastmod>{_build_date}</lastmod><changefreq>daily</changefreq></url>\n" for u in urls)

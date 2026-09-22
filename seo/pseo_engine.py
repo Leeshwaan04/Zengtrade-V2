@@ -2231,9 +2231,11 @@ def emit_pseo_catalog(dist_dir: str, shell_func, coin_roster: list, sample_only:
     }
 
 
-def emit_xml_sitemaps(dist_dir: str, partitions: dict[str, list[str]], build_date: str):
+def emit_xml_sitemaps(dist_dir: str, partitions: dict[str, list[str]], build_date: str, extra_sitemaps: list[str] = None):
     """Emits partitioned XML sitemaps chunked under 45,000 URLs and a root sitemap-index.xml for GSC compliance."""
     sub_sitemaps = []
+    if extra_sitemaps:
+        sub_sitemaps.extend(extra_sitemaps)
     MAX_CHUNK = 45000
 
     for name, url_list in partitions.items():
