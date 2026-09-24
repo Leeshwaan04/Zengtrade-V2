@@ -630,7 +630,9 @@ pseo_partitions = {
     "compare": []
 }
 if PSEO_MOD:
-    coin_roster = PSEO_MOD.build_pseo_coin_roster(coins if coins else [], target_count=1000)
+    # Reduce target_count to 75 to fit within the 1.0 GB GitHub Pages artifact limit
+    # (75 coins * 150 pages/coin + 10,000 blog pages * 35KB = ~750 MB)
+    coin_roster = PSEO_MOD.build_pseo_coin_roster(coins if coins else [], target_count=75)
     sm_title, sm_desc, sm_canon, sm_main = PSEO_MOD.generate_sitemap_html(
         coin_roster, PSEO_MOD.STRATEGIES, PSEO_MOD.INDICATORS, PSEO_MOD.REGIMES)
     emit("sitemap", shell(sm_title, sm_desc, sm_canon, sm_main), sm_canon)
