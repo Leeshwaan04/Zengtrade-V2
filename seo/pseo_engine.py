@@ -2155,70 +2155,76 @@ def emit_pseo_catalog(dist_dir: str, shell_func, coin_roster: list, sample_only:
     coins_to_run = coin_roster[:5] if sample_only else coin_roster
 
     def minify_html(raw: str) -> str:
+        # Better minification to fix GitHub Pages limit: strip lines and replace \n with space.
         lines = [line.strip() for line in raw.splitlines() if line.strip()]
-        return "\n".join(lines)
+        return " ".join(lines)
 
     def write_page(out_dir: str, content: str):
         os.makedirs(out_dir, exist_ok=True)
         with open(os.path.join(out_dir, "index.html"), "w", encoding="utf-8") as f:
             f.write(minify_html(content))
 
-    tasks = []
+    def process_and_write(out_d, title, desc, canon, mhtml, extra):
+        html_str = shell_func(title, desc, canon, mhtml, extra_head=extra)
+        write_page(out_d, html_str)
 
-    # 1. Strategies (15 x coins)
-    for s in STRATEGIES:
-        for c in coins_to_run:
-            title, desc, canon, mhtml, extra = render_strategy_coin_content(s, c)
-            out_d = os.path.join(dist_dir, "strategies", s["slug"], c[2])
-            tasks.append((out_d, shell_func(title, desc, canon, mhtml, extra_head=extra)))
-            strat_urls.append(canon)
-
-    # 2. Indicators (15 x coins)
-    for ind in INDICATORS:
-        for c in coins_to_run:
-            title, desc, canon, mhtml, extra = render_indicator_coin_content(ind, c)
-            out_d = os.path.join(dist_dir, "indicators", ind["slug"], c[2])
-            tasks.append((out_d, shell_func(title, desc, canon, mhtml, extra_head=extra)))
-            ind_urls.append(canon)
-
-    # 3. Regimes (3 x coins)
-    for reg in REGIMES:
-        for c in coins_to_run:
-            title, desc, canon, mhtml, extra = render_regime_coin_content(reg, c)
-            out_d = os.path.join(dist_dir, "regimes", reg["slug"], c[2])
-            tasks.append((out_d, shell_func(title, desc, canon, mhtml, extra_head=extra)))
-            reg_urls.append(canon)
-
-    # 4. Timeframe Strategies (15 x 5 x coins)
-    for s in STRATEGIES:
-        for tf in TIMEFRAMES:
-            for c in coins_to_run:
-                title, desc, canon, mhtml, extra = render_timeframe_strategy_content(s, c, tf)
-                out_d = os.path.join(dist_dir, "strategies", s["slug"], c[2], tf["slug"])
-                tasks.append((out_d, shell_func(title, desc, canon, mhtml, extra_head=extra)))
-                tf_strat_urls.append(canon)
-
-    # 5. Timeframe Indicators (12 x 3 x coins)
-    tf_ind_subset = [tf for tf in TIMEFRAMES if tf["slug"] in ("15m", "1h", "1d")]
-    for ind in INDICATORS[:12]:
-        for tf in tf_ind_subset:
-            for c in coins_to_run:
-                title, desc, canon, mhtml, extra = render_timeframe_indicator_content(ind, c, tf)
-                out_d = os.path.join(dist_dir, "indicators", ind["slug"], c[2], tf["slug"])
-                tasks.append((out_d, shell_func(title, desc, canon, mhtml, extra_head=extra)))
-                tf_ind_urls.append(canon)
-
-    # 6. Strategy Showdowns (6 x coins)
-    for comp in SHOWDOWNS:
-        for c in coins_to_run:
-            title, desc, canon, mhtml, extra = render_strategy_comparison_content(comp, c)
-            out_d = os.path.join(dist_dir, "compare", comp["slug"], c[2])
-            tasks.append((out_d, shell_func(title, desc, canon, mhtml, extra_head=extra)))
-            comp_urls.append(canon)
-
-    print(f"Emitting {len(tasks)} programmatic SEO pages into dist...")
     with ThreadPoolExecutor(max_workers=16) as ex:
-        list(ex.map(lambda t: write_page(t[0], t[1]), tasks))
+        futures = []
+        
+        # 1. Strategies (15 x coins)
+        for s in STRATEGIES:
+            for c in coins_to_run:
+                title, desc, canon, mhtml, extra = render_strategy_coin_content(s, c)
+                out_d = os.path.join(dist_dir, "strategies", s["slug"], c[2])
+                futures.append(ex.submit(process_and_write, out_d, title, desc, canon, mhtml, extra))
+                strat_urls.append(canon)
+    
+        # 2. Indicators (15 x coins)
+        for ind in INDICATORS:
+            for c in coins_to_run:
+                title, desc, canon, mhtml, extra = render_indicator_coin_content(ind, c)
+                out_d = os.path.join(dist_dir, "indicators", ind["slug"], c[2])
+                futures.append(ex.submit(process_and_write, out_d, title, desc, canon, mhtml, extra))
+                ind_urls.append(canon)
+    
+        # 3. Regimes (3 x coins)
+        for reg in REGIMES:
+            for c in coins_to_run:
+                title, desc, canon, mhtml, extra = render_regime_coin_content(reg, c)
+                out_d = os.path.join(dist_dir, "regimes", reg["slug"], c[2])
+                futures.append(ex.submit(process_and_write, out_d, title, desc, canon, mhtml, extra))
+                reg_urls.append(canon)
+    
+        # 4. Timeframe Strategies (15 x 5 x coins)
+        for s in STRATEGIES:
+            for tf in TIMEFRAMES:
+                for c in coins_to_run:
+                    title, desc, canon, mhtml, extra = render_timeframe_strategy_content(s, c, tf)
+                    out_d = os.path.join(dist_dir, "strategies", s["slug"], c[2], tf["slug"])
+                    futures.append(ex.submit(process_and_write, out_d, title, desc, canon, mhtml, extra))
+                    tf_strat_urls.append(canon)
+    
+        # 5. Timeframe Indicators (12 x 3 x coins)
+        tf_ind_subset = [tf for tf in TIMEFRAMES if tf["slug"] in ("15m", "1h", "1d")]
+        for ind in INDICATORS[:12]:
+            for tf in tf_ind_subset:
+                for c in coins_to_run:
+                    title, desc, canon, mhtml, extra = render_timeframe_indicator_content(ind, c, tf)
+                    out_d = os.path.join(dist_dir, "indicators", ind["slug"], c[2], tf["slug"])
+                    futures.append(ex.submit(process_and_write, out_d, title, desc, canon, mhtml, extra))
+                    tf_ind_urls.append(canon)
+    
+        # 6. Strategy Showdowns (6 x coins)
+        for comp in SHOWDOWNS:
+            for c in coins_to_run:
+                title, desc, canon, mhtml, extra = render_strategy_comparison_content(comp, c)
+                out_d = os.path.join(dist_dir, "compare", comp["slug"], c[2])
+                futures.append(ex.submit(process_and_write, out_d, title, desc, canon, mhtml, extra))
+                comp_urls.append(canon)
+    
+        print(f"Emitting {len(futures)} programmatic SEO pages into dist...")
+        for future in futures:
+            future.result()  # Wait for all to finish and catch exceptions
 
     print(f"Successfully generated {len(strat_urls)} strategies, {len(ind_urls)} indicators, {len(reg_urls)} regimes, {len(tf_strat_urls)} tf-strategies, {len(tf_ind_urls)} tf-indicators, and {len(comp_urls)} showdowns.")
     return {
