@@ -13,6 +13,7 @@ const $ = s => document.querySelector(s);
 const app = $("#view");
 let user = null, tier = "free", billCycle = "month";
 let state = { deployments: [], trades: [], loading: true, error: null, workerAlive: true, exchange: { connected: false } };
+let currentMode = "algo";
 
 const ROUTES = ["dashboard", "strategies", "forward", "accuracy", "analytics", "activity", "account"];
 // /account is a real, standalone clean URL (not a hash route) - same app.html/app.js serve both,
@@ -36,8 +37,19 @@ const route = () => (ACCOUNT_ONLY ? "account" : (location.hash.replace("#", "") 
   $("#userEmail").textContent = user.email;
   $("#signout").onclick = () => signOut();
   $("#upgradeBtn").onclick = () => ACCOUNT_ONLY ? (location.href = "/app#pricing") : (location.hash = "pricing");
+  
+  document.querySelectorAll(".mode-btn").forEach(b => {
+    b.onclick = (e) => {
+      document.querySelectorAll(".mode-btn").forEach(btn => btn.classList.remove("on"));
+      const target = e.currentTarget;
+      target.classList.add("on");
+      currentMode = target.dataset.mode;
+      render();
+    };
+  });
+
   window.addEventListener("hashchange", render);
-  window.addEventListener("resize", debounce(() => { if (route() === "dashboard") drawCurve(); }, 150));
+  window.addEventListener("resize", debounce(() => { if (route() === "dashboard" && currentMode === "algo") drawCurve(); }, 150));
   buildNav();
   render();                                   // paint shell immediately (loading state)
   await load();                               // then hydrate
@@ -165,6 +177,16 @@ function buildNav() {
     `<a href="#${r}" data-r="${r}">${r[0].toUpperCase() + r.slice(1)}</a>`).join("");
 }
 function render() {
+  const nav = $("#nav");
+  if (currentMode === "investing") {
+    if (nav) nav.parentElement.style.display = "none";
+    return renderInvestingDashboard();
+  } else if (currentMode === "trading") {
+    if (nav) nav.parentElement.style.display = "none";
+    return renderTradingDashboard();
+  }
+  if (nav) nav.parentElement.style.display = "";
+
   if (route() === "pricing") { document.querySelectorAll("#nav a").forEach(a=>a.classList.remove("on")); return renderPricing(); }
   const r = ROUTES.includes(route()) ? route() : "dashboard";
   document.querySelectorAll("#nav a").forEach(a => a.classList.toggle("on", a.dataset.r === r));
@@ -243,6 +265,152 @@ function renderDashboard() {
   $("#up2") && ($("#up2").onclick = () => location.hash = "pricing");
   $("#firstDeploy") && ($("#firstDeploy").onclick = goAlgoStudio);
 }
+
+// ---- Investing Mode Dashboard ----
+function renderInvestingDashboard() {
+  app.innerHTML = `
+    <div class="mode-hero investing">
+      <h2>Investing Mode</h2>
+      <p>Automate your long-term DCA into high-conviction assets. Systematically buy dips and accumulate based on risk regimes.</p>
+    </div>
+    
+    <div class="grid stats" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+      <div class="glass-stat investing">
+        <span>Active DCA Schedules</span>
+        <b>0</b>
+      </div>
+      <div class="glass-stat"><span>Total Accumulated</span><b>$0.00</b></div>
+      <div class="glass-stat"><span>Avg Entry Deviation</span><b>0.00%</b></div>
+    </div>
+    
+    <div class="glass-card investing" style="display:flex;flex-wrap:wrap;gap:32px;margin-top:24px">
+      <div style="flex:1;min-width:280px">
+        <div class="glass-card-ic" style="margin-bottom:16px">$</div>
+        <h3 style="font:800 20px/1.2 var(--sans);margin:0 0 6px">Automated DCA</h3>
+        <p style="color:var(--slate);margin:0 0 24px;line-height:1.5">Configure your schedule. The engine will dollar-cost average into your chosen asset automatically.</p>
+        
+        <div style="display:grid;gap:16px">
+          <div>
+            <label style="display:block;font:600 11px/1 var(--mono);color:var(--slate-2);text-transform:uppercase;margin-bottom:8px">Asset</label>
+            <div style="display:flex;gap:8px">
+              <button class="btn secondary" style="flex:1;border-color:var(--blue);color:var(--blue);background:var(--surface)">BTC</button>
+              <button class="btn ghost" style="flex:1">ETH</button>
+              <button class="btn ghost" style="flex:1">SOL</button>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font:600 11px/1 var(--mono);color:var(--slate-2);text-transform:uppercase;margin-bottom:8px">Frequency</label>
+            <div style="display:flex;gap:8px">
+              <button class="btn secondary" style="flex:1;border-color:var(--blue);color:var(--blue);background:var(--surface)">Daily</button>
+              <button class="btn ghost" style="flex:1">Weekly</button>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font:600 11px/1 var(--mono);color:var(--slate-2);text-transform:uppercase;margin-bottom:8px">Amount per order (USD)</label>
+            <input type="number" class="acc-input" value="50" style="font-size:16px;margin:0">
+          </div>
+          <button class="btn primary" style="background:var(--blue);color:#fff;margin-top:8px">Start Accumulation</button>
+        </div>
+      </div>
+      
+      <div style="flex:1.5;min-width:320px;display:flex;flex-direction:column">
+        <div class="card-h" style="margin-bottom:16px">
+          <h3 style="font:700 15px/1.2 var(--sans)">Projected 1Y Accumulation</h3>
+          <span class="muted" style="font:600 12px/1.2 var(--mono)">$18,250 Total</span>
+        </div>
+        <div style="flex:1;min-height:220px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;position:relative;overflow:hidden">
+          <canvas id="dcaCurve" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
+        </div>
+      </div>
+    </div>
+  `;
+  // Delay drawing the canvas until the DOM updates
+  setTimeout(() => {
+    const cvs = document.getElementById("dcaCurve");
+    if (cvs) {
+      // Simulate an upward smooth DCA accumulation curve
+      const proj = [];
+      let acc = 0;
+      for (let i=0; i<50; i++) { acc += 50 * (1 + Math.random() * 0.1); proj.push(acc); }
+      // Draw using our new smooth spline function!
+      equityCurve(cvs, proj);
+      // Force it to use the blue color for Investing mode
+      cvs.style.filter = "hue-rotate(200deg)"; 
+    }
+  }, 10);
+}
+
+// ---- Trading Mode Dashboard ----
+function renderTradingDashboard() {
+  app.innerHTML = `
+    <div class="mode-hero trading">
+      <h2>Trading Mode</h2>
+      <p>Execute precision manual trades with strict TP/SL brackets. Track your discretionary execution performance.</p>
+    </div>
+    
+    <div class="grid stats" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+      <div class="glass-stat trading">
+        <span>Active Limit Orders</span>
+        <b>0</b>
+      </div>
+      <div class="glass-stat"><span>Discretionary Win Rate</span><b>-</b></div>
+      <div class="glass-stat"><span>Profit Factor</span><b>0.00</b></div>
+    </div>
+    
+    <div class="glass-card trading" style="display:flex;flex-wrap:wrap;gap:32px;margin-top:24px">
+      <div style="flex:1;min-width:280px">
+        <div class="glass-card-ic" style="margin-bottom:16px">⚡</div>
+        <h3 style="font:800 20px/1.2 var(--sans);margin:0 0 6px">Quick Bracket Order</h3>
+        <p style="color:var(--slate);margin:0 0 24px;line-height:1.5">Execute a manual trade with strict risk management. Take-profit and stop-loss are enforced instantly.</p>
+        
+        <div style="display:grid;gap:16px">
+          <div>
+            <label style="display:block;font:600 11px/1 var(--mono);color:var(--slate-2);text-transform:uppercase;margin-bottom:8px">Market & Direction</label>
+            <div style="display:flex;gap:8px">
+              <select class="acc-input" style="flex:1;margin:0;font-size:14px">
+                <option>BTC/USDT</option>
+                <option>ETH/USDT</option>
+              </select>
+              <button class="btn secondary" style="flex:1;border-color:var(--green);color:var(--green);background:var(--surface)">LONG</button>
+              <button class="btn ghost" style="flex:1">SHORT</button>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font:600 11px/1 var(--mono);color:var(--slate-2);text-transform:uppercase;margin-bottom:8px">Position Size (USD)</label>
+            <input type="number" class="acc-input" value="1000" style="font-size:16px;margin:0">
+          </div>
+          <div>
+            <label style="display:block;font:600 11px/1 var(--mono);color:var(--slate-2);text-transform:uppercase;margin-bottom:8px">Risk/Reward Preset</label>
+            <div style="display:flex;gap:8px">
+              <button class="btn secondary" style="flex:1;border-color:var(--red);color:var(--red);background:var(--surface)">1:2 (Tight)</button>
+              <button class="btn ghost" style="flex:1">1:3 (Standard)</button>
+            </div>
+          </div>
+          <button class="btn primary" style="background:var(--red);color:#fff;margin-top:8px">Execute Market Bracket</button>
+        </div>
+      </div>
+      
+      <div style="flex:1.5;min-width:320px;display:flex;flex-direction:column;justify-content:center;padding:24px;background:var(--surface-2);border-radius:12px;border:1px solid var(--line)">
+        <div style="text-align:center">
+          <div style="font:600 11px/1 var(--mono);color:var(--green);margin-bottom:6px;text-transform:uppercase">Take Profit</div>
+          <b style="font:700 24px/1 var(--mono);color:var(--navy)">$68,450.00</b>
+        </div>
+        
+        <div style="display:flex;align-items:center;margin:16px 0">
+          <div style="flex:1;height:2px;background:var(--green-soft)"></div>
+          <div style="padding:8px 16px;background:var(--surface);border:1px solid var(--line);border-radius:24px;font:700 13px/1 var(--sans);color:var(--slate);box-shadow:0 2px 8px rgba(0,0,0,0.04)">Current Entry: $65,200.00</div>
+          <div style="flex:1;height:2px;background:color-mix(in srgb,var(--red) 15%,transparent)"></div>
+        </div>
+        
+        <div style="text-align:center">
+          <b style="font:700 24px/1 var(--mono);color:var(--navy)">$63,575.00</b>
+          <div style="font:600 11px/1 var(--mono);color:var(--red);margin-top:6px;text-transform:uppercase">Stop Loss</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 // ---- deploy routing (Algo Studio is primary surface) ----
 function goAlgoStudio() {
   if (!state.deployments.length) {
@@ -458,57 +626,109 @@ function renderAccount() {
   // header chip got the same treatment) - a free-tier user sees an upgrade prompt instead of
   // pasting real credentials only to hit the same 403 the old code already surfaced via toast.
   const exchangeBody = ex.connected
-    ? `<div class="acc-row"><span>Binance</span><b>Connected ✓ <span class="muted">· ${esc(timeAgo(ex.connectedAt))}</span></b></div>
-       <div class="acc-row"><span>Disconnecting removes this key from zengtrade only, it does not revoke it on Binance.</span>
-         <button class="btn ghost sm" id="exDisconnect">Disconnect</button></div>`
-    : !isPro(tier)
-    ? `<div class="acc-row-stack">
-         <p class="muted" style="font-size:12.5px;line-height:1.6;margin:0 0 10px">
-           Connecting a real exchange account and placing live orders is a <b>Pro/Elite</b> feature.
-           Free stays unlimited on paper trading, live execution unlocks with an upgrade.
-         </p>
-         <button class="btn sm primary" id="exUpgrade">Upgrade to Pro</button>
+    ? `<div style="display:flex;flex-direction:column;gap:16px">
+         <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px solid var(--line)">
+           <span class="muted" style="font-size:13px">Exchange</span>
+           <b style="font-size:14px;color:var(--green-d)">Connected ✓ <span class="muted" style="font-size:11px;font-weight:600">· ${esc(timeAgo(ex.connectedAt))}</span></b>
+         </div>
+         <div style="display:flex;justify-content:space-between;align-items:flex-start">
+           <span class="muted" style="font-size:12px;max-width:200px;line-height:1.5">Disconnecting removes this key from zengtrade only, it does not revoke it on Binance.</span>
+           <button class="btn ghost sm" id="exDisconnect" style="padding:6px 12px">Disconnect</button>
+         </div>
        </div>`
-    : `<div class="acc-row-stack">
-         <div class="trust-row">
-           <span class="trust-badge">Non-custodial</span>
-           <span class="trust-badge">Encrypted at rest</span>
-           <span class="trust-badge">Trade-only key</span>
-         </div>
-         <p class="muted" style="font-size:12.5px;line-height:1.6;margin:0 0 10px">
-           On Binance: <b>API Management &rarr; Create API</b>, check <b>only</b> "Enable Spot &amp;
-           Margin Trading", leave "Enable Withdrawals" unchecked. zengtrade never sees your Binance
-           password, this key only ever places orders on your own account.
+    : !isPro(tier)
+    ? `<div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:12px 0">
+         <div style="width:40px;height:40px;background:var(--surface-2);border-radius:50%;display:grid;place-items:center;margin-bottom:12px;font-size:18px">🔒</div>
+         <p class="muted" style="font-size:13px;line-height:1.6;margin:0 0 16px;max-width:260px">
+           Connecting a real exchange account to place live orders is a <b>Pro</b> feature. Free is strictly paper.
          </p>
-         <div style="display:flex;flex-wrap:wrap;gap:14px;margin:-2px 0 11px">
-           <a href="https://www.binance.com/en/my/settings/api-management" target="_blank" rel="noopener" style="font-size:11.5px;font-weight:700;color:var(--green-d);text-decoration:none">Open Binance &rarr;</a>
-           <a href="/learn/how-to-create-a-binance-api-key/" target="_blank" rel="noopener" style="font-size:11.5px;font-weight:700;color:var(--green-d);text-decoration:none">Full step-by-step guide &rarr;</a>
+         <button class="btn primary" id="exUpgrade" style="width:100%">Unlock Pro</button>
+       </div>`
+    : `<div style="display:flex;flex-direction:column;gap:12px">
+         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">
+           <span style="font:600 10px/1 var(--mono);text-transform:uppercase;background:var(--surface-2);padding:4px 8px;border-radius:4px;color:var(--slate)">Non-custodial</span>
+           <span style="font:600 10px/1 var(--mono);text-transform:uppercase;background:var(--surface-2);padding:4px 8px;border-radius:4px;color:var(--slate)">Trade-only</span>
          </div>
-         <input type="password" id="exKey" placeholder="Paste your API key" autocomplete="off" class="acc-input">
-         <input type="password" id="exSecret" placeholder="Paste your API secret" autocomplete="off" class="acc-input">
-         <button class="btn sm primary" id="exConnect">Connect Binance</button>
+         <p class="muted" style="font-size:12px;line-height:1.5;margin:0 0 4px">
+           <b>API Management &rarr; Create API</b>: check <b>only</b> "Enable Spot Trading". We never see your password.
+         </p>
+         <div style="display:flex;gap:12px;margin-bottom:8px">
+           <a href="https://www.binance.com/en/my/settings/api-management" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:var(--green-d);text-decoration:none">Binance &rarr;</a>
+           <a href="/learn/how-to-create-a-binance-api-key/" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:var(--green-d);text-decoration:none">Guide &rarr;</a>
+         </div>
+         <input type="password" id="exKey" placeholder="Paste your API key" autocomplete="off" style="width:100%;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font:14px var(--mono)">
+         <input type="password" id="exSecret" placeholder="Paste your API secret" autocomplete="off" style="width:100%;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font:14px var(--mono)">
+         <button class="btn primary" id="exConnect" style="width:100%;margin-top:4px">Connect Binance</button>
        </div>`;
   app.innerHTML = `
-    <div class="page-h"><div class="page-eyebrow"><span class="dot"></span>your account</div><h2>Account</h2></div>
-    <div class="card acc">
-      <div class="card-h"><span class="card-ic">◐</span><h3>Account details</h3></div>
-      <div class="acc-row"><span>Email</span><b>${esc(user.email)}</b></div>
-      <div class="acc-row"><span>Plan</span><b>${isPro(tier) ? "Pro" : "Free"}</b>
-        ${isPro(tier) ? "" : `<button class="btn sm primary" id="accUp">Upgrade to Pro</button>`}</div>
-      <div class="acc-row"><span>Trading mode</span><b>Paper by default <span class="muted">· real orders only on your own connected exchange, non-custodial</span></b></div>
+    <div class="page-h">
+      <div class="page-eyebrow"><span class="dot"></span>your profile</div>
+      <h2>Account Settings</h2>
+      <p class="muted">Manage your credentials, subscription plan, and exchange connectivity.</p>
     </div>
-    <div class="card acc">
-      <div class="card-h"><span class="card-ic">⇄</span><h3>Exchange connection</h3></div>
-      ${exchangeBody}
-    </div>
-    <div class="card acc">
-      <div class="card-h"><span class="card-ic">§</span><h3>Legal &amp; support</h3></div>
-      <div class="acc-row"><span>Legal</span><span class="links"><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/risk">Risk</a></span></div>
-      <div class="acc-row"><span>Support</span><a href="mailto:letmeknow@zengtrade.in">letmeknow@zengtrade.in</a></div>
-    </div>
-    <div class="card acc danger">
-      <div class="card-h"><span class="card-ic">⏻</span><h3>Sign out</h3></div>
-      <div class="acc-row"><span>End your session on this device</span><button class="btn ghost sm" id="accOut">Sign out</button></div>
+    <div style="display:grid;gap:20px;grid-template-columns:repeat(auto-fit, minmax(340px, 1fr));max-width:960px">
+      <!-- Profile Card -->
+      <div class="glass-card" style="border-top: 3px solid var(--navy)">
+        <div class="glass-card-ic" style="background:var(--surface-2);color:var(--navy)">👤</div>
+        <h3 style="margin:0 0 16px;font-size:16px">Account Details</h3>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px solid var(--line)">
+            <span class="muted" style="font-size:13px">Email</span>
+            <b style="font-size:14px">${esc(user.email)}</b>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px solid var(--line)">
+            <span class="muted" style="font-size:13px">Plan</span>
+            <div style="display:flex;align-items:center;gap:10px">
+              <b style="font-size:14px;color:${isPro(tier) ? 'var(--green-d)' : 'var(--slate)'}">${isPro(tier) ? "Pro" : "Free"}</b>
+              ${isPro(tier) ? "" : `<button class="btn sm primary" id="accUp" style="padding:4px 10px;font-size:12px">Upgrade</button>`}
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <span class="muted" style="font-size:13px">Mode</span>
+            <div style="text-align:right">
+              <b style="font-size:14px">Paper Default</b>
+              <div class="muted" style="font-size:11px;margin-top:4px;max-width:180px">Real orders only on connected exchange</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Exchange Card -->
+      <div class="glass-card" style="border-top: 3px solid var(--green-d)">
+        <div class="glass-card-ic" style="background:var(--green-soft);color:var(--green-d)">⇄</div>
+        <h3 style="margin:0 0 16px;font-size:16px">Exchange Connection</h3>
+        ${exchangeBody}
+      </div>
+
+      <!-- Legal & Support Card -->
+      <div class="glass-card" style="border-top: 3px solid var(--slate-2)">
+        <div class="glass-card-ic" style="background:var(--surface-2);color:var(--slate)">§</div>
+        <h3 style="margin:0 0 16px;font-size:16px">Legal & Support</h3>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span class="muted" style="font-size:13px">Documents</span>
+            <span class="links" style="display:flex;gap:12px;font-size:13px;font-weight:600">
+              <a href="/terms" style="color:var(--navy);text-decoration:none">Terms</a>
+              <a href="/privacy" style="color:var(--navy);text-decoration:none">Privacy</a>
+              <a href="/risk" style="color:var(--navy);text-decoration:none">Risk</a>
+            </span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span class="muted" style="font-size:13px">Contact</span>
+            <a href="mailto:letmeknow@zengtrade.in" style="font-size:13px;font-weight:600;color:var(--green-d);text-decoration:none">letmeknow@zengtrade.in</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Danger Zone -->
+      <div class="glass-card" style="border-top: 3px solid var(--red);background:color-mix(in srgb, var(--red) 2%, var(--surface))">
+        <div class="glass-card-ic" style="background:color-mix(in srgb, var(--red) 10%, transparent);color:var(--red)">⏻</div>
+        <h3 style="margin:0 0 16px;font-size:16px;color:var(--red)">Danger Zone</h3>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="muted" style="font-size:13px">End your current session</span>
+          <button class="btn ghost sm" id="accOut" style="color:var(--red);border-color:var(--red)">Sign out</button>
+        </div>
+      </div>
     </div>`;
   $("#accUp") && ($("#accUp").onclick = () => ACCOUNT_ONLY ? (location.href = "/app#pricing") : (location.hash = "pricing"));
   $("#exUpgrade") && ($("#exUpgrade").onclick = () => ACCOUNT_ONLY ? (location.href = "/app#pricing") : (location.hash = "pricing"));
