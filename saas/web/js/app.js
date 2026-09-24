@@ -885,7 +885,6 @@ function planCard(p, ready = true) {
     : `transition: transform 0.2s;`;
     
   return `<div class="plan" style="position:relative;border-radius:20px;padding:32px 24px;display:flex;flex-direction:column; ${cardStyle}">
-    ${p.featured ? `<div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--green);color:#04140a;font:800 11px/1 var(--mono);letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:99px;white-space:nowrap;box-shadow:0 4px 12px rgba(0,171,78,0.4)">Founding Member</div>` : ""}
     <span class="plan-ic" style="width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:18px;font-weight:800;margin-bottom:16px; ${isProCard ? 'background:var(--green);color:#fff;box-shadow:0 4px 12px rgba(0,171,78,0.3)' : 'background:var(--surface-2);color:var(--slate)'}">${planIcon}</span>
     <div class="plan-name" style="font:700 14px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px; ${isProCard ? 'color:var(--green-d)' : 'color:var(--slate-2)'}">${esc(p.name)}</div>
     <div class="plan-price" style="font:800 38px/1 var(--sans);letter-spacing:-.02em;margin-bottom:8px">$${price}<span style="font:600 16px/1 var(--sans);color:var(--slate)">${per}</span></div>
