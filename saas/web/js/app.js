@@ -452,26 +452,45 @@ function wireEmptyDeploy() {
 
 function showPostDeployHint() {
   if (document.getElementById("ztPostDeployHint")) return;
-  const workerNote = state.workerAlive
-    ? "Trades appear in Forward Test as the worker runs (~15 min)."
-    : "Worker is offline: deploy saved; trades start when the worker is live. <a href=\"/ops/e2e\">E2E status</a>";
   const el = document.createElement("div");
   el.id = "ztPostDeployHint";
   el.setAttribute("role", "status");
   el.style.cssText =
-    "position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:90;" +
-    "max-width:min(480px,calc(100% - 24px));padding:14px 16px;border-radius:14px;" +
-    "background:var(--surface,#fff);border:1px solid var(--line,#e2e8f0);box-shadow:0 8px 24px rgba(0,0,0,.12);" +
-    "font:600 13px/1.45 var(--sans,system-ui);display:flex;gap:12px;align-items:center;flex-wrap:wrap";
+    "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:90;" +
+    "max-width:min(520px,calc(100% - 32px));padding:20px;border-radius:20px;" +
+    "background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);" +
+    "border:1px solid rgba(0,171,78,0.3);box-shadow:0 20px 40px -10px rgba(0,0,0,0.15), 0 0 0 4px rgba(0,171,78,0.05);" +
+    "font:600 14px/1.5 var(--sans,system-ui);display:flex;gap:16px;align-items:center;flex-wrap:wrap;animation:riseIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)";
+  
   el.innerHTML =
-    `<div style="flex:1"><b>Strategy deployed</b><br><span style="font-weight:500;color:var(--slate,#64748b)">${workerNote}</span></div>` +
-    `<a href="#forward" style="padding:8px 14px;border-radius:9px;background:var(--green,#00ab4e);color:#04140a;text-decoration:none;font-weight:700">Forward Test</a>` +
-    `<a href="/coins/?utm_source=site&amp;utm_medium=organic&amp;utm_campaign=deploy_success_coins" style="padding:8px 14px;border-radius:9px;border:1px solid var(--line,#e2e8f0);color:var(--navy,#101e36);text-decoration:none;font-weight:700">More coins</a>` +
-    `<a href="#pricing" data-zt-pro-upgrade style="padding:8px 14px;border-radius:9px;border:1px solid var(--line,#e2e8f0);color:var(--navy,#101e36);text-decoration:none;font-weight:700">Pro $19/mo</a>` +
-    `<button type="button" style="border:0;background:transparent;cursor:pointer;color:var(--slate,#64748b)" aria-label="Dismiss">✕</button>`;
-  el.querySelector("button").onclick = () => el.remove();
+    `<div style="flex:1">
+       <b style="color:var(--navy);font-size:15px;display:flex;align-items:center;gap:6px">
+         <span style="display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 8px var(--green)"></span>
+         Strategy deployed to paper
+       </b>
+       <div style="font-weight:500;color:var(--slate);margin-top:4px;font-size:13px">
+         While this builds its track record, upgrade to Pro to ensure you can toggle <b>Live Execution</b> the moment it clears the go-live bar.
+       </div>
+     </div>
+     <div style="display:flex;flex-direction:column;gap:8px;min-width:140px">
+       <a href="#pricing" data-zt-pro-upgrade style="text-align:center;padding:10px 16px;border-radius:12px;background:linear-gradient(135deg, var(--green), var(--green-d));color:#fff;text-decoration:none;font-weight:700;box-shadow:0 4px 12px rgba(0,171,78,0.3);transition:transform 0.2s">Unlock Pro</a>
+       <button type="button" style="border:0;background:transparent;cursor:pointer;color:var(--slate);font-weight:600;font-size:12px" aria-label="Dismiss">Maybe later</button>
+     </div>`;
+     
+  el.querySelector("button").onclick = () => {
+    el.style.animation = "none";
+    el.style.transform = "translate(-50%, 20px)";
+    el.style.opacity = "0";
+    el.style.transition = "all 0.2s";
+    setTimeout(() => el.remove(), 200);
+  };
+  
   const proBtn = el.querySelector("[data-zt-pro-upgrade]");
-  if (proBtn) proBtn.onclick = (e) => { markCheckoutRef("deploy_success_pro"); };
+  if (proBtn) {
+    proBtn.onmouseover = () => proBtn.style.transform = "scale(1.03)";
+    proBtn.onmouseout = () => proBtn.style.transform = "scale(1)";
+    proBtn.onclick = (e) => { markCheckoutRef("deploy_success_pro"); };
+  }
   document.body.appendChild(el);
 }
 
@@ -856,14 +875,28 @@ function planCard(p, ready = true) {
     : p.id === "free" ? "Get started"
     : paidNotReady ? "Opening soon" : `Choose ${esc(p.name)}`;
   const planIcon = { free: "○", pro: "◈", elite: "✦" }[p.id] || "○";
-  return `<div class="plan${p.featured ? " feat" : ""}">
-    ${p.featured ? `<div class="ribbon">Most popular</div>` : ""}
-    <span class="plan-ic">${planIcon}</span>
-    <div class="plan-name">${esc(p.name)}</div>
-    <div class="plan-price">$${price}<span>${per}</span></div>
-    <div class="plan-tag">${esc(p.tagline)}</div>
-    <ul>${p.features.map(f => `<li>${esc(f)}</li>`).join("")}</ul>
-    <button class="btn ${p.featured ? "primary" : "ghost"} full" id="plan-${p.id}" ${current ? "disabled" : ""}${paidNotReady ? ' data-soon="1"' : ""}>${cta}</button>
+  
+  const isProCard = p.featured;
+  const cardStyle = isProCard 
+    ? `background: linear-gradient(180deg, var(--surface) 0%, rgba(0,171,78,0.03) 100%); border: 2px solid var(--green); box-shadow: 0 12px 40px -12px rgba(0,171,78,0.15), 0 0 0 1px var(--green) inset; transform: scale(1.02); z-index: 2;` 
+    : `border: 1px solid var(--line);`;
+  const btnStyle = isProCard 
+    ? `background: linear-gradient(135deg, var(--green), var(--green-d)); color: white; border: none; box-shadow: 0 4px 12px rgba(0,171,78,0.3); transition: transform 0.2s;` 
+    : `transition: transform 0.2s;`;
+    
+  return `<div class="plan" style="position:relative;border-radius:20px;padding:32px 24px;display:flex;flex-direction:column; ${cardStyle}">
+    ${p.featured ? `<div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--green);color:#04140a;font:800 11px/1 var(--mono);letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:99px;white-space:nowrap;box-shadow:0 4px 12px rgba(0,171,78,0.4)">Founding Member</div>` : ""}
+    <span class="plan-ic" style="width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:18px;font-weight:800;margin-bottom:16px; ${isProCard ? 'background:var(--green);color:#fff;box-shadow:0 4px 12px rgba(0,171,78,0.3)' : 'background:var(--surface-2);color:var(--slate)'}">${planIcon}</span>
+    <div class="plan-name" style="font:700 14px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px; ${isProCard ? 'color:var(--green-d)' : 'color:var(--slate-2)'}">${esc(p.name)}</div>
+    <div class="plan-price" style="font:800 38px/1 var(--sans);letter-spacing:-.02em;margin-bottom:8px">$${price}<span style="font:600 16px/1 var(--sans);color:var(--slate)">${per}</span></div>
+    <div class="plan-tag" style="font-size:14px;color:var(--slate);min-height:42px;margin-bottom:16px;line-height:1.4">${esc(p.tagline)}</div>
+    <ul style="flex:1;display:flex;flex-direction:column;gap:14px;margin:20px 0 28px;padding:0;list-style:none">
+      ${p.features.map(f => `<li style="position:relative;padding-left:26px;font-size:14px;color:var(--slate);line-height:1.5"><span style="position:absolute;left:0;color:${isProCard ? 'var(--green-d)' : 'var(--slate)'};font-weight:800">✓</span>${esc(f)}</li>`).join("")}
+    </ul>
+    <button class="btn ${p.featured ? "primary" : "ghost"} full" id="plan-${p.id}" style="${btnStyle}" ${current ? "disabled" : ""}${paidNotReady ? ' data-soon="1"' : ""}
+      onmouseover="if(!this.disabled) this.style.transform='scale(1.03)'" onmouseout="if(!this.disabled) this.style.transform='scale(1)'">
+      ${cta}
+    </button>
   </div>`;
 }
 
