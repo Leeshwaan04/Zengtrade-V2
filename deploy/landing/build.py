@@ -515,7 +515,11 @@ urls = []
 def emit(path, html_str, canon):
     d = os.path.join(DIST, path) if path else DIST
     os.makedirs(d, exist_ok=True)
-    open(os.path.join(d, "index.html"), "w").write(html_str)
+    
+    # Fast whitespace minification using regex to avoid GitHub Pages 1.0GB artifact limit
+    minified = re.sub(r'\s+', ' ', html_str)
+    
+    open(os.path.join(d, "index.html"), "w").write(minified)
     urls.append(canon)
 
 emit("", shell(
