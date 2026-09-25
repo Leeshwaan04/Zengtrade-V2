@@ -1431,16 +1431,17 @@ html[data-persona="investor"] .wg-body{gap:8px}
 .ih-secttag{margin-left:auto;font-size:10.5px;font-weight:700;color:var(--accent-d);background:var(--accent-soft);border:1px solid var(--accent-line);padding:3px 9px;border-radius:99px}
 
 /* shared atoms */
-.sec-tabs{display:flex;gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:4px}
+.sec-tabs{display:flex;gap:4px;background:rgba(244,246,250,0.6);border:1px solid rgba(255,255,255,0.5);border-radius:12px;padding:4px}
 .sec-tab{flex:1;border:0;background:transparent;color:var(--slate);font-family:var(--sans);font-weight:700;font-size:12px;
   padding:8px 6px;border-radius:8px;cursor:pointer;transition:.16s;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .sec-tab:hover{color:var(--navy)}
-.sec-tab.on{background:var(--surface);color:var(--accent-d);box-shadow:var(--shadow)}
+.sec-tab.on{background:var(--surface);color:var(--accent-d);box-shadow:0 4px 12px rgba(0,0,0,0.05)}
 .sec-tn{font-style:normal;font-size:10px;font-weight:700;background:var(--accent-soft);color:var(--accent-d);border-radius:99px;padding:1px 6px;min-width:16px;text-align:center}
 .sec-tab:not(.on) .sec-tn{background:var(--line);color:var(--slate)}
 
-.sec-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
-.sec-stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:1px}
+.sec-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px}
+.sec-stat{background:rgba(255,255,255,0.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.9);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:3px;box-shadow:0 8px 32px rgba(0,0,0,0.04);transition:transform 0.2s}
+.sec-stat:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,0.06);border-color:var(--accent-line)}
 .ss-l{font-size:10px;color:var(--slate);text-transform:uppercase;letter-spacing:.3px;font-weight:600}
 .ss-v{font-size:17px;font-weight:700;letter-spacing:-.4px}
 .ss-s{font-size:10.5px;color:var(--slate-2)}
@@ -2076,16 +2077,16 @@ html[data-persona="investor"] #investHub{display:flex;flex-direction:column;flex
    the Crypto Spot/Perps/Options view (and every Algo tab) relies on. */
 .algo-view,.invest-hub{display:flex;flex-direction:column;height:100%;min-height:0}
 .av-wrap,.ai-wrap{flex:1;min-height:0;display:flex;flex-direction:column}
-.av-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius) var(--radius) 0 0;border-bottom:0}
+.av-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:16px 20px;background:rgba(255,255,255,0.7);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.9);border-radius:18px 18px 0 0;border-bottom:1px solid rgba(0,0,0,0.04);box-shadow:0 8px 32px rgba(0,0,0,0.03)}
 .av-title{display:flex;align-items:center;gap:11px}
 .av-ic{display:inline-flex;width:34px;height:34px;align-items:center;justify-content:center;border-radius:10px;background:var(--accent-soft);color:var(--accent-d);flex:0 0 auto}
 .av-title b{font-size:15px;display:block} .av-title span{font-size:11.5px;color:var(--slate)}
-.av-tabs{display:flex;gap:3px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:3px}
+.av-tabs{display:flex;gap:4px;background:rgba(244,246,250,0.6);border:1px solid rgba(255,255,255,0.5);border-radius:12px;padding:4px}
 .av-tab{border:0;background:transparent;color:var(--slate);font-family:var(--sans);font-weight:700;font-size:12.5px;padding:8px 16px;border-radius:8px;cursor:pointer;transition:.15s}
-.av-tab:hover{color:var(--navy)} .av-tab.on{background:var(--surface);color:var(--accent-d);box-shadow:var(--shadow)}
+.av-tab:hover{color:var(--navy)} .av-tab.on{background:var(--surface);color:var(--accent-d);box-shadow:0 4px 12px rgba(0,0,0,0.05);border-radius:10px}
 .av-tab:focus-visible{outline:none;box-shadow:var(--ring)}
 .av-tn{font-style:normal;font-size:9.5px;background:var(--accent);color:#fff;border-radius:99px;padding:0 5px;margin-left:3px}
-.av-scroll{flex:1;min-height:0;overflow-y:auto;background:var(--surface);border:1px solid var(--line);border-top:0;border-radius:0 0 var(--radius) var(--radius);padding:14px 16px;display:flex;flex-direction:column;gap:13px}
+.av-scroll{flex:1;min-height:0;overflow-y:auto;background:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.9);border-top:0;border-radius:0 0 18px 18px;padding:16px 20px;display:flex;flex-direction:column;gap:16px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 
 /* ===== Algo Studio market toggle (Indian ⇄ Crypto) ===== */
 .mkt-toggle{display:flex;gap:3px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:10px;padding:3px}
@@ -2106,10 +2107,11 @@ html[data-persona="investor"] #investHub{display:flex;flex-direction:column;flex
 .ticker-bar.crypto #mktStatus,.ticker-bar.crypto .tb-mdiv,.ticker-bar.crypto #hdrEngine,.ticker-bar.crypto .tb-gear{display:none}
 
 /* ===== crypto layer ===== */
-.cx-preview-note{display:flex;gap:9px;align-items:flex-start;background:#fdf4e6;border:1px solid #f3d9b0;color:#7c4f12;border-radius:11px;padding:10px 12px;font-size:11.5px;line-height:1.5}
+.cx-preview-note{display:flex;gap:10px;align-items:flex-start;background:rgba(253,244,230,0.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(243,217,176,0.8);color:#7c4f12;border-radius:14px;padding:12px 14px;font-size:11.5px;line-height:1.5;box-shadow:0 8px 32px rgba(0,0,0,0.03)}
 .cx-preview-note b{color:#5e3c0d}
 .cx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
-.cx-card{display:flex;flex-direction:column;gap:7px;border:1px solid var(--line);border-radius:13px;background:var(--surface);padding:13px 14px}
+.cx-card{display:flex;flex-direction:column;gap:9px;border:1px solid rgba(255,255,255,0.9);border-radius:16px;background:rgba(255,255,255,0.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:16px;box-shadow:0 8px 32px rgba(0,0,0,0.04);transition:transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s}
+.cx-card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,0.08);border-color:var(--accent-line)}
 .cx-card-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .cx-card-h b{font-size:13.5px;color:var(--navy);font-weight:800}
 .cx-cat{display:block;font-size:10px;color:var(--slate-2);margin-top:2px;font-weight:600}
@@ -2122,7 +2124,7 @@ html[data-persona="investor"] #investHub{display:flex;flex-direction:column;flex
 .cx-tag{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--slate-2);background:var(--surface-2);border:1px solid var(--line);padding:3px 8px;border-radius:6px}
 /* crypto movers (Opportunity) + leaderboard */
 .cx-movers{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
-.cx-mv-col{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.cx-mv-col{border:1px solid rgba(255,255,255,0.9);border-radius:14px;background:rgba(255,255,255,0.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.04)}
 .cx-mv-h{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;color:var(--navy);padding:10px 12px;background:var(--surface-2);border-bottom:1px solid var(--line)}
 .cx-mv-row{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line)}
 .cx-mv-row:last-child{border-bottom:0}
@@ -2132,7 +2134,7 @@ html[data-persona="investor"] #investHub{display:flex;flex-direction:column;flex
 .cx-mv-chg{font-size:11.5px;font-weight:700;min-width:62px;text-align:right}
 .cx-mv-empty{padding:12px;color:var(--slate-2);font-size:11.5px;text-align:center}
 .cx-lb{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
-.cx-lb-grp{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.cx-lb-grp{border:1px solid rgba(255,255,255,0.9);border-radius:14px;background:rgba(255,255,255,0.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.04)}
 .cx-lb-h{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--navy);padding:9px 12px;background:var(--surface-2);border-bottom:1px solid var(--line)}
 .cx-lb-h i{font-style:normal;font-size:9.5px;background:var(--accent);color:#fff;border-radius:99px;padding:0 6px;margin-left:auto}
 .cx-lb-row{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line)}
@@ -2143,7 +2145,7 @@ html[data-persona="investor"] #investHub{display:flex;flex-direction:column;flex
 /* live crypto paper book (Monitor) */
 .cxm-tbl-h{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--navy);margin:14px 2px 8px}
 .cxm-tbl-h span{margin-left:auto;font-size:10.5px;font-weight:600;color:var(--slate-2)}
-.cxm-tbl{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden;flex-shrink:0}
+.cxm-tbl{border:1px solid rgba(255,255,255,0.9);border-radius:14px;background:rgba(255,255,255,0.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);overflow:hidden;flex-shrink:0;box-shadow:0 8px 32px rgba(0,0,0,0.04)}
 .cxm-row{display:grid;grid-template-columns:1fr 52px 92px 92px 100px;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
 .cxm-row:last-child{border-bottom:0}
 .cxm-head{background:var(--surface-2);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--slate-2)}
@@ -2172,10 +2174,10 @@ html[data-persona="investor"] #investHub{display:flex;flex-direction:column;flex
 /* crypto backtest */
 .cxbt-pick{display:flex;flex-direction:column;gap:8px;margin:2px 0 4px}
 .cxbt-pick-r{display:flex;flex-wrap:wrap;gap:6px}
-.cxbt-chip{font-size:11px;font-weight:600;color:var(--slate);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:5px 11px;cursor:pointer}
-.cxbt-chip:hover{border-color:var(--navy)}
-.cxbt-chip.on{background:var(--accent);color:#fff;border-color:transparent}
-.cxbt-chart{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:10px}
+.cxbt-chip{font-size:11.5px;font-weight:700;color:var(--slate);background:rgba(255,255,255,0.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.8);border-radius:10px;padding:6px 14px;cursor:pointer;transition:all .2s ease;box-shadow:0 2px 8px rgba(0,0,0,0.02)}
+.cxbt-chip:hover{border-color:var(--navy);background:rgba(255,255,255,0.8);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.04)}
+.cxbt-chip.on{background:var(--accent);color:#fff;border-color:transparent;box-shadow:0 4px 16px color-mix(in srgb,var(--accent) 30%,transparent)}
+.cxbt-chart{border:1px solid rgba(255,255,255,0.9);border-radius:16px;background:rgba(255,255,255,0.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:14px;box-shadow:0 8px 32px rgba(0,0,0,0.04)}
 .cxbt-svg{width:100%;height:150px;display:block}
 .cxbt-eq{fill:none;stroke:var(--blue);stroke-width:2;vector-effect:non-scaling-stroke}
 .cxbt-bh{fill:none;stroke:var(--slate-2);stroke-width:1.3;stroke-dasharray:4 3;vector-effect:non-scaling-stroke;opacity:.7}
@@ -2316,21 +2318,21 @@ html[data-persona="investor"] #investHub{display:flex;flex-direction:column;flex
 .eq-split{stroke:var(--slate);stroke-width:1;stroke-dasharray:4 3;opacity:.55}
 .eq-oostx{fill:var(--slate);font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;opacity:.7}
 /* trade analytics panel */
-.bt-an{background:var(--surface-2);border:1px solid var(--line);border-radius:13px;padding:13px 15px}
-.bt-anh{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--slate);display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.bt-an{background:rgba(244,246,250,0.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.9);border-radius:16px;padding:16px;box-shadow:0 8px 32px rgba(0,0,0,0.04)}
+.bt-anh{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--slate);display:flex;align-items:center;gap:6px;margin-bottom:12px}
 .bt-anh i{font-style:normal;color:var(--slate-2);font-weight:700;font-size:10px}
-.bt-angrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
-.bt-anc{display:flex;flex-direction:column;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 11px}
+.bt-angrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px}
+.bt-anc{display:flex;flex-direction:column;gap:4px;background:rgba(255,255,255,0.7);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.8);border-radius:12px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.02)}
 .bt-anc>span{font-size:9px;color:var(--slate);text-transform:uppercase;letter-spacing:.2px} .bt-anc>b{font-size:14px}
 /* quantitative anchors under the curve, so the backtest reads as numbers, not just a shape */
 .eq-cap{display:flex;justify-content:space-between;gap:10px;margin-top:9px;padding-top:9px;border-top:1px solid var(--line);flex-wrap:wrap}
 .eq-cap span{font-size:10px;color:var(--slate);text-transform:uppercase;letter-spacing:.2px;display:flex;align-items:baseline;gap:5px}
 .eq-cap b{font-size:13px} .eq-cap i{font-size:11px;font-style:normal}
 /* validation report: the honest in-sample vs out-of-sample cut (the moat) */
-.bt-vr{background:var(--surface-2);border:1px solid var(--line);border-radius:13px;padding:13px 15px;margin-top:2px}
-.bt-vrh{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--slate);display:flex;align-items:center;gap:6px;margin-bottom:10px}
-.bt-vrgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.bt-vrcol{display:flex;flex-direction:column;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+.bt-vr{background:rgba(244,246,250,0.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.9);border-radius:16px;padding:16px;margin-top:2px;box-shadow:0 8px 32px rgba(0,0,0,0.04)}
+.bt-vrh{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--slate);display:flex;align-items:center;gap:6px;margin-bottom:12px}
+.bt-vrgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.bt-vrcol{display:flex;flex-direction:column;gap:4px;background:rgba(255,255,255,0.7);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.8);border-radius:12px;padding:12px 14px;box-shadow:0 2px 8px rgba(0,0,0,0.02)}
 .bt-vrcol>span{font-size:9.5px;color:var(--slate);text-transform:uppercase;letter-spacing:.2px}
 .bt-vrcol>b{font-size:18px;letter-spacing:-.3px} .bt-vrcol>i{font-size:10px;color:var(--slate);font-style:normal}
 .bt-vrverdict{display:flex;align-items:flex-start;gap:7px;margin:11px 0 0;font-size:11px;line-height:1.5;color:var(--ink)}
@@ -2342,8 +2344,8 @@ html[data-persona="investor"] #investHub{display:flex;flex-direction:column;flex
 .lb-sorts{display:inline-flex;gap:3px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:3px}
 .lb-sort{font:inherit;font-size:12px;font-weight:700;cursor:pointer;border:0;background:transparent;color:var(--slate);padding:6px 13px;border-radius:8px}
 .lb-sort.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-sm)}
-.lb-list{display:flex;flex-direction:column;gap:8px;margin-top:13px}
-.lb-row{display:flex;align-items:center;gap:13px;padding:11px 14px;background:var(--surface);border:1px solid var(--line);border-radius:13px}
+.lb-list{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.lb-row{display:flex;align-items:center;gap:13px;padding:12px 16px;background:rgba(255,255,255,0.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.9);border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,0.03)}
 .lb-row.active{border-color:color-mix(in srgb,var(--green) 50%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--green) 22%,transparent)}
 .lb-rank{flex:0 0 auto;width:26px;height:26px;border-radius:8px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:var(--slate)}
 .lb-row:nth-child(1) .lb-rank{background:color-mix(in srgb,var(--amber) 22%,transparent);color:var(--amber)}
@@ -3447,7 +3449,7 @@ html[data-surface="night"] .opp-pstep.last,
 html[data-surface="night"] .rk-tier.on{background:var(--white);border-color:var(--line-2)}
 /* deployed-capital-by-class strip (under the P&L-by-class strip) */
 .mon-dep{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:-4px 0 12px}
-.mon-dep-cell{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:9px;background:var(--surface-2);border:1px solid var(--line)}
+.mon-dep-cell{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:10px;background:rgba(255,255,255,0.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.8);box-shadow:0 2px 8px rgba(0,0,0,0.02)}
 .mon-dep-cell i{font-style:normal;font-size:11px;font-weight:700;color:var(--slate)}
 .mon-dep-cell b{font-size:12px;font-weight:800;color:var(--navy)}
 .mon-dep-all{background:var(--accent-soft);border-color:var(--accent-line)}
@@ -3457,20 +3459,20 @@ html[data-surface="night"] .rk-tier.on{background:var(--white);border-color:var(
 .mon-ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin:2px 0 11px}
 .mon-seg{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .msc-lead{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--slate-2);margin-right:2px}
-.msc-chip{border:1px solid var(--line);background:var(--surface);color:var(--slate);font-family:var(--sans);font-weight:700;font-size:11.5px;padding:5px 11px;border-radius:8px;cursor:pointer;transition:.15s}
-.msc-chip:hover{color:var(--navy);border-color:var(--line-2)}
-.msc-chip.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-d)}
+.msc-chip{border:1px solid rgba(255,255,255,0.8);background:rgba(255,255,255,0.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:var(--slate);font-family:var(--sans);font-weight:700;font-size:11.5px;padding:6px 14px;border-radius:10px;cursor:pointer;transition:all .2s ease;box-shadow:0 2px 8px rgba(0,0,0,0.02)}
+.msc-chip:hover{color:var(--navy);border-color:var(--navy);background:rgba(255,255,255,0.8);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.04)}
+.msc-chip.on{background:var(--accent);border-color:transparent;color:#fff;box-shadow:0 4px 16px color-mix(in srgb,var(--accent) 30%,transparent)}
 .msc-chip:focus-visible{outline:none;box-shadow:var(--ring)}
 .msc-count{font-size:10.5px;color:var(--slate-2);margin-left:2px}
 .mc-dep{font-weight:700;color:var(--slate)}
 .mon-clearfilt{border:0;background:none;color:var(--accent-d);font-family:var(--sans);font-weight:700;font-size:inherit;cursor:pointer;padding:0;text-decoration:underline}
 /* LAYER 1: instrument class (Equity / Options / Futures) */
-.lib-instr{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
-.lib-instr-tab{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;
-  padding:11px 14px;border-radius:13px;cursor:pointer;transition:.15s;background:var(--surface);border:1px solid var(--line-2)}
-.lib-instr-tab:hover{border-color:var(--green);box-shadow:var(--shadow)}
+.lib-instr{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.lib-instr-tab{display:flex;flex-direction:column;gap:5px;align-items:flex-start;text-align:left;
+  padding:14px 16px;border-radius:14px;cursor:pointer;background:rgba(255,255,255,0.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.9);box-shadow:0 8px 32px rgba(0,0,0,0.04);transition:transform 0.25s, box-shadow 0.25s, border-color 0.25s}
+.lib-instr-tab:hover{border-color:var(--accent-line);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,0.08)}
 /* active highlight: opaque accent tint (matches the hold sub-tabs; no muddy semi-transparent bleed) */
-.lib-instr-tab.on{background:var(--accent-soft);border-color:var(--accent-line)}
+.lib-instr-tab.on{background:var(--accent-soft);border-color:var(--accent-line);box-shadow:0 4px 16px rgba(0,0,0,0.04);transform:translateY(-1px)}
 .lib-instr-tab:focus-visible{outline:none;box-shadow:var(--ring)}
 .lii-top{display:inline-flex;align-items:center;gap:7px;color:var(--navy)}
 .lii-top b{font-size:14.5px;font-weight:800}
