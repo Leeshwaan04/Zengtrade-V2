@@ -2257,8 +2257,12 @@ def emit_xml_sitemaps(dist_dir: str, partitions: dict[str, list[str]], build_dat
                 for u in chunk:
                     xml_body.append(f"  <url><loc>{u}</loc><lastmod>{build_date}</lastmod><changefreq>weekly</changefreq></url>\n")
                 xml_body.append("</urlset>\n")
+                chunk_xml = "".join(xml_body)
                 with open(os.path.join(dist_dir, sm_filename), "w", encoding="utf-8") as f:
-                    f.write("".join(xml_body))
+                    f.write(chunk_xml)
+                if part_idx == 1:
+                    with open(os.path.join(dist_dir, f"sitemap-{name}.xml"), "w", encoding="utf-8") as f:
+                        f.write(chunk_xml)
                 print(f"  ✓ {sm_filename} ({len(chunk)} URLs)")
         else:
             sm_filename = f"sitemap-{name}.xml"

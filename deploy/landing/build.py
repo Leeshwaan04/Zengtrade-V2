@@ -30,6 +30,12 @@ chrome = between(SRC, '<header class="topbar">', '<main id="main">').rsplit('<ma
 main_hiw = between(SRC, '<main id="main">', "</main>")
 tail = SRC[SRC.index("</main>") + len("</main>"): SRC.index("</body>")]     # footer + scripts
 
+# Extract shared inline scripts from tail into site.js to save ~1.5 GB across 150k pages
+tail_scripts = re.findall(r'<script[^>]*>(.*?)</script>', tail, re.DOTALL)
+site_js = "\n\n".join(s.strip() for s in tail_scripts)
+tail = re.sub(r'<script[^>]*>.*?</script>', '', tail, flags=re.DOTALL)
+tail += '\n<script src="/site.js" defer></script>'
+
 # make asset + mascot paths absolute so they work from /how-it-works/ and /pricing/
 def absolutize(x):
     x = x.replace('href="assets/', 'href="/assets/').replace('src="assets/', 'src="/assets/')
@@ -393,6 +399,7 @@ if os.path.exists(DIST):
 os.makedirs(DIST)
 shutil.copytree(os.path.join(HERE, "assets"), os.path.join(DIST, "assets"))
 open(os.path.join(DIST, "site.css"), "w").write(css + HOME_CSS + coin_css + article_css + glossary_css + blog_css + pseo_blog_css + tracks_css + pseo_css)   # ONE stylesheet for every page
+open(os.path.join(DIST, "site.js"), "w").write(site_js)   # ONE shared script for every page
 
 # ---- bundle the Supabase auth app onto the SAME origin (login / dashboard / legal) -----
 # Written as FOLDERS (login/index.html) so clean URLs work on GitHub Pages, which has no
@@ -630,9 +637,9 @@ pseo_partitions = {
     "compare": []
 }
 if PSEO_MOD:
-    # Reduce target_count to 75 to fit within the 1.0 GB GitHub Pages artifact limit
-    # (75 coins * 150 pages/coin + 10,000 blog pages * 35KB = ~750 MB)
-    coin_roster = PSEO_MOD.build_pseo_coin_roster(coins if coins else [], target_count=75)
+    # Scale to full 1,000-coin roster for 150,000 programmatic SEO landing pages
+    # Shared site.js saves ~1.5 GB, keeping the entire 150k catalog safely within quota
+    coin_roster = PSEO_MOD.build_pseo_coin_roster(coins if coins else [], target_count=1000)
     sm_title, sm_desc, sm_canon, sm_main = PSEO_MOD.generate_sitemap_html(
         coin_roster, PSEO_MOD.STRATEGIES, PSEO_MOD.INDICATORS, PSEO_MOD.REGIMES)
     emit("sitemap", shell(sm_title, sm_desc, sm_canon, sm_main), sm_canon)
