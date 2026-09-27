@@ -509,7 +509,10 @@ if os.path.isdir(STUDIO_DATA):
 open(os.path.join(DIST, "CNAME"), "w").write("zengtrade.in\n")
 # 404 fallback so unknown paths get a branded page (GitHub Pages serves /404.html)
 open(os.path.join(DIST, "_redirects"), "w").write(   # kept for hosts that DO read it (CF/Netlify)
-    "https://zengtrade.netlify.app/*   https://zengtrade.in/:splat   301!\n")
+    "https://zengtrade.netlify.app/*   https://zengtrade.in/:splat   301!\n"
+    "/.git/*   /404.html   404\n"     # VAPT: block git metadata exposure
+    "/.env*    /404.html   404\n"     # VAPT: block env file exposure
+)
 
 urls = []
 def emit(path, html_str, canon):
@@ -677,21 +680,27 @@ Disallow: /app
 Disallow: /ops/
 Disallow: /admin/
 Disallow: /reset/
+Disallow: /.git/
+Disallow: /.env
+Disallow: /.env.local
 
 User-agent: Googlebot
 Allow: /
 Disallow: /app
 Disallow: /ops/
+Disallow: /.git/
 
 User-agent: Bingbot
 Allow: /
 Disallow: /app
 Disallow: /ops/
+Disallow: /.git/
 
 User-agent: Applebot
 Allow: /
 Disallow: /app
 Disallow: /ops/
+Disallow: /.git/
 
 User-agent: GPTBot
 Allow: /
@@ -718,6 +727,29 @@ Sitemap: https://zengtrade.in/sitemap-index.xml
 Sitemap: https://zengtrade.in/sitemap.xml
 """
 open(os.path.join(DIST, "robots.txt"), "w").write(robots_content)
+
+# ---- Security headers (_headers file for Cloudflare Pages / Netlify) -------------------
+# Cloudflare reads _headers at the dist root and applies per-path rules.
+# VAPT fix: block /.git/* with HTTP 404, add security hardening headers globally.
+headers_content = """
+/.git/*
+  X-Robots-Tag: noindex
+  Cache-Control: no-store
+
+/.env*
+  X-Robots-Tag: noindex
+  Cache-Control: no-store
+
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  X-XSS-Protection: 1; mode=block
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+"""
+open(os.path.join(DIST, "_headers"), "w").write(headers_content.strip() + "\n")
+print("  \u2713 _headers written (Cloudflare security headers + .git block)")
 
 # ---- .nojekyll (CRITICAL) ---------------------------------------------------------------
 # GitHub Pages runs Jekyll by default which silently drops files it does not process,

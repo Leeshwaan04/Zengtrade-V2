@@ -103,6 +103,25 @@ jobs:
             exit 1
           fi
           echo "✅ All sitemaps serving correctly"
+      - name: VAPT security gate
+        run: |
+          SITE=https://zengtrade.in
+          FAIL=0
+          echo "Checking sensitive paths are NOT exposed..."
+          for path in /.git/config /.git/HEAD /.env /.env.local; do
+            code=$(/usr/bin/curl -s -o /dev/null -w "%{http_code}" "$SITE$path")
+            if [ "$code" = "200" ]; then
+              echo "❌ SECURITY FAIL: $path returned HTTP 200 (should be 404)"
+              FAIL=1
+            else
+              echo "✅ $path → $code (blocked)"
+            fi
+          done
+          if [ "$FAIL" = "1" ]; then
+            echo "::error::Sensitive path exposed. Add Cloudflare WAF rule to block /.git/* immediately."
+            exit 1
+          fi
+          echo "✅ VAPT gate passed"
       - name: P0 gate snapshot (informational)
         run: |
           chmod +x scripts/check-migrations.sh scripts/check-worker.sh scripts/status-report.sh
