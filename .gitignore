@@ -16,3 +16,4 @@ assets/app 2.js
 scratch/
 *.DS_Store
 .git_backup/
+node_modules/
