@@ -2267,9 +2267,20 @@ def emit_xml_sitemaps(dist_dir: str, partitions: dict[str, list[str]], build_dat
             for u in url_list:
                 xml_body.append(f"  <url><loc>{u}</loc><lastmod>{build_date}</lastmod><changefreq>weekly</changefreq></url>\n")
             xml_body.append("</urlset>\n")
+            raw_xml = "".join(xml_body)
             with open(os.path.join(dist_dir, sm_filename), "w", encoding="utf-8") as f:
-                f.write("".join(xml_body))
-            print(f"  ✓ {sm_filename} ({len(url_list)} URLs)")
+                f.write(raw_xml)
+            # Write alias with -1 for backwards compatibility with legacy GSC submissions
+            with open(os.path.join(dist_dir, f"sitemap-{name}-1.xml"), "w", encoding="utf-8") as f:
+                f.write(raw_xml)
+            print(f"  ✓ {sm_filename} (and legacy -1.xml alias) ({len(url_list)} URLs)")
+
+    # Legacy alias for sitemap-timeframes_strat-2.xml if it doesn't already exist
+    legacy_strat2 = os.path.join(dist_dir, "sitemap-timeframes_strat-2.xml")
+    if not os.path.exists(legacy_strat2):
+        empty_urlset = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n</urlset>\n'
+        with open(legacy_strat2, "w", encoding="utf-8") as f:
+            f.write(empty_urlset)
 
     # 1. Emit sitemap-index.xml
     index_body = ['<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n']
