@@ -807,6 +807,20 @@ def fetch_coins(syms=None):
         bars_1d = _bars(kl_1d)
         bars = {"24h": _bars(kl_1h), "1w": _bars(kl_4h), "1m": bars_1d[-30:], "3m": bars_1d, "1y": _bars(kl_1w)}
         out.append((sym, name, slug, cat, tk, bars))
+    
+    # Save cache to disk so subsequent steps/runs find it immediately
+    try:
+        data = {
+            "generated_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "universe": [sym for sym, _, _, _, _, _ in out],
+            "coins": [list(row) for row in out],
+        }
+        with open(CACHE_PATH, "w", encoding="utf-8") as f:
+            json.dump(data, f)
+        print(f"  ✓ saved coin_data_cache.json ({len(out)} coins)")
+    except Exception as ex:
+        print("  ! could not write coin_data_cache.json:", ex)
+
     return out
 
 
