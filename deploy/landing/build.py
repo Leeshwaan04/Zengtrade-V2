@@ -719,4 +719,16 @@ Sitemap: https://zengtrade.in/sitemap.xml
 """
 open(os.path.join(DIST, "robots.txt"), "w").write(robots_content)
 
+# ---- .nojekyll (CRITICAL) ---------------------------------------------------------------
+# GitHub Pages runs Jekyll by default which silently drops files it does not process,
+# including .xml sitemaps.  A zero-byte .nojekyll at the dist root tells GitHub Pages to
+# serve the directory as-is, ensuring every sitemap-*.xml is accessible to Googlebot.
+open(os.path.join(DIST, ".nojekyll"), "w").close()
+
+# ---- CNAME (ensure custom domain survives wipes) ----------------------------------------
+cname_path = os.path.join(DIST, "CNAME")
+if not os.path.exists(cname_path):
+    open(cname_path, "w").write("zengtrade.in")
+
 print("built %d pages:" % len(urls), ", ".join(sorted(os.listdir(DIST))))
+print("  ✓ .nojekyll written  (Jekyll bypass — ensures .xml sitemaps are served)")

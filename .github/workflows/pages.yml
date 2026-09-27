@@ -57,6 +57,11 @@ jobs:
           key: coin-data-${{ github.run_id }}
       - name: Build site
         run: python3 deploy/landing/build.py
+      - name: Guarantee .nojekyll (Jekyll bypass — ensures all .xml sitemaps are served)
+        run: |
+          touch deploy/landing/dist/.nojekyll
+          echo "✅ .nojekyll present: $(ls -la deploy/landing/dist/.nojekyll)"
+          echo "✅ sitemap count: $(ls deploy/landing/dist/sitemap*.xml 2>/dev/null | wc -l) XML files"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: deploy/landing/dist
@@ -80,7 +85,26 @@ jobs:
         run: sleep 45
       - name: Production smoke probe
         run: chmod +x scripts/check-production.sh && SITE=https://zengtrade.in ./scripts/check-production.sh
+      - name: Sitemap smoke check (catches Jekyll .nojekyll regressions)
+        run: |
+          SITE=https://zengtrade.in
+          FAIL=0
+          for sm in sitemap-index.xml sitemap.xml sitemap-strategies.xml sitemap-indicators.xml sitemap-core.xml; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$SITE/$sm")
+            if [ "$code" = "200" ]; then
+              echo "✅ $sm → $code"
+            else
+              echo "❌ $sm → $code  (FAIL — check .nojekyll in dist)"
+              FAIL=1
+            fi
+          done
+          if [ "$FAIL" = "1" ]; then
+            echo "::error::One or more sitemaps returned non-200. Ensure .nojekyll exists in deploy/landing/dist."
+            exit 1
+          fi
+          echo "✅ All sitemaps serving correctly"
       - name: P0 gate snapshot (informational)
         run: |
           chmod +x scripts/check-migrations.sh scripts/check-worker.sh scripts/status-report.sh
           ./scripts/status-report.sh || true
+
