@@ -16,3 +16,4 @@ assets/app 2.js
 # scratch
 scratch/
 *.DS_Store
+.git_backup/

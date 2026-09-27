@@ -930,6 +930,119 @@ html.js .lp-rv.in{opacity:1;transform:none}
     </div>
   </section>
 
+  <!-- ====================== 00 · THE THREE MODES ====================== -->
+  <section class="lp-sec" id="modes" aria-labelledby="h-modes" style="padding-top:40px;padding-bottom:80px;background:linear-gradient(to bottom, transparent, rgba(22, 103, 217, 0.03))">
+    <div class="lp-wrap lp-sec-grid">
+      <div class="lp-rail" aria-hidden="true">
+        <span class="lp-idx">00</span>
+        <span class="lp-rlabel">interface</span>
+      </div>
+      <div>
+        <h2 class="lp-h2 lp-rv" id="h-modes">Three modes. One engine.</h2>
+        <p class="lp-body lp-rv" style="--d:60ms">
+          zengtrade adapts to how you interact with the market. Seamlessly switch between building automated algorithms, actively managing risk, and passively accumulating assets—all powered by the same underlying regime-detection engine.
+        </p>
+
+        <div class="card lp-rv" style="--d:100ms; margin-top:32px; padding:0; overflow:hidden; background:var(--surface-2)">
+          <!-- Top bar emulator -->
+          <div style="display:flex;align-items:center;padding:16px 24px;background:var(--surface);border-bottom:1px solid var(--line);gap:16px">
+            <div class="mode-switch seg" role="tablist" style="margin:0 auto">
+              <button class="seg-btn lp-mode-btn" data-target="m-invest" role="tab">Investing</button>
+              <button class="seg-btn lp-mode-btn" data-target="m-trade" role="tab">Trading</button>
+              <button class="seg-btn lp-mode-btn active" data-target="m-algo" role="tab">Algo Studio</button>
+            </div>
+          </div>
+
+          <!-- Views -->
+          <div style="padding:32px 24px; min-height:400px; position:relative">
+            
+            <!-- ALGO STUDIO -->
+            <div id="m-algo" class="lp-mode-view active" style="display:flex;flex-wrap:wrap;gap:20px">
+              <div style="flex:1;min-width:300px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px;box-shadow:var(--shadow)">
+                <div style="display:flex;justify-content:space-between;margin-bottom:16px">
+                  <span class="badge b-accent">Active</span>
+                  <span style="font-family:var(--mono);font-size:12px;color:var(--slate)">BTC-Q9</span>
+                </div>
+                <h4 style="margin:0 0 8px;font-size:16px">Mean Reversion</h4>
+                <p style="color:var(--slate);font-size:13px;margin:0 0 24px;line-height:1.5">Fades VWAP deviations strictly during Neutral regimes.</p>
+                <div style="display:flex;justify-content:space-between;border-top:1px solid var(--line);padding-top:16px">
+                  <div style="font-family:var(--mono);color:var(--green)">+14.2%</div>
+                  <div style="font-family:var(--mono);color:var(--slate)">Win: 68%</div>
+                </div>
+              </div>
+              <div style="flex:1;min-width:300px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px;box-shadow:var(--shadow);opacity:0.6">
+                <div style="display:flex;justify-content:space-between;margin-bottom:16px">
+                  <span class="badge b-warn">Standby</span>
+                  <span style="font-family:var(--mono);font-size:12px;color:var(--slate)">ETH-B1</span>
+                </div>
+                <h4 style="margin:0 0 8px;font-size:16px">Momentum Breakout</h4>
+                <p style="color:var(--slate);font-size:13px;margin:0 0 24px;line-height:1.5">Awaits confirmed Bull regime. Flat otherwise.</p>
+                <div style="display:flex;justify-content:space-between;border-top:1px solid var(--line);padding-top:16px">
+                  <div style="font-family:var(--mono);color:var(--slate)">-</div>
+                  <div style="font-family:var(--mono);color:var(--slate)">-</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- INVESTING -->
+            <div id="m-invest" class="lp-mode-view" style="display:none;flex-wrap:wrap;gap:32px">
+              <div style="flex:1;min-width:260px">
+                <h3 style="font:800 20px/1.2 var(--sans);margin:0 0 6px">Automated DCA</h3>
+                <p style="color:var(--slate);margin:0 0 24px;font-size:13.5px;line-height:1.5">Passive accumulation with automatic deposits.</p>
+                <div style="display:grid;gap:12px">
+                  <div style="display:flex;gap:8px">
+                    <button class="btn secondary" style="flex:1;background:var(--surface)">BTC</button>
+                    <button class="btn ghost" style="flex:1">ETH</button>
+                  </div>
+                  <button class="btn secondary" style="background:var(--surface)">Weekly Frequency</button>
+                  <button class="btn primary" style="background:var(--accent);color:#fff;margin-top:8px">Deploy $200 / wk</button>
+                </div>
+              </div>
+              <div style="flex:1.5;min-width:300px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px;box-shadow:var(--shadow)">
+                <div style="font-family:var(--mono);font-size:11px;color:var(--slate);text-transform:uppercase;margin-bottom:8px">1Y Projected Accumulation</div>
+                <div style="height:120px;width:100%;background:linear-gradient(to top, rgba(0,171,78,0.1), transparent);border-bottom:2px solid var(--green);border-radius:4px;position:relative">
+                  <div style="position:absolute;bottom:0;right:0;padding:8px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--green)">1.04 BTC</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TRADING -->
+            <div id="m-trade" class="lp-mode-view" style="display:none;flex-wrap:wrap;gap:32px">
+              <div style="flex:1;min-width:260px">
+                <h3 style="font:800 20px/1.2 var(--sans);margin:0 0 6px">Quick Bracket</h3>
+                <p style="color:var(--slate);margin:0 0 24px;font-size:13.5px;line-height:1.5">Strict risk management, instant execution.</p>
+                <div style="display:grid;gap:12px">
+                  <div style="display:flex;gap:8px">
+                    <button class="btn secondary" style="flex:1;color:var(--green);border-color:var(--green);background:var(--surface)">LONG</button>
+                    <button class="btn ghost" style="flex:1">SHORT</button>
+                  </div>
+                  <div style="font-family:var(--mono);font-size:12px;padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:8px">Size: $10,000</div>
+                  <button class="btn primary" style="background:var(--red);color:#fff;margin-top:8px">Execute Market Bracket</button>
+                </div>
+              </div>
+              <div style="flex:1.5;min-width:300px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px;box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:center">
+                <div style="text-align:center">
+                  <div style="font:600 11px/1 var(--mono);color:var(--green);margin-bottom:4px;text-transform:uppercase">Take Profit (+3%)</div>
+                  <b style="font:700 20px/1 var(--mono);color:var(--navy)">$68,450.00</b>
+                </div>
+                <div style="display:flex;align-items:center;margin:16px 0">
+                  <div style="flex:1;height:2px;background:var(--green-soft)"></div>
+                  <div style="padding:6px 12px;background:var(--surface);border:1px solid var(--line);border-radius:24px;font:700 12px/1 var(--sans);color:var(--slate);box-shadow:0 2px 8px rgba(0,0,0,0.04)">Entry: $66,450.00</div>
+                  <div style="flex:1;height:2px;background:color-mix(in srgb,var(--red) 15%,transparent)"></div>
+                </div>
+                <div style="text-align:center">
+                  <b style="font:700 20px/1 var(--mono);color:var(--navy)">$65,450.00</b>
+                  <div style="font:600 11px/1 var(--mono);color:var(--red);margin-top:4px;text-transform:uppercase">Stop Loss (-1.5%)</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ====================== 01 · HONESTY ====================== -->
   <section class="lp-sec" id="honesty" aria-labelledby="h-honesty">
     <div class="lp-wrap lp-sec-grid">
@@ -1281,7 +1394,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
             <strong class="lp-flc-val">
               <span class="lp-flc-carousel" aria-hidden="true">
                 <img src="assets/mascot-bull.png" class="cbull" alt="" />
-                <img src="assets/mascot-owl.png" class="cowl" alt="" />
+                <img src="assets/mascot-neutral.png" class="cowl" alt="" />
                 <img src="assets/mascot-bear.png" class="cbear" alt="" />
               </span>
               <span class="lp-regime-txt">
@@ -1554,6 +1667,31 @@ html.js .lp-rv.in{opacity:1;transform:none}
     }, { rootMargin: "0px 0px -10% 0px", threshold: 0.04 });
     reveals.forEach(function (el) { io.observe(el); });
   }
+
+  /* ---- three-mode showcase ----------------------------------------- */
+  var modeBtns = [].slice.call(document.querySelectorAll(".lp-mode-btn"));
+  var modeViews = [].slice.call(document.querySelectorAll(".lp-mode-view"));
+  
+  modeBtns.forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      var targetId = btn.getAttribute("data-target");
+      
+      // Update buttons
+      modeBtns.forEach(function(b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      
+      // Update views
+      modeViews.forEach(function(view) {
+        if (view.id === targetId) {
+          view.classList.add("active");
+          view.style.display = "flex";
+        } else {
+          view.classList.remove("active");
+          view.style.display = "none";
+        }
+      });
+    });
+  });
 
   // the topbar copy of the control fades in once the hero one is gone
   var heroControl = document.querySelector(".lp-hero-control");

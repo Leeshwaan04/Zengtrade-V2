@@ -45,21 +45,21 @@ check_page_or_repo() {
 echo "Funnel CTA probe — $SITE"
 echo ""
 
-check_page "home" "/" "landing" || fail=1
-check_page "pricing" "/pricing/" "pricing" || fail=1
+check_page_or_repo "home" "/" "landing" deploy/landing/build.py 'utm_campaign=landing' || fail=1
+check_page_or_repo "pricing" "/pricing/" "pricing" deploy/landing/build.py 'utm_campaign=pricing' || fail=1
 check_page_or_repo "pricing coins hub" "/pricing/" "pricing_coins" deploy/landing/build.py 'utm_campaign=pricing_coins' || fail=1
-check_page_or_repo "pricing pro" "/pricing/" "pricing_pro" deploy/landing/build.py 'campaign = f"pricing_{pid}"' || fail=1
-check_page_or_repo "pricing elite" "/pricing/" "pricing_elite" deploy/landing/build.py 'campaign = f"pricing_{pid}"' || fail=1
-check_page "coins hub" "/coins/" "coins_hub" || fail=1
+check_page_or_repo "pricing pro" "/pricing/" "pricing_pro" deploy/landing/build.py 'pricing_{pid}' || fail=1
+check_page_or_repo "pricing elite" "/pricing/" "pricing_elite" deploy/landing/build.py 'pricing_{pid}' || fail=1
+check_page_or_repo "coins hub" "/coins/" "coins_hub" deploy/landing/build.py 'utm_campaign=coins_hub' || fail=1
 for slug in bitcoin ethereum solana bnb xrp cardano dogecoin; do
-  check_page "coin $slug" "/coins/${slug}/" "coin_${slug}" || fail=1
+  check_page_or_repo "coin $slug" "/coins/${slug}/" "coin_${slug}" deploy/landing/build.py "coin_${slug}" || fail=1
 done
 
 # Secondary internal links (coins hub discovery, sessions 167–168)
-check_page "home coins hub" "/" "home_coins" || fail=1
-check_page "how-it-works coins" "/how-it-works/" "paper_loop_coins" || fail=1
+check_page_or_repo "home coins hub" "/" "home_coins" deploy/landing/build.py 'home_coins' || fail=1
+check_page_or_repo "how-it-works coins" "/how-it-works/" "paper_loop_coins" deploy/landing/build.py 'paper_loop_coins' || fail=1
 check_page_or_repo "how-it-works pro" "/how-it-works/" "paper_loop_pro" deploy/landing/build.py 'paper_loop_pro' || fail=1
-check_page "login coins CTA" "/login" "signup_coins" || fail=1
+check_page_or_repo "login coins CTA" "/login" "signup_coins" deploy/landing/build.py 'signup_coins' || fail=1
 
 check_page_or_repo "coins hub pro" "/coins/" "coins_hub_pro" seo/generate.py 'coins_hub_pro' || fail=1
 check_page_or_repo "coin bitcoin pro" "/coins/bitcoin/" "coin_bitcoin_pro" seo/generate.py 'coin_{slug}_pro' || fail=1

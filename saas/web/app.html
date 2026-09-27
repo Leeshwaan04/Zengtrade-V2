@@ -74,19 +74,22 @@
   .srow-metric{text-align:right;min-width:56px} .srow-metric span{display:block;font:700 14px/1.2 var(--mono);font-variant-numeric:tabular-nums} .srow-metric small{font:600 9.5px/1 var(--mono);color:var(--slate-2);text-transform:uppercase}
   /* strategy cards (marketplace) */
   .grid.cards{grid-template-columns:1fr}@media(min-width:680px){.grid.cards{grid-template-columns:1fr 1fr}}@media(min-width:940px){.grid.cards{grid-template-columns:repeat(3,1fr)}}
-  .scard{background:var(--surface);border:1px solid var(--line);border-radius:15px;padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column}
-  .scard.on{border-color:var(--green-line);box-shadow:0 0 0 2px var(--green-soft),var(--shadow)}
-  .scard-top{display:flex;align-items:center;gap:8px;margin-bottom:8px} .scard-top b{font:700 16px/1.3 var(--sans)}
-  .scard-desc{margin:0 0 14px;color:var(--slate);font-size:13.5px;line-height:1.55;flex:1}
-  .scard-bt{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px}
-  .scard-bt div{text-align:center} .scard-bt b{display:block;font:700 14px/1.2 var(--mono);font-variant-numeric:tabular-nums} .scard-bt small{font:600 9px/1 var(--mono);color:var(--slate-2);text-transform:uppercase}
-  .scard-bt-label{font:600 10px/1.4 var(--mono);color:var(--slate-2);text-align:center;margin:8px 0 14px}
+  .scard{background:linear-gradient(145deg, var(--surface), var(--surface-2));border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 4px 14px rgba(0,0,0,0.03);display:flex;flex-direction:column;transition:transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s cubic-bezier(0.16,1,0.3,1)}
+  .scard:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,0.08);border-color:var(--line-2)}
+  .scard.on{border-color:var(--green-line);box-shadow:0 0 0 2px var(--green-soft), 0 12px 32px rgba(0,171,78,0.12)}
+  .scard-top{display:flex;align-items:center;gap:8px;margin-bottom:10px} .scard-top b{font:800 17px/1.3 var(--sans);letter-spacing:-0.01em}
+  .scard-desc{margin:0 0 18px;color:var(--slate);font-size:14px;line-height:1.6;flex:1}
+  .scard-bt{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:inset 0 1px 3px rgba(0,0,0,0.02)}
+  .scard-bt div{text-align:center} .scard-bt b{display:block;font:700 14px/1.2 var(--mono);font-variant-numeric:tabular-nums;color:var(--navy)} .scard-bt small{font:600 9.5px/1 var(--mono);color:var(--slate-2);text-transform:uppercase}
+  .scard-bt-label{font:700 10px/1.4 var(--mono);color:var(--slate);text-align:center;margin:10px 0 16px;text-transform:uppercase;letter-spacing:0.04em}
+  
   /* table */
-  .table-card{padding:0;overflow:hidden} .tbl-scroll{overflow-x:auto}
-  table{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
-  thead th{font:700 10px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--slate-2);text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--surface-2);position:sticky;top:0}
-  tbody td{padding:11px 14px;border-bottom:1px solid var(--line)} tbody tr:last-child td{border-bottom:0}
-  .tbl-foot{padding:12px 14px;font:600 11px/1 var(--mono);color:var(--slate-2);text-align:center}
+  .table-card{padding:0;overflow:hidden;border-radius:16px;border:1px solid var(--line);box-shadow:0 4px 14px rgba(0,0,0,0.03)} .tbl-scroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:560px}
+  thead th{font:700 10.5px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--slate-2);text-align:left;padding:14px 16px;border-bottom:1px solid var(--line);background:linear-gradient(180deg, var(--surface), var(--surface-2));position:sticky;top:0}
+  tbody tr{transition:background 0.15s} tbody tr:hover{background:var(--surface-2)}
+  tbody td{padding:12px 16px;border-bottom:1px solid var(--line)} tbody tr:last-child td{border-bottom:0}
+  .tbl-foot{padding:14px 16px;font:600 11px/1 var(--mono);color:var(--slate-2);text-align:center;background:var(--surface-2);border-top:1px solid var(--line)}
   /* account */
   .acc{padding:6px 18px} .acc.danger{border-color:var(--line)}
   .acc-row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)} .acc-row:last-child{border-bottom:0}
@@ -131,14 +134,25 @@
   :root[data-theme="dark"] .toast{color:#04140a}:root[data-theme="dark"] .toast.info{background:var(--surface);color:var(--navy);border:1px solid var(--line)}
   @media(prefers-color-scheme:dark){.toast.info{background:var(--surface);color:var(--navy);border:1px solid var(--line)}}
   /* dialog */
-  dialog{border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--navy);padding:0;box-shadow:var(--shadow-lg,0 24px 60px -18px rgba(0,0,0,.3));max-width:440px;width:92%}
-  dialog::backdrop{background:rgba(8,13,24,.55)}
-  .ob{padding:26px 26px 22px;text-align:center} .ob .logo{width:44px;height:44px;margin:0 auto 14px}
-  .ob h2{font:800 22px/1.2 var(--sans);margin:0 0 8px} .ob p{color:var(--slate);font-size:14.5px;line-height:1.6;margin:0 auto 8px;max-width:34ch}
-  .ob .pts{text-align:left;margin:16px auto 20px;max-width:32ch;display:grid;gap:10px}
-  .ob .pt{display:flex;gap:10px;font-size:13.5px;color:var(--slate)} .ob .pt b{color:var(--navy)}
-  .ob .pt svg{flex:0 0 auto;width:18px;height:18px;stroke:var(--green-d);fill:none;stroke-width:2.4;margin-top:1px}
-  .ob .acts{display:flex;gap:10px} .ob .acts .btn{flex:1}
+  dialog{border:1px solid var(--line-2);border-radius:20px;background:linear-gradient(145deg, rgba(255,255,255,0.95), rgba(248,250,252,0.85));color:var(--navy);padding:0;box-shadow:0 30px 80px -20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,1);max-width:480px;width:92%;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);animation:riseIn 0.5s cubic-bezier(0.16,1,0.3,1) both}
+  :root[data-theme="dark"] dialog {background:linear-gradient(145deg, rgba(16,26,46,0.95), rgba(12,20,36,0.85));box-shadow:0 30px 80px -20px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);border-color:var(--line)}
+  dialog::backdrop{background:rgba(8,13,24,0.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:fadeIn 0.4s ease}
+  @keyframes riseIn{0%{opacity:0;transform:translateY(20px) scale(0.95)}100%{opacity:1;transform:translateY(0) scale(1)}}
+  @keyframes fadeIn{0%{opacity:0}100%{opacity:1}}
+  
+  .ob{padding:32px 32px 28px;text-align:center} 
+  .ob .logo{width:52px;height:52px;margin:0 auto 18px;animation:floatBob 4s ease-in-out infinite;filter:drop-shadow(0 8px 16px rgba(0,171,78,0.3))}
+  @keyframes floatBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  
+  .ob h2{font:800 26px/1.15 var(--sans);letter-spacing:-0.02em;margin:0 0 10px} 
+  .ob p{color:var(--slate);font-size:15px;line-height:1.6;margin:0 auto 12px;max-width:38ch}
+  
+  .ob .pts{text-align:left;margin:24px auto 28px;max-width:36ch;display:grid;gap:14px}
+  .ob .pt{display:flex;gap:14px;font-size:14px;color:var(--slate);background:var(--surface);padding:14px;border-radius:14px;border:1px solid var(--line);box-shadow:0 2px 8px rgba(0,0,0,0.03);transition:transform 0.2s}
+  .ob .pt:hover{transform:translateX(4px);border-color:var(--green-line)}
+  .ob .pt b{color:var(--navy);display:block;margin-bottom:2px}
+  .ob .pt svg{flex:0 0 auto;width:22px;height:22px;stroke:var(--green-d);fill:none;stroke-width:2.4;margin-top:2px;background:var(--green-soft);border-radius:6px;padding:3px}
+  .ob .acts{display:flex;gap:12px} .ob .acts .btn{flex:1;padding:14px;font-size:15px}
   /* pricing */
   .page-h.center{text-align:center} .page-h.center p{margin-left:auto;margin-right:auto} .iso.center{text-align:center}
   .cycle{display:inline-flex;gap:3px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:4px;margin-top:14px}
@@ -160,11 +174,40 @@
   .plan ul li{position:relative;padding-left:22px;font-size:13.5px;color:var(--slate);line-height:1.4}
   .plan ul li::before{content:"✓";position:absolute;left:0;color:var(--green-d);font-weight:700}
   .btn.full[disabled]{opacity:.55;cursor:default}
+  /* mode switcher */
+  .mode-switch{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px;margin-left:12px}
+  .mode-switch button{background:transparent;border:0;color:var(--slate-2);font:600 12px/1 var(--sans);padding:7px 12px;border-radius:7px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:6px}
+  .mode-switch button:hover{color:var(--navy)}
+  .mode-switch button.on{background:var(--surface);color:var(--green-d);box-shadow:0 1px 3px rgba(0,0,0,0.1);font-weight:700}
+  .mode-switch svg{width:14px;height:14px;stroke-width:2.5;stroke:currentColor;fill:none}
+  
+  /* premium mode styles */
+  .mode-hero{padding:34px 24px;border-radius:18px;margin-bottom:20px;position:relative;overflow:hidden;border:1px solid var(--line)}
+  .mode-hero::before{content:"";position:absolute;top:0;left:0;right:0;bottom:0;opacity:0.07;background-size:20px 20px;background-image:radial-gradient(circle at 1px 1px, currentColor 1.5px, transparent 0)}
+  .mode-hero.investing{background:linear-gradient(135deg, var(--surface), var(--surface-2));border-color:var(--blue);color:var(--blue)}
+  .mode-hero.trading{background:linear-gradient(135deg, var(--surface), var(--surface-2));border-color:var(--red);color:var(--red)}
+  .mode-hero h2{font:800 clamp(24px,4vw,32px)/1.15 var(--sans);letter-spacing:-.02em;margin:0 0 10px;color:var(--navy)}
+  .mode-hero p{font-size:15px;color:var(--slate);max-width:60ch;margin:0;line-height:1.6;position:relative;z-index:2}
+  
+  .glass-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:0 8px 30px -12px rgba(0,0,0,0.08);position:relative;overflow:hidden;transition:transform 0.2s}
+  .glass-card:hover{transform:translateY(-2px)}
+  .glass-card-ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:18px;font-weight:800;margin-bottom:16px}
+  .glass-card.investing .glass-card-ic{background:color-mix(in srgb,var(--blue) 12%,var(--surface));color:var(--blue)}
+  .glass-card.trading .glass-card-ic{background:color-mix(in srgb,var(--red) 12%,var(--surface));color:var(--red)}
+  
+  .glass-stat{background:var(--surface-2);border-radius:14px;padding:18px;border:1px solid var(--line);box-shadow:inset 0 1px 2px rgba(255,255,255,0.5)}
+  .glass-stat span{display:block;font:600 11px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--slate);margin-bottom:8px}
+  .glass-stat b{font:700 28px/1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .glass-stat.investing b{color:var(--blue)} .glass-stat.trading b{color:var(--red)}
 </style></head><body>
 
 <header class="topbar"><div class="in">
   <span class="brand"><svg class="logo" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#00AB4E"/><path d="M24.69 13.67A9 9 0 1 1 20.5 8.21" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M12.5 19.5L17 15L20 17.5L26.5 8.8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>zengtrade</span>
-  <a class="btn ghost sm" href="/dashboard/" style="margin-left:4px">Algo Studio</a>
+  <div class="mode-switch" id="modeSwitch">
+    <button data-mode="investing" class="mode-btn"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Investing</button>
+    <button data-mode="trading" class="mode-btn"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Trading</button>
+    <button data-mode="algo" class="mode-btn on"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Algo Studio</button>
+  </div>
   <span class="sp"></span>
   <button class="btn primary sm" id="upgradeBtn" style="display:none">Upgrade to Pro</button>
   <span class="uchip" id="userEmail">…</span>

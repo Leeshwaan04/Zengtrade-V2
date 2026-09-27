@@ -601,7 +601,7 @@ if blog_posts:
 blog_sitemaps = []
 if BLOG_MOD:
     sample_only = bool(os.environ.get("ZT_FAST_PSEO"))
-    blog_urls, blog_sitemaps = BLOG_MOD.build_blog(DIST, shell, sample_only=sample_only)
+    blog_urls, blog_sitemaps = BLOG_MOD.build_blog(DIST, shell, sample_only=sample_only, coins=coins)
     urls.extend(blog_urls)
 
 # Product routes (auth-gated but indexable landing/signup entry points for GSC)

@@ -69,9 +69,18 @@ def safe_str(s: str) -> str:
 
 def get_coin_roster():
     p = os.path.join(os.path.dirname(__file__), "coin_data_cache.json")
-    with open(p, "r", encoding="utf-8") as f:
-        d = json.loads(f.read())
-    return d["coins"]
+    if os.path.exists(p):
+        try:
+            with open(p, "r", encoding="utf-8") as f:
+                d = json.loads(f.read())
+            return d.get("coins", [])
+        except Exception:
+            pass
+    try:
+        import generate as G
+        return G.get_coin_data()
+    except Exception:
+        return []
 
 def render_article(topic, coin, build_date):
     sym, name, slug, cat, tk, bars = coin
@@ -330,9 +339,10 @@ def render_category(pillar_key, topics, coins, build_date):
     return title, desc, canon, main_html, extra
 
 
-def build_blog(dist_dir, shell_func, sample_only=False):
+def build_blog(dist_dir, shell_func, sample_only=False, coins=None):
     topics = generate_topics()
-    coins = get_coin_roster()
+    if coins is None:
+        coins = get_coin_roster()
     if sample_only:
         coins = coins[:5]  # drastically reduce scope for fast tests
         
