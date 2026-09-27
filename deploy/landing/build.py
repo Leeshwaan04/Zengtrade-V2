@@ -627,7 +627,7 @@ core_urls = [
 urls.extend(core_urls)
 
 coin_urls = [c for c in urls if "/coins/" in c]
-learn_urls = [l for l in urls if "/learn/" in l or "/blog/" in l]
+learn_urls = [l for l in urls if "/learn/" in l]
 
 # ---- /sitemap/ interactive HTML directory & 150,000 pSEO catalog ----------------------
 pseo_partitions = {
