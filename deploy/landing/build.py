@@ -604,21 +604,18 @@ if BLOG_MOD:
     blog_urls, blog_sitemaps = BLOG_MOD.build_blog(DIST, shell, sample_only=sample_only, coins=coins)
     urls.extend(blog_urls)
 
-# Product routes (auth-gated but indexable landing/signup entry points for GSC)
+# Product routes (clean canonical indexable landing pages for GSC)
 core_urls = [
     "https://zengtrade.in/",
     "https://zengtrade.in/how-it-works/",
     "https://zengtrade.in/pricing/",
     "https://zengtrade.in/sitemap/",
-    "https://zengtrade.in/login",
-    "https://zengtrade.in/dashboard",
-    "https://zengtrade.in/app",
+    "https://zengtrade.in/terms/",
+    "https://zengtrade.in/privacy/",
+    "https://zengtrade.in/risk/",
+    "https://zengtrade.in/login/",
 ]
-urls.extend([
-    "https://zengtrade.in/login",
-    "https://zengtrade.in/dashboard",
-    "https://zengtrade.in/app",
-])
+urls.extend(core_urls)
 
 coin_urls = [c for c in urls if "/coins/" in c]
 learn_urls = [l for l in urls if "/learn/" in l or "/blog/" in l]
