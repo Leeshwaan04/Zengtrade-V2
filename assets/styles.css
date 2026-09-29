@@ -721,7 +721,9 @@ body.resizing{user-select:none;cursor:col-resize}
 /* dedicated full-width ticker tape */
 .ticker-bar{flex:0 0 auto;display:flex;align-items:center;padding:0 10px;background:var(--surface);
   border-bottom:1px solid var(--line);overflow:hidden}
-.tb-viewport{flex:1 1 auto;min-width:0;overflow:hidden;display:flex}
+.tb-viewport{flex:1 1 auto;min-width:0;overflow:hidden;display:flex;
+  mask-image:linear-gradient(to right, transparent, black 28px, black calc(100% - 28px), transparent);
+  -webkit-mask-image:linear-gradient(to right, transparent, black 28px, black calc(100% - 28px), transparent)}
 .tb-viewport.static{overflow-x:auto;scrollbar-width:none}
 .tb-viewport.static::-webkit-scrollbar{display:none}
 .tb-ticker{display:flex;align-items:center;width:max-content;will-change:transform}

@@ -1765,5 +1765,265 @@ html.js .lp-rv.in{opacity:1;transform:none}
   setInterval(pull, 15000);          // refresh every 15s
 })();
 </script>
+<script>
+/* Interactive Candlestick Chart for PSEO Strategy & Indicator Pages */
+(function initPseoChart() {
+  var container = document.getElementById("chart");
+  if (!container) return;
+  var symbol = (container.getAttribute("data-symbol") || "BTCUSDT").toUpperCase();
+  var tf = (container.getAttribute("data-tf") || "15m").toLowerCase();
+
+  var binanceInterval = "15m";
+  if (tf === "1d" || tf === "4h" || tf === "1h" || tf === "15m" || tf === "5m" || tf === "1m") {
+    binanceInterval = tf;
+  }
+
+  container.innerHTML = 
+    '<div class="pseo-chart-hud" id="chartHud">' +
+      '<span><b id="hudSym">' + symbol + '</b></span>' +
+      '<span>O: <span class="val" id="hudO">—</span></span>' +
+      '<span>H: <span class="val" id="hudH">—</span></span>' +
+      '<span>L: <span class="val" id="hudL">—</span></span>' +
+      '<span>C: <span class="val" id="hudC">—</span></span>' +
+      '<span>Change: <span class="val" id="hudChg">—</span></span>' +
+    '</div>' +
+    '<canvas class="pseo-chart-canvas" id="pseoCanvas"></canvas>' +
+    '<div class="pseo-chart-tooltip" id="chartTooltip"></div>';
+
+  var canvas = document.getElementById("pseoCanvas");
+  var hudO = document.getElementById("hudO");
+  var hudH = document.getElementById("hudH");
+  var hudL = document.getElementById("hudL");
+  var hudC = document.getElementById("hudC");
+  var hudChg = document.getElementById("hudChg");
+  var tooltip = document.getElementById("chartTooltip");
+  if (!canvas) return;
+
+  var ctx = canvas.getContext("2d");
+  var bars = [];
+  var hoveredIndex = -1;
+
+  function genFallbackBars() {
+    var b = [];
+    var now = Date.now();
+    var p = symbol.indexOf("BTC") !== -1 ? 83500 : symbol.indexOf("ETH") !== -1 ? 2680 : symbol.indexOf("SOL") !== -1 ? 118 : 1.5;
+    for (var i = 50; i >= 0; i--) {
+      var t = now - i * 15 * 60 * 1000;
+      var chg = (Math.random() - 0.49) * 0.015 * p;
+      var open = p;
+      var close = p + chg;
+      var high = Math.max(open, close) + Math.random() * 0.006 * p;
+      var low = Math.min(open, close) - Math.random() * 0.006 * p;
+      var vol = Math.random() * 1000 + 200;
+      b.push({ time: t, open: open, high: high, low: low, close: close, volume: vol });
+      p = close;
+    }
+    return b;
+  }
+
+  function fetchKlines() {
+    var url = "https://data-api.binance.vision/api/v3/klines?symbol=" + symbol + "&interval=" + binanceInterval + "&limit=60";
+    fetch(url)
+      .then(function(r) { return r.json(); })
+      .then(function(raw) {
+        if (!Array.isArray(raw) || raw.length === 0) {
+          bars = genFallbackBars();
+        } else {
+          bars = raw.map(function(k) {
+            return {
+              time: +k[0],
+              open: parseFloat(k[1]),
+              high: parseFloat(k[2]),
+              low: parseFloat(k[3]),
+              close: parseFloat(k[4]),
+              volume: parseFloat(k[5])
+            };
+          });
+        }
+        draw();
+      })
+      .catch(function() {
+        bars = genFallbackBars();
+        draw();
+      });
+  }
+
+  function fmtPrice(p) {
+    if (p == null || isNaN(p)) return "—";
+    if (p >= 1000) return p.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (p >= 1) return p.toFixed(2);
+    if (p >= 0.01) return p.toFixed(4);
+    return p.toFixed(6);
+  }
+
+  function draw() {
+    if (!bars || bars.length === 0) return;
+    var dpr = window.devicePixelRatio || 1;
+    var rect = container.getBoundingClientRect();
+    var w = rect.width;
+    var h = rect.height;
+    if (w === 0 || h === 0) return;
+
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.resetTransform && ctx.resetTransform();
+    ctx.scale(dpr, dpr);
+
+    var paddingRight = 65;
+    var paddingTop = 36;
+    var paddingBottom = 26;
+    var chartW = w - paddingRight;
+    var chartH = h - paddingTop - paddingBottom;
+    var volH = chartH * 0.20;
+    var priceH = chartH * 0.80;
+
+    var minPrice = Infinity;
+    var maxPrice = -Infinity;
+    var maxVol = 0;
+    for (var i = 0; i < bars.length; i++) {
+      if (bars[i].low < minPrice) minPrice = bars[i].low;
+      if (bars[i].high > maxPrice) maxPrice = bars[i].high;
+      if (bars[i].volume > maxVol) maxVol = bars[i].volume;
+    }
+    var priceRange = maxPrice - minPrice || 1;
+    minPrice -= priceRange * 0.05;
+    maxPrice += priceRange * 0.05;
+    priceRange = maxPrice - minPrice;
+
+    ctx.clearRect(0, 0, w, h);
+    var isDark = document.documentElement.getAttribute("data-surface") === "night" || document.documentElement.getAttribute("data-theme") === "dark";
+    var gridColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
+    var textColor = isDark ? "#8a9cc0" : "#64748b";
+    var upColor = "#00ab4e";
+    var dnColor = "#e5383b";
+
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = 1;
+
+    var gridLines = 4;
+    ctx.font = "10px monospace";
+    ctx.fillStyle = textColor;
+    ctx.textAlign = "left";
+    for (var g = 0; g <= gridLines; g++) {
+      var gy = paddingTop + (priceH / gridLines) * g;
+      ctx.beginPath();
+      ctx.moveTo(0, gy);
+      ctx.lineTo(chartW, gy);
+      ctx.stroke();
+      var gPrice = maxPrice - (priceRange / gridLines) * g;
+      ctx.fillText(fmtPrice(gPrice), chartW + 6, gy + 3);
+    }
+
+    var n = bars.length;
+    var candleSpacing = chartW / n;
+    var candleWidth = Math.max(2, candleSpacing * 0.72);
+
+    var ema = [];
+    var k = 2 / (20 + 1);
+    var prevEma = bars[0].close;
+    ema.push(prevEma);
+    for (var m = 1; m < n; m++) {
+      prevEma = bars[m].close * k + prevEma * (1 - k);
+      ema.push(prevEma);
+    }
+
+    for (var j = 0; j < n; j++) {
+      var b = bars[j];
+      var cx = j * candleSpacing + candleSpacing / 2;
+      var isUp = b.close >= b.open;
+      var cColor = isUp ? upColor : dnColor;
+
+      if (maxVol > 0) {
+        var vH = (b.volume / maxVol) * volH;
+        var vy = h - paddingBottom - vH;
+        ctx.fillStyle = isUp ? "rgba(0,171,78,0.22)" : "rgba(229,56,59,0.22)";
+        ctx.fillRect(cx - candleWidth / 2, vy, candleWidth, vH);
+      }
+
+      var yHigh = paddingTop + ((maxPrice - b.high) / priceRange) * priceH;
+      var yLow = paddingTop + ((maxPrice - b.low) / priceRange) * priceH;
+      ctx.strokeStyle = cColor;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(cx, yHigh);
+      ctx.lineTo(cx, yLow);
+      ctx.stroke();
+
+      var yOpen = paddingTop + ((maxPrice - b.open) / priceRange) * priceH;
+      var yClose = paddingTop + ((maxPrice - b.close) / priceRange) * priceH;
+      var topY = Math.min(yOpen, yClose);
+      var bodyH = Math.max(1.5, Math.abs(yOpen - yClose));
+      ctx.fillStyle = cColor;
+      ctx.fillRect(cx - candleWidth / 2, topY, candleWidth, bodyH);
+    }
+
+    ctx.beginPath();
+    ctx.strokeStyle = "#38bdf8";
+    ctx.lineWidth = 1.6;
+    for (var e = 0; e < n; e++) {
+      var ex = e * candleSpacing + candleSpacing / 2;
+      var ey = paddingTop + ((maxPrice - ema[e]) / priceRange) * priceH;
+      if (e === 0) ctx.moveTo(ex, ey);
+      else ctx.lineTo(ex, ey);
+    }
+    ctx.stroke();
+
+    if (hoveredIndex >= 0 && hoveredIndex < n) {
+      var hbar = bars[hoveredIndex];
+      var hx = hoveredIndex * candleSpacing + candleSpacing / 2;
+      var hy = paddingTop + ((maxPrice - hbar.close) / priceRange) * priceH;
+
+      ctx.strokeStyle = isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)";
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(hx, paddingTop);
+      ctx.lineTo(hx, h - paddingBottom);
+      ctx.moveTo(0, hy);
+      ctx.lineTo(chartW, hy);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      var diff = hbar.close - hbar.open;
+      var pctChg = (diff / hbar.open) * 100;
+      hudO.textContent = fmtPrice(hbar.open);
+      hudH.textContent = fmtPrice(hbar.high);
+      hudL.textContent = fmtPrice(hbar.low);
+      hudC.textContent = fmtPrice(hbar.close);
+      hudChg.textContent = (pctChg >= 0 ? "+" : "") + pctChg.toFixed(2) + "%";
+      hudChg.className = "val " + (pctChg >= 0 ? "up" : "down");
+    } else {
+      var last = bars[bars.length - 1];
+      var first = bars[0];
+      var totalChg = ((last.close - first.open) / first.open) * 100;
+      hudO.textContent = fmtPrice(last.open);
+      hudH.textContent = fmtPrice(last.high);
+      hudL.textContent = fmtPrice(last.low);
+      hudC.textContent = fmtPrice(last.close);
+      hudChg.textContent = (totalChg >= 0 ? "+" : "") + totalChg.toFixed(2) + "%";
+      hudChg.className = "val " + (totalChg >= 0 ? "up" : "down");
+    }
+  }
+
+  container.addEventListener("mousemove", function(e) {
+    var rect = container.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+    var chartW = rect.width - 65;
+    if (x >= 0 && x <= chartW && bars.length > 0) {
+      var candleSpacing = chartW / bars.length;
+      hoveredIndex = Math.floor(x / candleSpacing);
+      draw();
+    }
+  });
+
+  container.addEventListener("mouseleave", function() {
+    hoveredIndex = -1;
+    draw();
+  });
+
+  window.addEventListener("resize", draw);
+  fetchKlines();
+  setInterval(fetchKlines, 15000);
+})();
+</script>
 </body>
 </html>

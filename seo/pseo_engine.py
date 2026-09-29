@@ -1360,7 +1360,7 @@ def render_timeframe_strategy_content(strat: dict, coin: tuple[str, str, str, st
             <span class="cm-pill">Target Horizon: <strong>{tf['horizon']}</strong></span>
           </div>
         </div>
-        <div id="chart" style="height:360px;width:100%"></div>
+        <div id="chart" class="pseo-chart-container" data-symbol="{sym.upper()}USDT" data-tf="{tf_slug}" data-name="{html.escape(name)}"></div>
       </div>
     </div>
   </section>
@@ -1542,7 +1542,7 @@ def render_timeframe_indicator_content(ind: dict, coin: tuple[str, str, str, str
             <span class="cm-pill">Horizon: <strong>{tf['horizon']}</strong></span>
           </div>
         </div>
-        <div id="chart" style="height:360px;width:100%"></div>
+        <div id="chart" class="pseo-chart-container" data-symbol="{sym.upper()}USDT" data-tf="{tf_slug}" data-name="{html.escape(name)}"></div>
       </div>
     </div>
   </section>
@@ -1714,7 +1714,7 @@ def render_strategy_comparison_content(comp: dict, coin: tuple[str, str, str, st
             <span class="cm-pill">Strategy B: <strong>{s2_name}</strong></span>
           </div>
         </div>
-        <div id="chart" style="height:360px;width:100%"></div>
+        <div id="chart" class="pseo-chart-container" data-symbol="{sym.upper()}USDT" data-tf="1h" data-name="{html.escape(name)}"></div>
       </div>
     </div>
   </section>
@@ -2316,6 +2316,22 @@ PSEO_CSS = """
 /* ---- Programmatic SEO & Sitemap Styles ---- */
 .pseo-page{padding-bottom:60px}
 .pseo-hero{padding:48px 0 24px;text-align:left}
+.pseo-chart-card{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 12px 36px -8px rgba(0,0,0,0.18);position:relative}
+.chart-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line);background:color-mix(in srgb, var(--surface-2) 60%, var(--surface));flex-wrap:wrap;gap:12px}
+.chart-title{display:flex;align-items:center;gap:10px;font-size:14.5px;color:var(--navy)}
+.chart-tag{font:700 10.5px/1 var(--mono);color:var(--accent);background:rgba(0,171,78,0.12);border:1px solid rgba(0,171,78,0.3);padding:4px 8px;border-radius:6px;letter-spacing:0.5px}
+.chart-metrics{display:flex;gap:8px;flex-wrap:wrap}
+.cm-pill{font-size:12px;color:var(--slate);background:var(--surface);border:1px solid var(--line);padding:5px 11px;border-radius:99px}
+.cm-pill strong{color:var(--navy);font-weight:700}
+.pulse-live{display:inline-block;width:8px;height:8px;background:var(--accent);border-radius:50%;box-shadow:0 0 8px var(--accent);animation:pulseDot 2s infinite}
+@keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.85)}}
+.pseo-chart-container{position:relative;width:100%;height:360px;background:var(--surface-2);overflow:hidden}
+.pseo-chart-canvas{display:block;width:100%;height:100%;cursor:crosshair}
+.pseo-chart-hud{position:absolute;top:10px;left:16px;display:flex;gap:14px;font:600 12px/1 var(--mono);color:var(--slate);pointer-events:none;z-index:2;flex-wrap:wrap}
+.pseo-chart-hud .val{color:var(--navy);font-weight:700}
+.pseo-chart-hud .up{color:var(--green,#00ab4e)}
+.pseo-chart-hud .down{color:var(--red,#e5383b)}
+.pseo-chart-tooltip{position:absolute;background:rgba(12,20,36,0.92);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font:500 11px/1.4 var(--mono);color:#fff;pointer-events:none;z-index:10;display:none;box-shadow:0 8px 24px rgba(0,0,0,0.3)}
 .pseo-breadcrumbs{font-size:12px;color:var(--slate);margin-bottom:16px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .pseo-breadcrumbs a{color:var(--slate);text-decoration:none}
 .pseo-breadcrumbs a:hover{color:var(--navy);text-decoration:underline}

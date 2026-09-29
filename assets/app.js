@@ -2397,12 +2397,13 @@ function cryptoMonitor(){
   const note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>Live crypto paper book, ${esc(clsLabel)}.</b> Real Binance prices, simulated fills, <b>no crypto orders are placed</b>.${gate} Same survival-first Governor across every strategy. P&L is USDT on a $${Math.round((d.capital||1e6)/1000)}K sizing sandbox.</span></div>`;
   if(cur==='options' && !scoped.length){
     return note+cryptoScopeBar()+secEmpty('layers','Crypto options, coming online','The crypto options desk (USDT-settled, regime-gated premium selling on Binance) is being wired next. Spot & Perpetuals are live now, switch the toggle above.'); }
+  const liveReg = state.displayed ? (state.displayed.charAt(0).toUpperCase() + state.displayed.slice(1)) : (d.regime || '-');
   const stat=secStats([
     {l:'Realised',v:cxMoney(t.realised),s:'booked',tone:t.realised>0?'up':(t.realised<0?'down':''),id:'cxRealised'},
     {l:'Unrealised',v:cxMoney(t.unreal),s:'open · live',tone:t.unreal>0?'up':(t.unreal<0?'down':''),id:'cxUnreal'},
     {l:'Net',v:cxMoney(t.pnl),s:'realised + unrealised',tone:t.pnl>0?'up':(t.pnl<0?'down':''),id:'cxClsPnl'},
     {l:'Open positions',v:String(t.open||0),s:esc(clsLabel)+' strategies',id:'cxOpen'},
-    {l:'Regime',g:'market-regime',v:esc(d.regime||'-'),s:'BTC-led'},
+    {l:'Regime',g:'market-regime',v:esc(liveReg),s:'BTC-led'},
     {l:'Risk score',v:g.score==null?'-':String(g.score),s:g.exposurePct!=null?`${g.exposurePct}% exposure`:'governor'},
   ]);
   // forward stats (win%/PF/expectancy/closed per strategy) power the accuracy line + go-live check, 
@@ -2925,11 +2926,12 @@ function cryptoAnalytics(){
   if(d.running===false){ return secEmpty('activity','Analytics offline','The trading engine is temporarily offline, analytics resumes attributing its live book once it\'s back.'); }
   const t=d.totals||{}, st=d.stats||{}, note=`<div class="cx-preview-note">${icon('shield',13)}<span><b>P&L attribution, real, from the closed-trade log.</b> Every realised figure below is computed from actual closed paper trades (not estimated): the equity curve, and the splits by regime, symbol, exit-reason and hour. Open P&L is marked live. Nothing here is synthesised.</span></div>`;
   // live-book summary (open + realised), the running picture
+  const liveReg = state.displayed ? (state.displayed.charAt(0).toUpperCase() + state.displayed.slice(1)) : (d.regime || '-');
   const stat=secStats([
     {l:'Realised',v:cxMoney(t.realised),s:'booked',tone:t.realised>0?'up':(t.realised<0?'down':'')},
     {l:'Unrealised',v:cxMoney(t.unreal),s:'open · live',tone:t.unreal>0?'up':(t.unreal<0?'down':'')},
     {l:'Net',v:cxMoney(t.pnl),s:'realised + unrealised',tone:t.pnl>0?'up':(t.pnl<0?'down':'')},
-    {l:'Current regime',v:esc(d.regime||'-'),s:'BTC-led'},
+    {l:'Current regime',v:esc(liveReg),s:'BTC-led'},
   ]);
   // closed-trade quality (all real, from the log)
   const qual=st.n?secStats([
