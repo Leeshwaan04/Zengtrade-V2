@@ -475,7 +475,7 @@ function showPostDeployHint() {
          Strategy deployed to paper
        </b>
        <div style="font-weight:500;color:var(--slate);margin-top:4px;font-size:13px">
-         While this builds its track record, upgrade to Pro to ensure you can toggle <b>Live Execution</b> the moment it clears the go-live bar.
+         While this builds its track record, upgrade to Pro to ensure you can toggle <b>Live Execution</b> the moment it clears the go-live bar. <a href="/coins/?utm_source=site&utm_medium=organic&utm_campaign=deploy_success_coins" style="color:var(--green-d);font-weight:600;text-decoration:none">Explore coin strategies &rarr;</a>
        </div>
      </div>
      <div style="display:flex;flex-direction:column;gap:8px;min-width:140px">
