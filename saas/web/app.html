@@ -1,6 +1,9 @@
 <!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'none'">
+<meta name="color-scheme" content="light dark">
+<!-- apply a saved theme choice before first paint, so switching pages never flashes the wrong theme -->
+<script>(function(){try{var t=localStorage.getItem("zt_theme")||(localStorage.getItem("zt-surface")==="night"?"dark":null);if(t==="dark"||t==="light"){document.documentElement.setAttribute("data-theme",t);if(t==="dark")document.documentElement.setAttribute("data-surface","night");}}catch(e){}})();</script>
 <title>Dashboard · zengtrade</title>
 <meta name="description" content="zengtrade account dashboard, subscription management, billing, and trading performance evidence.">
 <meta name="robots" content="noindex">
@@ -17,17 +20,53 @@
   gtag('config', 'G-HTP82WBWMH');
 </script>
 <style>
+  body{min-height:100vh;background:radial-gradient(1200px 500px at 50% -10%,var(--green-soft),transparent 70%),var(--bg);background-attachment:fixed}
+  /* ambient aurora + data grid, matching zengtrade.in & /login */
+  .ambient{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+  .aurora{position:absolute;border-radius:50%;filter:blur(60px);will-change:transform;mix-blend-mode:multiply}
+  .aurora.a1{width:46vw;height:46vw;left:-8vw;top:-14vh;opacity:.35;background:radial-gradient(circle at 50% 50%,var(--green,#00AB4E),transparent 67%);animation:auroraA 30s ease-in-out infinite}
+  .aurora.a2{width:38vw;height:38vw;right:-6vw;top:6vh;opacity:.22;background:radial-gradient(circle at 50% 50%,var(--green-d,#059142),transparent 70%);animation:auroraB 36s ease-in-out infinite}
+  .aurora.a3{width:52vw;height:52vw;left:32vw;bottom:-26vh;opacity:.15;background:radial-gradient(circle at 50% 50%,var(--green,#00AB4E),transparent 72%);animation:auroraC 44s ease-in-out infinite}
+  @keyframes auroraA{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(13vw,9vh) scale(1.18)}}
+  @keyframes auroraB{0%,100%{transform:translate(0,0) scale(1.05)}50%{transform:translate(-11vw,7vh) scale(.9)}}
+  @keyframes auroraC{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(7vw,-9vh) scale(1.16)}}
+  .grid-motion{position:absolute;inset:-60%;opacity:.06;animation:gridPan 26s linear infinite;background-image:linear-gradient(var(--green,#00AB4E) 1px,transparent 1px),linear-gradient(90deg,var(--green,#00AB4E) 1px,transparent 1px);background-size:48px 48px}
+  @keyframes gridPan{from{transform:translate(0,0)}to{transform:translate(48px,48px)}}
+  @media(prefers-reduced-motion:reduce){.aurora,.grid-motion{animation:none}}
+  :root[data-theme="dark"] .aurora{mix-blend-mode:screen}
+  :root[data-theme="dark"] .aurora.a1{opacity:.45}
+  :root[data-theme="dark"] .grid-motion{opacity:.11}
+  @media(prefers-color-scheme:dark){
+    :root:not([data-theme="light"]) .aurora{mix-blend-mode:screen}
+    :root:not([data-theme="light"]) .aurora.a1{opacity:.45}
+    :root:not([data-theme="light"]) .grid-motion{opacity:.11}
+  }
+
   .pos{color:var(--green-d)} .neg{color:var(--red)} .muted{color:var(--slate-2)!important;font-weight:500}
   .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
   .r{text-align:right}
   /* topbar */
-  .topbar{position:sticky;top:0;z-index:40;background:var(--surface);border-bottom:1px solid var(--line)}
-  .topbar .in{max-width:1080px;margin:0 auto;padding:0 20px;height:60px;display:flex;align-items:center;gap:12px}
-  .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:18px}
+  .topbar{position:sticky;top:0;z-index:40;background:color-mix(in srgb, var(--surface) 90%, transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line);box-shadow:0 1px 3px rgba(0,0,0,.03);transition:background .3s ease,border-color .3s ease}
+  .topbar .in{max-width:1120px;margin:0 auto;padding:0 20px;height:62px;display:flex;align-items:center;gap:12px}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:18px;color:inherit;text-decoration:none}
   .logo{width:26px;height:26px;flex:0 0 auto}
   .sp{flex:1}
   .uchip{font:600 12.5px/1 var(--mono);color:var(--slate);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  @media(max-width:560px){.uchip{display:none}}
+  @media(max-width:680px){.uchip{display:none}}
+
+  /* ---------------- theme toggle (topbar) ---------------- */
+  .theme-toggle{position:relative;border:0;background:none;padding:0;cursor:pointer;border-radius:999px;display:inline-flex;align-items:center;flex:0 0 auto}
+  .theme-toggle:focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+  .tt-track{position:relative;display:flex;align-items:center;justify-content:space-between;width:52px;height:28px;padding:0 6px;
+    border-radius:999px;background:var(--surface-2);border:1px solid var(--line-2);box-shadow:inset 0 1px 2px rgba(0,0,0,.06);transition:background .35s ease,border-color .35s ease}
+  .tt-icon{position:relative;z-index:1;width:13px;height:13px;color:var(--slate-2);transition:color .35s ease}
+  .theme-toggle:not([aria-pressed=true]) .tt-sun{color:#c98a1a}
+  .theme-toggle[aria-pressed=true] .tt-moon{color:#cfe0ff}
+  .tt-thumb{position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;
+    background:linear-gradient(145deg,#ffd85e,#ffb238);box-shadow:0 2px 6px rgba(0,0,0,.28);
+    transition:transform .35s cubic-bezier(.4,0,.2,1),background .35s ease}
+  .theme-toggle[aria-pressed=true] .tt-thumb{transform:translateX(24px);background:linear-gradient(145deg,#5b6b9e,#2d3a63)}
+  @media(prefers-reduced-motion:reduce){.tt-thumb,.tt-track,.tt-icon{transition:none}}
   /* BUG FIX (2026-09-16): css.css (shared with the vertical login/signup form, where every
      button really should be full-width) sets .btn{width:100%} unconditionally. /app never reset
      that for its own very different context - a dashboard full of small inline buttons next to
@@ -91,22 +130,77 @@
   tbody tr{transition:background 0.15s} tbody tr:hover{background:var(--surface-2)}
   tbody td{padding:12px 16px;border-bottom:1px solid var(--line)} tbody tr:last-child td{border-bottom:0}
   .tbl-foot{padding:14px 16px;font:600 11px/1 var(--mono);color:var(--slate-2);text-align:center;background:var(--surface-2);border-top:1px solid var(--line)}
-  /* account */
-  .acc{padding:6px 18px} .acc.danger{border-color:var(--line)}
-  .acc-row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)} .acc-row:last-child{border-bottom:0}
-  .acc-row>span:first-child{width:130px;flex:0 0 auto;color:var(--slate);font-size:13px;font-weight:600} .acc-row b{font-size:13.5px} .acc-row .sp,.acc-row>b{flex:1}
-  .acc-row a{color:var(--blue);text-decoration:none;font-size:13.5px;font-weight:600} .acc-row .links{display:flex;gap:14px}
-  .acc-row button{margin-left:auto}
-  /* exchange connect form: the first real text input in this SPA, so this is new, not reused */
-  .acc-row-stack{padding:14px 0}
+  /* account modern cards */
+  .acct-grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));max-width:980px}
+  .acct-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px 26px;box-shadow:var(--shadow);position:relative;overflow:hidden;transition:transform .2s cubic-bezier(.16,1,.3,1),box-shadow .2s cubic-bezier(.16,1,.3,1),border-color .2s}
+  .acct-card:hover{transform:translateY(-2px);box-shadow:0 12px 32px -10px rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.04);border-color:var(--line-2)}
+  .acct-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--card-accent,transparent);opacity:.85}
+  
+  .acct-card.details{--card-accent:linear-gradient(90deg,var(--blue),var(--green))}
+  .acct-card.exchange{--card-accent:linear-gradient(90deg,var(--green),var(--green-d))}
+  .acct-card.legal{--card-accent:linear-gradient(90deg,var(--slate-2),var(--line-2))}
+  .acct-card.danger{--card-accent:linear-gradient(90deg,var(--red),#ff7e80);border-color:color-mix(in srgb,var(--red) 22%,var(--line))}
+  :root[data-theme="dark"] .acct-card.danger{background:linear-gradient(180deg,rgba(255,90,93,.04) 0%,var(--surface) 100%)}
+  :root[data-theme="light"] .acct-card.danger{background:linear-gradient(180deg,rgba(200,48,47,.02) 0%,var(--surface) 100%)}
+
+  .acct-card-ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;margin-bottom:16px;flex:0 0 auto}
+  .acct-card-ic svg{display:block}
+  .acct-card-ic.details{background:color-mix(in srgb,var(--blue) 12%,var(--surface));color:var(--blue)}
+  .acct-card-ic.exchange{background:var(--green-soft);color:var(--green-d)}
+  .acct-card-ic.legal{background:var(--surface-2);color:var(--slate);border:1px solid var(--line)}
+  .acct-card-ic.danger{background:color-mix(in srgb,var(--red) 12%,transparent);color:var(--red)}
+
+  .acct-card-title{margin:0 0 16px;font:700 16px/1.2 var(--sans);color:var(--navy)}
+  .acct-card-title.danger{color:var(--red)}
+
+  .acct-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .acct-row:last-child{border-bottom:0;padding-bottom:0}
+  .acct-lbl{font-size:13px;font-weight:600;color:var(--slate);flex:0 0 auto;min-width:70px}
+  .acct-val{font-size:13.5px;font-weight:700;color:var(--navy);text-align:right;word-break:break-all}
+  .acct-val.live{display:inline-flex;align-items:center;gap:6px;color:var(--green-d)}
+  .acct-val-grp{display:flex;align-items:center;gap:10px}
+  .acct-val-col{text-align:right}
+  .acct-sub{font-size:11.5px;color:var(--slate-2);margin-top:3px;max-width:200px;line-height:1.4}
+
+  .plan-pill{display:inline-flex;align-items:center;gap:5px;font:700 11px/1 var(--mono);text-transform:uppercase;letter-spacing:.05em;padding:4px 9px;border-radius:999px}
+  .plan-pill.free{background:var(--surface-2);color:var(--slate);border:1px solid var(--line-2)}
+  .plan-pill.pro{background:var(--green-soft);color:var(--green-d);border:1px solid var(--green-line)}
+
+  .mode-pill{display:inline-flex;align-items:center;gap:7px;font:700 13.5px/1 var(--sans);color:var(--navy)}
+  .mode-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex:0 0 auto;box-shadow:0 0 0 3px var(--green-soft)}
+
+  .ex-locked-box{display:flex;flex-direction:column;align-items:center;text-align:center;padding:10px 0 4px}
+  .ex-lock-badge{width:46px;height:46px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;color:var(--slate);margin-bottom:14px;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+  .ex-locked-msg{color:var(--slate);font-size:13px;line-height:1.6;margin:0 0 16px;max-width:280px}
+
+  .ex-disconnect-wrap{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-top:14px;border-top:1px solid var(--line);margin-top:12px}
+
+  .acct-doc-links{display:flex;gap:8px;flex-wrap:wrap}
+  .doc-link{color:var(--navy);text-decoration:none;font:600 12.5px/1 var(--sans);padding:6px 12px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);transition:all .15s}
+  .doc-link:hover{background:var(--surface);border-color:var(--line-2);color:var(--blue);transform:translateY(-1px)}
+  
+  .acct-mail-link{display:inline-flex;align-items:center;gap:6px;font:600 13px/1 var(--sans);color:var(--green-d);text-decoration:none;transition:color .15s}
+  .acct-mail-link:hover{text-decoration:underline}
+
+  .acct-danger-box{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .acct-danger-text{flex:1;min-width:180px}
+  .acct-danger-head{display:block;font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:2px}
+  
+  .btn.danger{background:transparent;color:var(--red);border:1px solid color-mix(in srgb,var(--red) 40%,var(--line));padding:8px 14px;border-radius:9px;font:700 13px/1 var(--sans);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+  .btn.danger:hover{background:color-mix(in srgb,var(--red) 12%,transparent);border-color:var(--red);color:var(--red);transform:translateY(-1px)}
+  .btn.danger:disabled{opacity:.6;cursor:wait;transform:none}
+
+  .acct-link-arrow{font-size:12px;font-weight:700;color:var(--green-d);text-decoration:none;display:inline-flex;align-items:center;gap:3px;transition:transform .12s}
+  .acct-link-arrow:hover{text-decoration:underline;transform:translateX(2px)}
+
+  /* exchange connect inputs */
   .acc-input{display:block;width:100%;box-sizing:border-box;border:1px solid var(--line-2);border-radius:9px;
-    background:var(--surface-2);color:var(--navy);font:600 13px/1 var(--mono);padding:11px 13px;margin-bottom:9px}
-  .acc-input:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:transparent}
+    background:var(--surface-2);color:var(--navy);font:600 13px/1 var(--mono);padding:11px 13px;margin-bottom:9px;transition:border-color .15s,box-shadow .15s}
+  .acc-input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px var(--green-soft);background:var(--surface)}
   .acc-input::placeholder{color:var(--slate-2);font-weight:500}
-  /* trust strip: same scannable-badge pattern as the terminal's connect modal (assets/styles.css) */
   .trust-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:11px}
   .trust-badge{display:inline-flex;align-items:center;font-size:10.5px;font-weight:700;color:var(--green-d);
-    background:var(--green-soft);border-radius:999px;padding:4px 9px}
+    background:var(--green-soft);border:1px solid var(--green-line);border-radius:999px;padding:4px 9px}
   /* upsell: quiet accent note, not a full shouting block - this loads on every free-tier visit,
      so it needs to read as useful context, not a nag repeated at every login. */
   .upsell{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--green);border-radius:13px;padding:13px 16px;margin-bottom:16px}
@@ -200,18 +294,37 @@
   .glass-stat span{display:block;font:600 11px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--slate);margin-bottom:8px}
   .glass-stat b{font:700 28px/1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
   .glass-stat.investing b{color:var(--blue)} .glass-stat.trading b{color:var(--red)}
+
+  @media(max-width:640px){
+    .topbar .in{padding:0 12px;gap:8px}
+    .brand span{display:none}
+    .mode-switch{margin-left:0}
+    .mode-switch button span{display:none}
+    .mode-switch button{padding:6px 8px}
+    .btn.sm{padding:7px 10px;font-size:12px}
+    .acct-card{padding:18px 18px}
+    .acct-val{max-width:180px}
+  }
 </style></head><body>
+<div class="ambient" aria-hidden="true"><span class="aurora a1"></span><span class="aurora a2"></span><span class="aurora a3"></span><span class="grid-motion"></span></div>
 
 <header class="topbar"><div class="in">
-  <span class="brand"><svg class="logo" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#00AB4E"/><path d="M24.69 13.67A9 9 0 1 1 20.5 8.21" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M12.5 19.5L17 15L20 17.5L26.5 8.8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>zengtrade</span>
+  <a href="/dashboard" class="brand"><svg class="logo" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#00AB4E"/><path d="M24.69 13.67A9 9 0 1 1 20.5 8.21" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M12.5 19.5L17 15L20 17.5L26.5 8.8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><span>zengtrade</span></a>
   <div class="mode-switch" id="modeSwitch">
-    <button data-mode="investing" class="mode-btn"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Investing</button>
-    <button data-mode="trading" class="mode-btn"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Trading</button>
-    <button data-mode="algo" class="mode-btn on"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Algo Studio</button>
+    <button data-mode="investing" class="mode-btn"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>Investing</span></button>
+    <button data-mode="trading" class="mode-btn"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Trading</span></button>
+    <button data-mode="algo" class="mode-btn on"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><span>Algo Studio</span></button>
   </div>
   <span class="sp"></span>
   <button class="btn primary sm" id="upgradeBtn" style="display:none">Upgrade to Pro</button>
   <span class="uchip" id="userEmail">…</span>
+  <button type="button" class="theme-toggle" id="themeToggle" aria-pressed="false" aria-label="Switch to dark theme">
+    <span class="tt-track">
+      <svg class="tt-icon tt-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M4.2 12H2M22 12h-2.2M6.5 6.5L5 5M19 19l-1.5-1.5M17.5 6.5L19 5M5 19l1.5-1.5"/></svg>
+      <svg class="tt-icon tt-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.4 8.4 0 1 0 10.2 10.2z"/></svg>
+      <span class="tt-thumb" aria-hidden="true"></span>
+    </span>
+  </button>
   <button class="btn ghost sm" id="signout">Sign out</button>
 </div></header>
 <nav class="tabs"><div class="in" id="nav"></div></nav>
@@ -229,5 +342,43 @@
   <div class="acts"><button class="btn ghost" id="ob-skip">Look around</button><button class="btn primary" id="ob-deploy">Open Algo Studio</button></div>
 </div></dialog>
 
+<script>
+(function(){
+  var root = document.documentElement;
+  var THEME_KEY = "zt_theme";
+  var SURFACE_KEY = "zt-surface";
+  var toggle = document.getElementById("themeToggle");
+  if(!toggle) return;
+  function systemDark(){ return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches; }
+  function current(){
+    var attr = root.getAttribute("data-theme");
+    if(attr === "dark" || attr === "light") return attr;
+    try {
+      var saved = localStorage.getItem(THEME_KEY);
+      if(saved === "dark" || saved === "light") return saved;
+      var surf = localStorage.getItem(SURFACE_KEY);
+      if(surf === "night") return "dark";
+      if(surf === "day") return "light";
+    } catch(e){}
+    return systemDark() ? "dark" : "light";
+  }
+  function apply(theme){
+    root.setAttribute("data-theme", theme);
+    if(theme === "dark") root.setAttribute("data-surface", "night");
+    else root.removeAttribute("data-surface");
+    toggle.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+    toggle.setAttribute("aria-label", theme === "dark" ? "Switch to light theme" : "Switch to dark theme");
+  }
+  apply(current());
+  toggle.addEventListener("click", function(){
+    var next = (root.getAttribute("data-theme") || current()) === "dark" ? "light" : "dark";
+    apply(next);
+    try {
+      localStorage.setItem(THEME_KEY, next);
+      localStorage.setItem(SURFACE_KEY, next === "dark" ? "night" : "day");
+    } catch(e){}
+  });
+})();
+</script>
 <script type="module" src="/js/app.js"></script>
 </body></html>

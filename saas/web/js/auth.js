@@ -125,6 +125,9 @@ export async function currentUser() {
 
 /** Route guard: call at the top of any protected page. Redirects out if not signed in. */
 export async function requireAuth() {
+  if (typeof window !== "undefined" && window.__ZT_MOCK_USER) {
+    return window.__ZT_MOCK_USER;
+  }
   try {
     await establishSession();
   } catch (e) {

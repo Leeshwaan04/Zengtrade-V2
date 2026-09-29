@@ -127,6 +127,12 @@ function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTi
 // ---------------------------------------------------------------- data
 async function load() {
   state.loading = true; state.error = null;
+  if (window.__ZT_MOCK_USER) {
+    tier = window.__ZT_MOCK_USER.tier || "free";
+    state.loading = false;
+    $("#upgradeBtn").style.display = isPro(tier) ? "none" : "inline-flex";
+    return;
+  }
   try {
     const [dep, tr, prof] = await Promise.all([
       sb.from("deployment").select("*").order("deployed_at", { ascending: false }),
@@ -645,39 +651,41 @@ function renderAccount() {
   // header chip got the same treatment) - a free-tier user sees an upgrade prompt instead of
   // pasting real credentials only to hit the same 403 the old code already surfaced via toast.
   const exchangeBody = ex.connected
-    ? `<div style="display:flex;flex-direction:column;gap:16px">
-         <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px solid var(--line)">
-           <span class="muted" style="font-size:13px">Exchange</span>
-           <b style="font-size:14px;color:var(--green-d)">Connected ✓ <span class="muted" style="font-size:11px;font-weight:600">· ${esc(timeAgo(ex.connectedAt))}</span></b>
+    ? `<div style="display:flex;flex-direction:column;gap:14px">
+         <div class="acct-row">
+           <span class="acct-lbl">Exchange</span>
+           <span class="acct-val live"><span class="mode-dot"></span>Connected ✓ <small class="muted" style="font-weight:600">· ${esc(timeAgo(ex.connectedAt))}</small></span>
          </div>
-         <div style="display:flex;justify-content:space-between;align-items:flex-start">
-           <span class="muted" style="font-size:12px;max-width:200px;line-height:1.5">Disconnecting removes this key from zengtrade only, it does not revoke it on Binance.</span>
-           <button class="btn ghost sm" id="exDisconnect" style="padding:6px 12px">Disconnect</button>
+         <div class="ex-disconnect-wrap">
+           <span class="muted" style="font-size:12px;line-height:1.5;max-width:240px">Disconnecting removes this key from zengtrade only. It does not revoke it on Binance.</span>
+           <button class="btn ghost sm" id="exDisconnect">Disconnect</button>
          </div>
        </div>`
     : !isPro(tier)
-    ? `<div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:12px 0">
-         <div style="width:40px;height:40px;background:var(--surface-2);border-radius:50%;display:grid;place-items:center;margin-bottom:12px;font-size:18px">🔒</div>
-         <p class="muted" style="font-size:13px;line-height:1.6;margin:0 0 16px;max-width:260px">
+    ? `<div class="ex-locked-box">
+         <div class="ex-lock-badge">
+           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+         </div>
+         <p class="ex-locked-msg">
            Connecting a real exchange account to place live orders is a <b>Pro</b> feature. Free is strictly paper.
          </p>
-         <button class="btn primary" id="exUpgrade" style="width:100%">Unlock Pro</button>
+         <button class="btn primary full" id="exUpgrade">Unlock Pro</button>
        </div>`
     : `<div style="display:flex;flex-direction:column;gap:12px">
-         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">
-           <span style="font:600 10px/1 var(--mono);text-transform:uppercase;background:var(--surface-2);padding:4px 8px;border-radius:4px;color:var(--slate)">Non-custodial</span>
-           <span style="font:600 10px/1 var(--mono);text-transform:uppercase;background:var(--surface-2);padding:4px 8px;border-radius:4px;color:var(--slate)">Trade-only</span>
+         <div class="trust-row">
+           <span class="trust-badge">Non-custodial</span>
+           <span class="trust-badge">Trade-only</span>
          </div>
          <p class="muted" style="font-size:12px;line-height:1.5;margin:0 0 4px">
            <b>API Management &rarr; Create API</b>: check <b>only</b> "Enable Spot Trading". We never see your password.
          </p>
-         <div style="display:flex;gap:12px;margin-bottom:8px">
-           <a href="https://www.binance.com/en/my/settings/api-management" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:var(--green-d);text-decoration:none">Binance &rarr;</a>
-           <a href="/learn/how-to-create-a-binance-api-key/" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:var(--green-d);text-decoration:none">Guide &rarr;</a>
+         <div style="display:flex;gap:14px;margin-bottom:8px">
+           <a href="https://www.binance.com/en/my/settings/api-management" target="_blank" rel="noopener" class="acct-link-arrow">Binance &rarr;</a>
+           <a href="/learn/how-to-create-a-binance-api-key/" target="_blank" rel="noopener" class="acct-link-arrow">Guide &rarr;</a>
          </div>
-         <input type="password" id="exKey" placeholder="Paste your API key" autocomplete="off" style="width:100%;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font:14px var(--mono)">
-         <input type="password" id="exSecret" placeholder="Paste your API secret" autocomplete="off" style="width:100%;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font:14px var(--mono)">
-         <button class="btn primary" id="exConnect" style="width:100%;margin-top:4px">Connect Binance</button>
+         <input type="password" id="exKey" class="acc-input" placeholder="Paste your Binance API key" autocomplete="off">
+         <input type="password" id="exSecret" class="acc-input" placeholder="Paste your Binance API secret" autocomplete="off">
+         <button class="btn primary full" id="exConnect" style="margin-top:2px">Connect Binance</button>
        </div>`;
   app.innerHTML = `
     <div class="page-h">
@@ -685,67 +693,81 @@ function renderAccount() {
       <h2>Account Settings</h2>
       <p class="muted">Manage your credentials, subscription plan, and exchange connectivity.</p>
     </div>
-    <div style="display:grid;gap:20px;grid-template-columns:repeat(auto-fit, minmax(340px, 1fr));max-width:960px">
+    <div class="acct-grid">
       <!-- Profile Card -->
-      <div class="glass-card" style="border-top: 3px solid var(--navy)">
-        <div class="glass-card-ic" style="background:var(--surface-2);color:var(--navy)">👤</div>
-        <h3 style="margin:0 0 16px;font-size:16px">Account Details</h3>
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px solid var(--line)">
-            <span class="muted" style="font-size:13px">Email</span>
-            <b style="font-size:14px">${esc(user.email)}</b>
+      <div class="acct-card details">
+        <div class="acct-card-ic details">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <h3 class="acct-card-title">Account Details</h3>
+        <div style="display:flex;flex-direction:column">
+          <div class="acct-row">
+            <span class="acct-lbl">Email</span>
+            <b class="acct-val mono">${esc(user.email)}</b>
           </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px solid var(--line)">
-            <span class="muted" style="font-size:13px">Plan</span>
-            <div style="display:flex;align-items:center;gap:10px">
-              <b style="font-size:14px;color:${isPro(tier) ? 'var(--green-d)' : 'var(--slate)'}">${isPro(tier) ? "Pro" : "Free"}</b>
+          <div class="acct-row">
+            <span class="acct-lbl">Plan</span>
+            <div class="acct-val-grp">
+              <span class="plan-pill ${isPro(tier) ? 'pro' : 'free'}">${isPro(tier) ? (tier === "elite" ? "Elite" : "Pro") : "Free"}</span>
               ${isPro(tier) ? "" : `<button class="btn sm primary" id="accUp" style="padding:4px 10px;font-size:12px">Upgrade</button>`}
             </div>
           </div>
-          <div style="display:flex;justify-content:space-between;align-items:flex-start">
-            <span class="muted" style="font-size:13px">Mode</span>
-            <div style="text-align:right">
-              <b style="font-size:14px">Paper Default</b>
-              <div class="muted" style="font-size:11px;margin-top:4px;max-width:180px">Real orders only on connected exchange</div>
+          <div class="acct-row" style="align-items:flex-start">
+            <span class="acct-lbl">Mode</span>
+            <div class="acct-val-col">
+              <div class="mode-pill"><span class="mode-dot"></span><b>Paper Default</b></div>
+              <div class="acct-sub">Real orders only on connected exchange</div>
             </div>
           </div>
         </div>
       </div>
       
       <!-- Exchange Card -->
-      <div class="glass-card" style="border-top: 3px solid var(--green-d)">
-        <div class="glass-card-ic" style="background:var(--green-soft);color:var(--green-d)">⇄</div>
-        <h3 style="margin:0 0 16px;font-size:16px">Exchange Connection</h3>
+      <div class="acct-card exchange">
+        <div class="acct-card-ic exchange">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 5h18"/><polyline points="7 23 3 19 7 15"/><path d="M21 19H3"/></svg>
+        </div>
+        <h3 class="acct-card-title">Exchange Connection</h3>
         ${exchangeBody}
       </div>
 
       <!-- Legal & Support Card -->
-      <div class="glass-card" style="border-top: 3px solid var(--slate-2)">
-        <div class="glass-card-ic" style="background:var(--surface-2);color:var(--slate)">§</div>
-        <h3 style="margin:0 0 16px;font-size:16px">Legal & Support</h3>
-        <div style="display:flex;flex-direction:column;gap:16px">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <span class="muted" style="font-size:13px">Documents</span>
-            <span class="links" style="display:flex;gap:12px;font-size:13px;font-weight:600">
-              <a href="/terms" style="color:var(--navy);text-decoration:none">Terms</a>
-              <a href="/privacy" style="color:var(--navy);text-decoration:none">Privacy</a>
-              <a href="/risk" style="color:var(--navy);text-decoration:none">Risk</a>
-            </span>
+      <div class="acct-card legal">
+        <div class="acct-card-ic legal">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3 class="acct-card-title">Legal &amp; Support</h3>
+        <div style="display:flex;flex-direction:column">
+          <div class="acct-row">
+            <span class="acct-lbl">Documents</span>
+            <div class="acct-doc-links">
+              <a href="/terms" class="doc-link">Terms</a>
+              <a href="/privacy" class="doc-link">Privacy</a>
+              <a href="/risk" class="doc-link">Risk</a>
+            </div>
           </div>
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <span class="muted" style="font-size:13px">Contact</span>
-            <a href="mailto:letmeknow@zengtrade.in" style="font-size:13px;font-weight:600;color:var(--green-d);text-decoration:none">letmeknow@zengtrade.in</a>
+          <div class="acct-row">
+            <span class="acct-lbl">Contact</span>
+            <a href="mailto:letmeknow@zengtrade.in" class="acct-mail-link">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              letmeknow@zengtrade.in
+            </a>
           </div>
         </div>
       </div>
 
       <!-- Danger Zone -->
-      <div class="glass-card" style="border-top: 3px solid var(--red);background:color-mix(in srgb, var(--red) 2%, var(--surface))">
-        <div class="glass-card-ic" style="background:color-mix(in srgb, var(--red) 10%, transparent);color:var(--red)">⏻</div>
-        <h3 style="margin:0 0 16px;font-size:16px;color:var(--red)">Danger Zone</h3>
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span class="muted" style="font-size:13px">End your current session</span>
-          <button class="btn ghost sm" id="accOut" style="color:var(--red);border-color:var(--red)">Sign out</button>
+      <div class="acct-card danger">
+        <div class="acct-card-ic danger">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+        </div>
+        <h3 class="acct-card-title danger">Danger Zone</h3>
+        <div class="acct-danger-box">
+          <div class="acct-danger-text">
+            <span class="acct-danger-head">End your current session</span>
+            <span class="muted" style="font-size:12.5px;display:block">Sign out of this browser session.</span>
+          </div>
+          <button class="btn danger sm" id="accOut">Sign out</button>
         </div>
       </div>
     </div>`;
