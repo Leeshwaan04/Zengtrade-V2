@@ -48,6 +48,7 @@ jobs:
             coin-data-
       - name: Refresh coin data (scheduled/manual only)
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         run: python3 seo/refresh_coin_data.py
       - name: Save coin data cache
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'

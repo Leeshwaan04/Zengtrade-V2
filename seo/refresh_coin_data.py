@@ -33,7 +33,10 @@ def main() -> int:
     print("Rebuilding coin universe from live CoinGecko market-cap ranking...")
     universe = G.build_coin_universe(600)
     if len(universe) < MIN_COINS:
-        print(f"  ! universe only {len(universe)} coins (< {MIN_COINS}), aborting without touching the cache")
+        if os.path.exists(CACHE_PATH):
+            print(f"  ! universe only {len(universe)} coins (< {MIN_COINS}); preserving existing cache at {CACHE_PATH} and continuing")
+            return 0
+        print(f"  ! universe only {len(universe)} coins (< {MIN_COINS}) and no existing cache found, aborting")
         return 1
 
     print(f"  {len(universe)} coins in universe, fetching tickers + klines "
@@ -41,7 +44,10 @@ def main() -> int:
     G.COINS = universe   # fetch_coins() reads the module-level COINS dict
     rows = G.fetch_coins()
     if len(rows) < MIN_COINS:
-        print(f"  ! only {len(rows)} coins fetched successfully (< {MIN_COINS}), aborting without touching the cache")
+        if os.path.exists(CACHE_PATH):
+            print(f"  ! only {len(rows)} coins fetched successfully (< {MIN_COINS}); preserving existing cache at {CACHE_PATH} and continuing")
+            return 0
+        print(f"  ! only {len(rows)} coins fetched successfully (< {MIN_COINS}) and no existing cache found, aborting")
         return 1
 
     payload = {
