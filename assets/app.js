@@ -3707,7 +3707,7 @@ function tradingTradeTab(){
 
               <div class="order-act-row">
                 <button class="cta ${live?'cta-live':(m.side==='buy'?'cta-buy':'cta-sell')}" id="tradeCta"${(m.priced&&m.qty>0&&!(m.overSell&&!live)&&!busy)?'':' disabled'}>${busy?'Placing order…':(m.overSell&&!live)?`Insufficient ${m.tk} to sell`:(live?`${m.side==='buy'?'BUY':'SELL'} ${m.tk} (LIVE)`:`${m.side==='buy'?'BUY':'SELL'} ${m.tk}`)}</button>
-                <button class="cta cta-bracket" id="tradeBracketCta"${(m.priced&&m.qty>0&&!(m.overSell&&!live)&&!busy)?'':' disabled'} title="Execute market order with automated TP/SL bracket attached">⚡ Bracket (1:${currRr})</button>
+                <button class="cta cta-bracket${live?' paper-sim-only':''}" id="tradeBracketCta"${(m.priced&&m.qty>0&&!(m.overSell&&!live)&&!busy)?'':' disabled'} title="${live?'Automated bracket orders are simulated in paper mode. Use BUY/SELL (LIVE) for real Binance execution.':'Execute market order with automated TP/SL bracket attached'}">${live?'⚡ Bracket (Paper only)':`⚡ Bracket (1:${currRr})`}</button>
               </div>
             </div>
           </div>
@@ -3740,10 +3740,48 @@ function tradingPositionsTab(){
   return `<div class="cxm-tbl-h">${icon('activity',13)}<b>Open positions</b><span>${open.length} pair${open.length===1?'':'s'} · marked to live price</span></div><div class="cxm-tbl">${head}${body}</div>`;
 }
 function tradingHistoryTab(){
-  if(!state.orders.length) return secEmpty('activity','No trades yet','Every buy and sell you place shows up here, honestly, no fabricated track record.');
+  const histMode = (state.trading && state.trading.histMode) || (state.trading && state.trading.live ? 'live' : 'paper');
+  const liveOrders = (state.trading && state.trading.liveOrders) || [];
+  const paperOrders = state.orders || [];
+  const hasExchangeBridge = typeof window.ztExchange !== 'undefined';
+  const ex = state.trading && state.trading.exchangeStatus;
+
+  const subNav = (hasExchangeBridge && ex && ex.connected) ? `
+    <div class="mon-ctrl" style="margin:0 0 16px 0">
+      <div class="mon-seg">
+        <button class="msc-chip${histMode==='paper'?' on':''}" data-histmode="paper">Paper Orders (${paperOrders.length})</button>
+        <button class="msc-chip${histMode==='live'?' on':''}" data-histmode="live">Live Binance Orders (${liveOrders.length})</button>
+      </div>
+    </div>` : '';
+
+  if (histMode === 'live' && hasExchangeBridge && ex && ex.connected) {
+    if (!liveOrders.length) {
+      return subNav + secEmpty('activity', 'No live orders yet', 'When you place live orders with your connected Binance account, your real filled trades, prices, and order IDs appear here.');
+    }
+    const cols = 'grid-template-columns:1fr 70px 90px 100px 110px 120px';
+    const head = `<div class="cxm-row cxm-head" style="${cols}"><div class="cxm-name">Pair</div><span class="cxm-n">Side</span><span class="cxm-n">Qty</span><span class="cxm-n">Fill Price</span><span class="cxm-n">Status</span><span class="cxm-n">Order ID</span></div>`;
+    const body = liveOrders.map(o => {
+      const sym = o.symbol || '';
+      const tk = sym.replace(/USDT$/, '');
+      const side = (o.side || '').toLowerCase();
+      const statusCls = o.status === 'FILLED' ? 'b-up' : (o.status === 'rejected' ? 'b-down' : 'b-warn');
+      const orderIdStr = o.binance_order_id ? `#${o.binance_order_id.slice(-8)}` : '-';
+      return `<div class="cxm-row" style="${cols}">
+        <div class="cxm-name"><b>${esc(tk || sym)}</b><div style="font-size:10px;color:var(--slate);font-family:var(--mono)">${esc(sym)}</div></div>
+        <span class="cxm-n"><span class="side-chip side-${side}">${esc(o.side)}</span></span>
+        <span class="cxm-n num">${Number(o.qty).toLocaleString()}</span>
+        <span class="cxm-n num">${o.avg_price ? cryptoFmt(o.avg_price) : '-'}</span>
+        <span class="cxm-n"><span class="badge ${statusCls}">${esc(o.status)}</span></span>
+        <span class="cxm-n mono" style="font-size:11px;color:var(--slate)" title="${esc(o.binance_order_id||'')}">${esc(orderIdStr)}</span>
+      </div>`;
+    }).join('');
+    return subNav + `<div class="cxm-tbl-h">${icon('shield',13)}<b>Live Binance executions</b><span>${liveOrders.length} order${liveOrders.length===1?'':'s'} · newest first</span></div><div class="cxm-tbl">${head}${body}</div>`;
+  }
+
+  if(!paperOrders.length) return subNav + secEmpty('activity','No paper trades yet','Every buy and sell you place in paper mode shows up here, honestly, no fabricated track record.');
   const cols='grid-template-columns:1fr 70px 90px 100px 110px';
   const head=`<div class="cxm-row cxm-head" style="${cols}"><div class="cxm-name">Pair</div><span class="cxm-n">Side</span><span class="cxm-n">Qty</span><span class="cxm-n">Price</span><span class="cxm-n">Status</span></div>`;
-  const body=state.orders.map(o=>{
+  const body=paperOrders.map(o=>{
     const c=CRYPTO_UNIVERSE.find(x=>x.sym===o.sym);
     const statusHtml=o.status==='Cancelled'?`<span class="badge b-warn">Cancelled</span>`
       :o.status==='Filled'?`<span class="badge b-up">Filled</span>`
@@ -3758,7 +3796,7 @@ function tradingHistoryTab(){
       <span class="cxm-n num">${cryptoFmt(o.price)}</span>
       <span class="cxm-n">${statusHtml}</span></div>`;
   }).join('');
-  return `<div class="cxm-tbl-h">${icon('activity',13)}<b>Trade history</b><span>${state.orders.length} order${state.orders.length===1?'':'s'} · newest first</span></div><div class="cxm-tbl">${head}${body}</div>`;
+  return subNav + `<div class="cxm-tbl-h">${icon('activity',13)}<b>Paper trade history</b><span>${paperOrders.length} order${paperOrders.length===1?'':'s'} · newest first</span></div><div class="cxm-tbl">${head}${body}</div>`;
 }
 function tradingPlace(){
   const m=tradeModel(state.trading.sym);
@@ -3797,6 +3835,11 @@ function tradingSubmitLive(m){
     state.trading.liveBusy=false;
     if(res.ok&&res.data&&res.data.filled){
       quickToast('Real order filled',`${m.side==='buy'?'Bought':'Sold'} ${res.data.qty} ${m.tk} at ${cryptoFmt(res.data.avgPrice||m.px)} on your Binance account.`);
+      if(window.ztExchange && typeof window.ztExchange.liveOrders === 'function'){
+        window.ztExchange.liveOrders().then(ords => {
+          if(state.trading){ state.trading.liveOrders = ords || []; if(state.persona==='trader') renderTrading(); }
+        });
+      }
     } else {
       quickToast('Live order failed',(res.data&&res.data.error)||'Binance did not accept this order, please try again.');
     }
@@ -3814,6 +3857,10 @@ function renderTrading(){
   if(typeof window.ztExchange!=='undefined'&&state.trading.exchangeStatus===undefined&&!state.trading.exchangeStatusBusy){
     state.trading.exchangeStatusBusy=true;
     window.ztExchange.status().then(s=>{ state.trading.exchangeStatus=s; state.trading.exchangeStatusBusy=false; if(state.persona==='trader') renderTrading(); });
+  }
+  if(typeof window.ztExchange!=='undefined'&&typeof window.ztExchange.liveOrders==='function'&&state.trading.liveOrders===undefined&&!state.trading.liveOrdersBusy){
+    state.trading.liveOrdersBusy=true;
+    window.ztExchange.liveOrders().then(ords=>{ state.trading.liveOrders=ords||[]; state.trading.liveOrdersBusy=false; if(state.persona==='trader') renderTrading(); });
   }
   const view=state.trading.view;
   const tabs=[['trade','Trade'],['positions','Positions'],['history','History']];
@@ -3881,6 +3928,10 @@ function renderTrading(){
     bcta.onclick=()=>{
       const m=tradeModel(state.trading.sym);
       if(!m.priced||!(m.qty>0)||(m.overSell&&!state.trading.live)) return;
+      if(state.trading.live){
+        quickToast('Bracket Order: Paper Only', 'Automated cloud bracket orders on live Binance accounts are rolling out with strategy execution. To place a real Binance order, use the Live Market button above.');
+        return;
+      }
       const currRr=state.trading.rrRatio||2.0;
       const basePct=0.015;
       const isBuy=m.side==='buy';
@@ -3896,6 +3947,11 @@ function renderTrading(){
       });
     };
   }
+  v.querySelectorAll('[data-histmode]').forEach(b=>b.onclick=()=>{
+    state.trading=state.trading||{};
+    state.trading.histMode=b.dataset.histmode;
+    renderTrading();
+  });
   v.querySelectorAll('[data-tradecancel]').forEach(b=>b.onclick=()=>cancelOrder(+b.dataset.tradecancel));
 }
 

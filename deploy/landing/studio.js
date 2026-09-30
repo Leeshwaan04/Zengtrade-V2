@@ -118,14 +118,18 @@
         '<div style="padding:8px 10px;font-size:11.5px;color:var(--slate-2,#8a94a6);'
         + 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid var(--line,#e3e8f0);margin-bottom:4px">'
         + (sess.email || "") + '</div>'
+        + '<button type="button" data-pm-item="evidence" style="display:flex;width:100%;padding:8px 10px;'
+        + 'background:none;border:0;border-radius:8px;font:600 13px var(--sans);color:var(--navy,#0f1a2a);'
+        + 'text-align:left;cursor:pointer">Evidence &amp; Billing</button>'
         + '<button type="button" data-pm-item="account" style="display:flex;width:100%;padding:8px 10px;'
         + 'background:none;border:0;border-radius:8px;font:600 13px var(--sans);color:var(--navy,#0f1a2a);'
-        + 'text-align:left;cursor:pointer">Account</button>'
+        + 'text-align:left;cursor:pointer">Account Settings</button>'
         + '<button type="button" data-pm-item="signout" style="display:flex;width:100%;padding:8px 10px;'
         + 'background:none;border:0;border-radius:8px;font:600 13px var(--sans);color:#b3261e;'
         + 'text-align:left;cursor:pointer">Sign out</button>';
       el.appendChild(menu);
       el.setAttribute("aria-expanded", "true");
+      menu.querySelector('[data-pm-item="evidence"]').onclick = function (e) { e.stopPropagation(); location.href = "/app"; };
       menu.querySelector('[data-pm-item="account"]').onclick = function (e) { e.stopPropagation(); location.href = "/account"; };
       menu.querySelector('[data-pm-item="signout"]').onclick = function (e) { e.stopPropagation(); doSignOut(e.currentTarget); };
       menu.querySelectorAll("button").forEach(function (b) {
@@ -198,6 +202,12 @@
         .then(function (r) { return r.ok ? r.json() : []; })
         .then(function (rows) { return (rows && rows[0] && rows[0].tier) || "free"; })
         .catch(function () { return "free"; });
+    },
+    liveOrders: function () {
+      return fetch(SUPA + "/rest/v1/live_order?select=id,symbol,side,qty,avg_price,notional_usd,binance_order_id,status,created_at&order=created_at.desc&limit=50",
+        { headers: sbHeaders() })
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .catch(function () { return []; });
     },
   };
 

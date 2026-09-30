@@ -40,11 +40,10 @@ const route = () => (ACCOUNT_ONLY ? "account" : (location.hash.replace("#", "") 
   
   document.querySelectorAll(".mode-btn").forEach(b => {
     b.onclick = (e) => {
-      document.querySelectorAll(".mode-btn").forEach(btn => btn.classList.remove("on"));
-      const target = e.currentTarget;
-      target.classList.add("on");
-      currentMode = target.dataset.mode;
-      render();
+      const mode = e.currentTarget.dataset.mode;
+      if (mode === "investing") location.href = "/dashboard?mode=investing";
+      else if (mode === "trading") location.href = "/dashboard?mode=trading";
+      else if (mode === "algo") location.href = "/dashboard?mode=algo";
     };
   });
 
@@ -185,11 +184,11 @@ function buildNav() {
 function render() {
   const nav = $("#nav");
   if (currentMode === "investing") {
-    if (nav) nav.parentElement.style.display = "none";
-    return renderInvestingDashboard();
+    location.href = "/dashboard?mode=investing";
+    return;
   } else if (currentMode === "trading") {
-    if (nav) nav.parentElement.style.display = "none";
-    return renderTradingDashboard();
+    location.href = "/dashboard?mode=trading";
+    return;
   }
   if (nav) nav.parentElement.style.display = "";
 
