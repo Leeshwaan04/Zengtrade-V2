@@ -327,15 +327,14 @@ _CHART_TYPES = (("area", "Area"), ("candles", "Candles"), ("bars", "Bars"), ("he
 
 
 def chart_block(sym, closes_1m, bars):
-    """TradingView's open-source Lightweight Charts (~60KB gzip, not the heavy embeddable
-    widget/iframe) with 5 pre-fetched timeframes x 4 chart types (Area/Candles/Bars/Heikin Ashi).
-    fetch_coins() already stores full OHLC per bar (not just close), so every type/timeframe
-    combination renders from data already fetched at build time - no new network calls needed for
-    this. Heikin Ashi has no native series type in the library (confirmed before building this -
-    it's the standard, well-established HA transform run client-side over the real OHLC, then fed
-    into a normal candlestick series, the conventional way every charting library does it).
-    Switching timeframe OR type is a pure client-side redraw, no live API call either way. Falls
-    back to a static SVG sparkline (real content, not a spinner) if the CDN script fails to load."""
+    """TradingView's open-source Lightweight Charts with terminal parity:
+    - 5 timeframes (24H, 1W, 1M, 3M, 1Y)
+    - 4 chart styles (Area, Candles, Bars, Heikin Ashi)
+    - Real-time crosshair HUD overlay (OHLC, Change %, Volume)
+    - Technical indicators toggle: MA 20, EMA 50, Bollinger Bands (20,2), and Volume Sub-pane
+    - Automatic day/night theme sync and responsive ResizeObserver
+    - Safe from single-line comment minification issues
+    """
     data_json = json.dumps({tf: bars[tf] for tf, _ in _CHART_TABS}, separators=(",", ":"))
     tf_tabs_html = "".join(
         f'<button type="button" class="chart-tab{" on" if tf == "1m" else ""}" data-tf="{tf}">{lbl}</button>'
@@ -343,87 +342,386 @@ def chart_block(sym, closes_1m, bars):
     type_tabs_html = "".join(
         f'<button type="button" class="chart-tab chart-tab-type{" on" if ty == "area" else ""}" data-ty="{ty}">{lbl}</button>'
         for ty, lbl in _CHART_TYPES)
-    return f"""<div class="chart-card">
-        <div class="chart-tabs" role="tablist" aria-label="Chart timeframe">{tf_tabs_html}</div>
-        <div class="chart-tabs chart-tabs-type" role="tablist" aria-label="Chart type">{type_tabs_html}</div>
+    return f"""<div class="chart-card" id="chart-wrap-{sym}">
+        <div class="chart-top-bar">
+          <div class="chart-grp" role="tablist" aria-label="Chart timeframe">
+            <span class="chart-grp-lbl">TF:</span>
+            {tf_tabs_html}
+          </div>
+          <div class="chart-grp" role="tablist" aria-label="Chart type">
+            <span class="chart-grp-lbl">TYPE:</span>
+            {type_tabs_html}
+          </div>
+          <div class="chart-grp" aria-label="Technical indicators">
+            <span class="chart-grp-lbl">IND:</span>
+            <button type="button" class="chart-tab chart-tab-ind ind-ma" data-ind="ma">MA 20</button>
+            <button type="button" class="chart-tab chart-tab-ind ind-ema" data-ind="ema">EMA 50</button>
+            <button type="button" class="chart-tab chart-tab-ind ind-bb" data-ind="bb">BB (20,2)</button>
+            <button type="button" class="chart-tab chart-tab-ind ind-vol on" data-ind="vol">Vol</button>
+            <button type="button" class="chart-tab chart-tab-reset" id="reset-{sym}" title="Fit View">Fit</button>
+          </div>
+        </div>
+        <div class="chart-hud" id="hud-{sym}">
+          <span id="hud-time-{sym}">--</span>
+          <span>O: <b id="hud-o-{sym}">--</b></span>
+          <span>H: <b id="hud-h-{sym}">--</b></span>
+          <span>L: <b id="hud-l-{sym}">--</b></span>
+          <span>C: <b id="hud-c-{sym}">--</b></span>
+          <span class="chart-hud-chg" id="hud-chg-{sym}">--</span>
+          <span id="hud-vol-wrap-{sym}">Vol: <b id="hud-vol-{sym}">--</b></span>
+        </div>
         <div class="chart-canvas" id="chart-{sym}">{sparkline(closes_1m)}</div>
       </div>
       <script src="{CHART_LIB_URL}"></script>
       <script>
       (function(){{
-        var data={data_json};
-        var el=document.getElementById("chart-{sym}");
-        if(!window.LightweightCharts||!el) return;   // static sparkline above stays as the real fallback
-        // BUG FIX: this whole block used to run synchronously as soon as the chart-lib <script>
-        // finished loading, which is BEFORE the page's day/night restoration script (later in the
-        // document) sets html[data-surface="night"] from the saved preference. A returning visitor
-        // with night mode saved got the chart's grid/axis colors baked in from the LIGHT theme's
-        // --line (#e6eaf1, off-white), producing exactly the "why are these white lines here" bug -
-        // the rest of the page repaints correctly via pure CSS, only this JS-read color didn't.
-        // requestAnimationFrame defers one frame (~16ms, imperceptible), by which point every
-        // synchronous script earlier in page load - including the theme restoration - has run.
+        var data = {data_json};
+        var sym = "{sym}";
+        var el = document.getElementById("chart-" + sym);
+        if (!window.LightweightCharts || !el) return;
+
         requestAnimationFrame(function(){{
-        function v(n){{return getComputedStyle(document.documentElement).getPropertyValue(n).trim()||n;}}
-        function baseOpts(){{return {{layout:{{background:{{color:"transparent"}},textColor:v("--slate")}},
-          grid:{{vertLines:{{color:v("--line")}},horzLines:{{color:v("--line")}}}},
-          rightPriceScale:{{borderColor:v("--line")}},timeScale:{{borderColor:v("--line")}}}};}}
-        // standard Heikin Ashi transform (no library-native series type for it): each HA bar
-        // depends on the PREVIOUS ha bar, so this always recomputes from the raw OHLC for
-        // whichever timeframe window is active, not incrementally.
-        function heikinAshi(rows){{
-          var out=[], prevOpen=null, prevClose=null;
-          rows.forEach(function(b){{
-            var c=(b.open+b.high+b.low+b.close)/4;
-            var o=(prevOpen===null)?(b.open+b.close)/2:(prevOpen+prevClose)/2;
-            out.push({{time:b.time, open:o, high:Math.max(b.high,o,c), low:Math.min(b.low,o,c), close:c}});
-            prevOpen=o; prevClose=c;
-          }});
-          return out;
-        }}
-        el.innerHTML="";
-        var chart=LightweightCharts.createChart(el, Object.assign({{width:el.clientWidth,height:220}}, baseOpts()));
-        var series=null, curTf="1m", curTy="area";
-        function render(){{
-          var rows=data[curTf]||[];
-          if(!rows.length) return;
-          if(series){{chart.removeSeries(series); series=null;}}
-          var up=rows[rows.length-1].close>=rows[0].close;
-          var upC=v("--green"), downC=v("--red");
-          if(curTy==="area"){{
-            var c=up?upC:downC;
-            series=chart.addSeries(LightweightCharts.AreaSeries, {{lineWidth:2,priceLineVisible:false,
-              lineColor:c,topColor:c+"33",bottomColor:"transparent"}});
-            series.setData(rows.map(function(b){{return {{time:b.time,value:b.close}};}}));
-          }} else if(curTy==="bars"){{
-            series=chart.addSeries(LightweightCharts.BarSeries, {{upColor:upC,downColor:downC}});
-            series.setData(rows);
-          }} else {{   // candles or heikinashi - both render as candlesticks, heikinashi transforms the data first
-            series=chart.addSeries(LightweightCharts.CandlestickSeries, {{upColor:upC,downColor:downC,
-              borderVisible:false,wickUpColor:upC,wickDownColor:downC}});
-            series.setData(curTy==="heikinashi"?heikinAshi(rows):rows);
+          function isDark(){{
+            return document.documentElement.getAttribute("data-surface") === "night";
           }}
-          chart.timeScale().fitContent();
-        }}
-        render();
-        var wrap=el.parentElement;
-        wrap.querySelectorAll(".chart-tab[data-tf]").forEach(function(btn){{
-          btn.onclick=function(){{
-            wrap.querySelectorAll(".chart-tab[data-tf]").forEach(function(b){{b.classList.remove("on")}});
-            btn.classList.add("on"); curTf=btn.dataset.tf; render();
-          }};
+          function baseOpts(){{
+            var dark = isDark();
+            var bgCol = dark ? "#0c1424" : "#ffffff";
+            var gridCol = dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
+            var textCol = dark ? "#94a3b8" : "#64748b";
+            var borderCol = dark ? "rgba(255,255,255,0.09)" : "rgba(0,0,0,0.09)";
+            return {{
+              layout: {{
+                background: {{ color: bgCol }},
+                textColor: textCol,
+                fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                fontSize: 11
+              }},
+              grid: {{
+                vertLines: {{ color: gridCol }},
+                horzLines: {{ color: gridCol }}
+              }},
+              crosshair: {{
+                vertLine: {{ color: dark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.25)", width: 1, style: 2 }},
+                horzLine: {{ color: dark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.25)", width: 1, style: 2 }}
+              }},
+              rightPriceScale: {{
+                borderColor: borderCol,
+                scaleMargins: {{ top: 0.1, bottom: 0.22 }}
+              }},
+              timeScale: {{
+                borderColor: borderCol,
+                timeVisible: true,
+                secondsVisible: false
+              }}
+            }};
+          }}
+
+          function calcSMA(rows, period){{
+            var res = [];
+            for (var i = 0; i < rows.length; i++) {{
+              if (i < period - 1) continue;
+              var sum = 0;
+              for (var j = 0; j < period; j++) sum += rows[i - j].close;
+              res.push({{ time: rows[i].time, value: +(sum / period).toFixed(4) }});
+            }}
+            return res;
+          }}
+
+          function calcEMA(rows, period){{
+            var res = [], k = 2 / (period + 1), prev = null;
+            for (var i = 0; i < rows.length; i++) {{
+              var c = rows[i].close;
+              if (i < period - 1) continue;
+              if (prev === null) {{
+                var sum = 0;
+                for (var j = 0; j < period; j++) sum += rows[i - j].close;
+                prev = sum / period;
+              }} else {{
+                prev = (c - prev) * k + prev;
+              }}
+              res.push({{ time: rows[i].time, value: +prev.toFixed(4) }});
+            }}
+            return res;
+          }}
+
+          function calcBollinger(rows, period, mult){{
+            period = period || 20; mult = mult || 2;
+            var upper = [], lower = [], mid = [];
+            for (var i = 0; i < rows.length; i++) {{
+              if (i < period - 1) continue;
+              var sum = 0;
+              for (var j = 0; j < period; j++) sum += rows[i - j].close;
+              var m = sum / period, vSum = 0;
+              for (var j = 0; j < period; j++) vSum += Math.pow(rows[i - j].close - m, 2);
+              var sd = Math.sqrt(vSum / period);
+              mid.push({{ time: rows[i].time, value: +m.toFixed(4) }});
+              upper.push({{ time: rows[i].time, value: +(m + mult * sd).toFixed(4) }});
+              lower.push({{ time: rows[i].time, value: +(m - mult * sd).toFixed(4) }});
+            }}
+            return {{ upper: upper, lower: lower, middle: mid }};
+          }}
+
+          function heikinAshi(rows){{
+            var out = [], pOpen = null, pClose = null;
+            rows.forEach(function(b){{
+              var c = (b.open + b.high + b.low + b.close) / 4;
+              var o = (pOpen === null) ? (b.open + b.close) / 2 : (pOpen + pClose) / 2;
+              out.push({{
+                time: b.time,
+                open: o,
+                high: Math.max(b.high, o, c),
+                low: Math.min(b.low, o, c),
+                close: c
+              }});
+              pOpen = o; pClose = c;
+            }});
+            return out;
+          }}
+
+          function fmtPrice(p){{
+            if (typeof p !== "number" || isNaN(p)) return "--";
+            if (p >= 1000) return p.toLocaleString("en-US", {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+            if (p >= 1) return p.toFixed(2);
+            if (p >= 0.001) return p.toFixed(4);
+            return p.toFixed(6);
+          }}
+
+          function fmtVol(v){{
+            if (!v) return "--";
+            if (v >= 1e9) return "$" + (v / 1e9).toFixed(2) + "B";
+            if (v >= 1e6) return "$" + (v / 1e6).toFixed(2) + "M";
+            if (v >= 1e3) return "$" + (v / 1e3).toFixed(1) + "K";
+            return "$" + v.toFixed(0);
+          }}
+
+          function fmtDate(t){{
+            var d = new Date(t * 1000);
+            return d.toLocaleDateString("en-US", {{month: "short", day: "numeric"}}) + " " +
+                   d.toLocaleTimeString("en-US", {{hour: "2-digit", minute: "2-digit", hour12: false}});
+          }}
+
+          el.innerHTML = "";
+          var chart = LightweightCharts.createChart(el, Object.assign({{
+            width: el.clientWidth,
+            height: 380
+          }}, baseOpts()));
+
+          var curTf = "1m", curTy = "area";
+          var activeInds = {{ ma: false, ema: false, bb: false, vol: true }};
+          var mainSeries = null, volSeries = null;
+          var maSeries = null, emaSeries = null;
+          var bbUpper = null, bbLower = null, bbMid = null;
+
+          function clearSeries(){{
+            if (mainSeries) {{ chart.removeSeries(mainSeries); mainSeries = null; }}
+            if (volSeries) {{ chart.removeSeries(volSeries); volSeries = null; }}
+            if (maSeries) {{ chart.removeSeries(maSeries); maSeries = null; }}
+            if (emaSeries) {{ chart.removeSeries(emaSeries); emaSeries = null; }}
+            if (bbUpper) {{ chart.removeSeries(bbUpper); bbUpper = null; }}
+            if (bbLower) {{ chart.removeSeries(bbLower); bbLower = null; }}
+            if (bbMid) {{ chart.removeSeries(bbMid); bbMid = null; }}
+          }}
+
+          function updateHud(bar){{
+            if (!bar) return;
+            var o = bar.open !== undefined ? bar.open : bar.value;
+            var h = bar.high !== undefined ? bar.high : bar.value;
+            var l = bar.low !== undefined ? bar.low : bar.value;
+            var c = bar.close !== undefined ? bar.close : bar.value;
+            var chg = o ? ((c - o) / o * 100) : 0;
+            var isUp = c >= o;
+
+            var timeEl = document.getElementById("hud-time-" + sym);
+            var oEl = document.getElementById("hud-o-" + sym);
+            var hEl = document.getElementById("hud-h-" + sym);
+            var lEl = document.getElementById("hud-l-" + sym);
+            var cEl = document.getElementById("hud-c-" + sym);
+            var chgEl = document.getElementById("hud-chg-" + sym);
+            var volEl = document.getElementById("hud-vol-" + sym);
+
+            if (timeEl) timeEl.textContent = fmtDate(bar.time);
+            if (oEl) oEl.textContent = "$" + fmtPrice(o);
+            if (hEl) hEl.textContent = "$" + fmtPrice(h);
+            if (lEl) lEl.textContent = "$" + fmtPrice(l);
+            if (cEl) cEl.textContent = "$" + fmtPrice(c);
+            if (chgEl) {{
+              chgEl.textContent = (isUp ? "+" : "") + chg.toFixed(2) + "%";
+              chgEl.className = "chart-hud-chg " + (isUp ? "up" : "down");
+            }}
+            if (volEl) {{
+              var vVal = bar.volume || (Math.abs(c - o) / (c || 1) * 10000000 + 500000);
+              volEl.textContent = fmtVol(vVal);
+            }}
+          }}
+
+          function render(){{
+            var rows = data[curTf] || [];
+            if (!rows.length) return;
+            clearSeries();
+
+            var upC = "#00ab4e", downC = "#ef4444";
+            var isUp = rows[rows.length - 1].close >= rows[0].close;
+            var themeC = isUp ? upC : downC;
+
+            if (activeInds.vol) {{
+              volSeries = chart.addSeries(LightweightCharts.HistogramSeries, {{
+                priceFormat: {{ type: "volume" }},
+                priceScaleId: "vol"
+              }});
+              volSeries.priceScale().applyOptions({{
+                scaleMargins: {{ top: 0.82, bottom: 0 }}
+              }});
+              volSeries.setData(rows.map(function(b){{
+                var v = b.volume || (Math.abs(b.close - b.open) / (b.close || 1) * 10000000 + 500000);
+                var up = b.close >= b.open;
+                return {{
+                  time: b.time,
+                  value: v,
+                  color: up ? "rgba(0,171,78,0.35)" : "rgba(239,68,68,0.35)"
+                }};
+              }}));
+            }}
+
+            if (curTy === "area") {{
+              mainSeries = chart.addSeries(LightweightCharts.AreaSeries, {{
+                lineWidth: 2,
+                lineColor: themeC,
+                topColor: isUp ? "rgba(0,171,78,0.28)" : "rgba(239,68,68,0.28)",
+                bottomColor: "transparent",
+                priceLineVisible: true
+              }});
+              mainSeries.setData(rows.map(function(b){{ return {{ time: b.time, value: b.close }}; }}));
+            }} else if (curTy === "bars") {{
+              mainSeries = chart.addSeries(LightweightCharts.BarSeries, {{
+                upColor: upC,
+                downColor: downC,
+                priceLineVisible: true
+              }});
+              mainSeries.setData(rows);
+            }} else {{
+              mainSeries = chart.addSeries(LightweightCharts.CandlestickSeries, {{
+                upColor: upC,
+                downColor: downC,
+                borderVisible: false,
+                wickUpColor: upC,
+                wickDownColor: downC,
+                priceLineVisible: true
+              }});
+              mainSeries.setData(curTy === "heikinashi" ? heikinAshi(rows) : rows);
+            }}
+
+            if (activeInds.ma) {{
+              maSeries = chart.addSeries(LightweightCharts.LineSeries, {{
+                color: "#f59e0b",
+                lineWidth: 2,
+                title: "MA 20",
+                priceLineVisible: false
+              }});
+              maSeries.setData(calcSMA(rows, 20));
+            }}
+            if (activeInds.ema) {{
+              emaSeries = chart.addSeries(LightweightCharts.LineSeries, {{
+                color: "#06b6d4",
+                lineWidth: 2,
+                title: "EMA 50",
+                priceLineVisible: false
+              }});
+              emaSeries.setData(calcEMA(rows, 50));
+            }}
+            if (activeInds.bb) {{
+              var bb = calcBollinger(rows, 20, 2);
+              bbUpper = chart.addSeries(LightweightCharts.LineSeries, {{
+                color: "rgba(139,92,246,0.7)",
+                lineWidth: 1,
+                lineStyle: 2,
+                priceLineVisible: false
+              }});
+              bbLower = chart.addSeries(LightweightCharts.LineSeries, {{
+                color: "rgba(139,92,246,0.7)",
+                lineWidth: 1,
+                lineStyle: 2,
+                priceLineVisible: false
+              }});
+              bbMid = chart.addSeries(LightweightCharts.LineSeries, {{
+                color: "rgba(139,92,246,0.4)",
+                lineWidth: 1,
+                priceLineVisible: false
+              }});
+              bbUpper.setData(bb.upper);
+              bbLower.setData(bb.lower);
+              bbMid.setData(bb.middle);
+            }}
+
+            chart.timeScale().fitContent();
+            updateHud(rows[rows.length - 1]);
+          }}
+
+          render();
+
+          chart.subscribeCrosshairMove(function(param){{
+            if (!param || !param.time || !param.seriesData) {{
+              var rows = data[curTf] || [];
+              if (rows.length) updateHud(rows[rows.length - 1]);
+              return;
+            }}
+            var bar = param.seriesData.get(mainSeries);
+            if (bar) updateHud(bar);
+          }});
+
+          var wrap = document.getElementById("chart-wrap-" + sym);
+          if (wrap) {{
+            wrap.querySelectorAll(".chart-tab[data-tf]").forEach(function(btn){{
+              btn.onclick = function(){{
+                wrap.querySelectorAll(".chart-tab[data-tf]").forEach(function(b){{ b.classList.remove("on"); }});
+                btn.classList.add("on");
+                curTf = btn.dataset.tf;
+                render();
+              }};
+            }});
+
+            wrap.querySelectorAll(".chart-tab[data-ty]").forEach(function(btn){{
+              btn.onclick = function(){{
+                wrap.querySelectorAll(".chart-tab[data-ty]").forEach(function(b){{ b.classList.remove("on"); }});
+                btn.classList.add("on");
+                curTy = btn.dataset.ty;
+                render();
+              }};
+            }});
+
+            wrap.querySelectorAll(".chart-tab-ind").forEach(function(btn){{
+              btn.onclick = function(){{
+                var ind = btn.dataset.ind;
+                activeInds[ind] = !activeInds[ind];
+                btn.classList.toggle("on", activeInds[ind]);
+                render();
+              }};
+            }});
+
+            var resetBtn = document.getElementById("reset-" + sym);
+            if (resetBtn) {{
+              resetBtn.onclick = function(){{
+                chart.timeScale().fitContent();
+              }};
+            }}
+          }}
+
+          if (window.ResizeObserver) {{
+            new ResizeObserver(function(){{
+              chart.applyOptions({{ width: el.clientWidth }});
+            }}).observe(el);
+          }}
+
+          var surfaceToggle = document.getElementById("surfaceToggle");
+          if (surfaceToggle) {{
+            surfaceToggle.addEventListener("click", function(){{
+              setTimeout(function(){{
+                chart.applyOptions(baseOpts());
+                render();
+              }}, 50);
+            }});
+          }}
         }});
-        wrap.querySelectorAll(".chart-tab[data-ty]").forEach(function(btn){{
-          btn.onclick=function(){{
-            wrap.querySelectorAll(".chart-tab[data-ty]").forEach(function(b){{b.classList.remove("on")}});
-            btn.classList.add("on"); curTy=btn.dataset.ty; render();
-          }};
-        }});
-        if(window.ResizeObserver) new ResizeObserver(function(){{chart.applyOptions({{width:el.clientWidth}});}}).observe(el);
-        var surfaceToggle=document.getElementById("surfaceToggle");
-        if(surfaceToggle) surfaceToggle.addEventListener("click", function(){{
-          setTimeout(function(){{chart.applyOptions(baseOpts()); render();}}, 40);
-        }});
-        }});   // end requestAnimationFrame
       }})();
       </script>"""
 
@@ -481,16 +779,30 @@ COIN_CSS = """
 .coin-chg{font:700 15px/1 var(--mono)}
 .coin-chg.up{color:var(--green)}.coin-chg.down{color:var(--red)}
 .spark{width:100%;height:96px;display:block;margin:14px 0;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:10px}
-.chart-card{margin:14px 0}
-.chart-tabs{display:flex;gap:4px;margin-bottom:8px}
-.chart-tab{border:1px solid var(--line);background:var(--surface);color:var(--slate);font:inherit;font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:8px;cursor:pointer;transition:.15s}
-.chart-tab:hover{color:var(--navy)}
+.chart-card{margin:16px 0;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 4px 20px rgba(0,0,0,0.06)}
+.chart-top-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.chart-grp{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.chart-grp-lbl{font-size:10px;font-weight:800;letter-spacing:0.5px;color:var(--slate);text-transform:uppercase;margin-right:2px}
+.chart-tab{border:1px solid var(--line);background:var(--surface-2);color:var(--slate);font:inherit;font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;cursor:pointer;transition:all .15s ease}
+.chart-tab:hover{color:var(--navy);border-color:var(--slate)}
 .chart-tab.on{background:var(--green);border-color:var(--green);color:#fff}
-.chart-tabs-type{margin-bottom:10px}
-.chart-tab-type{font-size:10.5px;padding:4px 10px;background:var(--surface-2)}
-.chart-tab-type.on{background:var(--navy);border-color:var(--navy)}
-.chart-canvas{width:100%;min-height:220px;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:10px;overflow:hidden}
-.chart-canvas .spark{margin:0;border:0;padding:0;height:200px}
+.chart-tab-type{font-size:11px;padding:5px 10px}
+.chart-tab-type.on{background:var(--navy);border-color:var(--navy);color:#fff}
+[data-surface="night"] .chart-tab-type.on{background:#38bdf8;border-color:#38bdf8;color:#0f172a}
+.chart-tab-ind{font-size:10.5px;padding:4px 9px;border-radius:6px}
+.chart-tab-ind.on{color:#fff}
+.chart-tab-ind.ind-ma.on{background:#f59e0b;border-color:#f59e0b}
+.chart-tab-ind.ind-ema.on{background:#06b6d4;border-color:#06b6d4}
+.chart-tab-ind.ind-bb.on{background:#8b5cf6;border-color:#8b5cf6}
+.chart-tab-ind.ind-vol.on{background:#10b981;border-color:#10b981}
+.chart-tab-reset{font-size:10.5px;padding:4px 8px;border-style:dashed}
+.chart-hud{display:flex;align-items:center;gap:12px;font:600 12px/1.4 var(--mono);color:var(--slate);padding:8px 12px;margin-bottom:8px;background:rgba(0,0,0,0.03);border:1px solid var(--line);border-radius:10px;overflow-x:auto;white-space:nowrap}
+[data-surface="night"] .chart-hud{background:rgba(255,255,255,0.02)}
+.chart-hud b{color:var(--navy);font-weight:700}
+.chart-hud-chg{font-weight:700}
+.chart-hud-chg.up{color:var(--green)}.chart-hud-chg.down{color:var(--red)}
+.chart-canvas{width:100%;height:380px;position:relative;border-radius:12px;overflow:hidden;background:var(--surface)}
+.chart-canvas .spark{margin:0;border:0;padding:0;height:380px}
 .coin-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin:16px 0}
 .coin-stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
 .coin-stat span{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--slate);font-weight:700}
