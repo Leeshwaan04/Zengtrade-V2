@@ -142,7 +142,7 @@ BLOG_CSS = """
 .viral-insight-card{background:linear-gradient(135deg,rgba(0,171,78,0.06) 0%,rgba(14,165,233,0.05) 100%);border:1px solid rgba(0,171,78,0.28);border-left:5px solid var(--accent);border-radius:14px;padding:22px 24px;margin:32px 0;position:relative}
 .vic-badge{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.6px;color:var(--accent);display:flex;align-items:center;gap:6px;margin-bottom:10px}
 .vic-quote{font-size:16px;font-weight:700;line-height:1.6;color:var(--navy);margin:0 0 16px;font-style:italic}
-.vic-meta{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding-top:12px;border-top:1px solid rgba(0,0,0,0.06)}
+.vic-meta{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding-top:12px;border-top:1px solid var(--line)}
 .vic-author{font-size:12px;color:var(--slate);font-weight:600}
 .vic-actions{display:flex;gap:8px;align-items:center}
 .vic-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer;transition:all 0.15s;text-decoration:none;border:none}
@@ -157,7 +157,8 @@ BLOG_CSS = """
 .bsf-sub{font-size:13px;color:var(--slate);margin:0 0 16px}
 
 /* Share Toast */
-.share-toast{position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.25);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transform:translateY(12px);transition:all 0.25s cubic-bezier(0.16,1,0.3,1)}
+.share-toast{position:fixed;bottom:24px;right:24px;background:#0f1a2a;color:#f8fafc;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.25);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transform:translateY(12px);transition:all 0.25s cubic-bezier(0.16,1,0.3,1);border:1px solid rgba(255,255,255,0.1)}
+[data-surface="night"] .share-toast{background:#16223a;color:#e8eefb;border-color:rgba(255,255,255,0.16);box-shadow:0 12px 32px rgba(0,0,0,0.6)}
 .share-toast.show{opacity:1;pointer-events:auto;transform:translateY(0)}
 .share-toast-dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
 @media(max-width:820px){.blog-grid3{grid-template-columns:1fr}.blog-calc-grid{grid-template-columns:1fr}.blog-share-bar{flex-direction:column;align-items:flex-start}}
@@ -167,11 +168,11 @@ def render_social_share_bar(canon_url, raw_title, sym, name, is_footer=False):
     e = html.escape
     q = urllib.parse.quote
     share_text = f"Quantitative research breakdown: {raw_title}. Regime filters, 35 bps friction simulation & algorithmic risk rules for {sym}:"
-    x_url = f"https://twitter.com/intent/tweet?text={q(share_text)}&url={q(canon_url)}&hashtags={q(f'CryptoTrading,AlgoTrading,{sym}')}"
-    li_url = f"https://www.linkedin.com/sharing/share-offsite/?url={q(canon_url)}"
-    wa_url = f"https://api.whatsapp.com/send?text={q(share_text + ' ' + canon_url)}"
-    tg_url = f"https://t.me/share/url?url={q(canon_url)}&text={q(share_text)}"
-    rd_url = f"https://reddit.com/submit?url={q(canon_url)}&title={q(raw_title)}"
+    x_url = f"https://twitter.com/intent/tweet?text={q(share_text, safe='')}&url={q(canon_url, safe='')}&hashtags={q(f'CryptoTrading,AlgoTrading,{sym}', safe='')}"
+    li_url = f"https://www.linkedin.com/sharing/share-offsite/?url={q(canon_url, safe='')}"
+    wa_url = f"https://api.whatsapp.com/send?text={q(share_text + ' ' + canon_url, safe='')}"
+    tg_url = f"https://t.me/share/url?url={q(canon_url, safe='')}&text={q(share_text, safe='')}"
+    rd_url = f"https://reddit.com/submit?url={q(canon_url, safe='')}&title={q(raw_title, safe='')}"
 
     if is_footer:
         return f"""<div class="blog-share-footer">
@@ -204,8 +205,7 @@ def render_viral_insight_card(name, sym, raw_title, canon_url):
     q = urllib.parse.quote
     quote_text = f"In {name} ({sym}) algorithmic trading, naive momentum evaporates once 35 bps round-trip friction is factored in. Real statistical expectancy mandates regime-aware filters: Bull expansion, Neutral chop oscillation, or Bear defense to cash."
     tweet_text = f"\"{quote_text}\" - Systematic research breakdown on {sym}:"
-    tweet_url = f"https://twitter.com/intent/tweet?text={q(tweet_text)}&url={q(canon_url)}&hashtags={q(f'Trading,Crypto,{sym}')}"
-    escaped_js_quote = quote_text.replace("'", "\\'")
+    tweet_url = f"https://twitter.com/intent/tweet?text={q(tweet_text, safe='')}&url={q(canon_url, safe='')}&hashtags={q(f'Trading,Crypto,{sym}', safe='')}"
 
     return f"""<div class="viral-insight-card">
       <div class="vic-badge">
@@ -217,7 +217,7 @@ def render_viral_insight_card(name, sym, raw_title, canon_url):
         <span class="vic-author">zengtrade Quantitative Research Group &bull; Friction-Adjusted Model</span>
         <div class="vic-actions">
           <a class="vic-btn tweet" href="{tweet_url}" target="_blank" rel="noopener noreferrer"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> Tweet Insight</a>
-          <button type="button" class="vic-btn copy" onclick="copyInsightText('{escaped_js_quote}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Insight</button>
+          <button type="button" class="vic-btn copy" data-insight="{e(quote_text)}" onclick="copyInsightCard(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Insight</button>
         </div>
       </div>
     </div>"""
@@ -579,11 +579,13 @@ function copyArticleLink() {{
     prompt('Copy this link:', url);
   }}
 }}
-function copyInsightText(txt) {{
+function copyInsightCard(btn) {{
+  var txt = btn ? btn.getAttribute('data-insight') : '';
+  if (!txt) return;
   var cite = txt + ' (Source: ' + window.location.href + ' via @zengtrade)';
   if (navigator.clipboard && navigator.clipboard.writeText) {{
     navigator.clipboard.writeText(cite).then(function() {{
-      showToast('Quantitative insight copied to clipboard! 📋');
+      showToast('Quantitative insight copied to clipboard!');
     }}).catch(function() {{
       prompt('Copy this insight:', cite);
     }});
@@ -599,7 +601,11 @@ function showToast(msg) {{
     t.className = 'share-toast';
     document.body.appendChild(t);
   }}
-  t.innerHTML = '<span class="share-toast-dot"></span>' + msg;
+  t.textContent = '';
+  var dot = document.createElement('span');
+  dot.className = 'share-toast-dot';
+  t.appendChild(dot);
+  t.appendChild(document.createTextNode(' ' + msg));
   t.classList.add('show');
   clearTimeout(window._toastTimeout);
   window._toastTimeout = setTimeout(function() {{

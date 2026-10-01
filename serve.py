@@ -41,6 +41,8 @@ DIST = os.path.join(HERE, "deploy", "landing", "dist")
 class Handler(http.server.SimpleHTTPRequestHandler):
     def translate_path(self, path):
         clean = path.split("?", 1)[0].split("#", 1)[0].strip("/")
+        if clean in ("home", "landing"):
+            return os.path.join(DIST, "index.html")
         if clean in ("", "index.html", "dashboard"):
             return os.path.join(HERE, "index.html")
 

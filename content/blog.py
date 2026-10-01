@@ -82,13 +82,14 @@ def load_posts():
 
 
 def render_blog_share_bar(canon_url, title):
+    e = html.escape
     q = urllib.parse.quote
     share_text = f"Research: {title} via @zengtrade:"
-    x_url = f"https://twitter.com/intent/tweet?text={q(share_text)}&url={q(canon_url)}&hashtags=CryptoTrading,AlgoTrading,QuantitativeFinance"
-    li_url = f"https://www.linkedin.com/sharing/share-offsite/?url={q(canon_url)}"
-    wa_url = f"https://api.whatsapp.com/send?text={q(share_text + ' ' + canon_url)}"
-    tg_url = f"https://t.me/share/url?url={q(canon_url)}&text={q(share_text)}"
-    rd_url = f"https://reddit.com/submit?url={q(canon_url)}&title={q(title)}"
+    x_url = f"https://twitter.com/intent/tweet?text={q(share_text, safe='')}&url={q(canon_url, safe='')}&hashtags={q('CryptoTrading,AlgoTrading,QuantitativeFinance', safe='')}"
+    li_url = f"https://www.linkedin.com/sharing/share-offsite/?url={q(canon_url, safe='')}"
+    wa_url = f"https://api.whatsapp.com/send?text={q(share_text + ' ' + canon_url, safe='')}"
+    tg_url = f"https://t.me/share/url?url={q(canon_url, safe='')}&text={q(share_text, safe='')}"
+    rd_url = f"https://reddit.com/submit?url={q(canon_url, safe='')}&title={q(title, safe='')}"
     return f"""<div class="blog-share-bar" style="margin:16px 0 0">
       <span class="blog-share-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share Post:</span>
       <div class="blog-share-btns">
@@ -175,13 +176,32 @@ def post_parts(p):
     var url = window.location.href;
     if (navigator.clipboard && navigator.clipboard.writeText) {{
       navigator.clipboard.writeText(url).then(function() {{
-        alert('Blog post link copied to clipboard!');
+        showToast('Blog post link copied to clipboard!');
       }}).catch(function() {{
         prompt('Copy this link:', url);
       }});
     }} else {{
       prompt('Copy this link:', url);
     }}
+  }}
+  function showToast(msg) {{
+    var t = document.getElementById('shareToast');
+    if (!t) {{
+      t = document.createElement('div');
+      t.id = 'shareToast';
+      t.className = 'share-toast';
+      document.body.appendChild(t);
+    }}
+    t.textContent = '';
+    var dot = document.createElement('span');
+    dot.className = 'share-toast-dot';
+    t.appendChild(dot);
+    t.appendChild(document.createTextNode(' ' + msg));
+    t.classList.add('show');
+    clearTimeout(window._toastTimeout);
+    window._toastTimeout = setTimeout(function() {{
+      t.classList.remove('show');
+    }}, 2600);
   }}
   </script>
 </main>"""
