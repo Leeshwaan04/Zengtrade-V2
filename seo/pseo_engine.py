@@ -2230,7 +2230,11 @@ def emit_pseo_catalog(dist_dir: str, shell_func, coin_roster: list, sample_only:
     tf_ind_urls = []
     comp_urls = []
 
-    coins_to_run = coin_roster[:5] if sample_only else coin_roster
+    # In sample_only mode (ZT_FAST_PSEO=1), run 5 sample coins for fast unit testing.
+    # In production mode, capped at top 50 coins (3,150 pSEO pages, ~40 MB) to stay well under
+    # GitHub Pages 1.0 GB artifact deployment limit (~470 MB total dist).
+    pseo_limit = int(os.environ.get("ZT_PSEO_COINS_LIMIT", "50"))
+    coins_to_run = coin_roster[:5] if sample_only else coin_roster[:pseo_limit]
 
     def minify_html(raw: str) -> str:
         # Better minification to fix GitHub Pages limit: strip lines and replace \n with space.

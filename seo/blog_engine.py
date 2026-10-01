@@ -812,8 +812,10 @@ def build_blog(dist_dir, shell_func, sample_only=False, coins=None):
     article_urls = []
     
     # In sample_only mode (ZT_FAST_PSEO=1), run 1 coin * 200 topics = 200 sample pages in ~1s
-    # In production mode, run full 1,000 coins * 200 topics = 200,000 programmatic articles
-    coins_to_run = coins[:1] if sample_only else coins
+    # In production mode, right-sized to top 25 coins * 200 topics = 5,000 articles (~230 MB)
+    # to stay safely within GitHub Pages 1.0 GB artifact deployment limit (~470 MB total dist).
+    blog_limit = int(os.environ.get("ZT_BLOG_COINS_LIMIT", "25"))
+    coins_to_run = coins[:1] if sample_only else coins[:blog_limit]
     
     def minify_html(raw: str) -> str:
         raw = raw.replace('\u2014', ' - ').replace('—', ' - ')
