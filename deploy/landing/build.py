@@ -88,7 +88,7 @@ GA_SNIPPET = """<script async src="https://www.googletagmanager.com/gtag/js?id=G
 BEACON = """<script>
 (function(){try{
  var u=new URLSearchParams(location.search),bits=[];
- ["utm_source","utm_medium","utm_campaign"].forEach(function(k){var v=u.get(k);if(v)bits.push(k+"="+v);});
+ ["utm_source","utm_medium","utm_campaign","utm_term","utm_content","gclid"].forEach(function(k){var v=u.get(k);if(v)bits.push(k+"="+v);});
  var path=location.pathname.slice(0,220)+(bits.length?"?"+bits.join("&"):"");
  fetch("https://ponvarxeytfcntckczbn.supabase.co/rest/v1/event",{method:"POST",
   headers:{apikey:"sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1","Content-Type":"application/json",Prefer:"return=minimal"},
@@ -768,4 +768,4 @@ if not os.path.exists(cname_path):
     open(cname_path, "w").write("zengtrade.in")
 
 print("built %d pages:" % len(urls), ", ".join(sorted(os.listdir(DIST))))
-print("  ✓ .nojekyll written  (Jekyll bypass — ensures .xml sitemaps are served)")
+print("  ✓ .nojekyll written  (Jekyll bypass - ensures .xml sitemaps are served)")
