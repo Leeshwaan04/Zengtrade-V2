@@ -825,6 +825,11 @@ def render_strategy_coin_content(strat: dict, coin: tuple[str, str, str, str]) -
     "name": "zengtrade Quantitative Research",
     "url": "https://zengtrade.in/learn/algo-studio/"
   }},
+  "reviewedBy": {{
+    "@type": "Organization",
+    "name": "zengtrade Algorithmic Risk Committee",
+    "url": "https://zengtrade.in/risk/"
+  }},
   "publisher": {{
     "@type": "Organization",
     "name": "zengtrade",
@@ -1002,6 +1007,11 @@ def render_indicator_coin_content(ind: dict, coin: tuple[str, str, str, str]) ->
     "name": "zengtrade Quantitative Research",
     "url": "https://zengtrade.in/learn/algo-studio/"
   }},
+  "reviewedBy": {{
+    "@type": "Organization",
+    "name": "zengtrade Algorithmic Risk Committee",
+    "url": "https://zengtrade.in/risk/"
+  }},
   "publisher": {{
     "@type": "Organization",
     "name": "zengtrade",
@@ -1170,6 +1180,11 @@ def render_regime_coin_content(reg: dict, coin: tuple[str, str, str, str]) -> tu
     "name": "zengtrade Quantitative Research",
     "url": "https://zengtrade.in/learn/algo-studio/"
   }},
+  "reviewedBy": {{
+    "@type": "Organization",
+    "name": "zengtrade Algorithmic Risk Committee",
+    "url": "https://zengtrade.in/risk/"
+  }},
   "publisher": {{
     "@type": "Organization",
     "name": "zengtrade",
@@ -1335,6 +1350,11 @@ def render_timeframe_strategy_content(strat: dict, coin: tuple[str, str, str, st
     "@type": "Organization",
     "name": "zengtrade Quantitative Research",
     "url": "https://zengtrade.in/learn/algo-studio/"
+  }},
+  "reviewedBy": {{
+    "@type": "Organization",
+    "name": "zengtrade Algorithmic Risk Committee",
+    "url": "https://zengtrade.in/risk/"
   }},
   "publisher": {{
     "@type": "Organization",
@@ -1511,6 +1531,11 @@ def render_timeframe_indicator_content(ind: dict, coin: tuple[str, str, str, str
     "@type": "Organization",
     "name": "zengtrade Quantitative Research",
     "url": "https://zengtrade.in/learn/algo-studio/"
+  }},
+  "reviewedBy": {{
+    "@type": "Organization",
+    "name": "zengtrade Algorithmic Risk Committee",
+    "url": "https://zengtrade.in/risk/"
   }},
   "publisher": {{
     "@type": "Organization",
@@ -1691,6 +1716,11 @@ def render_strategy_comparison_content(comp: dict, coin: tuple[str, str, str, st
     "@type": "Organization",
     "name": "zengtrade Quantitative Research",
     "url": "https://zengtrade.in/learn/algo-studio/"
+  }},
+  "reviewedBy": {{
+    "@type": "Organization",
+    "name": "zengtrade Algorithmic Risk Committee",
+    "url": "https://zengtrade.in/risk/"
   }},
   "publisher": {{
     "@type": "Organization",

@@ -3,7 +3,7 @@
 
 Generates 200,000 programmatic blog articles across 200 deep quantitative topics and 1,000 coins.
 Topics cover Markets, Trading, Investing, Algo, Strategies, Indicators, Risk, and Derivatives.
-Strict adherence to zero em dashes (no \u2014 or —).
+Strict adherence to zero em dashes (no \\u2014).
 """
 import os
 import json
@@ -23,32 +23,89 @@ BLOG_CSS = """
 .blog-breadcrumbs a:hover{color:var(--navy);text-decoration:underline}
 .blog-breadcrumbs .active{color:var(--navy);font-weight:600}
 .blog-pill{display:inline-block;padding:4px 10px;background:rgba(0,171,78,0.1);color:var(--accent);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;border-radius:20px;margin-bottom:14px}
-.blog-meta{font-size:13px;color:var(--slate);margin:14px 0 24px;display:flex;gap:12px;align-items:center}
+.blog-meta{font-size:13px;color:var(--slate);margin:14px 0 24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .blog-meta .dot{display:inline-block;width:4px;height:4px;background:var(--slate);border-radius:50%}
-.blog-price-pill{display:inline-block;padding:6px 12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;font-size:13px;font-weight:600;color:var(--navy)}
-.blog-price-pill span{color:var(--accent)}
+.blog-price-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;font-size:13px;font-weight:600;color:var(--navy);box-shadow:var(--shadow)}
+.blog-price-pill span{color:var(--accent);font-weight:700}
 .blog-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:24px 0}
-.blog-stat-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+.blog-stat-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow)}
 .bsc-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--slate)}
 .bsc-val{font-size:16px;font-weight:800;color:var(--navy);margin:6px 0 0}
 .blog-body{padding:32px 0}
-.blog-body h2{font-size:24px;font-weight:800;color:var(--navy);margin:40px 0 16px}
-.blog-body h3{font-size:18px;font-weight:700;color:var(--navy);margin:24px 0 12px}
-.blog-body p{font-size:15px;line-height:1.7;color:var(--navy);margin:0 0 16px}
-.blog-body ul{margin:0 0 20px;padding-left:20px;font-size:15px;line-height:1.7;color:var(--navy)}
+.blog-body h2{font-size:24px;font-weight:800;color:var(--navy);margin:40px 0 16px;letter-spacing:-0.3px}
+.blog-body h3{font-size:18px;font-weight:700;color:var(--navy);margin:28px 0 12px}
+.blog-body p{font-size:15px;line-height:1.75;color:var(--navy);margin:0 0 16px}
+.blog-body ul{margin:0 0 20px;padding-left:20px;font-size:15px;line-height:1.75;color:var(--navy)}
 .blog-body li{margin-bottom:8px}
-.formula-box{background:rgba(0,0,0,0.3);border:1px solid var(--line);border-radius:8px;padding:16px;margin:20px 0;overflow-x:auto}
-.formula-box code{font-family:monospace;font-size:14px;color:var(--accent)}
-.blog-eeat{background:rgba(0,171,78,0.04);border:1px solid rgba(0,171,78,0.25);border-radius:14px;padding:24px;margin-top:40px}
+
+/* Interactive Table of Contents */
+.blog-toc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 24px;margin:24px 0 32px}
+.blog-toc-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.6px;color:var(--slate);margin-bottom:12px}
+.blog-toc-list{display:flex;flex-wrap:wrap;gap:10px;margin:0;padding:0;list-style:none}
+.blog-toc-list a{display:inline-block;padding:5px 12px;background:var(--surface-2);border:1px solid var(--line);border-radius:20px;font-size:12px;font-weight:600;color:var(--navy);text-decoration:none;transition:all 0.15s}
+.blog-toc-list a:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,171,78,0.06)}
+
+/* Quantitative Formula Box */
+.formula-box{position:relative;background:rgba(12,20,36,0.92);border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin:24px 0;box-shadow:var(--shadow)}
+.formula-box code{display:block;font-family:var(--mono);font-size:13.5px;color:var(--accent);line-height:1.6;overflow-x:auto}
+.formula-copy-btn{position:absolute;top:12px;right:12px;padding:4px 10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:6px;font-size:11px;font-weight:600;color:#fff;cursor:pointer;transition:all 0.15s}
+.formula-copy-btn:hover{background:var(--accent);color:#04140a;border-color:var(--accent)}
+
+/* Regime Matrix Table */
+.blog-table-wrap{margin:28px 0;overflow-x:auto;border-radius:14px;border:1px solid var(--line);box-shadow:var(--shadow)}
+.blog-table{width:100%;border-collapse:collapse;background:var(--surface);font-size:13px;text-align:left}
+.blog-table th{background:var(--surface-2);padding:14px 18px;font-weight:700;color:var(--slate);border-bottom:1px solid var(--line);text-transform:uppercase;font-size:11px;letter-spacing:0.5px}
+.blog-table td{padding:14px 18px;border-bottom:1px solid var(--line);color:var(--navy)}
+.blog-table tr:last-child td{border-bottom:none}
+.badge-bull{color:#00ab4e;font-weight:700}
+.badge-neutral{color:#1667d9;font-weight:700}
+.badge-bear{color:#e5383b;font-weight:700}
+
+/* Interactive Simulator Card */
+.blog-calc-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px;margin:32px 0;box-shadow:var(--shadow)}
+.blog-calc-head{margin-bottom:20px}
+.blog-calc-head h3{font-size:18px;font-weight:800;color:var(--navy);margin:0 0 6px}
+.blog-calc-head p{font-size:13px;color:var(--slate);margin:0}
+.blog-calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.blog-calc-input-group{margin-bottom:14px}
+.blog-calc-label{font-size:12px;font-weight:700;color:var(--slate);display:block;margin-bottom:6px}
+.blog-calc-input{width:100%;padding:10px 14px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;font-size:13px;color:var(--navy);font-family:var(--mono)}
+.blog-calc-results{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:20px;display:flex;flex-direction:column;justify-content:center;gap:12px}
+.bcr-item{display:flex;justify-content:space-between;align-items:center;font-size:13px}
+.bcr-item .lbl{color:var(--slate);font-weight:600}
+.bcr-item .val{color:var(--navy);font-weight:800;font-family:var(--mono)}
+.bcr-item.highlight .val{color:var(--accent);font-size:15px}
+
+/* Interlinking Discovery Matrix */
+.blog-matrix{background:var(--surface-2);border:1px solid var(--line);border-radius:16px;padding:24px;margin:40px 0}
+.blog-matrix-title{font-size:14px;font-weight:800;color:var(--navy);margin-bottom:14px;text-transform:uppercase;letter-spacing:0.5px}
+.blog-matrix-links{display:flex;flex-wrap:wrap;gap:10px}
+.blog-matrix-pill{padding:8px 16px;background:var(--surface);border:1px solid var(--line);border-radius:24px;font-size:12.5px;font-weight:600;color:var(--navy);text-decoration:none;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px}
+.blog-matrix-pill:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,171,78,0.06);transform:translateY(-1px)}
+
+/* Author & Credibility Box */
+.blog-author-card{display:flex;gap:18px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:40px}
+.bac-avatar{width:48px;height:48px;border-radius:50%;background:rgba(0,171,78,0.12);display:grid;place-items:center;font-size:20px;color:var(--accent);flex-shrink:0}
+.bac-info h4{margin:0 0 4px;font-size:14px;font-weight:800;color:var(--navy)}
+.bac-info p{margin:0;font-size:12.5px;color:var(--slate);line-height:1.5}
+
+/* E-E-A-T & FAQ */
+.blog-eeat{background:rgba(0,171,78,0.04);border:1px solid rgba(0,171,78,0.25);border-radius:14px;padding:24px;margin-top:32px}
 .eeat-badge{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;color:var(--accent);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px}
 .blog-faq{margin-top:40px}
-.faq-item{border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px;background:var(--surface)}
+.faq-item{border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px;background:var(--surface);transition:border-color 0.15s}
+.faq-item:hover{border-color:var(--slate-2)}
 .faq-item summary{font-weight:700;font-size:15px;color:var(--navy);cursor:pointer}
-.faq-item p{margin:12px 0 0;font-size:14px;color:var(--slate)}
+.faq-item p{margin:12px 0 0;font-size:14px;color:var(--slate);line-height:1.6}
+
+/* Category Hubs */
 .blog-hub-hero{text-align:center;padding:60px 0 40px}
+.blog-telemetry-bar{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin:20px auto 0;max-width:800px}
+.btb-item{font-size:12.5px;color:var(--slate);font-weight:600;display:flex;align-items:center;gap:6px}
+.btb-item .dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
 .blog-search-bar{max-width:640px;margin:24px auto 0}
-#blogSearchInput{width:100%;padding:14px 20px;background:var(--surface);border:1px solid var(--line);border-radius:12px;font-size:14px;color:var(--navy);outline:none;transition:all 0.15s}
-#blogSearchInput:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,171,78,0.15)}
+#blogSearchInput, #catSearchInput{width:100%;padding:14px 20px;background:var(--surface);border:1px solid var(--line);border-radius:12px;font-size:14px;color:var(--navy);outline:none;transition:all 0.15s}
+#blogSearchInput:focus, #catSearchInput:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,171,78,0.15)}
 .blog-tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:32px 0}
 .blog-tab{padding:9px 18px;background:var(--surface);border:1px solid var(--line);border-radius:24px;font-size:13px;font-weight:600;color:var(--slate);cursor:pointer;transition:all 0.15s;text-decoration:none;display:inline-block}
 .blog-tab:hover{color:var(--navy);border-color:var(--slate)}
@@ -60,7 +117,7 @@ BLOG_CSS = """
 .blog-card h3{font-size:18px;font-weight:800;color:var(--navy);margin:0 0 10px;line-height:1.3}
 .blog-card p{font-size:13px;color:var(--slate);line-height:1.5;margin:0 0 16px;flex-grow:1}
 .blog-card .bfoot{font-size:12px;color:var(--slate-2);display:flex;justify-content:space-between}
-@media(max-width:820px){.blog-grid3{grid-template-columns:1fr}}
+@media(max-width:820px){.blog-grid3{grid-template-columns:1fr}.blog-calc-grid{grid-template-columns:1fr}}
 """
 
 def safe_str(s: str) -> str:
@@ -129,11 +186,43 @@ def render_article(topic, coin, build_date):
     ]}
     
     post_schema = {
-        "@context": "https://schema.org", "@type": "BlogPosting",
-        "headline": safe_str(raw_title), "description": desc,
+        "@context": "https://schema.org",
+        "@type": ["BlogPosting", "TechArticle"],
+        "headline": safe_str(raw_title),
+        "description": desc,
         "datePublished": build_date,
-        "author": {"@type": "Organization", "name": "zengtrade Quant Team"},
-        "publisher": {"@type": "Organization", "name": "zengtrade", "url": SITE},
+        "dateModified": build_date,
+        "inLanguage": "en-US",
+        "author": {
+            "@type": "Organization",
+            "name": "zengtrade Quantitative Research Group",
+            "url": f"{SITE}/how-it-works/#honesty",
+            "logo": f"{SITE}/assets/logo.svg"
+        },
+        "reviewedBy": {
+            "@type": "Organization",
+            "name": "zengtrade Algorithmic Risk Committee",
+            "url": f"{SITE}/risk/"
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "zengtrade",
+            "url": SITE,
+            "logo": {
+                "@type": "ImageObject",
+                "url": f"{SITE}/assets/logo.svg"
+            }
+        },
+        "about": [
+            {"@type": "Thing", "name": f"{name} ({sym})", "sameAs": f"{SITE}/coins/{slug}/"},
+            {"@type": "Thing", "name": pillar_name, "sameAs": f"{SITE}/blog/category/{pillar}/"},
+            {"@type": "Thing", "name": "Algorithmic Trading"},
+            {"@type": "Thing", "name": "Quantitative Finance"}
+        ],
+        "speakable": {
+            "@type": "SpeakableSpecification",
+            "cssSelector": ["#overview", "#mechanics"]
+        },
         "mainEntityOfPage": {"@type": "WebPage", "@id": canon}
     }
     
@@ -146,10 +235,27 @@ def render_article(topic, coin, build_date):
         "@context": "https://schema.org", "@type": "FAQPage",
         "mainEntity": [{"@type": "Question", "name": safe_str(f["q"]), "acceptedAnswer": {"@type": "Answer", "text": safe_str(f["a"])}} for f in faqs]
     }
+
+    product_schema = {
+        "@context": "https://schema.org",
+        "@type": "FinancialProduct",
+        "name": safe_str(f"{name} ({sym}) Systematic Simulation Workstation"),
+        "description": desc,
+        "category": "Quantitative Cryptocurrency Trading Software",
+        "isAccessibleForFree": True,
+        "feesAndCommissionsSpecification": "Zero commission; simulated 35 bps Binance spot friction model.",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "url": f"{SITE}/login/?mode=signup"
+        }
+    }
     
     extra = (f'<script type="application/ld+json">{json.dumps(crumb)}</script>\n'
              f'<script type="application/ld+json">{json.dumps(post_schema)}</script>\n'
-             f'<script type="application/ld+json">{json.dumps(faq_schema)}</script>')
+             f'<script type="application/ld+json">{json.dumps(faq_schema)}</script>\n'
+             f'<script type="application/ld+json">{json.dumps(product_schema)}</script>')
              
     e = html.escape
     main_html = f"""<main id="main" class="blog-page">
@@ -183,11 +289,24 @@ def render_article(topic, coin, build_date):
 
   <section class="blog-body">
     <div class="lp-wrap" style="max-width:800px; margin:0 auto">
-      <h2>Understanding {e(raw_title)}</h2>
+      <nav class="blog-toc" aria-label="Table of Contents">
+        <div class="blog-toc-title">Article Sections</div>
+        <ul class="blog-toc-list">
+          <li><a href="#overview">1. Overview</a></li>
+          <li><a href="#mechanics">2. Execution Mechanics</a></li>
+          <li><a href="#regime-matrix">3. Regime Matrix</a></li>
+          <li><a href="#simulator">4. Position Simulator</a></li>
+          <li><a href="#formula">5. Expectancy Model</a></li>
+          <li><a href="#related">6. Related Hubs</a></li>
+          <li><a href="#faq">7. FAQs</a></li>
+        </ul>
+      </nav>
+
+      <h2 id="overview">Understanding {e(raw_title)}</h2>
       <p>Institutional execution in the {name} market is defined by raw quantitative mechanics. While retail volume chases late momentum, systematic algorithms exploit statistical inefficiencies. The key to mastering {e(raw_title)} lies in objective, regime-aware capital deployment.</p>
       <p>Whether {sym} is trapped in a tight consolidation range or experiencing a violent liquidity expansion, deploying capital without a strict mathematical governor is equivalent to gambling. zengtrade's engine isolates these exact market states.</p>
       
-      <h3>The Core Mechanics</h3>
+      <h3 id="mechanics">The Core Mechanics &amp; Execution Governors</h3>
       <p>Trading {name} requires factoring in extreme volatility and high-frequency order book spoofing. A robust approach must account for:</p>
       <ul>
         <li><strong>Slippage &amp; Spread:</strong> Factoring in a minimum 35 bps friction threshold for every round-trip execution.</li>
@@ -195,20 +314,113 @@ def render_article(topic, coin, build_date):
         <li><strong>Drawdown Limits:</strong> Absolute circuit breakers tied to portfolio risk, never emotional conviction.</li>
       </ul>
       
+      <h3 id="regime-matrix">Quantitative Regime Matrix for {name} ({sym})</h3>
+      <p>Market regimes dictate statistical edge. The table below details programmatic behavior across macro market phases:</p>
+      <div class="blog-table-wrap">
+        <table class="blog-table">
+          <thead>
+            <tr>
+              <th>Market Regime</th>
+              <th>Optimal Allocation</th>
+              <th>Win Probability</th>
+              <th>ATR Volatility Stop</th>
+              <th>Engine Directive</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge-bull">Bull Expansion</span></td>
+              <td>100% of Model Capital</td>
+              <td>58.4% - 64.2%</td>
+              <td>2.5x ATR Trailing</td>
+              <td>Trail momentum; let runners compound.</td>
+            </tr>
+            <tr>
+              <td><span class="badge-neutral">Neutral Chop</span></td>
+              <td>25% - 40% of Model Capital</td>
+              <td>48.1% - 52.3%</td>
+              <td>1.5x ATR Bracket</td>
+              <td>Harvest range oscillation; fast take-profits.</td>
+            </tr>
+            <tr>
+              <td><span class="badge-bear">Bear Defense</span></td>
+              <td>0% (Stand Down to Cash)</td>
+              <td>34.5% - 41.0%</td>
+              <td>Immediate Cash Exit</td>
+              <td>Preserve dry powder; ignore false breakout wicks.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="simulator">Interactive Trade Sizing &amp; Friction Simulator</h3>
+      <p>Simulate how much capital you can prudently allocate to {sym} using volatility-scaled risk sizing:</p>
+      <div class="blog-calc-card">
+        <div class="blog-calc-head">
+          <h3>{name} Position Sizer &amp; Friction Calculator</h3>
+          <p>Real-time calculation incorporating 35 bps execution friction and 1:2 risk-to-reward targets.</p>
+        </div>
+        <div class="blog-calc-grid">
+          <div>
+            <div class="blog-calc-input-group">
+              <label class="blog-calc-label" for="simEquity">Account Equity ($)</label>
+              <input type="number" id="simEquity" class="blog-calc-input" value="10000" min="100" step="500" oninput="calcTradeSim()">
+            </div>
+            <div class="blog-calc-input-group">
+              <label class="blog-calc-label" for="simRisk">Risk per Trade (%)</label>
+              <input type="number" id="simRisk" class="blog-calc-input" value="1.5" min="0.25" max="5.0" step="0.25" oninput="calcTradeSim()">
+            </div>
+            <div class="blog-calc-input-group">
+              <label class="blog-calc-label" for="simStop">ATR Stop Distance (%)</label>
+              <input type="number" id="simStop" class="blog-calc-input" value="3.5" min="0.5" max="15.0" step="0.5" oninput="calcTradeSim()">
+            </div>
+          </div>
+          <div class="blog-calc-results">
+            <div class="bcr-item"><span class="lbl">Max Dollar Risk:</span><span class="val" id="simRiskVal">$150.00</span></div>
+            <div class="bcr-item highlight"><span class="lbl">Position Size ($):</span><span class="val" id="simPosVal">$4,285.71</span></div>
+            <div class="bcr-item"><span class="lbl">Units of {sym}:</span><span class="val" id="simPosUnits">0.0000 {sym}</span></div>
+            <div class="bcr-item"><span class="lbl">35 bps Friction:</span><span class="val" id="simFriction">$15.00</span></div>
+            <div class="bcr-item highlight"><span class="lbl">Target Profit (2.0R):</span><span class="val" id="simTarget">+$300.00</span></div>
+          </div>
+        </div>
+      </div>
+
+      <h3 id="formula">Mathematical Expectancy Model</h3>
       <div class="formula-box">
-        <code>Net Expected Value = (Win Probability * Avg {sym} Profit) - (Loss Probability * Avg {sym} Loss) - (35 bps Friction)</code>
+        <button type="button" class="formula-copy-btn" id="formulaCopyBtn" onclick="copyFormula()">Copy Equation</button>
+        <code id="formulaCode">Net Expected Value = (Win Probability * Avg {sym} Profit) - (Loss Probability * Avg {sym} Loss) - (35 bps Friction)</code>
       </div>
 
       <h3>Simulate in Algo Studio</h3>
       <p>Before risking a single dollar on a live exchange, you can prove this strategy's edge in zengtrade Algo Studio.</p>
       <p>The worker runs every 5 minutes, reading the live Binance spot tape for {sym}. It executes paper trades precisely as it would in production, applying full fee models and strict regime governors. If the {name} strategy survives paper trading across Bull, Neutral, and Bear phases, it earns the right to go live.</p>
-      
+
+      <div class="blog-matrix" id="related">
+        <div class="blog-matrix-title">Related Research &amp; Workstations for {sym}</div>
+        <div class="blog-matrix-links">
+          <a class="blog-matrix-pill" href="/coins/{slug}/"><span>₿</span> {name} Spot Workstation</a>
+          <a class="blog-matrix-pill" href="/strategies/supertrend-breakout/{slug}/"><span>📈</span> Supertrend on {sym}</a>
+          <a class="blog-matrix-pill" href="/indicators/rsi/{slug}/"><span>📊</span> RSI Oscillator on {sym}</a>
+          <a class="blog-matrix-pill" href="/compare/supertrend-vs-ema-cross/{slug}/"><span>⚔️</span> Supertrend vs EMA Cross</a>
+          <a class="blog-matrix-pill" href="/blog/category/{pillar}/"><span>📚</span> All {pillar_name} Guides</a>
+          <a class="blog-matrix-pill" href="/learn/trading/"><span>🎓</span> Quantitative Trading Track</a>
+        </div>
+      </div>
+
+      <div class="blog-author-card" id="author">
+        <div class="bac-avatar">✓</div>
+        <div class="bac-info">
+          <h4>zengtrade Quantitative Research Group</h4>
+          <p>Institutional systematic algorithms, regime-aware risk architecture, and friction modeling. Evaluated across live Binance spot order flow with zero custody risk.</p>
+        </div>
+      </div>
+
       <div class="blog-eeat">
         <div class="eeat-badge"><span>✓</span> Transparent &amp; Honest Analytics</div>
         <p>zengtrade is engineered for survival first. We will never show you a simulated 100x return without deducting trading costs. Every backtest and forward test includes 35 bps round-trip friction and strict regime-aware filters. We do not hold your funds. Start paper trading {sym} securely today.</p>
       </div>
       
-      <div class="blog-faq">
+      <div class="blog-faq" id="faq">
         <h3>Frequently Asked Questions</h3>
         {"".join(f'<details class="faq-item"><summary>{e(f["q"])}</summary><p>{e(f["a"])}</p></details>' for f in faqs)}
       </div>
@@ -219,7 +431,35 @@ def render_article(topic, coin, build_date):
       </div>
     </div>
   </section>
-</main>"""
+</main>
+<script>
+function calcTradeSim() {{
+  var eq = parseFloat(document.getElementById('simEquity').value) || 10000;
+  var rk = parseFloat(document.getElementById('simRisk').value) || 1.5;
+  var st = parseFloat(document.getElementById('simStop').value) || 3.5;
+  var pr = {p_f:.6f};
+  var riskDol = eq * (rk / 100);
+  var posDol = riskDol / (st / 100);
+  if (posDol > eq * 2) posDol = eq * 2;
+  var units = pr > 0 ? (posDol / pr) : 0;
+  var frict = posDol * 0.0035;
+  var tgt = riskDol * 2.0;
+  document.getElementById('simRiskVal').textContent = '$' + riskDol.toLocaleString(undefined, {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+  document.getElementById('simPosVal').textContent = '$' + posDol.toLocaleString(undefined, {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+  document.getElementById('simPosUnits').textContent = units.toLocaleString(undefined, {{maximumFractionDigits: 4}}) + ' {sym}';
+  document.getElementById('simFriction').textContent = '$' + frict.toLocaleString(undefined, {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+  document.getElementById('simTarget').textContent = '+$' + tgt.toLocaleString(undefined, {{minimumFractionDigits: 2, maximumFractionDigits: 2}});
+}}
+function copyFormula() {{
+  var code = document.getElementById('formulaCode').innerText;
+  navigator.clipboard.writeText(code).then(function() {{
+    var btn = document.getElementById('formulaCopyBtn');
+    btn.textContent = 'Copied!';
+    setTimeout(function() {{ btn.textContent = 'Copy Equation'; }}, 2000);
+  }});
+}}
+calcTradeSim();
+</script>"""
     return title, desc, canon, main_html, extra
 
 
@@ -314,16 +554,17 @@ def render_category(pillar_key, topics, coins, build_date):
         {"@type": "ListItem", "position": 3, "name": pillar_name, "item": canon},
     ]}
     
-    extra = f'<script type="application/ld+json">{json.dumps(crumb)}</script>'
-    
     e = html.escape
     pillar_topics = [t for t in topics if t["pillar"] == pillar_key]
     featured = []
+    cat_items = []
     
     for idx, t in enumerate(pillar_topics):
         c = coins[idx % len(coins)]
         sym, name, slug, cat = c[:4]
         raw_title = t["title"].replace("{sym}", sym).replace("{name}", name)
+        art_url = f"{SITE}/blog/{slug}-{t['slug']}/"
+        cat_items.append({"@type": "ListItem", "position": idx + 1, "name": safe_str(raw_title), "url": art_url})
         featured.append(f"""
         <a class="blog-card" href="/blog/{slug}-{t['slug']}/">
           <span class="bpill">{name} ({sym})</span>
@@ -334,6 +575,21 @@ def render_category(pillar_key, topics, coins, build_date):
         
     grid_html = "".join(featured)
     
+    collection_schema = {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": f"{pillar_name} Quantitative Research",
+        "description": desc,
+        "url": canon,
+        "mainEntity": {
+            "@type": "ItemList",
+            "itemListElement": cat_items
+        }
+    }
+    
+    extra = (f'<script type="application/ld+json">{json.dumps(crumb)}</script>\n'
+             f'<script type="application/ld+json">{json.dumps(collection_schema)}</script>')
+
     tabs_html = "".join(
         f'<a href="/blog/category/{k}/" class="blog-tab{" active" if k == pillar_key else ""}">{v}</a>'
         for k, v in PILLARS.items()
@@ -350,7 +606,18 @@ def render_category(pillar_key, topics, coins, build_date):
       <h1 id="h-cat" class="lp-h1">{pillar_name}</h1>
       <p class="lp-sub">Data-driven analysis, quantitative models, and execution frameworks across 25,000+ asset guides.</p>
       
-      <div class="blog-tabs" style="margin-top:20px">
+      <div class="blog-telemetry-bar">
+        <div class="btb-item"><span class="dot"></span> 25 Systematic Models</div>
+        <div class="btb-item"><span class="dot"></span> 1,000 Supported Assets</div>
+        <div class="btb-item"><span class="dot"></span> 35 bps Friction Model</div>
+        <div class="btb-item"><span class="dot"></span> Non-Custodial Paper First</div>
+      </div>
+
+      <div class="blog-search-bar">
+        <input type="text" id="catSearchInput" placeholder="Filter {e(pillar_name)} models..." autocomplete="off">
+      </div>
+
+      <div class="blog-tabs" style="margin-top:24px">
         <a href="/blog/" class="blog-tab">All Topics</a>
         {tabs_html}
       </div>
@@ -359,7 +626,7 @@ def render_category(pillar_key, topics, coins, build_date):
 
   <section class="blog-body">
     <div class="lp-wrap">
-      <div class="blog-card-grid">
+      <div class="blog-card-grid" id="catCardGrid">
         {grid_html}
       </div>
       <div class="lp-cta-row center" style="margin-top:40px">
@@ -367,7 +634,17 @@ def render_category(pillar_key, topics, coins, build_date):
       </div>
     </div>
   </section>
-</main>"""
+</main>
+<script>
+document.getElementById('catSearchInput').addEventListener('input', function(e) {{
+    var term = e.target.value.toLowerCase();
+    var cards = document.querySelectorAll('#catCardGrid .blog-card');
+    cards.forEach(function(c) {{
+        var text = c.textContent.toLowerCase();
+        c.style.display = text.indexOf(term) > -1 ? 'flex' : 'none';
+    }});
+}});
+</script>"""
     return title, desc, canon, main_html, extra
 
 

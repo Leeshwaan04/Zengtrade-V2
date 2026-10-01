@@ -940,7 +940,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
       <div>
         <h2 class="lp-h2 lp-rv" id="h-modes">Three modes. One engine.</h2>
         <p class="lp-body lp-rv" style="--d:60ms">
-          zengtrade adapts to how you interact with the market. Seamlessly switch between building automated algorithms, actively managing risk, and passively accumulating assets—all powered by the same underlying regime-detection engine.
+          zengtrade adapts to how you interact with the market. Seamlessly switch between building automated algorithms, actively managing risk, and passively accumulating assets - all powered by the same underlying regime-detection engine.
         </p>
 
         <div class="card lp-rv" style="--d:100ms; margin-top:32px; padding:0; overflow:hidden; background:var(--surface-2)">
@@ -1781,11 +1781,11 @@ html.js .lp-rv.in{opacity:1;transform:none}
   container.innerHTML = 
     '<div class="pseo-chart-hud" id="chartHud">' +
       '<span><b id="hudSym">' + symbol + '</b></span>' +
-      '<span>O: <span class="val" id="hudO">—</span></span>' +
-      '<span>H: <span class="val" id="hudH">—</span></span>' +
-      '<span>L: <span class="val" id="hudL">—</span></span>' +
-      '<span>C: <span class="val" id="hudC">—</span></span>' +
-      '<span>Change: <span class="val" id="hudChg">—</span></span>' +
+      '<span>O: <span class="val" id="hudO">--</span></span>' +
+      '<span>H: <span class="val" id="hudH">--</span></span>' +
+      '<span>L: <span class="val" id="hudL">--</span></span>' +
+      '<span>C: <span class="val" id="hudC">--</span></span>' +
+      '<span>Change: <span class="val" id="hudChg">--</span></span>' +
     '</div>' +
     '<canvas class="pseo-chart-canvas" id="pseoCanvas"></canvas>' +
     '<div class="pseo-chart-tooltip" id="chartTooltip"></div>';
@@ -1849,7 +1849,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
   }
 
   function fmtPrice(p) {
-    if (p == null || isNaN(p)) return "—";
+    if (p == null || isNaN(p)) return "--";
     if (p >= 1000) return p.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     if (p >= 1) return p.toFixed(2);
     if (p >= 0.01) return p.toFixed(4);

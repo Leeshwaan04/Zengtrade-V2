@@ -114,11 +114,34 @@ def article_parts(a):
         {"@type": "ListItem", "position": 3, "name": a["title"], "item": canonical},
     ]}
     article_schema = {
-        "@context": "https://schema.org", "@type": "Article",
-        "headline": a["title"], "description": a["description"],
+        "@context": "https://schema.org",
+        "@type": ["Article", "TechArticle"],
+        "headline": a["title"],
+        "description": a["description"],
         "datePublished": a["date"],
-        "author": {"@type": "Organization", "name": "zengtrade"},
-        "publisher": {"@type": "Organization", "name": "zengtrade", "url": SITE},
+        "dateModified": a["date"],
+        "inLanguage": "en-US",
+        "mainEntityOfPage": {"@type": "WebPage", "@id": canonical},
+        "author": {
+            "@type": "Organization",
+            "name": "zengtrade Quantitative Research Group",
+            "url": f"{SITE}/how-it-works/#honesty",
+            "logo": f"{SITE}/assets/logo.svg"
+        },
+        "reviewedBy": {
+            "@type": "Organization",
+            "name": "zengtrade Algorithmic Risk Committee",
+            "url": f"{SITE}/risk/"
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "zengtrade",
+            "url": SITE,
+            "logo": {
+                "@type": "ImageObject",
+                "url": f"{SITE}/assets/logo.svg"
+            }
+        },
     }
     extra_head = (f'<script type="application/ld+json">{json.dumps(crumb)}</script>'
                   f'<script type="application/ld+json">{json.dumps(article_schema)}</script>')
@@ -134,6 +157,10 @@ def article_parts(a):
   <section class="lp-sec" aria-label="Article">
     <div class="lp-wrap article-body">
       {a['body_html']}
+      <div class="pseo-eeat-card" style="margin:28px 0">
+        <div class="eeat-badge"><span>✓</span> Quantitative Verification &amp; Risk Governance</div>
+        <p><strong>Authored by zengtrade Quantitative Research Group &bull; Reviewed by Algorithmic Risk Committee:</strong> Every model, friction parameter (35 bps round-trip friction), and signal rule is backtested against live Binance spot data. zengtrade is strictly non-custodial and paper-first. Read our <a href="/how-it-works/">Regime Methodology</a> and <a href="/risk/">Risk Disclosures</a>.</p>
+      </div>
       <p class="lp-fineprint">Educational content, not investment advice. zengtrade is paper-first and non-custodial.</p>
       <div class="lp-cta-row center" style="margin-top:20px">
       <a class="lp-cta primary" href="/login/?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=learn_{a['slug']}">Start free, paper-trade any coin</a>

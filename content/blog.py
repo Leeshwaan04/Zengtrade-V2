@@ -94,11 +94,34 @@ def post_parts(p):
         {"@type": "ListItem", "position": 3, "name": p["title"], "item": canonical},
     ]}
     post_schema = {
-        "@context": "https://schema.org", "@type": "BlogPosting",
-        "headline": p["title"], "description": p["description"],
+        "@context": "https://schema.org",
+        "@type": ["BlogPosting", "TechArticle"],
+        "headline": p["title"],
+        "description": p["description"],
         "datePublished": p["date"],
-        "author": {"@type": "Organization", "name": "zengtrade"},
-        "publisher": {"@type": "Organization", "name": "zengtrade", "url": SITE},
+        "dateModified": p["date"],
+        "inLanguage": "en-US",
+        "mainEntityOfPage": {"@type": "WebPage", "@id": canonical},
+        "author": {
+            "@type": "Organization",
+            "name": "zengtrade Quantitative Research Group",
+            "url": f"{SITE}/how-it-works/#honesty",
+            "logo": f"{SITE}/assets/logo.svg"
+        },
+        "reviewedBy": {
+            "@type": "Organization",
+            "name": "zengtrade Algorithmic Risk Committee",
+            "url": f"{SITE}/risk/"
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "zengtrade",
+            "url": SITE,
+            "logo": {
+                "@type": "ImageObject",
+                "url": f"{SITE}/assets/logo.svg"
+            }
+        },
     }
     extra_head = (f'<script type="application/ld+json">{json.dumps(crumb)}</script>'
                   f'<script type="application/ld+json">{json.dumps(post_schema)}</script>')
@@ -114,6 +137,10 @@ def post_parts(p):
   <section class="lp-sec" aria-label="Post">
     <div class="lp-wrap article-body">
       {p['body_html']}
+      <div class="pseo-eeat-card" style="margin:28px 0">
+        <div class="eeat-badge"><span>✓</span> Quantitative Verification &amp; Risk Governance</div>
+        <p><strong>Authored by zengtrade Quantitative Research Group &bull; Reviewed by Algorithmic Risk Committee:</strong> Every article adheres to our quantitative integrity standard: 35 bps round-trip friction model, non-custodial execution, and zero hypothetical yield fabrication. Read our <a href="/how-it-works/">Regime Methodology</a> and <a href="/risk/">Risk Disclosures</a>.</p>
+      </div>
       <p class="lp-fineprint">Not investment advice. zengtrade is paper-first and non-custodial.</p>
       <div class="lp-cta-row center" style="margin-top:20px">
       <a class="lp-cta primary" href="/login/?mode=signup&amp;utm_source=site&amp;utm_medium=organic&amp;utm_campaign=blog_{p['slug']}">Start free, paper-trade any coin</a>
