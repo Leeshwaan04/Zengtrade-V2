@@ -464,7 +464,8 @@
       "guide-qa-rls-isolation.sh + check-founder-parallel-ready.sh (session 130)",
       "check-qa-parallel includes check-free-tier-limit Q9 + ops-security playbook probe (session 202)",
       "guide-qa-founder-standup.sh \u2014 parallel QA combined playbook (session 213)",
-      "Q3 RLS isolation PASSED (session 220) \u2014 two real, email-confirmed accounts tested directly against the Supabase REST API: read isolation (deployment/book_state/trade, including a live worker-opened position) and write isolation (User B's PATCH/DELETE against User A's row both no-op'd under RLS). See docs/QA_VAPT_CHECKLIST.md for the full writeup."
+      "Q3 RLS isolation PASSED (session 220) \u2014 two real, email-confirmed accounts tested directly against the Supabase REST API: read isolation (deployment/book_state/trade, including a live worker-opened position) and write isolation (User B's PATCH/DELETE against User A's row both no-op'd under RLS). See docs/QA_VAPT_CHECKLIST.md for the full writeup.",
+      "Pre-login footer light/dark theme contrast fix + complete E2E QA & VAPT on social share suite (safe DOM textNode toasts, parameter quoting safe='', attribute injection prevention, reverse tabnabbing rel='noopener noreferrer' across /coins/{slug}/articles/, /blog/, and /learn/) - verified all QA parallel gates green (session 221)"
     ],
     "next": "Resolved (session 220): database_url_auth_ok is a local-session credential check, not a production health signal - sync-ops-gates.py's cto_ok no longer includes it. Next real QA&VAPT item: security-review the new dashboard tooltip/track features for anything user-input-adjacent (none currently take user input, so likely a quick pass).",
     "links": [

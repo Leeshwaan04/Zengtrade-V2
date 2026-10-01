@@ -20,6 +20,8 @@
 | V1 | XSS | Dynamic HTML uses `esc()` in `/app` | ☑ | `check-xss-hygiene.sh` + `app.js` review (2026-08-23) |
 | V2 | Event abuse | `event` insert policy name whitelist | ☑ | migration `0011` applied prod (2026-08-23) |
 | V3 | Worker | DB creds only server-side | ☑ | no secrets in `saas/web/js` |
+| V4 | Blog & Learn Share Bar | Strict URL param encoding (safe=''), safe DOM textNode toast (zero innerHTML XSS), attribute breakout prevention, reverse tabnabbing rel='noopener noreferrer' | ☑ | `blog_engine.py`, `blog.py`, `articles.py` audited & hardened (2026-10-02) |
+| Q10 | Pre-login Footer UI | WCAG AAA contrast in light and dark mode, adaptive tokens (--slate-c, --accent-t), absolute mascot assets | ☑ | Chrome browser subagent visual audit on /landing, /how-it-works/, /pricing/, /login/ (2026-10-02) |
 
 ## RLS isolation — PASSED (2026-09-12, session 220)
 
