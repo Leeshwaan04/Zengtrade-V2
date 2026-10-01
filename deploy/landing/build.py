@@ -593,16 +593,15 @@ if glossary_terms:
     print("  ✓ /learn/glossary/ (%d terms)" % len(glossary_terms))
 
 # ---- /blog/ hub + posts (identical shell -> full design parity) -----------------------
-if blog_posts:
-    emit("blog", shell(
-        "Blog | zengtrade",
-        "Dated, honest build-in-public updates on what shipped in zengtrade's crypto algo studio. No hype, no fabricated numbers.",
-        "https://zengtrade.in/blog/", BLOG.blog_hub_main(blog_posts),
-        extra_head=BLOG.blog_hub_schema(blog_posts)), "https://zengtrade.in/blog/")
-    for post in blog_posts:
-        title, desc, canon, pmain, extra = BLOG.post_parts(post)
-        emit(os.path.join("blog", post["slug"]), shell(title, desc, canon, pmain, extra_head=extra), canon)
-        print("  ✓ /blog/%s/" % post["slug"])
+emit("blog", shell(
+    "Blog | zengtrade",
+    "Data-driven quantitative research, market analysis, and algorithmic trading strategies across crypto markets.",
+    "https://zengtrade.in/blog/", BLOG.blog_hub_main(blog_posts),
+    extra_head=BLOG.blog_hub_schema(blog_posts)), "https://zengtrade.in/blog/")
+for post in blog_posts:
+    title, desc, canon, pmain, extra = BLOG.post_parts(post)
+    emit(os.path.join("blog", post["slug"]), shell(title, desc, canon, pmain, extra_head=extra), canon)
+    print("  ✓ /blog/%s/" % post["slug"])
 
 # ---- /blog/ programmatic SEO posts --------------------------------------------
 blog_sitemaps = []

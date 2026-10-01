@@ -143,21 +143,21 @@ def blog_hub_main(posts):
         f'<a class="blog-hub-row" href="/blog/{e(p["slug"])}/"><b>{e(p["title"])}</b>'
         f'<span class="article-meta">{e(p["date"])}</span><span>{e(p["description"])}</span></a>'
         for p in posts)
-    empty = '<p class="lp-sub">First post coming soon.</p>' if not posts else ""
+    posts_section = f'<div class="blog-hub-list">{rows}</div>' if rows else ""
+    quant_style = "" if rows else ' style="margin-top:0;padding-top:0;border-top:none"'
     return f"""<main id="main">
   <section class="lp-hero" aria-labelledby="h-blog">
     <div class="lp-wrap">
       <nav class="coin-crumb" aria-label="Breadcrumb"><a href="/">Home</a> &rsaquo; Blog</nav>
-      <div class="lp-eyebrow"><span class="dot"></span> building in public</div>
+      <div class="lp-eyebrow"><span class="dot"></span> quantitative research</div>
       <h1 id="h-blog" class="lp-h1">The zengtrade <span class="hl">blog</span></h1>
-      <p class="lp-sub">What actually shipped, what it changes, and honest progress notes. No hype, no fabricated numbers.</p>
+      <p class="lp-sub">Data-driven quantitative research, algorithmic execution models, and regime-aware trading insights. No hype, no fabricated numbers.</p>
     </div>
   </section>
   <section class="lp-sec" aria-label="Posts">
     <div class="lp-wrap">
-      {empty}<div class="blog-hub-list">{rows}</div>
-      
-      <div class="quant-research-section">
+      {posts_section}
+      <div class="quant-research-section"{quant_style}>
         <h2>Quantitative Research Engine</h2>
         <p>Explore over 10,000 data-driven, programmatic SEO articles analyzing regime-aware crypto trading strategies across the entire Binance-tradable universe.</p>
         <div class="quant-grid">
