@@ -8,6 +8,7 @@ Strict adherence to zero em dashes (no \\u2014).
 import os
 import json
 import html
+import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 
 from blog_engine_data import PILLARS, generate_topics
@@ -117,8 +118,110 @@ BLOG_CSS = """
 .blog-card h3{font-size:18px;font-weight:800;color:var(--navy);margin:0 0 10px;line-height:1.3}
 .blog-card p{font-size:13px;color:var(--slate);line-height:1.5;margin:0 0 16px;flex-grow:1}
 .blog-card .bfoot{font-size:12px;color:var(--slate-2);display:flex;justify-content:space-between}
-@media(max-width:820px){.blog-grid3{grid-template-columns:1fr}.blog-calc-grid{grid-template-columns:1fr}}
+
+/* Viral Social Sharing Suite */
+.blog-share-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:20px 0 24px;flex-wrap:wrap;padding:12px 18px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.blog-share-label{font-size:12px;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:6px}
+.blog-share-btns{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.share-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;transition:all 0.15s;border:1px solid transparent;cursor:pointer;font-family:inherit;line-height:1}
+.share-btn svg{width:13px;height:13px;fill:currentColor;flex-shrink:0}
+.share-btn.x{background:#040914;color:#fff;border-color:#1e293b}
+.share-btn.x:hover{background:#111b2e;transform:translateY(-1px);border-color:var(--accent)}
+.share-btn.li{background:#0a66c2;color:#fff;border-color:#0a66c2}
+.share-btn.li:hover{background:#084e96;transform:translateY(-1px)}
+.share-btn.wa{background:#25d366;color:#fff;border-color:#25d366}
+.share-btn.wa:hover{background:#1ebe57;transform:translateY(-1px)}
+.share-btn.tg{background:#229ed9;color:#fff;border-color:#229ed9}
+.share-btn.tg:hover{background:#1c85b8;transform:translateY(-1px)}
+.share-btn.rd{background:#ff4500;color:#fff;border-color:#ff4500}
+.share-btn.rd:hover{background:#d83a00;transform:translateY(-1px)}
+.share-btn.copy{background:var(--surface-2);color:var(--navy);border-color:var(--line)}
+.share-btn.copy:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+
+/* Viral Key Takeaway / Quote Card */
+.viral-insight-card{background:linear-gradient(135deg,rgba(0,171,78,0.06) 0%,rgba(14,165,233,0.05) 100%);border:1px solid rgba(0,171,78,0.28);border-left:5px solid var(--accent);border-radius:14px;padding:22px 24px;margin:32px 0;position:relative}
+.vic-badge{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.6px;color:var(--accent);display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.vic-quote{font-size:16px;font-weight:700;line-height:1.6;color:var(--navy);margin:0 0 16px;font-style:italic}
+.vic-meta{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding-top:12px;border-top:1px solid rgba(0,0,0,0.06)}
+.vic-author{font-size:12px;color:var(--slate);font-weight:600}
+.vic-actions{display:flex;gap:8px;align-items:center}
+.vic-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer;transition:all 0.15s;text-decoration:none;border:none}
+.vic-btn.tweet{background:#040914;color:#fff;border:1px solid #1e293b}
+.vic-btn.tweet:hover{background:#111b2e;transform:translateY(-1px);border-color:var(--accent)}
+.vic-btn.copy{background:var(--surface);border:1px solid var(--line);color:var(--navy)}
+.vic-btn.copy:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+
+/* End of Article Share Footer */
+.blog-share-footer{margin-top:36px;padding:22px 24px;background:var(--surface);border-radius:14px;border:1px solid var(--line);text-align:center;box-shadow:var(--shadow)}
+.bsf-title{font-size:15px;font-weight:800;color:var(--navy);margin:0 0 6px}
+.bsf-sub{font-size:13px;color:var(--slate);margin:0 0 16px}
+
+/* Share Toast */
+.share-toast{position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.25);display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;pointer-events:none;transform:translateY(12px);transition:all 0.25s cubic-bezier(0.16,1,0.3,1)}
+.share-toast.show{opacity:1;pointer-events:auto;transform:translateY(0)}
+.share-toast-dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+@media(max-width:820px){.blog-grid3{grid-template-columns:1fr}.blog-calc-grid{grid-template-columns:1fr}.blog-share-bar{flex-direction:column;align-items:flex-start}}
 """
+
+def render_social_share_bar(canon_url, raw_title, sym, name, is_footer=False):
+    e = html.escape
+    q = urllib.parse.quote
+    share_text = f"Quantitative research breakdown: {raw_title}. Regime filters, 35 bps friction simulation & algorithmic risk rules for {sym}:"
+    x_url = f"https://twitter.com/intent/tweet?text={q(share_text)}&url={q(canon_url)}&hashtags={q(f'CryptoTrading,AlgoTrading,{sym}')}"
+    li_url = f"https://www.linkedin.com/sharing/share-offsite/?url={q(canon_url)}"
+    wa_url = f"https://api.whatsapp.com/send?text={q(share_text + ' ' + canon_url)}"
+    tg_url = f"https://t.me/share/url?url={q(canon_url)}&text={q(share_text)}"
+    rd_url = f"https://reddit.com/submit?url={q(canon_url)}&title={q(raw_title)}"
+
+    if is_footer:
+        return f"""<div class="blog-share-footer">
+        <div class="bsf-title">Found this quantitative research valuable?</div>
+        <div class="bsf-sub">Share this systematic {name} ({sym}) analysis with your trading desk, network, or crypto research team.</div>
+        <div class="blog-share-btns" style="justify-content:center">
+          <a class="share-btn x" href="{x_url}" target="_blank" rel="noopener noreferrer" title="Post to X" aria-label="Post to X"><svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span>Post</span></a>
+          <a class="share-btn li" href="{li_url}" target="_blank" rel="noopener noreferrer" title="Share on LinkedIn" aria-label="Share on LinkedIn"><svg viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg><span>LinkedIn</span></a>
+          <a class="share-btn wa" href="{wa_url}" target="_blank" rel="noopener noreferrer" title="Share via WhatsApp" aria-label="Share via WhatsApp"><svg viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.53c-.25.7-.78 1.29-1.44 1.45-.45.11-1.04.16-3.32-.78-2.64-1.09-4.34-3.77-4.47-3.95-.13-.18-1.08-1.44-1.08-2.75 0-1.31.68-1.95.93-2.22.25-.26.54-.33.72-.33.18 0 .36 0 .52.01.17.01.4-.06.62.48.23.55.78 1.91.85 2.05.07.14.12.3.02.48-.09.18-.14.3-.28.46-.14.16-.29.36-.42.48-.14.13-.28.28-.12.56.16.27.71 1.17 1.53 1.9 1.05.94 1.94 1.23 2.21 1.37.28.14.44.11.6-.07.17-.18.7-.82.89-1.1.18-.28.37-.23.63-.14.25.09 1.61.76 1.89.9.28.14.46.21.53.33.07.12.07.69-.18 1.39z"/></svg><span>WhatsApp</span></a>
+          <a class="share-btn tg" href="{tg_url}" target="_blank" rel="noopener noreferrer" title="Share via Telegram" aria-label="Share via Telegram"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg><span>Telegram</span></a>
+          <a class="share-btn rd" href="{rd_url}" target="_blank" rel="noopener noreferrer" title="Share on Reddit" aria-label="Share on Reddit"><svg viewBox="0 0 24 24"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm5.74-10.74a1.35 1.35 0 0 0-1.28-.93 1.33 1.33 0 0 0-.86.32c-1.02-.73-2.42-1.2-3.98-1.26l.68-3.19 2.22.47a1.05 1.05 0 0 0 1.03.83 1.06 1.06 0 1 0-1.06-1.06c0 .08.01.16.03.24l-2.48-.52a.26.26 0 0 0-.31.2l-.78 3.69c-1.6.05-3.04.52-4.08 1.27a1.35 1.35 0 0 0-2.14.61 1.33 1.33 0 0 0 .32 1.35c-.03.17-.05.35-.05.53 0 2.68 3.13 4.85 7 4.85s7-2.17 7-4.85c0-.18-.02-.36-.05-.53a1.35 1.35 0 0 0 .51-1.07zm-9.24.74a1.06 1.06 0 1 1-2.12 0 1.06 1.06 0 0 1 2.12 0zm5.02 3.19c-.64.64-1.85.69-2.02.69s-1.38-.05-2.02-.69a.27.27 0 0 1 .38-.38c.45.45 1.34.52 1.64.52.3 0 1.19-.07 1.64-.52a.27.27 0 0 1 .38.38zm-.52-2.13a1.06 1.06 0 1 1-2.12 0 1.06 1.06 0 0 1 2.12 0z"/></svg><span>Reddit</span></a>
+          <button type="button" class="share-btn copy" onclick="copyArticleLink()" title="Copy Link" aria-label="Copy Article Link"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy Link</span></button>
+        </div>
+      </div>"""
+
+    return f"""<div class="blog-share-bar">
+      <span class="blog-share-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share Analysis:</span>
+      <div class="blog-share-btns">
+        <a class="share-btn x" href="{x_url}" target="_blank" rel="noopener noreferrer" title="Post to X" aria-label="Post to X"><svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span>Post</span></a>
+        <a class="share-btn li" href="{li_url}" target="_blank" rel="noopener noreferrer" title="Share on LinkedIn" aria-label="Share on LinkedIn"><svg viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg><span>LinkedIn</span></a>
+        <a class="share-btn wa" href="{wa_url}" target="_blank" rel="noopener noreferrer" title="Share via WhatsApp" aria-label="Share via WhatsApp"><svg viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.53c-.25.7-.78 1.29-1.44 1.45-.45.11-1.04.16-3.32-.78-2.64-1.09-4.34-3.77-4.47-3.95-.13-.18-1.08-1.44-1.08-2.75 0-1.31.68-1.95.93-2.22.25-.26.54-.33.72-.33.18 0 .36 0 .52.01.17.01.4-.06.62.48.23.55.78 1.91.85 2.05.07.14.12.3.02.48-.09.18-.14.3-.28.46-.14.16-.29.36-.42.48-.14.13-.28.28-.12.56.16.27.71 1.17 1.53 1.9 1.05.94 1.94 1.23 2.21 1.37.28.14.44.11.6-.07.17-.18.7-.82.89-1.1.18-.28.37-.23.63-.14.25.09 1.61.76 1.89.9.28.14.46.21.53.33.07.12.07.69-.18 1.39z"/></svg><span>WhatsApp</span></a>
+        <a class="share-btn tg" href="{tg_url}" target="_blank" rel="noopener noreferrer" title="Share via Telegram" aria-label="Share via Telegram"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg><span>Telegram</span></a>
+        <a class="share-btn rd" href="{rd_url}" target="_blank" rel="noopener noreferrer" title="Share on Reddit" aria-label="Share on Reddit"><svg viewBox="0 0 24 24"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm5.74-10.74a1.35 1.35 0 0 0-1.28-.93 1.33 1.33 0 0 0-.86.32c-1.02-.73-2.42-1.2-3.98-1.26l.68-3.19 2.22.47a1.05 1.05 0 0 0 1.03.83 1.06 1.06 0 1 0-1.06-1.06c0 .08.01.16.03.24l-2.48-.52a.26.26 0 0 0-.31.2l-.78 3.69c-1.6.05-3.04.52-4.08 1.27a1.35 1.35 0 0 0-2.14.61 1.33 1.33 0 0 0 .32 1.35c-.03.17-.05.35-.05.53 0 2.68 3.13 4.85 7 4.85s7-2.17 7-4.85c0-.18-.02-.36-.05-.53a1.35 1.35 0 0 0 .51-1.07zm-9.24.74a1.06 1.06 0 1 1-2.12 0 1.06 1.06 0 0 1 2.12 0zm5.02 3.19c-.64.64-1.85.69-2.02.69s-1.38-.05-2.02-.69a.27.27 0 0 1 .38-.38c.45.45 1.34.52 1.64.52.3 0 1.19-.07 1.64-.52a.27.27 0 0 1 .38.38zm-.52-2.13a1.06 1.06 0 1 1-2.12 0 1.06 1.06 0 0 1 2.12 0z"/></svg><span>Reddit</span></a>
+        <button type="button" class="share-btn copy" onclick="copyArticleLink()" title="Copy Link" aria-label="Copy Article Link"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy Link</span></button>
+      </div>
+    </div>"""
+
+def render_viral_insight_card(name, sym, raw_title, canon_url):
+    e = html.escape
+    q = urllib.parse.quote
+    quote_text = f"In {name} ({sym}) algorithmic trading, naive momentum evaporates once 35 bps round-trip friction is factored in. Real statistical expectancy mandates regime-aware filters: Bull expansion, Neutral chop oscillation, or Bear defense to cash."
+    tweet_text = f"\"{quote_text}\" - Systematic research breakdown on {sym}:"
+    tweet_url = f"https://twitter.com/intent/tweet?text={q(tweet_text)}&url={q(canon_url)}&hashtags={q(f'Trading,Crypto,{sym}')}"
+    escaped_js_quote = quote_text.replace("'", "\\'")
+
+    return f"""<div class="viral-insight-card">
+      <div class="vic-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        Key Quantitative Takeaway &bull; {sym} Research
+      </div>
+      <p class="vic-quote">"{e(quote_text)}"</p>
+      <div class="vic-meta">
+        <span class="vic-author">zengtrade Quantitative Research Group &bull; Friction-Adjusted Model</span>
+        <div class="vic-actions">
+          <a class="vic-btn tweet" href="{tweet_url}" target="_blank" rel="noopener noreferrer"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> Tweet Insight</a>
+          <button type="button" class="vic-btn copy" onclick="copyInsightText('{escaped_js_quote}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Insight</button>
+        </div>
+      </div>
+    </div>"""
+
 
 def safe_str(s: str) -> str:
     if not isinstance(s, str): return s
@@ -279,6 +382,8 @@ def render_article(topic, coin, build_date):
         Live Tape: {name} ({sym}) {price_str} <span>{chg_str} 24h</span>
       </div>
       
+      {render_social_share_bar(canon, raw_title, sym, name, is_footer=False)}
+      
       <div class="blog-grid3">
         <div class="blog-stat-card"><div class="bsc-label">Execution Model</div><div class="bsc-val">Paper &amp; Live Spot</div></div>
         <div class="blog-stat-card"><div class="bsc-label">Friction Engine</div><div class="bsc-val">35 bps Round-Trip</div></div>
@@ -352,6 +457,8 @@ def render_article(topic, coin, build_date):
           </tbody>
         </table>
       </div>
+      
+      {render_viral_insight_card(name, sym, raw_title, canon)}
 
       <h3 id="simulator">Interactive Trade Sizing &amp; Friction Simulator</h3>
       <p>Simulate how much capital you can prudently allocate to {sym} using volatility-scaled risk sizing:</p>
@@ -425,7 +532,9 @@ def render_article(topic, coin, build_date):
         {"".join(f'<details class="faq-item"><summary>{e(f["q"])}</summary><p>{e(f["a"])}</p></details>' for f in faqs)}
       </div>
       
-      <div class="lp-cta-row center" style="margin-top:48px">
+      {render_social_share_bar(canon, raw_title, sym, name, is_footer=True)}
+
+      <div class="lp-cta-row center" style="margin-top:40px">
         <a class="lp-cta primary" href="/login/?mode=signup&amp;utm_source=seo&amp;utm_medium=organic&amp;utm_campaign=blog_{slug}_{t_slug}">Paper-Trade {sym} Free</a>
         <a class="lp-cta ghost" href="/blog/">Back to Blog Hub</a>
       </div>
@@ -457,6 +566,45 @@ function copyFormula() {{
     btn.textContent = 'Copied!';
     setTimeout(function() {{ btn.textContent = 'Copy Equation'; }}, 2000);
   }});
+}}
+function copyArticleLink() {{
+  var url = window.location.href;
+  if (navigator.clipboard && navigator.clipboard.writeText) {{
+    navigator.clipboard.writeText(url).then(function() {{
+      showToast('Article link copied to clipboard! 🚀');
+    }}).catch(function() {{
+      prompt('Copy this link:', url);
+    }});
+  }} else {{
+    prompt('Copy this link:', url);
+  }}
+}}
+function copyInsightText(txt) {{
+  var cite = txt + ' (Source: ' + window.location.href + ' via @zengtrade)';
+  if (navigator.clipboard && navigator.clipboard.writeText) {{
+    navigator.clipboard.writeText(cite).then(function() {{
+      showToast('Quantitative insight copied to clipboard! 📋');
+    }}).catch(function() {{
+      prompt('Copy this insight:', cite);
+    }});
+  }} else {{
+    prompt('Copy this insight:', cite);
+  }}
+}}
+function showToast(msg) {{
+  var t = document.getElementById('shareToast');
+  if (!t) {{
+    t = document.createElement('div');
+    t.id = 'shareToast';
+    t.className = 'share-toast';
+    document.body.appendChild(t);
+  }}
+  t.innerHTML = '<span class="share-toast-dot"></span>' + msg;
+  t.classList.add('show');
+  clearTimeout(window._toastTimeout);
+  window._toastTimeout = setTimeout(function() {{
+    t.classList.remove('show');
+  }}, 2500);
 }}
 calcTradeSim();
 </script>"""

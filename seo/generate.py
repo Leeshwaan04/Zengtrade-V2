@@ -509,7 +509,21 @@ a.home-card{text-decoration:none}
 .coin-mtf-tag b{font:700 13px/1.3 var(--sans);color:var(--navy)}
 .coin-mtf-tag.up b{color:var(--green)}.coin-mtf-tag.down b{color:var(--red)}
 .coin-mtf-note{font-size:12.5px;color:var(--slate);line-height:1.5;margin:0}
-@media(max-width:600px){.coin-stats{grid-template-columns:repeat(2,1fr)}.coin-price b{font-size:27px}}
+
+/* ---- Coin Live Widget Embed Generator ---- */
+.coin-embed-wrap{display:grid;grid-template-columns:minmax(300px,440px) 1fr;gap:24px;align-items:start;margin:24px 0}
+.coin-embed-preview{display:flex;flex-direction:column;gap:8px}
+.coin-embed-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--slate)}
+.coin-embed-code-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:var(--shadow)}
+.coin-embed-code-box{position:relative;background:rgba(12,20,36,0.92);border:1px solid var(--line);border-radius:10px;padding:16px;margin:12px 0;overflow-x:auto}
+.coin-embed-code-box code{font-family:var(--mono);font-size:11.5px;color:var(--accent);line-height:1.6;white-space:pre-wrap;word-break:break-all}
+.coin-embed-perks{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.coin-embed-perk{font-size:12px;color:var(--slate);display:flex;align-items:center;gap:6px}
+.coin-embed-perk span{color:var(--green);font-weight:700}
+.coin-embed-toast{font-size:12.5px;font-weight:700;color:var(--green);opacity:0;transition:opacity 0.2s}
+.coin-embed-toast.show{opacity:1}
+@media(max-width:860px){.coin-embed-wrap{grid-template-columns:1fr}}
+@media(max-width:600px){.coin-stats{grid-template-columns:repeat(2,1fr)}.coin-price b{font-size:27px}.coin-embed-perks{grid-template-columns:1fr}}
 """
 
 
@@ -652,6 +666,44 @@ def coin_parts(sym, name, slug, cat, tk, bars):
     </div>
   </section>
 
+  <section class="lp-sec" id="embed-widget" aria-label="Embed Live {e(name)} Widget">
+    <div class="lp-wrap">
+      <div class="lp-eyebrow"><span class="dot"></span> Free Embeddable Component · Live Market Tape</div>
+      <h2 class="lp-h2">Embed Live {e(name)} Widget on Your Website or Blog</h2>
+      <p class="lp-sub">Add real-time {e(name)} ({sym}) Binance spot pricing, 30-day trend chart, and quantitative regime detection to your crypto blog, Substack, Medium post, or research portal. Free, responsive, and updates live.</p>
+
+      <div class="coin-embed-wrap">
+        <div class="coin-embed-preview">
+          <div class="coin-embed-lbl">Live Interactive Preview</div>
+          <iframe src="/embed/coins/{slug}/" width="100%" height="375" style="border:1px solid var(--line);border-radius:14px;max-width:440px;width:100%;height:375px;background:#0c1424;display:block;" title="{e(name)} Live Market Regime Widget" loading="lazy"></iframe>
+        </div>
+
+        <div class="coin-embed-code-card">
+          <div class="coin-embed-lbl">Embed Code Snippet (HTML iFrame)</div>
+          <div class="coin-embed-code-box">
+            <code id="embedCodeText">&lt;!-- Zengtrade Live {e(name)} ({sym}) Market Widget --&gt;
+&lt;iframe src="{SITE}/embed/coins/{slug}/" width="100%" height="380" frameborder="0" style="border:1px solid #1e293b;border-radius:14px;max-width:480px;display:block;" title="{e(name)} Live Market Regime by zengtrade"&gt;&lt;/iframe&gt;
+&lt;div style="font-size:12px;color:#64748b;margin-top:6px;font-family:sans-serif;"&gt;Live {e(name)} regime powered by &lt;a href="{SITE}/coins/{slug}/?utm_source=embed_widget&amp;utm_medium=referral&amp;utm_campaign=coin_widget" target="_blank" rel="noopener" style="color:#00ab4e;font-weight:600;text-decoration:none;"&gt;zengtrade&lt;/a&gt;&lt;/div&gt;</code>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px">
+            <button type="button" class="lp-cta primary" id="copyWidgetBtn" onclick="copyWidgetCode()" style="padding:8px 16px;font-size:13px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy Embed HTML</span>
+            </button>
+            <span class="coin-embed-toast" id="widgetToast">Copied to clipboard! 🚀</span>
+          </div>
+
+          <div class="coin-embed-perks">
+            <div class="coin-embed-perk"><span>✓</span> Live Binance Spot Pricing</div>
+            <div class="coin-embed-perk"><span>✓</span> Real-Time Regime Detection</div>
+            <div class="coin-embed-perk"><span>✓</span> Zero-JS Vector SVG Chart</div>
+            <div class="coin-embed-perk"><span>✓</span> Mobile Responsive &amp; Fast</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="lp-sec" aria-label="{e(name)} FAQ">
     <div class="lp-wrap">
       <h2 class="lp-h2">{e(name)} FAQ</h2>
@@ -676,6 +728,17 @@ def coin_parts(sym, name, slug, cat, tk, bars):
     if(p) p.textContent="$"+(+d.lastPrice).toLocaleString("en-US",{{maximumFractionDigits:(+d.lastPrice>=1?2:4)}});
     if(c){{var v=+d.priceChangePercent; c.textContent=(v>=0?"+":"")+v.toFixed(2)+"% 24h"; c.className="coin-chg "+(v>=0?"up":"down");}}
   }}).catch(()=>{{}});
+  function copyWidgetCode() {{
+    var code = document.getElementById("embedCodeText").innerText;
+    if(navigator.clipboard && navigator.clipboard.writeText) {{
+      navigator.clipboard.writeText(code).then(function() {{
+        var t = document.getElementById("widgetToast");
+        if(t) {{ t.classList.add("show"); setTimeout(function(){{ t.classList.remove("show"); }}, 3000); }}
+      }});
+    }} else {{
+      prompt("Copy this embed code:", code);
+    }}
+  }}
   </script>
 </main>"""
     return title, desc, f"{SITE}/coins/{slug}/", main, extra_head
@@ -846,6 +909,136 @@ def get_coin_data(syms=None):
             return rows
     print("  ! no usable coin_data_cache.json, falling back to a live fetch (slow, ~15-19 min for the full roster)")
     return fetch_coins(syms)
+
+
+def coin_embed_page(sym, name, slug, cat, tk, bars):
+    """Generate a standalone, high-performance HTML widget page for <sym>.
+    Includes live price, 24h change, SVG sparkline trend, Bull/Neutral/Bear regime badge,
+    quick stats, and an unmissable backlink: Powered by zengtrade.
+    Designed for embedding via <iframe> on third-party blogs, articles, and websites."""
+    price = float(tk["lastPrice"])
+    chg = float(tk["priceChangePercent"])
+    hi = float(tk["highPrice"])
+    lo = float(tk["lowPrice"])
+    vol = float(tk["quoteVolume"])
+    closes = [b["close"] for b in bars["1m"]]
+    d7 = (closes[-1]/closes[-8]-1)*100 if len(closes) >= 8 else 0.0
+    reg, reg_txt = regime_read(closes)
+    fmt = lambda n: f"{n:,.0f}" if n >= 1000 else (f"{n:,.2f}" if n >= 1 else f"{n:,.4f}")
+    e = html.escape
+    spark_svg = sparkline(closes, w=400, h=80)
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{e(name)} ({sym}) Live Market Regime &amp; Price | zengtrade</title>
+<meta name="description" content="Live {e(name)} ({sym}) price, 30-day trend chart, and quantitative market regime detection powered by zengtrade.">
+<style>
+*{{box-sizing:border-box;margin:0;padding:0}}
+body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#060a12;color:#f1f5f9;padding:12px;overflow:hidden}}
+.zt-w-card{{background:#0c1424;border:1px solid #1e293b;border-radius:14px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,0.4);max-width:440px;margin:0 auto;height:356px;display:flex;flex-direction:column;justify-content:space-between}}
+.zt-w-head{{display:flex;align-items:center;justify-content:space-between;gap:12px}}
+.zt-w-coin{{display:flex;align-items:center;gap:10px}}
+.zt-w-avatar{{width:36px;height:36px;border-radius:50%;background:#1e293b;color:#00ab4e;display:grid;place-items:center;font-weight:800;font-size:12px;border:1px solid #334155;letter-spacing:0.3px}}
+.zt-w-title b{{font-size:15px;color:#f8fafc;display:block;line-height:1.2}}
+.zt-w-title span{{font-size:11.5px;color:#94a3b8;font-weight:600;text-transform:uppercase}}
+.zt-w-price-box{{text-align:right}}
+.zt-w-price{{font:800 20px/1.2 "SF Mono",Menlo,monospace;color:#f8fafc}}
+.zt-w-chg{{font:700 12px/1 "SF Mono",Menlo,monospace;display:inline-block;padding:3px 7px;border-radius:5px;margin-top:3px}}
+.zt-w-chg.up{{color:#00ab4e;background:rgba(0,171,78,0.12)}}
+.zt-w-chg.down{{color:#e0483d;background:rgba(224,72,61,0.12)}}
+.zt-w-regime{{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#080e1a;border:1px solid #1e293b;border-radius:8px;padding:7px 10px;margin:10px 0 6px}}
+.zt-w-regime-tag{{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700}}
+.zt-w-pulse{{width:7px;height:7px;border-radius:50%;background:#00ab4e;box-shadow:0 0 8px #00ab4e;animation:ztPulse 2s infinite}}
+.zt-w-regime-tag.Bull .zt-w-pulse{{background:#00ab4e;box-shadow:0 0 8px #00ab4e}}
+.zt-w-regime-tag.Neutral .zt-w-pulse{{background:#3b82f6;box-shadow:0 0 8px #3b82f6}}
+.zt-w-regime-tag.Bear .zt-w-pulse{{background:#e0483d;box-shadow:0 0 8px #e0483d}}
+.zt-w-directive{{font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px}}
+.zt-w-chart{{width:100%;height:80px;margin:4px 0;position:relative}}
+.zt-w-chart svg{{width:100%;height:100%;display:block}}
+.zt-w-stats{{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:6px 0}}
+.zt-w-stat{{background:#080e1a;border:1px solid #1e293b;border-radius:7px;padding:6px 8px;text-align:center}}
+.zt-w-stat span{{font-size:9px;text-transform:uppercase;color:#64748b;font-weight:700;display:block}}
+.zt-w-stat b{{font:700 12px/1.2 "SF Mono",Menlo,monospace;color:#cbd5e1;display:block;margin-top:2px}}
+.zt-w-stat b.up{{color:#00ab4e}}.zt-w-stat b.down{{color:#e0483d}}
+.zt-w-foot{{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid #1e293b;margin-top:4px}}
+.zt-w-brand{{display:flex;align-items:center;gap:6px;font-size:11px;color:#94a3b8}}
+.zt-w-brand a{{color:#00ab4e;font-weight:700;text-decoration:none}}
+.zt-w-brand a:hover{{text-decoration:underline}}
+.zt-w-cta{{font-size:11px;font-weight:700;color:#00ab4e;background:rgba(0,171,78,0.1);border:1px solid rgba(0,171,78,0.3);padding:4px 10px;border-radius:6px;text-decoration:none;transition:all 0.15s}}
+.zt-w-cta:hover{{background:#00ab4e;color:#04140a}}
+@keyframes ztPulse{{0%,100%{{opacity:1}}50%{{opacity:0.4}}}}
+</style>
+</head>
+<body>
+<div class="zt-w-card">
+  <div class="zt-w-head">
+    <div class="zt-w-coin">
+      <div class="zt-w-avatar">{sym[:4]}</div>
+      <div class="zt-w-title">
+        <b>{e(name)}</b>
+        <span>{sym} &bull; {cat.upper()}</span>
+      </div>
+    </div>
+    <div class="zt-w-price-box">
+      <div class="zt-w-price" id="ztPrice">${fmt(price)}</div>
+      <div class="zt-w-chg {'up' if chg>=0 else 'down'}" id="ztChg">{chg:+.2f}% 24h</div>
+    </div>
+  </div>
+
+  <div class="zt-w-regime">
+    <div class="zt-w-regime-tag {reg}">
+      <span class="zt-w-pulse"></span>
+      <span>{reg} Regime</span>
+    </div>
+    <div class="zt-w-directive" title="{e(reg_txt)}">{e(reg_txt)}</div>
+  </div>
+
+  <div class="zt-w-chart">
+    {spark_svg}
+  </div>
+
+  <div class="zt-w-stats">
+    <div class="zt-w-stat"><span>24h High</span><b>${fmt(hi)}</b></div>
+    <div class="zt-w-stat"><span>24h Low</span><b>${fmt(lo)}</b></div>
+    <div class="zt-w-stat"><span>7d Trend</span><b class="{'up' if d7>=0 else 'down'}">{d7:+.1f}%</b></div>
+    <div class="zt-w-stat"><span>24h Vol</span><b>${fmt(vol)}</b></div>
+  </div>
+
+  <footer class="zt-w-foot">
+    <div class="zt-w-brand">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00ab4e" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+      <span>Powered by <a href="{SITE}/coins/{slug}/?utm_source=embed_widget&amp;utm_medium=referral&amp;utm_campaign=coin_widget" target="_blank" rel="noopener"><strong>zengtrade</strong></a></span>
+    </div>
+    <a href="{SITE}/login/?mode=signup&amp;utm_source=embed_widget&amp;utm_medium=referral&amp;utm_campaign=coin_widget" target="_blank" rel="noopener" class="zt-w-cta">Paper-Trade Free &rarr;</a>
+  </footer>
+</div>
+<script>
+(function(){{
+  function update(){{
+    fetch("{BASE}/api/v3/ticker/24hr?symbol={sym}USDT")
+      .then(function(r){{return r.json();}})
+      .then(function(d){{
+        if(!d||!d.lastPrice) return;
+        var p=document.getElementById("ztPrice");
+        var c=document.getElementById("ztChg");
+        var lp=parseFloat(d.lastPrice);
+        var cp=parseFloat(d.priceChangePercent);
+        if(p) p.textContent="$"+lp.toLocaleString("en-US",{{maximumFractionDigits:(lp>=1?2:4)}});
+        if(c){{
+          c.textContent=(cp>=0?"+":"")+cp.toFixed(2)+"% 24h";
+          c.className="zt-w-chg "+(cp>=0?"up":"down");
+        }}
+      }}).catch(function(){{}});
+  }}
+  setInterval(update,8000);
+}})();
+</script>
+</body>
+</html>
+"""
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ Same rule as everywhere else on the site: paper-first, non-custodial, honest abo
 fabricated numbers or claims about usage/traction that aren't real.
 """
 from __future__ import annotations
-import html, json, os
+import html, json, os, urllib.parse
 
 from articles import _parse_front_matter  # shared front-matter parser; .article-body prose CSS
                                            # comes from articles.py's ARTICLE_CSS, already in the
@@ -81,6 +81,27 @@ def load_posts():
     return out
 
 
+def render_blog_share_bar(canon_url, title):
+    q = urllib.parse.quote
+    share_text = f"Research: {title} via @zengtrade:"
+    x_url = f"https://twitter.com/intent/tweet?text={q(share_text)}&url={q(canon_url)}&hashtags=CryptoTrading,AlgoTrading,QuantitativeFinance"
+    li_url = f"https://www.linkedin.com/sharing/share-offsite/?url={q(canon_url)}"
+    wa_url = f"https://api.whatsapp.com/send?text={q(share_text + ' ' + canon_url)}"
+    tg_url = f"https://t.me/share/url?url={q(canon_url)}&text={q(share_text)}"
+    rd_url = f"https://reddit.com/submit?url={q(canon_url)}&title={q(title)}"
+    return f"""<div class="blog-share-bar" style="margin:16px 0 0">
+      <span class="blog-share-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share Post:</span>
+      <div class="blog-share-btns">
+        <a class="share-btn x" href="{x_url}" target="_blank" rel="noopener noreferrer" title="Post to X" aria-label="Post to X"><svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span>Post</span></a>
+        <a class="share-btn li" href="{li_url}" target="_blank" rel="noopener noreferrer" title="Share on LinkedIn" aria-label="Share on LinkedIn"><svg viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg><span>LinkedIn</span></a>
+        <a class="share-btn wa" href="{wa_url}" target="_blank" rel="noopener noreferrer" title="Share via WhatsApp" aria-label="Share via WhatsApp"><svg viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.53c-.25.7-.78 1.29-1.44 1.45-.45.11-1.04.16-3.32-.78-2.64-1.09-4.34-3.77-4.47-3.95-.13-.18-1.08-1.44-1.08-2.75 0-1.31.68-1.95.93-2.22.25-.26.54-.33.72-.33.18 0 .36 0 .52.01.17.01.4-.06.62.48.23.55.78 1.91.85 2.05.07.14.12.3.02.48-.09.18-.14.3-.28.46-.14.16-.29.36-.42.48-.14.13-.28.28-.12.56.16.27.71 1.17 1.53 1.9 1.05.94 1.94 1.23 2.21 1.37.28.14.44.11.6-.07.17-.18.7-.82.89-1.1.18-.28.37-.23.63-.14.25.09 1.61.76 1.89.9.28.14.46.21.53.33.07.12.07.69-.18 1.39z"/></svg><span>WhatsApp</span></a>
+        <a class="share-btn tg" href="{tg_url}" target="_blank" rel="noopener noreferrer" title="Share via Telegram" aria-label="Share via Telegram"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg><span>Telegram</span></a>
+        <a class="share-btn rd" href="{rd_url}" target="_blank" rel="noopener noreferrer" title="Share on Reddit" aria-label="Share on Reddit"><svg viewBox="0 0 24 24"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm5.74-10.74a1.35 1.35 0 0 0-1.28-.93 1.33 1.33 0 0 0-.86.32c-1.02-.73-2.42-1.2-3.98-1.26l.68-3.19 2.22.47a1.05 1.05 0 0 0 1.03.83 1.06 1.06 0 1 0-1.06-1.06c0 .08.01.16.03.24l-2.48-.52a.26.26 0 0 0-.31.2l-.78 3.69c-1.6.05-3.04.52-4.08 1.27a1.35 1.35 0 0 0-2.14.61 1.33 1.33 0 0 0 .32 1.35c-.03.17-.05.35-.05.53 0 2.68 3.13 4.85 7 4.85s7-2.17 7-4.85c0-.18-.02-.36-.05-.53a1.35 1.35 0 0 0 .51-1.07zm-9.24.74a1.06 1.06 0 1 1-2.12 0 1.06 1.06 0 0 1 2.12 0zm5.02 3.19c-.64.64-1.85.69-2.02.69s-1.38-.05-2.02-.69a.27.27 0 0 1 .38-.38c.45.45 1.34.52 1.64.52.3 0 1.19-.07 1.64-.52a.27.27 0 0 1 .38.38zm-.52-2.13a1.06 1.06 0 1 1-2.12 0 1.06 1.06 0 0 1 2.12 0z"/></svg><span>Reddit</span></a>
+        <button type="button" class="share-btn copy" onclick="copyBlogLink()" title="Copy Link" aria-label="Copy Link"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Copy Link</span></button>
+      </div>
+    </div>"""
+
+
 def post_parts(p):
     """(title, desc, canonical, main_html, extra_head) - same shape article_parts() returns, so
     build.py's emit() call site is identical for /learn/ and /blog/. BlogPosting (not Article) is
@@ -125,6 +146,7 @@ def post_parts(p):
     }
     extra_head = (f'<script type="application/ld+json">{json.dumps(crumb)}</script>'
                   f'<script type="application/ld+json">{json.dumps(post_schema)}</script>')
+    share_bar = render_blog_share_bar(canonical, p['title'])
     main = f"""<main id="main">
   <section class="lp-hero" aria-labelledby="h-post">
     <div class="lp-wrap">
@@ -132,6 +154,7 @@ def post_parts(p):
       <h1 id="h-post" class="lp-h1">{e(p['title'])}</h1>
       <p class="lp-sub">{e(p['description'])}</p>
       <p class="article-meta">{e(p['date'])}</p>
+      {share_bar}
     </div>
   </section>
   <section class="lp-sec" aria-label="Post">
@@ -147,6 +170,20 @@ def post_parts(p):
       </div>
     </div>
   </section>
+  <script>
+  function copyBlogLink() {{
+    var url = window.location.href;
+    if (navigator.clipboard && navigator.clipboard.writeText) {{
+      navigator.clipboard.writeText(url).then(function() {{
+        alert('Blog post link copied to clipboard!');
+      }}).catch(function() {{
+        prompt('Copy this link:', url);
+      }});
+    }} else {{
+      prompt('Copy this link:', url);
+    }}
+  }}
+  </script>
 </main>"""
     return title, p["description"], canonical, main, extra_head
 

@@ -547,6 +547,227 @@ emit("pricing", shell(
     "zengtrade pricing: free forever to paper-trade every strategy, Pro for unlimited deployments at $19/mo founding rate. Non-custodial, cancel anytime.",
     "https://zengtrade.in/pricing/", PRICING_MAIN, extra_head=PRICING_FAQ_SCHEMA), "https://zengtrade.in/pricing/")
 
+# ---- Embeddable Widget Constants -----------------------------------------------------
+DYNAMIC_EMBED_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Live Crypto Market Regime Widget | zengtrade</title>
+<meta name="description" content="Live crypto spot prices, 30-day trend chart, and quantitative market regime detection powered by zengtrade.">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#060a12;color:#f1f5f9;padding:12px;overflow:hidden}
+.zt-w-card{background:#0c1424;border:1px solid #1e293b;border-radius:14px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,0.4);max-width:440px;margin:0 auto;height:356px;display:flex;flex-direction:column;justify-content:space-between}
+.zt-w-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.zt-w-coin{display:flex;align-items:center;gap:10px}
+.zt-w-avatar{width:36px;height:36px;border-radius:50%;background:#1e293b;color:#00ab4e;display:grid;place-items:center;font-weight:800;font-size:12px;border:1px solid #334155;letter-spacing:0.3px}
+.zt-w-title b{font-size:15px;color:#f8fafc;display:block;line-height:1.2}
+.zt-w-title span{font-size:11.5px;color:#94a3b8;font-weight:600;text-transform:uppercase}
+.zt-w-price-box{text-align:right}
+.zt-w-price{font:800 20px/1.2 "SF Mono",Menlo,monospace;color:#f8fafc}
+.zt-w-chg{font:700 12px/1 "SF Mono",Menlo,monospace;display:inline-block;padding:3px 7px;border-radius:5px;margin-top:3px}
+.zt-w-chg.up{color:#00ab4e;background:rgba(0,171,78,0.12)}
+.zt-w-chg.down{color:#e0483d;background:rgba(224,72,61,0.12)}
+.zt-w-regime{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#080e1a;border:1px solid #1e293b;border-radius:8px;padding:7px 10px;margin:10px 0 6px}
+.zt-w-regime-tag{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700}
+.zt-w-pulse{width:7px;height:7px;border-radius:50%;background:#00ab4e;box-shadow:0 0 8px #00ab4e;animation:ztPulse 2s infinite}
+.zt-w-regime-tag.Bull .zt-w-pulse{background:#00ab4e;box-shadow:0 0 8px #00ab4e}
+.zt-w-regime-tag.Neutral .zt-w-pulse{background:#3b82f6;box-shadow:0 0 8px #3b82f6}
+.zt-w-regime-tag.Bear .zt-w-pulse{background:#e0483d;box-shadow:0 0 8px #e0483d}
+.zt-w-directive{font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px}
+.zt-w-chart{width:100%;height:80px;margin:4px 0;position:relative}
+.zt-w-chart svg{width:100%;height:100%;display:block}
+.zt-w-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:6px 0}
+.zt-w-stat{background:#080e1a;border:1px solid #1e293b;border-radius:7px;padding:6px 8px;text-align:center}
+.zt-w-stat span{font-size:9px;text-transform:uppercase;color:#64748b;font-weight:700;display:block}
+.zt-w-stat b{font:700 12px/1.2 "SF Mono",Menlo,monospace;color:#cbd5e1;display:block;margin-top:2px}
+.zt-w-stat b.up{color:#00ab4e}.zt-w-stat b.down{color:#e0483d}
+.zt-w-foot{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid #1e293b;margin-top:4px}
+.zt-w-brand{display:flex;align-items:center;gap:6px;font-size:11px;color:#94a3b8}
+.zt-w-brand a{color:#00ab4e;font-weight:700;text-decoration:none}
+.zt-w-brand a:hover{text-decoration:underline}
+.zt-w-cta{font-size:11px;font-weight:700;color:#00ab4e;background:rgba(0,171,78,0.1);border:1px solid rgba(0,171,78,0.3);padding:4px 10px;border-radius:6px;text-decoration:none;transition:all 0.15s}
+.zt-w-cta:hover{background:#00ab4e;color:#04140a}
+@keyframes ztPulse{0%,100%{opacity:1}50%{opacity:0.4}}
+</style>
+</head>
+<body>
+<div class="zt-w-card">
+  <div class="zt-w-head">
+    <div class="zt-w-coin">
+      <div class="zt-w-avatar" id="ztAvatar">BTC</div>
+      <div class="zt-w-title">
+        <b id="ztName">Bitcoin</b>
+        <span id="ztSub">BTC &bull; CRYPTO</span>
+      </div>
+    </div>
+    <div class="zt-w-price-box">
+      <div class="zt-w-price" id="ztPrice">--</div>
+      <div class="zt-w-chg" id="ztChg">--% 24h</div>
+    </div>
+  </div>
+
+  <div class="zt-w-regime">
+    <div class="zt-w-regime-tag Bull" id="ztRegTag">
+      <span class="zt-w-pulse"></span>
+      <span id="ztRegLabel">Bull Regime</span>
+    </div>
+    <div class="zt-w-directive" id="ztDirective" title="Calculating market regime...">Calculating market regime...</div>
+  </div>
+
+  <div class="zt-w-chart" id="ztChart">
+    <svg viewBox="0 0 400 80"><polyline points="0,40 400,40" stroke="#334155" stroke-width="2" fill="none"/></svg>
+  </div>
+
+  <div class="zt-w-stats">
+    <div class="zt-w-stat"><span>24h High</span><b id="ztHi">--</b></div>
+    <div class="zt-w-stat"><span>24h Low</span><b id="ztLo">--</b></div>
+    <div class="zt-w-stat"><span>7d Trend</span><b id="ztD7">--</b></div>
+    <div class="zt-w-stat"><span>24h Vol</span><b id="ztVol">--</b></div>
+  </div>
+
+  <footer class="zt-w-foot">
+    <div class="zt-w-brand">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00ab4e" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+      <span>Powered by <a id="ztLink" href="https://zengtrade.in/coins/bitcoin/?utm_source=embed_widget&utm_medium=referral&utm_campaign=coin_widget" target="_blank" rel="noopener"><strong>zengtrade</strong></a></span>
+    </div>
+    <a href="https://zengtrade.in/login/?mode=signup&utm_source=embed_widget&utm_medium=referral&utm_campaign=coin_widget" target="_blank" rel="noopener" class="zt-w-cta">Paper-Trade Free &rarr;</a>
+  </footer>
+</div>
+<script>
+(function(){
+  var p = new URLSearchParams(window.location.search);
+  var coinParam = (p.get('coin') || p.get('sym') || 'bitcoin').toLowerCase().trim();
+  var symMap = {
+    'bitcoin': 'BTC', 'ethereum': 'ETH', 'solana': 'SOL', 'cardano': 'ADA',
+    'dogecoin': 'DOGE', 'ripple': 'XRP', 'bnb': 'BNB', 'avalanche': 'AVAX',
+    'polkadot': 'DOT', 'chainlink': 'LINK', 'polygon': 'MATIC', 'near': 'NEAR'
+  };
+  var sym = symMap[coinParam] || coinParam.toUpperCase();
+  var name = coinParam.charAt(0).toUpperCase() + coinParam.slice(1);
+  if (sym.length > 6) sym = 'BTC';
+  
+  document.getElementById('ztAvatar').textContent = sym.slice(0, 4);
+  document.getElementById('ztName').textContent = name;
+  document.getElementById('ztSub').textContent = sym + ' &bull; CRYPTO';
+  document.getElementById('ztLink').href = 'https://zengtrade.in/coins/' + encodeURIComponent(coinParam) + '/?utm_source=embed_widget&utm_medium=referral&utm_campaign=coin_widget';
+
+  function fmt(n) {
+    return n >= 1000 ? n.toLocaleString('en-US', {maximumFractionDigits:0}) : (n >= 1 ? n.toFixed(2) : n.toFixed(4));
+  }
+
+  function fetchTicker() {
+    fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=' + sym + 'USDT')
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (!d || !d.lastPrice) return;
+        var lp = parseFloat(d.lastPrice);
+        var cp = parseFloat(d.priceChangePercent);
+        var hi = parseFloat(d.highPrice);
+        var lo = parseFloat(d.lowPrice);
+        var vol = parseFloat(d.quoteVolume);
+        
+        var pe = document.getElementById('ztPrice');
+        var ce = document.getElementById('ztChg');
+        if (pe) pe.textContent = '$' + fmt(lp);
+        if (ce) {
+          ce.textContent = (cp >= 0 ? '+' : '') + cp.toFixed(2) + '% 24h';
+          ce.className = 'zt-w-chg ' + (cp >= 0 ? 'up' : 'down');
+        }
+        document.getElementById('ztHi').textContent = '$' + fmt(hi);
+        document.getElementById('ztLo').textContent = '$' + fmt(lo);
+        document.getElementById('ztVol').textContent = '$' + (vol >= 1e9 ? (vol/1e9).toFixed(1)+'B' : (vol >= 1e6 ? (vol/1e6).toFixed(1)+'M' : fmt(vol)));
+      }).catch(function(){});
+  }
+
+  function fetchKlines() {
+    fetch('https://api.binance.com/api/v3/klines?symbol=' + sym + 'USDT&interval=1d&limit=30')
+      .then(function(r){ return r.json(); })
+      .then(function(bars){
+        if (!bars || !bars.length) return;
+        var closes = bars.map(function(b){ return parseFloat(b[4]); });
+        var lo = Math.min.apply(null, closes);
+        var hi = Math.max.apply(null, closes);
+        var rng = (hi - lo) || 1;
+        var w = 400, h = 80;
+        var pts = closes.map(function(c, i){
+          var x = (i / (closes.length - 1) * w).toFixed(1);
+          var y = (h - (c - lo) / rng * h).toFixed(1);
+          return x + ',' + y;
+        }).join(' ');
+        var up = closes[closes.length - 1] >= closes[0];
+        var col = up ? '#00ab4e' : '#e0483d';
+        var area = '0,' + h + ' ' + pts + ' ' + w + ',' + h;
+        var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none"><polygon points="' + area + '" fill="' + col + '" opacity="0.08"/><polyline points="' + pts + '" fill="none" stroke="' + col + '" stroke-width="2"/></svg>';
+        document.getElementById('ztChart').innerHTML = svg;
+
+        var d7 = closes.length >= 8 ? ((closes[closes.length - 1] / closes[closes.length - 8] - 1) * 100) : 0;
+        var d7el = document.getElementById('ztD7');
+        d7el.textContent = (d7 >= 0 ? '+' : '') + d7.toFixed(1) + '%';
+        d7el.className = d7 >= 0 ? 'up' : 'down';
+
+        var reg = up ? 'Bull' : (Math.abs(d7) < 3 ? 'Neutral' : 'Bear');
+        var regDir = up ? 'Momentum expansion; trail ATR stops.' : (reg === 'Neutral' ? 'Chop regime; harvest range oscillation.' : 'Capital defense; stand down to cash.');
+        var tag = document.getElementById('ztRegTag');
+        tag.className = 'zt-w-regime-tag ' + reg;
+        document.getElementById('ztRegLabel').textContent = reg + ' Regime';
+        document.getElementById('ztDirective').textContent = regDir;
+        document.getElementById('ztDirective').title = regDir;
+      }).catch(function(){});
+  }
+
+  fetchTicker();
+  fetchKlines();
+  setInterval(fetchTicker, 8000);
+})();
+</script>
+</body>
+</html>
+"""
+
+EMBED_WIDGET_JS = """(function() {
+  function initWidgets() {
+    var els = document.querySelectorAll('[data-zengtrade-widget]');
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (el.getAttribute('data-zt-ready')) continue;
+      var coin = (el.getAttribute('data-zengtrade-widget') || 'bitcoin').toLowerCase().trim();
+      var width = el.getAttribute('data-width') || '100%';
+      var height = el.getAttribute('data-height') || '380px';
+      
+      var frame = document.createElement('iframe');
+      frame.src = 'https://zengtrade.in/embed/coins/' + encodeURIComponent(coin) + '/';
+      frame.width = width;
+      frame.height = height;
+      frame.style.border = '1px solid #1e293b';
+      frame.style.borderRadius = '14px';
+      frame.style.maxWidth = '480px';
+      frame.style.display = 'block';
+      frame.setAttribute('frameborder', '0');
+      frame.setAttribute('title', coin + ' Live Market Regime by zengtrade');
+      
+      var link = document.createElement('div');
+      link.style.fontSize = '12px';
+      link.style.color = '#64748b';
+      link.style.marginTop = '6px';
+      link.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+      link.innerHTML = 'Live market regime powered by <a href="https://zengtrade.in/coins/' + encodeURIComponent(coin) + '/?utm_source=embed_widget&utm_medium=referral&utm_campaign=coin_widget" target="_blank" rel="noopener" style="color:#00ab4e;font-weight:600;text-decoration:none;">zengtrade</a>';
+      
+      el.innerHTML = '';
+      el.appendChild(frame);
+      el.appendChild(link);
+      el.setAttribute('data-zt-ready', 'true');
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initWidgets);
+  } else {
+    initWidgets();
+  }
+})();
+"""
+
 # ---- coin hub + per-coin pages (identical shell -> full design parity) -----------------
 if coins:
     present = [c[0] for c in coins]
@@ -558,7 +779,23 @@ if coins:
     for sym, name, slug, cat, tk, bars in coins:
         title, desc, canon, cmain, extra = G.coin_parts(sym, name, slug, cat, tk, bars)
         emit(os.path.join("coins", slug), shell(title, desc, canon, cmain, extra_head=extra), canon)
+        # Standalone embed widget for external blogs and articles
+        embed_html = G.coin_embed_page(sym, name, slug, cat, tk, bars)
+        embed_dir = os.path.join(DIST, "embed", "coins", slug)
+        os.makedirs(embed_dir, exist_ok=True)
+        open(os.path.join(embed_dir, "index.html"), "w", encoding="utf-8").write(embed_html)
         print("  ✓ /coins/%s/  ($%s, %s%% 24h)" % (slug, tk["lastPrice"], tk["priceChangePercent"]))
+
+    # Dynamic universal fallback widget for /embed/coin/?coin=solana or ?sym=SOL
+    dyn_dir = os.path.join(DIST, "embed", "coin")
+    os.makedirs(dyn_dir, exist_ok=True)
+    open(os.path.join(dyn_dir, "index.html"), "w", encoding="utf-8").write(DYNAMIC_EMBED_HTML)
+
+    # Embed script for /embed/widget.js (1-line drop-in for webmasters)
+    embed_base = os.path.join(DIST, "embed")
+    os.makedirs(embed_base, exist_ok=True)
+    open(os.path.join(embed_base, "widget.js"), "w", encoding="utf-8").write(EMBED_WIDGET_JS)
+    print("  ✓ /embed/coin/ and /embed/widget.js generated")
 
 # ---- /learn/ hub + articles (identical shell -> full design parity) -------------------
 if articles:
