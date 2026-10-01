@@ -1844,8 +1844,11 @@ html[data-persona="trader"][data-layout="build"] .panel{display:none}
 .live-toggle .lt-btn{border:0;background:var(--surface);color:var(--slate);font-family:var(--sans);font-weight:700;font-size:11px;padding:6px 12px;cursor:pointer}
 .live-toggle .lt-btn.on{background:var(--red);color:#fff}
 .live-toggle .lt-btn[data-lt="paper"].on{background:var(--slate);color:#fff}
+.live-toggle .lt-btn.locked{opacity:0.8;display:inline-flex;align-items:center;gap:4px;color:var(--slate-2);background:var(--surface-2)}
+.live-toggle .lt-btn.locked:hover{opacity:1;color:var(--accent-d);background:color-mix(in srgb,var(--amber) 10%,var(--surface))}
 .live-connect-hint{font-size:11.5px;color:var(--slate);margin:0 0 11px}
 .live-connect-hint a{color:var(--accent-d);font-weight:600;text-decoration:none}
+.live-connect-hint a:hover{text-decoration:underline}
 .cta-live{background:var(--red)!important;color:#fff!important}
 .cta-live:hover{filter:brightness(1.08)}
 .ih-demo{display:inline-flex;align-items:center;font-size:9.5px;font-weight:700;letter-spacing:.2px;color:var(--amber);background:color-mix(in srgb,var(--amber) 14%,transparent);border-radius:6px;padding:2px 7px;cursor:help;white-space:nowrap}

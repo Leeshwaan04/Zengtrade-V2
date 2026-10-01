@@ -3628,7 +3628,9 @@ function tradingTradeTab(){
     toggle=`<div class="live-toggle"><span class="lt-label">${live?'Trading with real money on your connected Binance account.':'Paper trading, no money at risk.'}</span>
       <div class="lt-seg"><button class="lt-btn${live?'':' on'}" data-lt="paper">Paper</button><button class="lt-btn${live?' on':''}" data-lt="live">Live</button></div></div>`;
   } else if(hasExchangeBridge&&ex&&!ex.connected){
-    toggle=`<p class="live-connect-hint">${icon('shield',13)} Trading with real money needs a connected exchange. <a href="/account" target="_blank" rel="noopener">Connect your Binance account &rarr;</a></p>`;
+    toggle=`<div class="live-toggle"><span class="lt-label">${icon('shield',13)} Paper trading (simulated fills). Live execution is a <b>Pro</b> feature.</span>
+      <div class="lt-seg"><button class="lt-btn on" data-lt="paper">Paper</button><button class="lt-btn locked" id="liveLockedBtn" title="Live trading requires Pro plan &amp; Binance connection">${icon('lock',11)} Live</button></div></div>
+      <p class="live-connect-hint">${icon('bolt',12)} Real-money live trading requires a <b>Pro plan</b> and a connected exchange. <a href="javascript:void(0)" id="liveConnectHintLink">Unlock Pro &amp; Connect &rarr;</a></p>`;
   }
   const note=live
     ?`<div class="cx-preview-note">${icon('alert',13)}<span><b>Real orders, your own Binance account.</b> Every buy/sell below places a REAL market order using your connected key. This is not simulated and cannot be undone once filled.</span></div>`
@@ -3841,7 +3843,13 @@ function tradingSubmitLive(m){
         });
       }
     } else {
-      quickToast('Live order failed',(res.data&&res.data.error)||'Binance did not accept this order, please try again.');
+      const err = (res.data && res.data.error) || '';
+      if (err.includes('Pro') || err.includes('Elite') || err.includes('Upgrade') || (res.data && res.data.status === 403)) {
+        if (typeof window.ztOpenPricingModal === 'function') {
+          setTimeout(() => { window.ztOpenPricingModal(); }, 400);
+        }
+      }
+      quickToast('Live order failed', err || 'Binance did not accept this order, please try again.');
     }
     renderTrading();
   });
@@ -3916,6 +3924,8 @@ function renderTrading(){
     }
   };
   v.querySelectorAll('[data-lt]').forEach(b=>b.onclick=()=>{state.trading.live=b.dataset.lt==='live';renderTrading();});
+  const hintLink=v.querySelector('#liveConnectHintLink'); if(hintLink) hintLink.onclick=openConnectExchangeModal;
+  const lockedBtn=v.querySelector('#liveLockedBtn'); if(lockedBtn) lockedBtn.onclick=openConnectExchangeModal;
   const cta=v.querySelector('#tradeCta'); if(cta) cta.onclick=()=>{ (state.trading.live?tradingPlaceLive:tradingPlace)(); };
   v.querySelectorAll('[data-rrratio]').forEach(b=>b.onclick=()=>{
     state.trading=state.trading||{};
