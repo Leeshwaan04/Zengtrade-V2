@@ -37,6 +37,7 @@ except ImportError:
 SB = os.environ.get("ZT_SUPABASE_URL", "https://ponvarxeytfcntckczbn.supabase.co")
 ANON = os.environ.get("ZT_SUPABASE_ANON", "sb_publishable_w-pQMK0bj-91EPHXtA0sMQ__CTu_rf1")
 TABLES = ["profile", "subscription", "exchange_connection", "deployment", "book_state", "trade"]
+OPTIONAL_TABLES = ["live_order"]
 
 results: list[tuple[bool, str, str]] = []
 
@@ -97,6 +98,14 @@ def tier1_anon_fails_closed() -> None:
         empty = (st == 200 and isinstance(d, list) and len(d) == 0)
         check(empty, f"anon SELECT {t} returns no rows",
               f"status={st} rows={len(d) if isinstance(d, list) else '?'}")
+    for t in OPTIONAL_TABLES:
+        st, d = req("GET", f"/rest/v1/{t}?select=*&limit=5", ANON)
+        if st == 404:
+            print(f"  [INFO] {t} table pending migration 0013 (status=404)")
+        else:
+            empty = (st == 200 and isinstance(d, list) and len(d) == 0)
+            check(empty, f"anon SELECT {t} returns no rows",
+                  f"status={st} rows={len(d) if isinstance(d, list) else '?'}")
     # anon INSERT must be rejected by the RLS WITH CHECK (Postgres error 42501)
     st, d = req("POST", "/rest/v1/deployment", ANON,
                 {"user_id": "00000000-0000-0000-0000-000000000000", "strategy_key": "trend_follow"},

@@ -3763,7 +3763,7 @@ function tradingHistoryTab(){
     const body = liveOrders.map(o => {
       const sym = o.symbol || '';
       const tk = sym.replace(/USDT$/, '');
-      const side = (o.side || '').toLowerCase();
+      const side = (o.side || '').toLowerCase() === 'sell' ? 'sell' : 'buy';
       const statusCls = o.status === 'FILLED' ? 'b-up' : (o.status === 'rejected' ? 'b-down' : 'b-warn');
       const orderIdStr = o.binance_order_id ? `#${o.binance_order_id.slice(-8)}` : '-';
       return `<div class="cxm-row" style="${cols}">
