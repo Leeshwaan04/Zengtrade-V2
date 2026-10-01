@@ -541,6 +541,54 @@ SHOWDOWNS = [
         "winner_in_chop": "Funding Rate Arbitrage (zero delta risk, pure funding harvest)",
         "winner_in_trend": "Dynamic DCA Grid (outperforms significantly during secular bull markets)",
         "verdict": "Allocate to Funding Arbitrage during uncertain or frothy market conditions; shift into Dynamic DCA at macro cycle valuation discounts."
+    },
+    {
+        "slug": "rsi-vs-stochastic-rsi",
+        "name": "RSI vs Stochastic RSI Oscillator Sensitivity",
+        "strat1_slug": "rsi-divergence",
+        "strat1_name": "RSI Momentum Divergence",
+        "strat2_slug": "multitimeframe-rsi",
+        "strat2_name": "Multi-Timeframe RSI Confluence",
+        "comparison_thesis": "Standard RSI calculates raw price momentum across 14 bars, while Multi-Timeframe Stochastic RSI cascades sensitivity across higher timeframe trend anchors to avoid premature exits.",
+        "winner_in_chop": "Multi-Timeframe RSI (filters out intra-range noise through higher timeframe alignment)",
+        "winner_in_trend": "RSI Divergence (pinpoints structural exhaustion points at cycle extremes)",
+        "verdict": "Deploy Multi-Timeframe RSI for momentum trend continuation; utilize RSI Divergence when anticipating cyclical trend reversals."
+    },
+    {
+        "slug": "ema-cross-vs-macd",
+        "name": "Dual EMA Trend Cross vs MACD Histogram Divergence",
+        "strat1_slug": "dual-ema-cross",
+        "strat1_name": "Dual EMA Cross",
+        "strat2_slug": "macd-divergence",
+        "strat2_name": "MACD Histogram Divergence",
+        "comparison_thesis": "Dual EMA Cross waits for lagging moving average confirmation, whereas MACD Histogram Divergence enters early on momentum deceleration before price trends cross.",
+        "winner_in_chop": "Dual EMA Cross (longer lookback periods prevent frequent false triggers)",
+        "winner_in_trend": "MACD Histogram Divergence (captures inflection points closer to absolute cycle turns)",
+        "verdict": "Use Dual EMA Cross for persistent secular trends; execute MACD Divergence when seeking favorable asymmetric reward-to-risk entries."
+    },
+    {
+        "slug": "supertrend-vs-atr-breakout",
+        "name": "Supertrend Breakout vs Keltner Channel Volatility Squeeze",
+        "strat1_slug": "supertrend-breakout",
+        "strat1_name": "Supertrend Breakout",
+        "strat2_slug": "keltner-squeeze",
+        "strat2_name": "Keltner Channel Squeeze",
+        "comparison_thesis": "Supertrend provides an active directional volatility trailing stop, while Keltner Squeeze identifies compression zones ready for explosive directional expansion.",
+        "winner_in_chop": "Keltner Squeeze (stands down cleanly while volatility remains contracted inside bands)",
+        "winner_in_trend": "Supertrend Breakout (locks in running profits with ATR-based trailing brackets)",
+        "verdict": "Use Keltner Squeeze to identify low-volatility coiling; switch to Supertrend to trail momentum runners once breakout confirms."
+    },
+    {
+        "slug": "grid-bot-vs-dca-bot",
+        "name": "Range-Bound Grid Bot vs Dynamic DCA Accumulation",
+        "strat1_slug": "arithmetic-grid",
+        "strat1_name": "Arithmetic Grid Bot",
+        "strat2_slug": "dynamic-dca-grid",
+        "strat2_name": "Dynamic DCA Bot",
+        "comparison_thesis": "Arithmetic Grid captures continuous bidirectional profit within defined horizontal ranges, whereas Dynamic DCA focuses on systematically building spot inventory during market drawdowns.",
+        "winner_in_chop": "Arithmetic Grid (continuously cycles buy and sell orders across the range corridor)",
+        "winner_in_trend": "Dynamic DCA Bot (lowers cost basis during downturns and rides full secular expansions)",
+        "verdict": "Run Arithmetic Grid during neutral consolidation regimes; deploy Dynamic DCA during deep macro bear valuation discounts."
     }
 ]
 
