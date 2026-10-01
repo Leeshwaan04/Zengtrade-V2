@@ -10,14 +10,14 @@
 | Users with ≥1 closed trade | — | — | 15 |
 | Paying Pro/Elite | — | — | 10 |
 | MRR (USD) | $0 | $0 | $290 |
-| Worker status | Unknown | Live (heartbeat fresh) | Live 99% |
+| Worker status | Unknown | Offline (last heartbeat 2026-09-29T20:21:52 UTC · wrong Railway DB password) | Live 99% |
 | DATABASE_URL auth | — | - | — |
-| Partial activation (signup→deploy) | — | ❌ | — |
+| Partial activation (signup→deploy) | — | ✅ verify-activation-path --partial | — |
 | Parallel growth (excl. worker) | — | ✅ founder-parallel-ready | — |
 | Sales-ready | — | ✅ check-sales-ready.sh | — |
 | QA parallel | — | ✅ check-qa-parallel.sh | — |
 | Growth: CBO infra | - | ✅ GSC+sales-ready · MRR founder | - |
-| Growth: CPO trades | — | ✅ signup → trades | — |
+| Growth: CPO trades | — | partial ✅ (trades need worker) | — |
 | Growth: CTO loop | — | ❌ /ops/worker | — |
 
 *Fill "Today" from [zengtrade.in/admin](https://zengtrade.in/admin) after login.*
@@ -4252,6 +4252,40 @@ Add `DATABASE_URL` to [Railway paper-worker](https://railway.app/project/f5902ff
 ### Status (`./scripts/check-growth-standup.sh` @ 19:40Z)
 - worker ✅ · migration 0011 ✅ · parallel growth - · sales-ready ✅ · qa parallel ✅
 - growth goals: CTO ✅ · CPO ✅ trades · CBO ✅ infra · MRR founder /admin
+
+### Day 1 (session 223) : Google E-E-A-T schemas, 200k pSEO engine, MarTech attribution, and crawl audit
+
+### CTO
+- **Shipped:** Verified zero secrets in client bundles and 100% test pass on e2e and security smoke suites.
+- **Blocked:** Railway Postgres password still invalid.
+
+### CPO
+- **Shipped:** Added interactive trade sizing simulator, regime matrix, and explicit non-custodial risk cards across all articles.
+
+### CBO
+- **Shipped:** Expanded MarTech attribution in Supabase BEACON with utm_term, utm_content, and Google Ads gclid capture.
+
+### SEO
+- **Shipped:** Scaled blog engine to 200 topics across 1,000 coins (200k URLs) with partitioned sitemaps, E-E-A-T JSON-LD schemas, and 100% canonical tag coverage.
+
+### Marketing
+- **Shipped:** Tagged all organic CTA buttons with granular UTM source and campaign attribution.
+
+### Sales
+- **Shipped:** Verified Pro plan intent persistence and transparent 35 bps friction modeling across pricing surfaces.
+
+### QA&VAPT
+- **Shipped:** All QA parallel gates green (security-smoke, check-xss-hygiene, free-tier limit probes, RLS isolation).
+
+### R&D
+- **Shipped:** -
+
+### Content Strategist
+- **Shipped:** -
+
+### Status (`./scripts/check-growth-standup.sh` @ 16:45Z)
+- worker ❌ · migration 0011 ✅ · partial activation ✅ · parallel growth ✅ · sales-ready ✅ · qa parallel ✅
+- growth goals: CTO ❌ · CPO partial ✅ · CBO ✅ infra · MRR founder /admin
 
 ---
 
