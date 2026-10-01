@@ -159,13 +159,16 @@ def blog_hub_main(posts):
       {posts_section}
       <div class="quant-research-section"{quant_style}>
         <h2>Quantitative Research Engine</h2>
-        <p>Explore over 10,000 data-driven, programmatic SEO articles analyzing regime-aware crypto trading strategies across the entire Binance-tradable universe.</p>
+        <p>Explore over 200,000 data-driven, programmatic research articles analyzing regime-aware crypto trading strategies, indicators, risk management, and market microstructure across the entire Binance-tradable universe.</p>
         <div class="quant-grid">
           <a class="quant-card" href="/blog/category/markets/"><b>Markets Analysis</b><span>Macro regimes and asset class dynamics.</span></a>
-          <a class="quant-card" href="/blog/category/trading/"><b>Trading Mechanics</b><span>Execution algorithms, risk, and slippage.</span></a>
+          <a class="quant-card" href="/blog/category/trading/"><b>Trading Mechanics</b><span>Execution algorithms, order flow, and slippage.</span></a>
           <a class="quant-card" href="/blog/category/investing/"><b>Systematic Investing</b><span>Long-term data-driven portfolio models.</span></a>
-          <a class="quant-card" href="/blog/category/algo/"><b>Algo Studio</b><span>Automated execution and backtesting.</span></a>
+          <a class="quant-card" href="/blog/category/algo/"><b>Algo Studio</b><span>Automated execution, backtesting, and latency.</span></a>
           <a class="quant-card" href="/blog/category/strategies/"><b>Trading Strategies</b><span>Deep dives into quantitative strategies.</span></a>
+          <a class="quant-card" href="/blog/category/indicators/"><b>Technical Indicators</b><span>Mathematical formulas and signal filters.</span></a>
+          <a class="quant-card" href="/blog/category/risk/"><b>Risk Management</b><span>Dynamic ATR sizing, stops, and kill-switches.</span></a>
+          <a class="quant-card" href="/blog/category/derivatives/"><b>Derivatives &amp; Arbitrage</b><span>Funding rates, cash &amp; carry, and basis trades.</span></a>
         </div>
       </div>
     </div>

@@ -29,7 +29,11 @@ Owner: SEO Manager autopilot (`.cursor/autopilot/seo.md`) · companion to `docs/
 | `/coins/{slug}/` × 150 | `{coin name} trading strategy` (e.g. `bitcoin trading strategy`) | Commercial investigation — researching a systematic approach to ONE coin |
 | `/learn/investing/` | `crypto investing for beginners` | Informational, top-of-funnel — asset-class literacy, not platform evaluation |
 | `/learn/trading/` | `crypto trading basics indicators and risk` | Informational, mid-funnel — deliberately NOT `crypto trading strategies` (home already owns that at commercial-investigation intent; this page is purely educational) |
-| `/learn/algo-studio/` | `how does algo trading work` | Informational, bottom-of-funnel — deliberately NOT `crypto algo trading platform` (home owns that at commercial intent); this page explains the concept and links into the real product |
+| `/learn/best-3commas-alternatives/` | `3commas alternative` / `best 3commas alternatives` | Commercial investigation — users searching for non-custodial bot alternatives |
+| `/learn/best-pionex-alternatives/` | `pionex alternative` / `trade algos on binance keys` | Commercial investigation — traders seeking non-custodial exchange trading |
+| `/learn/how-to-automate-binance-trading/` | `how to automate binance trading` / `binance trading bot tutorial` | Informational/Commercial — step-by-step Binance automation tutorial |
+| `/learn/grid-bot-vs-dca-bot/` | `grid bot vs dca bot` / `grid vs dca crypto strategy` | Informational — strategy showdown across market regimes |
+| `/learn/crypto-trading-bot-slippage-and-fees/` | `crypto trading bot fees and slippage` / `35 bps friction crypto bot` | Informational/Trust — breakdown of friction and net profitability |
 | `/login` | (no organic keyword target — conversion page, arrives via CTA only) | Transactional |
 
 The riskiest overlap is **home vs. the coins hub vs. individual coin pages** — all three could
