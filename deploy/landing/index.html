@@ -579,9 +579,7 @@ html[data-regime="bear"] .lp-var[data-var="bear"]{opacity:1;visibility:visible;t
 
 /* ---- Premium Animated Glassmorphic Footer ---- */
 @keyframes foot-aurora-drift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-@keyframes mascot-fade-bull { 0%, 25% { opacity: 1; transform: scale(1); } 33.33%, 91.66% { opacity: 0; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
-@keyframes mascot-fade-owl { 0%, 25% { opacity: 0; transform: scale(0.95); } 33.33%, 58.33% { opacity: 1; transform: scale(1); } 66.66%, 100% { opacity: 0; transform: scale(0.95); } }
-@keyframes mascot-fade-bear { 0%, 58.33% { opacity: 0; transform: scale(0.95); } 66.66%, 91.66% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(0.95); } }
+
 
 .lp-foot{border-top:1px solid var(--line);padding-top:clamp(48px,6vh,72px);padding-bottom:36px;background:var(--surface-2);position:relative;overflow:hidden;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
 .lp-foot::before{content:"";position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at center, rgba(0,171,78,0.05) 0%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(229,56,59,0.04) 0%, transparent 50%);background-size:200% 200%;animation:foot-aurora-drift 20s ease infinite;z-index:0;pointer-events:none}
@@ -606,16 +604,21 @@ html[data-regime="bear"] .lp-var[data-var="bear"]{opacity:1;visibility:visible;t
 .lp-flc-row{display:flex;justify-content:space-between;align-items:center;color:var(--slate)}
 .lp-flc-val{color:var(--navy);font-family:var(--mono);font-size:12px;display:flex;align-items:center;gap:8px}
 
-.lp-flc-carousel{position:relative;width:24px;height:24px;display:inline-block;margin-right:4px}
-.lp-flc-carousel img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;animation-duration:12s;animation-iteration-count:infinite;animation-timing-function:ease-in-out;opacity:0}
-.lp-flc-carousel img.cbull{animation-name:mascot-fade-bull}
-.lp-flc-carousel img.cowl{animation-name:mascot-fade-owl}
-.lp-flc-carousel img.cbear{animation-name:mascot-fade-bear}
-.lp-regime-txt{position:relative;display:inline-block;width:9ch;text-align:left}
-.lp-regime-txt span{position:absolute;top:50%;left:0;transform:translateY(-50%);animation-duration:12s;animation-iteration-count:infinite;animation-timing-function:ease-in-out;opacity:0}
-.lp-regime-txt span.cbull{animation-name:mascot-fade-bull;color:var(--accent)}
-.lp-regime-txt span.cowl{animation-name:mascot-fade-owl;color:var(--amber)}
-.lp-regime-txt span.cbear{animation-name:mascot-fade-bear;color:var(--red)}
+.lp-regime-pill{display:inline-flex;align-items:center}
+.lp-rp-state{display:none;align-items:center;gap:6px;font-family:var(--mono);font-size:12px}
+.lp-rp-icon{flex-shrink:0}
+.lp-rp-name{font-weight:800;letter-spacing:0.5px}
+.lp-rp-desc{color:var(--slate);font-weight:600}
+html[data-regime="bull"] .lp-rp-bull,
+html:not([data-regime]) .lp-rp-bull{display:inline-flex}
+.lp-rp-bull .lp-rp-icon,
+.lp-rp-bull .lp-rp-name{color:var(--accent,#00ab4e)}
+html[data-regime="neutral"] .lp-rp-neutral{display:inline-flex}
+.lp-rp-neutral .lp-rp-icon,
+.lp-rp-neutral .lp-rp-name{color:var(--amber,#e8821f)}
+html[data-regime="bear"] .lp-rp-bear{display:inline-flex}
+.lp-rp-bear .lp-rp-icon,
+.lp-rp-bear .lp-rp-name{color:var(--red,#e5383b)}
 
 .lp-flc-btn{display:inline-block;text-align:center;padding:10px 16px;background:rgba(0,171,78,0.1);border:1px solid rgba(0,171,78,0.35);border-radius:10px;font-size:13px;font-weight:700;color:var(--accent-t, var(--accent));text-decoration:none;transition:all .25s ease;z-index:1;box-shadow:0 2px 8px rgba(0,171,78,0.08)}
 [data-surface="night"] .lp-flc-btn{background:linear-gradient(180deg,rgba(0,171,78,0.15),rgba(0,171,78,0.05));border:1px solid rgba(0,171,78,0.4);color:var(--accent);box-shadow:0 2px 8px rgba(0,171,78,0.15)}
@@ -1399,16 +1402,23 @@ html.js .lp-rv.in{opacity:1;transform:none}
           <div class="lp-flc-row">
             <span>Market Regime:</span>
             <strong class="lp-flc-val">
-              <span class="lp-flc-carousel" aria-hidden="true">
-                <img src="/assets/mascot-bull.png" class="cbull" alt="" />
-                <img src="/assets/mascot-neutral.png" class="cowl" alt="" />
-                <img src="/assets/mascot-bear.png" class="cbear" alt="" />
+              <span class="lp-regime-pill" id="lpFootRegime" aria-label="Current market regime">
+                <span class="lp-rp-state lp-rp-bull">
+                  <svg class="lp-rp-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8C2 5 6 3 8 6l2 3"/><path d="M20 8c2-3-2-5-4-2l-2 3"/><path d="M7 10c0-2 2-4 5-4s5 2 5 4v5c0 4-3 6-5 6s-5-2-5-6v-5z"/><circle cx="9.5" cy="13" r="1.2" fill="currentColor"/><circle cx="14.5" cy="13" r="1.2" fill="currentColor"/></svg>
+                  <span class="lp-rp-name">BULL</span>
+                  <span class="lp-rp-desc">Expansion</span>
+                </span>
+                <span class="lp-rp-state lp-rp-neutral">
+                  <svg class="lp-rp-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><circle cx="9" cy="12" r="2.5"/><circle cx="15" cy="12" r="2.5"/><path d="M12 14.5l-1 2h2l-1-2z"/><path d="M8 5l2 2M16 5l-2 2"/></svg>
+                  <span class="lp-rp-name">NEUTRAL</span>
+                  <span class="lp-rp-desc">Rangebound</span>
+                </span>
+                <span class="lp-rp-state lp-rp-bear">
+                  <svg class="lp-rp-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="12" cy="14" r="8"/><path d="M10 13h.01M14 13h.01"/><path d="M10 17c1 1 3 1 4 0"/></svg>
+                  <span class="lp-rp-name">BEAR</span>
+                  <span class="lp-rp-desc">Contraction</span>
+                </span>
               </span>
-              <span class="lp-regime-txt">
-                <span class="cbull">BULL</span>
-                <span class="cowl">NEUTRAL</span>
-                <span class="cbear">BEAR</span>
-              </span> Expansion
             </strong>
           </div>
           <div class="lp-flc-row">
