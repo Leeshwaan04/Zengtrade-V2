@@ -596,7 +596,7 @@ function renderRegimeBar(r){
       <span class="rb-mini-ic rb-emo-${r}">${icon(r,13)}</span><b>${cfg.title}</b><span class="rb-mini-kick">${cfg.kick} · ${pTag}</span><span class="rb-chev">▾</span></button>`;
   } else {
     bar.innerHTML=`
-      <div class="rb-badge"><div class="rb-emo rb-emo-${r}"><img class="rb-mascot" src="assets/mascot-${r}.png" alt="" draggable="false"><span class="rb-emo-ic" style="display:none">${icon(r,21)}</span></div>
+      <div class="rb-badge"><div class="rb-emo rb-emo-${r}"><img class="rb-mascot" src="/assets/mascot-${r}.png" alt="" draggable="false"><span class="rb-emo-ic" style="display:none">${icon(r,21)}</span></div>
         <div><div class="rb-title"><small>${cfg.kick} · ${pTag}</small>${cfg.title}</div></div></div>
       <div class="rb-read">${read}</div>
       <button class="rb-toggle mini" id="rbToggle" aria-expanded="true" aria-label="Minimize market read" title="Minimize">${icon('compress',13)}<span>Minimize</span></button>`;
@@ -1029,7 +1029,7 @@ function buildMascot(r){
     <span class="rv-burst"></span><span class="rv-burst b2"></span>
     <div class="rv-streaks">${streaks}</div>${smoke}
     <div class="rv-glyph rv-${r}">
-      <img class="rv-img" src="assets/mascot-${r}.png" alt="" draggable="false">
+      <img class="rv-img" src="/assets/mascot-${r}.png" alt="" draggable="false">
       <svg viewBox="0 0 200 200" class="rv-svg" style="display:none">${MASCOTS[r]}</svg>
     </div>
     ${pcl}

@@ -27,7 +27,7 @@
 <meta name="twitter:description" content="Paper-trade, backtest and forward-test algorithmic crypto strategies on live data before risking a dollar. Honest about every cost. Non-custodial.">
 <meta name="twitter:image" content="https://zengtrade.in/assets/mascot-bull.png">
 
-<link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/logo.svg">
 
 <!-- structured data: helps Google understand the product (rich results, knowledge graph) -->
 <script type="application/ld+json">
@@ -854,7 +854,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
       <div class="regime-bar lp-stage" id="regimeStage" role="tabpanel" aria-labelledby="tab-bull" tabindex="0">
         <div class="rb-badge">
           <div class="rb-emo rb-emo-bull" id="rbEmo">
-            <img class="rb-mascot" id="rbMascot" src="assets/mascot-bull.png" width="168" height="168" alt="" draggable="false" fetchpriority="high" decoding="async">
+            <img class="rb-mascot" id="rbMascot" src="/assets/mascot-bull.png" width="168" height="168" alt="" draggable="false" fetchpriority="high" decoding="async">
           </div>
         </div>
 
@@ -1567,7 +1567,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
     root.setAttribute("data-regime", regime);
 
     // swap the real mascot, exactly as the terminal does
-    if (mascot) mascot.src = "assets/mascot-" + regime + ".png";
+    if (mascot) mascot.src = "/assets/mascot-" + regime + ".png";
     if (emo) emo.className = "rb-emo rb-emo-" + regime;
     if (stage) stage.setAttribute("aria-labelledby", "tab-" + regime);
 
@@ -1620,7 +1620,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
     REGIMES.forEach(function (r) {
       if (r === root.getAttribute("data-regime")) return;
       var i = new Image();
-      i.src = "assets/mascot-" + r + ".png";
+      i.src = "/assets/mascot-" + r + ".png";
     });
   });
 

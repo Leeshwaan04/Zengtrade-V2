@@ -40,7 +40,10 @@ tail += '\n<script src="/site.js" defer></script>'
 def absolutize(x):
     x = x.replace('href="assets/', 'href="/assets/').replace('src="assets/', 'src="/assets/')
     x = x.replace('url(assets/', 'url(/assets/').replace('"assets/mascot-', '"/assets/mascot-')
+    x = x.replace("'assets/mascot-", "'/assets/mascot-")
+    x = x.replace('assets/mascot-', '/assets/mascot-')
     return x
+site_js = absolutize(site_js)
 css, prebody, chrome, main_hiw, tail = map(absolutize, (css, prebody, chrome, main_hiw, tail))
 
 # rewire the mega-nav to the real cross-page URLs
@@ -135,7 +138,6 @@ def shell(title, desc, canon, main, extra_head=""):
     return f"""<!DOCTYPE html><html lang="en" data-regime="bull"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="google-site-verification" content="4PH6tBz21xuJcfMqEBPBNHeAnsjUgybfawZpg8sYLc0">
-<meta http-equiv="Content-Security-Policy" content="frame-ancestors 'none'">
 <script>document.documentElement.className+=" js";</script>
 <title>{title}</title>
 <meta name="description" content="{desc}">
@@ -984,6 +986,7 @@ headers_content = """
 
 /*
   X-Frame-Options: DENY
+  Content-Security-Policy: frame-ancestors 'none'
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
