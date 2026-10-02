@@ -41,9 +41,12 @@ DIST = os.path.join(HERE, "deploy", "landing", "dist")
 class Handler(http.server.SimpleHTTPRequestHandler):
     def translate_path(self, path):
         clean = path.split("?", 1)[0].split("#", 1)[0].strip("/")
-        if clean in ("home", "landing"):
-            return os.path.join(DIST, "index.html")
-        if clean in ("", "index.html", "dashboard"):
+        if clean in ("", "index.html"):
+            dist_idx = os.path.join(DIST, "index.html")
+            if os.path.isfile(dist_idx):
+                return dist_idx
+            return os.path.join(HERE, "index.html")
+        if clean == "dashboard":
             return os.path.join(HERE, "index.html")
 
         # 1. Exact match in HERE (assets, etc.)
@@ -68,7 +71,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         clean = self.path.split("?", 1)[0].split("#", 1)[0].strip("/")
-        if clean in ("", "index.html", "dashboard"):
+        if clean == "dashboard":
+            return self._serve_index()
+        if clean in ("", "index.html"):
+            dist_idx = os.path.join(DIST, "index.html")
+            if os.path.isfile(dist_idx):
+                return self._serve_file(dist_idx)
             return self._serve_index()
 
         # Dynamic pSEO fall-through if file not written in DIST
@@ -101,6 +109,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+
+    def _serve_file(self, file_path: str):
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                html = f.read()
+        except OSError:
+            return self.send_error(404)
+        return self._serve_html_str(html)
 
     def _serve_index(self):
         try:
