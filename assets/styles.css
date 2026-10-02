@@ -840,6 +840,318 @@ html[data-surface="night"] .profile{background:var(--surface-2);color:var(--navy
 html[data-surface="night"] .regime-bar{box-shadow:inset 0 -1px 0 var(--line),0 0 50px -24px var(--accent-line)}
 html[data-surface="night"] .surface-toggle{color:var(--amber)}
 
+/* ===================== NIGHT / DARK MODE REFINEMENTS ===================== */
+html[data-surface="night"] .av-head,
+html[data-theme="dark"] .av-head {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+  box-shadow: var(--shadow) !important;
+}
+
+html[data-surface="night"] .av-scroll,
+html[data-theme="dark"] .av-scroll {
+  background: transparent !important;
+  border-color: var(--line) !important;
+}
+
+html[data-surface="night"] .av-tabs,
+html[data-theme="dark"] .av-tabs,
+html[data-surface="night"] .sec-tabs,
+html[data-theme="dark"] .sec-tabs {
+  background: var(--surface-2) !important;
+  border: 1px solid var(--line) !important;
+}
+
+html[data-surface="night"] .av-tab,
+html[data-theme="dark"] .av-tab,
+html[data-surface="night"] .sec-tab,
+html[data-theme="dark"] .sec-tab {
+  color: var(--slate) !important;
+}
+
+html[data-surface="night"] .av-tab:hover,
+html[data-theme="dark"] .av-tab:hover,
+html[data-surface="night"] .sec-tab:hover,
+html[data-theme="dark"] .sec-tab:hover {
+  color: var(--navy) !important;
+}
+
+html[data-surface="night"] .av-tab.on,
+html[data-theme="dark"] .av-tab.on,
+html[data-surface="night"] .sec-tab.on,
+html[data-theme="dark"] .sec-tab.on {
+  background: var(--surface) !important;
+  color: var(--accent) !important;
+  border: 1px solid var(--line-2) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+}
+
+html[data-surface="night"] .lib-instr-tab,
+html[data-theme="dark"] .lib-instr-tab {
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: var(--shadow) !important;
+}
+
+html[data-surface="night"] .lib-instr-tab:hover,
+html[data-theme="dark"] .lib-instr-tab:hover {
+  background: var(--surface-2) !important;
+  border-color: var(--accent-line) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.4) !important;
+}
+
+html[data-surface="night"] .lib-instr-tab.on,
+html[data-theme="dark"] .lib-instr-tab.on {
+  background: rgba(31, 208, 122, 0.12) !important;
+  border: 1px solid var(--accent) !important;
+  box-shadow: 0 0 24px -6px var(--accent-line), var(--shadow) !important;
+  transform: translateY(-1px);
+}
+
+html[data-surface="night"] .lib-instr-tab .lii-top,
+html[data-theme="dark"] .lib-instr-tab .lii-top {
+  color: var(--navy) !important;
+}
+
+html[data-surface="night"] .lib-instr-tab .lii-top .ico,
+html[data-theme="dark"] .lib-instr-tab .lii-top .ico {
+  color: var(--accent) !important;
+}
+
+html[data-surface="night"] .lib-instr-tab .lii-desc,
+html[data-theme="dark"] .lib-instr-tab .lii-desc {
+  color: var(--slate) !important;
+}
+
+html[data-surface="night"] .lib-instr-tab .lii-dep,
+html[data-theme="dark"] .lib-instr-tab .lii-dep {
+  color: var(--slate-2) !important;
+}
+
+html[data-surface="night"] .lib-instr-tab .lii-dep b,
+html[data-theme="dark"] .lib-instr-tab .lii-dep b {
+  color: var(--navy) !important;
+}
+
+html[data-surface="night"] .lib-instr-tab .lii-n,
+html[data-theme="dark"] .lib-instr-tab .lii-n {
+  background: var(--surface-2) !important;
+  color: var(--slate-2) !important;
+  border: 1px solid var(--line) !important;
+}
+
+html[data-surface="night"] .lib-instr-tab.on .lii-top,
+html[data-theme="dark"] .lib-instr-tab.on .lii-top {
+  color: var(--accent-d) !important;
+}
+
+html[data-surface="night"] .lib-instr-tab.on .lii-desc,
+html[data-theme="dark"] .lib-instr-tab.on .lii-desc {
+  color: var(--accent) !important;
+  opacity: 0.9 !important;
+}
+
+html[data-surface="night"] .lib-instr-tab.on .lii-dep,
+html[data-theme="dark"] .lib-instr-tab.on .lii-dep {
+  color: var(--accent) !important;
+  opacity: 0.9 !important;
+}
+
+html[data-surface="night"] .lib-instr-tab.on .lii-dep b,
+html[data-theme="dark"] .lib-instr-tab.on .lii-dep b {
+  color: #fff !important;
+}
+
+html[data-surface="night"] .lib-instr-tab.on .lii-n,
+html[data-theme="dark"] .lib-instr-tab.on .lii-n {
+  background: var(--accent) !important;
+  color: #06121f !important;
+  border-color: transparent !important;
+}
+
+html[data-surface="night"] .sec-stat,
+html[data-theme="dark"] .sec-stat {
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: var(--shadow) !important;
+}
+
+html[data-surface="night"] .sec-stat:hover,
+html[data-theme="dark"] .sec-stat:hover {
+  background: var(--surface-2) !important;
+  border-color: var(--accent-line) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important;
+}
+
+html[data-surface="night"] .sec-stat .ss-l,
+html[data-theme="dark"] .sec-stat .ss-l {
+  color: var(--slate) !important;
+}
+
+html[data-surface="night"] .sec-stat .ss-v,
+html[data-theme="dark"] .sec-stat .ss-v {
+  color: var(--navy) !important;
+}
+
+html[data-surface="night"] .sec-stat .ss-v.up,
+html[data-theme="dark"] .sec-stat .ss-v.up {
+  color: var(--green) !important;
+}
+
+html[data-surface="night"] .sec-stat .ss-v.down,
+html[data-theme="dark"] .sec-stat .ss-v.down {
+  color: var(--red) !important;
+}
+
+html[data-surface="night"] .sec-stat .ss-s,
+html[data-theme="dark"] .sec-stat .ss-s {
+  color: var(--slate-2) !important;
+}
+
+html[data-surface="night"] button.ss-help,
+html[data-theme="dark"] button.ss-help {
+  color: var(--slate) !important;
+  text-decoration-color: var(--slate-2) !important;
+}
+
+html[data-surface="night"] button.ss-help:hover,
+html[data-theme="dark"] button.ss-help:hover {
+  color: var(--accent) !important;
+  text-decoration-color: var(--accent) !important;
+}
+
+html[data-surface="night"] .ss-q,
+html[data-theme="dark"] .ss-q {
+  background: var(--surface-2) !important;
+  border: 1px solid var(--line) !important;
+  color: var(--slate) !important;
+}
+
+html[data-surface="night"] .cx-preview-note,
+html[data-theme="dark"] .cx-preview-note {
+  background: rgba(245, 177, 72, 0.08) !important;
+  border: 1px solid rgba(245, 177, 72, 0.25) !important;
+  color: #e2c18c !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2) !important;
+}
+
+html[data-surface="night"] .cx-preview-note b,
+html[data-theme="dark"] .cx-preview-note b {
+  color: #f5b148 !important;
+}
+
+html[data-surface="night"] .cx-preview-note .ico,
+html[data-theme="dark"] .cx-preview-note .ico,
+html[data-surface="night"] .cx-preview-note svg,
+html[data-theme="dark"] .cx-preview-note svg {
+  color: #f5b148 !important;
+}
+
+html[data-surface="night"] .cx-card,
+html[data-theme="dark"] .cx-card,
+html[data-surface="night"] .cx-mv-col,
+html[data-theme="dark"] .cx-mv-col,
+html[data-surface="night"] .cx-lb-grp,
+html[data-theme="dark"] .cx-lb-grp,
+html[data-surface="night"] .cxm-tbl,
+html[data-theme="dark"] .cxm-tbl,
+html[data-surface="night"] .cxbt-chart,
+html[data-theme="dark"] .cxbt-chart,
+html[data-surface="night"] .bt-an,
+html[data-theme="dark"] .bt-an,
+html[data-surface="night"] .bt-vr,
+html[data-theme="dark"] .bt-vr,
+html[data-surface="night"] .lb-row,
+html[data-theme="dark"] .lb-row {
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: var(--shadow) !important;
+}
+
+html[data-surface="night"] .cx-card:hover,
+html[data-theme="dark"] .cx-card:hover,
+html[data-surface="night"] .lb-row:hover,
+html[data-theme="dark"] .lb-row:hover {
+  background: var(--surface-2) !important;
+  border-color: var(--accent-line) !important;
+}
+
+html[data-surface="night"] .bt-anc,
+html[data-theme="dark"] .bt-anc,
+html[data-surface="night"] .bt-vrcol,
+html[data-theme="dark"] .bt-vrcol,
+html[data-surface="night"] .cxm-head,
+html[data-theme="dark"] .cxm-head,
+html[data-surface="night"] .cx-mv-h,
+html[data-theme="dark"] .cx-mv-h,
+html[data-surface="night"] .cx-lb-h,
+html[data-theme="dark"] .cx-lb-h {
+  background: var(--surface-2) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-surface="night"] .cxm-row,
+html[data-theme="dark"] .cxm-row,
+html[data-surface="night"] .cx-mv-row,
+html[data-theme="dark"] .cx-mv-row,
+html[data-surface="night"] .cx-lb-row,
+html[data-theme="dark"] .cx-lb-row {
+  border-color: var(--line) !important;
+}
+
+html[data-surface="night"] .cxm-row:hover,
+html[data-theme="dark"] .cxm-row:hover {
+  background: var(--surface-2) !important;
+}
+
+html[data-surface="night"] .cxm-chip,
+html[data-theme="dark"] .cxm-chip {
+  background: var(--surface-2) !important;
+  border-color: var(--line) !important;
+  color: var(--slate) !important;
+}
+
+html[data-surface="night"] .msc-chip,
+html[data-theme="dark"] .msc-chip,
+html[data-surface="night"] .cxbt-chip,
+html[data-theme="dark"] .cxbt-chip,
+html[data-surface="night"] .mon-dep-cell,
+html[data-theme="dark"] .mon-dep-cell {
+  background: var(--surface-2) !important;
+  border: 1px solid var(--line) !important;
+  color: var(--slate) !important;
+  box-shadow: none !important;
+}
+
+html[data-surface="night"] .msc-chip:hover,
+html[data-theme="dark"] .msc-chip:hover,
+html[data-surface="night"] .cxbt-chip:hover,
+html[data-theme="dark"] .cxbt-chip:hover,
+html[data-surface="night"] .mon-dep-cell:hover,
+html[data-theme="dark"] .mon-dep-cell:hover {
+  background: var(--surface) !important;
+  border-color: var(--accent-line) !important;
+  color: var(--navy) !important;
+}
+
+html[data-surface="night"] .msc-chip.on,
+html[data-theme="dark"] .msc-chip.on,
+html[data-surface="night"] .cxbt-chip.on,
+html[data-theme="dark"] .cxbt-chip.on {
+  background: var(--accent) !important;
+  border-color: transparent !important;
+  color: #06121f !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 14px rgba(31,208,122,0.3) !important;
+}
+
+html[data-surface="night"] .lb-rank,
+html[data-theme="dark"] .lb-rank {
+  background: var(--surface-2) !important;
+  color: var(--slate) !important;
+}
+
 /* ===================== PREMIUM EXPERIENCE LAYER ===================== */
 /* ambient animated aurora + data grid (regime-tinted, behind content) */
 .ambient{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
