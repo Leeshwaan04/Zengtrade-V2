@@ -47,9 +47,14 @@ if [[ "$billing_enabled" != "True" ]]; then
   echo "If you have another billing-enabled GCP project, specify it via:"
   echo "  GCP_PROJECT_ID=my-active-project ./scripts/deploy-worker-gcp.sh"
   echo ""
-  read -r -p "Have you enabled/linked billing on this project? (y/N) " confirm
-  if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-    echo "Aborting until billing is enabled on Google Cloud."
+  if [[ -t 0 ]]; then
+    read -r -p "Have you enabled/linked billing on this project? (y/N) " confirm
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+      echo "Aborting until billing is enabled on Google Cloud."
+      exit 1
+    fi
+  else
+    echo "ERROR: Project '$GCP_PROJECT' has billingEnabled=false. Enable billing in GCP Console before deploying."
     exit 1
   fi
 fi
@@ -73,12 +78,16 @@ if [[ -z "$DATABASE_URL" ]]; then
   echo "DATABASE_URL is required for the worker to connect to Supabase."
   if [[ -n "${DATABASE_PASSWORD:-}" ]]; then
     DATABASE_URL="postgresql://postgres.ponvarxeytfcntckczbn:${DATABASE_PASSWORD}@aws-0-ap-south-1.pooler.supabase.com:5432/postgres"
-  else
+  elif [[ -t 0 ]]; then
     echo "Enter your Supabase database connection string"
     echo "(e.g. postgresql://postgres.ponvarxeytfcntckczbn:[PASSWORD]@aws-0-ap-south-1.pooler.supabase.com:5432/postgres):"
     read -r -s -p "DATABASE_URL: " input_url
     echo ""
     DATABASE_URL="$input_url"
+  else
+    echo "ERROR: DATABASE_URL or DATABASE_PASSWORD must be provided in the environment."
+    echo "Usage: DATABASE_PASSWORD='your_password' ./scripts/deploy-worker-gcp.sh"
+    exit 1
   fi
 fi
 
