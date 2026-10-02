@@ -33,6 +33,34 @@ tail = SRC[SRC.index("</main>") + len("</main>"): SRC.index("</body>")]     # fo
 # Extract shared inline scripts from tail into site.js to save ~1.5 GB across 150k pages
 tail_scripts = re.findall(r'<script[^>]*>(.*?)</script>', tail, re.DOTALL)
 site_js = "\n\n".join(s.strip() for s in tail_scripts)
+# Speculative hover prefetcher for instantaneous sub-30ms page transitions
+site_js += """
+;(function(){
+  var seen = {};
+  function pf(u){
+    if (!u || seen[u] || u.charAt(0) === '#' || (u.indexOf('http') === 0 && u.indexOf(location.origin) !== 0)) return;
+    seen[u] = true;
+    var l = document.createElement('link');
+    l.rel = 'prefetch';
+    l.href = u;
+    document.head.appendChild(l);
+  }
+  document.addEventListener('mouseover', function(e){
+    var a = e.target.closest('a');
+    if (a) {
+      var h = a.getAttribute('href');
+      if (h && (h.charAt(0) === '/' || h.indexOf(location.origin) === 0)) pf(h);
+    }
+  }, {passive: true});
+  document.addEventListener('touchstart', function(e){
+    var a = e.target.closest('a');
+    if (a) {
+      var h = a.getAttribute('href');
+      if (h && (h.charAt(0) === '/' || h.indexOf(location.origin) === 0)) pf(h);
+    }
+  }, {passive: true});
+})();
+"""
 tail = re.sub(r'<script[^>]*>.*?</script>', '', tail, flags=re.DOTALL)
 tail += '\n<script src="/site.js" defer></script>'
 
@@ -68,6 +96,7 @@ _FONTS_URL = "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@40
 # stylesheet request no longer delays first paint; noscript keeps it working with JS disabled.
 FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
          '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+         '<link rel="preconnect" href="https://data-api.binance.vision" crossorigin>'
          f'<link rel="preload" as="style" href="{_FONTS_URL}">'
          f'<link href="{_FONTS_URL}" rel="stylesheet" media="print" onload="this.media=\'all\'">'
          f'<noscript><link rel="stylesheet" href="{_FONTS_URL}"></noscript>')
@@ -522,6 +551,194 @@ open(os.path.join(DIST, "_redirects"), "w").write(   # kept for hosts that DO re
     "/.git/*   /404.html   404\n"     # VAPT: block git metadata exposure
     "/.env*    /404.html   404\n"     # VAPT: block env file exposure
 )
+
+PAGE_404_MAIN = """<main id="main">
+  <section class="lp-hero" style="min-height:68vh;display:flex;align-items:center;padding:clamp(60px,10vh,110px) 0;">
+    <div class="lp-wrap" style="text-align:center;max-width:820px;margin:0 auto;width:100%;">
+      
+      <!-- Smart Dynamic Route Recovery Card -->
+      <div id="dynamicResolver" style="display:none;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:clamp(24px,4vw,36px);margin-bottom:32px;box-shadow:0 16px 40px rgba(0,0,0,0.06);text-align:left;position:relative;overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+          <div style="display:inline-flex;align-items:center;gap:8px;">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent,#00ab4e);box-shadow:0 0 10px var(--accent,#00ab4e);"></span>
+            <span style="font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:1px;color:var(--accent,#00ab4e);text-transform:uppercase;" id="resTag">DYNAMIC QUANTITATIVE ROUTE</span>
+          </div>
+          <div id="resLivePrice" style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--navy);"></div>
+        </div>
+        
+        <h2 id="resTitle" class="lp-h2" style="margin:0 0 12px;font-size:clamp(22px,3.2vw,34px);line-height:1.2;">Resolving Model...</h2>
+        <p id="resDesc" class="lp-sub" style="margin:0 0 24px;font-size:15px;color:var(--slate);line-height:1.6;max-width:100%;"></p>
+        
+        <div id="resActions" class="lp-cta-row" style="margin:0;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+        </div>
+      </div>
+
+      <!-- Standard 404 Fallback View -->
+      <div id="default404">
+        <div class="lp-eyebrow" style="justify-content:center;"><span class="dot"></span> HTTP 404 - ORDER BOOK EXHAUSTED</div>
+        <h1 class="lp-h1" style="font-size:clamp(44px,8vw,80px);margin-bottom:14px;line-height:1.05;">404 <span class="hl">Off The Tape</span></h1>
+        <p class="lp-sub" style="max-width:620px;margin:0 auto 32px;font-size:clamp(15px,2vw,17px);line-height:1.6;">
+          The market moves fast, but the page or execution model you requested is not currently active on this order book. It may have moved or is being recalibrated in Algo Studio.
+        </p>
+
+        <div style="max-width:480px;margin:0 auto 36px;">
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="errSearchInput" placeholder="Search 340+ coins or strategies (e.g. AIXBT, BTC, Supertrend)..." style="flex:1;padding:12px 16px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--navy);font-family:inherit;font-size:14px;outline:none;" onkeydown="if(event.key==='Enter')submitErrSearch()">
+            <button type="button" onclick="submitErrSearch()" class="lp-cta primary" style="padding:10px 20px;border-radius:12px;cursor:pointer;white-space:nowrap;">Search</button>
+          </div>
+        </div>
+
+        <div class="lp-cta-row center" style="margin-bottom:28px;">
+          <a class="lp-cta primary" href="/dashboard/">Open Algo Studio</a>
+          <a class="lp-cta ghost" href="/coins/">Browse 340+ Coins</a>
+          <a class="lp-cta ghost" href="/sitemap/">Sitemap Directory</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</main>
+<script>
+function submitErrSearch(){
+  var inp = document.getElementById('errSearchInput');
+  if (!inp || !inp.value.trim()) return;
+  var q = inp.value.trim().toLowerCase();
+  if (q.indexOf(' ') === -1 && q.length <= 10) {
+    location.href = '/coins/' + encodeURIComponent(q) + '/';
+  } else {
+    location.href = '/sitemap/?q=' + encodeURIComponent(q);
+  }
+}
+
+(function(){
+  try {
+    var raw = window.location.pathname.replace(/^\\/+|\\/+$/g, '');
+    var parts = raw.split('/');
+    if (!parts || !parts[0]) return;
+
+    var stratMap = {
+      'ichimoku-cloud-breakout': 'Ichimoku Cloud Kumo Breakout',
+      'supertrend-breakout': 'Supertrend Volatility Breakout',
+      'dual-ema-cross': 'Dual EMA Golden Cross (50/200)',
+      'bollinger-mean-reversion': 'Bollinger Band Mean Reversion',
+      'funding-rate-arbitrage': 'Funding Rate Cash & Carry Arbitrage',
+      'dynamic-dca-grid': 'Dynamic DCA Grid Accumulation',
+      'macd-divergence': 'MACD Momentum Divergence',
+      'rsi-mean-reversion': 'RSI Dynamic Mean Reversion',
+      'volume-breakout': 'Volume Breakout & Liquidity Absorption',
+      'parabolic-sar': 'Parabolic SAR Trailing Momentum',
+      'keltner-squeeze': 'Keltner Channel Volatility Squeeze',
+      'stochastic-rsi': 'Stochastic RSI Reversal',
+      'atr-trailing-ladder': 'ATR Trailing Profit Ladder',
+      'obv-institutional-flow': 'OBV Institutional Flow Confirmation',
+      'donchian-breakout': 'Donchian Channel Trend Breakout'
+    };
+
+    var indMap = {
+      'rsi': 'Relative Strength Index (RSI)',
+      'macd': 'MACD Momentum Oscillator',
+      'supertrend': 'Supertrend ATR Directional',
+      'bollinger-bands': 'Bollinger Bands Volatility',
+      'ema-200': '200 Exponential Moving Average',
+      'vwap': 'Volume-Weighted Average Price',
+      'atr': 'Average True Range Volatility',
+      'stochastic-rsi': 'Stochastic RSI Oscillator'
+    };
+
+    var tfMap = {
+      '5m': '5-Minute Scalp',
+      '15m': '15-Minute Intraday',
+      '1h': '1-Hour Swing',
+      '4h': '4-Hour Trend',
+      '1d': '1-Day Macro'
+    };
+
+    var resolver = document.getElementById('dynamicResolver');
+    var defView = document.getElementById('default404');
+    var resTitle = document.getElementById('resTitle');
+    var resDesc = document.getElementById('resDesc');
+    var resActions = document.getElementById('resActions');
+    var resPrice = document.getElementById('resLivePrice');
+
+    function checkLivePrice(sym) {
+      if (!sym) return;
+      var url = 'https://data-api.binance.vision/api/v3/ticker/24hr?symbol=' + sym.toUpperCase() + 'USDT';
+      fetch(url).then(function(r){return r.json();}).then(function(d){
+        if (d && d.lastPrice && resPrice) {
+          var p = +d.lastPrice;
+          var chg = +d.priceChangePercent;
+          var sign = chg >= 0 ? '+' : '';
+          var col = chg >= 0 ? 'var(--accent,#00ab4e)' : 'var(--red,#e5383b)';
+          resPrice.innerHTML = sym.toUpperCase() + ' Spot: <strong>$' + p.toLocaleString('en-US',{maximumFractionDigits:p>=1?2:4}) + '</strong> <span style="color:' + col + '">(' + sign + chg.toFixed(2) + '% 24h)</span>';
+        }
+      }).catch(function(){});
+    }
+
+    if (parts[0] === 'strategies' && parts.length >= 3) {
+      var sSlug = parts[1];
+      var cSlug = parts[2];
+      var tfSlug = parts[3] || '15m';
+      var sName = stratMap[sSlug] || sSlug.replace(/-/g, ' ').toUpperCase();
+      var cName = cSlug.toUpperCase();
+      var tfName = tfMap[tfSlug] || tfSlug.toUpperCase();
+
+      document.title = sName + ' (' + cName + ') ' + tfName + ' | zengtrade';
+      resTitle.innerHTML = sName + ' <span class="hl">' + cName + '</span> (' + tfName + ')';
+      resDesc.innerHTML = 'You navigated to the <strong>' + tfName + '</strong> quantitative horizon for <strong>' + cName + '</strong>. While this specific horizon sub-file is compiling, you can immediately test this strategy on live market data in Algo Studio or view the ' + cName + ' workstation.';
+
+      resActions.innerHTML = 
+        '<a class="lp-cta primary" href="/dashboard/?coin=' + encodeURIComponent(cName) + '&strat=' + encodeURIComponent(sSlug) + '&tf=' + encodeURIComponent(tfSlug) + '">Simulate ' + cName + ' in Algo Studio →</a>' +
+        '<a class="lp-cta ghost" href="/coins/' + encodeURIComponent(cSlug) + '/">' + cName + ' Coin Hub & Live Chart</a>' +
+        '<a class="lp-cta ghost" href="/strategies/' + encodeURIComponent(sSlug) + '/bitcoin/">' + sName + ' Base Guide</a>';
+
+      resolver.style.display = 'block';
+      defView.style.display = 'none';
+      checkLivePrice(cName);
+      return;
+    }
+
+    if (parts[0] === 'indicators' && parts.length >= 3) {
+      var iSlug = parts[1];
+      var cSlug = parts[2];
+      var iName = indMap[iSlug] || iSlug.replace(/-/g, ' ').toUpperCase();
+      var cName = cSlug.toUpperCase();
+
+      document.title = iName + ' on ' + cName + ' | zengtrade';
+      resTitle.innerHTML = iName + ' on <span class="hl">' + cName + '</span>';
+      resDesc.innerHTML = 'Explore quantitative signal triggers, historical oscillator thresholds, and regime filters for <strong>' + cName + '</strong>.';
+
+      resActions.innerHTML = 
+        '<a class="lp-cta primary" href="/dashboard/?coin=' + encodeURIComponent(cName) + '">Analyze ' + cName + ' in Algo Studio →</a>' +
+        '<a class="lp-cta ghost" href="/coins/' + encodeURIComponent(cSlug) + '/">' + cName + ' Coin Hub & Live Chart</a>' +
+        '<a class="lp-cta ghost" href="/indicators/' + encodeURIComponent(iSlug) + '/bitcoin/">' + iName + ' Formula Guide</a>';
+
+      resolver.style.display = 'block';
+      defView.style.display = 'none';
+      checkLivePrice(cName);
+      return;
+    }
+
+    if (parts[0] === 'coins' && parts.length >= 2) {
+      var cSlug = parts[1];
+      var cName = cSlug.toUpperCase();
+      document.title = cName + ' Trading Strategies | zengtrade';
+      resTitle.innerHTML = 'Workstation for <span class="hl">' + cName + '</span>';
+      resDesc.innerHTML = 'Launch paper trading and multi-timeframe regime analysis for <strong>' + cName + '</strong> directly in Algo Studio.';
+
+      resActions.innerHTML = 
+        '<a class="lp-cta primary" href="/dashboard/?coin=' + encodeURIComponent(cName) + '">Open ' + cName + ' in Algo Studio →</a>' +
+        '<a class="lp-cta ghost" href="/coins/">Browse 340+ Cryptocurrency Workstations</a>';
+
+      resolver.style.display = 'block';
+      defView.style.display = 'none';
+      checkLivePrice(cName);
+      return;
+    }
+
+  } catch(e) {}
+})();
+</script>
+"""
 
 urls = []
 def emit(path, html_str, canon):
@@ -995,6 +1212,22 @@ headers_content = """
 """
 open(os.path.join(DIST, "_headers"), "w").write(headers_content.strip() + "\n")
 print("  \u2713 _headers written (Cloudflare security headers + .git block)")
+
+# ---- 404.html (GitHub Pages branded error page) -----------------------------------------
+# GitHub Pages automatically serves /404.html for every unresolvable path.
+# We generate a full branded page that uses client-side JS to:
+#  1. Detect route patterns (strategies/*, indicators/*, coins/*)
+#  2. Show a smart "Dynamic Route Resolver" card with live price + CTA
+#  3. Fall back to a styled 404 page with search if the path is unknown
+_html_404 = shell(
+    "Page Not Found | zengtrade",
+    "The page you requested was not found. Use the route resolver or search 340+ crypto workstations to find what you need.",
+    "https://zengtrade.in/404/",
+    PAGE_404_MAIN,
+)
+# Write as 404.html (not index.html inside a folder) so GitHub Pages picks it up
+open(os.path.join(DIST, "404.html"), "w").write(re.sub(r'\s+', ' ', _html_404))
+print("  \u2713 404.html written (branded dynamic-route resolver)")
 
 # ---- .nojekyll (CRITICAL) ---------------------------------------------------------------
 # GitHub Pages runs Jekyll by default which silently drops files it does not process,
