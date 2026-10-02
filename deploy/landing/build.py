@@ -552,7 +552,7 @@ open(os.path.join(DIST, "_redirects"), "w").write(   # kept for hosts that DO re
     "/.env*    /404.html   404\n"     # VAPT: block env file exposure
 )
 
-PAGE_404_MAIN = """<main id="main">
+PAGE_404_MAIN = r"""<main id="main">
   <section class="lp-hero" style="min-height:68vh;display:flex;align-items:center;padding:clamp(60px,10vh,110px) 0;">
     <div class="lp-wrap" style="text-align:center;max-width:820px;margin:0 auto;width:100%;">
       
@@ -599,11 +599,25 @@ PAGE_404_MAIN = """<main id="main">
   </section>
 </main>
 <script>
+function esc(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function validSlug(s) {
+  return typeof s === 'string' && /^[a-zA-Z0-9_-]{1,40}$/.test(s);
+}
+
 function submitErrSearch(){
   var inp = document.getElementById('errSearchInput');
   if (!inp || !inp.value.trim()) return;
   var q = inp.value.trim().toLowerCase();
-  if (q.indexOf(' ') === -1 && q.length <= 10) {
+  if (q.indexOf(' ') === -1 && /^[a-z0-9_-]{1,15}$/.test(q)) {
     location.href = '/coins/' + encodeURIComponent(q) + '/';
   } else {
     location.href = '/sitemap/?q=' + encodeURIComponent(q);
@@ -612,7 +626,7 @@ function submitErrSearch(){
 
 (function(){
   try {
-    var raw = window.location.pathname.replace(/^\\/+|\\/+$/g, '');
+    var raw = window.location.pathname.replace(/^\/+|\/+$/g, '');
     var parts = raw.split('/');
     if (!parts || !parts[0]) return;
 
@@ -661,15 +675,15 @@ function submitErrSearch(){
     var resPrice = document.getElementById('resLivePrice');
 
     function checkLivePrice(sym) {
-      if (!sym) return;
-      var url = 'https://data-api.binance.vision/api/v3/ticker/24hr?symbol=' + sym.toUpperCase() + 'USDT';
+      if (!sym || !/^[A-Z0-9]{2,12}$/.test(sym)) return;
+      var url = 'https://data-api.binance.vision/api/v3/ticker/24hr?symbol=' + encodeURIComponent(sym) + 'USDT';
       fetch(url).then(function(r){return r.json();}).then(function(d){
         if (d && d.lastPrice && resPrice) {
           var p = +d.lastPrice;
           var chg = +d.priceChangePercent;
           var sign = chg >= 0 ? '+' : '';
           var col = chg >= 0 ? 'var(--accent,#00ab4e)' : 'var(--red,#e5383b)';
-          resPrice.innerHTML = sym.toUpperCase() + ' Spot: <strong>$' + p.toLocaleString('en-US',{maximumFractionDigits:p>=1?2:4}) + '</strong> <span style="color:' + col + '">(' + sign + chg.toFixed(2) + '% 24h)</span>';
+          resPrice.innerHTML = esc(sym) + ' Spot: <strong>$' + esc(p.toLocaleString('en-US',{maximumFractionDigits:p>=1?2:4})) + '</strong> <span style="color:' + col + '">(' + esc(sign + chg.toFixed(2)) + '% 24h)</span>';
         }
       }).catch(function(){});
     }
@@ -678,60 +692,66 @@ function submitErrSearch(){
       var sSlug = parts[1];
       var cSlug = parts[2];
       var tfSlug = parts[3] || '15m';
-      var sName = stratMap[sSlug] || sSlug.replace(/-/g, ' ').toUpperCase();
-      var cName = cSlug.toUpperCase();
-      var tfName = tfMap[tfSlug] || tfSlug.toUpperCase();
+      if (!validSlug(sSlug) || !validSlug(cSlug) || !validSlug(tfSlug)) return;
+
+      var sName = stratMap[sSlug] || esc(sSlug.replace(/-/g, ' ').toUpperCase());
+      var cName = esc(cSlug.toUpperCase());
+      var tfName = tfMap[tfSlug] || esc(tfSlug.toUpperCase());
 
       document.title = sName + ' (' + cName + ') ' + tfName + ' | zengtrade';
       resTitle.innerHTML = sName + ' <span class="hl">' + cName + '</span> (' + tfName + ')';
       resDesc.innerHTML = 'You navigated to the <strong>' + tfName + '</strong> quantitative horizon for <strong>' + cName + '</strong>. While this specific horizon sub-file is compiling, you can immediately test this strategy on live market data in Algo Studio or view the ' + cName + ' workstation.';
 
       resActions.innerHTML = 
-        '<a class="lp-cta primary" href="/dashboard/?coin=' + encodeURIComponent(cName) + '&strat=' + encodeURIComponent(sSlug) + '&tf=' + encodeURIComponent(tfSlug) + '">Simulate ' + cName + ' in Algo Studio →</a>' +
+        '<a class="lp-cta primary" href="/dashboard/?coin=' + encodeURIComponent(cSlug.toUpperCase()) + '&strat=' + encodeURIComponent(sSlug) + '&tf=' + encodeURIComponent(tfSlug) + '">Simulate ' + cName + ' in Algo Studio →</a>' +
         '<a class="lp-cta ghost" href="/coins/' + encodeURIComponent(cSlug) + '/">' + cName + ' Coin Hub & Live Chart</a>' +
         '<a class="lp-cta ghost" href="/strategies/' + encodeURIComponent(sSlug) + '/bitcoin/">' + sName + ' Base Guide</a>';
 
       resolver.style.display = 'block';
       defView.style.display = 'none';
-      checkLivePrice(cName);
+      checkLivePrice(cSlug.toUpperCase());
       return;
     }
 
     if (parts[0] === 'indicators' && parts.length >= 3) {
       var iSlug = parts[1];
       var cSlug = parts[2];
-      var iName = indMap[iSlug] || iSlug.replace(/-/g, ' ').toUpperCase();
-      var cName = cSlug.toUpperCase();
+      if (!validSlug(iSlug) || !validSlug(cSlug)) return;
+
+      var iName = indMap[iSlug] || esc(iSlug.replace(/-/g, ' ').toUpperCase());
+      var cName = esc(cSlug.toUpperCase());
 
       document.title = iName + ' on ' + cName + ' | zengtrade';
       resTitle.innerHTML = iName + ' on <span class="hl">' + cName + '</span>';
       resDesc.innerHTML = 'Explore quantitative signal triggers, historical oscillator thresholds, and regime filters for <strong>' + cName + '</strong>.';
 
       resActions.innerHTML = 
-        '<a class="lp-cta primary" href="/dashboard/?coin=' + encodeURIComponent(cName) + '">Analyze ' + cName + ' in Algo Studio →</a>' +
+        '<a class="lp-cta primary" href="/dashboard/?coin=' + encodeURIComponent(cSlug.toUpperCase()) + '">Analyze ' + cName + ' in Algo Studio →</a>' +
         '<a class="lp-cta ghost" href="/coins/' + encodeURIComponent(cSlug) + '/">' + cName + ' Coin Hub & Live Chart</a>' +
         '<a class="lp-cta ghost" href="/indicators/' + encodeURIComponent(iSlug) + '/bitcoin/">' + iName + ' Formula Guide</a>';
 
       resolver.style.display = 'block';
       defView.style.display = 'none';
-      checkLivePrice(cName);
+      checkLivePrice(cSlug.toUpperCase());
       return;
     }
 
     if (parts[0] === 'coins' && parts.length >= 2) {
       var cSlug = parts[1];
-      var cName = cSlug.toUpperCase();
+      if (!validSlug(cSlug)) return;
+
+      var cName = esc(cSlug.toUpperCase());
       document.title = cName + ' Trading Strategies | zengtrade';
       resTitle.innerHTML = 'Workstation for <span class="hl">' + cName + '</span>';
       resDesc.innerHTML = 'Launch paper trading and multi-timeframe regime analysis for <strong>' + cName + '</strong> directly in Algo Studio.';
 
       resActions.innerHTML = 
-        '<a class="lp-cta primary" href="/dashboard/?coin=' + encodeURIComponent(cName) + '">Open ' + cName + ' in Algo Studio →</a>' +
+        '<a class="lp-cta primary" href="/dashboard/?coin=' + encodeURIComponent(cSlug.toUpperCase()) + '">Open ' + cName + ' in Algo Studio →</a>' +
         '<a class="lp-cta ghost" href="/coins/">Browse 340+ Cryptocurrency Workstations</a>';
 
       resolver.style.display = 'block';
       defView.style.display = 'none';
-      checkLivePrice(cName);
+      checkLivePrice(cSlug.toUpperCase());
       return;
     }
 

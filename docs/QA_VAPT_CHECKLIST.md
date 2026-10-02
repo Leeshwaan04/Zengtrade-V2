@@ -22,6 +22,7 @@
 | V3 | Worker | DB creds only server-side | ☑ | no secrets in `saas/web/js` |
 | V4 | Blog & Learn Share Bar | Strict URL param encoding (safe=''), safe DOM textNode toast (zero innerHTML XSS), attribute breakout prevention, reverse tabnabbing rel='noopener noreferrer' | ☑ | `blog_engine.py`, `blog.py`, `articles.py` audited & hardened (2026-10-02) |
 | Q10 | Pre-login Footer UI | WCAG AAA contrast in light and dark mode, adaptive tokens (--slate-c, --accent-t), absolute mascot assets | ☑ | Chrome browser subagent visual audit on /landing, /how-it-works/, /pricing/, /login/ (2026-10-02) |
+| V5 | 404 Route Resolver DOM XSS | Strict validSlug validation regex, esc() HTML escaping, safe ticker symbol validation in client-side router | ☑ | `deploy/landing/build.py` 404 resolver hardened, zero reflected DOM XSS (2026-10-02) |
 
 ## RLS isolation — PASSED (2026-09-12, session 220)
 

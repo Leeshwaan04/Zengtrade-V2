@@ -762,11 +762,46 @@ SUPPLEMENTAL_COINS = [
 
 
 def build_pseo_coin_roster(cached_coins: list, target_count: int = 1000) -> list[tuple[str, str, str, str]]:
-    """Builds a deterministic 1,000-coin roster combining cached live coins + supplemental coins."""
+    """Builds a deterministic 1,000-coin roster combining cached live coins + supplemental coins.
+    Prioritizes high-volume and trending retail tokens so they are pre-rendered into static HTML."""
     roster = []
     seen = set()
 
-    for c in cached_coins:
+    priority_syms = [
+        "BTC", "ETH", "SOL", "BNB", "XRP", "DOGE", "ADA", "AVAX", "LINK", "SUI",
+        "AIXBT", "PEPE", "NEAR", "SHIB", "FET", "RENDER", "INJ", "TIA", "ARB", "OP",
+        "APT", "KAS", "FTM", "TAO", "WIF", "BONK", "FLOKI", "POL", "ATOM", "ICP",
+        "DOT", "LTC", "BCH", "UNI", "AAVE", "MKR", "PENDLE", "JUP", "RUNE", "SEI"
+    ]
+    prio_set = set(priority_syms)
+
+    # First pass: priority trending coins
+    coin_by_sym = {c[0]: c for c in cached_coins}
+    for psym in priority_syms:
+        if psym in coin_by_sym:
+            c = coin_by_sym[psym]
+            sym = c[0]
+            name = c[1]
+            slug = c[2]
+            cat = c[3] if len(c) > 3 else "altcoin"
+            if sym not in seen and slug not in seen:
+                seen.add(sym)
+                seen.add(slug)
+                roster.append((sym, name, slug, cat))
+
+    # Second pass: remaining cached coins sorted by 24h quoteVolume if present
+    def get_vol(coin_row):
+        try:
+            if len(coin_row) > 4 and isinstance(coin_row[4], dict):
+                return float(coin_row[4].get("quoteVolume", 0) or 0)
+        except Exception:
+            pass
+        return 0.0
+
+    rem_coins = [c for c in cached_coins if c[0] not in prio_set]
+    rem_coins.sort(key=get_vol, reverse=True)
+
+    for c in rem_coins:
         sym = c[0]
         name = c[1]
         slug = c[2]
