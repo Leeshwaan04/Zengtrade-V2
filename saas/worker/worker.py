@@ -10,11 +10,35 @@ writes each user's results into their own rows. Powers the honest track record =
   DATABASE_URL=... python worker.py               # continuous
 """
 from __future__ import annotations
-import os, sys, time, json, argparse, warnings
+import os, sys, time, json, argparse, warnings, threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 warnings.filterwarnings("ignore")
 import psycopg2
 import engine as E
 import strategies as X
+
+_WORKER_STATUS = {"status": "starting", "last_heartbeat": None, "deployments": 0, "trades": 0}
+
+class HealthHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        body = json.dumps(_WORKER_STATUS).encode("utf-8")
+        self.wfile.write(body)
+
+    def log_message(self, format, *args):
+        pass  # suppress noisy access log lines
+
+def start_health_server(port: int):
+    """Spins up a lightweight health check server on a daemon thread for Cloud Run."""
+    try:
+        server = HTTPServer(("0.0.0.0", port), HealthHandler)
+        t = threading.Thread(target=server.serve_forever, daemon=True)
+        t.start()
+        print(f"  Cloud Run health server listening on port {port}", flush=True)
+    except Exception as e:
+        print(f"  WARN: failed to start health server on port {port}: {e}", flush=True)
 
 # Self-contained env loading: supervisors (launchd/systemd) don't reliably run shell
 # export tricks, and a silent fallback to the dev DB is exactly the failure we never
@@ -123,6 +147,9 @@ def _process(cur, uid, skey, params=None, replay_days=None):
 def heartbeat(cur, deps, trades):
     """Prove the worker is alive EVERY cycle, even with zero deployments — so the admin
     'Worker: Live' signal reflects the process, not whether any customer has deployed."""
+    global _WORKER_STATUS
+    now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    _WORKER_STATUS = {"status": "ok", "last_heartbeat": now_iso, "deployments": deps, "trades": trades}
     cur.execute("""insert into engine_state (key, value, updated_at)
         values ('_worker_heartbeat', %s::jsonb, now())
         on conflict (key) do update set value=excluded.value, updated_at=now()""",
@@ -146,6 +173,9 @@ def run_cycle(conn, replay_days=None):
     conn.commit(); return len(deps), tot
 
 def main():
+    port = int(os.environ.get("PORT", "0"))
+    if port > 0:
+        start_health_server(port)
     ap=argparse.ArgumentParser(); ap.add_argument("--once",action="store_true")
     ap.add_argument("--replay",type=int); ap.add_argument("--interval",type=int,default=300)
     a=ap.parse_args(); conn=db_with_retry()

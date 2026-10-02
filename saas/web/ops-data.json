@@ -163,10 +163,19 @@
       "guide-cto-founder-standup.sh \u2014 P0 worker recovery combined playbook (session 215)",
       "guide-founder-growth-standup quick mode ZT_QUICK_GROWTH_STANDUP (session 218)",
       "Fixed cto_ok reading false when production was actually healthy (session 220): sync-ops-gates.py was including database_url_auth_ok (a local-session credential check, not a production health signal) in the cto_ok tuple - removed it, verified live",
-      "Decoupled coin-data fetch from every push (session 220): a plain code push used to cost the same 15-19 minutes as a 190-coin roster expansion because seo/generate.py re-fetched all coin prices/candles live on every build. pages.yml now restores/saves seo/coin_data_cache.json via the GitHub Actions cache (not git, avoids history bloat), refreshed only on the workflow's 6h schedule or manual dispatch via seo/refresh_coin_data.py; a normal push just reads the cache. Also fixed a real bug this surfaced: build_coin_universe()'s CoinGecko loop had no pacing/retry-on-429 and could silently truncate the whole coin universe under rate limiting - now paced and retries respecting Retry-After"
+      "Decoupled coin-data fetch from every push (session 220): a plain code push used to cost the same 15-19 minutes as a 190-coin roster expansion because seo/generate.py re-fetched all coin prices/candles live on every build. pages.yml now restores/saves seo/coin_data_cache.json via the GitHub Actions cache (not git, avoids history bloat), refreshed only on the workflow's 6h schedule or manual dispatch via seo/refresh_coin_data.py; a normal push just reads the cache. Also fixed a real bug this surfaced: build_coin_universe()'s CoinGecko loop had no pacing/retry-on-429 and could silently truncate the whole coin universe under rate limiting - now paced and retries respecting Retry-After",
+      "Migrated paper worker deployment architecture to Google Cloud Platform (session 226): added native Cloud Run HTTP health check daemon on $PORT to saas/worker/worker.py; created automated one-command GCP deploy script scripts/deploy-worker-gcp.sh; updated check-worker.sh and guide-worker-recovery.sh for GCP Cloud Run and Cloud Scheduler; diagnosed project zengtrade billing account suspension as root cause of API suspension"
     ],
-    "next": "Worker + billing + migration + production all green (see founder_actions for remaining founder-only items: GSC sitemap submit, first Pro checkout, Hostinger Reach activation, LinkedIn post).",
+    "next": "Enable/link open billing account on GCP project zengtrade (https://console.cloud.google.com/billing/linkedaccount?project=zengtrade), then run ./scripts/deploy-worker-gcp.sh to deploy Cloud Run worker.",
     "links": [
+      {
+        "label": "GCP Cloud Run Console",
+        "url": "https://console.cloud.google.com/run?project=zengtrade"
+      },
+      {
+        "label": "GCP Billing Setup",
+        "url": "https://console.cloud.google.com/billing/linkedaccount?project=zengtrade"
+      },
       {
         "label": "Founder guide index",
         "url": "https://github.com/Leeshwaan04/Zengtrade-V2/blob/main/docs/GUIDE_INDEX.md"
@@ -180,16 +189,8 @@
         "url": "https://github.com/Leeshwaan04/Zengtrade-V2/actions"
       },
       {
-        "label": "Pages deploy",
-        "url": "https://github.com/Leeshwaan04/Zengtrade-V2/actions/workflows/pages.yml"
-      },
-      {
         "label": "Supabase project",
         "url": "https://supabase.com/dashboard/project/ponvarxeytfcntckczbn"
-      },
-      {
-        "label": "Railway new service",
-        "url": "https://railway.app/new"
       }
     ]
   },

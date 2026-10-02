@@ -34,7 +34,7 @@ if [[ "$age_min" -le "$MAX_AGE_MIN" ]]; then
 fi
 
 echo "FAIL worker — heartbeat stale (${age_min}m ago, max ${MAX_AGE_MIN}m) · last seen $ts"
-echo "      Deploy saas/worker on Railway/Fly — docs/FOUNDER_DEPLOY.md §4"
+echo "      Deploy saas/worker on Google Cloud Run — ./scripts/deploy-worker-gcp.sh · docs/WORKER_RECOVERY.md"
 echo "      Recovery: ./scripts/guide-worker-recovery.sh · https://zengtrade.in/ops/worker"
 if [[ -z "${ZT_QUIET_GROWTH:-}" ]]; then
   echo ""
