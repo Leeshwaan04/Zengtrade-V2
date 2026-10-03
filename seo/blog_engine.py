@@ -876,6 +876,17 @@ def build_blog(dist_dir, shell_func, sample_only=False, coins=None):
         with open(os.path.join(dist_dir, sm_filename), "w", encoding="utf-8") as f:
             f.write("".join(xml_body))
         print(f"  ✓ {sm_filename} ({len(chunk)} URLs)")
+
+    # Legacy tombstone sitemaps for sitemap-blog-2.xml through sitemap-blog-8.xml
+    # Prevents Google Search Console from encountering 404 errors on historical submissions
+    empty_urlset = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n</urlset>\n'
+    for old_idx in range(len(chunks) + 1, 9):
+        old_filename = f"sitemap-blog-{old_idx}.xml"
+        old_path = os.path.join(dist_dir, old_filename)
+        if not os.path.exists(old_path):
+            with open(old_path, "w", encoding="utf-8") as f:
+                f.write(empty_urlset)
+            print(f"  ✓ {old_filename} (legacy tombstone XML)")
         
     return urls + category_urls + article_urls, all_sitemaps
 
