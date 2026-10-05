@@ -715,6 +715,367 @@ html.js .lp-rv.in{opacity:1;transform:none}
 @media(max-width:420px){
   .tb-market{display:none}
 }
+
+/* ============================================================
+   SHOWCASE & COMPONENT DESIGN SYSTEM
+   Elevated button, segmented pill, and interactive card styles
+   ============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+  box-sizing: border-box;
+  user-select: none;
+  outline: none;
+  color: var(--navy);
+}
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.btn.primary {
+  background: linear-gradient(135deg, var(--green, #00ab4e), var(--green-d, #059142));
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 14px rgba(0, 171, 78, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.btn.primary:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 171, 78, 0.38);
+}
+.btn.primary:active {
+  transform: translateY(0);
+}
+.btn.secondary {
+  background: var(--surface);
+  color: var(--navy);
+  border: 1px solid var(--line);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.btn.secondary:hover {
+  background: var(--surface-2);
+  border-color: var(--line-2);
+  color: var(--navy);
+}
+.btn.secondary.active {
+  background: var(--surface);
+  border-color: var(--accent);
+  color: var(--accent-t);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.btn.ghost {
+  background: transparent;
+  color: var(--slate);
+  border: 1px solid transparent;
+}
+.btn.ghost:hover {
+  background: var(--surface-2);
+  color: var(--navy);
+  border-color: var(--line);
+}
+.btn.btn-danger {
+  background: linear-gradient(135deg, #e5383b, #ba181b) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 14px rgba(229, 56, 59, 0.28) !important;
+}
+.btn.btn-danger:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(229, 56, 59, 0.38) !important;
+}
+.btn.btn-success {
+  background: linear-gradient(135deg, #00ab4e, #059142) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 14px rgba(0, 171, 78, 0.28) !important;
+}
+.btn.btn-success:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 171, 78, 0.38) !important;
+}
+
+/* ---- Three Modes Segmented Control ---- */
+.lp-mode-wrap {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+.lp-mode-seg {
+  display: inline-flex;
+  align-items: center;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px;
+  gap: 4px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
+}
+.lp-mode-btn {
+  border: 0;
+  background: transparent;
+  color: var(--slate);
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 20px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  outline: none;
+  user-select: none;
+}
+.lp-mode-btn:hover {
+  color: var(--navy);
+}
+.lp-mode-btn.active {
+  background: var(--surface);
+  color: var(--accent-t);
+  font-weight: 700;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08), 0 0 0 1px var(--line-2);
+}
+.lp-mode-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  display: none;
+}
+.lp-mode-btn.active .lp-mode-dot {
+  display: inline-block;
+}
+
+/* ---- Quick Bracket Component ---- */
+.qb-side-toggle {
+  display: flex;
+  gap: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 4px;
+}
+.qb-side-btn {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  padding: 9px 16px;
+  border-radius: 7px;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  color: var(--slate);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.qb-side-btn.is-long.active {
+  background: rgba(0, 171, 78, 0.12);
+  color: var(--green);
+  border: 1px solid rgba(0, 171, 78, 0.3);
+  box-shadow: 0 1px 4px rgba(0, 171, 78, 0.12);
+}
+.qb-side-btn.is-short.active {
+  background: rgba(229, 56, 59, 0.12);
+  color: var(--red);
+  border: 1px solid rgba(229, 56, 59, 0.3);
+  box-shadow: 0 1px 4px rgba(229, 56, 59, 0.12);
+}
+.qb-input-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--navy);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+}
+.qb-input-chips {
+  display: flex;
+  gap: 6px;
+  margin-top: -4px;
+}
+.qb-chip {
+  flex: 1;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--slate);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 0;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.qb-chip:hover, .qb-chip.active {
+  color: var(--navy);
+  border-color: var(--line-2);
+  background: var(--surface-2);
+  font-weight: 700;
+}
+
+/* Bracket Ladder Visualizer */
+.qb-ladder-card {
+  flex: 1.5;
+  min-width: 300px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+.qb-ladder-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 140px;
+  height: 140px;
+  background: radial-gradient(circle, rgba(0,171,78,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.qb-tier {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+.qb-tier.tp {
+  background: rgba(0, 171, 78, 0.05);
+  border: 1px solid rgba(0, 171, 78, 0.2);
+}
+.qb-tier.sl {
+  background: rgba(229, 56, 59, 0.05);
+  border: 1px solid rgba(229, 56, 59, 0.2);
+}
+.qb-ladder-entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0;
+  position: relative;
+}
+.qb-entry-line {
+  flex: 1;
+  height: 2px;
+  border-radius: 2px;
+}
+.qb-entry-line.green {
+  background: linear-gradient(to right, transparent, rgba(0, 171, 78, 0.4));
+}
+.qb-entry-line.red {
+  background: linear-gradient(to left, transparent, rgba(229, 56, 59, 0.4));
+}
+.qb-entry-pill {
+  padding: 7px 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--line-2);
+  border-radius: 24px;
+  font: 700 12.5px/1 var(--sans);
+  color: var(--navy);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* ---- Automated DCA Visualizer ---- */
+.dca-card {
+  flex: 1.5;
+  min-width: 300px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+.dca-chart-wrap {
+  width: 100%;
+  height: 140px;
+  position: relative;
+  margin-top: 14px;
+}
+.dca-chart-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.dca-axis-row {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--slate);
+  margin-top: 6px;
+  padding: 0 4px;
+}
+
+/* Mascot Image and Fallback Badge */
+.rb-mascot {
+  width: clamp(112px, 15vw, 168px);
+  height: clamp(112px, 15vw, 168px);
+  object-fit: contain;
+  display: block;
+}
+.rb-badge {
+  min-width: 140px;
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rb-emo {
+  min-width: 140px;
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.fallback-emo {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, var(--accent-soft), transparent 70%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 </style>
 </head>
 
@@ -857,7 +1218,12 @@ html.js .lp-rv.in{opacity:1;transform:none}
       <div class="regime-bar lp-stage" id="regimeStage" role="tabpanel" aria-labelledby="tab-bull" tabindex="0">
         <div class="rb-badge">
           <div class="rb-emo rb-emo-bull" id="rbEmo">
-            <img class="rb-mascot" id="rbMascot" src="/assets/mascot-bull.png" width="168" height="168" alt="" draggable="false" fetchpriority="high" decoding="async">
+            <img class="rb-mascot" id="rbMascot" src="assets/mascot-bull.png" width="168" height="168" alt="zengtrade Bull Market Mascot" draggable="false" fetchpriority="high" decoding="async" onerror="this.onerror=null;if(this.src.indexOf('/assets/')===-1){this.src='/assets/mascot-bull.png';}else{this.style.display='none';var s=document.getElementById('rbMascotSvg');if(s)s.style.display='block';}">
+            <svg class="rb-mascot rb-mascot-svg" id="rbMascotSvg" style="display:none;width:140px;height:140px" viewBox="0 0 168 168" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Regime mascot graphic">
+              <circle cx="84" cy="84" r="74" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="4"/>
+              <path d="M46 112 L72 64 L94 86 L122 48" stroke="var(--accent)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="122" cy="48" r="7" fill="var(--accent)"/>
+            </svg>
           </div>
         </div>
 
@@ -956,15 +1322,23 @@ html.js .lp-rv.in{opacity:1;transform:none}
         <div class="card lp-rv" style="--d:100ms; margin-top:32px; padding:0; overflow:hidden; background:var(--surface-2)">
           <!-- Top bar emulator -->
           <div style="display:flex;align-items:center;padding:16px 24px;background:var(--surface);border-bottom:1px solid var(--line);gap:16px">
-            <div class="mode-switch seg" role="tablist" style="margin:0 auto">
-              <button class="seg-btn lp-mode-btn" data-target="m-invest" role="tab">Investing</button>
-              <button class="seg-btn lp-mode-btn" data-target="m-trade" role="tab">Trading</button>
-              <button class="seg-btn lp-mode-btn active" data-target="m-algo" role="tab">Algo Studio</button>
+            <div class="lp-mode-wrap">
+              <div class="lp-mode-seg" role="tablist" aria-label="Product modes">
+                <button class="lp-mode-btn" data-target="m-invest" role="tab" aria-selected="false">
+                  <span class="lp-mode-dot"></span>Investing
+                </button>
+                <button class="lp-mode-btn" data-target="m-trade" role="tab" aria-selected="false">
+                  <span class="lp-mode-dot"></span>Trading
+                </button>
+                <button class="lp-mode-btn active" data-target="m-algo" role="tab" aria-selected="true">
+                  <span class="lp-mode-dot"></span>Algo Studio
+                </button>
+              </div>
             </div>
           </div>
 
           <!-- Views -->
-          <div style="padding:32px 24px; min-height:400px; position:relative">
+          <div style="padding:32px 24px; min-height:420px; position:relative">
             
             <!-- ALGO STUDIO -->
             <div id="m-algo" class="lp-mode-view active" style="display:flex;flex-wrap:wrap;gap:20px">
@@ -976,7 +1350,7 @@ html.js .lp-rv.in{opacity:1;transform:none}
                 <h4 style="margin:0 0 8px;font-size:16px">Mean Reversion</h4>
                 <p style="color:var(--slate);font-size:13px;margin:0 0 24px;line-height:1.5">Fades VWAP deviations strictly during Neutral regimes.</p>
                 <div style="display:flex;justify-content:space-between;border-top:1px solid var(--line);padding-top:16px">
-                  <div style="font-family:var(--mono);color:var(--green)">+14.2%</div>
+                  <div style="font-family:var(--mono);color:var(--green);font-weight:700">+14.2%</div>
                   <div style="font-family:var(--mono);color:var(--slate)">Win: 68%</div>
                 </div>
               </div>
@@ -996,53 +1370,166 @@ html.js .lp-rv.in{opacity:1;transform:none}
 
             <!-- INVESTING -->
             <div id="m-invest" class="lp-mode-view" style="display:none;flex-wrap:wrap;gap:32px">
-              <div style="flex:1;min-width:260px">
+              <div style="flex:1;min-width:280px">
                 <h3 style="font:800 20px/1.2 var(--sans);margin:0 0 6px">Automated DCA</h3>
-                <p style="color:var(--slate);margin:0 0 24px;font-size:13.5px;line-height:1.5">Passive accumulation with automatic deposits.</p>
+                <p style="color:var(--slate);margin:0 0 20px;font-size:13.5px;line-height:1.5">Passive accumulation with automatic deposits.</p>
                 <div style="display:grid;gap:12px">
+                  <!-- Asset selector -->
                   <div style="display:flex;gap:8px">
-                    <button class="btn secondary" style="flex:1;background:var(--surface)">BTC</button>
-                    <button class="btn ghost" style="flex:1">ETH</button>
+                    <button class="btn secondary active" id="dcaAssetBtc" style="flex:1" type="button">
+                      <span style="color:#f7931a;font-weight:800">₿</span> Bitcoin (BTC)
+                    </button>
+                    <button class="btn secondary" id="dcaAssetEth" style="flex:1" type="button">
+                      <span style="color:#627eea;font-weight:800">Ξ</span> Ethereum (ETH)
+                    </button>
                   </div>
-                  <button class="btn secondary" style="background:var(--surface)">Weekly Frequency</button>
-                  <button class="btn primary" style="background:var(--accent);color:#fff;margin-top:8px">Deploy $200 / wk</button>
+                  <!-- Frequency -->
+                  <div style="display:flex;gap:6px">
+                    <button class="qb-chip" type="button">Daily</button>
+                    <button class="qb-chip active" type="button">Weekly (Mon)</button>
+                    <button class="qb-chip" type="button">Monthly (1st)</button>
+                  </div>
+                  <!-- Deposit input -->
+                  <div class="qb-input-wrap">
+                    <span style="font-size:12px;color:var(--slate);font-family:var(--sans);font-weight:600">Recurring Deposit</span>
+                    <span style="font-weight:700;font-size:14px;color:var(--navy)">$200.00 <small style="font-size:11px;color:var(--slate)">/ wk</small></span>
+                  </div>
+                  <div class="qb-input-chips">
+                    <button class="qb-chip" type="button">+$50</button>
+                    <button class="qb-chip" type="button">+$100</button>
+                    <button class="qb-chip" type="button">+$200</button>
+                    <button class="qb-chip" type="button">+$500</button>
+                  </div>
+                  <button class="btn btn-success" style="width:100%;margin-top:6px;padding:12px 18px" type="button">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    Deploy $200 / wk
+                  </button>
                 </div>
               </div>
-              <div style="flex:1.5;min-width:300px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px;box-shadow:var(--shadow)">
-                <div style="font-family:var(--mono);font-size:11px;color:var(--slate);text-transform:uppercase;margin-bottom:8px">1Y Projected Accumulation</div>
-                <div style="height:120px;width:100%;background:linear-gradient(to top, rgba(0,171,78,0.1), transparent);border-bottom:2px solid var(--green);border-radius:4px;position:relative">
-                  <div style="position:absolute;bottom:0;right:0;padding:8px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--green)">1.04 BTC</div>
+              <!-- Right accumulation projection -->
+              <div class="dca-card">
+                <div>
+                  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+                    <span style="font-family:var(--mono);font-size:11px;color:var(--slate);letter-spacing:.05em;text-transform:uppercase;font-weight:600">1Y Projected Accumulation</span>
+                    <span class="badge b-accent">+18.4% Return</span>
+                  </div>
+                  <div style="font-family:var(--mono);font-size:22px;font-weight:800;color:var(--navy);letter-spacing:-.02em">
+                    1.0402 BTC <small style="font-size:13px;font-weight:500;color:var(--slate)">($69,120)</small>
+                  </div>
+                  <div style="font-size:11.5px;color:var(--slate);margin-top:2px">Total invested: $10,400 across 52 automated buys</div>
+                </div>
+
+                <div class="dca-chart-wrap">
+                  <svg class="dca-chart-svg" viewBox="0 0 320 120" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="dcaGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#00ab4e" stop-opacity="0.25"/>
+                        <stop offset="100%" stop-color="#00ab4e" stop-opacity="0.0"/>
+                      </linearGradient>
+                    </defs>
+                    <!-- Guideline / grid lines -->
+                    <line x1="0" y1="30" x2="320" y2="30" stroke="var(--line)" stroke-dasharray="3 3"/>
+                    <line x1="0" y1="70" x2="320" y2="70" stroke="var(--line)" stroke-dasharray="3 3"/>
+                    <!-- Area fill -->
+                    <path d="M0,115 Q80,105 160,75 T320,18 L320,120 L0,120 Z" fill="url(#dcaGrad)"/>
+                    <!-- Smooth growth curve -->
+                    <path d="M0,115 Q80,105 160,75 T320,18" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round"/>
+                    <!-- Milestones -->
+                    <circle cx="80" cy="100" r="3.5" fill="var(--surface)" stroke="var(--green)" stroke-width="2"/>
+                    <circle cx="160" cy="75" r="3.5" fill="var(--surface)" stroke="var(--green)" stroke-width="2"/>
+                    <circle cx="240" cy="45" r="3.5" fill="var(--surface)" stroke="var(--green)" stroke-width="2"/>
+                    <circle cx="320" cy="18" r="4.5" fill="var(--green)" stroke="#fff" stroke-width="2"/>
+                  </svg>
+                </div>
+                <div class="dca-axis-row">
+                  <span>Start ($0)</span>
+                  <span>3M ($2.6k)</span>
+                  <span>6M ($5.2k)</span>
+                  <span>9M ($7.8k)</span>
+                  <span>1Y (1.04 BTC)</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;border-top:1px solid var(--line);padding-top:12px;margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--slate)">
+                  <span>Avg Cost: $63,800</span>
+                  <span style="color:var(--green)">✓ No Emotion · No Timing</span>
                 </div>
               </div>
             </div>
 
             <!-- TRADING -->
             <div id="m-trade" class="lp-mode-view" style="display:none;flex-wrap:wrap;gap:32px">
-              <div style="flex:1;min-width:260px">
+              <div style="flex:1;min-width:280px">
                 <h3 style="font:800 20px/1.2 var(--sans);margin:0 0 6px">Quick Bracket</h3>
-                <p style="color:var(--slate);margin:0 0 24px;font-size:13.5px;line-height:1.5">Strict risk management, instant execution.</p>
+                <p style="color:var(--slate);margin:0 0 20px;font-size:13.5px;line-height:1.5">Strict risk management, instant execution.</p>
                 <div style="display:grid;gap:12px">
-                  <div style="display:flex;gap:8px">
-                    <button class="btn secondary" style="flex:1;color:var(--green);border-color:var(--green);background:var(--surface)">LONG</button>
-                    <button class="btn ghost" style="flex:1">SHORT</button>
+                  <!-- Side Toggle -->
+                  <div class="qb-side-toggle">
+                    <button class="qb-side-btn is-long active" id="qbSideLong" type="button">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                      LONG
+                    </button>
+                    <button class="qb-side-btn is-short" id="qbSideShort" type="button">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                      SHORT
+                    </button>
                   </div>
-                  <div style="font-family:var(--mono);font-size:12px;padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:8px">Size: $10,000</div>
-                  <button class="btn primary" style="background:var(--red);color:#fff;margin-top:8px">Execute Market Bracket</button>
+                  <!-- Size input -->
+                  <div class="qb-input-wrap">
+                    <span style="font-size:12px;color:var(--slate);font-family:var(--sans);font-weight:600">Order Value</span>
+                    <span style="font-weight:700;font-size:14px;color:var(--navy)">$10,000 <small style="font-size:11px;color:var(--slate)">USDT</small></span>
+                  </div>
+                  <div class="qb-input-chips">
+                    <button class="qb-chip" type="button">25%</button>
+                    <button class="qb-chip" type="button">50%</button>
+                    <button class="qb-chip" type="button">75%</button>
+                    <button class="qb-chip active" type="button">100%</button>
+                  </div>
+                  <!-- Submit CTA -->
+                  <button class="btn btn-success" id="qbExecBtn" style="width:100%;margin-top:6px;padding:12px 18px" type="button">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    Execute Long Bracket ($10,000)
+                  </button>
                 </div>
               </div>
-              <div style="flex:1.5;min-width:300px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px;box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:center">
-                <div style="text-align:center">
-                  <div style="font:600 11px/1 var(--mono);color:var(--green);margin-bottom:4px;text-transform:uppercase">Take Profit (+3%)</div>
-                  <b style="font:700 20px/1 var(--mono);color:var(--navy)">$68,450.00</b>
+              <!-- Right Ladder Card -->
+              <div class="qb-ladder-card">
+                <div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                    <span style="font-family:var(--mono);font-size:11px;color:var(--slate);letter-spacing:.05em;text-transform:uppercase;font-weight:600">Dynamic Risk : Reward</span>
+                    <span class="badge b-accent">2.0 : 1 R:R</span>
+                  </div>
                 </div>
-                <div style="display:flex;align-items:center;margin:16px 0">
-                  <div style="flex:1;height:2px;background:var(--green-soft)"></div>
-                  <div style="padding:6px 12px;background:var(--surface);border:1px solid var(--line);border-radius:24px;font:700 12px/1 var(--sans);color:var(--slate);box-shadow:0 2px 8px rgba(0,0,0,0.04)">Entry: $66,450.00</div>
-                  <div style="flex:1;height:2px;background:color-mix(in srgb,var(--red) 15%,transparent)"></div>
+
+                <!-- Take profit tier -->
+                <div class="qb-tier tp">
+                  <div>
+                    <div style="font:700 10.5px/1 var(--mono);color:var(--green);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Take Profit (+3.0%)</div>
+                    <b style="font:700 18px/1 var(--mono);color:var(--navy)">$68,450.00</b>
+                  </div>
+                  <span style="font:700 12px/1 var(--mono);color:var(--green)">+$300.00 USDT</span>
                 </div>
-                <div style="text-align:center">
-                  <b style="font:700 20px/1 var(--mono);color:var(--navy)">$65,450.00</b>
-                  <div style="font:600 11px/1 var(--mono);color:var(--red);margin-top:4px;text-transform:uppercase">Stop Loss (-1.5%)</div>
+
+                <!-- Entry node -->
+                <div class="qb-ladder-entry">
+                  <div class="qb-entry-line green"></div>
+                  <div class="qb-entry-pill">
+                    <span style="width:6px;height:6px;border-radius:50%;background:var(--accent)"></span>
+                    <span>Entry: $66,450.00</span>
+                  </div>
+                  <div class="qb-entry-line red"></div>
+                </div>
+
+                <!-- Stop loss tier -->
+                <div class="qb-tier sl">
+                  <div>
+                    <div style="font:700 10.5px/1 var(--mono);color:var(--red);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Stop Loss (-1.5%)</div>
+                    <b style="font:700 18px/1 var(--mono);color:var(--navy)">$65,450.00</b>
+                  </div>
+                  <span style="font:700 12px/1 var(--mono);color:var(--red)">-$150.00 USDT</span>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;border-top:1px solid var(--line);padding-top:12px;margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--slate)">
+                  <span>Max Slippage: 0.02%</span>
+                  <span style="color:var(--green)">OCO Linked Bracket</span>
                 </div>
               </div>
             </div>
@@ -1577,7 +2064,12 @@ html.js .lp-rv.in{opacity:1;transform:none}
     root.setAttribute("data-regime", regime);
 
     // swap the real mascot, exactly as the terminal does
-    if (mascot) mascot.src = "/assets/mascot-" + regime + ".png";
+    if (mascot) {
+      mascot.style.display = "";
+      var svg = document.getElementById("rbMascotSvg");
+      if (svg) svg.style.display = "none";
+      mascot.src = (location.protocol === "file:" ? "assets/" : "/assets/") + "mascot-" + regime + ".png";
+    }
     if (emo) emo.className = "rb-emo rb-emo-" + regime;
     if (stage) stage.setAttribute("aria-labelledby", "tab-" + regime);
 
@@ -1694,8 +2186,12 @@ html.js .lp-rv.in{opacity:1;transform:none}
       var targetId = btn.getAttribute("data-target");
       
       // Update buttons
-      modeBtns.forEach(function(b) { b.classList.remove("active"); });
+      modeBtns.forEach(function(b) { 
+        b.classList.remove("active"); 
+        b.setAttribute("aria-selected", "false");
+      });
       btn.classList.add("active");
+      btn.setAttribute("aria-selected", "true");
       
       // Update views
       modeViews.forEach(function(view) {
@@ -1707,6 +2203,48 @@ html.js .lp-rv.in{opacity:1;transform:none}
           view.style.display = "none";
         }
       });
+    });
+  });
+
+  // Long / Short toggle in Quick Bracket
+  var qbLong = document.getElementById("qbSideLong");
+  var qbShort = document.getElementById("qbSideShort");
+  var qbExecBtn = document.getElementById("qbExecBtn");
+  if (qbLong && qbShort && qbExecBtn) {
+    qbLong.addEventListener("click", function() {
+      qbLong.classList.add("active");
+      qbShort.classList.remove("active");
+      qbExecBtn.className = "btn btn-success";
+      qbExecBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Execute Long Bracket ($10,000)';
+    });
+    qbShort.addEventListener("click", function() {
+      qbShort.classList.add("active");
+      qbLong.classList.remove("active");
+      qbExecBtn.className = "btn btn-danger";
+      qbExecBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Execute Short Bracket ($10,000)';
+    });
+  }
+
+  // BTC / ETH toggle in DCA
+  var dcaBtc = document.getElementById("dcaAssetBtc");
+  var dcaEth = document.getElementById("dcaAssetEth");
+  if (dcaBtc && dcaEth) {
+    dcaBtc.addEventListener("click", function() {
+      dcaBtc.classList.add("active");
+      dcaEth.classList.remove("active");
+    });
+    dcaEth.addEventListener("click", function() {
+      dcaEth.classList.add("active");
+      dcaBtc.classList.remove("active");
+    });
+  }
+
+  // Generic chip toggle inside showcase views
+  document.querySelectorAll(".qb-chip").forEach(function(chip) {
+    chip.addEventListener("click", function() {
+      var siblings = chip.parentElement.querySelectorAll(".qb-chip");
+      siblings.forEach(function(s) { s.classList.remove("active"); });
+      chip.classList.add("active");
     });
   });
 

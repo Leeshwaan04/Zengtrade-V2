@@ -11,7 +11,10 @@ import html
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 
-from blog_engine_data import PILLARS, generate_topics
+try:
+    from blog_engine_data import PILLARS, generate_topics
+except ImportError:
+    from seo.blog_engine_data import PILLARS, generate_topics
 
 SITE = "https://zengtrade.in"
 
@@ -889,4 +892,63 @@ def build_blog(dist_dir, shell_func, sample_only=False, coins=None):
             print(f"  ✓ {old_filename} (legacy tombstone XML)")
         
     return urls + category_urls + article_urls, all_sitemaps
+
+
+_TOPICS_CACHE = None
+_TOPICS_BY_SLUG = None
+
+
+def get_topics_by_slug():
+    global _TOPICS_CACHE, _TOPICS_BY_SLUG
+    if _TOPICS_BY_SLUG is None:
+        _TOPICS_CACHE = generate_topics()
+        # Sort by slug length descending to ensure longest match first
+        _TOPICS_BY_SLUG = sorted(_TOPICS_CACHE, key=lambda t: len(t["slug"]), reverse=True)
+    return _TOPICS_BY_SLUG
+
+
+def resolve_blog_page(clean_path: str, shell_func, coin_roster: list = None) -> str | None:
+    """Dynamically resolves and renders any of the 200,000 programmatic blog articles or categories."""
+    parts = [p for p in clean_path.strip("/").split("/") if p]
+    if not parts or parts[0] != "blog":
+        return None
+
+    build_date = "2026-09-22"
+
+    # 1. Category hub: /blog/category/{pillar}
+    if len(parts) == 3 and parts[1] == "category":
+        pillar = parts[2]
+        if pillar in PILLARS:
+            topics = generate_topics()
+            if coin_roster is None:
+                try:
+                    from pseo_engine import build_pseo_coin_roster
+                    coin_roster = build_pseo_coin_roster([], target_count=1000)
+                except Exception:
+                    coin_roster = []
+            ctitle, cdesc, ccanon, cmain, cextra = render_category(pillar, topics, coin_roster, build_date)
+            return shell_func(ctitle, cdesc, ccanon, cmain, extra_head=cextra)
+
+    # 2. Programmatic article: /blog/{coin_slug}-{topic_slug}
+    if len(parts) == 2:
+        slug = parts[1]
+        topics = get_topics_by_slug()
+        if coin_roster is None:
+            try:
+                from pseo_engine import build_pseo_coin_roster
+                coin_roster = build_pseo_coin_roster([], target_count=1000)
+            except Exception:
+                coin_roster = []
+        coin_map = {c[2]: c for c in coin_roster}
+
+        for topic in topics:
+            t_slug = topic["slug"]
+            suffix = "-" + t_slug
+            if slug.endswith(suffix):
+                c_slug = slug[:-len(suffix)]
+                if c_slug in coin_map:
+                    atitle, adesc, acanon, amain, aextra = render_article(topic, coin_map[c_slug], build_date)
+                    return shell_func(atitle, adesc, acanon, amain, extra_head=aextra)
+
+    return None
 
