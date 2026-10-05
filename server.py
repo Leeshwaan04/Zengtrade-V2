@@ -112,7 +112,21 @@ elif os.path.isdir(ASSETS_DIR):
 
 
 @app.middleware("http")
-async def add_security_and_cache_headers(request: Request, call_next):
+async def handle_head_and_security(request: Request, call_next):
+    # Transparently convert HEAD → GET so all routes handle HEAD automatically
+    if request.method == "HEAD":
+        from starlette.datastructures import Headers
+        scope = dict(request.scope)
+        scope["method"] = "GET"
+        get_request = Request(scope, request._receive, request._send)
+        resp = await call_next(get_request)
+        # Return headers only, no body
+        from starlette.responses import Response as StarResponse
+        headers = dict(resp.headers)
+        headers.pop("content-length", None)  # will be recomputed as 0
+        empty = StarResponse(status_code=resp.status_code, headers=headers)
+        empty.headers["content-length"] = "0"
+        return empty
     resp = await call_next(request)
     resp.headers["X-Frame-Options"] = "DENY"
     resp.headers["Content-Security-Policy"] = "frame-ancestors 'none'"
