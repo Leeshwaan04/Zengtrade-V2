@@ -53,6 +53,56 @@ def get_all_blog_urls():
                 _BLOG_URLS.append(f"https://zengtrade.in/blog/{c[2]}-{t_slug}/")
     return _BLOG_URLS
 
+_STRAT_URLS = None
+def get_all_strat_urls():
+    global _STRAT_URLS
+    if _STRAT_URLS is None:
+        _STRAT_URLS = []
+        for s in pseo.STRATEGIES:
+            s_slug = s["slug"]
+            for c in COIN_ROSTER:
+                c_slug = c[2]
+                _STRAT_URLS.append(f"https://zengtrade.in/strategies/{s_slug}/{c_slug}/")
+                for tf in pseo.TIMEFRAMES:
+                    _STRAT_URLS.append(f"https://zengtrade.in/strategies/{s_slug}/{c_slug}/{tf['slug']}/")
+    return _STRAT_URLS
+
+_IND_URLS = None
+def get_all_ind_urls():
+    global _IND_URLS
+    if _IND_URLS is None:
+        _IND_URLS = []
+        for i in pseo.INDICATORS:
+            i_slug = i["slug"]
+            for c in COIN_ROSTER:
+                c_slug = c[2]
+                _IND_URLS.append(f"https://zengtrade.in/indicators/{i_slug}/{c_slug}/")
+                for tf in pseo.TIMEFRAMES:
+                    _IND_URLS.append(f"https://zengtrade.in/indicators/{i_slug}/{c_slug}/{tf['slug']}/")
+    return _IND_URLS
+
+_REGIME_URLS = None
+def get_all_regime_urls():
+    global _REGIME_URLS
+    if _REGIME_URLS is None:
+        _REGIME_URLS = []
+        for r in pseo.REGIMES:
+            r_slug = r["slug"]
+            for c in COIN_ROSTER:
+                _REGIME_URLS.append(f"https://zengtrade.in/regimes/{r_slug}/{c[2]}/")
+    return _REGIME_URLS
+
+_COMPARE_URLS = None
+def get_all_compare_urls():
+    global _COMPARE_URLS
+    if _COMPARE_URLS is None:
+        _COMPARE_URLS = []
+        for s in pseo.SHOWDOWNS:
+            s_slug = s["slug"]
+            for c in COIN_ROSTER:
+                _COMPARE_URLS.append(f"https://zengtrade.in/compare/{s_slug}/{c[2]}/")
+    return _COMPARE_URLS
+
 
 # Mount static assets
 if os.path.isdir(os.path.join(DIST_DIR, "assets")):
@@ -87,7 +137,17 @@ def robots():
     return PlainTextResponse("User-agent: *\nAllow: /\nDisallow: /app\nDisallow: /ops/\nDisallow: /admin/\nSitemap: https://zengtrade.in/sitemap-index.xml\n")
 
 
-# ---- DYNAMIC REAL-TIME SITEMAPS (ALL 300,000 URLS) --------------------------------------
+# ---- DYNAMIC REAL-TIME SITEMAPS (ALL 393,000+ URLS) --------------------------------------
+
+def _build_urlset(urls):
+    if not urls:
+        return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>'
+    xml_parts = ['<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n']
+    for u in urls:
+        xml_parts.append(f"  <url><loc>{u}</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq></url>\n")
+    xml_parts.append("</urlset>\n")
+    return "".join(xml_parts)
+
 
 @app.get("/sitemap-index.xml")
 def sitemap_index():
@@ -95,13 +155,16 @@ def sitemap_index():
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap><loc>https://zengtrade.in/sitemap-core.xml</loc><lastmod>2026-10-05</lastmod></sitemap>
   <sitemap><loc>https://zengtrade.in/sitemap-coins.xml</loc><lastmod>2026-10-05</lastmod></sitemap>
-  <sitemap><loc>https://zengtrade.in/sitemap-strategies.xml</loc><lastmod>2026-10-05</lastmod></sitemap>
-  <sitemap><loc>https://zengtrade.in/sitemap-indicators.xml</loc><lastmod>2026-10-05</lastmod></lastmod></sitemap>
   <sitemap><loc>https://zengtrade.in/sitemap-regimes.xml</loc><lastmod>2026-10-05</lastmod></sitemap>
-  <sitemap><loc>https://zengtrade.in/sitemap-timeframes_strat.xml</loc><lastmod>2026-10-05</lastmod></sitemap>
-  <sitemap><loc>https://zengtrade.in/sitemap-timeframes_ind.xml</loc><lastmod>2026-10-05</lastmod></sitemap>
   <sitemap><loc>https://zengtrade.in/sitemap-compare.xml</loc><lastmod>2026-10-05</lastmod></sitemap>
-  <sitemap><loc>https://zengtrade.in/sitemap-learn.xml</loc><lastmod>2026-10-05</lastmod></sitemap>
+  <sitemap><loc>https://zengtrade.in/sitemap-strategies-1.xml</loc><lastmod>2026-10-05</lastmod></sitemap>
+  <sitemap><loc>https://zengtrade.in/sitemap-strategies-2.xml</loc><lastmod>2026-10-05</lastmod></sitemap>
+  <sitemap><loc>https://zengtrade.in/sitemap-strategies-3.xml</loc><lastmod>2026-10-05</lastmod></sitemap>
+  <sitemap><loc>https://zengtrade.in/sitemap-strategies-4.xml</loc><lastmod>2026-10-05</lastmod></sitemap>
+  <sitemap><loc>https://zengtrade.in/sitemap-indicators-1.xml</loc><lastmod>2026-10-05</lastmod></sitemap>
+  <sitemap><loc>https://zengtrade.in/sitemap-indicators-2.xml</loc><lastmod>2026-10-05</lastmod></sitemap>
+  <sitemap><loc>https://zengtrade.in/sitemap-indicators-3.xml</loc><lastmod>2026-10-05</lastmod></sitemap>
+  <sitemap><loc>https://zengtrade.in/sitemap-indicators-4.xml</loc><lastmod>2026-10-05</lastmod></sitemap>
   <sitemap><loc>https://zengtrade.in/sitemap-blog-1.xml</loc><lastmod>2026-10-05</lastmod></sitemap>
   <sitemap><loc>https://zengtrade.in/sitemap-blog-2.xml</loc><lastmod>2026-10-05</lastmod></sitemap>
   <sitemap><loc>https://zengtrade.in/sitemap-blog-3.xml</loc><lastmod>2026-10-05</lastmod></sitemap>
@@ -119,22 +182,65 @@ def sitemap_blog_part(part: int):
     all_urls = get_all_blog_urls()
     max_chunk = 25000
     start = (part - 1) * max_chunk
-    end = start + max_chunk
-    chunk = all_urls[start:end]
+    chunk = all_urls[start : start + max_chunk]
+    return Response(content=_build_urlset(chunk), media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
 
-    if not chunk:
-        return Response(content='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>', media_type="application/xml")
 
-    xml_parts = ['<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n']
-    for u in chunk:
-        xml_parts.append(f"  <url><loc>{u}</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq></url>\n")
-    xml_parts.append("</urlset>\n")
+@app.get("/sitemap-strategies-{part}.xml")
+def sitemap_strategies_part(part: int):
+    all_urls = get_all_strat_urls()
+    max_chunk = 25000
+    start = (part - 1) * max_chunk
+    chunk = all_urls[start : start + max_chunk]
+    return Response(content=_build_urlset(chunk), media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
 
-    return Response(
-        content="".join(xml_parts),
-        media_type="application/xml",
-        headers={"Cache-Control": "public, max-age=86400"}
-    )
+
+@app.get("/sitemap-indicators-{part}.xml")
+def sitemap_indicators_part(part: int):
+    all_urls = get_all_ind_urls()
+    max_chunk = 25000
+    start = (part - 1) * max_chunk
+    chunk = all_urls[start : start + max_chunk]
+    return Response(content=_build_urlset(chunk), media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
+
+
+@app.get("/sitemap-regimes.xml")
+def sitemap_regimes():
+    all_urls = get_all_regime_urls()
+    return Response(content=_build_urlset(all_urls), media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
+
+
+@app.get("/sitemap-compare.xml")
+def sitemap_compare():
+    all_urls = get_all_compare_urls()
+    return Response(content=_build_urlset(all_urls), media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
+
+
+@app.get("/sitemap-coins.xml")
+def sitemap_coins():
+    urls = ["https://zengtrade.in/coins/"]
+    for c in base_coins:
+        urls.append(f"https://zengtrade.in/coins/{c[2]}/")
+    return Response(content=_build_urlset(urls), media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
+
+
+@app.get("/sitemap-core.xml")
+def sitemap_core():
+    urls = [
+        "https://zengtrade.in/",
+        "https://zengtrade.in/how-it-works/",
+        "https://zengtrade.in/pricing/",
+        "https://zengtrade.in/coins/",
+        "https://zengtrade.in/blog/",
+        "https://zengtrade.in/dashboard/",
+        "https://zengtrade.in/app",
+        "https://zengtrade.in/login",
+        "https://zengtrade.in/contact",
+        "https://zengtrade.in/privacy",
+        "https://zengtrade.in/terms",
+        "https://zengtrade.in/risk",
+    ]
+    return Response(content=_build_urlset(urls), media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
 
 
 # Serve other sitemaps directly from DIST if present
