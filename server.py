@@ -29,7 +29,48 @@ DIST_DIR = os.path.join(HERE, "deploy", "landing", "dist")
 SAAS_WEB_DIR = os.path.join(HERE, "saas", "web")
 ASSETS_DIR = os.path.join(HERE, "assets")
 
-app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+class HeadToGetMiddleware:
+    """ASGI-level HEAD→GET converter.
+    FastAPI's router rejects HEAD before @app.middleware runs,
+    so we must intercept at the raw ASGI layer instead.
+    """
+    def __init__(self, app):
+        self._app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http" and scope["method"] == "HEAD":
+            scope = dict(scope)
+            scope["method"] = "GET"
+            head_response_started = False
+            head_status = 200
+            head_headers = []
+
+            async def head_send(event):
+                nonlocal head_response_started, head_status, head_headers
+                if event["type"] == "http.response.start":
+                    head_status = event["status"]
+                    head_headers = event["headers"]
+                    head_response_started = True
+                    # Send start with content-length: 0
+                    filtered = [(k, v) for k, v in head_headers if k.lower() != b"content-length"]
+                    filtered.append((b"content-length", b"0"))
+                    await send({"type": "http.response.start", "status": head_status, "headers": filtered})
+                elif event["type"] == "http.response.body":
+                    # Send empty body to finish the response
+                    await send({"type": "http.response.body", "body": b"", "more_body": False})
+                else:
+                    await send(event)
+
+            await self._app(scope, receive, head_send)
+        else:
+            await self._app(scope, receive, send)
+
+
+_fastapi = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+app = HeadToGetMiddleware(_fastapi)
+# Keep 'app' pointing to the ASGI wrapper for uvicorn.
+# Use '_fastapi' for all route decorators below.
+_app = _fastapi  # alias for route decorators
 
 # Pre-load roster & topics into memory on startup
 cache_data = G._load_cache() or {}
@@ -106,27 +147,13 @@ def get_all_compare_urls():
 
 # Mount static assets
 if os.path.isdir(os.path.join(DIST_DIR, "assets")):
-    app.mount("/assets", StaticFiles(directory=os.path.join(DIST_DIR, "assets")), name="assets")
+    _fastapi.mount("/assets", StaticFiles(directory=os.path.join(DIST_DIR, "assets")), name="assets")
 elif os.path.isdir(ASSETS_DIR):
-    app.mount("/assets", StaticFiles(directory=ASSETS_DIR), name="assets")
+    _fastapi.mount("/assets", StaticFiles(directory=ASSETS_DIR), name="assets")
 
 
-@app.middleware("http")
-async def handle_head_and_security(request: Request, call_next):
-    # Transparently convert HEAD → GET so all routes handle HEAD automatically
-    if request.method == "HEAD":
-        from starlette.datastructures import Headers
-        scope = dict(request.scope)
-        scope["method"] = "GET"
-        get_request = Request(scope, request._receive, request._send)
-        resp = await call_next(get_request)
-        # Return headers only, no body
-        from starlette.responses import Response as StarResponse
-        headers = dict(resp.headers)
-        headers.pop("content-length", None)  # will be recomputed as 0
-        empty = StarResponse(status_code=resp.status_code, headers=headers)
-        empty.headers["content-length"] = "0"
-        return empty
+@_fastapi.middleware("http")
+async def add_security_headers(request: Request, call_next):
     resp = await call_next(request)
     resp.headers["X-Frame-Options"] = "DENY"
     resp.headers["Content-Security-Policy"] = "frame-ancestors 'none'"
@@ -135,12 +162,12 @@ async def handle_head_and_security(request: Request, call_next):
     return resp
 
 
-@app.get("/healthz")
+@_fastapi.get("/healthz")
 def healthz():
     return {"status": "ok", "service": "zengtrade-ssr", "coins": len(COIN_ROSTER)}
 
 
-@app.get("/robots.txt")
+@_fastapi.get("/robots.txt")
 def robots():
     rb_path = os.path.join(DIST_DIR, "robots.txt")
     if not os.path.exists(rb_path):
@@ -163,7 +190,7 @@ def _build_urlset(urls):
     return "".join(xml_parts)
 
 
-@app.get("/sitemap-index.xml")
+@_fastapi.get("/sitemap-index.xml")
 def sitemap_index():
     xml = """<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -191,7 +218,7 @@ def sitemap_index():
     return Response(content=xml, media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
 
 
-@app.get("/sitemap-blog-{part}.xml")
+@_fastapi.get("/sitemap-blog-{part}.xml")
 def sitemap_blog_part(part: int):
     all_urls = get_all_blog_urls()
     max_chunk = 25000
@@ -200,7 +227,7 @@ def sitemap_blog_part(part: int):
     return Response(content=_build_urlset(chunk), media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
 
 
-@app.get("/sitemap-strategies-{part}.xml")
+@_fastapi.get("/sitemap-strategies-{part}.xml")
 def sitemap_strategies_part(part: int):
     all_urls = get_all_strat_urls()
     max_chunk = 25000
@@ -209,7 +236,7 @@ def sitemap_strategies_part(part: int):
     return Response(content=_build_urlset(chunk), media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
 
 
-@app.get("/sitemap-indicators-{part}.xml")
+@_fastapi.get("/sitemap-indicators-{part}.xml")
 def sitemap_indicators_part(part: int):
     all_urls = get_all_ind_urls()
     max_chunk = 25000
@@ -218,19 +245,19 @@ def sitemap_indicators_part(part: int):
     return Response(content=_build_urlset(chunk), media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
 
 
-@app.get("/sitemap-regimes.xml")
+@_fastapi.get("/sitemap-regimes.xml")
 def sitemap_regimes():
     all_urls = get_all_regime_urls()
     return Response(content=_build_urlset(all_urls), media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
 
 
-@app.get("/sitemap-compare.xml")
+@_fastapi.get("/sitemap-compare.xml")
 def sitemap_compare():
     all_urls = get_all_compare_urls()
     return Response(content=_build_urlset(all_urls), media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
 
 
-@app.get("/sitemap-coins.xml")
+@_fastapi.get("/sitemap-coins.xml")
 def sitemap_coins():
     urls = ["https://zengtrade.in/coins/"]
     for c in base_coins:
@@ -238,7 +265,7 @@ def sitemap_coins():
     return Response(content=_build_urlset(urls), media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
 
 
-@app.get("/sitemap-core.xml")
+@_fastapi.get("/sitemap-core.xml")
 def sitemap_core():
     urls = [
         "https://zengtrade.in/",
@@ -258,7 +285,7 @@ def sitemap_core():
 
 
 # Serve other sitemaps directly from DIST if present
-@app.get("/{sitemap_name:str}.xml")
+@_fastapi.get("/{sitemap_name:str}.xml")
 def static_sitemap(sitemap_name: str):
     sm_file = os.path.join(DIST_DIR, f"{sitemap_name}.xml")
     if os.path.isfile(sm_file):
@@ -269,36 +296,36 @@ def static_sitemap(sitemap_name: str):
 
 # ---- CORE APPS & SPA PAGES ------------------------------------------------------------
 
-@app.get("/site.css")
+@_fastapi.get("/site.css")
 def site_css():
     p = os.path.join(DIST_DIR, "site.css")
     if os.path.exists(p):
         return Response(content=open(p, "r", encoding="utf-8").read(), media_type="text/css", headers={"Cache-Control": "public, max-age=31536000, immutable"})
     return Response(status_code=404)
 
-@app.get("/site.js")
+@_fastapi.get("/site.js")
 def site_js():
     p = os.path.join(DIST_DIR, "site.js")
     if os.path.exists(p):
         return Response(content=open(p, "r", encoding="utf-8").read(), media_type="application/javascript", headers={"Cache-Control": "public, max-age=31536000, immutable"})
     return Response(status_code=404)
 
-@app.get("/app")
+@_fastapi.get("/app")
 def app_page():
     p = os.path.join(SAAS_WEB_DIR, "app.html")
     return HTMLResponse(open(p, "r", encoding="utf-8").read())
 
-@app.get("/login")
+@_fastapi.get("/login")
 def login_page():
     p = os.path.join(SAAS_WEB_DIR, "login.html")
     return HTMLResponse(open(p, "r", encoding="utf-8").read())
 
-@app.get("/reset")
+@_fastapi.get("/reset")
 def reset_page():
     p = os.path.join(SAAS_WEB_DIR, "reset.html")
     return HTMLResponse(open(p, "r", encoding="utf-8").read())
 
-@app.get("/dashboard")
+@_fastapi.get("/dashboard")
 def dashboard_page():
     p = os.path.join(DIST_DIR, "dashboard", "index.html")
     if not os.path.exists(p):
@@ -308,7 +335,7 @@ def dashboard_page():
 
 # ---- DYNAMIC ROUTE RESOLVER (REAL-TIME SSR FOR ALL 300,000 PAGES) ----------------------
 
-@app.get("/{full_path:path}")
+@_fastapi.get("/{full_path:path}")
 def catch_all(request: Request, full_path: str):
     clean = full_path.strip("/")
 
