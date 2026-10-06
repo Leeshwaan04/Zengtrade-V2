@@ -2305,7 +2305,13 @@ html.js .lp-rv.in{opacity:1;transform:none}
     if (inflight) return;             // never let a slow request overlap the next tick
     inflight = true;
     fetch(FEED)
-      .then(function (r) { return r.json(); })
+      .then(function (r) {
+        if (!r.ok) throw new Error("direct failed");
+        return r.json();
+      })
+      .catch(function () {
+        return fetch("/api/tape").then(function (r) { return r.json(); });
+      })
       .then(function (rows) {
         if (!Array.isArray(rows)) return;
         var map = {};
@@ -2379,7 +2385,13 @@ html.js .lp-rv.in{opacity:1;transform:none}
   function fetchKlines() {
     var url = "https://data-api.binance.vision/api/v3/klines?symbol=" + symbol + "&interval=" + binanceInterval + "&limit=60";
     fetch(url)
-      .then(function(r) { return r.json(); })
+      .then(function(r) {
+        if (!r.ok) throw new Error("direct failed");
+        return r.json();
+      })
+      .catch(function() {
+        return fetch("/api/klines?symbol=" + symbol + "&interval=" + binanceInterval + "&limit=60").then(function(r) { return r.json(); });
+      })
       .then(function(raw) {
         if (!Array.isArray(raw) || raw.length === 0) {
           bars = genFallbackBars();

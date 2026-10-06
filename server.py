@@ -10,10 +10,13 @@ from __future__ import annotations
 import os
 import sys
 import time
+import json
+import urllib.request
+import urllib.parse
 from typing import Optional
 
 from fastapi import FastAPI, Request, Response
-from fastapi.responses import HTMLResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -163,7 +166,7 @@ async def add_security_headers(request: Request, call_next):
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; "
         "font-src 'self' https://fonts.gstatic.com; "
         "img-src 'self' data: https: https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://*.googletagmanager.com; "
-        "connect-src 'self' https://api.coingecko.com https://ponvarxeytfcntckczbn.supabase.co wss://ponvarxeytfcntckczbn.supabase.co https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://stats.g.doubleclick.net https://*.g.doubleclick.net; "
+        "connect-src 'self' https://data-api.binance.vision wss://data-stream.binance.vision https://api.binance.com wss://stream.binance.com https://api.coingecko.com https://ponvarxeytfcntckczbn.supabase.co wss://ponvarxeytfcntckczbn.supabase.co https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://stats.g.doubleclick.net https://*.g.doubleclick.net; "
         "object-src 'none'; "
         "base-uri 'self'; "
         "frame-ancestors 'none'; "
@@ -173,6 +176,42 @@ async def add_security_headers(request: Request, call_next):
     resp.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     resp.headers["Permissions-Policy"] = "geolocation=(), camera=(), microphone=(), payment=()"
     return resp
+
+
+_tape_cache = {"ts": 0, "data": []}
+
+@_fastapi.get("/api/tape")
+def api_tape():
+    """Proxy Binance 24hr ticker data to guarantee live tape renders even under strict client firewalls/ISPs."""
+    now = time.time()
+    if now - _tape_cache["ts"] < 10 and _tape_cache["data"]:
+        return JSONResponse(_tape_cache["data"], headers={"Cache-Control": "public, max-age=10"})
+    try:
+        symbols = json.dumps([p + "USDT" for p in ["BTC","ETH","SOL","BNB","XRP","ADA","DOGE","AVAX","LINK","MATIC"]], separators=(',', ':'))
+        url = f"https://data-api.binance.vision/api/v3/ticker/24hr?symbols={urllib.parse.quote(symbols)}"
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 zengtrade-ssr/1.0"})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = json.loads(resp.read().decode())
+            _tape_cache["ts"] = now
+            _tape_cache["data"] = data
+            return JSONResponse(data, headers={"Cache-Control": "public, max-age=10"})
+    except Exception as e:
+        if _tape_cache["data"]:
+            return JSONResponse(_tape_cache["data"], headers={"Cache-Control": "public, max-age=10"})
+        return JSONResponse([], status_code=502)
+
+
+@_fastapi.get("/api/klines")
+def api_klines(symbol: str = "BTCUSDT", interval: str = "15m", limit: int = 60):
+    """Proxy Binance klines for interactive candlestick chart on PSEO strategy pages."""
+    try:
+        url = f"https://data-api.binance.vision/api/v3/klines?symbol={urllib.parse.quote(symbol)}&interval={urllib.parse.quote(interval)}&limit={min(limit, 100)}"
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 zengtrade-ssr/1.0"})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = json.loads(resp.read().decode())
+            return JSONResponse(data, headers={"Cache-Control": "public, max-age=60"})
+    except Exception:
+        return JSONResponse([], status_code=502)
 
 
 @_fastapi.get("/healthz")
