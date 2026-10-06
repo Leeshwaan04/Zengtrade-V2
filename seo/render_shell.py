@@ -28,7 +28,8 @@ def _init_shell():
         x = x.replace('href="assets/', 'href="/assets/').replace('src="assets/', 'src="/assets/')
         x = x.replace('url(assets/', 'url(/assets/').replace('"assets/mascot-', '"/assets/mascot-')
         x = x.replace("'assets/mascot-", "'/assets/mascot-")
-        x = x.replace('assets/mascot-', '/assets/mascot-')
+        x = x.replace('//assets/', '/assets/')
+        x = x.replace('alt=""', 'alt="zengtrade Bull Market Mascot"')
         return x
 
     css, prebody, chrome, tail = map(absolutize, (css, prebody, chrome, tail))

@@ -376,29 +376,9 @@ def catch_all(request: Request, full_path: str):
         if os.path.isfile(p):
             return HTMLResponse(open(p, "r", encoding="utf-8").read(), headers={"Cache-Control": "public, max-age=3600"})
 
-    # 2. Exact match in DIST (pre-rendered core pages: pricing, how-it-works, coins, etc.)
-    p_dist_idx = os.path.join(DIST_DIR, clean, "index.html")
-    if os.path.isfile(p_dist_idx):
-        return HTMLResponse(open(p_dist_idx, "r", encoding="utf-8").read(), headers={"Cache-Control": "public, max-age=86400"})
-    
-    p_dist_file = os.path.join(DIST_DIR, clean)
-    if os.path.isfile(p_dist_file):
-        content_type = "text/html"
-        if clean.endswith(".json"): content_type = "application/json"
-        elif clean.endswith(".svg"): content_type = "image/svg+xml"
-        return Response(content=open(p_dist_file, "rb").read(), media_type=content_type)
-
-    # 3. Exact match in saas/web/ (e.g. contact.html, terms.html, privacy.html, ops.html)
-    p_saas = os.path.join(SAAS_WEB_DIR, clean + ".html")
-    if os.path.isfile(p_saas):
-        return HTMLResponse(open(p_saas, "r", encoding="utf-8").read(), headers={"Cache-Control": "public, max-age=86400"})
-
-    # 4. Real-time SSR: Blog Engine (/blog, /blog/, /blog/category/* and /blog/*)
+    # 2. Real-time SSR: Blog Engine (/blog, /blog/, /blog/category/* and /blog/*)
     if clean == "blog":
-        p_blog = os.path.join(DIST_DIR, "blog", "index.html")
-        if os.path.isfile(p_blog):
-            return HTMLResponse(open(p_blog, "r", encoding="utf-8").read(), headers={"Cache-Control": "public, max-age=86400"})
-        html = blog.resolve_blog_page("blog/category/crypto-trading-strategies", render_shell, COIN_ROSTER)
+        html = pseo.render_blog_hub(render_shell, COIN_ROSTER)
         if html:
             return HTMLResponse(html, headers={"Cache-Control": "public, max-age=86400"})
 
@@ -407,7 +387,7 @@ def catch_all(request: Request, full_path: str):
         if html:
             return HTMLResponse(html, headers={"Cache-Control": "public, max-age=86400, s-maxage=604800"})
 
-    # 4b. Real-time SSR: Coins Hub & Coin Detail Pages (/coins, /coins/{coin})
+    # 3. Real-time SSR: Coins Hub & Coin Detail Pages (/coins, /coins/{coin})
     if clean == "coins":
         p_coins = os.path.join(DIST_DIR, "coins", "index.html")
         if os.path.isfile(p_coins):
@@ -426,11 +406,29 @@ def catch_all(request: Request, full_path: str):
             title, desc, canon, cmain, extra = G.coin_parts(*COIN_BY_SLUG[slug])
             return HTMLResponse(render_shell(title, desc, canon, cmain, extra_head=extra), headers={"Cache-Control": "public, max-age=86400, s-maxage=604800"})
 
-    # 5. Real-time SSR: pSEO Strategies, Indicators, Regimes, Timeframes, Comparisons
-    if clean.startswith(("strategies/", "indicators/", "regimes/", "compare/")):
+    # 4. Real-time SSR: pSEO Strategies, Indicators, Regimes, Timeframes, Comparisons
+    if clean in ("strategies", "indicators", "regimes", "compare") or clean.startswith(("strategies/", "indicators/", "regimes/", "compare/")):
         html = pseo.resolve_pseo_page(clean, render_shell, COIN_ROSTER)
         if html:
             return HTMLResponse(html, headers={"Cache-Control": "public, max-age=86400, s-maxage=604800"})
+
+    # 5. Exact match in DIST (pre-rendered core pages: pricing, how-it-works, coins, etc.)
+    p_dist_idx = os.path.join(DIST_DIR, clean, "index.html")
+    if os.path.isfile(p_dist_idx):
+        return HTMLResponse(open(p_dist_idx, "r", encoding="utf-8").read(), headers={"Cache-Control": "public, max-age=86400"})
+    
+    p_dist_file = os.path.join(DIST_DIR, clean)
+    if os.path.isfile(p_dist_file):
+        content_type = "text/html"
+        if clean.endswith(".json"): content_type = "application/json"
+        elif clean.endswith(".svg"): content_type = "image/svg+xml"
+        return Response(content=open(p_dist_file, "rb").read(), media_type=content_type)
+
+    # 6. Exact match in saas/web/ (e.g. contact.html, terms.html, privacy.html, ops.html)
+    saas_name = clean if clean.endswith(".html") else f"{clean}.html"
+    p_saas = os.path.join(SAAS_WEB_DIR, saas_name)
+    if os.path.isfile(p_saas):
+        return HTMLResponse(open(p_saas, "r", encoding="utf-8").read(), headers={"Cache-Control": "public, max-age=86400"})
 
     # 6. Fallback 404
     p_404 = os.path.join(DIST_DIR, "404.html")

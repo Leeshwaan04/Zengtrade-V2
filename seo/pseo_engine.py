@@ -1028,7 +1028,7 @@ def render_indicator_coin_content(ind: dict, coin: tuple[str, str, str, str]) ->
     ind_slug = ind["slug"]
     ind_name = ind["name"]
     canon = f"{SITE}/indicators/{ind_slug}/{slug}/"
-    title = f"{name} ({sym}) {ind_name} Technical Analysis & Algo Signals | zengtrade"
+    title = f"{name} ({sym}) {ind_name} Signals & Analysis | zengtrade"
     desc = f"Technical analysis rules, calculation formulas, and algorithmic signal triggers for {ind_name} on {name} ({sym}). Paper-trade signals free on live data."
 
     schema = f"""<script type="application/ld+json">
@@ -1363,8 +1363,8 @@ def render_timeframe_strategy_content(strat: dict, coin: tuple[str, str, str, st
     tf_slug = tf["slug"]
     tf_name = tf["name"]
     canon = f"{SITE}/strategies/{strat_slug}/{slug}/{tf_slug}/"
-    title = f"{name} ({sym}) {tf_name} {strat_name} Strategy & Bot Signals | zengtrade"
-    desc = f"Algorithmic {tf_name} {strat_name} strategy for {name} ({sym}). Calibrated for {tf['horizon']} with {tf['noise_filter']}. Paper trade on live Binance data."
+    title = f"{name} ({sym}) {tf_slug.upper()} {strat_name} | zengtrade"
+    desc = f"Algorithmic {tf_slug.upper()} {strat_name} for {name} ({sym}) tuned for {tf['horizon']}. Free paper trading on live spot feeds."
 
     schema = f"""<script type="application/ld+json">
 {{
@@ -1553,8 +1553,8 @@ def render_timeframe_indicator_content(ind: dict, coin: tuple[str, str, str, str
     tf_slug = tf["slug"]
     tf_name = tf["name"]
     canon = f"{SITE}/indicators/{ind_slug}/{slug}/{tf_slug}/"
-    title = f"{name} ({sym}) {tf_name} {ind_name} Technical Analysis & Signals | zengtrade"
-    desc = f"Technical analysis rules, calculation formulas, and algorithmic signal triggers for {ind_name} on {name} ({sym}) on {tf_name}. Paper-trade signals free on live data."
+    title = f"{name} ({sym}) {tf_slug.upper()} {ind_name} Signals | zengtrade"
+    desc = f"Technical analysis rules and algorithmic signals for {ind_name} on {name} ({sym}) on {tf_slug.upper()}. Paper trade free on live data."
 
     schema = f"""<script type="application/ld+json">
 {{
@@ -2207,6 +2207,780 @@ document.addEventListener('DOMContentLoaded', function() {{
     return title, desc, canon, main_html
 
 
+def render_strategies_hub(shell_func, coin_roster: list) -> str:
+    title = "Systematic Crypto Trading Strategies & Quantitative Models | zengtrade"
+    desc = "Explore 15 systematic crypto trading strategies across 1,000 coins. Trend following, mean reversion, breakout, and arbitrage models calibrated for Binance spot feeds."
+    canon = f"{SITE}/strategies/"
+    sample_coins = coin_roster[:10] if coin_roster else [("BTC", "Bitcoin", "bitcoin", "major"), ("ETH", "Ethereum", "ethereum", "major"), ("SOL", "Solana", "solana", "layer-1")]
+
+    cards_html = []
+    for s in STRATEGIES:
+        s_slug = s["slug"]
+        s_name = s["name"]
+        cat = s["category"]
+        reg_fit = s["regime_fit"]
+        summary = s["summary"]
+        rr = s.get("risk_reward", "1:2")
+        hold = s.get("holding_period", "Swing")
+
+        coin_links = " ".join([
+            f'<a href="/strategies/{s_slug}/{c[2]}/">{c[0]}</a>'
+            for c in sample_coins[:6]
+        ])
+
+        cards_html.append(f"""
+        <div class="sm-strat-block">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span class="sm-cat">{html.escape(cat)}</span>
+            <span style="font-size:11px;color:var(--slate)">{html.escape(reg_fit)}</span>
+          </div>
+          <h3><a href="/strategies/{s_slug}/bitcoin/" style="color:var(--navy);text-decoration:none">{html.escape(s_name)}</a></h3>
+          <p>{html.escape(summary)}</p>
+          <div style="display:flex;gap:12px;font-size:12px;color:var(--slate);margin-bottom:12px">
+            <span>R:R <strong>{rr}</strong></span> &bull; <span>Horizon <strong>{hold}</strong></span>
+          </div>
+          <div class="sm-coin-chips">
+            {coin_links}
+            <a class="more-link" href="/strategies/{s_slug}/bitcoin/">View top pairs &rarr;</a>
+          </div>
+        </div>
+        """)
+
+    strat_cards = "\n".join(cards_html)
+
+    schema = f"""<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Systematic Crypto Trading Strategies",
+  "description": "{html.escape(desc)}",
+  "url": "{canon}",
+  "publisher": {{
+    "@type": "Organization",
+    "name": "zengtrade",
+    "url": "https://zengtrade.in/",
+    "logo": "https://zengtrade.in/assets/logo.svg"
+  }}
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://zengtrade.in/"}},
+    {{"@type": "ListItem", "position": 2, "name": "Strategies", "item": "{canon}"}}
+  ]
+}}
+</script>
+<style>{PSEO_CSS}</style>"""
+
+    main_html = f"""<main id="main" class="pseo-page">
+  <section class="lp-hero pseo-hero">
+    <div class="lp-wrap">
+      <div class="pseo-breadcrumbs">
+        <a href="/">Home</a> <span>/</span>
+        <span class="active">Strategies</span>
+      </div>
+      <div class="lp-eyebrow"><span class="dot"></span> Quantitative Strategy Catalog</div>
+      <h1 class="lp-h1">Systematic Crypto Trading Strategies</h1>
+      <p class="lp-lead">15 algorithmic trading strategies designed for crypto market cycles. Every model is calibrated with realistic 35 bps round-trip friction and tested in forward simulation.</p>
+      <div class="lp-hero-cta">
+        <a href="/dashboard" class="btn btn-primary">Deploy Paper Strategy in Algo Studio &rarr;</a>
+        <a href="/coins/" class="btn btn-secondary">Browse All 1,000+ Coins</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec">
+    <div class="lp-wrap">
+      <div class="sm-strat-list">
+        {strat_cards}
+      </div>
+    </div>
+  </section>
+</main>"""
+    return shell_func(title, desc, canon, main_html, extra_head=schema)
+
+
+def render_strategy_sub_hub(strat: dict, shell_func, coin_roster: list) -> str:
+    s_slug = strat["slug"]
+    s_name = strat["name"]
+    cat = strat["category"]
+    title = f"{s_name} Strategy Guide & Crypto Pairs | zengtrade"
+    desc = f"Algorithmic execution rules, entry and exit parameters, and forward paper simulation for {s_name} across top crypto assets on live Binance spot data."
+    canon = f"{SITE}/strategies/{s_slug}/"
+    sample_coins = coin_roster[:30] if coin_roster else []
+
+    coin_cards = []
+    for c in sample_coins:
+        coin_cards.append(f"""
+        <a class="sm-card" href="/strategies/{s_slug}/{c[2]}/">
+          <strong>{c[0]} &middot; {c[1]}</strong>
+          <span>{s_name} signals &rarr;</span>
+        </a>
+        """)
+    coins_grid = "\n".join(coin_cards)
+
+    schema = f"""<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "{html.escape(s_name)} Strategy Guide",
+  "description": "{html.escape(desc)}",
+  "url": "{canon}",
+  "publisher": {{
+    "@type": "Organization",
+    "name": "zengtrade",
+    "url": "https://zengtrade.in/",
+    "logo": "https://zengtrade.in/assets/logo.svg"
+  }}
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://zengtrade.in/"}},
+    {{"@type": "ListItem", "position": 2, "name": "Strategies", "item": "https://zengtrade.in/strategies/"}},
+    {{"@type": "ListItem", "position": 3, "name": "{html.escape(s_name)}", "item": "{canon}"}}
+  ]
+}}
+</script>
+<style>{PSEO_CSS}</style>"""
+
+    main_html = f"""<main id="main" class="pseo-page">
+  <section class="lp-hero pseo-hero">
+    <div class="lp-wrap">
+      <div class="pseo-breadcrumbs">
+        <a href="/">Home</a> <span>/</span>
+        <a href="/strategies/">Strategies</a> <span>/</span>
+        <span class="active">{s_name}</span>
+      </div>
+      <div class="lp-eyebrow"><span class="dot"></span> {cat} Engine &middot; {strat['regime_fit']}</div>
+      <h1 class="lp-h1">{s_name} Strategy</h1>
+      <p class="lp-lead">{strat['summary']}</p>
+      <div class="lp-hero-cta">
+        <a href="/dashboard" class="btn btn-primary">Forward-Test on BTC in Algo Studio &rarr;</a>
+        <a href="/strategies/" class="btn btn-secondary">All Strategies Catalog</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec">
+    <div class="lp-wrap">
+      <h2 class="lp-h2">Supported Cryptocurrency Pairs</h2>
+      <div class="sm-grid">
+        {coins_grid}
+      </div>
+    </div>
+  </section>
+</main>"""
+    return shell_func(title, desc, canon, main_html, extra_head=schema)
+
+
+def render_indicators_hub(shell_func, coin_roster: list) -> str:
+    title = "Technical Indicators & Quantitative Signals for Crypto | zengtrade"
+    desc = "Technical indicator guides, mathematical formulas, and algorithmic signals for 12 key indicators across 1,000 crypto assets. Automated alerts on live Binance data."
+    canon = f"{SITE}/indicators/"
+    sample_coins = coin_roster[:10] if coin_roster else []
+
+    cards_html = []
+    for ind in INDICATORS:
+        i_slug = ind["slug"]
+        i_name = ind["name"]
+        i_type = ind["type"]
+        formula = ind["formula"]
+        interp = ind["interpretation"]
+
+        coin_links = " ".join([
+            f'<a href="/indicators/{i_slug}/{c[2]}/">{c[0]}</a>'
+            for c in sample_coins[:6]
+        ])
+
+        cards_html.append(f"""
+        <div class="sm-strat-block">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span class="sm-cat">{html.escape(i_type)}</span>
+            <span style="font-size:11px;color:var(--slate)">{html.escape(ind['standard_lookback'])}</span>
+          </div>
+          <h3><a href="/indicators/{i_slug}/bitcoin/" style="color:var(--navy);text-decoration:none">{html.escape(i_name)}</a></h3>
+          <p>{html.escape(interp)}</p>
+          <div class="formula-box"><code>{html.escape(formula)}</code></div>
+          <div class="sm-coin-chips">
+            {coin_links}
+            <a class="more-link" href="/indicators/{i_slug}/bitcoin/">View top pairs &rarr;</a>
+          </div>
+        </div>
+        """)
+
+    ind_cards = "\n".join(cards_html)
+
+    schema = f"""<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Technical Indicators & Quantitative Signals",
+  "description": "{html.escape(desc)}",
+  "url": "{canon}",
+  "publisher": {{
+    "@type": "Organization",
+    "name": "zengtrade",
+    "url": "https://zengtrade.in/",
+    "logo": "https://zengtrade.in/assets/logo.svg"
+  }}
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://zengtrade.in/"}},
+    {{"@type": "ListItem", "position": 2, "name": "Indicators", "item": "{canon}"}}
+  ]
+}}
+</script>
+<style>{PSEO_CSS}</style>"""
+
+    main_html = f"""<main id="main" class="pseo-page">
+  <section class="lp-hero pseo-hero">
+    <div class="lp-wrap">
+      <div class="pseo-breadcrumbs">
+        <a href="/">Home</a> <span>/</span>
+        <span class="active">Indicators</span>
+      </div>
+      <div class="lp-eyebrow"><span class="dot"></span> Technical Indicators &amp; Signal Rules</div>
+      <h1 class="lp-h1">Technical Indicators &amp; Quantitative Signals</h1>
+      <p class="lp-lead">Precision mathematical indicators, boundary conditions, and algorithmic signal triggers calibrated across 1,000+ Binance spot pairs.</p>
+      <div class="lp-hero-cta">
+        <a href="/dashboard" class="btn btn-primary">Chart Indicators in Algo Studio &rarr;</a>
+        <a href="/strategies/" class="btn btn-secondary">Explore Trading Strategies</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec">
+    <div class="lp-wrap">
+      <div class="sm-strat-list">
+        {ind_cards}
+      </div>
+    </div>
+  </section>
+</main>"""
+    return shell_func(title, desc, canon, main_html, extra_head=schema)
+
+
+def render_indicator_sub_hub(ind: dict, shell_func, coin_roster: list) -> str:
+    i_slug = ind["slug"]
+    i_name = ind["name"]
+    title = f"{i_name} Technical Analysis & Signal Pairs | zengtrade"
+    desc = f"Technical analysis rules, calculation formulas, and algorithmic signal triggers for {i_name} across top crypto assets on live Binance spot data."
+    canon = f"{SITE}/indicators/{i_slug}/"
+    sample_coins = coin_roster[:30] if coin_roster else []
+
+    coin_cards = []
+    for c in sample_coins:
+        coin_cards.append(f"""
+        <a class="sm-card" href="/indicators/{i_slug}/{c[2]}/">
+          <strong>{c[0]} &middot; {c[1]}</strong>
+          <span>{i_name} signals &rarr;</span>
+        </a>
+        """)
+    coins_grid = "\n".join(coin_cards)
+
+    schema = f"""<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "{html.escape(i_name)} Indicator Guide",
+  "description": "{html.escape(desc)}",
+  "url": "{canon}",
+  "publisher": {{
+    "@type": "Organization",
+    "name": "zengtrade",
+    "url": "https://zengtrade.in/",
+    "logo": "https://zengtrade.in/assets/logo.svg"
+  }}
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://zengtrade.in/"}},
+    {{"@type": "ListItem", "position": 2, "name": "Indicators", "item": "https://zengtrade.in/indicators/"}},
+    {{"@type": "ListItem", "position": 3, "name": "{html.escape(i_name)}", "item": "{canon}"}}
+  ]
+}}
+</script>
+<style>{PSEO_CSS}</style>"""
+
+    main_html = f"""<main id="main" class="pseo-page">
+  <section class="lp-hero pseo-hero">
+    <div class="lp-wrap">
+      <div class="pseo-breadcrumbs">
+        <a href="/">Home</a> <span>/</span>
+        <a href="/indicators/">Indicators</a> <span>/</span>
+        <span class="active">{i_name}</span>
+      </div>
+      <div class="lp-eyebrow"><span class="dot"></span> {ind['type']} &middot; Lookback: {ind['standard_lookback']}</div>
+      <h1 class="lp-h1">{i_name}</h1>
+      <p class="lp-lead">{ind['interpretation']}</p>
+      <div class="formula-box"><code>{html.escape(ind['formula'])}</code></div>
+      <div class="lp-hero-cta">
+        <a href="/dashboard" class="btn btn-primary">Chart {i_name} on BTC &rarr;</a>
+        <a href="/indicators/" class="btn btn-secondary">All Indicators</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec">
+    <div class="lp-wrap">
+      <h2 class="lp-h2">Supported Cryptocurrency Pairs</h2>
+      <div class="sm-grid">
+        {coins_grid}
+      </div>
+    </div>
+  </section>
+</main>"""
+    return shell_func(title, desc, canon, main_html, extra_head=schema)
+
+
+def render_regimes_hub(shell_func, coin_roster: list) -> str:
+    title = "Market Regimes & Volatility State Classification | zengtrade"
+    desc = "Regime-aware crypto trading framework. How Bull, Neutral, Bear, Choppy, and Volatile market regimes dictate risk, position sizing, and strategy activation."
+    canon = f"{SITE}/regimes/"
+    sample_coins = coin_roster[:10] if coin_roster else []
+
+    cards_html = []
+    for r in REGIMES:
+        r_slug = r["slug"]
+        r_name = r["name"]
+        bias = r["bias"]
+        cash = r["cash_allocation"]
+        styles = r["favored_styles"]
+        gov = r["risk_governor"]
+        overview = r["overview"]
+
+        coin_links = " ".join([
+            f'<a href="/regimes/{r_slug}/{c[2]}/">{c[0]}</a>'
+            for c in sample_coins[:6]
+        ])
+
+        cards_html.append(f"""
+        <div class="sm-strat-block">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span class="sm-cat">{html.escape(bias)}</span>
+            <span style="font-size:11px;color:var(--slate)">{html.escape(cash)}</span>
+          </div>
+          <h3><a href="/regimes/{r_slug}/bitcoin/" style="color:var(--navy);text-decoration:none">{html.escape(r_name)}</a></h3>
+          <p>{html.escape(overview)}</p>
+          <div style="font-size:12.5px;color:var(--slate);margin:10px 0">
+            <strong style="color:var(--navy)">Policy:</strong> {html.escape(gov)}
+          </div>
+          <div style="font-size:12px;color:var(--accent);margin-bottom:12px">
+            <strong>Active Styles:</strong> {html.escape(styles)}
+          </div>
+          <div class="sm-coin-chips">
+            {coin_links}
+            <a class="more-link" href="/regimes/{r_slug}/bitcoin/">View coin classifications &rarr;</a>
+          </div>
+        </div>
+        """)
+
+    reg_cards = "\n".join(cards_html)
+
+    schema = f"""<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Market Regimes & Volatility State Classification",
+  "description": "{html.escape(desc)}",
+  "url": "{canon}",
+  "publisher": {{
+    "@type": "Organization",
+    "name": "zengtrade",
+    "url": "https://zengtrade.in/",
+    "logo": "https://zengtrade.in/assets/logo.svg"
+  }}
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://zengtrade.in/"}},
+    {{"@type": "ListItem", "position": 2, "name": "Regimes", "item": "{canon}"}}
+  ]
+}}
+</script>
+<style>{PSEO_CSS}</style>"""
+
+    main_html = f"""<main id="main" class="pseo-page">
+  <section class="lp-hero pseo-hero">
+    <div class="lp-wrap">
+      <div class="pseo-breadcrumbs">
+        <a href="/">Home</a> <span>/</span>
+        <span class="active">Regimes</span>
+      </div>
+      <div class="lp-eyebrow"><span class="dot"></span> Regime Classification Engine</div>
+      <h1 class="lp-h1">Market Regimes &amp; Volatility States</h1>
+      <p class="lp-lead">The market has moods. The Zengtrade engine reads live trend, volatility, and volume structure to adapt position sizing, activate compatible strategies, and stand aside during chop.</p>
+      <div class="lp-hero-cta">
+        <a href="/how-it-works/" class="btn btn-primary">How the Regime Engine Works &rarr;</a>
+        <a href="/dashboard" class="btn btn-secondary">Open Algo Studio</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec">
+    <div class="lp-wrap">
+      <div class="sm-strat-list">
+        {reg_cards}
+      </div>
+    </div>
+  </section>
+</main>"""
+    return shell_func(title, desc, canon, main_html, extra_head=schema)
+
+
+def render_regime_sub_hub(reg: dict, shell_func, coin_roster: list) -> str:
+    r_slug = reg["slug"]
+    r_name = reg["name"]
+    title = f"{r_name} Crypto Analysis & Strategy Playbook | zengtrade"
+    desc = f"Algorithmic posture, cash allocation, and favored trading strategies during {r_name} across top crypto assets on Binance spot feeds."
+    canon = f"{SITE}/regimes/{r_slug}/"
+    sample_coins = coin_roster[:30] if coin_roster else []
+
+    coin_cards = []
+    for c in sample_coins:
+        coin_cards.append(f"""
+        <a class="sm-card" href="/regimes/{r_slug}/{c[2]}/">
+          <strong>{c[0]} &middot; {c[1]}</strong>
+          <span>{r_name} posture &rarr;</span>
+        </a>
+        """)
+    coins_grid = "\n".join(coin_cards)
+
+    schema = f"""<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "{html.escape(r_name)} Analysis",
+  "description": "{html.escape(desc)}",
+  "url": "{canon}",
+  "publisher": {{
+    "@type": "Organization",
+    "name": "zengtrade",
+    "url": "https://zengtrade.in/",
+    "logo": "https://zengtrade.in/assets/logo.svg"
+  }}
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://zengtrade.in/"}},
+    {{"@type": "ListItem", "position": 2, "name": "Regimes", "item": "https://zengtrade.in/regimes/"}},
+    {{"@type": "ListItem", "position": 3, "name": "{html.escape(r_name)}", "item": "{canon}"}}
+  ]
+}}
+</script>
+<style>{PSEO_CSS}</style>"""
+
+    main_html = f"""<main id="main" class="pseo-page">
+  <section class="lp-hero pseo-hero">
+    <div class="lp-wrap">
+      <div class="pseo-breadcrumbs">
+        <a href="/">Home</a> <span>/</span>
+        <a href="/regimes/">Regimes</a> <span>/</span>
+        <span class="active">{r_name}</span>
+      </div>
+      <div class="lp-eyebrow"><span class="dot"></span> {reg['bias']} &middot; Cash: {reg['cash_allocation']}</div>
+      <h1 class="lp-h1">{r_name}</h1>
+      <p class="lp-lead">{reg['overview']}</p>
+      <div style="margin:16px 0;padding:16px 20px;background:var(--surface);border:1px solid var(--line);border-radius:12px;font-size:13.5px;color:var(--slate)">
+        <strong style="color:var(--navy)">Risk Governor Mandate:</strong> {reg['risk_governor']}
+      </div>
+      <div class="lp-hero-cta">
+        <a href="/dashboard" class="btn btn-primary">Test in Algo Studio &rarr;</a>
+        <a href="/regimes/" class="btn btn-secondary">All Market Regimes</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec">
+    <div class="lp-wrap">
+      <h2 class="lp-h2">Supported Cryptocurrency Pairs</h2>
+      <div class="sm-grid">
+        {coins_grid}
+      </div>
+    </div>
+  </section>
+</main>"""
+    return shell_func(title, desc, canon, main_html, extra_head=schema)
+
+
+def render_compare_hub(shell_func, coin_roster: list) -> str:
+    title = "Crypto Strategy Comparisons & Algorithmic Showdowns | zengtrade"
+    desc = "Side-by-side quantitative comparisons of crypto trading strategies. Win rate, maximum drawdown, regime adaptability, and execution friction evaluated."
+    canon = f"{SITE}/compare/"
+    sample_coins = coin_roster[:10] if coin_roster else []
+
+    cards_html = []
+    for s in SHOWDOWNS:
+        s_slug = s["slug"]
+        s_name = s["name"]
+        a_name = s["strat1_name"]
+        b_name = s["strat2_name"]
+        diff = s["comparison_thesis"]
+
+        coin_links = " ".join([
+            f'<a href="/compare/{s_slug}/{c[2]}/">{c[0]}</a>'
+            for c in sample_coins[:6]
+        ])
+
+        cards_html.append(f"""
+        <div class="sm-strat-block">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span class="sm-cat">{html.escape(a_name)} vs {html.escape(b_name)}</span>
+          </div>
+          <h3><a href="/compare/{s_slug}/bitcoin/" style="color:var(--navy);text-decoration:none">{html.escape(s_name)}</a></h3>
+          <p>{html.escape(diff)}</p>
+          <div class="sm-coin-chips">
+            {coin_links}
+            <a class="more-link" href="/compare/{s_slug}/bitcoin/">View comparison breakdown &rarr;</a>
+          </div>
+        </div>
+        """)
+
+    comp_cards = "\n".join(cards_html)
+
+    schema = f"""<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Crypto Strategy Comparisons & Showdowns",
+  "description": "{html.escape(desc)}",
+  "url": "{canon}",
+  "publisher": {{
+    "@type": "Organization",
+    "name": "zengtrade",
+    "url": "https://zengtrade.in/",
+    "logo": "https://zengtrade.in/assets/logo.svg"
+  }}
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://zengtrade.in/"}},
+    {{"@type": "ListItem", "position": 2, "name": "Compare", "item": "{canon}"}}
+  ]
+}}
+</script>
+<style>{PSEO_CSS}</style>"""
+
+    main_html = f"""<main id="main" class="pseo-page">
+  <section class="lp-hero pseo-hero">
+    <div class="lp-wrap">
+      <div class="pseo-breadcrumbs">
+        <a href="/">Home</a> <span>/</span>
+        <span class="active">Compare</span>
+      </div>
+      <div class="lp-eyebrow"><span class="dot"></span> Strategy Showdowns &amp; Benchmarks</div>
+      <h1 class="lp-h1">Strategy Comparisons &amp; Algorithmic Showdowns</h1>
+      <p class="lp-lead">Side-by-side head-to-head backtesting analysis comparing trend-following, mean reversion, and volatility breakout models across historical market cycles.</p>
+      <div class="lp-hero-cta">
+        <a href="/dashboard" class="btn btn-primary">Compare Strategies in Algo Studio &rarr;</a>
+        <a href="/strategies/" class="btn btn-secondary">Strategy Catalog</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec">
+    <div class="lp-wrap">
+      <div class="sm-strat-list">
+        {comp_cards}
+      </div>
+    </div>
+  </section>
+</main>"""
+    return shell_func(title, desc, canon, main_html, extra_head=schema)
+
+
+def render_showdown_sub_hub(showdown: dict, shell_func, coin_roster: list) -> str:
+    s_slug = showdown["slug"]
+    s_name = showdown["name"]
+    title = f"{s_name} Comparison & Crypto Showdowns | zengtrade"
+    desc = f"Quantitative comparison evaluating {showdown['strat1_name']} versus {showdown['strat2_name']} on win rate, drawdown, and fee efficiency."
+    canon = f"{SITE}/compare/{s_slug}/"
+    sample_coins = coin_roster[:30] if coin_roster else []
+
+    coin_cards = []
+    for c in sample_coins:
+        coin_cards.append(f"""
+        <a class="sm-card" href="/compare/{s_slug}/{c[2]}/">
+          <strong>{c[0]} &middot; {c[1]}</strong>
+          <span>{s_name} on {c[0]} &rarr;</span>
+        </a>
+        """)
+    coins_grid = "\n".join(coin_cards)
+
+    schema = f"""<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "{html.escape(s_name)} Comparison Guide",
+  "description": "{html.escape(desc)}",
+  "url": "{canon}",
+  "publisher": {{
+    "@type": "Organization",
+    "name": "zengtrade",
+    "url": "https://zengtrade.in/",
+    "logo": "https://zengtrade.in/assets/logo.svg"
+  }}
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://zengtrade.in/"}},
+    {{"@type": "ListItem", "position": 2, "name": "Compare", "item": "https://zengtrade.in/compare/"}},
+    {{"@type": "ListItem", "position": 3, "name": "{html.escape(s_name)}", "item": "{canon}"}}
+  ]
+}}
+</script>
+<style>{PSEO_CSS}</style>"""
+
+    main_html = f"""<main id="main" class="pseo-page">
+  <section class="lp-hero pseo-hero">
+    <div class="lp-wrap">
+      <div class="pseo-breadcrumbs">
+        <a href="/">Home</a> <span>/</span>
+        <a href="/compare/">Compare</a> <span>/</span>
+        <span class="active">{s_name}</span>
+      </div>
+      <div class="lp-eyebrow"><span class="dot"></span> {showdown['strat1_name']} vs {showdown['strat2_name']}</div>
+      <h1 class="lp-h1">{s_name}</h1>
+      <p class="lp-lead">{showdown['comparison_thesis']}</p>
+      <div class="lp-hero-cta">
+        <a href="/dashboard" class="btn btn-primary">Backtest Both in Algo Studio &rarr;</a>
+        <a href="/compare/" class="btn btn-secondary">All Strategy Showdowns</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec">
+    <div class="lp-wrap">
+      <h2 class="lp-h2">Supported Cryptocurrency Pairs</h2>
+      <div class="sm-grid">
+        {coins_grid}
+      </div>
+    </div>
+  </section>
+</main>"""
+    return shell_func(title, desc, canon, main_html, extra_head=schema)
+
+
+def render_blog_hub(shell_func, coin_roster: list) -> str:
+    try:
+        from blog_engine_data import PILLARS, generate_topics
+    except ImportError:
+        from seo.blog_engine_data import PILLARS, generate_topics
+
+    title = "Quantitative Crypto Research & Strategy Insights | zengtrade"
+    desc = "Deep quantitative research, market microstructure analyses, algorithmic trading playbooks, and honest build-in-public strategy documentation from zengtrade."
+    canon = f"{SITE}/blog/"
+    topics = generate_topics()
+    sample_coins = coin_roster[:6] if coin_roster else [("BTC", "Bitcoin", "bitcoin", "major"), ("ETH", "Ethereum", "ethereum", "major")]
+
+    pillar_cards = []
+    for p_slug, p_name in PILLARS.items():
+        p_topics = [t for t in topics if t["pillar"] == p_slug][:4]
+        topic_links = "".join([
+            f'<li><a href="/blog/{sample_coins[0][2]}-{t["slug"]}/">{t["title"]}</a></li>'
+            for t in p_topics
+        ])
+        pillar_cards.append(f"""
+        <div class="sm-strat-block">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span class="sm-cat">{html.escape(p_name)}</span>
+            <a href="/blog/category/{p_slug}/" style="font-size:12px;color:var(--accent);text-decoration:none;font-weight:600">Category Guide &rarr;</a>
+          </div>
+          <h3><a href="/blog/category/{p_slug}/" style="color:var(--navy);text-decoration:none">{html.escape(p_name)} Hub</a></h3>
+          <ul class="pseo-list" style="margin:12px 0">
+            {topic_links}
+          </ul>
+        </div>
+        """)
+    pillars_html = "\n".join(pillar_cards)
+
+    schema = f"""<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Quantitative Crypto Research & Strategy Insights",
+  "description": "{html.escape(desc)}",
+  "url": "{canon}",
+  "publisher": {{
+    "@type": "Organization",
+    "name": "zengtrade",
+    "url": "https://zengtrade.in/",
+    "logo": "https://zengtrade.in/assets/logo.svg"
+  }}
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://zengtrade.in/"}},
+    {{"@type": "ListItem", "position": 2, "name": "Blog", "item": "{canon}"}}
+  ]
+}}
+</script>
+<style>{PSEO_CSS}</style>"""
+
+    main_html = f"""<main id="main" class="pseo-page">
+  <section class="lp-hero pseo-hero">
+    <div class="lp-wrap">
+      <div class="pseo-breadcrumbs">
+        <a href="/">Home</a> <span>/</span>
+        <span class="active">Blog</span>
+      </div>
+      <div class="lp-eyebrow"><span class="dot"></span> Quantitative Research &amp; Market Insights</div>
+      <h1 class="lp-h1">Quantitative Crypto Research &amp; Strategy Insights</h1>
+      <p class="lp-lead">Rigorous quantitative guides, order flow mechanics, algorithmic trading playbooks, and honest build-in-public strategy documentation.</p>
+      <div class="lp-hero-cta">
+        <a href="/dashboard" class="btn btn-primary">Open Algo Studio &rarr;</a>
+        <a href="/how-it-works/" class="btn btn-secondary">Regime Methodology</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec">
+    <div class="lp-wrap">
+      <div class="sm-strat-list">
+        {pillars_html}
+      </div>
+    </div>
+  </section>
+</main>"""
+    return shell_func(title, desc, canon, main_html, extra_head=schema)
+
+
 def resolve_pseo_page(clean_path: str, shell_func, coin_roster: list) -> str | None:
     """Dynamically resolves and renders any of the 150,000 pSEO pages on the fly."""
     parts = [p for p in clean_path.strip("/").split("/") if p]
@@ -2219,6 +2993,25 @@ def resolve_pseo_page(clean_path: str, shell_func, coin_roster: list) -> str | N
     reg_map = {r["slug"]: r for r in REGIMES}
     tf_map = {t["slug"]: t for t in TIMEFRAMES}
     showdown_map = {s["slug"]: s for s in SHOWDOWNS}
+
+    # Category Hubs
+    if len(parts) == 1:
+        if parts[0] == "strategies": return render_strategies_hub(shell_func, coin_roster)
+        if parts[0] == "indicators": return render_indicators_hub(shell_func, coin_roster)
+        if parts[0] == "regimes": return render_regimes_hub(shell_func, coin_roster)
+        if parts[0] == "compare": return render_compare_hub(shell_func, coin_roster)
+        if parts[0] == "blog": return render_blog_hub(shell_func, coin_roster)
+
+    # Sub-hubs
+    if len(parts) == 2:
+        if parts[0] == "strategies" and parts[1] in strat_map:
+            return render_strategy_sub_hub(strat_map[parts[1]], shell_func, coin_roster)
+        if parts[0] == "indicators" and parts[1] in ind_map:
+            return render_indicator_sub_hub(ind_map[parts[1]], shell_func, coin_roster)
+        if parts[0] == "regimes" and parts[1] in reg_map:
+            return render_regime_sub_hub(reg_map[parts[1]], shell_func, coin_roster)
+        if parts[0] == "compare" and parts[1] in showdown_map:
+            return render_showdown_sub_hub(showdown_map[parts[1]], shell_func, coin_roster)
 
     # /strategies/{strat}/{coin}/
     if len(parts) == 3 and parts[0] == "strategies" and parts[1] in strat_map and parts[2] in coin_map:

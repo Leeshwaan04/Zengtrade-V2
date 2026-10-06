@@ -12,6 +12,24 @@ Run:  python3 deploy/landing/build.py   ->  writes into deploy/landing/dist/
 import os, re, shutil, hashlib
 from datetime import datetime, timezone
 
+def _safe_copyfile(src, dst, *, follow_symlinks=True):
+    with open(src, "rb") as fsrc, open(dst, "wb") as fdst:
+        shutil.copyfileobj(fsrc, fdst)
+
+def _safe_copystat(src, dst, *, follow_symlinks=True):
+    pass
+
+_orig_copytree = shutil.copytree
+def _safe_copytree(src, dst, *args, **kwargs):
+    kwargs["copy_function"] = _safe_copyfile
+    return _orig_copytree(src, dst, *args, **kwargs)
+
+shutil.copyfile = _safe_copyfile
+shutil.copystat = _safe_copystat
+shutil.copy = _safe_copyfile
+shutil.copy2 = _safe_copyfile
+shutil.copytree = _safe_copytree
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = open(os.path.join(HERE, "index.html")).read()
 DIST = os.path.join(HERE, "dist")
@@ -69,7 +87,8 @@ def absolutize(x):
     x = x.replace('href="assets/', 'href="/assets/').replace('src="assets/', 'src="/assets/')
     x = x.replace('url(assets/', 'url(/assets/').replace('"assets/mascot-', '"/assets/mascot-')
     x = x.replace("'assets/mascot-", "'/assets/mascot-")
-    x = x.replace('assets/mascot-', '/assets/mascot-')
+    x = x.replace('//assets/', '/assets/')
+    x = x.replace('alt=""', 'alt="zengtrade Bull Market Mascot"')
     return x
 site_js = absolutize(site_js)
 css, prebody, chrome, main_hiw, tail = map(absolutize, (css, prebody, chrome, main_hiw, tail))

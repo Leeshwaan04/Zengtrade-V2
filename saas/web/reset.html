@@ -35,9 +35,9 @@
   @media(prefers-reduced-motion:reduce){.aurora,.grid-motion{animation:none}}
   .auth{width:100%;max-width:410px;position:relative;z-index:1}
   .brand{justify-content:center;margin-bottom:6px}
-  .tag{text-align:center;color:var(--slate);font-size:13.5px;margin:0 0 22px}
+  .tag{text-align:center;color:var(--slate);font-size:13.5px;font-weight:600;margin:0 0 22px;line-height:1.4}
   .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px}
-  h1{font:800 20px/1.2 var(--sans);margin:0 0 5px;text-align:center;color:var(--navy)}
+  .sub-head{font:800 20px/1.2 var(--sans);margin:0 0 5px;text-align:center;color:var(--navy)}
   .sub{color:var(--slate);font-size:13.5px;text-align:center;margin:0 0 18px;line-height:1.5}
   .pane[hidden]{display:none}
   .foot{text-align:center;color:var(--slate-2);font-size:11.5px;margin-top:18px}
@@ -47,10 +47,10 @@
 <div class="ambient" aria-hidden="true"><span class="aurora a1"></span><span class="aurora a2"></span><span class="aurora a3"></span><span class="grid-motion"></span></div>
 <div class="auth">
   <div class="brand"><svg class="logo" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#00AB4E"/><path d="M24.69 13.67A9 9 0 1 1 20.5 8.21" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M12.5 19.5L17 15L20 17.5L26.5 8.8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>zengtrade</div>
-  <p class="tag">Account recovery</p>
+  <h1 class="tag">Account recovery</h1>
   <div class="card">
     <div class="pane" id="p-form">
-      <h1>Choose a new password</h1>
+      <h2 class="sub-head">Choose a new password</h2>
       <p class="sub">Enter a new password for your account.</p>
       <form id="f">
         <label for="pw">New password</label>
@@ -61,7 +61,7 @@
       </form>
     </div>
     <div class="pane" id="p-invalid" hidden>
-      <h1>Open the link from your email</h1>
+      <h2 class="sub-head">Open the link from your email</h2>
       <p class="sub">This page works from the password-reset link we email you. Request a fresh one from the sign-in page.</p>
       <a href="/login/" style="display:flex;justify-content:center;text-decoration:none;color:var(--navy);border:1px solid var(--line-2,var(--line));border-radius:10px;padding:12px 15px;font:700 13.5px/1 var(--sans)">Back to sign in</a>
     </div>
