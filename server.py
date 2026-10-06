@@ -193,6 +193,15 @@ def robots():
 
 # ---- DYNAMIC REAL-TIME SITEMAPS (ALL 393,000+ URLS) --------------------------------------
 
+_SITEMAP_XML_CACHE = {}
+
+def _get_or_build_sitemap_xml(cache_key: str, urls_or_callable):
+    if cache_key not in _SITEMAP_XML_CACHE:
+        urls = urls_or_callable() if callable(urls_or_callable) else urls_or_callable
+        _SITEMAP_XML_CACHE[cache_key] = _build_urlset(urls)
+    return _SITEMAP_XML_CACHE[cache_key]
+
+
 def _build_urlset(urls):
     if not urls:
         return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>'
@@ -233,49 +242,58 @@ def sitemap_index():
 
 @_fastapi.get("/sitemap-blog-{part}.xml")
 def sitemap_blog_part(part: int):
-    all_urls = get_all_blog_urls()
-    max_chunk = 25000
-    start = (part - 1) * max_chunk
-    chunk = all_urls[start : start + max_chunk]
-    return Response(content=_build_urlset(chunk), media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
+    def _get_chunk():
+        all_urls = get_all_blog_urls()
+        max_chunk = 25000
+        start = (part - 1) * max_chunk
+        return all_urls[start : start + max_chunk]
+    xml = _get_or_build_sitemap_xml(f"blog_{part}", _get_chunk)
+    return Response(content=xml, media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @_fastapi.get("/sitemap-strategies-{part}.xml")
 def sitemap_strategies_part(part: int):
-    all_urls = get_all_strat_urls()
-    max_chunk = 25000
-    start = (part - 1) * max_chunk
-    chunk = all_urls[start : start + max_chunk]
-    return Response(content=_build_urlset(chunk), media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
+    def _get_chunk():
+        all_urls = get_all_strat_urls()
+        max_chunk = 25000
+        start = (part - 1) * max_chunk
+        return all_urls[start : start + max_chunk]
+    xml = _get_or_build_sitemap_xml(f"strat_{part}", _get_chunk)
+    return Response(content=xml, media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @_fastapi.get("/sitemap-indicators-{part}.xml")
 def sitemap_indicators_part(part: int):
-    all_urls = get_all_ind_urls()
-    max_chunk = 25000
-    start = (part - 1) * max_chunk
-    chunk = all_urls[start : start + max_chunk]
-    return Response(content=_build_urlset(chunk), media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
+    def _get_chunk():
+        all_urls = get_all_ind_urls()
+        max_chunk = 25000
+        start = (part - 1) * max_chunk
+        return all_urls[start : start + max_chunk]
+    xml = _get_or_build_sitemap_xml(f"ind_{part}", _get_chunk)
+    return Response(content=xml, media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @_fastapi.get("/sitemap-regimes.xml")
 def sitemap_regimes():
-    all_urls = get_all_regime_urls()
-    return Response(content=_build_urlset(all_urls), media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
+    xml = _get_or_build_sitemap_xml("regimes", get_all_regime_urls)
+    return Response(content=xml, media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @_fastapi.get("/sitemap-compare.xml")
 def sitemap_compare():
-    all_urls = get_all_compare_urls()
-    return Response(content=_build_urlset(all_urls), media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
+    xml = _get_or_build_sitemap_xml("compare", get_all_compare_urls)
+    return Response(content=xml, media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @_fastapi.get("/sitemap-coins.xml")
 def sitemap_coins():
-    urls = ["https://zengtrade.in/coins/"]
-    for c in base_coins:
-        urls.append(f"https://zengtrade.in/coins/{c[2]}/")
-    return Response(content=_build_urlset(urls), media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
+    def _get_urls():
+        urls = ["https://zengtrade.in/coins/"]
+        for c in base_coins:
+            urls.append(f"https://zengtrade.in/coins/{c[2]}/")
+        return urls
+    xml = _get_or_build_sitemap_xml("coins", _get_urls)
+    return Response(content=xml, media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @_fastapi.get("/sitemap-core.xml")
