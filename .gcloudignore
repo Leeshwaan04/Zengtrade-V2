@@ -6,6 +6,9 @@
 node_modules
 scratch
 tests
+docs
+scripts
+content
 deploy/landing/dist/coins
 deploy/landing/dist/blog
 deploy/landing/dist/strategies
@@ -13,6 +16,11 @@ deploy/landing/dist/indicators
 deploy/landing/dist/regimes
 deploy/landing/dist/compare
 deploy/landing/dist/embed
+deploy/landing/dist/learn
+deploy/landing/dist/sitemap*
+saas/supabase
+saas/worker
+saas/tests
 *.pyc
 __pycache__
 .DS_Store

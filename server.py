@@ -212,6 +212,7 @@ def _build_urlset(urls):
     return "".join(xml_parts)
 
 
+@_fastapi.get("/sitemap.xml")
 @_fastapi.get("/sitemap-index.xml")
 def sitemap_index():
     xml = """<?xml version="1.0" encoding="UTF-8"?>
