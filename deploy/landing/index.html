@@ -272,9 +272,13 @@ html[data-surface="night"] .grid-motion{opacity:.14}
 .lp-mobile[open] .lp-burger span:nth-child(1){transform:translateY(6px) rotate(45deg)}
 .lp-mobile[open] .lp-burger span:nth-child(2){opacity:0}
 .lp-mobile[open] .lp-burger span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
-.lp-mobile-panel{position:fixed;right:12px;top:56px;z-index:80;width:min(260px,calc(100vw - 24px));background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 22px 54px -22px rgba(8,13,24,.4);padding:8px;display:flex;flex-direction:column}
-.lp-mobile-panel a{padding:12px 12px;border-radius:9px;color:var(--navy);text-decoration:none;font:600 14px/1 var(--sans)}
-.lp-mobile-panel a:hover,.lp-mobile-panel a:focus-visible{background:var(--bg)}
+.lp-mobile-panel{position:fixed;right:12px;top:56px;z-index:999;width:min(320px,calc(100vw - 24px));max-height:calc(100vh - 72px);overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--surface);border:1px solid var(--line-2,var(--line));border-radius:16px;box-shadow:0 24px 60px -16px rgba(0,0,0,.45);padding:12px;display:flex;flex-direction:column;gap:3px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.lp-mobile-auth{display:flex;flex-direction:column;gap:8px;padding-bottom:10px;margin-bottom:8px;border-bottom:1px solid var(--line)}
+.lp-mobile-auth a{display:flex;align-items:center;justify-content:center;padding:11px 14px;border-radius:10px;font:700 14px/1 var(--sans);text-decoration:none}
+.lp-mobile-auth .mb-signup{background:var(--accent);color:#04140a}
+.lp-mobile-auth .mb-login{background:var(--surface-2);color:var(--navy);border:1px solid var(--line)}
+.lp-mobile-panel a.lp-m-link{padding:11px 12px;border-radius:8px;color:var(--navy);text-decoration:none;font:600 13.5px/1 var(--sans);display:flex;align-items:center;justify-content:space-between}
+.lp-mobile-panel a.lp-m-link:hover,.lp-mobile-panel a.lp-m-link:focus-visible{background:var(--bg)}
 .ticker-bar{flex:0 0 auto;display:flex;align-items:center;padding:0 10px;background:var(--surface);
   border-bottom:1px solid var(--line);overflow:hidden;position:relative;z-index:1;gap:0;min-height:34px}
 .tb-viewport{flex:1 1 auto;min-width:0;overflow:hidden;display:flex}
@@ -690,30 +694,49 @@ html.js .lp-rv.in{opacity:1;transform:none}
   .lp-gov-row .lp-desc{grid-column:1/-1}
 }
 @media(max-width:880px){
-  .topbar{flex-wrap:wrap;gap:9px 10px}
-  .tb-spacer{display:none}
-  .topbar-right{margin-left:auto}
   .lp-books-grid{grid-template-columns:1fr}
   .lp-stage .rb-badge{margin-inline:0}
 }
-@media(max-width:760px){
+@media(max-width:768px){
+  .topbar{flex-wrap:nowrap;height:56px;padding:0 14px;gap:8px}
+  .tb-spacer{display:block;flex:1 1 auto}
+  .tb-brand{flex:0 0 auto}
+  .brand-pro{font-size:14px;padding-left:8px}
+  .brand-pro::after{margin-left:6px;width:6px;height:6px}
+  .topbar-right{margin-left:auto;flex-wrap:nowrap;gap:6px}
+  .tb-auth .tb-cta.ghost{display:none}
+  .tb-auth .tb-cta.primary{min-width:auto;padding:7px 12px;font-size:12px;border-radius:8px}
+  .surface-toggle{width:34px;height:34px;border-radius:8px}
+  .lp-burger{width:36px;height:36px;border-radius:8px}
   .lp-books{grid-template-columns:1fr}
   .lp-tb-seg{display:none}
   .mkt-sess{display:none}
 }
-@media(max-width:600px){
-  .topbar{padding:8px 12px;gap:8px}
-  .brand-pro{font-size:14px;padding-left:9px}
+@media(max-width:640px){
+  .tb-market{display:none !important}
+  .ticker-bar{padding:0 8px;min-height:30px}
+  .tb-ticker .tix{padding:5px 10px}
+  .tix-name{font-size:9px}
+  .tix-val{font-size:12px}
+  .tix-chg{font-size:10px}
+  .lp-hero{padding-block:24px 34px}
   .lp-hero-control{gap:7px;--ctl-h:44px}
   .lp-hero-control .seg{flex:1 1 100%}
   .lp-hero-control .seg-btn{flex:1;justify-content:center;padding:0 4px;gap:6px}
   .lp-hero-control .auto-pill{flex:1 1 100%;justify-content:center}
-  .tb-ticker .tix{padding:6px 12px}
   .lp-dash-fields .ss-v{font-size:20px}
   .lp-gov-row .lp-val{font-size:15px}
 }
-@media(max-width:420px){
-  .tb-market{display:none}
+@media(max-width:480px){
+  .topbar{padding:0 10px}
+  .brand-pro{display:none}
+  .brand-logo{height:28px}
+  .tb-auth .tb-cta.primary{padding:6px 10px;font-size:11.5px}
+  .lp-h1{font-size:clamp(25px,7.5vw,32px);line-height:1.15;max-width:100%}
+  .lp-h2{font-size:clamp(21px,6vw,26px);line-height:1.2}
+  .lp-sub{font-size:14.5px;line-height:1.6}
+  .lp-cta-row{flex-direction:column;width:100%;gap:10px}
+  .lp-cta-row .lp-cta{width:100%;min-height:48px;text-align:center;justify-content:center;font-size:14.5px;padding:14px 18px}
 }
 
 /* ============================================================
@@ -1143,14 +1166,18 @@ html.js .lp-rv.in{opacity:1;transform:none}
     <details class="lp-mobile">
       <summary class="lp-burger" aria-label="Open menu" title="Menu"><span></span><span></span><span></span></summary>
       <nav class="lp-mobile-panel" aria-label="Mobile">
-        <a href="/how-it-works/">How it works</a>
-        <a href="/pricing/">Pricing</a>
-        <a href="/coins/">Coins</a>
-        <a href="/learn/">Learn: guides &amp; explainers</a>
-        <a href="/blog/">Blog</a>
-        <a href="/how-it-works/#regime">Reading market regimes</a>
-        <a href="/how-it-works/#books">Strategy library</a>
-        <a href="/how-it-works/#honesty">Why honesty matters</a>
+        <div class="lp-mobile-auth">
+          <a class="mb-signup" href="/login/?mode=signup">Start free (Zero Risk)</a>
+          <a class="mb-login" href="/login/">Log in to Studio</a>
+        </div>
+        <a class="lp-m-link" href="/how-it-works/">How it works <span>→</span></a>
+        <a class="lp-m-link" href="/pricing/">Pricing <span>→</span></a>
+        <a class="lp-m-link" href="/coins/">Coin Workstations <span>→</span></a>
+        <a class="lp-m-link" href="/learn/">Learn: Quant Guides <span>→</span></a>
+        <a class="lp-m-link" href="/blog/">Build-in-Public Blog <span>→</span></a>
+        <a class="lp-m-link" href="/how-it-works/#regime">Market Regimes Engine <span>→</span></a>
+        <a class="lp-m-link" href="/how-it-works/#books">Strategy Library (15 Algos) <span>→</span></a>
+        <a class="lp-m-link" href="/how-it-works/#honesty">35 bps Friction &amp; Custody <span>→</span></a>
       </nav>
     </details>
     <div class="tb-auth">
@@ -2325,6 +2352,16 @@ html.js .lp-rv.in{opacity:1;transform:none}
   pull();
   setInterval(pull, 10000);          // refresh every 10s
 })();
+document.addEventListener("click", function (e) {
+  var d = document.querySelector(".lp-mobile");
+  if (d && d.open && !d.contains(e.target)) d.removeAttribute("open");
+});
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Escape") {
+    var d = document.querySelector(".lp-mobile");
+    if (d && d.open) d.removeAttribute("open");
+  }
+});
 </script>
 <script>
 /* Interactive Candlestick Chart for PSEO Strategy & Indicator Pages */

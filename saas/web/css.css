@@ -34,7 +34,7 @@ body{margin:0;background:var(--bg);color:var(--navy);font:16px/1.55 var(--sans);
 .btn.oauth:hover{border-color:var(--green-line)}
 .btn.link{background:transparent;color:var(--slate);border:1px dashed var(--line-2);font-weight:600;font-size:13px;padding:11px}
 input{width:100%;background:var(--surface-2);border:1px solid var(--line-2);color:var(--navy);
-  border-radius:10px;padding:12px 13px;font:500 15px/1 var(--sans)}
+  border-radius:10px;padding:12px 13px;font:500 16px/1.2 var(--sans)}
 input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px var(--green-soft);background:var(--surface)}
 label{display:block;font:600 12px/1 var(--sans);color:var(--slate);margin:14px 0 6px}
 .msg{margin-top:14px;padding:11px 13px;border-radius:9px;font-size:13.5px;display:none}

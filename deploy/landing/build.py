@@ -366,7 +366,24 @@ HOME_CSS = """
 .faq{border:1px solid var(--line);border-radius:12px;padding:13px 16px;margin:9px 0;background:var(--surface);max-width:720px;margin-left:auto;margin-right:auto}
 .faq summary{font-weight:700;cursor:pointer;color:var(--navy)}.faq p{margin:9px 0 0;color:var(--slate)}
 .center{text-align:center}
-@media(max-width:820px){.lp-grid4{grid-template-columns:repeat(2,1fr)}.lp-grid3,.pr-grid{grid-template-columns:1fr}.home-regime-in{flex-direction:column;text-align:center}}
+@media(max-width:820px){
+  .lp-grid4{grid-template-columns:repeat(2,1fr)}
+  .lp-grid3,.pr-grid{grid-template-columns:1fr}
+  .home-regime-in{flex-direction:column;text-align:center}
+}
+@media(max-width:580px){
+  .lp-grid4{grid-template-columns:1fr !important;gap:12px}
+  .home-card{padding:18px 16px;border-radius:14px}
+  .home-card b{font-size:16px;margin:8px 0 4px}
+  .home-card span{font-size:13.5px;line-height:1.55}
+  .home-mascot{max-width:130px;height:auto;margin:0 auto}
+  .home-regime-in{gap:16px}
+  .home-final-in{padding:28px 16px;border-radius:16px}
+  .pr-plan{padding:18px 14px}
+  .pr-price{font-size:28px}
+  .lp-cta-row{flex-direction:column;width:100%;gap:10px}
+  .lp-cta-row .lp-cta{width:100%;min-height:48px;text-align:center;justify-content:center;font-size:14.5px;padding:14px 18px}
+}
 """
 
 # ---- coin pSEO content lives in seo/generate.py (now a library that shares THIS shell) --
