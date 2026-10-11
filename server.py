@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Zengtrade Real-Time SSR Server for Cloud Run.
 
-Serves 300,000+ programmatic SEO articles, systematic strategy hubs,
+Serves 393,000+ programmatic SEO articles, systematic strategy hubs,
 technical indicators, and coin pages with real-time server rendering (<10ms)
 and dynamic XML sitemaps.
 """
@@ -28,7 +28,12 @@ from seo.render_shell import render_shell
 import seo.pseo_engine as pseo
 import seo.blog_engine as blog
 
-DIST_DIR = os.path.join(HERE, "deploy", "landing", "dist")
+RUNTIME_SITE_DIR = os.path.join(HERE, "runtime-site")
+DIST_DIR = (
+    RUNTIME_SITE_DIR
+    if os.path.isdir(RUNTIME_SITE_DIR)
+    else os.path.join(HERE, "deploy", "landing", "dist")
+)
 SAAS_WEB_DIR = os.path.join(HERE, "saas", "web")
 ASSETS_DIR = os.path.join(HERE, "assets")
 
@@ -405,7 +410,7 @@ def dashboard_page():
     return HTMLResponse(open(p, "r", encoding="utf-8").read())
 
 
-# ---- DYNAMIC ROUTE RESOLVER (REAL-TIME SSR FOR ALL 300,000 PAGES) ----------------------
+# ---- DYNAMIC ROUTE RESOLVER (REAL-TIME SSR FOR ALL 393,000 PAGES) ----------------------
 
 @_fastapi.get("/{full_path:path}")
 def catch_all(request: Request, full_path: str):

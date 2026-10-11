@@ -1,9 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": null,
-  "installCommand": null,
-  "buildCommand": "python3 deploy/landing/build.py",
-  "outputDirectory": "deploy/landing/dist",
+  "framework": "fastapi",
+  "buildCommand": "bash scripts/build-vercel.sh",
+  "functions": {
+    "server.py": {
+      "includeFiles": "seo/coin_data_cache.json",
+      "excludeFiles": "deploy/landing/dist/**"
+    }
+  },
   "git": {
     "deploymentEnabled": false
   }

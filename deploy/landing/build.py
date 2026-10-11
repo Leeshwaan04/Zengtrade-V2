@@ -1184,6 +1184,67 @@ if PSEO_MOD and (pseo_partitions.get("strategies") or pseo_partitions.get("indic
     }
     # Add blog to sitemap partitions so it merges elegantly into sitemap-index.xml
     PSEO_MOD.emit_xml_sitemaps(DIST, all_partitions, _build_date, extra_sitemaps=blog_sitemaps)
+
+    # Publish the full dynamic catalog, not only the subset pre-rendered into static HTML.
+    # The Vercel FastAPI function renders the remaining URLs on demand.
+    full_strategies = []
+    full_timeframe_strategies = []
+    for strategy in PSEO_MOD.STRATEGIES:
+        for coin in coin_roster:
+            base = f"https://zengtrade.in/strategies/{strategy['slug']}/{coin[2]}"
+            full_strategies.append(f"{base}/")
+            full_timeframe_strategies.extend(
+                f"{base}/{tf['slug']}/" for tf in PSEO_MOD.TIMEFRAMES
+            )
+
+    full_indicators = []
+    full_timeframe_indicators = []
+    for indicator in PSEO_MOD.INDICATORS:
+        for coin in coin_roster:
+            base = f"https://zengtrade.in/indicators/{indicator['slug']}/{coin[2]}"
+            full_indicators.append(f"{base}/")
+            full_timeframe_indicators.extend(
+                f"{base}/{tf['slug']}/" for tf in PSEO_MOD.TIMEFRAMES
+            )
+
+    full_regimes = [
+        f"https://zengtrade.in/regimes/{regime['slug']}/{coin[2]}/"
+        for regime in PSEO_MOD.REGIMES
+        for coin in coin_roster
+    ]
+    full_comparisons = [
+        f"https://zengtrade.in/compare/{showdown['slug']}/{coin[2]}/"
+        for showdown in PSEO_MOD.SHOWDOWNS
+        for coin in coin_roster
+    ]
+    full_blog = [
+        f"https://zengtrade.in/blog/{coin[2]}-{topic['slug']}/"
+        for topic in BLOG_MOD.generate_topics()
+        for coin in coin_roster
+    ] if BLOG_MOD else []
+    full_blog.extend(f"https://zengtrade.in/blog/{post['slug']}/" for post in blog_posts)
+
+    indexable_core_urls = [
+        url for url in core_urls
+        if url not in (
+            "https://zengtrade.in/login",
+            "https://zengtrade.in/dashboard",
+            "https://zengtrade.in/app",
+        )
+    ]
+    full_partitions = {
+        "core": indexable_core_urls,
+        "coins": coin_urls,
+        "strategies": full_strategies,
+        "indicators": full_indicators,
+        "regimes": full_regimes,
+        "timeframes_strat": full_timeframe_strategies,
+        "timeframes_ind": full_timeframe_indicators,
+        "compare": full_comparisons,
+        "blog": full_blog,
+        "learn": learn_urls,
+    }
+    PSEO_MOD.emit_xml_sitemaps(DIST, full_partitions, _build_date)
 else:
     sm = ('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
           + "".join(f"  <url><loc>{u}</loc><lastmod>{_build_date}</lastmod><changefreq>daily</changefreq></url>\n" for u in urls)
