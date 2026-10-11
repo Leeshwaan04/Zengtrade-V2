@@ -17,3 +17,5 @@ scratch/
 *.DS_Store
 .git_backup/
 node_modules/
+.vercel
+.env.local

@@ -1,5 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": null,
+  "buildCommand": "python3 deploy/landing/build.py",
+  "outputDirectory": "deploy/landing/dist",
   "git": {
     "deploymentEnabled": false
   }
