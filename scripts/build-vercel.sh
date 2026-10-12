@@ -13,6 +13,7 @@ cp deploy/landing/dist/index.html \
   deploy/landing/dist/llms.txt \
   deploy/landing/dist/llms-full.txt \
   runtime-site/
+cp deploy/landing/dist/sitemap*.xml runtime-site/ 2>/dev/null || true
 cp -R deploy/landing/dist/account \
   deploy/landing/dist/admin \
   deploy/landing/dist/app \
