@@ -1,0 +1,14 @@
+# Ignore build output and heavy local dependencies from Vercel upload
+deploy/landing/dist/
+runtime-site/
+.git_backup/
+node_modules/
+scratch/
+.pytest_cache/
+saas/supabase/.temp/
+saas/worker/forward.out
+saas/worker/forward_state.json
+__pycache__/
+*.pyc
+*.tar.gz
+.DS_Store
