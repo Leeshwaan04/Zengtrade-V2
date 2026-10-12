@@ -33,3 +33,7 @@ cp -R deploy/landing/dist/account \
   deploy/landing/dist/sitemap \
   deploy/landing/dist/terms \
   runtime-site/
+
+mkdir -p runtime-site/assets
+cp -R assets/* runtime-site/assets/ 2>/dev/null || true
+cp deploy/landing/dist/dashboard/studio.js runtime-site/studio.js 2>/dev/null || true

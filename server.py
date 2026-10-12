@@ -480,6 +480,19 @@ def site_js():
         return Response(content=open(p, "r", encoding="utf-8").read(), media_type="application/javascript", headers={"Cache-Control": "public, max-age=31536000, immutable"})
     return Response(status_code=404)
 
+@_fastapi.get("/studio.js")
+def studio_js():
+    for base in [os.path.join(DIST_DIR, "dashboard"), DIST_DIR, os.path.join(HERE, "deploy", "landing")]:
+        p = os.path.join(base, "studio.js")
+        if os.path.isfile(p):
+            return Response(
+                content=open(p, "rb").read(),
+                media_type="application/javascript",
+                headers={"Cache-Control": "public, max-age=3600", "Content-Type": "application/javascript; charset=utf-8"}
+            )
+    return Response(status_code=404)
+
+
 @_fastapi.get("/app")
 def app_page():
     p = os.path.join(SAAS_WEB_DIR, "app.html")

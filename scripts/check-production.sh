@@ -46,6 +46,38 @@ else
 fi
 check "app-js" "$SITE/js/auth.js" "establishSession"
 rm -f /tmp/ztcurl.out
+
+# Verify critical asset MIME types and non-empty payloads
+check_asset() {
+  local path="$1" expect_mime="$2"
+  local url="$SITE$path"
+  local ct=""
+  if ct=$(curl -sfL --connect-timeout 5 --max-time 10 -D - "$url" -o /tmp/ztasset.out 2>/dev/null | grep -i '^content-type:' | head -n 1 | tr -d '\r'); then
+    local sz=$(wc -c < /tmp/ztasset.out 2>/dev/null || echo 0)
+    if echo "$ct" | grep -qi "$expect_mime" && [[ "$sz" -gt 50 ]]; then
+      echo "OK   asset $path — $expect_mime ($sz B)"
+    else
+      echo "FAIL asset $path — invalid MIME ($ct) or empty ($sz B)"
+      fail=1
+    fi
+  else
+    echo "FAIL asset $path — 404/network error ($url)"
+    fail=1
+  fi
+  rm -f /tmp/ztasset.out
+}
+
+check_asset "/css.css" "text/css"
+check_asset "/site.css" "text/css"
+check_asset "/site.js" "javascript"
+check_asset "/studio.js" "javascript"
+check_asset "/js/auth.js" "javascript"
+check_asset "/js/app.js" "javascript"
+check_asset "/assets/styles.css" "text/css"
+check_asset "/assets/chart.js" "javascript"
+check_asset "/assets/app.js" "javascript"
+check_asset "/assets/mascot-bull.png" "image"
+
 if [[ $fail -ne 0 ]]; then
   echo "Some checks failed — see FOUNDER_DEPLOY.md"
   exit 1
