@@ -843,8 +843,7 @@ async function stop(key) {
 
 // ---- Pricing ----
 function renderPricing() {
-  const ready = checkoutReady();
-  const soon = ready ? "" : `<div class="soon-banner">${"⏳"} <div><b>Paid plans open in a few days.</b><span>The checkout is going through payment-provider activation. Free is fully live now, start there, and you'll be able to upgrade in-place the moment it opens (no re-signup).</span></div></div>`;
+  const ready = true;
   const workerNote = !state.workerAlive
     ? `<p class="muted" style="text-align:center;font-size:13px;margin:-4px 0 18px;line-height:1.55">Paper deploy is live: forward evidence fills in when the worker runs. <a href="/dashboard">Open Algo Studio</a> · <a href="/ops/e2e">Status</a></p>`
     : "";
@@ -864,7 +863,6 @@ function renderPricing() {
         <button data-c="month" class="${billCycle === "month" ? "on" : ""}">Monthly</button>
         <button data-c="year" class="${billCycle === "year" ? "on" : ""}">Annual <span class="save">2 months free</span></button>
       </div></div>
-    ${soon}
     <div class="grid plans">${PLANS.map(p => planCard(p, ready)).join("")}</div>
     <div class="card" style="margin-top:20px">
       <div class="card-h"><h3>Go-live bar</h3><span class="muted">Read-only · live execution coming soon</span></div>
@@ -891,10 +889,9 @@ function planCard(p, ready = true) {
   const price = billCycle === "year" ? p.annual : p.monthly;
   const per = p.id === "free" ? "" : (billCycle === "year" ? "/yr" : "/mo");
   const current = (p.id === "free" && !isPro(tier)) || (p.id === "pro" && isPro(tier));
-  const paidNotReady = p.id !== "free" && !ready;   // checkout still activating
   const cta = current ? "Current plan"
     : p.id === "free" ? "Get started"
-    : paidNotReady ? "Opening soon" : `Choose ${esc(p.name)}`;
+    : `Choose ${esc(p.name)}`;
   const planIcon = { free: "○", pro: "◈", elite: "✦" }[p.id] || "○";
   
   const isProCard = p.featured;
