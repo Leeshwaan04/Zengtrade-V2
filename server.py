@@ -547,9 +547,14 @@ def catch_all(request: Request, full_path: str):
         elif clean.endswith(".svg"): content_type = "image/svg+xml"
         return Response(content=open(p_dist_file, "rb").read(), media_type=content_type)
 
-    # 6. Exact match in saas/web/ (e.g. contact.html, terms.html, privacy.html, ops.html)
+    # 6. Exact match in saas/web/ (e.g. contact.html, terms.html, privacy.html, ops.html, ops-p0.html)
     saas_name = clean if clean.endswith(".html") else f"{clean}.html"
     p_saas = os.path.join(SAAS_WEB_DIR, saas_name)
+    if not os.path.isfile(p_saas) and "/" in clean:
+        alt_saas_name = f"{clean.replace('/', '-')}.html"
+        p_saas_alt = os.path.join(SAAS_WEB_DIR, alt_saas_name)
+        if os.path.isfile(p_saas_alt):
+            p_saas = p_saas_alt
     if os.path.isfile(p_saas):
         return HTMLResponse(open(p_saas, "r", encoding="utf-8").read(), headers={"Cache-Control": "public, max-age=86400"})
 

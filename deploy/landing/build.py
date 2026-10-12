@@ -1224,16 +1224,8 @@ if PSEO_MOD and (pseo_partitions.get("strategies") or pseo_partitions.get("indic
     ] if BLOG_MOD else []
     full_blog.extend(f"https://zengtrade.in/blog/{post['slug']}/" for post in blog_posts)
 
-    indexable_core_urls = [
-        url for url in core_urls
-        if url not in (
-            "https://zengtrade.in/login",
-            "https://zengtrade.in/dashboard",
-            "https://zengtrade.in/app",
-        )
-    ]
     full_partitions = {
-        "core": indexable_core_urls,
+        "core": core_urls,
         "coins": coin_urls,
         "strategies": full_strategies,
         "indicators": full_indicators,
