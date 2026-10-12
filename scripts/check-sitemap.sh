@@ -5,19 +5,21 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SITE="${SITE:-https://zengtrade.in}"
 fail=0
 
+SITEMAP_TMP="/tmp/ztsitemap.xml"
+rm -f "$SITEMAP_TMP"
+for attempt in 1 2 3; do
+  if curl -sfL --connect-timeout 5 --max-time 15 -o "$SITEMAP_TMP" "$SITE/sitemap.xml" 2>/dev/null && [[ -s "$SITEMAP_TMP" ]]; then
+    break
+  fi
+  [[ $attempt -lt 3 ]] && sleep 1
+done
+
 need_url() {
-  local label="$1" path="$2" repo_pat="${3:-}" sitemap="" attempt
-  # Retry: a fresh deploy can hit a not-yet-warm CDN edge for a request or two (seen in practice -
-  # this check has flaked transiently on home/coin pages that were confirmed present moments
-  # later), so don't fail the whole check on one slow/empty fetch.
-  for attempt in 1 2 3; do
-    sitemap=$(curl -sfL "$SITE/sitemap.xml" 2>/dev/null) || sitemap=""
-    if [[ -n "$sitemap" ]] && echo "$sitemap" | grep "<loc>${SITE}${path}</loc>" >/dev/null; then
-      echo "OK   $label - in sitemap"
-      return
-    fi
-    [[ $attempt -lt 3 ]] && sleep 2
-  done
+  local label="$1" path="$2" repo_pat="${3:-}"
+  if [[ -s "$SITEMAP_TMP" ]] && grep -q "<loc>${SITE}${path}</loc>" "$SITEMAP_TMP"; then
+    echo "OK   $label - in sitemap"
+    return
+  fi
   if [[ -n "$repo_pat" ]] && grep -q "$repo_pat" "$ROOT/deploy/landing/build.py" 2>/dev/null; then
     echo "OK   $label — in sitemap (repo — production deploy pending)"
   else
