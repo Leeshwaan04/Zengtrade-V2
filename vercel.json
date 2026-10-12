@@ -4,7 +4,7 @@
   "buildCommand": "bash scripts/build-vercel.sh",
   "functions": {
     "server.py": {
-      "includeFiles": "seo/coin_data_cache.json",
+      "includeFiles": "{seo/coin_data_cache.json,runtime-site/**,saas/web/**,assets/**}",
       "excludeFiles": "deploy/landing/dist/**"
     }
   },

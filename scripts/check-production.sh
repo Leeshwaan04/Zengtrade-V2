@@ -5,7 +5,7 @@ SITE="${SITE:-https://zengtrade.in}"
 fail=0
 check() {
   local name="$1" url="$2" expect="${3:-}"
-  if code=$(curl -sfL -o /tmp/ztcurl.out -w '%{http_code}' "$url" 2>/dev/null); then
+  if code=$(curl -sfL --connect-timeout 5 --max-time 30 -o /tmp/ztcurl.out -w '%{http_code}' "$url" 2>/dev/null); then
     if [[ -n "$expect" ]] && ! grep -q "$expect" /tmp/ztcurl.out 2>/dev/null; then
       echo "WARN $name — HTTP $code but missing '$expect'"
       fail=1

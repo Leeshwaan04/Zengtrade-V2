@@ -15,6 +15,13 @@ import tempfile
 import urllib.request
 import urllib.parse
 from typing import Optional
+import mimetypes
+
+mimetypes.init()
+mimetypes.add_type("text/css", ".css")
+mimetypes.add_type("application/javascript", ".js")
+mimetypes.add_type("image/svg+xml", ".svg")
+mimetypes.add_type("application/json", ".json")
 
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import HTMLResponse, PlainTextResponse, JSONResponse
@@ -205,6 +212,13 @@ if os.path.isdir(os.path.join(DIST_DIR, "assets")):
     _fastapi.mount("/assets", StaticFiles(directory=os.path.join(DIST_DIR, "assets")), name="assets")
 elif os.path.isdir(ASSETS_DIR):
     _fastapi.mount("/assets", StaticFiles(directory=ASSETS_DIR), name="assets")
+
+# Mount static JavaScript
+js_mount_dir = os.path.join(DIST_DIR, "js")
+if not os.path.isdir(js_mount_dir):
+    js_mount_dir = os.path.join(SAAS_WEB_DIR, "js")
+if os.path.isdir(js_mount_dir):
+    _fastapi.mount("/js", StaticFiles(directory=js_mount_dir), name="js")
 
 
 @_fastapi.middleware("http")
@@ -445,6 +459,18 @@ def site_css():
         return Response(content=open(p, "r", encoding="utf-8").read(), media_type="text/css", headers={"Cache-Control": "public, max-age=31536000, immutable"})
     return Response(status_code=404)
 
+@_fastapi.get("/css.css")
+def css_css():
+    for base in [DIST_DIR, SAAS_WEB_DIR, os.path.join(HERE, "deploy", "landing", "dist")]:
+        p = os.path.join(base, "css.css")
+        if os.path.isfile(p):
+            return Response(
+                content=open(p, "rb").read(),
+                media_type="text/css",
+                headers={"Cache-Control": "public, max-age=3600", "Content-Type": "text/css; charset=utf-8"}
+            )
+    return Response(status_code=404)
+
 @_fastapi.get("/site.js")
 def site_js():
     p = os.path.join(DIST_DIR, "site.js")
@@ -558,12 +584,35 @@ def catch_all(request: Request, full_path: str):
     
     p_dist_file = os.path.join(DIST_DIR, clean)
     if os.path.isfile(p_dist_file):
-        content_type = "text/html"
-        if clean.endswith(".json"): content_type = "application/json"
-        elif clean.endswith(".svg"): content_type = "image/svg+xml"
-        return Response(content=open(p_dist_file, "rb").read(), media_type=content_type)
+        content_type, _ = mimetypes.guess_type(p_dist_file)
+        if not content_type:
+            if clean.endswith(".json"): content_type = "application/json"
+            elif clean.endswith(".svg"): content_type = "image/svg+xml"
+            elif clean.endswith(".css"): content_type = "text/css"
+            elif clean.endswith(".js"): content_type = "application/javascript"
+            else: content_type = "text/html"
+        headers = {"Cache-Control": "public, max-age=86400"}
+        if content_type == "text/css":
+            headers["Content-Type"] = "text/css; charset=utf-8"
+        elif content_type in ("application/javascript", "text/javascript"):
+            headers["Content-Type"] = "application/javascript; charset=utf-8"
+        return Response(content=open(p_dist_file, "rb").read(), media_type=content_type, headers=headers)
 
     # 6. Exact match in saas/web/ (e.g. contact.html, terms.html, privacy.html, ops.html, ops-p0.html)
+    p_saas_raw = os.path.join(SAAS_WEB_DIR, clean)
+    if os.path.isfile(p_saas_raw) and not clean.endswith(".html"):
+        content_type, _ = mimetypes.guess_type(p_saas_raw)
+        if not content_type:
+            if clean.endswith(".css"): content_type = "text/css"
+            elif clean.endswith(".js"): content_type = "application/javascript"
+            else: content_type = "text/plain"
+        headers = {"Cache-Control": "public, max-age=86400"}
+        if content_type == "text/css":
+            headers["Content-Type"] = "text/css; charset=utf-8"
+        elif content_type in ("application/javascript", "text/javascript"):
+            headers["Content-Type"] = "application/javascript; charset=utf-8"
+        return Response(content=open(p_saas_raw, "rb").read(), media_type=content_type, headers=headers)
+
     saas_name = clean if clean.endswith(".html") else f"{clean}.html"
     p_saas = os.path.join(SAAS_WEB_DIR, saas_name)
     if not os.path.isfile(p_saas) and "/" in clean:
