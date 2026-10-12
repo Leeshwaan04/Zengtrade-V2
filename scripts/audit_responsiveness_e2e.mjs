@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer-core';
 
 const CHROME_PATH = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const BASE_URL = 'https://zengtrade.in';
+const BASE_URL = process.env.BASE_URL || 'https://zengtrade.in';
 
 const VIEWPORTS = [
   { name: 'Mobile Small (Android 360)', width: 360, height: 640, isMobile: true, hasTouch: true },
@@ -44,7 +44,7 @@ async function runAudit() {
   const browser = await puppeteer.launch({
     executablePath: CHROME_PATH,
     headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu']
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--user-data-dir=/tmp/puppeteer_tmp_profile']
   });
 
   const page = await browser.newPage();

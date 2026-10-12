@@ -24,3 +24,5 @@ saas/tests
 *.pyc
 __pycache__
 .DS_Store
+*.tar.gz
+zi0V5kHX

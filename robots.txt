@@ -1,0 +1,52 @@
+# zengtrade robots.txt - optimized for search engines, web crawlers, and AI discovery
+User-agent: *
+Allow: /
+Disallow: /app
+Disallow: /ops/
+Disallow: /admin/
+Disallow: /reset/
+Disallow: /.git/
+Disallow: /.env
+Disallow: /.env.local
+
+User-agent: Googlebot
+Allow: /
+Disallow: /app
+Disallow: /ops/
+Disallow: /.git/
+
+User-agent: Bingbot
+Allow: /
+Disallow: /app
+Disallow: /ops/
+Disallow: /.git/
+
+User-agent: Applebot
+Allow: /
+Disallow: /app
+Disallow: /ops/
+Disallow: /.git/
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+Sitemap: https://zengtrade.in/sitemap-index.xml
+Sitemap: https://zengtrade.in/sitemap.xml

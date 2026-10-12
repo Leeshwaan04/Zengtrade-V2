@@ -83,7 +83,7 @@ echo "=========================================================="
 echo ""
 
 echo ">> Running live smoke tests against Cloud Run..."
-for route in "" "pricing/" "coins/bitcoin/" "strategies/supertrend-breakout/bitcoin/" "compare/supertrend-vs-ema-cross/ethereum/" "blog/bitcoin-asymmetric-risk-portfolio-allocation/" "sitemap-index.xml" "sitemap-blog-1.xml" "healthz"; do
+for route in "" "pricing/" "coins/bitcoin/" "strategies/supertrend-breakout/bitcoin/" "compare/supertrend-vs-ema-cross/ethereum/" "blog/bitcoin-asymmetric-risk-portfolio-allocation/" "sitemap/" "sitemap-index.xml" "sitemap-blog-1.xml" "llms.txt" "llms-full.txt" "healthz"; do
   code=$(curl -s -o /dev/null -w "%{http_code}" "$LIVE_URL/$route")
   echo "  $LIVE_URL/$route -> HTTP $code"
 done

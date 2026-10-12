@@ -11,6 +11,7 @@ import os
 import sys
 import time
 import json
+import tempfile
 import urllib.request
 import urllib.parse
 from typing import Optional
@@ -53,8 +54,9 @@ class HeadToGetMiddleware:
             head_status = 200
             head_headers = []
 
+            head_body_sent = False
             async def head_send(event):
-                nonlocal head_response_started, head_status, head_headers
+                nonlocal head_response_started, head_status, head_headers, head_body_sent
                 if event["type"] == "http.response.start":
                     head_status = event["status"]
                     head_headers = event["headers"]
@@ -64,8 +66,9 @@ class HeadToGetMiddleware:
                     filtered.append((b"content-length", b"0"))
                     await send({"type": "http.response.start", "status": head_status, "headers": filtered})
                 elif event["type"] == "http.response.body":
-                    # Send empty body to finish the response
-                    await send({"type": "http.response.body", "body": b"", "more_body": False})
+                    if not head_body_sent:
+                        head_body_sent = True
+                        await send({"type": "http.response.body", "body": b"", "more_body": False})
                 else:
                     await send(event)
 
@@ -151,6 +154,50 @@ def get_all_compare_urls():
             for c in COIN_ROSTER:
                 _COMPARE_URLS.append(f"https://zengtrade.in/compare/{s_slug}/{c[2]}/")
     return _COMPARE_URLS
+
+
+_TEXT_ASSET_CACHE = {}
+_SITEMAP_DIRECTORY_CACHE = None
+
+
+def _read_or_generate_text_asset(filename: str, generator):
+    if filename in _TEXT_ASSET_CACHE:
+        return _TEXT_ASSET_CACHE[filename]
+
+    dist_path = os.path.join(DIST_DIR, filename)
+    if os.path.isfile(dist_path):
+        content = open(dist_path, "r", encoding="utf-8").read()
+        _TEXT_ASSET_CACHE[filename] = content
+        return content
+
+    with tempfile.TemporaryDirectory() as td:
+        generator(td)
+        generated_path = os.path.join(td, filename)
+        if not os.path.isfile(generated_path):
+            return None
+        content = open(generated_path, "r", encoding="utf-8").read()
+        _TEXT_ASSET_CACHE[filename] = content
+        return content
+
+
+def _render_sitemap_directory():
+    global _SITEMAP_DIRECTORY_CACHE
+    if _SITEMAP_DIRECTORY_CACHE is not None:
+        return _SITEMAP_DIRECTORY_CACHE
+
+    static_path = os.path.join(DIST_DIR, "sitemap", "index.html")
+    if os.path.isfile(static_path):
+        _SITEMAP_DIRECTORY_CACHE = open(static_path, "r", encoding="utf-8").read()
+        return _SITEMAP_DIRECTORY_CACHE
+
+    title, desc, canon, main = pseo.generate_sitemap_html(
+        COIN_ROSTER,
+        pseo.STRATEGIES,
+        pseo.INDICATORS,
+        pseo.REGIMES,
+    )
+    _SITEMAP_DIRECTORY_CACHE = render_shell(title, desc, canon, main)
+    return _SITEMAP_DIRECTORY_CACHE
 
 
 # Mount static assets
@@ -376,6 +423,8 @@ def static_sitemap(sitemap_name: str):
 @_fastapi.get("/site.css")
 def site_css():
     p = os.path.join(DIST_DIR, "site.css")
+    if not os.path.exists(p):
+        p = os.path.join(HERE, "assets", "styles.css")
     if os.path.exists(p):
         return Response(content=open(p, "r", encoding="utf-8").read(), media_type="text/css", headers={"Cache-Control": "public, max-age=31536000, immutable"})
     return Response(status_code=404)
@@ -383,6 +432,8 @@ def site_css():
 @_fastapi.get("/site.js")
 def site_js():
     p = os.path.join(DIST_DIR, "site.js")
+    if not os.path.exists(p):
+        p = os.path.join(HERE, "assets", "app.js")
     if os.path.exists(p):
         return Response(content=open(p, "r", encoding="utf-8").read(), media_type="application/javascript", headers={"Cache-Control": "public, max-age=31536000, immutable"})
     return Response(status_code=404)
@@ -410,6 +461,28 @@ def dashboard_page():
     return HTMLResponse(open(p, "r", encoding="utf-8").read())
 
 
+@_fastapi.get("/llms.txt")
+def llms_txt():
+    content = _read_or_generate_text_asset("llms.txt", pseo.generate_llms_txt)
+    if content is None:
+        return Response(status_code=404)
+    return PlainTextResponse(content, media_type="text/plain", headers={"Cache-Control": "public, max-age=86400"})
+
+
+@_fastapi.get("/llms-full.txt")
+def llms_full_txt():
+    content = _read_or_generate_text_asset("llms-full.txt", pseo.generate_llms_full_txt)
+    if content is None:
+        return Response(status_code=404)
+    return PlainTextResponse(content, media_type="text/plain", headers={"Cache-Control": "public, max-age=86400"})
+
+
+@_fastapi.get("/sitemap")
+@_fastapi.get("/sitemap/")
+def sitemap_directory():
+    return HTMLResponse(_render_sitemap_directory(), headers={"Cache-Control": "public, max-age=86400"})
+
+
 # ---- DYNAMIC ROUTE RESOLVER (REAL-TIME SSR FOR ALL 393,000 PAGES) ----------------------
 
 @_fastapi.get("/{full_path:path}")
@@ -419,6 +492,10 @@ def catch_all(request: Request, full_path: str):
     # 1. Root / Home
     if clean in ("", "index.html"):
         p = os.path.join(DIST_DIR, "index.html")
+        if not os.path.isfile(p):
+            p = os.path.join(HERE, "deploy", "landing", "index.html")
+        if not os.path.isfile(p):
+            p = os.path.join(HERE, "index.html")
         if os.path.isfile(p):
             return HTMLResponse(open(p, "r", encoding="utf-8").read(), headers={"Cache-Control": "public, max-age=3600"})
 
