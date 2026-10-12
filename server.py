@@ -304,9 +304,19 @@ def _build_urlset(urls):
 
 
 @_fastapi.get("/sitemap.xml")
+def sitemap_xml():
+    p = os.path.join(DIST_DIR, "sitemap.xml")
+    if os.path.isfile(p):
+        return Response(content=open(p, "r", encoding="utf-8").read(), media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
+    return sitemap_core()
+
+
 @_fastapi.get("/sitemap-index.xml")
 @_fastapi.get("/sitemap_index.xml")
 def sitemap_index():
+    p = os.path.join(DIST_DIR, "sitemap-index.xml")
+    if os.path.isfile(p):
+        return Response(content=open(p, "r", encoding="utf-8").read(), media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
     xml = """<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap><loc>https://zengtrade.in/sitemap-core.xml</loc><lastmod>2026-10-05</lastmod></sitemap>

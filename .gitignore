@@ -20,3 +20,4 @@ node_modules/
 .vercel
 .env.local
 runtime-site/
+.env*
