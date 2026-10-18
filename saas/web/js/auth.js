@@ -34,7 +34,7 @@ export async function completeAuthCallback() {
   if (p.hasError) {
     const clean = location.pathname;
     history.replaceState({}, "", clean);
-    throw new Error(decodeURIComponent(String(p.error || "sign-in failed").replace(/\+/g, " ")));
+    throw new Error(String(p.error || "sign-in failed"));
   }
   if (!p.hasCode && !p.hasHash) return null;
 
